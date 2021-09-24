@@ -14,8 +14,24 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=meta-chaind \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
+TEST_DIR?="./..."
+TEST_BUILD_FLAGS :=  -tags mocknet
+
+
 
 all: install
+
+
+test-coverage:
+	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}
+
+coverage-report: test-coverage
+	@go tool cover -html=cover.txt
+
+test:
+	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
+
+
 
 install: go.sum
 		@echo "--> Installing meta-chaind & meta-noded"
