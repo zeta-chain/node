@@ -1,3 +1,5 @@
+name: Linter
+
 on:
   push:
     tags:
