@@ -1,0 +1,13 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+}
+
+// this line is used by starport scaffolding # proto/tx/message
