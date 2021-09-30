@@ -19102,6 +19102,396 @@ paths:
           format: uint64
       tags:
         - Query
+  /Meta-Protocol/metacore/metacore/txin:
+    get:
+      summary: Queries a list of txin items.
+      operationId: MetaProtocolMetacoreMetacoreTxinAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Txin:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    txHash:
+                      type: string
+                    sourceAsset:
+                      type: string
+                    sourceAmount:
+                      type: string
+                    mBurnt:
+                      type: string
+                    destinationAsset:
+                      type: string
+                    fromAddress:
+                      type: string
+                    toAddress:
+                      type: string
+                    blockHeight:
+                      type: string
+                    signers:
+                      type: array
+                      items:
+                        type: string
+              pagination:
+                type: object
+                properties:
+                  nextKey:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.countTotal
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/Meta-Protocol/metacore/metacore/txin/{index}':
+    get:
+      summary: Queries a txin by index.
+      operationId: MetaProtocolMetacoreMetacoreTxin
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Txin:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  txHash:
+                    type: string
+                  sourceAsset:
+                    type: string
+                  sourceAmount:
+                    type: string
+                  mBurnt:
+                    type: string
+                  destinationAsset:
+                    type: string
+                  fromAddress:
+                    type: string
+                  toAddress:
+                    type: string
+                  blockHeight:
+                    type: string
+                  signers:
+                    type: array
+                    items:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /Meta-Protocol/metacore/metacore/txinVoter:
+    get:
+      summary: Queries a list of txinVoter items.
+      operationId: MetaProtocolMetacoreMetacoreTxinVoterAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TxinVoter:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    txHash:
+                      type: string
+                    sourceAsset:
+                      type: string
+                    sourceAmount:
+                      type: string
+                    mBurnt:
+                      type: string
+                    destinationAsset:
+                      type: string
+                    fromAddress:
+                      type: string
+                    toAddress:
+                      type: string
+                    blockHeight:
+                      type: string
+                    signer:
+                      type: string
+                    signature:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  nextKey:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.countTotal
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/Meta-Protocol/metacore/metacore/txinVoter/{index}':
+    get:
+      summary: Queries a txinVoter by index.
+      operationId: MetaProtocolMetacoreMetacoreTxinVoter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TxinVoter:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  txHash:
+                    type: string
+                  sourceAsset:
+                    type: string
+                  sourceAmount:
+                    type: string
+                  mBurnt:
+                    type: string
+                  destinationAsset:
+                    type: string
+                  fromAddress:
+                    type: string
+                  toAddress:
+                    type: string
+                  blockHeight:
+                    type: string
+                  signer:
+                    type: string
+                  signature:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
 definitions:
   cosmos.bank.v1beta1.DenomUnit:
     type: object
@@ -29268,3 +29658,233 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  MetaProtocol.metacore.metacore.MsgCreateTxinVoterResponse:
+    type: object
+  MetaProtocol.metacore.metacore.QueryAllTxinResponse:
+    type: object
+    properties:
+      Txin:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            txHash:
+              type: string
+            sourceAsset:
+              type: string
+            sourceAmount:
+              type: string
+            mBurnt:
+              type: string
+            destinationAsset:
+              type: string
+            fromAddress:
+              type: string
+            toAddress:
+              type: string
+            blockHeight:
+              type: string
+            signers:
+              type: array
+              items:
+                type: string
+      pagination:
+        type: object
+        properties:
+          nextKey:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  MetaProtocol.metacore.metacore.QueryAllTxinVoterResponse:
+    type: object
+    properties:
+      TxinVoter:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            txHash:
+              type: string
+            sourceAsset:
+              type: string
+            sourceAmount:
+              type: string
+            mBurnt:
+              type: string
+            destinationAsset:
+              type: string
+            fromAddress:
+              type: string
+            toAddress:
+              type: string
+            blockHeight:
+              type: string
+            signer:
+              type: string
+            signature:
+              type: string
+      pagination:
+        type: object
+        properties:
+          nextKey:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  MetaProtocol.metacore.metacore.QueryGetTxinResponse:
+    type: object
+    properties:
+      Txin:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          txHash:
+            type: string
+          sourceAsset:
+            type: string
+          sourceAmount:
+            type: string
+          mBurnt:
+            type: string
+          destinationAsset:
+            type: string
+          fromAddress:
+            type: string
+          toAddress:
+            type: string
+          blockHeight:
+            type: string
+          signers:
+            type: array
+            items:
+              type: string
+  MetaProtocol.metacore.metacore.QueryGetTxinVoterResponse:
+    type: object
+    properties:
+      TxinVoter:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          txHash:
+            type: string
+          sourceAsset:
+            type: string
+          sourceAmount:
+            type: string
+          mBurnt:
+            type: string
+          destinationAsset:
+            type: string
+          fromAddress:
+            type: string
+          toAddress:
+            type: string
+          blockHeight:
+            type: string
+          signer:
+            type: string
+          signature:
+            type: string
+  MetaProtocol.metacore.metacore.Txin:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      txHash:
+        type: string
+      sourceAsset:
+        type: string
+      sourceAmount:
+        type: string
+      mBurnt:
+        type: string
+      destinationAsset:
+        type: string
+      fromAddress:
+        type: string
+      toAddress:
+        type: string
+      blockHeight:
+        type: string
+      signers:
+        type: array
+        items:
+          type: string
+  MetaProtocol.metacore.metacore.TxinVoter:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      txHash:
+        type: string
+      sourceAsset:
+        type: string
+      sourceAmount:
+        type: string
+      mBurnt:
+        type: string
+      destinationAsset:
+        type: string
+      fromAddress:
+        type: string
+      toAddress:
+        type: string
+      blockHeight:
+        type: string
+      signer:
+        type: string
+      signature:
+        type: string

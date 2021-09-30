@@ -69,7 +69,6 @@ func (c Chain) String() string {
 	return strings.ToUpper(string(c))
 }
 
-
 // GetSigningAlgo get the signing algorithm for the given chain
 func (c Chain) GetSigningAlgo() SigninAlgo {
 	switch c {
@@ -79,8 +78,6 @@ func (c Chain) GetSigningAlgo() SigninAlgo {
 		return SigningAlgoSecp256k1
 	}
 }
-
-
 
 // Has check whether chain c is in the list
 func (chains Chains) Has(c Chain) bool {

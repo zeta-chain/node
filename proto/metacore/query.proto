@@ -4,12 +4,68 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/txin_voter.proto";
+import "metacore/txin.proto";
 
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a txinVoter by index.
+	rpc TxinVoter(QueryGetTxinVoterRequest) returns (QueryGetTxinVoterResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txinVoter/{index}";
+	}
+
+	// Queries a list of txinVoter items.
+	rpc TxinVoterAll(QueryAllTxinVoterRequest) returns (QueryAllTxinVoterResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txinVoter";
+	}
+
+
+	// Queries a txin by index.
+	rpc Txin(QueryGetTxinRequest) returns (QueryGetTxinResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txin/{index}";
+	}
+
+	// Queries a list of txin items.
+	rpc TxinAll(QueryAllTxinRequest) returns (QueryAllTxinResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txin";
+	}
+
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetTxinVoterRequest {
+	string index = 1;
+}
+
+message QueryGetTxinVoterResponse {
+	TxinVoter TxinVoter = 1;
+}
+
+message QueryAllTxinVoterRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTxinVoterResponse {
+	repeated TxinVoter TxinVoter = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetTxinRequest {
+	string index = 1;
+}
+
+message QueryGetTxinResponse {
+	Txin Txin = 1;
+}
+
+message QueryAllTxinRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTxinResponse {
+	repeated Txin Txin = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -21,9 +21,9 @@ type KeyDataAddr struct {
 }
 
 type KeyData struct {
-	priv     string
-	pub      string
-	addrETH  KeyDataAddr
+	priv    string
+	pub     string
+	addrETH KeyDataAddr
 }
 
 type PubKeyTestSuite struct {
@@ -51,7 +51,6 @@ func (s *PubKeyTestSuite) SetUpSuite(_ *C) {
 				testnet: "0x970e8128ab834e8eac17ab8e3812f010678cf791",
 				mocknet: "0x970e8128ab834e8eac17ab8e3812f010678cf791",
 			},
-
 		},
 		{
 			priv: "e810f1d7d6691b4a7a73476f3543bd87d601f9a53e7faf670eac2c5b517d83bf",
@@ -104,6 +103,7 @@ func (s *PubKeyTestSuite) TestPubKey(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(pk2.Equals(pk), Equals, true)
 }
+
 //
 //func (s *PubKeyTestSuite) TestPubKeySet(c *C) {
 //	_, pubKey, _ := testdata.KeyTestPubAddr()
@@ -153,12 +153,10 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mainnet)
 
-
 		c.Assert(os.Setenv("NET", "testnet"), IsNil)
 		addrETH, err = pk.GetAddress(ETHChain)
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.testnet)
-
 
 		c.Assert(os.Setenv("NET", "mocknet"), IsNil)
 		addrETH, err = pk.GetAddress(ETHChain)

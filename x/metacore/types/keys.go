@@ -24,3 +24,11 @@ const (
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
+
+const (
+	TxinKey = "Txin-value-"
+)
+
+const (
+	TxinVoterKey = "TxinVoter-value-"
+)

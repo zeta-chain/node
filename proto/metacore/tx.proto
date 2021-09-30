@@ -2,12 +2,29 @@ syntax = "proto3";
 package MetaProtocol.metacore.metacore;
 
 // this line is used by starport scaffolding # proto/tx/import
+import "metacore/txin_voter.proto";
 
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 // Msg defines the Msg service.
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
+  rpc CreateTxinVoter(MsgCreateTxinVoter) returns (MsgCreateTxinVoterResponse);
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgCreateTxinVoter {
+  string creator = 1;
+  string index = 2;
+  string txHash = 3;
+  string sourceAsset = 4;
+  string sourceAmount = 5;
+  string mBurnt = 6;
+  string destinationAsset = 7;
+  string fromAddress = 8;
+  string toAddress = 9;
+  string blockHeight = 10;
+  string signer = 11;
+  string signature = 12;
+}
+message MsgCreateTxinVoterResponse { }
