@@ -19,7 +19,7 @@ func TestCreateTxinVoter(t *testing.T) {
 	ctx := val.ClientCtx
 	id := "0"
 
-	fields := []string{"xyz", "xyz", "xyz", "xyz", "xyz", "xyz", "xyz", "xyz", "xyz", "xyz"}
+	fields := []string{"xyz", "xyz", "123", "234", "xyz", "xyz", "xyz", "456", "xyz", "xyz"}
 	for _, tc := range []struct {
 		desc string
 		id   string

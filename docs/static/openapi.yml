@@ -19127,8 +19127,10 @@ paths:
                       type: string
                     sourceAmount:
                       type: string
+                      format: uint64
                     mBurnt:
                       type: string
+                      format: uint64
                     destinationAsset:
                       type: string
                     fromAddress:
@@ -19137,6 +19139,7 @@ paths:
                       type: string
                     blockHeight:
                       type: string
+                      format: uint64
                     signers:
                       type: array
                       items:
@@ -19258,8 +19261,10 @@ paths:
                     type: string
                   sourceAmount:
                     type: string
+                    format: uint64
                   mBurnt:
                     type: string
+                    format: uint64
                   destinationAsset:
                     type: string
                   fromAddress:
@@ -19268,6 +19273,7 @@ paths:
                     type: string
                   blockHeight:
                     type: string
+                    format: uint64
                   signers:
                     type: array
                     items:
@@ -19322,8 +19328,10 @@ paths:
                       type: string
                     sourceAmount:
                       type: string
+                      format: uint64
                     mBurnt:
                       type: string
+                      format: uint64
                     destinationAsset:
                       type: string
                     fromAddress:
@@ -19332,6 +19340,7 @@ paths:
                       type: string
                     blockHeight:
                       type: string
+                      format: uint64
                     signer:
                       type: string
                     signature:
@@ -19453,8 +19462,10 @@ paths:
                     type: string
                   sourceAmount:
                     type: string
+                    format: uint64
                   mBurnt:
                     type: string
+                    format: uint64
                   destinationAsset:
                     type: string
                   fromAddress:
@@ -19463,6 +19474,7 @@ paths:
                     type: string
                   blockHeight:
                     type: string
+                    format: uint64
                   signer:
                     type: string
                   signature:
@@ -29678,8 +29690,10 @@ definitions:
               type: string
             sourceAmount:
               type: string
+              format: uint64
             mBurnt:
               type: string
+              format: uint64
             destinationAsset:
               type: string
             fromAddress:
@@ -29688,6 +29702,7 @@ definitions:
               type: string
             blockHeight:
               type: string
+              format: uint64
             signers:
               type: array
               items:
@@ -29735,8 +29750,10 @@ definitions:
               type: string
             sourceAmount:
               type: string
+              format: uint64
             mBurnt:
               type: string
+              format: uint64
             destinationAsset:
               type: string
             fromAddress:
@@ -29745,6 +29762,7 @@ definitions:
               type: string
             blockHeight:
               type: string
+              format: uint64
             signer:
               type: string
             signature:
@@ -29790,8 +29808,10 @@ definitions:
             type: string
           sourceAmount:
             type: string
+            format: uint64
           mBurnt:
             type: string
+            format: uint64
           destinationAsset:
             type: string
           fromAddress:
@@ -29800,6 +29820,7 @@ definitions:
             type: string
           blockHeight:
             type: string
+            format: uint64
           signers:
             type: array
             items:
@@ -29820,8 +29841,10 @@ definitions:
             type: string
           sourceAmount:
             type: string
+            format: uint64
           mBurnt:
             type: string
+            format: uint64
           destinationAsset:
             type: string
           fromAddress:
@@ -29830,6 +29853,7 @@ definitions:
             type: string
           blockHeight:
             type: string
+            format: uint64
           signer:
             type: string
           signature:
@@ -29847,8 +29871,10 @@ definitions:
         type: string
       sourceAmount:
         type: string
+        format: uint64
       mBurnt:
         type: string
+        format: uint64
       destinationAsset:
         type: string
       fromAddress:
@@ -29857,6 +29883,7 @@ definitions:
         type: string
       blockHeight:
         type: string
+        format: uint64
       signers:
         type: array
         items:
@@ -29874,8 +29901,10 @@ definitions:
         type: string
       sourceAmount:
         type: string
+        format: uint64
       mBurnt:
         type: string
+        format: uint64
       destinationAsset:
         type: string
       fromAddress:
@@ -29884,6 +29913,7 @@ definitions:
         type: string
       blockHeight:
         type: string
+        format: uint64
       signer:
         type: string
       signature:

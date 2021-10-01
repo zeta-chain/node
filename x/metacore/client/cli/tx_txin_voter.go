@@ -26,11 +26,11 @@ func CmdCreateTxinVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsSourceAmount, err := cast.ToStringE(args[3])
+			argsSourceAmount, err := cast.ToUint64E(args[3])
 			if err != nil {
 				return err
 			}
-			argsMBurnt, err := cast.ToStringE(args[4])
+			argsMBurnt, err := cast.ToUint64E(args[4])
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ func CmdCreateTxinVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsBlockHeight, err := cast.ToStringE(args[8])
+			argsBlockHeight, err := cast.ToUint64E(args[8])
 			if err != nil {
 				return err
 			}
