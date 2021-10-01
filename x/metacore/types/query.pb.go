@@ -30,6 +30,86 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // this line is used by starport scaffolding # 3
+type QueryLastMetaHeightRequest struct {
+}
+
+func (m *QueryLastMetaHeightRequest) Reset()         { *m = QueryLastMetaHeightRequest{} }
+func (m *QueryLastMetaHeightRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryLastMetaHeightRequest) ProtoMessage()    {}
+func (*QueryLastMetaHeightRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc2a1267d2da6377, []int{0}
+}
+func (m *QueryLastMetaHeightRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastMetaHeightRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastMetaHeightRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastMetaHeightRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastMetaHeightRequest.Merge(m, src)
+}
+func (m *QueryLastMetaHeightRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastMetaHeightRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastMetaHeightRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastMetaHeightRequest proto.InternalMessageInfo
+
+type QueryLastMetaHeightResponse struct {
+	Height uint64 `protobuf:"varint,1,opt,name=Height,proto3" json:"Height,omitempty"`
+}
+
+func (m *QueryLastMetaHeightResponse) Reset()         { *m = QueryLastMetaHeightResponse{} }
+func (m *QueryLastMetaHeightResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryLastMetaHeightResponse) ProtoMessage()    {}
+func (*QueryLastMetaHeightResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dc2a1267d2da6377, []int{1}
+}
+func (m *QueryLastMetaHeightResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryLastMetaHeightResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryLastMetaHeightResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryLastMetaHeightResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryLastMetaHeightResponse.Merge(m, src)
+}
+func (m *QueryLastMetaHeightResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryLastMetaHeightResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryLastMetaHeightResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryLastMetaHeightResponse proto.InternalMessageInfo
+
+func (m *QueryLastMetaHeightResponse) GetHeight() uint64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
 type QueryGetTxinVoterRequest struct {
 	Index string `protobuf:"bytes,1,opt,name=index,proto3" json:"index,omitempty"`
 }
@@ -38,7 +118,7 @@ func (m *QueryGetTxinVoterRequest) Reset()         { *m = QueryGetTxinVoterReque
 func (m *QueryGetTxinVoterRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetTxinVoterRequest) ProtoMessage()    {}
 func (*QueryGetTxinVoterRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{0}
+	return fileDescriptor_dc2a1267d2da6377, []int{2}
 }
 func (m *QueryGetTxinVoterRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -82,7 +162,7 @@ func (m *QueryGetTxinVoterResponse) Reset()         { *m = QueryGetTxinVoterResp
 func (m *QueryGetTxinVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetTxinVoterResponse) ProtoMessage()    {}
 func (*QueryGetTxinVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{1}
+	return fileDescriptor_dc2a1267d2da6377, []int{3}
 }
 func (m *QueryGetTxinVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -126,7 +206,7 @@ func (m *QueryAllTxinVoterRequest) Reset()         { *m = QueryAllTxinVoterReque
 func (m *QueryAllTxinVoterRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryAllTxinVoterRequest) ProtoMessage()    {}
 func (*QueryAllTxinVoterRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{2}
+	return fileDescriptor_dc2a1267d2da6377, []int{4}
 }
 func (m *QueryAllTxinVoterRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -171,7 +251,7 @@ func (m *QueryAllTxinVoterResponse) Reset()         { *m = QueryAllTxinVoterResp
 func (m *QueryAllTxinVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryAllTxinVoterResponse) ProtoMessage()    {}
 func (*QueryAllTxinVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{3}
+	return fileDescriptor_dc2a1267d2da6377, []int{5}
 }
 func (m *QueryAllTxinVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -222,7 +302,7 @@ func (m *QueryGetTxinRequest) Reset()         { *m = QueryGetTxinRequest{} }
 func (m *QueryGetTxinRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetTxinRequest) ProtoMessage()    {}
 func (*QueryGetTxinRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{4}
+	return fileDescriptor_dc2a1267d2da6377, []int{6}
 }
 func (m *QueryGetTxinRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -266,7 +346,7 @@ func (m *QueryGetTxinResponse) Reset()         { *m = QueryGetTxinResponse{} }
 func (m *QueryGetTxinResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetTxinResponse) ProtoMessage()    {}
 func (*QueryGetTxinResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{5}
+	return fileDescriptor_dc2a1267d2da6377, []int{7}
 }
 func (m *QueryGetTxinResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -310,7 +390,7 @@ func (m *QueryAllTxinRequest) Reset()         { *m = QueryAllTxinRequest{} }
 func (m *QueryAllTxinRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryAllTxinRequest) ProtoMessage()    {}
 func (*QueryAllTxinRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{6}
+	return fileDescriptor_dc2a1267d2da6377, []int{8}
 }
 func (m *QueryAllTxinRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -355,7 +435,7 @@ func (m *QueryAllTxinResponse) Reset()         { *m = QueryAllTxinResponse{} }
 func (m *QueryAllTxinResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryAllTxinResponse) ProtoMessage()    {}
 func (*QueryAllTxinResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dc2a1267d2da6377, []int{7}
+	return fileDescriptor_dc2a1267d2da6377, []int{9}
 }
 func (m *QueryAllTxinResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -399,6 +479,8 @@ func (m *QueryAllTxinResponse) GetPagination() *query.PageResponse {
 }
 
 func init() {
+	proto.RegisterType((*QueryLastMetaHeightRequest)(nil), "MetaProtocol.metacore.metacore.QueryLastMetaHeightRequest")
+	proto.RegisterType((*QueryLastMetaHeightResponse)(nil), "MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse")
 	proto.RegisterType((*QueryGetTxinVoterRequest)(nil), "MetaProtocol.metacore.metacore.QueryGetTxinVoterRequest")
 	proto.RegisterType((*QueryGetTxinVoterResponse)(nil), "MetaProtocol.metacore.metacore.QueryGetTxinVoterResponse")
 	proto.RegisterType((*QueryAllTxinVoterRequest)(nil), "MetaProtocol.metacore.metacore.QueryAllTxinVoterRequest")
@@ -412,41 +494,45 @@ func init() {
 func init() { proto.RegisterFile("metacore/query.proto", fileDescriptor_dc2a1267d2da6377) }
 
 var fileDescriptor_dc2a1267d2da6377 = []byte{
-	// 533 bytes of a gzipped FileDescriptorProto
+	// 598 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x3d, 0x6f, 0xd3, 0x40,
-	0x1c, 0xc6, 0x73, 0x2d, 0x01, 0xf5, 0x60, 0xba, 0x66, 0x68, 0x23, 0x64, 0x21, 0x0b, 0x28, 0x14,
-	0x72, 0x47, 0x9d, 0x22, 0x15, 0xb6, 0x32, 0x90, 0x05, 0xa4, 0x10, 0x21, 0x06, 0x24, 0x84, 0xce,
-	0xe9, 0xc9, 0x58, 0x72, 0xee, 0xdc, 0xdc, 0xa5, 0x4a, 0x85, 0x58, 0xf8, 0x04, 0x48, 0x4c, 0xcc,
-	0x2c, 0x2c, 0xcc, 0x2c, 0x7c, 0x00, 0xc6, 0x22, 0x16, 0x46, 0x94, 0xf0, 0x41, 0xd0, 0xbd, 0xc4,
-	0x89, 0x69, 0xda, 0xda, 0x55, 0x36, 0xbf, 0xdc, 0xf3, 0xdc, 0xef, 0x79, 0x7c, 0x7f, 0x19, 0xd6,
-	0x7a, 0x4c, 0xd1, 0xae, 0xe8, 0x33, 0xb2, 0x3f, 0x60, 0xfd, 0x43, 0x9c, 0xf6, 0x85, 0x12, 0xc8,
-	0x7b, 0xca, 0x14, 0x6d, 0xeb, 0xcb, 0xae, 0x48, 0xf0, 0x64, 0x49, 0x76, 0x51, 0xbf, 0x1a, 0x09,
-	0x11, 0x25, 0x8c, 0xd0, 0x34, 0x26, 0x94, 0x73, 0xa1, 0xa8, 0x8a, 0x05, 0x97, 0x56, 0x5d, 0xdf,
-	0xec, 0x0a, 0xd9, 0x13, 0x92, 0x84, 0x54, 0x3a, 0x5b, 0x72, 0xb0, 0x15, 0x32, 0x45, 0xb7, 0x48,
-	0x4a, 0xa3, 0x98, 0x9b, 0xc5, 0x6e, 0xed, 0x7a, 0xb6, 0xbf, 0x1a, 0xc6, 0xfc, 0xf5, 0x81, 0x50,
-	0xac, 0xef, 0x5e, 0xad, 0xe6, 0x5e, 0xd9, 0x87, 0xfe, 0x3d, 0xb8, 0xf6, 0x4c, 0x3b, 0xb6, 0x98,
-	0x7a, 0x3e, 0x8c, 0xf9, 0x0b, 0xbd, 0xbe, 0xc3, 0xf6, 0x07, 0x4c, 0x2a, 0x54, 0x83, 0xd5, 0x98,
-	0xef, 0xb1, 0xe1, 0x1a, 0xb8, 0x06, 0x6e, 0xad, 0x74, 0xec, 0x8d, 0xbf, 0x07, 0xd7, 0xe7, 0x28,
-	0x64, 0x2a, 0xb8, 0x64, 0xa8, 0x05, 0x57, 0xb2, 0x87, 0x46, 0x76, 0x39, 0xb8, 0x8d, 0x4f, 0x0f,
-	0x8f, 0xa7, 0x2e, 0x53, 0xad, 0x1f, 0x3a, 0xae, 0xdd, 0x24, 0x39, 0xc6, 0xf5, 0x18, 0xc2, 0x69,
-	0x6e, 0xb7, 0xcb, 0x4d, 0x6c, 0x4b, 0xc2, 0xba, 0x24, 0x6c, 0xbb, 0x77, 0x25, 0xe1, 0x36, 0x8d,
-	0x98, 0xd3, 0x76, 0x66, 0x94, 0xfe, 0x57, 0xe0, 0xa2, 0xe4, 0x37, 0x99, 0x1f, 0x65, 0xf9, 0xbc,
-	0x51, 0x50, 0x2b, 0x87, 0xbb, 0x64, 0x70, 0x37, 0xce, 0xc4, 0xb5, 0x14, 0x39, 0xde, 0x3b, 0x70,
-	0x75, 0xb6, 0xf9, 0xd3, 0x3f, 0x53, 0x1b, 0xd6, 0xf2, 0x8b, 0x5d, 0xac, 0x1d, 0x78, 0x41, 0xdf,
-	0xbb, 0xda, 0xae, 0x17, 0x49, 0xd4, 0x31, 0x0a, 0xff, 0x95, 0xdb, 0xde, 0xb5, 0xb5, 0xe8, 0xaf,
-	0xf1, 0x09, 0x38, 0xe2, 0xcc, 0xff, 0x18, 0xf1, 0x72, 0x39, 0xe2, 0x85, 0x35, 0x1f, 0xfc, 0xac,
-	0xc2, 0xaa, 0x61, 0x43, 0xdf, 0xc1, 0xcc, 0xb1, 0x40, 0x3b, 0x67, 0xc1, 0x9c, 0x34, 0x5b, 0xf5,
-	0x07, 0xe7, 0x50, 0x5a, 0x30, 0xff, 0xe1, 0xfb, 0x5f, 0x7f, 0x3f, 0x2e, 0x6d, 0xa3, 0x80, 0x68,
-	0x8b, 0xc6, 0xc4, 0x83, 0x64, 0xe3, 0x9d, 0x9b, 0x73, 0xa3, 0x25, 0x6f, 0xcd, 0xa1, 0x78, 0x87,
-	0xbe, 0x01, 0x78, 0x25, 0x73, 0xdc, 0x4d, 0x92, 0x82, 0x09, 0xe6, 0x4c, 0x61, 0xc1, 0x04, 0xf3,
-	0x46, 0xcb, 0x0f, 0x4c, 0x82, 0xbb, 0x68, 0xb3, 0x78, 0x02, 0xf4, 0x05, 0xd8, 0x63, 0x80, 0x9a,
-	0x65, 0x9a, 0x9b, 0xc0, 0x6e, 0x97, 0x13, 0x39, 0xce, 0xfb, 0x86, 0x93, 0xa0, 0x46, 0x21, 0xce,
-	0xac, 0xe4, 0xcf, 0x00, 0x5e, 0xd2, 0x3e, 0xba, 0xdf, 0x66, 0x99, 0x96, 0xca, 0xd1, 0xfe, 0x37,
-	0x27, 0x7e, 0xc3, 0xd0, 0x6e, 0xa0, 0x1b, 0x85, 0x68, 0x1f, 0x3d, 0xf9, 0x31, 0xf2, 0xc0, 0xd1,
-	0xc8, 0x03, 0x7f, 0x46, 0x1e, 0xf8, 0x30, 0xf6, 0x2a, 0x47, 0x63, 0xaf, 0xf2, 0x7b, 0xec, 0x55,
-	0x5e, 0x06, 0x51, 0xac, 0xde, 0x0c, 0x42, 0xdc, 0x15, 0xbd, 0x93, 0xac, 0x86, 0x33, 0x66, 0x87,
-	0x29, 0x93, 0xe1, 0x45, 0xf3, 0x3b, 0x69, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x4d, 0xc4, 0x34,
-	0x02, 0x00, 0x07, 0x00, 0x00,
+	0x1c, 0xc6, 0x73, 0x7d, 0x55, 0x0f, 0xc4, 0x70, 0x8d, 0x50, 0x6b, 0x2a, 0x0b, 0x9d, 0x80, 0x42,
+	0x21, 0x3e, 0xe2, 0xb4, 0xa2, 0x94, 0xa9, 0x0c, 0x84, 0xa1, 0x48, 0xc1, 0x42, 0x0c, 0x48, 0x08,
+	0x9d, 0xd3, 0x93, 0x6b, 0xc9, 0xf1, 0xb9, 0xf1, 0xa5, 0x4a, 0x85, 0x58, 0xf8, 0x04, 0x48, 0x48,
+	0x48, 0xcc, 0x2c, 0x2c, 0xcc, 0x2c, 0x4c, 0x4c, 0x8c, 0x95, 0x58, 0x18, 0x51, 0xc2, 0x07, 0x41,
+	0x3e, 0x5f, 0x9c, 0xb8, 0x75, 0x1b, 0x3b, 0xca, 0xe6, 0x7b, 0x79, 0x9e, 0xfb, 0xfd, 0x9f, 0x7b,
+	0x31, 0x2c, 0xb7, 0x98, 0xa0, 0x4d, 0xde, 0x66, 0xe4, 0xb0, 0xc3, 0xda, 0xc7, 0x46, 0xd0, 0xe6,
+	0x82, 0x23, 0xfd, 0x19, 0x13, 0xb4, 0x11, 0x7d, 0x36, 0xb9, 0x67, 0x0c, 0xa6, 0x24, 0x1f, 0xda,
+	0x9a, 0xc3, 0xb9, 0xe3, 0x31, 0x42, 0x03, 0x97, 0x50, 0xdf, 0xe7, 0x82, 0x0a, 0x97, 0xfb, 0x61,
+	0xac, 0xd6, 0x36, 0x9a, 0x3c, 0x6c, 0xf1, 0x90, 0xd8, 0x34, 0x54, 0xb6, 0xe4, 0xa8, 0x6a, 0x33,
+	0x41, 0xab, 0x24, 0xa0, 0x8e, 0xeb, 0xcb, 0xc9, 0x6a, 0xee, 0x6a, 0xb2, 0xbe, 0xe8, 0xba, 0xfe,
+	0x9b, 0x23, 0x2e, 0x58, 0x5b, 0x0d, 0x2d, 0xa7, 0x86, 0xe2, 0x4e, 0xbc, 0x06, 0xb5, 0xe7, 0x91,
+	0xe3, 0x1e, 0x0d, 0x45, 0x04, 0xf9, 0x94, 0xb9, 0xce, 0x81, 0xb0, 0xd8, 0x61, 0x87, 0x85, 0x02,
+	0x6f, 0xc1, 0x6b, 0x99, 0xa3, 0x61, 0xc0, 0xfd, 0x90, 0xa1, 0xab, 0x70, 0x21, 0xee, 0x59, 0x01,
+	0xd7, 0xc1, 0xed, 0x39, 0x4b, 0xb5, 0xf0, 0x7d, 0xb8, 0x22, 0x65, 0x75, 0x26, 0x5e, 0x74, 0x5d,
+	0xff, 0x65, 0x04, 0xa1, 0x2c, 0x51, 0x19, 0xce, 0xbb, 0xfe, 0x3e, 0xeb, 0x4a, 0xc9, 0x92, 0x15,
+	0x37, 0xf0, 0x3e, 0x5c, 0xcd, 0x50, 0xa8, 0x65, 0xea, 0x70, 0x29, 0xe9, 0x94, 0xb2, 0x4b, 0xe6,
+	0x1d, 0xe3, 0xe2, 0x44, 0x8d, 0xa1, 0xcb, 0x50, 0x8b, 0x6d, 0xc5, 0xb5, 0xeb, 0x79, 0x67, 0xb8,
+	0x9e, 0x40, 0x38, 0x0c, 0x53, 0xad, 0x72, 0xcb, 0x88, 0x93, 0x37, 0xa2, 0xe4, 0x8d, 0x78, 0x43,
+	0x55, 0xf2, 0x46, 0x83, 0x3a, 0x4c, 0x69, 0xad, 0x11, 0x25, 0xfe, 0x06, 0x54, 0x29, 0xe9, 0x45,
+	0xb2, 0x4b, 0x99, 0x9d, 0xb4, 0x14, 0x54, 0x4f, 0xe1, 0xce, 0x48, 0xdc, 0xf5, 0xb1, 0xb8, 0x31,
+	0x45, 0x8a, 0xf7, 0x2e, 0x5c, 0x1e, 0x4d, 0xfe, 0xe2, 0x6d, 0x6a, 0xc0, 0x72, 0x7a, 0xb2, 0x2a,
+	0x6b, 0x1b, 0xce, 0x45, 0x6d, 0x15, 0xdb, 0x8d, 0x3c, 0x15, 0x59, 0x52, 0x81, 0x5f, 0xab, 0xe5,
+	0x55, 0x5a, 0xd3, 0xde, 0x8d, 0xcf, 0x40, 0x11, 0x27, 0xfe, 0x67, 0x88, 0x67, 0x8b, 0x11, 0x4f,
+	0x2d, 0x79, 0xf3, 0xd3, 0x22, 0x9c, 0x97, 0x6c, 0xe8, 0x27, 0x80, 0x57, 0xd2, 0x57, 0x0c, 0xed,
+	0x8c, 0x23, 0x3a, 0xff, 0xd6, 0x6a, 0x8f, 0x26, 0xd2, 0xc6, 0x84, 0xf8, 0xc1, 0xfb, 0xdf, 0xff,
+	0x3e, 0xce, 0x54, 0x11, 0x21, 0xd1, 0x60, 0x65, 0xe0, 0x42, 0x92, 0xc7, 0x23, 0xf9, 0xf0, 0xd2,
+	0xc4, 0x3f, 0xc0, 0xc8, 0xd9, 0x46, 0xdb, 0xb9, 0x18, 0x32, 0x1e, 0x08, 0xed, 0xe1, 0x04, 0x4a,
+	0xc5, 0xbe, 0x23, 0xd9, 0x37, 0x91, 0x39, 0x96, 0x5d, 0x0c, 0xb4, 0xe4, 0xad, 0x3c, 0xd9, 0xef,
+	0xd0, 0x77, 0x00, 0x2f, 0x27, 0x8e, 0xbb, 0x9e, 0x97, 0xb3, 0x82, 0x8c, 0xa7, 0x24, 0x67, 0x05,
+	0x59, 0xef, 0x03, 0x36, 0x65, 0x05, 0xf7, 0xd0, 0x46, 0xfe, 0x0a, 0xd0, 0x57, 0x10, 0x9f, 0x65,
+	0x54, 0x2b, 0x92, 0xdc, 0x00, 0x76, 0xb3, 0x98, 0x48, 0x71, 0x6e, 0x49, 0x4e, 0x82, 0x2a, 0xb9,
+	0x38, 0x93, 0x90, 0xbf, 0x00, 0xb8, 0x18, 0xf9, 0x44, 0xf9, 0xd6, 0x8a, 0xa4, 0x54, 0x8c, 0xf6,
+	0xd4, 0x65, 0xc7, 0x15, 0x49, 0xbb, 0x8e, 0x6e, 0xe6, 0xa2, 0x7d, 0xbc, 0xf7, 0xab, 0xa7, 0x83,
+	0x93, 0x9e, 0x0e, 0xfe, 0xf6, 0x74, 0xf0, 0xa1, 0xaf, 0x97, 0x4e, 0xfa, 0x7a, 0xe9, 0x4f, 0x5f,
+	0x2f, 0xbd, 0x32, 0x1d, 0x57, 0x1c, 0x74, 0x6c, 0xa3, 0xc9, 0x5b, 0xe7, 0x59, 0x75, 0x47, 0xcc,
+	0x8e, 0x03, 0x16, 0xda, 0x0b, 0xf2, 0x47, 0x5b, 0xfb, 0x1f, 0x00, 0x00, 0xff, 0xff, 0xbf, 0x77,
+	0x1c, 0x17, 0x1a, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -461,6 +547,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Queries a list of lastMetaHeight items.
+	LastMetaHeight(ctx context.Context, in *QueryLastMetaHeightRequest, opts ...grpc.CallOption) (*QueryLastMetaHeightResponse, error)
 	// Queries a txinVoter by index.
 	TxinVoter(ctx context.Context, in *QueryGetTxinVoterRequest, opts ...grpc.CallOption) (*QueryGetTxinVoterResponse, error)
 	// Queries a list of txinVoter items.
@@ -477,6 +565,15 @@ type queryClient struct {
 
 func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
+}
+
+func (c *queryClient) LastMetaHeight(ctx context.Context, in *QueryLastMetaHeightRequest, opts ...grpc.CallOption) (*QueryLastMetaHeightResponse, error) {
+	out := new(QueryLastMetaHeightResponse)
+	err := c.cc.Invoke(ctx, "/MetaProtocol.metacore.metacore.Query/LastMetaHeight", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *queryClient) TxinVoter(ctx context.Context, in *QueryGetTxinVoterRequest, opts ...grpc.CallOption) (*QueryGetTxinVoterResponse, error) {
@@ -517,6 +614,8 @@ func (c *queryClient) TxinAll(ctx context.Context, in *QueryAllTxinRequest, opts
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Queries a list of lastMetaHeight items.
+	LastMetaHeight(context.Context, *QueryLastMetaHeightRequest) (*QueryLastMetaHeightResponse, error)
 	// Queries a txinVoter by index.
 	TxinVoter(context.Context, *QueryGetTxinVoterRequest) (*QueryGetTxinVoterResponse, error)
 	// Queries a list of txinVoter items.
@@ -531,6 +630,9 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) LastMetaHeight(ctx context.Context, req *QueryLastMetaHeightRequest) (*QueryLastMetaHeightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastMetaHeight not implemented")
+}
 func (*UnimplementedQueryServer) TxinVoter(ctx context.Context, req *QueryGetTxinVoterRequest) (*QueryGetTxinVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TxinVoter not implemented")
 }
@@ -546,6 +648,24 @@ func (*UnimplementedQueryServer) TxinAll(ctx context.Context, req *QueryAllTxinR
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_LastMetaHeight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLastMetaHeightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LastMetaHeight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MetaProtocol.metacore.metacore.Query/LastMetaHeight",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LastMetaHeight(ctx, req.(*QueryLastMetaHeightRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_TxinVoter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -625,6 +745,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "LastMetaHeight",
+			Handler:    _Query_LastMetaHeight_Handler,
+		},
+		{
 			MethodName: "TxinVoter",
 			Handler:    _Query_TxinVoter_Handler,
 		},
@@ -643,6 +767,57 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "metacore/query.proto",
+}
+
+func (m *QueryLastMetaHeightRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastMetaHeightRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastMetaHeightRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryLastMetaHeightResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryLastMetaHeightResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryLastMetaHeightResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Height != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryGetTxinVoterRequest) Marshal() (dAtA []byte, err error) {
@@ -954,6 +1129,27 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryLastMetaHeightRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryLastMetaHeightResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Height != 0 {
+		n += 1 + sovQuery(uint64(m.Height))
+	}
+	return n
+}
+
 func (m *QueryGetTxinVoterRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1075,6 +1271,125 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryLastMetaHeightRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastMetaHeightRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastMetaHeightRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryLastMetaHeightResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryLastMetaHeightResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryLastMetaHeightResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryGetTxinVoterRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

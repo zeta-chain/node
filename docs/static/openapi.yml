@@ -19102,6 +19102,39 @@ paths:
           format: uint64
       tags:
         - Query
+  /Meta-Protocol/metacore/metacore/lastMetaHeight:
+    get:
+      summary: Queries a list of lastMetaHeight items.
+      operationId: MetaProtocolMetacoreMetacoreLastMetaHeight
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Height:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /Meta-Protocol/metacore/metacore/txin:
     get:
       summary: Queries a list of txin items.
@@ -29858,6 +29891,12 @@ definitions:
             type: string
           signature:
             type: string
+  MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
+    type: object
+    properties:
+      Height:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.Txin:
     type: object
     properties:

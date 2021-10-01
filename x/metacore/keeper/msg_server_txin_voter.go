@@ -39,4 +39,3 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 	)
 	return &types.MsgCreateTxinVoterResponse{}, nil
 }
-

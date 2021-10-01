@@ -13,6 +13,12 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 service Query {
     // this line is used by starport scaffolding # 2
 
+	// Queries a list of lastMetaHeight items.
+	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/lastMetaHeight";
+	}
+
+
 	// Queries a txinVoter by index.
 	rpc TxinVoter(QueryGetTxinVoterRequest) returns (QueryGetTxinVoterResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txinVoter/{index}";
@@ -37,6 +43,13 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryLastMetaHeightRequest {
+}
+
+message QueryLastMetaHeightResponse {
+	uint64 Height = 1;
+}
+
 message QueryGetTxinVoterRequest {
 	string index = 1;
 }
