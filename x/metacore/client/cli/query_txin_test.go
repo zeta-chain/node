@@ -25,7 +25,7 @@ func networkWithTxinObjects(t *testing.T, n int) (*network.Network, []*types.Txi
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TxinList = append(state.TxinList, &types.Txin{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{"A","B"}})
+		state.TxinList = append(state.TxinList, &types.Txin{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{"A", "B"}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
