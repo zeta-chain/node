@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"testing"
 	"time"
 
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -19,7 +18,6 @@ import (
 
 type KeysSuite struct{}
 
-func TestPackage(t *testing.T) { TestingT(t) }
 
 var _ = Suite(&KeysSuite{})
 
