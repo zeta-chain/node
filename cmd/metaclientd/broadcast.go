@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 )
 
-// Broadcast Broadcasts tx to metachain
+// Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
@@ -29,7 +29,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	}
 	b.logger.Info().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
-	flags := flag.NewFlagSet("metachain", 0)
+	flags := flag.NewFlagSet("metacore", 0)
 
 	ctx := b.GetContext()
 	factory := clienttx.NewFactoryCLI(ctx, flags)
@@ -60,8 +60,15 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	}
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
 	if commit.Code > 0 {
+		if commit.Code == 32 {
+			// bad sequence number, fetch new one
+			_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
+			if seqNum > 0 {
+				b.seqNumber = seqNum
+			}
+		}
 		b.logger.Info().Msgf("messages: %+v", msgs)
-		return "", fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
+		return commit.TxHash, fmt.Errorf("fail to broadcast to THORChain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 	b.logger.Info().Msgf("Received a TxHash of %v from the metachain", commit.TxHash)
 
@@ -76,7 +83,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 func (b *MetachainBridge) GetContext() client.Context {
 	ctx := client.Context{}
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	ctx = ctx.WithChainID("metachain")
+	ctx = ctx.WithChainID("metacore")
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
 	ctx = ctx.WithFromAddress(b.keys.GetSignerInfo().GetAddress())
@@ -93,7 +100,7 @@ func (b *MetachainBridge) GetContext() client.Context {
 	if !strings.HasPrefix(b.cfg.ChainHost, "http") {
 		remote = fmt.Sprintf("tcp://%s", remote)
 	}
-	fmt.Println("ctx.remote ", remote)
+	//fmt.Println("ctx.remote ", remote)
 
 	ctx = ctx.WithNodeURI(remote)
 	client, err := rpchttp.New(remote, "/websocket")

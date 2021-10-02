@@ -60,7 +60,7 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-	fmt.Println("signer: ", signerName)
+	//fmt.Println("signer: ", signerName)
 	si, err := kb.Key(signerName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w", signerName, err)
@@ -78,7 +78,7 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 		}
 		cliDir = filepath.Join(usr.HomeDir, metachainCliFolderPath)
 	}
-	fmt.Println("getKeybase: ", sdk.KeyringServiceName(), cliDir)
+	//fmt.Println("getKeybase: ", sdk.KeyringServiceName(), cliDir)
 	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
 }
 

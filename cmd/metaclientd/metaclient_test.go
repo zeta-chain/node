@@ -1,15 +1,17 @@
+// +build integration
+
+// this is integration test; must be run when a chain is running:
+// starport chain serve
+
 package metaclientd
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/Meta-Protocol/metacore/cmd/metaclientd/types"
 	"github.com/rs/zerolog/log"
+	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
 	"testing"
-
-	. "gopkg.in/check.v1"
+	"time"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -21,12 +23,15 @@ type MySuite struct {
 var _ = Suite(&MySuite{})
 
 func (s *MySuite) SetUpTest(c *C) {
+	SetupConfigForTest() // setup meta-prefix
+
 	c.Logf("Settting up test...")
 	homeDir, err := os.UserHomeDir()
 	c.Logf("user home dir: %s", homeDir)
-	//chainHomeFoler := homeDir + "/.meta-chain"
 	chainHomeFoler := filepath.Join(homeDir, ".metacore")
 	c.Logf("chain home dir: %s", chainHomeFoler)
+
+	// alice is the default user created by Starport chain serve
 	signerName := "alice"
 	signerPass := "password"
 	kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
@@ -35,10 +40,10 @@ func (s *MySuite) SetUpTest(c *C) {
 	}
 
 	k := NewKeysWithKeybase(kb, signerName, signerPass)
-	log.Info().Msgf("keybase: %s", k.GetSignerInfo().GetAddress())
+	//log.Info().Msgf("keybase: %s", k.GetSignerInfo().GetAddress())
 
 	chainIP := "127.0.0.1"
-	bridge, err := NewMetachainBridge(k, chainIP)
+	bridge, err := NewMetachainBridge(k, chainIP, "alice")
 	if err != nil {
 		c.Fail()
 	}
@@ -53,90 +58,38 @@ func (s *MySuite) TestGetBlockHeight(c *C) {
 
 func (s *MySuite) TestGetAccountNumberAndSeuqeuence(c *C) {
 	an, as, err := s.bridge.GetAccountNumberAndSequenceNumber()
-	c.Logf("acc number %d acc sequence %d err %w", an, as, err)
+	c.Assert(err, IsNil)
+	c.Logf("acc number %d acc sequence %d", an, as)
 }
 
-//
-//func (s *MySuite) Test1(c *C) {
-//	b := s.bridge
-//	//alice_address, err := sdk.AccAddressFromBech32("cosmos1svjyqzr90s28njlfuuf4hr7swxvr4gh5v9ytxc")
-//	address := b.keys.GetSignerInfo().GetAddress()
-//
-//	bankClient := banktypes.NewQueryClient(b.grpcConn)
-//	bankRes, err := bankClient.AllBalances(
-//		context.Background(),
-//		&banktypes.QueryAllBalancesRequest{Address: address.String()},
-//	)
-//	if err != nil {
-//		c.Errorf("fail to get balance : %s", err)
-//	}
-//	// Prints the account balance
-//	c.Log(bankRes.Balances)
-//}
 
-func (s *MySuite) TestSequenceNumber(c *C) {
+func (s *MySuite) TestObservedTxIn(c *C) {
 	b := s.bridge
-	path := fmt.Sprintf("%s/%s", AuthAccountEndpoint, b.GetKeys().GetSignerInfo().GetAddress())
+	//err := b.PostTxIn("ETH.ETH", 2, 4, "ETH.BSC", "0xdeadbeef", "0x1234", 2345)
+	metaHash, err := b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
+		time.Now().String(),  12345, "mysignature")
 
-	body, _, err := b.GetWithPath(path)
-	if err != nil {
-		//return 0, 0, fmt.Errorf("failed to get auth accounts: %w", err)
-		c.Errorf("failed to get auth accounts: %s", err)
-	}
+	c.Assert(err, IsNil)
+	log.Info().Msgf("PostTxIn metaHash %s", metaHash)
 
-	var resp types.AccountResp
-	if err := json.Unmarshal(body, &resp); err != nil {
-		//return 0, 0, fmt.Errorf("failed to unmarshal account resp: %w", err)
-		c.Errorf("failed to unmarshal account resp: %s", err)
-	}
+	timer1 := time.NewTimer(500 * time.Millisecond)
+	<-timer1.C
 
-	c.Logf("acct # %d, seq # %d\n", resp.Result.Value.AccountNumber, resp.Result.Value.Sequence)
+	metaHash, err = b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
+		time.Now().String(),  12345, "mysignature")
+	c.Assert(err, IsNil)
+	log.Info().Msgf("Second PostTxIn metaHash %s", metaHash)
+	//err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)
+	//c.Assert(err, IsNil)
 
-	//return acc.AccountNumber, acc.Sequence, nil
+	//timer1 := time.NewTimer(6 * time.Second)
+	//<-timer1.C
+	//
+	//chain, _ := common.NewChain("ETH")
+	//_, err = s.bridge.GetLastBlockObserved(chain)
+	//c.Assert(err, IsNil)
 }
 
-//
-//func (s *MySuite) Test3(c *C) {
-//	b := s.bridge
-//	address := b.keys.GetSignerInfo().GetAddress()
-//
-//	authClient := authtypes.NewQueryClient(b.grpcConn)
-//	accRes, err := authClient.Account(
-//		context.TODO(),
-//		&authtypes.QueryAccountRequest{Address: address.String()},
-//	)
-//	if err != nil {
-//		fmt.Printf("fail to get acct : %s", err)
-//	}
-//	// Prints the account balance
-//	fmt.Println(accRes.Account.GetCachedValue())
-//}
-
-func (s *MySuite) TestBroadcast(c *C) {
-	//creator := s.bridge.keys.GetSignerInfo().GetAddress()
-	//msg := metatypes.NewMsgCreateTxin(creator.String(), "1", "2", "3",
-	//	"4", "5", "8", 123)
-	//_, err := s.bridge.Broadcast(msg)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-}
-
-//func (s *MySuite) TestObservedTxIn(c *C) {
-//	b := s.bridge
-//	err := b.PostTxIn("ETH.ETH", 2, 4, "ETH.BSC", "0xdeadbeef", "0x1234", 2345)
-//	c.Assert(err, IsNil)
-//	err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)
-//	c.Assert(err, IsNil)
-//
-//	timer1 := time.NewTimer(6 * time.Second)
-//	<-timer1.C
-//
-//	chain, _ := common.NewChain("ETH")
-//	_, err = s.bridge.GetLastBlockObserved(chain)
-//	c.Assert(err, IsNil)
-//}
-//
 //func (s *MySuite) TestTxoutObserve(c *C) {
 //	_, err := s.bridge.GetMetachainTxout()
 //	c.Assert(err, IsNil)
