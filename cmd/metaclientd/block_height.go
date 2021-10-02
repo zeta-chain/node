@@ -7,7 +7,7 @@ import (
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 )
 
-// GetBlockHeight returns the current height for thorchain blocks
+// GetBlockHeight returns the current height for metachain blocks
 func (b *MetachainBridge) GetBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	height, err := client.LastMetaHeight(

@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	// folder name for thorchain thorcli
 	metachainCliFolderPath = `.meta-chaind`
 )
 

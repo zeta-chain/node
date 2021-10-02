@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 )
 
-// Broadcast Broadcasts tx to thorchain
+// Broadcast Broadcasts tx to metachain
 func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
@@ -63,7 +63,6 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 		b.logger.Info().Msgf("messages: %+v", msgs)
 		return "", fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
-	//b.m.GetCounter(metrics.TxToThorchain).Inc()
 	b.logger.Info().Msgf("Received a TxHash of %v from the metachain", commit.TxHash)
 
 	// increment seqNum
