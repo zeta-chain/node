@@ -123,7 +123,7 @@ func (b *MetachainBridge) getMetachainURL(path string) string {
 }
 
 //
-// getAccountNumberAndSequenceNumber returns account and Sequence number required to post into thorchain
+// GetAccountNumberAndSequenceNumber returns account and Sequence number required to post into metachain
 func (b *MetachainBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
 
 	path := fmt.Sprintf("%s/%s", AuthAccountEndpoint, b.keys.GetSignerInfo().GetAddress())
@@ -143,11 +143,11 @@ func (b *MetachainBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, e
 	return resp.Result.Value.AccountNumber, resp.Result.Value.Sequence, nil
 }
 
-// get handle all the low level http GET calls using retryablehttp.ThorchainBridge
+// get handle all the low level http GET calls using retryablehttp.MetachainBridge
 func (b *MetachainBridge) get(url string) ([]byte, int, error) {
 	resp, err := b.httpClient.Get(url)
 	if err != nil {
-		return nil, http.StatusNotFound, fmt.Errorf("failed to GET from thorchain: %w", err)
+		return nil, http.StatusNotFound, fmt.Errorf("failed to GET from metachain: %w", err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
