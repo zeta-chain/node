@@ -18,6 +18,7 @@ import (
 )
 
 type KeysSuite struct{}
+
 func Test(t *testing.T) { TestingT(t) }
 
 var _ = Suite(&KeysSuite{})
@@ -59,7 +60,6 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	return metaCliDir
 }
 
-
 func (ks *KeysSuite) TestNewKeys(c *C) {
 	oldStdIn := os.Stdin
 	defer func() {
@@ -86,4 +86,11 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	c.Assert(priKey.Bytes(), HasLen, 32)
 	kb := ki.GetKeybase()
 	c.Assert(kb, NotNil)
+
+	msg := "hello"
+	signedMsg, err := priKey.Sign([]byte(msg))
+	c.Assert(err, IsNil)
+	pubKey := ki.GetSignerInfo().GetPubKey()
+	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
+
 }
