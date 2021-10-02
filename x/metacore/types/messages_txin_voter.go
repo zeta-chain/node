@@ -7,7 +7,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateTxinVoter{}
 
-func NewMsgCreateTxinVoter(creator string, index string, txHash string, sourceAsset string, sourceAmount uint64, mBurnt uint64, destinationAsset string, fromAddress string, toAddress string, blockHeight uint64, signer string, signature string) *MsgCreateTxinVoter {
+func NewMsgCreateTxinVoter(creator string, index string, txHash string, sourceAsset string, sourceAmount uint64, mBurnt uint64, destinationAsset string, fromAddress string, toAddress string, blockHeight uint64) *MsgCreateTxinVoter {
 	return &MsgCreateTxinVoter{
 		Creator:          creator,
 		Index:            index,
@@ -19,8 +19,6 @@ func NewMsgCreateTxinVoter(creator string, index string, txHash string, sourceAs
 		FromAddress:      fromAddress,
 		ToAddress:        toAddress,
 		BlockHeight:      blockHeight,
-		Signer:           signer,
-		Signature:        signature,
 	}
 }
 

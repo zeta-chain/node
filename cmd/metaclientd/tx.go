@@ -7,12 +7,12 @@ import (
 
 // Post Txin to Metachain, with signature of the signer.
 // MetaChain takes this as a vote to the PostTxIn.
-func (b *MetachainBridge) PostTxIn(fromAddress string, toAddress string,sourceAsset string, sourceAmount uint64, mBurnt uint64, destAsset string, txHash string, blockHeight uint64,  signature string) (string, error) {
+func (b *MetachainBridge) PostTxIn(fromAddress string, toAddress string,sourceAsset string, sourceAmount uint64, mBurnt uint64, destAsset string, txHash string, blockHeight uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgCreateTxinVoter(
 		signerAddress,
 		txHash, txHash, sourceAsset, sourceAmount, mBurnt, destAsset,
-		fromAddress, toAddress, blockHeight, signerAddress, signature,
+		fromAddress, toAddress, blockHeight,
 	)
 
 	metaTxHash, err := b.Broadcast(msg)

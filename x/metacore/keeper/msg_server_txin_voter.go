@@ -29,8 +29,6 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 		FromAddress:      msg.FromAddress,
 		ToAddress:        msg.ToAddress,
 		BlockHeight:      msg.BlockHeight,
-		Signer:           msg.Signer,
-		Signature:        msg.Signature,
 	}
 
 	k.SetTxinVoter(

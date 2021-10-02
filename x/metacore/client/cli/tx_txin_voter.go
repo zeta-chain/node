@@ -50,21 +50,14 @@ func CmdCreateTxinVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsSigner, err := cast.ToStringE(args[9])
-			if err != nil {
-				return err
-			}
-			argsSignature, err := cast.ToStringE(args[10])
-			if err != nil {
-				return err
-			}
+
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateTxinVoter(clientCtx.GetFromAddress().String(), index, argsTxHash, argsSourceAsset, argsSourceAmount, argsMBurnt, argsDestinationAsset, argsFromAddress, argsToAddress, argsBlockHeight, argsSigner, argsSignature)
+			msg := types.NewMsgCreateTxinVoter(clientCtx.GetFromAddress().String(), index, argsTxHash, argsSourceAsset, argsSourceAmount, argsMBurnt, argsDestinationAsset, argsFromAddress, argsToAddress, argsBlockHeight)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
