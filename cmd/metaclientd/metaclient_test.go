@@ -66,7 +66,7 @@ func (s *MySuite) TestObservedTxIn(c *C) {
 	b := s.bridge
 	//err := b.PostTxIn("ETH.ETH", 2, 4, "ETH.BSC", "0xdeadbeef", "0x1234", 2345)
 	metaHash, err := b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
-		time.Now().String(),  12345, "mysignature")
+		time.Now().String(),  123123)
 
 	c.Assert(err, IsNil)
 	log.Info().Msgf("PostTxIn metaHash %s", metaHash)
@@ -75,7 +75,7 @@ func (s *MySuite) TestObservedTxIn(c *C) {
 	<-timer1.C
 
 	metaHash, err = b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
-		time.Now().String(),  12345, "mysignature")
+		time.Now().String(),  12345)
 	c.Assert(err, IsNil)
 	log.Info().Msgf("Second PostTxIn metaHash %s", metaHash)
 	//err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)

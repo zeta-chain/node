@@ -19374,10 +19374,6 @@ paths:
                     blockHeight:
                       type: string
                       format: uint64
-                    signer:
-                      type: string
-                    signature:
-                      type: string
               pagination:
                 type: object
                 properties:
@@ -19508,10 +19504,6 @@ paths:
                   blockHeight:
                     type: string
                     format: uint64
-                  signer:
-                    type: string
-                  signature:
-                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -29796,10 +29788,6 @@ definitions:
             blockHeight:
               type: string
               format: uint64
-            signer:
-              type: string
-            signature:
-              type: string
       pagination:
         type: object
         properties:
@@ -29887,10 +29875,6 @@ definitions:
           blockHeight:
             type: string
             format: uint64
-          signer:
-            type: string
-          signature:
-            type: string
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -29953,7 +29937,3 @@ definitions:
       blockHeight:
         type: string
         format: uint64
-      signer:
-        type: string
-      signature:
-        type: string
