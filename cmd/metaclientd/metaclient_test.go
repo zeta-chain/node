@@ -10,11 +10,10 @@ import (
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
-	"testing"
 	"time"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+
 
 type MySuite struct {
 	bridge *MetachainBridge
