@@ -63,7 +63,7 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	//fmt.Println("signer: ", signerName)
 	si, err := kb.Key(signerName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w", signerName, err)
+		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
 	}
 	return kb, si, nil
 }
@@ -78,7 +78,8 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 		}
 		cliDir = filepath.Join(usr.HomeDir, metachainCliFolderPath)
 	}
-	//fmt.Println("getKeybase: ", sdk.KeyringServiceName(), cliDir)
+	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
+	// Change to BackendFile with password!
 	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
 }
 
