@@ -24,7 +24,5 @@ message MsgCreateTxinVoter {
   string fromAddress = 8;
   string toAddress = 9;
   uint64 blockHeight = 10;
-  string signer = 11;
-  string signature = 12;
 }
 message MsgCreateTxinVoterResponse { }

@@ -11,7 +11,7 @@ func (b *MetachainBridge) PostTxIn(fromAddress string, toAddress string,sourceAs
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgCreateTxinVoter(
 		signerAddress,
-		txHash, txHash, sourceAsset, sourceAmount, mBurnt, destAsset,
+		txHash, sourceAsset, sourceAmount, mBurnt, destAsset,
 		fromAddress, toAddress, blockHeight,
 	)
 

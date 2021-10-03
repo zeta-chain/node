@@ -1,16 +1,17 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.Msg = &MsgCreateTxinVoter{}
 
-func NewMsgCreateTxinVoter(creator string, index string, txHash string, sourceAsset string, sourceAmount uint64, mBurnt uint64, destinationAsset string, fromAddress string, toAddress string, blockHeight uint64) *MsgCreateTxinVoter {
+func NewMsgCreateTxinVoter(creator string, txHash string, sourceAsset string, sourceAmount uint64, mBurnt uint64, destinationAsset string, fromAddress string, toAddress string, blockHeight uint64) *MsgCreateTxinVoter {
 	return &MsgCreateTxinVoter{
 		Creator:          creator,
-		Index:            index,
+		Index:            fmt.Sprintf("%s-%s", txHash, creator),
 		TxHash:           txHash,
 		SourceAsset:      sourceAsset,
 		SourceAmount:     sourceAmount,

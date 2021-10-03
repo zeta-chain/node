@@ -31,9 +31,32 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 		BlockHeight:      msg.BlockHeight,
 	}
 
-	k.SetTxinVoter(
-		ctx,
-		txinVoter,
-	)
+	k.SetTxinVoter(ctx, txinVoter)
+
+	// Create Txin, add signers to it
+	txin, isFound := k.GetTxin(ctx, msg.TxHash)
+	if isFound {
+		for _, s := range txin.Signers {
+			if s == msg.Creator {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("txin index %s already set from signer %s", msg.TxHash, msg.Creator))
+			}
+		}
+		txin.Signers = append(txin.Signers, msg.Creator)
+	} else { // first signer for TxHash
+		txin = types.Txin{
+			Creator:          msg.Creator,
+			Index:            msg.TxHash,
+			TxHash:           msg.TxHash,
+			SourceAsset:      msg.SourceAsset,
+			SourceAmount:     msg.SourceAmount,
+			MBurnt:           msg.MBurnt,
+			DestinationAsset: msg.DestinationAsset,
+			FromAddress:      msg.FromAddress,
+			ToAddress:        msg.ToAddress,
+			Signers:          []string{msg.Creator},
+		}
+	}
+	k.SetTxin(ctx, txin)
+
 	return &types.MsgCreateTxinVoterResponse{}, nil
 }
