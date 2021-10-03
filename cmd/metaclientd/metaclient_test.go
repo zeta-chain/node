@@ -78,6 +78,9 @@ func (s *MySuite) TestObservedTxIn(c *C) {
 		time.Now().String(),  12345)
 	c.Assert(err, IsNil)
 	log.Info().Msgf("Second PostTxIn metaHash %s", metaHash)
+
+
+
 	//err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)
 	//c.Assert(err, IsNil)
 
@@ -89,8 +92,4 @@ func (s *MySuite) TestObservedTxIn(c *C) {
 	//c.Assert(err, IsNil)
 }
 
-//func (s *MySuite) TestTxoutObserve(c *C) {
-//	_, err := s.bridge.GetMetachainTxout()
-//	c.Assert(err, IsNil)
-//}
 

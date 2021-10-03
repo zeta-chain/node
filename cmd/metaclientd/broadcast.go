@@ -54,7 +54,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	}
 
 	// broadcast to a Tendermint node
-	commit, err := ctx.BroadcastTx(txBytes)
+	commit, err := ctx.BroadcastTxSync(txBytes)
 	if err != nil {
 		return "", fmt.Errorf("fail to broadcast tx: %w", err)
 	}
@@ -70,7 +70,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 		b.logger.Info().Msgf("messages: %+v", msgs)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to THORChain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
-	b.logger.Info().Msgf("Received a TxHash of %v from the metachain", commit.TxHash)
+	b.logger.Info().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
 
 	// increment seqNum
 	atomic.AddUint64(&b.seqNumber, 1)
