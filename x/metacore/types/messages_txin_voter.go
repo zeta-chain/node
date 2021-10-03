@@ -46,9 +46,13 @@ func (msg *MsgCreateTxinVoter) GetSignBytes() []byte {
 
 func (msg *MsgCreateTxinVoter) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	//TODO: validate the signature.
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	wantedIndex := fmt.Sprintf("%s-%s", msg.TxHash, msg.Creator)
+	if msg.Index != wantedIndex {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "msg.Index must be (%s), instead got (%s)", wantedIndex, msg.Index)
+	}
+	// TODO: Validate the addresses, amounts, and asset format
 	return nil
 }

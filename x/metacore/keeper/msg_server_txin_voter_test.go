@@ -17,8 +17,8 @@ func TestTxinVoterMsgServerCreate(t *testing.T) {
 	wctx := sdk.WrapSDKContext(ctx)
 	creator := "A"
 	for i := 0; i < 5; i++ {
-		idx := fmt.Sprintf("%d", i)
-		expected := &types.MsgCreateTxinVoter{Creator: creator, Index: idx}
+		idx := fmt.Sprintf("txhash%d-%s", i, creator)
+		expected := &types.MsgCreateTxinVoter{Creator: creator, TxHash: fmt.Sprintf("txhash%d", i), Index: idx}
 		_, err := srv.CreateTxinVoter(wctx, expected)
 		require.NoError(t, err)
 		rst, found := keeper.GetTxinVoter(ctx, expected.Index)

@@ -51,14 +51,13 @@ func CmdCreateTxinVoter() *cobra.Command {
 				return err
 			}
 
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			_ = index // index is set to TxHash
-			msg := types.NewMsgCreateTxinVoter(clientCtx.GetFromAddress().String(),  argsTxHash, argsSourceAsset, argsSourceAmount, argsMBurnt, argsDestinationAsset, argsFromAddress, argsToAddress, argsBlockHeight)
+			_ = index // index is set to "TxHash-Creator" automatically by NewMsgCreateTxinVoter
+			msg := types.NewMsgCreateTxinVoter(clientCtx.GetFromAddress().String(), argsTxHash, argsSourceAsset, argsSourceAmount, argsMBurnt, argsDestinationAsset, argsFromAddress, argsToAddress, argsBlockHeight)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
