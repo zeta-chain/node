@@ -10,6 +10,11 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the nodeAccount
+	for _, elem := range genState.NodeAccountList {
+		k.SetNodeAccount(ctx, *elem)
+	}
+
 	// Set all the txinVoter
 	for _, elem := range genState.TxinVoterList {
 		k.SetTxinVoter(ctx, *elem)
@@ -28,6 +33,13 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all nodeAccount
+	nodeAccountList := k.GetAllNodeAccount(ctx)
+	for _, elem := range nodeAccountList {
+		elem := elem
+		genesis.NodeAccountList = append(genesis.NodeAccountList, &elem)
+	}
+
 	// Get all txinVoter
 	txinVoterList := k.GetAllTxinVoter(ctx)
 	for _, elem := range txinVoterList {
