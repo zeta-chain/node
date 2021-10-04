@@ -32,3 +32,7 @@ const (
 const (
 	TxinVoterKey = "TxinVoter-value-"
 )
+
+const (
+	NodeAccountKey = "NodeAccount-value-"
+)

@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/node_account.proto";
 import "metacore/txin_voter.proto";
 import "metacore/txin.proto";
 
@@ -12,6 +13,17 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a nodeAccount by index.
+	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/nodeAccount/{index}";
+	}
+
+	// Queries a list of nodeAccount items.
+	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/nodeAccount";
+	}
+
 
 	// Queries a list of lastMetaHeight items.
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
@@ -43,6 +55,22 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetNodeAccountRequest {
+	string index = 1;
+}
+
+message QueryGetNodeAccountResponse {
+	NodeAccount NodeAccount = 1;
+}
+
+message QueryAllNodeAccountRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeAccountResponse {
+	repeated NodeAccount NodeAccount = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryLastMetaHeightRequest {
 }
 
