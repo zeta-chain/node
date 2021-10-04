@@ -19374,6 +19374,9 @@ paths:
                       type: array
                       items:
                         type: string
+                    finalizedHeight:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19508,6 +19511,9 @@ paths:
                     type: array
                     items:
                       type: string
+                  finalizedHeight:
+                    type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30027,6 +30033,9 @@ definitions:
               type: array
               items:
                 type: string
+            finalizedHeight:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -30172,6 +30181,9 @@ definitions:
             type: array
             items:
               type: string
+          finalizedHeight:
+            type: string
+            format: uint64
   MetaProtocol.metacore.metacore.QueryGetTxinVoterResponse:
     type: object
     properties:
@@ -30237,6 +30249,9 @@ definitions:
         type: array
         items:
           type: string
+      finalizedHeight:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.TxinVoter:
     type: object
     properties:

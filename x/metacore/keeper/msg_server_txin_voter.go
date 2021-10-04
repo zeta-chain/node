@@ -54,14 +54,19 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 			FromAddress:      msg.FromAddress,
 			ToAddress:        msg.ToAddress,
 			Signers:          []string{msg.Creator},
+			FinalizedHeight:  0,
 		}
 	}
-	k.SetTxin(ctx, txin)
 
 	// see if the txin reached consensus. If so, create the corresponding txout.
+	// FIXME: change to super-majority of current validator set
 	if len(txin.Signers) == 2 { // the first time that txin reaches consensus
-
+		txin.FinalizedHeight = uint64(ctx.BlockHeader().Height)
 	}
+
+	k.SetTxin(ctx, txin)
+
+
 
 	return &types.MsgCreateTxinVoterResponse{}, nil
 }

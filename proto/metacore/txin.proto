@@ -17,4 +17,5 @@ message Txin {
   string toAddress = 9; 
   uint64 blockHeight = 10;
   repeated string signers = 11 [(gogoproto.nullable) = false];
+  uint64 finalizedHeight = 12;
 }
