@@ -19156,10 +19156,25 @@ paths:
                       type: string
                     nodeAddress:
                       type: string
+                      format: byte
                     pubkeySet:
-                      type: string
+                      type: object
+                      properties:
+                        secp256k1:
+                          type: string
+                        ed25519:
+                          type: string
+                      title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
                     nodeStatus:
                       type: string
+                      enum:
+                        - Unknown
+                        - Whitelisted
+                        - Standby
+                        - Ready
+                        - Active
+                        - Disabled
+                      default: Unknown
               pagination:
                 type: object
                 properties:
@@ -19273,10 +19288,25 @@ paths:
                     type: string
                   nodeAddress:
                     type: string
+                    format: byte
                   pubkeySet:
-                    type: string
+                    type: object
+                    properties:
+                      secp256k1:
+                        type: string
+                      ed25519:
+                        type: string
+                    title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
                   nodeStatus:
                     type: string
+                    enum:
+                      - Unknown
+                      - Whitelisted
+                      - Standby
+                      - Ready
+                      - Active
+                      - Disabled
+                    default: Unknown
         default:
           description: An unexpected error response.
           schema:
@@ -29875,10 +29905,35 @@ definitions:
         type: string
       nodeAddress:
         type: string
+        format: byte
       pubkeySet:
-        type: string
+        type: object
+        properties:
+          secp256k1:
+            type: string
+          ed25519:
+            type: string
+        title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
       nodeStatus:
         type: string
+        enum:
+          - Unknown
+          - Whitelisted
+          - Standby
+          - Ready
+          - Active
+          - Disabled
+        default: Unknown
+  MetaProtocol.metacore.metacore.NodeStatus:
+    type: string
+    enum:
+      - Unknown
+      - Whitelisted
+      - Standby
+      - Ready
+      - Active
+      - Disabled
+    default: Unknown
   MetaProtocol.metacore.metacore.QueryAllNodeAccountResponse:
     type: object
     properties:
@@ -29893,10 +29948,25 @@ definitions:
               type: string
             nodeAddress:
               type: string
+              format: byte
             pubkeySet:
-              type: string
+              type: object
+              properties:
+                secp256k1:
+                  type: string
+                ed25519:
+                  type: string
+              title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
             nodeStatus:
               type: string
+              enum:
+                - Unknown
+                - Whitelisted
+                - Standby
+                - Ready
+                - Active
+                - Disabled
+              default: Unknown
       pagination:
         type: object
         properties:
@@ -30050,10 +30120,25 @@ definitions:
             type: string
           nodeAddress:
             type: string
+            format: byte
           pubkeySet:
-            type: string
+            type: object
+            properties:
+              secp256k1:
+                type: string
+              ed25519:
+                type: string
+            title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
           nodeStatus:
             type: string
+            enum:
+              - Unknown
+              - Whitelisted
+              - Standby
+              - Ready
+              - Active
+              - Disabled
+            default: Unknown
   MetaProtocol.metacore.metacore.QueryGetTxinResponse:
     type: object
     properties:
