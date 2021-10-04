@@ -29697,6 +29697,8 @@ definitions:
       the connection handshake.
   MetaProtocol.metacore.metacore.MsgCreateTxinVoterResponse:
     type: object
+  MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse:
+    type: object
   MetaProtocol.metacore.metacore.QueryAllTxinResponse:
     type: object
     properties:
@@ -29937,3 +29939,11 @@ definitions:
       blockHeight:
         type: string
         format: uint64
+  common.PubKeySet:
+    type: object
+    properties:
+      secp256k1:
+        type: string
+      ed25519:
+        type: string
+    title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
