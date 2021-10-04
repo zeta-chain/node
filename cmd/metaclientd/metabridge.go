@@ -119,7 +119,6 @@ func (b *MetachainBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, e
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetSignerInfo().GetAddress())
 }
 
-
 func (b *MetachainBridge) GetKeys() *Keys {
 	return b.keys
 }

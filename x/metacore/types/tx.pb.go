@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	common "github.com/Meta-Protocol/metacore/common"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -28,6 +29,102 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // this line is used by starport scaffolding # proto/tx/message
+type MsgSetNodeKeys struct {
+	Creator                  string            `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	PubkeySet                *common.PubKeySet `protobuf:"bytes,2,opt,name=pubkeySet,proto3" json:"pubkeySet,omitempty"`
+	ValidatorConsensusPubkey string            `protobuf:"bytes,3,opt,name=validatorConsensusPubkey,proto3" json:"validatorConsensusPubkey,omitempty"`
+}
+
+func (m *MsgSetNodeKeys) Reset()         { *m = MsgSetNodeKeys{} }
+func (m *MsgSetNodeKeys) String() string { return proto.CompactTextString(m) }
+func (*MsgSetNodeKeys) ProtoMessage()    {}
+func (*MsgSetNodeKeys) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3410749d96999ade, []int{0}
+}
+func (m *MsgSetNodeKeys) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetNodeKeys) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetNodeKeys.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetNodeKeys) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetNodeKeys.Merge(m, src)
+}
+func (m *MsgSetNodeKeys) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetNodeKeys) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetNodeKeys.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetNodeKeys proto.InternalMessageInfo
+
+func (m *MsgSetNodeKeys) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgSetNodeKeys) GetPubkeySet() *common.PubKeySet {
+	if m != nil {
+		return m.PubkeySet
+	}
+	return nil
+}
+
+func (m *MsgSetNodeKeys) GetValidatorConsensusPubkey() string {
+	if m != nil {
+		return m.ValidatorConsensusPubkey
+	}
+	return ""
+}
+
+type MsgSetNodeKeysResponse struct {
+}
+
+func (m *MsgSetNodeKeysResponse) Reset()         { *m = MsgSetNodeKeysResponse{} }
+func (m *MsgSetNodeKeysResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetNodeKeysResponse) ProtoMessage()    {}
+func (*MsgSetNodeKeysResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3410749d96999ade, []int{1}
+}
+func (m *MsgSetNodeKeysResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetNodeKeysResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetNodeKeysResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetNodeKeysResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetNodeKeysResponse.Merge(m, src)
+}
+func (m *MsgSetNodeKeysResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetNodeKeysResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetNodeKeysResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetNodeKeysResponse proto.InternalMessageInfo
+
 type MsgCreateTxinVoter struct {
 	Creator          string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Index            string `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
@@ -45,7 +142,7 @@ func (m *MsgCreateTxinVoter) Reset()         { *m = MsgCreateTxinVoter{} }
 func (m *MsgCreateTxinVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateTxinVoter) ProtoMessage()    {}
 func (*MsgCreateTxinVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{0}
+	return fileDescriptor_3410749d96999ade, []int{2}
 }
 func (m *MsgCreateTxinVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -151,7 +248,7 @@ func (m *MsgCreateTxinVoterResponse) Reset()         { *m = MsgCreateTxinVoterRe
 func (m *MsgCreateTxinVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateTxinVoterResponse) ProtoMessage()    {}
 func (*MsgCreateTxinVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{1}
+	return fileDescriptor_3410749d96999ade, []int{3}
 }
 func (m *MsgCreateTxinVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -181,6 +278,8 @@ func (m *MsgCreateTxinVoterResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreateTxinVoterResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgSetNodeKeys)(nil), "MetaProtocol.metacore.metacore.MsgSetNodeKeys")
+	proto.RegisterType((*MsgSetNodeKeysResponse)(nil), "MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse")
 	proto.RegisterType((*MsgCreateTxinVoter)(nil), "MetaProtocol.metacore.metacore.MsgCreateTxinVoter")
 	proto.RegisterType((*MsgCreateTxinVoterResponse)(nil), "MetaProtocol.metacore.metacore.MsgCreateTxinVoterResponse")
 }
@@ -188,30 +287,37 @@ func init() {
 func init() { proto.RegisterFile("metacore/tx.proto", fileDescriptor_3410749d96999ade) }
 
 var fileDescriptor_3410749d96999ade = []byte{
-	// 365 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x3f, 0x4b, 0x33, 0x41,
-	0x10, 0xc6, 0xb3, 0xf9, 0xfb, 0x66, 0xdf, 0x17, 0x5e, 0x5d, 0x44, 0xd6, 0x10, 0x8e, 0x90, 0x2a,
-	0x08, 0x5e, 0x20, 0x76, 0x76, 0x89, 0x4d, 0x0a, 0x03, 0x12, 0xc4, 0xc2, 0x46, 0x2e, 0x77, 0xe3,
-	0xe5, 0x30, 0xb7, 0x1b, 0x76, 0xe7, 0xe4, 0x2c, 0x2d, 0xed, 0xfc, 0x58, 0x29, 0x53, 0x5a, 0x4a,
-	0xf2, 0x45, 0xe4, 0xf6, 0x72, 0xc9, 0x69, 0x40, 0xb0, 0x9b, 0xe7, 0xf7, 0x30, 0x33, 0x0f, 0xbb,
-	0x43, 0x0f, 0x43, 0x40, 0xc7, 0x95, 0x0a, 0xba, 0x18, 0xdb, 0x73, 0x25, 0x51, 0x32, 0x6b, 0x04,
-	0xe8, 0x5c, 0x27, 0xa5, 0x2b, 0x67, 0x76, 0xe6, 0x6f, 0x8b, 0xc6, 0x49, 0xae, 0x25, 0x10, 0xf7,
-	0x4f, 0x12, 0x41, 0xa5, 0xad, 0xed, 0x45, 0x91, 0xb2, 0x91, 0xf6, 0x2f, 0x15, 0x38, 0x08, 0x37,
-	0x71, 0x20, 0x6e, 0x13, 0x93, 0x71, 0x5a, 0x73, 0x13, 0x24, 0x15, 0x27, 0x2d, 0xd2, 0xa9, 0x8f,
-	0x33, 0xc9, 0x8e, 0x68, 0x25, 0x10, 0x1e, 0xc4, 0xbc, 0x68, 0x78, 0x2a, 0xd8, 0x31, 0xad, 0x62,
-	0x3c, 0x74, 0xf4, 0x94, 0x97, 0x0c, 0xde, 0x28, 0xd6, 0xa2, 0x7f, 0xb5, 0x8c, 0x94, 0x0b, 0x7d,
-	0xad, 0x01, 0x79, 0xd9, 0x98, 0x79, 0xc4, 0xda, 0xf4, 0xdf, 0x46, 0x86, 0x32, 0x12, 0xc8, 0x2b,
-	0x2d, 0xd2, 0x29, 0x8f, 0xbf, 0xb0, 0x64, 0x7a, 0x38, 0x88, 0x94, 0x40, 0x5e, 0x35, 0xee, 0x46,
-	0xb1, 0x53, 0x7a, 0xe0, 0x81, 0xc6, 0x40, 0x38, 0x18, 0x48, 0x91, 0xae, 0xa8, 0x99, 0x15, 0x7b,
-	0x3c, 0x49, 0xf2, 0xa0, 0x64, 0xd8, 0xf7, 0x3c, 0x05, 0x5a, 0xf3, 0x3f, 0x69, 0x92, 0x1c, 0x62,
-	0x4d, 0x5a, 0x47, 0x99, 0xf9, 0x75, 0xe3, 0xef, 0x40, 0xd2, 0x3f, 0x99, 0x49, 0xf7, 0x71, 0x08,
-	0x81, 0x3f, 0x45, 0x4e, 0x4d, 0x90, 0x3c, 0x6a, 0x37, 0x69, 0x63, 0xff, 0x25, 0xc7, 0xa0, 0xe7,
-	0x52, 0x68, 0xe8, 0xbd, 0x12, 0x5a, 0x1a, 0x69, 0x9f, 0xbd, 0x10, 0xfa, 0xff, 0xfb, 0x6b, 0xf7,
-	0xec, 0x9f, 0x3f, 0xd0, 0xde, 0x9f, 0xdb, 0xb8, 0xf8, 0x7d, 0x4f, 0x96, 0x65, 0x70, 0xb5, 0x58,
-	0x59, 0x64, 0xb9, 0xb2, 0xc8, 0xc7, 0xca, 0x22, 0x6f, 0x6b, 0xab, 0xb0, 0x5c, 0x5b, 0x85, 0xf7,
-	0xb5, 0x55, 0xb8, 0xeb, 0xf9, 0x01, 0x4e, 0xa3, 0x89, 0xed, 0xca, 0xb0, 0x9b, 0xcc, 0x3f, 0xcb,
-	0x16, 0x74, 0xb7, 0x27, 0x14, 0xef, 0x4a, 0x7c, 0x9e, 0x83, 0x9e, 0x54, 0xcd, 0x25, 0x9d, 0x7f,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x50, 0x63, 0xbe, 0x99, 0x02, 0x00, 0x00,
+	// 473 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0x8d, 0xd3, 0x36, 0xc5, 0x1b, 0x04, 0x74, 0x41, 0xd5, 0x62, 0x55, 0x56, 0xe4, 0x53, 0x84,
+	0x84, 0x2d, 0x05, 0x89, 0x43, 0x6f, 0x6d, 0x2f, 0x95, 0x4a, 0x50, 0xe4, 0x22, 0x0e, 0x5c, 0x90,
+	0x3f, 0x06, 0xc7, 0x6a, 0xbc, 0x1b, 0x79, 0xc7, 0x95, 0x73, 0x83, 0x7f, 0xc0, 0x8d, 0xbf, 0xd4,
+	0x63, 0x8f, 0x1c, 0x51, 0xf2, 0x47, 0xd0, 0xae, 0xed, 0xc6, 0x69, 0x45, 0x45, 0x4e, 0x9e, 0x79,
+	0x6f, 0xde, 0xcc, 0xf3, 0xee, 0x2c, 0x39, 0xc8, 0x00, 0x83, 0x48, 0xe4, 0xe0, 0x61, 0xe9, 0xce,
+	0x73, 0x81, 0x82, 0xda, 0x63, 0xc0, 0x60, 0xa2, 0xc2, 0x48, 0xcc, 0xdc, 0x86, 0xbf, 0x0b, 0xac,
+	0xd7, 0x2d, 0x49, 0xca, 0xbf, 0x5e, 0x0b, 0x84, 0xbc, 0x92, 0x5a, 0x2f, 0x23, 0x91, 0x65, 0x82,
+	0x7b, 0xd5, 0xa7, 0x02, 0x9d, 0x5f, 0x06, 0x79, 0x36, 0x96, 0xc9, 0x25, 0xe0, 0x47, 0x11, 0xc3,
+	0x05, 0x2c, 0x24, 0x65, 0x64, 0x3f, 0xca, 0x21, 0x40, 0x91, 0x33, 0x63, 0x60, 0x0c, 0x4d, 0xbf,
+	0x49, 0xa9, 0x47, 0xcc, 0x79, 0x11, 0x5e, 0xc1, 0xe2, 0x12, 0x90, 0x75, 0x07, 0xc6, 0xb0, 0x3f,
+	0x3a, 0x70, 0xeb, 0x76, 0x93, 0x22, 0xbc, 0xd0, 0x84, 0xbf, 0xae, 0xa1, 0xc7, 0x84, 0x5d, 0x07,
+	0xb3, 0x34, 0x56, 0xea, 0x33, 0xc1, 0x25, 0x70, 0x59, 0xc8, 0x89, 0xa6, 0xd9, 0x8e, 0xee, 0xfd,
+	0x4f, 0xde, 0x61, 0xe4, 0x70, 0xd3, 0x98, 0x0f, 0x72, 0xae, 0x6a, 0x9c, 0x9b, 0x2e, 0xa1, 0x63,
+	0x99, 0x9c, 0x29, 0x57, 0xf0, 0xa9, 0x4c, 0xf9, 0x67, 0xf5, 0x97, 0x8f, 0xf8, 0x7e, 0x45, 0xf6,
+	0x52, 0x1e, 0x43, 0xa9, 0x3d, 0x9b, 0x7e, 0x95, 0xd0, 0x43, 0xd2, 0xc3, 0xf2, 0x3c, 0x90, 0xd3,
+	0xda, 0x4a, 0x9d, 0xd1, 0x01, 0xe9, 0x4b, 0x51, 0xe4, 0x11, 0x9c, 0x48, 0x09, 0xc8, 0x76, 0x35,
+	0xd9, 0x86, 0xa8, 0x43, 0x9e, 0xd6, 0x69, 0x26, 0x0a, 0x8e, 0x6c, 0x6f, 0x60, 0x0c, 0x77, 0xfd,
+	0x0d, 0x4c, 0x75, 0xcf, 0x4e, 0x8b, 0x9c, 0x23, 0xeb, 0x69, 0xb6, 0xce, 0xe8, 0x1b, 0xf2, 0x22,
+	0x06, 0x89, 0x29, 0x0f, 0x30, 0x15, 0xbc, 0x1a, 0xb1, 0xaf, 0x47, 0x3c, 0xc0, 0x95, 0x93, 0x6f,
+	0xb9, 0xc8, 0x4e, 0xe2, 0x38, 0x07, 0x29, 0xd9, 0x93, 0xca, 0x49, 0x0b, 0xa2, 0x47, 0xc4, 0x44,
+	0xd1, 0xf0, 0xa6, 0xe6, 0xd7, 0x80, 0xd2, 0x87, 0x33, 0x11, 0x5d, 0x9d, 0x43, 0x9a, 0x4c, 0x91,
+	0x11, 0x6d, 0xa4, 0x0d, 0x39, 0x47, 0xc4, 0x7a, 0x78, 0x92, 0xcd, 0x41, 0x8f, 0xbe, 0x77, 0xc9,
+	0xce, 0x58, 0x26, 0xb4, 0x20, 0xfd, 0xf6, 0x82, 0xb8, 0xee, 0xe3, 0x4b, 0xe8, 0x6e, 0xde, 0x9b,
+	0xf5, 0x7e, 0xbb, 0xfa, 0x66, 0x3c, 0xfd, 0x61, 0x90, 0xe7, 0xf7, 0x2f, 0x79, 0xf4, 0x1f, 0xbd,
+	0xee, 0x69, 0xac, 0xe3, 0xed, 0x35, 0x8d, 0x87, 0xd3, 0x0f, 0x37, 0x4b, 0xdb, 0xb8, 0x5d, 0xda,
+	0xc6, 0x9f, 0xa5, 0x6d, 0xfc, 0x5c, 0xd9, 0x9d, 0xdb, 0x95, 0xdd, 0xf9, 0xbd, 0xb2, 0x3b, 0x5f,
+	0x46, 0x49, 0x8a, 0xd3, 0x22, 0x54, 0xfb, 0xef, 0xa9, 0xfe, 0x6f, 0x9b, 0x01, 0xde, 0xdd, 0x13,
+	0x2c, 0xd7, 0x21, 0x2e, 0xe6, 0x20, 0xc3, 0x9e, 0x7e, 0x74, 0xef, 0xfe, 0x06, 0x00, 0x00, 0xff,
+	0xff, 0x9a, 0x61, 0xe1, 0x4a, 0xd9, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -227,6 +333,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// this line is used by starport scaffolding # proto/tx/rpc
+	SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ...grpc.CallOption) (*MsgSetNodeKeysResponse, error)
 	CreateTxinVoter(ctx context.Context, in *MsgCreateTxinVoter, opts ...grpc.CallOption) (*MsgCreateTxinVoterResponse, error)
 }
 
@@ -236,6 +343,15 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
+}
+
+func (c *msgClient) SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ...grpc.CallOption) (*MsgSetNodeKeysResponse, error) {
+	out := new(MsgSetNodeKeysResponse)
+	err := c.cc.Invoke(ctx, "/MetaProtocol.metacore.metacore.Msg/SetNodeKeys", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *msgClient) CreateTxinVoter(ctx context.Context, in *MsgCreateTxinVoter, opts ...grpc.CallOption) (*MsgCreateTxinVoterResponse, error) {
@@ -250,6 +366,7 @@ func (c *msgClient) CreateTxinVoter(ctx context.Context, in *MsgCreateTxinVoter,
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// this line is used by starport scaffolding # proto/tx/rpc
+	SetNodeKeys(context.Context, *MsgSetNodeKeys) (*MsgSetNodeKeysResponse, error)
 	CreateTxinVoter(context.Context, *MsgCreateTxinVoter) (*MsgCreateTxinVoterResponse, error)
 }
 
@@ -257,12 +374,33 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) SetNodeKeys(ctx context.Context, req *MsgSetNodeKeys) (*MsgSetNodeKeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetNodeKeys not implemented")
+}
 func (*UnimplementedMsgServer) CreateTxinVoter(ctx context.Context, req *MsgCreateTxinVoter) (*MsgCreateTxinVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTxinVoter not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_SetNodeKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetNodeKeys)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetNodeKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MetaProtocol.metacore.metacore.Msg/SetNodeKeys",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetNodeKeys(ctx, req.(*MsgSetNodeKeys))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CreateTxinVoter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -288,12 +426,88 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "SetNodeKeys",
+			Handler:    _Msg_SetNodeKeys_Handler,
+		},
+		{
 			MethodName: "CreateTxinVoter",
 			Handler:    _Msg_CreateTxinVoter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "metacore/tx.proto",
+}
+
+func (m *MsgSetNodeKeys) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetNodeKeys) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetNodeKeys) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorConsensusPubkey) > 0 {
+		i -= len(m.ValidatorConsensusPubkey)
+		copy(dAtA[i:], m.ValidatorConsensusPubkey)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ValidatorConsensusPubkey)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.PubkeySet != nil {
+		{
+			size, err := m.PubkeySet.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetNodeKeysResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetNodeKeysResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetNodeKeysResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgCreateTxinVoter) Marshal() (dAtA []byte, err error) {
@@ -417,6 +631,36 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgSetNodeKeys) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PubkeySet != nil {
+		l = m.PubkeySet.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ValidatorConsensusPubkey)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetNodeKeysResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgCreateTxinVoter) Size() (n int) {
 	if m == nil {
 		return 0
@@ -477,6 +721,206 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgSetNodeKeys) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetNodeKeys: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetNodeKeys: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PubkeySet", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.PubkeySet == nil {
+				m.PubkeySet = &common.PubKeySet{}
+			}
+			if err := m.PubkeySet.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorConsensusPubkey", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorConsensusPubkey = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetNodeKeysResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetNodeKeysResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetNodeKeysResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgCreateTxinVoter) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
