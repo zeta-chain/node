@@ -35,7 +35,7 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 
 	// Create Txin, add signers to it
 	txin, isFound := k.GetTxin(ctx, msg.TxHash)
-	if isFound {
+	if isFound { // txin already created; add signer to it
 		for _, s := range txin.Signers {
 			if s == msg.Creator {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("txin index %s already set from signer %s", msg.TxHash, msg.Creator))
@@ -57,6 +57,11 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 		}
 	}
 	k.SetTxin(ctx, txin)
+
+	// see if the txin reached consensus. If so, create the corresponding txout.
+	if len(txin.Signers) == 2 { // the first time that txin reaches consensus
+
+	}
 
 	return &types.MsgCreateTxinVoterResponse{}, nil
 }
