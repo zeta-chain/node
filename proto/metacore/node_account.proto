@@ -4,11 +4,22 @@ package MetaProtocol.metacore.metacore;
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 import "gogoproto/gogo.proto";
+import "common/common.proto";
+
+enum NodeStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  Unknown = 0;
+  Whitelisted = 1;
+  Standby = 2;
+  Ready = 3;
+  Active = 4;
+  Disabled = 5;
+}
 
 message NodeAccount {
   string creator = 1;
   string index = 2;
-  string nodeAddress = 3; 
-  string pubkeySet = 4; 
-  string nodeStatus = 5; 
+  bytes nodeAddress = 3  [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  common.PubKeySet pubkeySet = 4;
+  NodeStatus nodeStatus = 5;
 }

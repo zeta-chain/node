@@ -25,7 +25,7 @@ func networkWithNodeAccountObjects(t *testing.T, n int) (*network.Network, []*ty
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Creator: "ANY", Index: strconv.Itoa(i), NodeAddress: []byte{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
