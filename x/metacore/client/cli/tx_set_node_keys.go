@@ -32,9 +32,10 @@ func CmdSetNodeKeys() *cobra.Command {
 			}
 			ed25519Key, err := common.NewPubKey(args[1])
 			//TODO: re-enable the check. THis is for test when ed25519 key is not supported
-			//if err != nil {
-			//	return fmt.Errorf("fail to parse ed25519 pub key ,err:%w", err)
-			//}
+			if err != nil {
+				//return fmt.Errorf("fail to parse ed25519 pub key ,err:%w", err)
+				fmt.Printf("fail to parse ed25519 pub key ,err:%s", err)
+			}
 			pk := common.NewPubKeySet(secp256k1Key, ed25519Key)
 			validatorConsPubKey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeConsPub, args[2])
 			if err != nil {
