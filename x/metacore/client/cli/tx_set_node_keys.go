@@ -19,7 +19,7 @@ func CmdSetNodeKeys() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-node-keys [secp256k1] [ed25519] [validatorConsensusPubkey]",
 		Short: "Broadcast message SetNodeKeys",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -31,9 +31,10 @@ func CmdSetNodeKeys() *cobra.Command {
 				return fmt.Errorf("fail to parse secp256k1 pub key ,err:%w", err)
 			}
 			ed25519Key, err := common.NewPubKey(args[1])
-			if err != nil {
-				return fmt.Errorf("fail to parse ed25519 pub key ,err:%w", err)
-			}
+			//TODO: re-enable the check. THis is for test when ed25519 key is not supported
+			//if err != nil {
+			//	return fmt.Errorf("fail to parse ed25519 pub key ,err:%w", err)
+			//}
 			pk := common.NewPubKeySet(secp256k1Key, ed25519Key)
 			validatorConsPubKey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeConsPub, args[2])
 			if err != nil {
