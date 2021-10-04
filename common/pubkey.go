@@ -188,13 +188,14 @@ func ConvertAndEncode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, converted)
 }
 
-//// NewPubKeySet create a new instance of PubKeySet , which contains two keys
-//func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
-//	return PubKeySet{
-//		Secp256k1: secp256k1,
-//		Ed25519:   ed25519,
-//	}
-//}
+// NewPubKeySet create a new instance of PubKeySet , which contains two keys
+func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
+	return PubKeySet{
+		Secp256k1: secp256k1,
+		Ed25519:   ed25519,
+	}
+}
+
 //
 //// IsEmpty will determinate whether PubKeySet is an empty
 //func (pks PubKeySet) IsEmpty() bool {
