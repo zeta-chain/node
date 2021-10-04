@@ -15,20 +15,19 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s not valid", msg.Creator))
 	}
-	na, found := k.GetNodeAccount(ctx, msg.Creator)
+	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
-		na = types.NodeAccount{
+		na := types.NodeAccount{
 			Creator:     msg.Creator,
 			Index:       msg.Creator,
 			NodeAddress: addr,
 			PubkeySet:   msg.PubkeySet,
 			NodeStatus:  types.NodeStatus_Unknown,
 		}
+		k.SetNodeAccount(ctx, na)
 	} else {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s already has a node account", msg.Creator))
 	}
-
-	k.SetNodeAccount(ctx, na)
-
+	
 	return &types.MsgSetNodeKeysResponse{}, nil
 }
