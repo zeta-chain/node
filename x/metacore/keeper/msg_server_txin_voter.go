@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,8 +34,13 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 
 	k.SetTxinVoter(ctx, txinVoter)
 
-	// Create Txin, add signers to it
-	txin, isFound := k.GetTxin(ctx, msg.TxHash)
+	// hash the body of txinVoter--making sure that each TxinVoter votes
+	// on the exact same Txin. 
+	txinVoter.Index = ""
+	txinVoter.Creator = ""
+	hashTxin := crypto.Keccak256Hash([]byte(txinVoter.String()))
+
+	txin, isFound := k.GetTxin(ctx, hashTxin.Hex())
 	if isFound { // txin already created; add signer to it
 		for _, s := range txin.Signers {
 			if s == msg.Creator {
@@ -45,7 +51,7 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 	} else { // first signer for TxHash
 		txin = types.Txin{
 			Creator:          msg.Creator,
-			Index:            msg.TxHash,
+			Index:            hashTxin.Hex(),
 			TxHash:           msg.TxHash,
 			SourceAsset:      msg.SourceAsset,
 			SourceAmount:     msg.SourceAmount,
