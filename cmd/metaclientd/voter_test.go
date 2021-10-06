@@ -85,7 +85,7 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	log.Info().Msgf("PostTxIn metaHash %s", metaHash)
 
 	// wait for the next block
-	timer1 := time.NewTimer(4 * time.Second)
+	timer1 := time.NewTimer(2 * time.Second)
 	<-timer1.C
 
 	metaHash, err = b2.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
@@ -93,13 +93,26 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	c.Assert(err, IsNil)
 	log.Info().Msgf("Second PostTxIn metaHash %s", metaHash)
 
-	//err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)
-	//c.Assert(err, IsNil)
+	// wait for the next block
+	timer2 := time.NewTimer(2 * time.Second)
+	<-timer2.C
 
-	//timer1 := time.NewTimer(6 * time.Second)
-	//<-timer1.C
-	//
-	//chain, _ := common.NewChain("ETH")
-	//_, err = s.bridge.GetLastBlockObserved(chain)
-	//c.Assert(err, IsNil)
+	txouts, err := b1.GetAllTxout()
+	c.Assert(err, IsNil)
+	log.Info().Msgf("txouts: %v", txouts)
+	c.Assert(len(txouts) >=1, Equals, true)
+
+	txout := txouts[0]
+	tid := txout.Id
+	metaHash, err = b1.PostTxoutConfirmation(tid, "0xhashtxout", 1337, "0xnicetoken", 1773, "0xmywallet", 12345)
+	timer3 := time.NewTimer(2 * time.Second)
+	<-timer3.C
+	metaHash, err = b2.PostTxoutConfirmation(tid, "0xhashtxout", 1337, "0xnicetoken", 1773, "0xmywallet", 12345)
+
+	timer4 := time.NewTimer(2 * time.Second)
+	<-timer4.C
+
+	txouts, err = b1.GetAllTxout()
+	c.Assert(err, IsNil)
+	log.Info().Msgf("txouts: %v", txouts)
 }
