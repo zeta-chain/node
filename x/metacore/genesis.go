@@ -10,6 +10,14 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the txout
+	for _, elem := range genState.TxoutList {
+		k.SetTxout(ctx, *elem)
+	}
+
+	// Set txout count
+	k.SetTxoutCount(ctx, genState.TxoutCount)
+
 	// Set all the nodeAccount
 	for _, elem := range genState.NodeAccountList {
 		k.SetNodeAccount(ctx, *elem)
@@ -33,6 +41,16 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all txout
+	txoutList := k.GetAllTxout(ctx)
+	for _, elem := range txoutList {
+		elem := elem
+		genesis.TxoutList = append(genesis.TxoutList, &elem)
+	}
+
+	// Set the current count
+	genesis.TxoutCount = k.GetTxoutCount(ctx)
+
 	// Get all nodeAccount
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	for _, elem := range nodeAccountList {

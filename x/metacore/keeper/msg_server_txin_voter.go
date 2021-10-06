@@ -66,7 +66,5 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 
 	k.SetTxin(ctx, txin)
 
-
-
 	return &types.MsgCreateTxinVoterResponse{}, nil
 }
