@@ -25,7 +25,7 @@ func networkWithTxoutConfirmationObjects(t *testing.T, n int) (*network.Network,
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TxoutConfirmationList = append(state.TxoutConfirmationList, &types.TxoutConfirmation{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.TxoutConfirmationList = append(state.TxoutConfirmationList, &types.TxoutConfirmation{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)

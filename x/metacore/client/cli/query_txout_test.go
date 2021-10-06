@@ -24,7 +24,7 @@ func networkWithTxoutObjects(t *testing.T, n int) (*network.Network, []*types.Tx
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TxoutList = append(state.TxoutList, &types.Txout{Creator: "ANY", Id: uint64(i)})
+		state.TxoutList = append(state.TxoutList, &types.Txout{Creator: "ANY", Id: uint64(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
