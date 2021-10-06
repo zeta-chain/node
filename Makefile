@@ -7,9 +7,9 @@ PACKAGES=$(shell go list ./... | grep -v '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=meta-chaind \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=meta-chaind \
-	-X github.com/cosmos/cosmos-sdk/version.ClientName=metacli \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=metachain \
+	-X github.com/cosmos/cosmos-sdk/version.ServerName=metacored \
+	-X github.com/cosmos/cosmos-sdk/version.ClientName=metaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
@@ -34,17 +34,13 @@ test:
 
 
 install: go.sum
-		@echo "--> Installing meta-chaind & meta-noded"
+		@echo "--> Installing metacored & metaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/metacored
-#		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/meta-noded
-#		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/config
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
 
-test:
-	@go test -mod=readonly $(PACKAGES)
 
 reset:
 	sudo rm -rf ~/.metachain

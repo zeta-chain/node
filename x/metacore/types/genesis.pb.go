@@ -24,6 +24,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the metacore module's genesis state.
 type GenesisState struct {
+	// this line is used by starport scaffolding # genesis/proto/state
+	NodeAccountList []*NodeAccount `protobuf:"bytes,3,rep,name=nodeAccountList,proto3" json:"nodeAccountList,omitempty"`
+	TxinVoterList   []*TxinVoter   `protobuf:"bytes,2,rep,name=txinVoterList,proto3" json:"txinVoterList,omitempty"`
+	TxinList        []*Txin        `protobuf:"bytes,1,rep,name=txinList,proto3" json:"txinList,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -59,6 +63,27 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
+func (m *GenesisState) GetNodeAccountList() []*NodeAccount {
+	if m != nil {
+		return m.NodeAccountList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetTxinVoterList() []*TxinVoter {
+	if m != nil {
+		return m.TxinVoterList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetTxinList() []*Txin {
+	if m != nil {
+		return m.TxinList
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "MetaProtocol.metacore.metacore.GenesisState")
 }
@@ -66,16 +91,23 @@ func init() {
 func init() { proto.RegisterFile("metacore/genesis.proto", fileDescriptor_c68bd28f2e9a7fbf) }
 
 var fileDescriptor_c68bd28f2e9a7fbf = []byte{
-	// 138 bytes of a gzipped FileDescriptorProto
+	// 252 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcb, 0x4d, 0x2d, 0x49,
 	0x4c, 0xce, 0x2f, 0x4a, 0xd5, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca,
 	0x2f, 0xc9, 0x17, 0x92, 0xf3, 0x4d, 0x2d, 0x49, 0x0c, 0x00, 0x31, 0x93, 0xf3, 0x73, 0xf4, 0x60,
-	0x8a, 0xe0, 0x0c, 0x25, 0x3e, 0x2e, 0x1e, 0x77, 0x88, 0x86, 0xe0, 0x92, 0xc4, 0x92, 0x54, 0x27,
-	0x9f, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63,
-	0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x32, 0x4a, 0xcf, 0x2c, 0xc9,
-	0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x07, 0x19, 0xaa, 0x0b, 0x33, 0x55, 0x1f, 0x6e, 0x75,
-	0x05, 0x82, 0x59, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x76, 0x84, 0x31, 0x20, 0x00, 0x00,
-	0xff, 0xff, 0xbe, 0xfa, 0x85, 0x46, 0x9e, 0x00, 0x00, 0x00,
+	0x8a, 0xe0, 0x0c, 0x29, 0x69, 0xb8, 0xbe, 0xbc, 0xfc, 0x94, 0xd4, 0xf8, 0xc4, 0xe4, 0xe4, 0xfc,
+	0xd2, 0xbc, 0x12, 0x88, 0x66, 0x29, 0x49, 0xb8, 0x64, 0x49, 0x45, 0x66, 0x5e, 0x7c, 0x59, 0x7e,
+	0x49, 0x6a, 0x11, 0x54, 0x4a, 0x18, 0x45, 0x0a, 0x22, 0xa8, 0xf4, 0x83, 0x91, 0x8b, 0xc7, 0x1d,
+	0x62, 0x7d, 0x70, 0x49, 0x62, 0x49, 0xaa, 0x50, 0x28, 0x17, 0x3f, 0xc8, 0x58, 0x47, 0x88, 0xa9,
+	0x3e, 0x99, 0xc5, 0x25, 0x12, 0xcc, 0x0a, 0xcc, 0x1a, 0xdc, 0x46, 0xda, 0x7a, 0xf8, 0xdd, 0xa5,
+	0xe7, 0x87, 0xd0, 0x16, 0x84, 0x6e, 0x86, 0x90, 0x3f, 0x17, 0x2f, 0xc8, 0xd6, 0x30, 0x90, 0x7b,
+	0xc0, 0x86, 0x32, 0x81, 0x0d, 0xd5, 0x24, 0x64, 0x68, 0x08, 0x4c, 0x53, 0x10, 0xaa, 0x7e, 0x21,
+	0x07, 0x2e, 0x0e, 0x90, 0x00, 0xd8, 0x2c, 0x46, 0xb0, 0x59, 0x2a, 0xc4, 0x98, 0x15, 0x04, 0xd7,
+	0xe5, 0xe4, 0x73, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e,
+	0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x46, 0xe9, 0x99,
+	0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x20, 0x33, 0x75, 0x61, 0x86, 0xea, 0xc3,
+	0x83, 0xb0, 0x02, 0xc1, 0x2c, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x87, 0xa7, 0x31, 0x20,
+	0x00, 0x00, 0xff, 0xff, 0x62, 0xf0, 0x9b, 0x2e, 0xd6, 0x01, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -98,6 +130,48 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.NodeAccountList) > 0 {
+		for iNdEx := len(m.NodeAccountList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.NodeAccountList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.TxinVoterList) > 0 {
+		for iNdEx := len(m.TxinVoterList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TxinVoterList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.TxinList) > 0 {
+		for iNdEx := len(m.TxinList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TxinList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -118,6 +192,24 @@ func (m *GenesisState) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if len(m.TxinList) > 0 {
+		for _, e := range m.TxinList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.TxinVoterList) > 0 {
+		for _, e := range m.TxinVoterList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.NodeAccountList) > 0 {
+		for _, e := range m.NodeAccountList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -156,6 +248,108 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxinList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxinList = append(m.TxinList, &Txin{})
+			if err := m.TxinList[len(m.TxinList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxinVoterList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxinVoterList = append(m.TxinVoterList, &TxinVoter{})
+			if err := m.TxinVoterList[len(m.TxinVoterList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeAccountList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeAccountList = append(m.NodeAccountList, &NodeAccount{})
+			if err := m.NodeAccountList[len(m.NodeAccountList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
