@@ -36,3 +36,8 @@ const (
 const (
 	NodeAccountKey = "NodeAccount-value-"
 )
+
+const (
+	TxoutKey      = "Txout-value-"
+	TxoutCountKey = "Txout-count-"
+)
