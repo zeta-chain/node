@@ -23,17 +23,17 @@ func CmdTxoutConfirmationVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsTxHash := string(args[1])
+			argsTxHash := args[1]
 			argsMMint,err := cast.ToUint64E(args[2])
 			if err != nil {
 				return err
 			}
-			argsDestinationAsset := string(args[3])
+			argsDestinationAsset := args[3]
 			argsDestinationAmount, err := cast.ToUint64E(args[4])
 			if err != nil {
 				return err
 			}
-			toAddress := string(args[5])
+			toAddress := args[5]
 
 			argsBlockHeight, err := cast.ToUint64E(args[6])
 			if err != nil {
@@ -45,7 +45,7 @@ func CmdTxoutConfirmationVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTxoutConfirmationVoter(clientCtx.GetFromAddress().String(), argsTxoutId, string(argsTxHash), argsMMint, string(argsDestinationAsset), (argsDestinationAmount), toAddress, (argsBlockHeight))
+			msg := types.NewMsgTxoutConfirmationVoter(clientCtx.GetFromAddress().String(), argsTxoutId, argsTxHash, argsMMint, argsDestinationAsset, argsDestinationAmount, toAddress, argsBlockHeight)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
