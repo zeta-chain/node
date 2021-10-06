@@ -8,16 +8,17 @@ import "gogoproto/gogo.proto";
 message Txout {
   string creator = 1;
   uint64 id = 2;
-  string txinHash = 3; 
-  string sourceAsset = 4; 
+  string txinHash = 3;
+  string sourceAsset = 4;
   uint64 sourceAmount = 5;
   uint64 mBurnt = 6;
   uint64 mMint = 7;
   string destinationAsset = 8;
-  string fromAddress = 9;
-  string toAddress = 10;
-  uint64 blockHeight = 11;
-  repeated string signers = 12 [(gogoproto.nullable) = false];
-  uint64 finalizedHeight = 13;
+  uint64 destinationAmount = 9;
+  string fromAddress = 10;
+  string toAddress = 11;
+  uint64 blockHeight = 12;
+  repeated string signers = 13 [(gogoproto.nullable) = false];
+  uint64 finalizedHeight = 14;
 
 }
