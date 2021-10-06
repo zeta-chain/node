@@ -2,11 +2,17 @@ syntax = "proto3";
 package MetaProtocol.metacore.metacore;
 
 // this line is used by starport scaffolding # genesis/proto/import
+import "metacore/node_account.proto";
+import "metacore/txin_voter.proto";
+import "metacore/txin.proto";
 
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
     // this line is used by starport scaffolding # genesis/proto/state
+		repeated NodeAccount nodeAccountList = 3; // this line is used by starport scaffolding # genesis/proto/stateField
+		repeated TxinVoter txinVoterList = 2; // this line is used by starport scaffolding # genesis/proto/stateField
+		repeated Txin txinList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
     // this line is used by starport scaffolding # ibc/genesis/proto
 }

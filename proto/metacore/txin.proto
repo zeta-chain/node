@@ -1,0 +1,21 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+import "gogoproto/gogo.proto";
+
+message Txin {
+  string creator = 1;
+  string index = 2;
+  string txHash = 3; 
+  string sourceAsset = 4; 
+  uint64 sourceAmount = 5;
+  uint64 mBurnt = 6;
+  string destinationAsset = 7; 
+  string fromAddress = 8; 
+  string toAddress = 9; 
+  uint64 blockHeight = 10;
+  repeated string signers = 11 [(gogoproto.nullable) = false];
+  uint64 finalizedHeight = 12;
+}
