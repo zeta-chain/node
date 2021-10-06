@@ -12,10 +12,12 @@ message Txout {
   string sourceAsset = 4; 
   uint64 sourceAmount = 5;
   uint64 mBurnt = 6;
-  string destinationAsset = 7; 
-  string fromAddress = 8; 
-  string toAddress = 9;
-  uint64 blockHeight = 10;
-  repeated string signers = 11 [(gogoproto.nullable) = false];
-  uint64 finalizedHeight = 12;
+  uint64 mMint = 7;
+  string destinationAsset = 8;
+  string fromAddress = 9;
+  string toAddress = 10;
+  uint64 blockHeight = 11;
+  repeated string signers = 12 [(gogoproto.nullable) = false];
+  uint64 finalizedHeight = 13;
+
 }

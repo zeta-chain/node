@@ -68,19 +68,19 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 	// FIXME: change to super-majority of current validator set
 	if len(txin.Signers) == 2 { // the first time that txin reaches consensus
 		txin.FinalizedHeight = uint64(ctx.BlockHeader().Height)
-
 		// create Txout for Metaclient to consume
 		txout := types.Txout{
-			Creator:          "",   // not used
-			Id:               0,    // Id will get overwritten when SetTxout
-			TxinHash:         txin.TxHash,
+			Creator:          "",             // not used
+			Id:               0,              // Id will get overwritten when SetTxout
+			TxinHash:         hashTxin.Hex(), // the Txin that generates this Txout. 
 			SourceAsset:      txin.SourceAsset,
 			SourceAmount:     txin.SourceAmount,
 			MBurnt:           txin.MBurnt,
+			MMint:            txin.MBurnt, //TODO: compute the amount to Mint; should be MBurnt - gas on destination - our fee.
 			DestinationAsset: txin.DestinationAsset,
 			FromAddress:      txin.FromAddress,
 			ToAddress:        txin.ToAddress,
-			BlockHeight:      txin.BlockHeight,
+			BlockHeight:      0,
 			Signers:          []string{},
 			FinalizedHeight:  0,
 		}

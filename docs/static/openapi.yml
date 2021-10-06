@@ -19762,6 +19762,9 @@ paths:
                     mBurnt:
                       type: string
                       format: uint64
+                    mMint:
+                      type: string
+                      format: uint64
                     destinationAsset:
                       type: string
                     fromAddress:
@@ -19898,6 +19901,9 @@ paths:
                     type: string
                     format: uint64
                   mBurnt:
+                    type: string
+                    format: uint64
+                  mMint:
                     type: string
                     format: uint64
                   destinationAsset:
@@ -30350,6 +30356,9 @@ definitions:
             mBurnt:
               type: string
               format: uint64
+            mMint:
+              type: string
+              format: uint64
             destinationAsset:
               type: string
             fromAddress:
@@ -30508,6 +30517,9 @@ definitions:
           mBurnt:
             type: string
             format: uint64
+          mMint:
+            type: string
+            format: uint64
           destinationAsset:
             type: string
           fromAddress:
@@ -30605,6 +30617,9 @@ definitions:
         type: string
         format: uint64
       mBurnt:
+        type: string
+        format: uint64
+      mMint:
         type: string
         format: uint64
       destinationAsset:
