@@ -1,6 +1,7 @@
 package metaclientd
 
 import (
+	"context"
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	"github.com/rs/zerolog/log"
 )
@@ -21,4 +22,28 @@ func (b *MetachainBridge) PostTxIn(fromAddress string, toAddress string, sourceA
 		return "", err
 	}
 	return metaTxHash, nil
+}
+
+// Post Txin to Metachain, with signature of the signer.
+// MetaChain takes this as a vote to the PostTxIn.
+func (b *MetachainBridge) PostTxoutConfirmation(txoutId uint64, txHash string, mMint uint64, destinationAsset string, destinationAmount uint64, toAddress string, blockHeight uint64) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgTxoutConfirmationVoter(signerAddress, txoutId, txHash, mMint, destinationAsset, destinationAmount, toAddress, blockHeight)
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("PostTxoutConfirmation broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
+}
+
+// Get all current Txout from MetaCore
+func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error){
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TxoutAll(context.Background(), &types.QueryAllTxoutRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("query TxoutAll error")
+		return nil, err
+	}
+	return resp.Txout, nil
 }

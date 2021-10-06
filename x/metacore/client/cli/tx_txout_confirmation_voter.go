@@ -15,9 +15,9 @@ var _ = strconv.Itoa(0)
 
 func CmdTxoutConfirmationVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "txout-confirmation-voter [txoutId] [txHash] [mMint] [destinationAsset] [destinationAmount] [blockHeight]",
+		Use:   "txout-confirmation-voter [txoutId] [txHash] [mMint] [destinationAsset] [destinationAmount] [toAddress] [blockHeight]",
 		Short: "Broadcast message TxoutConfirmationVoter",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsTxoutId, err := cast.ToUint64E(args[0])
 			if err != nil {
@@ -33,7 +33,9 @@ func CmdTxoutConfirmationVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsBlockHeight, err := cast.ToUint64E(args[5])
+			toAddress := string(args[5])
+
+			argsBlockHeight, err := cast.ToUint64E(args[6])
 			if err != nil {
 				return err
 			}
@@ -43,7 +45,7 @@ func CmdTxoutConfirmationVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTxoutConfirmationVoter(clientCtx.GetFromAddress().String(), argsTxoutId, string(argsTxHash), argsMMint, string(argsDestinationAsset), (argsDestinationAmount), (argsBlockHeight))
+			msg := types.NewMsgTxoutConfirmationVoter(clientCtx.GetFromAddress().String(), argsTxoutId, string(argsTxHash), argsMMint, string(argsDestinationAsset), (argsDestinationAmount), toAddress, (argsBlockHeight))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

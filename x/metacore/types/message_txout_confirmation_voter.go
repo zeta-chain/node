@@ -7,7 +7,7 @@ import (
 
 var _ sdk.Msg = &MsgTxoutConfirmationVoter{}
 
-func NewMsgTxoutConfirmationVoter(creator string, txoutId uint64, txHash string, mMint uint64, destinationAsset string, destinationAmount uint64, blockHeight uint64) *MsgTxoutConfirmationVoter {
+func NewMsgTxoutConfirmationVoter(creator string, txoutId uint64, txHash string, mMint uint64, destinationAsset string, destinationAmount uint64, toAddress string, blockHeight uint64) *MsgTxoutConfirmationVoter {
 	return &MsgTxoutConfirmationVoter{
 		Creator:           creator,
 		TxoutId:           txoutId,
@@ -15,6 +15,7 @@ func NewMsgTxoutConfirmationVoter(creator string, txoutId uint64, txHash string,
 		MMint:             mMint,
 		DestinationAsset:  destinationAsset,
 		DestinationAmount: destinationAmount,
+		ToAddress:         toAddress,
 		BlockHeight:       blockHeight,
 	}
 }

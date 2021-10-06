@@ -33,12 +33,17 @@ func (k msgServer) TxoutConfirmationVoter(goCtx context.Context, msg *types.MsgT
 	}
 
 	hashTxoutConf := crypto.Keccak256Hash([]byte(txoutConf.String()))
-	_, found = k.GetTxoutConfirmation(ctx, hashTxoutConf.Hex())
+	txoutConf2, found := k.GetTxoutConfirmation(ctx, hashTxoutConf.Hex())
 	if !found {
 		txoutConf.Index = hashTxoutConf.Hex()
+		txoutConf.Signers = append(txoutConf.Signers, msg.Creator)
+	} else {
+		txoutConf2.Signers = append(txoutConf2.Signers, msg.Creator)
+		txoutConf = txoutConf2
 	}
-	txoutConf.Signers = append(txoutConf.Signers, msg.Creator)
+
 	k.SetTxoutConfirmation(ctx, txoutConf)
+
 
 	if len(txoutConf.Signers) == 2 { // TODO: fix threshold
 		txoutConf.FinalizedHeight = uint64(ctx.BlockHeader().Height)
