@@ -35,7 +35,7 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 	k.SetTxinVoter(ctx, txinVoter)
 
 	// hash the body of txinVoter--making sure that each TxinVoter votes
-	// on the exact same Txin. 
+	// on the exact same Txin.
 	txinVoter.Index = ""
 	txinVoter.Creator = ""
 	hashTxin := crypto.Keccak256Hash([]byte(txinVoter.String()))
@@ -68,6 +68,23 @@ func (k msgServer) CreateTxinVoter(goCtx context.Context, msg *types.MsgCreateTx
 	// FIXME: change to super-majority of current validator set
 	if len(txin.Signers) == 2 { // the first time that txin reaches consensus
 		txin.FinalizedHeight = uint64(ctx.BlockHeader().Height)
+
+		// create Txout for Metaclient to consume
+		txout := types.Txout{
+			Creator:          "",   // not used
+			Id:               0,    // Id will get overwritten when SetTxout
+			TxinHash:         txin.TxHash,
+			SourceAsset:      txin.SourceAsset,
+			SourceAmount:     txin.SourceAmount,
+			MBurnt:           txin.MBurnt,
+			DestinationAsset: txin.DestinationAsset,
+			FromAddress:      txin.FromAddress,
+			ToAddress:        txin.ToAddress,
+			BlockHeight:      txin.BlockHeight,
+			Signers:          []string{},
+			FinalizedHeight:  0,
+		}
+		k.SetTxout(ctx, txout)
 	}
 
 	k.SetTxin(ctx, txin)
