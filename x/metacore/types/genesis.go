@@ -13,9 +13,11 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
-		NodeAccountList: []*NodeAccount{},
-		TxinVoterList:   []*TxinVoter{},
-		TxinList:        []*Txin{},
+		TxoutConfirmationList: []*TxoutConfirmation{},
+		TxoutList:             []*Txout{},
+		NodeAccountList:       []*NodeAccount{},
+		TxinVoterList:         []*TxinVoter{},
+		TxinList:              []*Txin{},
 	}
 }
 
@@ -25,6 +27,24 @@ func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
 	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in txoutConfirmation
+	txoutConfirmationIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.TxoutConfirmationList {
+		if _, ok := txoutConfirmationIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for txoutConfirmation")
+		}
+		txoutConfirmationIndexMap[elem.Index] = true
+	}
+	// Check for duplicated ID in txout
+	txoutIdMap := make(map[uint64]bool)
+
+	for _, elem := range gs.TxoutList {
+		if _, ok := txoutIdMap[elem.Id]; ok {
+			return fmt.Errorf("duplicated id for txout")
+		}
+		txoutIdMap[elem.Id] = true
+	}
 	// Check for duplicated index in nodeAccount
 	nodeAccountIndexMap := make(map[string]bool)
 

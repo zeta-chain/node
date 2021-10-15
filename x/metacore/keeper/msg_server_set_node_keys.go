@@ -28,6 +28,6 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 	} else {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s already has a node account", msg.Creator))
 	}
-	
+
 	return &types.MsgSetNodeKeysResponse{}, nil
 }

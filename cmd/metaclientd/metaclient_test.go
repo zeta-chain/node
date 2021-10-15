@@ -59,6 +59,8 @@ func (s *MySuite) TestGetAccountNumberAndSeuqeuence(c *C) {
 	c.Logf("acc number %d acc sequence %d", an, as)
 }
 
+// run this test with tag "voter" and a fresh chain!
+// starport chain serve --reset-once
 func (s *MySuite) TestObservedTxIn(c *C) {
 	b := s.bridge
 	//err := b.PostTxIn("ETH.ETH", 2, 4, "ETH.BSC", "0xdeadbeef", "0x1234", 2345)
