@@ -49,3 +49,7 @@ const (
 const (
 	SendVoterKey = "SendVoter-value-"
 )
+
+const (
+	SendKey = "Send-value-"
+)
