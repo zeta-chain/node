@@ -45,3 +45,7 @@ const (
 const (
 	TxoutConfirmationKey = "TxoutConfirmation-value-"
 )
+
+const (
+	SendVoterKey = "SendVoter-value-"
+)

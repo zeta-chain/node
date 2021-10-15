@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
+		SendVoterList:         []*SendVoter{},
 		TxoutConfirmationList: []*TxoutConfirmation{},
 		TxoutList:             []*Txout{},
 		NodeAccountList:       []*NodeAccount{},
@@ -27,6 +28,15 @@ func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
 	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in sendVoter
+	sendVoterIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.SendVoterList {
+		if _, ok := sendVoterIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for sendVoter")
+		}
+		sendVoterIndexMap[elem.Index] = true
+	}
 	// Check for duplicated index in txoutConfirmation
 	txoutConfirmationIndexMap := make(map[string]bool)
 

@@ -10,6 +10,11 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the sendVoter
+	for _, elem := range genState.SendVoterList {
+		k.SetSendVoter(ctx, *elem)
+	}
+
 	// Set all the txoutConfirmation
 	for _, elem := range genState.TxoutConfirmationList {
 		k.SetTxoutConfirmation(ctx, *elem)
@@ -46,6 +51,13 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all sendVoter
+	sendVoterList := k.GetAllSendVoter(ctx)
+	for _, elem := range sendVoterList {
+		elem := elem
+		genesis.SendVoterList = append(genesis.SendVoterList, &elem)
+	}
+
 	// Get all txoutConfirmation
 	txoutConfirmationList := k.GetAllTxoutConfirmation(ctx)
 	for _, elem := range txoutConfirmationList {

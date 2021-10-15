@@ -2,6 +2,7 @@ syntax = "proto3";
 package MetaProtocol.metacore.metacore;
 
 // this line is used by starport scaffolding # genesis/proto/import
+import "metacore/send_voter.proto";
 import "metacore/txout_confirmation.proto";
 import "metacore/txout.proto";
 import "metacore/node_account.proto";
@@ -13,6 +14,7 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
     // this line is used by starport scaffolding # genesis/proto/state
+		repeated SendVoter sendVoterList = 7; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated TxoutConfirmation txoutConfirmationList = 6; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated Txout txoutList = 4; // this line is used by starport scaffolding # genesis/proto/stateField
 		uint64 txoutCount = 5; // this line is used by starport scaffolding # genesis/proto/stateField
