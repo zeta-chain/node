@@ -4,6 +4,8 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/txout_confirmation.proto";
+import "metacore/txout.proto";
 import "metacore/node_account.proto";
 import "metacore/txin_voter.proto";
 import "metacore/txin.proto";
@@ -13,6 +15,28 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a txoutConfirmation by index.
+	rpc TxoutConfirmation(QueryGetTxoutConfirmationRequest) returns (QueryGetTxoutConfirmationResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txoutConfirmation/{index}";
+	}
+
+	// Queries a list of txoutConfirmation items.
+	rpc TxoutConfirmationAll(QueryAllTxoutConfirmationRequest) returns (QueryAllTxoutConfirmationResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txoutConfirmation";
+	}
+
+
+	// Queries a txout by id.
+	rpc Txout(QueryGetTxoutRequest) returns (QueryGetTxoutResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txout/{id}";
+	}
+
+	// Queries a list of txout items.
+	rpc TxoutAll(QueryAllTxoutRequest) returns (QueryAllTxoutResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txout";
+	}
+
 
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
@@ -55,6 +79,38 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetTxoutConfirmationRequest {
+	string index = 1;
+}
+
+message QueryGetTxoutConfirmationResponse {
+	TxoutConfirmation TxoutConfirmation = 1;
+}
+
+message QueryAllTxoutConfirmationRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTxoutConfirmationResponse {
+	repeated TxoutConfirmation TxoutConfirmation = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetTxoutRequest {
+	uint64 id = 1;
+}
+
+message QueryGetTxoutResponse {
+	Txout Txout = 1;
+}
+
+message QueryAllTxoutRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTxoutResponse {
+	repeated Txout Txout = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetNodeAccountRequest {
 	string index = 1;
 }
