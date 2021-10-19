@@ -18,7 +18,7 @@ func TestSendVoterMsgServerCreate(t *testing.T) {
 	creator := "A"
 	for i := 0; i < 5; i++ {
 		idx := fmt.Sprintf("%d", i)
-		expected := &types.MsgCreateSendVoter{Creator: creator, Index: idx}
+		expected := &types.MsgCreateSendVoter{Creator: creator, TxHash: fmt.Sprintf("txahsh%s", idx), Index: idx}
 		_, err := srv.CreateSendVoter(wctx, expected)
 		require.NoError(t, err)
 		rst, found := keeper.GetSendVoter(ctx, expected.Index)
