@@ -51,7 +51,7 @@ func (k msgServer) CreateSendVoter(goCtx context.Context, msg *types.MsgCreateSe
 		send.Signers = append(send.Signers, msg.Creator)
 	} else {
 		send = types.Send{
-			Index:           msg.Index,
+			Index:           hashSend.Hex(),
 			Creator:         msg.Creator,
 			Sender:          msg.Sender,
 			SenderChainId:   msg.SenderChainId,
@@ -67,7 +67,8 @@ func (k msgServer) CreateSendVoter(goCtx context.Context, msg *types.MsgCreateSe
 
 	if len(send.Signers) == 2 {
 		send.FinalizedHeight = uint64(ctx.BlockHeader().Height)
-		//TODO: generate RECV item.
 	}
+	k.SetSend(ctx, send)
+
 	return &types.MsgCreateSendVoterResponse{}, nil
 }

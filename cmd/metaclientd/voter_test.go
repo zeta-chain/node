@@ -116,3 +116,30 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	c.Assert(err, IsNil)
 	log.Info().Msgf("txouts: %v", txouts)
 }
+
+func (s *VoterSuite) TestSendMVoter(c *C) {
+	b1 := s.bridge1
+	b2 := s.bridge2
+	metaHash, err := b1.PostSendM("0xtxhash", "0xfrom", "ethereum", "0xreceiver", "bsc", "123848", "hello", 123);
+
+	c.Assert(err, IsNil)
+	log.Info().Msgf("PostSendM metaHash %s", metaHash)
+
+	// wait for the next block
+	timer1 := time.NewTimer(2 * time.Second)
+	<-timer1.C
+
+	metaHash, err = b2.PostSendM("0xtxhash", "0xfrom", "ethereum", "0xreceiver", "bsc", "123848", "hello", 123);
+	c.Assert(err, IsNil)
+	log.Info().Msgf("Second PostSendM metaHash %s", metaHash)
+
+	// wait for the next block
+	timer2 := time.NewTimer(2 * time.Second)
+	<-timer2.C
+
+	sendall, err := b1.GetSendAll()
+	c.Assert(err, IsNil)
+	log.Info().Msgf("sendall: %v", sendall)
+	c.Assert(len(sendall) >= 1, Equals, true)
+
+}

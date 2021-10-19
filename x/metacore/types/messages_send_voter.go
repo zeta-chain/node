@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -10,7 +11,7 @@ var _ sdk.Msg = &MsgCreateSendVoter{}
 func NewMsgCreateSendVoter(creator string, index string, sender string, senderChainId string, receiver string, receiverChainId string, mBurnt string, message string, txHash string, blockHeight uint64) *MsgCreateSendVoter {
 	return &MsgCreateSendVoter{
 		Creator:         creator,
-		Index:           index,
+		Index:           fmt.Sprintf("%s-%s", txHash, creator),
 		Sender:          sender,
 		SenderChainId:   senderChainId,
 		Receiver:        receiver,
