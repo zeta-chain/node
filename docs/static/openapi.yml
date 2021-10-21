@@ -19375,6 +19375,16 @@ paths:
                     outBlockHeight:
                       type: string
                       format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    inTxFinalizedHeight:
+                      type: string
+                      format: uint64
+                    outTxFianlizedHeight:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19508,6 +19518,16 @@ paths:
                   outTxHash:
                     type: string
                   outBlockHeight:
+                    type: string
+                    format: uint64
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  inTxFinalizedHeight:
+                    type: string
+                    format: uint64
+                  outTxFianlizedHeight:
                     type: string
                     format: uint64
         default:
@@ -30668,6 +30688,16 @@ definitions:
             outBlockHeight:
               type: string
               format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            inTxFinalizedHeight:
+              type: string
+              format: uint64
+            outTxFianlizedHeight:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -31009,6 +31039,16 @@ definitions:
           outBlockHeight:
             type: string
             format: uint64
+          signers:
+            type: array
+            items:
+              type: string
+          inTxFinalizedHeight:
+            type: string
+            format: uint64
+          outTxFianlizedHeight:
+            type: string
+            format: uint64
   MetaProtocol.metacore.metacore.QueryGetTxinResponse:
     type: object
     properties:
@@ -31187,6 +31227,16 @@ definitions:
       outTxHash:
         type: string
       outBlockHeight:
+        type: string
+        format: uint64
+      signers:
+        type: array
+        items:
+          type: string
+      inTxFinalizedHeight:
+        type: string
+        format: uint64
+      outTxFianlizedHeight:
         type: string
         format: uint64
   MetaProtocol.metacore.metacore.Txin:

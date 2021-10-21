@@ -9,25 +9,34 @@ import (
 func (k msgServer) CreateSend(goCtx context.Context, msg *types.MsgCreateSend) (*types.MsgCreateSendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// index should be inTxHash
 	send, isFound := k.GetSend(ctx, msg.Index)
 	if !isFound {
 		send = types.Send{
 			Index:          msg.Index,
-			Creator:        msg.Creator,
+			Creator:        "",
 			Sender:         msg.Sender,
 			SenderChain:    msg.SenderChain,
 			Receiver:       msg.Receiver,
 			ReceiverChain:  msg.ReceiverChain,
 			MBurnt:         msg.MBurnt,
-			MMint:          msg.MMint,
+			MMint:          "",
 			Message:        msg.Message,
 			InTxHash:       msg.InTxHash,
 			InBlockHeight:  msg.InBlockHeight,
-			OutTxHash:      msg.OutTxHash,
-			OutBlockHeight: msg.OutBlockHeight,
+			OutTxHash:      "",
+			OutBlockHeight: 0,
+			Signers:        []string{msg.Creator},
+			InTxFinalizedHeight: 0,
+			OutTxFianlizedHeight: 0,
 		}
+	} else {
+		//TODO: check if msg.Creator is already in signers;
+		//TODO: verify that msg.Creator is one of the validators;
+		send.Signers = append(send.Signers, msg.Creator)
+
 	}
+
+
 
 
 	k.SetSend(ctx, send)

@@ -19,4 +19,7 @@ message Send {
   uint64 inBlockHeight = 11;
   string outTxHash = 12; 
   uint64 outBlockHeight = 13;
+  repeated string signers = 14;
+  uint64 inTxFinalizedHeight = 15;
+  uint64 outTxFianlizedHeight = 16;
 }

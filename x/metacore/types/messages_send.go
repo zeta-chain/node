@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var _ sdk.Msg = &MsgCreateSend{}
@@ -47,9 +48,25 @@ func (msg *MsgCreateSend) GetSignBytes() []byte {
 }
 
 func (msg *MsgCreateSend) ValidateBasic() error {
+	//TODO: add basic validation here
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	if msg.Digest() != msg.Index {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "index %s must match digest of message", msg.Index)
+	}
 	return nil
+}
+
+// the digest should be used as index of the Send
+func (msg *MsgCreateSend) Digest() string {
+	m := *msg
+	m.Creator = ""
+	m.Index = ""
+	m.OutTxHash = ""
+	m.OutBlockHeight = 0
+	m.MMint = ""
+	hash := crypto.Keccak256Hash([]byte(m.String()))
+	return hash.Hex()
 }
