@@ -1,0 +1,22 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+import "gogoproto/gogo.proto";
+
+message Send {
+  string creator = 1;
+  string index = 2;
+  string sender = 3; 
+  string senderChain = 4; 
+  string receiver = 5; 
+  string receiverChain = 6; 
+  string mBurnt = 7; 
+  string mMint = 8; 
+  string message = 9; 
+  string inTxHash = 10; 
+  uint64 inBlockHeight = 11;
+  string outTxHash = 12; 
+  uint64 outBlockHeight = 13;
+}
