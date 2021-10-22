@@ -24,19 +24,19 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Send struct {
-	Creator             string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Index               string `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	Sender              string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
-	SenderChain         string `protobuf:"bytes,4,opt,name=senderChain,proto3" json:"senderChain,omitempty"`
-	Receiver            string `protobuf:"bytes,5,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	ReceiverChain       string `protobuf:"bytes,6,opt,name=receiverChain,proto3" json:"receiverChain,omitempty"`
-	MBurnt              string `protobuf:"bytes,7,opt,name=mBurnt,proto3" json:"mBurnt,omitempty"`
-	MMint               string `protobuf:"bytes,8,opt,name=mMint,proto3" json:"mMint,omitempty"`
-	Message             string `protobuf:"bytes,9,opt,name=message,proto3" json:"message,omitempty"`
-	InTxHash            string `protobuf:"bytes,10,opt,name=inTxHash,proto3" json:"inTxHash,omitempty"`
-	InBlockHeight       string `protobuf:"bytes,11,opt,name=inBlockHeight,proto3" json:"inBlockHeight,omitempty"`
-	FinalizedMetaHeight string `protobuf:"bytes,12,opt,name=finalizedMetaHeight,proto3" json:"finalizedMetaHeight,omitempty"`
-	Signers             string `protobuf:"bytes,13,opt,name=signers,proto3" json:"signers,omitempty"`
+	Creator             string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Index               string   `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
+	Sender              string   `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+	SenderChain         string   `protobuf:"bytes,4,opt,name=senderChain,proto3" json:"senderChain,omitempty"`
+	Receiver            string   `protobuf:"bytes,5,opt,name=receiver,proto3" json:"receiver,omitempty"`
+	ReceiverChain       string   `protobuf:"bytes,6,opt,name=receiverChain,proto3" json:"receiverChain,omitempty"`
+	MBurnt              string   `protobuf:"bytes,7,opt,name=mBurnt,proto3" json:"mBurnt,omitempty"`
+	MMint               string   `protobuf:"bytes,8,opt,name=mMint,proto3" json:"mMint,omitempty"`
+	Message             string   `protobuf:"bytes,9,opt,name=message,proto3" json:"message,omitempty"`
+	InTxHash            string   `protobuf:"bytes,10,opt,name=inTxHash,proto3" json:"inTxHash,omitempty"`
+	InBlockHeight       string   `protobuf:"bytes,11,opt,name=inBlockHeight,proto3" json:"inBlockHeight,omitempty"`
+	FinalizedMetaHeight string   `protobuf:"bytes,12,opt,name=finalizedMetaHeight,proto3" json:"finalizedMetaHeight,omitempty"`
+	Signers             []string `protobuf:"bytes,13,rep,name=signers,proto3" json:"signers,omitempty"`
 }
 
 func (m *Send) Reset()         { *m = Send{} }
@@ -156,11 +156,11 @@ func (m *Send) GetFinalizedMetaHeight() string {
 	return ""
 }
 
-func (m *Send) GetSigners() string {
+func (m *Send) GetSigners() []string {
 	if m != nil {
 		return m.Signers
 	}
-	return ""
+	return nil
 }
 
 func init() {
@@ -170,7 +170,7 @@ func init() {
 func init() { proto.RegisterFile("metacore/send.proto", fileDescriptor_c81f0328df818595) }
 
 var fileDescriptor_c81f0328df818595 = []byte{
-	// 341 bytes of a gzipped FileDescriptorProto
+	// 343 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x92, 0xcf, 0x4e, 0x32, 0x31,
 	0x14, 0xc5, 0x99, 0x8f, 0xff, 0xe5, 0x63, 0x53, 0x88, 0x69, 0x58, 0x34, 0xc4, 0xb8, 0x70, 0x23,
 	0x63, 0xf4, 0x0d, 0x70, 0xc3, 0x42, 0x12, 0xa3, 0xae, 0xdc, 0x95, 0x99, 0x6b, 0xa7, 0x91, 0x69,
@@ -188,11 +188,11 @@ var fileDescriptor_c81f0328df818595 = []byte{
 	0x33, 0x66, 0x32, 0x82, 0x42, 0x93, 0x92, 0x5d, 0x13, 0x21, 0xa7, 0x4b, 0x95, 0x3c, 0xcd, 0x40,
 	0xf0, 0xcc, 0x92, 0x5e, 0x68, 0x72, 0x60, 0xe2, 0x73, 0x34, 0x78, 0x14, 0x92, 0x2d, 0xc5, 0x2b,
 	0xa4, 0xee, 0xff, 0x2f, 0xb2, 0xff, 0x7d, 0xf6, 0xaf, 0x91, 0x6b, 0x63, 0x04, 0x97, 0xa0, 0x0d,
-	0xe9, 0x87, 0x36, 0x05, 0x4e, 0xaf, 0x3f, 0x76, 0x34, 0xda, 0xee, 0x68, 0xf4, 0xb5, 0xa3, 0xd1,
-	0xfb, 0x9e, 0xd6, 0xb6, 0x7b, 0x5a, 0xfb, 0xdc, 0xd3, 0xda, 0xc3, 0x05, 0x17, 0x36, 0x5b, 0x2f,
-	0x26, 0x89, 0xca, 0x63, 0xf7, 0x53, 0x67, 0xe5, 0x33, 0xc7, 0xd5, 0x87, 0xb0, 0xf9, 0x91, 0xf6,
-	0x65, 0x05, 0x66, 0xd1, 0xf2, 0xef, 0x7b, 0xf9, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x20, 0x67,
-	0x86, 0x2c, 0x02, 0x00, 0x00,
+	0xe9, 0x8f, 0xeb, 0xae, 0x4d, 0x81, 0xd3, 0xeb, 0x8f, 0x1d, 0x8d, 0xb6, 0x3b, 0x1a, 0x7d, 0xed,
+	0x68, 0xf4, 0xbe, 0xa7, 0xb5, 0xed, 0x9e, 0xd6, 0x3e, 0xf7, 0xb4, 0xf6, 0x70, 0xc1, 0x85, 0xcd,
+	0xd6, 0x8b, 0x49, 0xa2, 0xf2, 0xd8, 0xfd, 0xd4, 0x59, 0xf9, 0xcc, 0x71, 0xf5, 0x21, 0x6c, 0x7e,
+	0xa4, 0x7d, 0x59, 0x81, 0x59, 0xb4, 0xfc, 0xfb, 0x5e, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0xf3,
+	0x0a, 0xec, 0x53, 0x2c, 0x02, 0x00, 0x00,
 }
 
 func (m *Send) Marshal() (dAtA []byte, err error) {
@@ -216,11 +216,13 @@ func (m *Send) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Signers) > 0 {
-		i -= len(m.Signers)
-		copy(dAtA[i:], m.Signers)
-		i = encodeVarintSend(dAtA, i, uint64(len(m.Signers)))
-		i--
-		dAtA[i] = 0x6a
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintSend(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0x6a
+		}
 	}
 	if len(m.FinalizedMetaHeight) > 0 {
 		i -= len(m.FinalizedMetaHeight)
@@ -374,9 +376,11 @@ func (m *Send) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSend(uint64(l))
 	}
-	l = len(m.Signers)
-	if l > 0 {
-		n += 1 + l + sovSend(uint64(l))
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovSend(uint64(l))
+		}
 	}
 	return n
 }
@@ -830,7 +834,7 @@ func (m *Send) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signers = string(dAtA[iNdEx:postIndex])
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
