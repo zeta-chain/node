@@ -27,7 +27,7 @@ message MsgSendVoter {
   string mMint = 7;
   string message = 8;
   string inTxHash = 9;
-  string inBlockHeight = 10;
+  uint64 inBlockHeight = 10;
 }
 
 message MsgSendVoterResponse {

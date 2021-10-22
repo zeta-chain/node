@@ -26,14 +26,16 @@ func CmdSendVoter() *cobra.Command {
 			argsMMint := string(args[5])
 			argsMessage := string(args[6])
 			argsInTxHash := string(args[7])
-			argsInBlockHeight := string(args[8])
-
+			argsInBlockHeight,err := strconv.ParseInt(args[8], 10, 64)
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), string(argsSender), string(argsSenderChain), string(argsReceiver), string(argsReceiverChain), string(argsMBurnt), string(argsMMint), string(argsMessage), string(argsInTxHash), string(argsInBlockHeight))
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), string(argsSender), string(argsSenderChain), string(argsReceiver), string(argsReceiverChain), string(argsMBurnt), string(argsMMint), string(argsMessage), string(argsInTxHash), uint64(argsInBlockHeight))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
