@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/receive.proto";
 import "metacore/send.proto";
 import "metacore/node_account.proto";
 
@@ -12,6 +13,17 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a receive by index.
+	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/receive/{index}";
+	}
+
+	// Queries a list of receive items.
+	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/receive";
+	}
+
 
 	// Queries a send by index.
 	rpc Send(QueryGetSendRequest) returns (QueryGetSendResponse) {
@@ -45,6 +57,22 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetReceiveRequest {
+	string index = 1;
+}
+
+message QueryGetReceiveResponse {
+	Receive Receive = 1;
+}
+
+message QueryAllReceiveRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllReceiveResponse {
+	repeated Receive Receive = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetSendRequest {
 	string index = 1;
 }
