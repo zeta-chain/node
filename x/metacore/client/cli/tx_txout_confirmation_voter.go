@@ -24,7 +24,7 @@ func CmdTxoutConfirmationVoter() *cobra.Command {
 				return err
 			}
 			argsTxHash := args[1]
-			argsMMint,err := cast.ToUint64E(args[2])
+			argsMMint, err := cast.ToUint64E(args[2])
 			if err != nil {
 				return err
 			}

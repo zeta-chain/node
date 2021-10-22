@@ -100,7 +100,7 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	txouts, err := b1.GetAllTxout()
 	c.Assert(err, IsNil)
 	log.Info().Msgf("txouts: %v", txouts)
-	c.Assert(len(txouts) >=1, Equals, true)
+	c.Assert(len(txouts) >= 1, Equals, true)
 
 	txout := txouts[0]
 	tid := txout.Id
