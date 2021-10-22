@@ -16,7 +16,7 @@ message Send {
   string mMint = 8; 
   string message = 9; 
   string inTxHash = 10; 
-  string inBlockHeight = 11; 
-  string finalizedMetaHeight = 12; 
+  uint64 inBlockHeight = 11;
+  uint64 finalizedMetaHeight = 12;
   repeated string signers = 13;
 }

@@ -19369,8 +19369,10 @@ paths:
                       type: string
                     inBlockHeight:
                       type: string
+                      format: uint64
                     finalizedMetaHeight:
                       type: string
+                      format: uint64
                     signers:
                       type: array
                       items:
@@ -19504,8 +19506,10 @@ paths:
                     type: string
                   inBlockHeight:
                     type: string
+                    format: uint64
                   finalizedMetaHeight:
                     type: string
+                    format: uint64
                   signers:
                     type: array
                     items:
@@ -30662,8 +30666,10 @@ definitions:
               type: string
             inBlockHeight:
               type: string
+              format: uint64
             finalizedMetaHeight:
               type: string
+              format: uint64
             signers:
               type: array
               items:
@@ -31003,8 +31009,10 @@ definitions:
             type: string
           inBlockHeight:
             type: string
+            format: uint64
           finalizedMetaHeight:
             type: string
+            format: uint64
           signers:
             type: array
             items:
@@ -31183,8 +31191,10 @@ definitions:
         type: string
       inBlockHeight:
         type: string
+        format: uint64
       finalizedMetaHeight:
         type: string
+        format: uint64
       signers:
         type: array
         items:
