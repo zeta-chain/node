@@ -30530,6 +30530,8 @@ definitions:
       the connection handshake.
   MetaProtocol.metacore.metacore.MsgCreateTxinVoterResponse:
     type: object
+  MetaProtocol.metacore.metacore.MsgSendVoterResponse:
+    type: object
   MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgTxoutConfirmationVoterResponse:
