@@ -19372,7 +19372,9 @@ paths:
                     finalizedMetaHeight:
                       type: string
                     signers:
-                      type: string
+                      type: array
+                      items:
+                        type: string
               pagination:
                 type: object
                 properties:
@@ -19505,7 +19507,9 @@ paths:
                   finalizedMetaHeight:
                     type: string
                   signers:
-                    type: string
+                    type: array
+                    items:
+                      type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30659,7 +30663,9 @@ definitions:
             finalizedMetaHeight:
               type: string
             signers:
-              type: string
+              type: array
+              items:
+                type: string
       pagination:
         type: object
         properties:
@@ -30998,7 +31004,9 @@ definitions:
           finalizedMetaHeight:
             type: string
           signers:
-            type: string
+            type: array
+            items:
+              type: string
   MetaProtocol.metacore.metacore.QueryGetTxinResponse:
     type: object
     properties:
@@ -31176,7 +31184,9 @@ definitions:
       finalizedMetaHeight:
         type: string
       signers:
-        type: string
+        type: array
+        items:
+          type: string
   MetaProtocol.metacore.metacore.Txin:
     type: object
     properties:
