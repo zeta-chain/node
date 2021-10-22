@@ -10,6 +10,12 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+// Set all the receive
+for _, elem := range genState.ReceiveList {
+	k.SetReceive(ctx, *elem)
+}
+
+
 	// Set all the send
 	for _, elem := range genState.SendList {
 		k.SetSend(ctx, *elem)
@@ -32,6 +38,13 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+// Get all receive
+receiveList := k.GetAllReceive(ctx)
+for _, elem := range receiveList {
+	elem := elem
+	genesis.ReceiveList = append(genesis.ReceiveList, &elem)
+}
+
 	// Get all send
 	sendList := k.GetAllSend(ctx)
 	for _, elem := range sendList {
