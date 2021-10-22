@@ -18,14 +18,14 @@ func CmdSendVoter() *cobra.Command {
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsSender := string(args[0])
-			argsSenderChain := string(args[1])
-			argsReceiver := string(args[2])
-			argsReceiverChain := string(args[3])
-			argsMBurnt := string(args[4])
-			argsMMint := string(args[5])
-			argsMessage := string(args[6])
-			argsInTxHash := string(args[7])
+			argsSender := (args[0])
+			argsSenderChain := (args[1])
+			argsReceiver := (args[2])
+			argsReceiverChain := (args[3])
+			argsMBurnt := (args[4])
+			argsMMint := (args[5])
+			argsMessage := (args[6])
+			argsInTxHash := (args[7])
 			argsInBlockHeight,err := strconv.ParseInt(args[8], 10, 64)
 			if err != nil {
 				return err
@@ -35,7 +35,7 @@ func CmdSendVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), string(argsSender), string(argsSenderChain), string(argsReceiver), string(argsReceiverChain), string(argsMBurnt), string(argsMMint), string(argsMessage), string(argsInTxHash), uint64(argsInBlockHeight))
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
