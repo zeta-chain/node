@@ -38,7 +38,7 @@ func (b *MetachainBridge) PostTxoutConfirmation(txoutId uint64, txHash string, m
 }
 
 // Get all current Txout from MetaCore
-func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error){
+func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TxoutAll(context.Background(), &types.QueryAllTxoutRequest{})
 	if err != nil {
