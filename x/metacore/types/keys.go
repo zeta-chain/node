@@ -51,5 +51,5 @@ const (
 )
 
 const (
-	ReceiveKey= "Receive-value-"
+	ReceiveKey = "Receive-value-"
 )

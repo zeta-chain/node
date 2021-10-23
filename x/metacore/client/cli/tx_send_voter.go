@@ -26,7 +26,7 @@ func CmdSendVoter() *cobra.Command {
 			argsMMint := (args[5])
 			argsMessage := (args[6])
 			argsInTxHash := (args[7])
-			argsInBlockHeight,err := strconv.ParseInt(args[8], 10, 64)
+			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
 			if err != nil {
 				return err
 			}

@@ -15,17 +15,17 @@ import (
 
 	"github.com/Meta-Protocol/metacore/testutil/network"
 	"github.com/Meta-Protocol/metacore/x/metacore/client/cli"
-    "github.com/Meta-Protocol/metacore/x/metacore/types"
+	"github.com/Meta-Protocol/metacore/x/metacore/types"
 )
 
 func networkWithReceiveObjects(t *testing.T, n int) (*network.Network, []*types.Receive) {
 	t.Helper()
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
-    require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.ReceiveList = append(state.ReceiveList, &types.Receive{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.ReceiveList = append(state.ReceiveList, &types.Receive{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
