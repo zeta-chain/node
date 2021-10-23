@@ -7,5 +7,5 @@ import (
 func TestQueryRouter(t *testing.T) {
 	mo := &MetaObserver{}
 
-	mo.WatchRouter("Ethereum")
+	mo.WatchRouter("BSC")
 }
