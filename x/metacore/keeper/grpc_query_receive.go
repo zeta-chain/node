@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
+	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -47,7 +47,7 @@ func (k Keeper) Receive(c context.Context, req *types.QueryGetReceiveRequest) (*
 
 	val, found := k.GetReceive(ctx, req.Index)
 	if !found {
-	    return nil, status.Error(codes.InvalidArgument, "not found")
+		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
 	return &types.QueryGetReceiveResponse{Receive: &val}, nil

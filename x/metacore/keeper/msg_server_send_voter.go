@@ -28,27 +28,14 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			InTxHash:            msg.InTxHash,
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
-			Signers: 			 []string{msg.Creator},
+			Signers:             []string{msg.Creator},
 		}
 	}
 
 	//TODO: proper super majority needed
 	if len(send.Signers) == 2 {
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		// create receive var to signal outbound tx
-		// also for collecting confirmation and store signers
-		receive := types.Receive{
-			Creator:             msg.Creator,
-			Index:               index,
-			SendHash:            index,
-			OutTxHash:           "",
-			OutBlockHeight:      0,
-			FinalizedMetaHeight: 0,
-			Signers:             []string{},
-		}
-		k.SetReceive(ctx, receive)
 	}
-
 
 	k.SetSend(ctx, send)
 
