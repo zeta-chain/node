@@ -1,14 +1,11 @@
-package metaclient
+package metaclientd
 
 import (
 	"testing"
 )
 
-// Testing boilerplate... todo once implemented
+func TestQueryRouter(t *testing.T) {
+	mo := &MetaObserver{}
 
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct {
+	mo.WatchRouter("Ethereum")
 }
-
-var _ = Suite(&MySuite{})

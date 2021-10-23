@@ -1,194 +1,168 @@
-package metaclient
+package metaclientd
 
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// Based on old router query code, currently WIP
-func query_router_deposit(httpserver *TssHttpServer, chain string, bridge *metaclient.MetachainBridge) {
-	var NODE string
-	var ROUTER string
+// Constants
+const (
+	// Routers
+	ETH_ROUTER  = "0xaEf30949004FAAfcAd2c0e47c0491D91Dd76f7AA"
+	POLY_ROUTER = ""
+	BSC_ROUTER  = ""
+
+	// API Endpoints
+	ETH_ENDPOINT  = "https://ropsten.infura.io/v3/90705d89baca4c2f9a8178f86d30c4f8"
+	POLY_ENDPOINT = ""
+	BSC_ENDPOINT  = ""
+
+	// Ticker timers
+	ETH_BLOCK_TIME  = 15
+	POLY_BLOCK_TIME = 3
+	BSC_BLOCK_TIME  = 3
+
+	// ABIs
+	META_LOCK_ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"receiver\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"chainid\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"LockSend\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"receiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Unlock\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOracleAddres\",\"type\":\"address\"}],\"name\":\"changeOracle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"receiver\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"chainid\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"lockSend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceTSSAddressUpdater\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"receiver\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"unlock\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_address\",\"type\":\"address\"}],\"name\":\"updateTSSAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"metaAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"oracleAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_TSSAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_TSSAddressUpdater\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_OracleUpdater\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"getLockedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OracleUpdater\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TSSAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TSSAddressUpdater\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
+)
+
+// Chain configuration struct
+// Filled with above constants depending on chain
+type MetaObserver struct {
+	router    string
+	endpoint  string
+	ticker    *time.Ticker
+	abi       string
+	client    *ethclient.Client
+	lastBlock *big.Int
+}
+
+// Return configuration based on supplied target chain
+func (mo *MetaObserver) initObserver(chain string) {
 	switch chain {
 	case "Polygon":
-		NODE = POLYGON_NODE
-		ROUTER = POLYGON_ROUTER
-	case "Goerli":
-		NODE = GOERLI_INFURA
-		ROUTER = GOERLI_ROUTER
-	case "BSCTestnet":
-		NODE = BSC_NODE
-		ROUTER = BSC_ROUTER
+		mo.router = POLY_ROUTER
+		mo.endpoint = POLY_ENDPOINT
+		mo.ticker = time.NewTicker(time.Duration(POLY_BLOCK_TIME) * time.Second)
+		// TODO: ABI
+	case "Ethereum":
+		mo.router = ETH_ROUTER
+		mo.endpoint = ETH_ENDPOINT
+		mo.ticker = time.NewTicker(time.Duration(ETH_BLOCK_TIME) * time.Second)
+		mo.abi = META_LOCK_ABI
+	case "BSC":
+		mo.router = BSC_ROUTER
+		mo.endpoint = BSC_ENDPOINT
+		mo.ticker = time.NewTicker(time.Duration(BSC_BLOCK_TIME) * time.Second)
+		// TODO: ABI
 	}
+}
 
-	log.Info().Msgf("Starting monitoring deposit on %s", chain)
-	cl, err := ethclient.Dial(NODE)
+func (mo *MetaObserver) WatchRouter(chain string) {
+	// Initialize variables
+	mo.initObserver(chain)
+
+	// Dial the router
+	client, err := ethclient.Dial(mo.endpoint)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("dial %s error", chain)
+		log.Fatal(err)
 	}
-	ctx := context.Background()
 
-	// ticker to run every blocktime
-	blockTime := metaclient.ChainNameToBlocktime[chain]
-	ticker := time.NewTicker(time.Duration(blockTime) * time.Second)
+	// Set observer client
+	mo.client = client
 
-	chainid, err := cl.ChainID(ctx)
+	// TODO: Assuming last block observed is zero
+	// We need to integrate with meta blockchain to check last
+	// observed block
+
+	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
-		log.Fatal().Err(err).Msg("chainid error")
+		log.Fatal(err)
 	}
-	log.Info().Msgf("chainid: %s", chainid.String())
+	mo.lastBlock = big.NewInt(0).Sub(header.Number, big.NewInt(int64(10)))
 
-	router_address := ethcommon.HexToAddress(ROUTER)
-
-	// 5533138
-	var mostRecentBlock *big.Int
-
-	// chain, _ := metacommon.NewChain("ETH")
-	// // 	lastObserved, err := b.GetLastBlockObserved(chain)
-
-	chainObj, _ := metacommon.NewChain(strings.ToUpper(chain))
-
-	mostRecentBlockQuery, err := bridge.GetLastBlockObserved(chainObj)
-	if err != nil {
-		log.Warn().Err(err).Msg("last block observed error")
-	}
-
-	if mostRecentBlockQuery == 0 {
-		// get most recent block number
-		header, err := cl.HeaderByNumber(context.Background(), nil)
-		bigIntTen := big.NewInt(int64(10))
-
-		mostRecentBlock = big.NewInt(0).Sub(header.Number, bigIntTen) // hard coded as current block minus 10 if not found -- this can be tuned
-		if err != nil {
-			log.Fatal()
-		}
-	} else {
-		mostRecentBlock = big.NewInt(int64(mostRecentBlockQuery))
-	}
-
-	fmt.Printf("Starting block height query: %d\n", mostRecentBlockQuery) // 5671744
-	// big.NewInt(int64(5533267))
-
-	fmt.Println("mostRecentBlock is ", mostRecentBlock)
-	// go func() {
 	for {
 		select {
-		case t := <-ticker.C:
+		case t := <-mo.ticker.C:
 			fmt.Println("Ticker at ", t)
 
-			// get most recent block number
-			header, err := cl.HeaderByNumber(context.Background(), nil)
+			// At each tick, query the router
+			err := mo.queryRouter()
 			if err != nil {
-				log.Warn().Err(err).Msg("block header err")
-				continue // if error, then continue loop
-			}
-
-			fmt.Printf("Most recent block: %s\n", header.Number.String()) // 5671744
-
-			// to block = now, from block = most recently queried block
-			query := ethereum.FilterQuery{
-				Addresses: []ethcommon.Address{router_address},
-				FromBlock: mostRecentBlock,
-				ToBlock:   header.Number,
-			}
-
-			logs, err := cl.FilterLogs(context.Background(), query)
-			if err != nil {
-				log.Fatal()
-				continue // keep going to next iteration
-			}
-
-			contractABI, err := abi.JSON(strings.NewReader(string(contracts.MainABI)))
-			if err != nil {
-				log.Fatal().Err(err).Msg("ABI contract err")
-				continue // keep going to next iteration
-			}
-
-			logDepositSig := []byte("DepositMade(address,uint256,address,uint256,address,address,uint256)")
-			logDepositSigHash := crypto.Keccak256Hash(logDepositSig)
-
-			logWithdrawSig := []byte("WithdrawalMade(address,uint256,address,uint256")
-			logWithdrawSigHash := crypto.Keccak256Hash(logWithdrawSig)
-
-			// update most recent block
-			mostRecentBlock = header.Number
-
-			for _, vLog := range logs {
-				// tx has already been processed, so we should continue
-				if _, ok := bridge.ProcessedTransactions[vLog.TxHash.Hex()]; ok {
-					continue
-				}
-				switch vLog.Topics[0].Hex() {
-				case logDepositSigHash.Hex():
-					returnVal, err := contractABI.Unpack("DepositMade", vLog.Data)
-
-					if err != nil {
-						log.Warn().Err(err).Msg("unpack err")
-						continue // keep going to next iteration
-					}
-					fmt.Printf("Source Address: %s\n", ethcommon.HexToAddress(vLog.Topics[1].Hex()))
-					fmt.Printf("Destination Address: %s\n", ethcommon.HexToAddress(vLog.Topics[2].Hex()))
-					fmt.Printf("Destination Unit: %d\n", returnVal[0])
-					fmt.Printf("MTP Burned: %d\n", returnVal[1])
-					fmt.Printf("Source Token: %s\n", returnVal[2])
-					fmt.Printf("Destination Token: %s\n", returnVal[3])
-					fmt.Printf("Amount Deposited: %d\n", returnVal[4])
-
-					bigIntAmountDeposited := returnVal[4].(*big.Int)
-					if bigIntAmountDeposited == nil || bigIntAmountDeposited.Int64() <= 0 {
-						log.Warn().Msg("amount deposited is invalid")
-						break // shouldn't keep executing if invalid deposit
-					}
-					uintAmountDeposited := bigIntAmountDeposited.Uint64()
-
-					bigIntMTPBurned := returnVal[1].(*big.Int)
-					uintMTPBurned := bigIntMTPBurned.Uint64()
-
-					fmt.Println("Uint Deposited: ", uintAmountDeposited)
-					fmt.Println("Uint burned: ", uintMTPBurned)
-
-					stringSourceToken := fmt.Sprintf("%v", returnVal[2])
-					// sourceTicker := metaclient.AddressToTicker[chain][stringSourceToken] // use token address now instead of ticker so we don't need to store lookup
-					sourceAsset := fmt.Sprintf("%s.%s", stringSourceToken, chain)
-					fmt.Println("Source Asset: ", sourceAsset)
-
-					destChainId := fmt.Sprintf("%v", returnVal[0])
-					destChainName := metaclient.ChainIdToName[destChainId]
-
-					fmt.Println("destination chain name: ", destChainName)
-
-					stringDestToken := fmt.Sprintf("%v", returnVal[3])
-					// destTicker := metaclient.AddressToTicker[destChainName][stringDestToken]
-					destAsset := fmt.Sprintf("%s.%s", stringDestToken, destChainName)
-
-					fmt.Println("Dest Asset: ", destAsset)
-
-					fmt.Println("Attempting to post transaction")
-					// need to figure out mapping for chainIDs and assets
-					err = bridge.PostTxIn(sourceAsset, uintAmountDeposited, uintMTPBurned, destAsset, vLog.Topics[2].Hex(), vLog.TxHash.Hex(), vLog.BlockNumber)
-
-					if err != nil {
-						log.Warn().Err(err).Msg("tx post in err")
-					}
-
-					bridge.ProcessedTransactions[vLog.TxHash.Hex()] = 0 // Pending --> 0 is enum value defined in metachain.go
-
-					// c.Assert(err, IsNil)
-
-					fmt.Println("Successfully posted transaction")
-
-				case logWithdrawSigHash.Hex():
-					returnVal, err := contractABI.Unpack("WithdrawalMade", vLog.Data)
-					if err != nil {
-						log.Warn().Err(err).Msg("unpack withdrawal err")
-					}
-					fmt.Println("Withdrawal made: ", returnVal)
-				}
+				fmt.Println(err)
+				continue
 			}
 		}
 	}
-	// }()
+
+}
+
+func (mo *MetaObserver) queryRouter() error {
+	//router_address := ethcommon.HexToAddress(mo.router)
+	// Get most recent block number from client
+	header, err := mo.client.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+
+	// Generate query
+	query := ethereum.FilterQuery{
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(mo.router)},
+		FromBlock: mo.lastBlock,
+		ToBlock:   header.Number,
+	}
+
+	// Finally query the for the logs
+	logs, err := mo.client.FilterLogs(context.Background(), query)
+	if err != nil {
+		return err
+	}
+
+	// Read in ABI
+	contractAbi, err := abi.JSON(strings.NewReader(string(mo.abi)))
+	if err != nil {
+		return err
+	}
+
+	// Look for LockSend event
+	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
+	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
+
+	// Update last block
+	mo.lastBlock = header.Number
+
+	// Pull out arguments from logs
+	for _, vLog := range logs {
+		switch vLog.Topics[0].Hex() {
+		case logLockSendSignatureHash.Hex():
+			returnVal, err := contractAbi.Unpack("LockSend", vLog.Data)
+			if err != nil {
+				fmt.Println("error unpacking LockSend")
+				continue
+			}
+
+			// read and validate the transaction
+			mo.readAndValidate(returnVal)
+		}
+	}
+
+	return nil
+}
+
+func (mo *MetaObserver) readAndValidate(values []interface{}) {
+	fmt.Println("Send Address: ", values[0])
+	fmt.Println("Rx Address: ", values[1])
+	fmt.Println("Amount: ", values[2])
+	fmt.Println("ChainID: ", values[3])
+	fmt.Println("Message: ", values[4])
 }
