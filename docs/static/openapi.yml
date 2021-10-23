@@ -29888,6 +29888,8 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse:
+    type: object
   MetaProtocol.metacore.metacore.MsgSendVoterResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse:
