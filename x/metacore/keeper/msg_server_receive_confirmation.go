@@ -41,6 +41,19 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	//TODO: do proper super majority check
 	if len(receive.Signers) == 2 {
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
+		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
+		if !isFound {
+			lastblock = types.LastBlockHeight{
+				Creator:           msg.Creator,
+				Index:             send.ReceiverChain,
+				Chain:             send.ReceiverChain,
+				LastSendHeight:    0,
+				LastReceiveHeight: msg.OutBlockHeight,
+			}
+		} else {
+			lastblock.LastSendHeight = msg.OutBlockHeight
+		}
+		k.SetLastBlockHeight(ctx, lastblock)
 	}
 
 	k.SetReceive(ctx, receive)

@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/last_block_height.proto";
 import "metacore/receive.proto";
 import "metacore/send.proto";
 import "metacore/node_account.proto";
@@ -13,6 +14,17 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a lastBlockHeight by index.
+	rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/lastBlockHeight/{index}";
+	}
+
+	// Queries a list of lastBlockHeight items.
+	rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest) returns (QueryAllLastBlockHeightResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/lastBlockHeight";
+	}
+
 
 	// Queries a receive by index.
 	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
@@ -57,6 +69,22 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetLastBlockHeightRequest {
+	string index = 1;
+}
+
+message QueryGetLastBlockHeightResponse {
+	LastBlockHeight LastBlockHeight = 1;
+}
+
+message QueryAllLastBlockHeightRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllLastBlockHeightResponse {
+	repeated LastBlockHeight LastBlockHeight = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetReceiveRequest {
 	string index = 1;
 }
