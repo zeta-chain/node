@@ -119,7 +119,7 @@ func (mo *MetaObserver) queryRouter() error {
 	}
 
 	// Read in ABI
-	contractAbi, err := abi.JSON(strings.NewReader(string(mo.abi)))
+	contractAbi, err := abi.JSON(strings.NewReader(mo.abi))
 	if err != nil {
 		return err
 	}
