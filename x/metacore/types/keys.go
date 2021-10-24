@@ -53,3 +53,7 @@ const (
 const (
 	ReceiveKey = "Receive-value-"
 )
+
+const (
+	LastBlockHeightKey = "LastBlockHeight-value-"
+)
