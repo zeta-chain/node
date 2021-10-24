@@ -28,7 +28,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			InTxHash:            msg.InTxHash,
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
-			Signers: 			 []string{msg.Creator},
+			Signers:             []string{msg.Creator},
 		}
 	}
 
@@ -36,7 +36,6 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	if len(send.Signers) == 2 {
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 	}
-
 
 	k.SetSend(ctx, send)
 

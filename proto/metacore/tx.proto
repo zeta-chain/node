@@ -9,11 +9,23 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Msg defines the Msg service.
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
+  rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
   rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgReceiveConfirmation {
+  string creator = 1;
+  string sendHash = 2;
+  string outTxHash = 3;
+  uint64 outBlockHeight = 4;
+  string mMint = 5;
+}
+
+message MsgReceiveConfirmationResponse {
+}
+
 message MsgSendVoter {
   string creator = 1;
   string sender = 2;

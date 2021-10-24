@@ -49,3 +49,7 @@ const (
 const (
 	SendKey = "Send-value-"
 )
+
+const (
+	ReceiveKey = "Receive-value-"
+)

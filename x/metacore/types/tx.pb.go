@@ -29,6 +29,118 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // this line is used by starport scaffolding # proto/tx/message
+type MsgReceiveConfirmation struct {
+	Creator        string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	SendHash       string `protobuf:"bytes,2,opt,name=sendHash,proto3" json:"sendHash,omitempty"`
+	OutTxHash      string `protobuf:"bytes,3,opt,name=outTxHash,proto3" json:"outTxHash,omitempty"`
+	OutBlockHeight uint64 `protobuf:"varint,4,opt,name=outBlockHeight,proto3" json:"outBlockHeight,omitempty"`
+	MMint          string `protobuf:"bytes,5,opt,name=mMint,proto3" json:"mMint,omitempty"`
+}
+
+func (m *MsgReceiveConfirmation) Reset()         { *m = MsgReceiveConfirmation{} }
+func (m *MsgReceiveConfirmation) String() string { return proto.CompactTextString(m) }
+func (*MsgReceiveConfirmation) ProtoMessage()    {}
+func (*MsgReceiveConfirmation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3410749d96999ade, []int{0}
+}
+func (m *MsgReceiveConfirmation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgReceiveConfirmation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgReceiveConfirmation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgReceiveConfirmation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReceiveConfirmation.Merge(m, src)
+}
+func (m *MsgReceiveConfirmation) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgReceiveConfirmation) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReceiveConfirmation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReceiveConfirmation proto.InternalMessageInfo
+
+func (m *MsgReceiveConfirmation) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgReceiveConfirmation) GetSendHash() string {
+	if m != nil {
+		return m.SendHash
+	}
+	return ""
+}
+
+func (m *MsgReceiveConfirmation) GetOutTxHash() string {
+	if m != nil {
+		return m.OutTxHash
+	}
+	return ""
+}
+
+func (m *MsgReceiveConfirmation) GetOutBlockHeight() uint64 {
+	if m != nil {
+		return m.OutBlockHeight
+	}
+	return 0
+}
+
+func (m *MsgReceiveConfirmation) GetMMint() string {
+	if m != nil {
+		return m.MMint
+	}
+	return ""
+}
+
+type MsgReceiveConfirmationResponse struct {
+}
+
+func (m *MsgReceiveConfirmationResponse) Reset()         { *m = MsgReceiveConfirmationResponse{} }
+func (m *MsgReceiveConfirmationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgReceiveConfirmationResponse) ProtoMessage()    {}
+func (*MsgReceiveConfirmationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3410749d96999ade, []int{1}
+}
+func (m *MsgReceiveConfirmationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgReceiveConfirmationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgReceiveConfirmationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgReceiveConfirmationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReceiveConfirmationResponse.Merge(m, src)
+}
+func (m *MsgReceiveConfirmationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgReceiveConfirmationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReceiveConfirmationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReceiveConfirmationResponse proto.InternalMessageInfo
+
 type MsgSendVoter struct {
 	Creator       string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Sender        string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
@@ -46,7 +158,7 @@ func (m *MsgSendVoter) Reset()         { *m = MsgSendVoter{} }
 func (m *MsgSendVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgSendVoter) ProtoMessage()    {}
 func (*MsgSendVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{0}
+	return fileDescriptor_3410749d96999ade, []int{2}
 }
 func (m *MsgSendVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -152,7 +264,7 @@ func (m *MsgSendVoterResponse) Reset()         { *m = MsgSendVoterResponse{} }
 func (m *MsgSendVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSendVoterResponse) ProtoMessage()    {}
 func (*MsgSendVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{1}
+	return fileDescriptor_3410749d96999ade, []int{3}
 }
 func (m *MsgSendVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -191,7 +303,7 @@ func (m *MsgSetNodeKeys) Reset()         { *m = MsgSetNodeKeys{} }
 func (m *MsgSetNodeKeys) String() string { return proto.CompactTextString(m) }
 func (*MsgSetNodeKeys) ProtoMessage()    {}
 func (*MsgSetNodeKeys) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{2}
+	return fileDescriptor_3410749d96999ade, []int{4}
 }
 func (m *MsgSetNodeKeys) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -248,7 +360,7 @@ func (m *MsgSetNodeKeysResponse) Reset()         { *m = MsgSetNodeKeysResponse{}
 func (m *MsgSetNodeKeysResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetNodeKeysResponse) ProtoMessage()    {}
 func (*MsgSetNodeKeysResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3410749d96999ade, []int{3}
+	return fileDescriptor_3410749d96999ade, []int{5}
 }
 func (m *MsgSetNodeKeysResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -278,6 +390,8 @@ func (m *MsgSetNodeKeysResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSetNodeKeysResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgReceiveConfirmation)(nil), "MetaProtocol.metacore.metacore.MsgReceiveConfirmation")
+	proto.RegisterType((*MsgReceiveConfirmationResponse)(nil), "MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse")
 	proto.RegisterType((*MsgSendVoter)(nil), "MetaProtocol.metacore.metacore.MsgSendVoter")
 	proto.RegisterType((*MsgSendVoterResponse)(nil), "MetaProtocol.metacore.metacore.MsgSendVoterResponse")
 	proto.RegisterType((*MsgSetNodeKeys)(nil), "MetaProtocol.metacore.metacore.MsgSetNodeKeys")
@@ -287,35 +401,41 @@ func init() {
 func init() { proto.RegisterFile("metacore/tx.proto", fileDescriptor_3410749d96999ade) }
 
 var fileDescriptor_3410749d96999ade = []byte{
-	// 443 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x3f, 0x6f, 0x1a, 0x31,
-	0x14, 0xc7, 0xf9, 0x43, 0xc2, 0xa3, 0xad, 0x14, 0x37, 0x42, 0x16, 0xc3, 0x09, 0xa1, 0x0e, 0x19,
-	0xda, 0x3b, 0x89, 0x56, 0x1d, 0x3a, 0x92, 0x25, 0x52, 0x4a, 0x85, 0x48, 0xd5, 0xa1, 0xdb, 0x71,
-	0x3c, 0x1d, 0x56, 0x38, 0x1b, 0xd9, 0xbe, 0x08, 0xbe, 0x45, 0xb7, 0x7e, 0x8b, 0x7e, 0x8e, 0x8e,
-	0x19, 0x3b, 0x56, 0x30, 0xf7, 0x3b, 0x54, 0xb6, 0x31, 0x1c, 0x43, 0xa3, 0x32, 0xf9, 0xfd, 0xde,
-	0xef, 0xfd, 0xfd, 0xd9, 0x86, 0x8b, 0x02, 0x4d, 0x9a, 0x49, 0x85, 0x89, 0x59, 0xc4, 0x73, 0x25,
-	0x8d, 0xa4, 0xd1, 0x00, 0x4d, 0x3a, 0xb4, 0x66, 0x26, 0x67, 0x71, 0xe0, 0xb7, 0x46, 0xfb, 0x65,
-	0x26, 0x8b, 0x42, 0x8a, 0xc4, 0x1f, 0x3e, 0xa9, 0xfb, 0xe3, 0x08, 0x9e, 0x0d, 0x74, 0x7e, 0x87,
-	0x62, 0xf2, 0x45, 0x1a, 0x54, 0x94, 0xc1, 0x59, 0xa6, 0x30, 0x35, 0x52, 0x31, 0xd2, 0x21, 0x57,
-	0x8d, 0x51, 0x80, 0xb4, 0x05, 0x75, 0x8d, 0x62, 0x82, 0x8a, 0x1d, 0x39, 0x62, 0x83, 0x68, 0x07,
-	0x9a, 0xde, 0xba, 0x9e, 0xa6, 0x5c, 0xb0, 0x63, 0x47, 0x56, 0x5d, 0xb4, 0x0d, 0xe7, 0x0a, 0x33,
-	0xe4, 0x0f, 0xa8, 0xd8, 0x89, 0xa3, 0xb7, 0x98, 0xbe, 0x82, 0xe7, 0xc1, 0xf6, 0xf9, 0xa7, 0x2e,
-	0x60, 0xdf, 0x69, 0x7b, 0x17, 0xfd, 0x52, 0x09, 0xc3, 0xea, 0xbe, 0xb7, 0x47, 0xf4, 0x12, 0x4e,
-	0x8b, 0x01, 0x17, 0x86, 0x9d, 0x39, 0xb7, 0x07, 0x76, 0x87, 0x02, 0xb5, 0x4e, 0x73, 0x64, 0xe7,
-	0x7e, 0x87, 0x0d, 0xb4, 0x93, 0x70, 0xf1, 0x79, 0x71, 0x93, 0xea, 0x29, 0x6b, 0xf8, 0x49, 0x02,
-	0xb6, 0x93, 0x70, 0xd1, 0x9f, 0xc9, 0xec, 0xfe, 0x06, 0x79, 0x3e, 0x35, 0x0c, 0x3a, 0xe4, 0xea,
-	0x64, 0xb4, 0xef, 0xec, 0xb6, 0xe0, 0xb2, 0xaa, 0xd7, 0x08, 0xf5, 0x5c, 0x0a, 0x8d, 0xdd, 0xef,
-	0x04, 0x5e, 0x38, 0xc2, 0x7c, 0x92, 0x13, 0xbc, 0xc5, 0xa5, 0x7e, 0x42, 0xca, 0x04, 0x1a, 0xf3,
-	0x72, 0x7c, 0x8f, 0xcb, 0x3b, 0x34, 0x4e, 0xcd, 0x66, 0xef, 0x22, 0xde, 0xdc, 0xcb, 0xb0, 0x1c,
-	0xdf, 0x3a, 0x62, 0xb4, 0x8b, 0xa1, 0x1f, 0x80, 0x3d, 0xa4, 0x33, 0x3e, 0xb1, 0xd9, 0xd7, 0xb6,
-	0x9f, 0xd0, 0xa5, 0x1e, 0x3a, 0x7a, 0x23, 0xf8, 0x3f, 0xf9, 0x2e, 0x83, 0xd6, 0xfe, 0x60, 0x61,
-	0xe6, 0xde, 0x1f, 0x02, 0xc7, 0x03, 0x9d, 0x53, 0x09, 0x8d, 0xdd, 0x03, 0x78, 0x1d, 0x3f, 0xfd,
-	0x8e, 0xe2, 0xea, 0xfa, 0xed, 0x77, 0x87, 0x44, 0x87, 0xc6, 0xb4, 0x84, 0x66, 0x55, 0xa8, 0xf8,
-	0xbf, 0x8a, 0x6c, 0xe3, 0xdb, 0xef, 0x0f, 0x8b, 0x0f, 0x6d, 0xfb, 0x1f, 0x7f, 0xae, 0x22, 0xf2,
-	0xb8, 0x8a, 0xc8, 0xef, 0x55, 0x44, 0xbe, 0xad, 0xa3, 0xda, 0xe3, 0x3a, 0xaa, 0xfd, 0x5a, 0x47,
-	0xb5, 0xaf, 0xbd, 0x9c, 0x9b, 0x69, 0x39, 0xb6, 0x77, 0x90, 0xd8, 0xda, 0x6f, 0x42, 0xf1, 0x64,
-	0xfb, 0xcf, 0x16, 0x3b, 0xd3, 0x2c, 0xe7, 0xa8, 0xc7, 0x75, 0xf7, 0x83, 0xde, 0xfe, 0x0d, 0x00,
-	0x00, 0xff, 0xff, 0xd4, 0x77, 0x84, 0x79, 0x8b, 0x03, 0x00, 0x00,
+	// 530 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x4f, 0x6b, 0x13, 0x41,
+	0x14, 0xef, 0xa6, 0x6d, 0xda, 0x7d, 0xd1, 0x42, 0xa7, 0x25, 0x2c, 0x41, 0x96, 0x10, 0x44, 0x7a,
+	0xd0, 0x0d, 0x44, 0xe9, 0xc1, 0x83, 0x87, 0xe4, 0x52, 0xa8, 0x91, 0xb0, 0x15, 0x0f, 0xde, 0x36,
+	0x9b, 0xe7, 0x66, 0x69, 0x76, 0x26, 0xcc, 0xcc, 0x96, 0xe4, 0x43, 0x08, 0xde, 0xfc, 0x0e, 0x1e,
+	0xfc, 0x1c, 0x1e, 0x7b, 0xf4, 0x28, 0xc9, 0xe7, 0x10, 0x64, 0x66, 0xf6, 0x5f, 0x25, 0x86, 0xd6,
+	0x53, 0xde, 0xff, 0xf7, 0xfb, 0xfd, 0xf2, 0x76, 0xe0, 0x38, 0x41, 0x19, 0x84, 0x8c, 0x63, 0x57,
+	0x2e, 0xbc, 0x39, 0x67, 0x92, 0x11, 0x77, 0x88, 0x32, 0x18, 0x29, 0x33, 0x64, 0x33, 0x2f, 0xcf,
+	0x17, 0x46, 0xeb, 0x24, 0x64, 0x49, 0xc2, 0x68, 0xd7, 0xfc, 0x98, 0xa6, 0xce, 0x37, 0x0b, 0x9a,
+	0x43, 0x11, 0xf9, 0x18, 0x62, 0x7c, 0x83, 0x03, 0x46, 0x3f, 0xc5, 0x3c, 0x09, 0x64, 0xcc, 0x28,
+	0x71, 0xe0, 0x20, 0xe4, 0x18, 0x48, 0xc6, 0x1d, 0xab, 0x6d, 0x9d, 0xd9, 0x7e, 0xee, 0x92, 0x16,
+	0x1c, 0x0a, 0xa4, 0x93, 0x8b, 0x40, 0x4c, 0x9d, 0x9a, 0x4e, 0x15, 0x3e, 0x79, 0x02, 0x36, 0x4b,
+	0xe5, 0xfb, 0x85, 0x4e, 0xee, 0xea, 0x64, 0x19, 0x20, 0xcf, 0xe0, 0x88, 0xa5, 0xb2, 0x3f, 0x63,
+	0xe1, 0xf5, 0x05, 0xc6, 0xd1, 0x54, 0x3a, 0x7b, 0x6d, 0xeb, 0x6c, 0xcf, 0xff, 0x2b, 0x4a, 0x4e,
+	0x61, 0x3f, 0x19, 0xc6, 0x54, 0x3a, 0xfb, 0x7a, 0x82, 0x71, 0x3a, 0x6d, 0x70, 0x37, 0x63, 0xf5,
+	0x51, 0xcc, 0x19, 0x15, 0xd8, 0xf9, 0x5e, 0x83, 0x47, 0x43, 0x11, 0x5d, 0x21, 0x9d, 0x7c, 0x60,
+	0x12, 0xf9, 0x16, 0x12, 0x4d, 0xa8, 0x2b, 0xd0, 0xc8, 0x33, 0x0a, 0x99, 0x47, 0xda, 0xd0, 0x30,
+	0xd6, 0x60, 0x1a, 0xc4, 0x34, 0xa3, 0x50, 0x0d, 0x29, 0xfa, 0xdc, 0x60, 0xe0, 0x1a, 0xbe, 0xed,
+	0x17, 0x3e, 0x79, 0x0a, 0x8f, 0x73, 0xdb, 0xf4, 0x1b, 0x02, 0x77, 0x83, 0x6a, 0x77, 0xd2, 0x4f,
+	0x39, 0x95, 0x4e, 0xdd, 0xec, 0x36, 0x5e, 0x49, 0xfb, 0xa0, 0x42, 0x5b, 0x71, 0x48, 0x50, 0x88,
+	0x20, 0x42, 0xe7, 0xd0, 0x70, 0xc8, 0x5c, 0x85, 0x24, 0xa6, 0x99, 0xd6, 0xb6, 0x41, 0x92, 0xfb,
+	0x0a, 0x49, 0x4c, 0xab, 0x4a, 0x83, 0x56, 0xfa, 0x6e, 0xb0, 0xd3, 0x84, 0xd3, 0xaa, 0x5e, 0x85,
+	0x90, 0x5f, 0x2d, 0x38, 0xd2, 0x09, 0xf9, 0x8e, 0x4d, 0xf0, 0x12, 0x97, 0x62, 0x8b, 0x94, 0x5d,
+	0xb0, 0xe7, 0xe9, 0xf8, 0x1a, 0x97, 0x57, 0x28, 0xb5, 0x9a, 0x8d, 0xde, 0xb1, 0x97, 0x9d, 0xd9,
+	0x28, 0x1d, 0x5f, 0xea, 0x84, 0x5f, 0xd6, 0x90, 0xd7, 0xe0, 0xdc, 0x04, 0xb3, 0x78, 0xa2, 0xba,
+	0x07, 0x6a, 0x1f, 0x15, 0xa9, 0x18, 0xe9, 0x74, 0x26, 0xf8, 0x3f, 0xf3, 0x1d, 0x47, 0x1f, 0x6c,
+	0x05, 0x58, 0x8e, 0xb9, 0xf7, 0xbb, 0x06, 0xbb, 0x43, 0x11, 0x91, 0xcf, 0x16, 0x9c, 0x6c, 0x3a,
+	0xe8, 0x73, 0x6f, 0xfb, 0x17, 0xe2, 0x6d, 0x3e, 0xae, 0xd6, 0x9b, 0xff, 0xeb, 0xcb, 0x71, 0x11,
+	0x06, 0x76, 0x79, 0x90, 0xcf, 0xef, 0x31, 0xac, 0xa8, 0x6e, 0xbd, 0x7a, 0x48, 0x75, 0xb1, 0x30,
+	0x85, 0x46, 0xf5, 0x8f, 0xf3, 0xee, 0x35, 0xa4, 0xa8, 0x6f, 0x9d, 0x3f, 0xac, 0x3e, 0x5f, 0xdb,
+	0x7f, 0xfb, 0x63, 0xe5, 0x5a, 0xb7, 0x2b, 0xd7, 0xfa, 0xb5, 0x72, 0xad, 0x2f, 0x6b, 0x77, 0xe7,
+	0x76, 0xed, 0xee, 0xfc, 0x5c, 0xbb, 0x3b, 0x1f, 0x7b, 0x51, 0x2c, 0xa7, 0xe9, 0x58, 0xdd, 0x44,
+	0x57, 0xcd, 0x7e, 0x91, 0x0f, 0xef, 0x16, 0xcf, 0xd8, 0xa2, 0x34, 0xe5, 0x72, 0x8e, 0x62, 0x5c,
+	0xd7, 0x0f, 0xd4, 0xcb, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x58, 0xcb, 0x84, 0x48, 0xea, 0x04,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -331,6 +451,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// this line is used by starport scaffolding # proto/tx/rpc
+	ReceiveConfirmation(ctx context.Context, in *MsgReceiveConfirmation, opts ...grpc.CallOption) (*MsgReceiveConfirmationResponse, error)
 	SendVoter(ctx context.Context, in *MsgSendVoter, opts ...grpc.CallOption) (*MsgSendVoterResponse, error)
 	SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ...grpc.CallOption) (*MsgSetNodeKeysResponse, error)
 }
@@ -341,6 +462,15 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
+}
+
+func (c *msgClient) ReceiveConfirmation(ctx context.Context, in *MsgReceiveConfirmation, opts ...grpc.CallOption) (*MsgReceiveConfirmationResponse, error) {
+	out := new(MsgReceiveConfirmationResponse)
+	err := c.cc.Invoke(ctx, "/MetaProtocol.metacore.metacore.Msg/ReceiveConfirmation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *msgClient) SendVoter(ctx context.Context, in *MsgSendVoter, opts ...grpc.CallOption) (*MsgSendVoterResponse, error) {
@@ -364,6 +494,7 @@ func (c *msgClient) SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ..
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// this line is used by starport scaffolding # proto/tx/rpc
+	ReceiveConfirmation(context.Context, *MsgReceiveConfirmation) (*MsgReceiveConfirmationResponse, error)
 	SendVoter(context.Context, *MsgSendVoter) (*MsgSendVoterResponse, error)
 	SetNodeKeys(context.Context, *MsgSetNodeKeys) (*MsgSetNodeKeysResponse, error)
 }
@@ -372,6 +503,9 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) ReceiveConfirmation(ctx context.Context, req *MsgReceiveConfirmation) (*MsgReceiveConfirmationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiveConfirmation not implemented")
+}
 func (*UnimplementedMsgServer) SendVoter(ctx context.Context, req *MsgSendVoter) (*MsgSendVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendVoter not implemented")
 }
@@ -381,6 +515,24 @@ func (*UnimplementedMsgServer) SetNodeKeys(ctx context.Context, req *MsgSetNodeK
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_ReceiveConfirmation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgReceiveConfirmation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ReceiveConfirmation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MetaProtocol.metacore.metacore.Msg/ReceiveConfirmation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ReceiveConfirmation(ctx, req.(*MsgReceiveConfirmation))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_SendVoter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -424,6 +576,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ReceiveConfirmation",
+			Handler:    _Msg_ReceiveConfirmation_Handler,
+		},
+		{
 			MethodName: "SendVoter",
 			Handler:    _Msg_SendVoter_Handler,
 		},
@@ -434,6 +590,85 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "metacore/tx.proto",
+}
+
+func (m *MsgReceiveConfirmation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgReceiveConfirmation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgReceiveConfirmation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MMint) > 0 {
+		i -= len(m.MMint)
+		copy(dAtA[i:], m.MMint)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.MMint)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.OutBlockHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.OutBlockHeight))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.OutTxHash) > 0 {
+		i -= len(m.OutTxHash)
+		copy(dAtA[i:], m.OutTxHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.OutTxHash)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.SendHash) > 0 {
+		i -= len(m.SendHash)
+		copy(dAtA[i:], m.SendHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SendHash)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgReceiveConfirmationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgReceiveConfirmationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgReceiveConfirmationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgSendVoter) Marshal() (dAtA []byte, err error) {
@@ -633,6 +868,43 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgReceiveConfirmation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.SendHash)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.OutTxHash)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.OutBlockHeight != 0 {
+		n += 1 + sovTx(uint64(m.OutBlockHeight))
+	}
+	l = len(m.MMint)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgReceiveConfirmationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgSendVoter) Size() (n int) {
 	if m == nil {
 		return 0
@@ -725,6 +997,253 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgReceiveConfirmation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgReceiveConfirmation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgReceiveConfirmation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SendHash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SendHash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutTxHash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OutTxHash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutBlockHeight", wireType)
+			}
+			m.OutBlockHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OutBlockHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MMint", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MMint = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgReceiveConfirmationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgReceiveConfirmationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgReceiveConfirmationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgSendVoter) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
