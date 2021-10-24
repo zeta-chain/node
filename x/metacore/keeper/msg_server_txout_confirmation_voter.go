@@ -44,7 +44,6 @@ func (k msgServer) TxoutConfirmationVoter(goCtx context.Context, msg *types.MsgT
 
 	k.SetTxoutConfirmation(ctx, txoutConf)
 
-
 	if len(txoutConf.Signers) == 2 { // TODO: fix threshold
 		txoutConf.FinalizedHeight = uint64(ctx.BlockHeader().Height)
 		k.RemoveTxout(ctx, txoutConf.TxoutId)

@@ -100,7 +100,7 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	txouts, err := b1.GetAllTxout()
 	c.Assert(err, IsNil)
 	log.Info().Msgf("txouts: %v", txouts)
-	c.Assert(len(txouts) >=1, Equals, true)
+	c.Assert(len(txouts) >= 1, Equals, true)
 
 	txout := txouts[0]
 	tid := txout.Id
@@ -115,4 +115,47 @@ func (s *VoterSuite) TestObservedTxIn(c *C) {
 	txouts, err = b1.GetAllTxout()
 	c.Assert(err, IsNil)
 	log.Info().Msgf("txouts: %v", txouts)
+}
+
+
+func (s *VoterSuite) TestSendVoter(c *C) {
+	b1 := s.bridge1
+	b2 := s.bridge2
+	metaHash, err := b1.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
+		"0xtxhash", 123123)
+
+	c.Assert(err, IsNil)
+	log.Info().Msgf("PostSend metaHash %s", metaHash)
+
+	// wait for the next block
+	timer1 := time.NewTimer(2 * time.Second)
+	<-timer1.C
+
+	metaHash, err = b2.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
+		"0xtxhash", 123123)
+	c.Assert(err, IsNil)
+	log.Info().Msgf("Second PostSend metaHash %s", metaHash)
+
+	// wait for the next block
+	timer2 := time.NewTimer(2 * time.Second)
+	<-timer2.C
+
+	sends, err := b1.GetAllSend()
+	c.Assert(err, IsNil)
+	log.Info().Msgf("sends: %v", sends)
+	c.Assert(len(sends) >= 1, Equals, true)
+
+	//send := sends[0]
+	//tid := send.Index
+	//metaHash, err = b1.PostTxoutConfirmation(tid, "0xhashtxout", 1337, "0xnicetoken", 1773, "0xmywallet", 12345)
+	//timer3 := time.NewTimer(2 * time.Second)
+	//<-timer3.C
+	//metaHash, err = b2.PostTxoutConfirmation(tid, "0xhashtxout", 1337, "0xnicetoken", 1773, "0xmywallet", 12345)
+	//
+	//timer4 := time.NewTimer(2 * time.Second)
+	//<-timer4.C
+	//
+	//sends, err = b1.GetAllSend()
+	//c.Assert(err, IsNil)
+	//log.Info().Msgf("sends: %v", txouts)
 }

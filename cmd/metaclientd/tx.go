@@ -38,7 +38,7 @@ func (b *MetachainBridge) PostTxoutConfirmation(txoutId uint64, txHash string, m
 }
 
 // Get all current Txout from MetaCore
-func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error){
+func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TxoutAll(context.Background(), &types.QueryAllTxoutRequest{})
 	if err != nil {
@@ -46,4 +46,26 @@ func (b *MetachainBridge) GetAllTxout() ([]*types.Txout, error){
 		return nil, err
 	}
 	return resp.Txout, nil
+}
+
+func (b *MetachainBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight)
+
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("PostSend broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
+}
+
+func (b *MetachainBridge) GetAllSend() ([]*types.Send, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.SendAll(context.Background(), &types.QueryAllSendRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("query SendAll error")
+		return nil, err
+	}
+	return resp.Send, nil
 }
