@@ -4,8 +4,6 @@ import (
 	"testing"
 )
 
-func TestQueryRouter(t *testing.T) {
-	mo := &MetaObserver{}
+func TestWatchRouter(t *testing.T) {
 
-	mo.WatchRouter("BSC")
 }
