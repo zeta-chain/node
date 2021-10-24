@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdListTxinVoter() *cobra.Command {
+func CmdListReceive() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-txin-voter",
-		Short: "list all TxinVoter",
+		Use:   "list-receive",
+		Short: "list all receive",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -23,11 +23,11 @@ func CmdListTxinVoter() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllTxinVoterRequest{
+			params := &types.QueryAllReceiveRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.TxinVoterAll(context.Background(), params)
+			res, err := queryClient.ReceiveAll(context.Background(), params)
 			if err != nil {
 				return err
 			}
@@ -42,21 +42,21 @@ func CmdListTxinVoter() *cobra.Command {
 	return cmd
 }
 
-func CmdShowTxinVoter() *cobra.Command {
+func CmdShowReceive() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-txin-voter [index]",
-		Short: "shows a TxinVoter",
+		Use:   "show-receive [index]",
+		Short: "shows a receive",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetTxinVoterRequest{
+			params := &types.QueryGetReceiveRequest{
 				Index: args[0],
 			}
 
-			res, err := queryClient.TxinVoter(context.Background(), params)
+			res, err := queryClient.Receive(context.Background(), params)
 			if err != nil {
 				return err
 			}

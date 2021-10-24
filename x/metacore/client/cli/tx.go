@@ -30,13 +30,11 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(CmdReceiveConfirmation())
+
 	cmd.AddCommand(CmdSendVoter())
 
-	cmd.AddCommand(CmdTxoutConfirmationVoter())
-
 	cmd.AddCommand(CmdSetNodeKeys())
-
-	cmd.AddCommand(CmdCreateTxinVoter())
 
 	return cmd
 }

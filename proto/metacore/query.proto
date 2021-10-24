@@ -4,18 +4,26 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/receive.proto";
 import "metacore/send.proto";
-import "metacore/txout_confirmation.proto";
-import "metacore/txout.proto";
 import "metacore/node_account.proto";
-import "metacore/txin_voter.proto";
-import "metacore/txin.proto";
 
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a receive by index.
+	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/receive/{index}";
+	}
+
+	// Queries a list of receive items.
+	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/receive";
+	}
+
 
 	// Queries a send by index.
 	rpc Send(QueryGetSendRequest) returns (QueryGetSendResponse) {
@@ -25,28 +33,6 @@ service Query {
 	// Queries a list of send items.
 	rpc SendAll(QueryAllSendRequest) returns (QueryAllSendResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/send";
-	}
-
-
-	// Queries a txoutConfirmation by index.
-	rpc TxoutConfirmation(QueryGetTxoutConfirmationRequest) returns (QueryGetTxoutConfirmationResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txoutConfirmation/{index}";
-	}
-
-	// Queries a list of txoutConfirmation items.
-	rpc TxoutConfirmationAll(QueryAllTxoutConfirmationRequest) returns (QueryAllTxoutConfirmationResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txoutConfirmation";
-	}
-
-
-	// Queries a txout by id.
-	rpc Txout(QueryGetTxoutRequest) returns (QueryGetTxoutResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txout/{id}";
-	}
-
-	// Queries a list of txout items.
-	rpc TxoutAll(QueryAllTxoutRequest) returns (QueryAllTxoutResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txout";
 	}
 
 
@@ -67,30 +53,26 @@ service Query {
 	}
 
 
-	// Queries a txinVoter by index.
-	rpc TxinVoter(QueryGetTxinVoterRequest) returns (QueryGetTxinVoterResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txinVoter/{index}";
-	}
-
-	// Queries a list of txinVoter items.
-	rpc TxinVoterAll(QueryAllTxinVoterRequest) returns (QueryAllTxinVoterResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txinVoter";
-	}
-
-
-	// Queries a txin by index.
-	rpc Txin(QueryGetTxinRequest) returns (QueryGetTxinResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txin/{index}";
-	}
-
-	// Queries a list of txin items.
-	rpc TxinAll(QueryAllTxinRequest) returns (QueryAllTxinResponse) {
-		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txin";
-	}
 
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetReceiveRequest {
+	string index = 1;
+}
+
+message QueryGetReceiveResponse {
+	Receive Receive = 1;
+}
+
+message QueryAllReceiveRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllReceiveResponse {
+	repeated Receive Receive = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetSendRequest {
 	string index = 1;
 }
@@ -107,38 +89,7 @@ message QueryAllSendResponse {
 	repeated Send Send = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryGetTxoutConfirmationRequest {
-	string index = 1;
-}
 
-message QueryGetTxoutConfirmationResponse {
-	TxoutConfirmation TxoutConfirmation = 1;
-}
-
-message QueryAllTxoutConfirmationRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTxoutConfirmationResponse {
-	repeated TxoutConfirmation TxoutConfirmation = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetTxoutRequest {
-	uint64 id = 1;
-}
-
-message QueryGetTxoutResponse {
-	Txout Txout = 1;
-}
-
-message QueryAllTxoutRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTxoutResponse {
-	repeated Txout Txout = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
 message QueryGetNodeAccountRequest {
 	string index = 1;
 }
@@ -160,37 +111,4 @@ message QueryLastMetaHeightRequest {
 
 message QueryLastMetaHeightResponse {
 	uint64 Height = 1;
-}
-
-message QueryGetTxinVoterRequest {
-	string index = 1;
-}
-
-message QueryGetTxinVoterResponse {
-	TxinVoter TxinVoter = 1;
-}
-
-message QueryAllTxinVoterRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTxinVoterResponse {
-	repeated TxinVoter TxinVoter = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetTxinRequest {
-	string index = 1;
-}
-
-message QueryGetTxinResponse {
-	Txin Txin = 1;
-}
-
-message QueryAllTxinRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTxinResponse {
-	repeated Txin Txin = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
