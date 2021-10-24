@@ -49,7 +49,7 @@ type MetaObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func (mo *MetaObserver) initObserver(chain string) {
+func (mo *MetaObserver) InitMetaObserver(chain string) {
 	switch chain {
 	case "Polygon":
 		mo.router = POLY_ROUTER
@@ -69,10 +69,7 @@ func (mo *MetaObserver) initObserver(chain string) {
 	}
 }
 
-func (mo *MetaObserver) WatchRouter(chain string) {
-	// Initialize variables
-	mo.initObserver(chain)
-
+func (mo *MetaObserver) WatchRouter() {
 	// Dial the router
 	client, err := ethclient.Dial(mo.endpoint)
 	if err != nil {
@@ -133,9 +130,15 @@ func (mo *MetaObserver) queryRouter() error {
 	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
+	// Unlock event signature
+	logUnlockSignature := []byte("Unlock(address,uint256)")
+	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
+
 	// BurnSend event signature
 	logBurnSendSignature := []byte("BurnSend(address,address,uint256,uint256,string)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
+
+	// TODO: Monitor some kind of "unlock" event on Poly/BSC
 
 	// Update last block
 	mo.lastBlock = header.Number
@@ -161,6 +164,9 @@ func (mo *MetaObserver) queryRouter() error {
 
 			// read and validate the transaction
 			mo.readAndValidateBurnSend(returnVal)
+		case logUnlockSignatureHash.Hex():
+			// TODO: What happens here?
+			mo.readAndValidateUnlock()
 		}
 	}
 
@@ -181,4 +187,8 @@ func (mo *MetaObserver) readAndValidateLockSend(values []interface{}) {
 	fmt.Println("Amount: ", values[2])
 	fmt.Println("ChainID: ", values[3])
 	fmt.Println("Message: ", values[4]) // Shows up as a byte list?
+}
+
+func (mo *MetaObserver) readAndValidateUnlock() {
+	fmt.Println("Unlock tokens!")
 }
