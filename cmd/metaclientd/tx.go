@@ -43,8 +43,18 @@ func (b *MetachainBridge) GetAllReceive() ([]*types.Receive, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ReceiveAll(context.Background(), &types.QueryAllReceiveRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("query SendAll error")
+		log.Error().Err(err).Msg("query GetAllReceive error")
 		return nil, err
 	}
 	return resp.Receive, nil
+}
+
+func (b *MetachainBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("query GetLastBlockHeight error")
+		return nil, err
+	}
+	return resp.LastBlockHeight, nil
 }
