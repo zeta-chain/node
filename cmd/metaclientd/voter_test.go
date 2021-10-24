@@ -117,4 +117,11 @@ func (s *VoterSuite) TestSendVoter(c *C) {
 	log.Info().Msgf("receives: %v", receives)
 	c.Assert(len(receives), Equals, 1)
 
+	timer4 := time.NewTimer(2 * time.Second)
+	<-timer4.C
+
+	last, err := b1.GetLastBlockHeight()
+	c.Assert(err, IsNil)
+	c.Assert(len(last), Equals, 2)
+
 }

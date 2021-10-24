@@ -13,9 +13,10 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
-		ReceiveList:     []*Receive{},
-		SendList:        []*Send{},
-		NodeAccountList: []*NodeAccount{},
+		LastBlockHeightList: []*LastBlockHeight{},
+		ReceiveList:         []*Receive{},
+		SendList:            []*Send{},
+		NodeAccountList:     []*NodeAccount{},
 	}
 }
 
@@ -25,6 +26,15 @@ func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
 	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in lastBlockHeight
+	lastBlockHeightIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.LastBlockHeightList {
+		if _, ok := lastBlockHeightIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for lastBlockHeight")
+		}
+		lastBlockHeightIndexMap[elem.Index] = true
+	}
 	// Check for duplicated index in receive
 	receiveIndexMap := make(map[string]bool)
 
