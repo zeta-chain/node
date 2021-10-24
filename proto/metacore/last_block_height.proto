@@ -1,0 +1,14 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+import "gogoproto/gogo.proto";
+
+message LastBlockHeight {
+  string creator = 1;
+  string index = 2;
+  string chain = 3; 
+  uint64 lastSendHeight = 4;
+  uint64 lastReceiveHeight = 5;
+}
