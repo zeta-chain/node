@@ -94,14 +94,8 @@ func (mo *MetaObserver) WatchRouter() {
 	// Set observer client
 	mo.client = client
 
-	// TODO: Query meta core for the last block
-	// vs. mo.lastBlock
-
-	header, err := client.HeaderByNumber(context.Background(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	mo.lastBlock = big.NewInt(0).Sub(header.Number, big.NewInt(int64(10)))
+	// Set the latest block to begin scan
+	mo.setLastBlock()
 
 	// At each tick, query the router
 	for range mo.ticker.C {
@@ -216,15 +210,49 @@ func (mo *MetaObserver) queryRouter() error {
 			fmt.Println("PostSend metahash: ", metaHash)
 		case logUnlockSignatureHash.Hex():
 			// TODO: Handle Unlock
+			fmt.Println("ObservedUnlock")
 		case logMMintedSignatureHash.Hex():
 			// TODO: Handle MMinted
+			fmt.Println("Observed MMinted")
 		}
 	}
 
 	return nil
 }
 
+func (mo *MetaObserver) setLastBlock() {
+	// Check metacore for last block checked and set initial last block
+	var useLastBlockHeight bool = true
+	lastBlockHeights, err := mo.bridge.GetLastBlockHeight()
+
+	// If there's an error retrieving blocks,
+	// continue and use latest block - 10
+	if err != nil {
+		log.Fatal(err)
+		useLastBlockHeight = false
+	}
+
+	// If metacore reports no previous blocks, use
+	// latest block - 10
+	if len(lastBlockHeights) <= 0 {
+		useLastBlockHeight = false
+	}
+
+	if useLastBlockHeight {
+		// Last block from meta core
+		mo.lastBlock = big.NewInt(int64(lastBlockHeights[0].LastSendHeight))
+	} else {
+		// Most recent block - 10
+		header, err := mo.client.HeaderByNumber(context.Background(), nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		mo.lastBlock = big.NewInt(0).Sub(header.Number, big.NewInt(int64(10)))
+	}
+}
+
 func (mo *MetaObserver) createBridge() error {
+	// TODO: How do we properly set these values?
 	signerName := "alice"
 	signerPass := "password"
 
