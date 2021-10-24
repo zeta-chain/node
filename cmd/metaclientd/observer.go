@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -40,32 +42,45 @@ const (
 // Chain configuration struct
 // Filled with above constants depending on chain
 type MetaObserver struct {
+	chain     string
 	router    string
 	endpoint  string
 	ticker    *time.Ticker
 	abi       string
 	client    *ethclient.Client
+	bridge    *MetachainBridge
 	lastBlock *big.Int
 }
 
 // Return configuration based on supplied target chain
 func (mo *MetaObserver) InitMetaObserver(chain string) {
+	// Initialize constants
 	switch chain {
 	case "Polygon":
+		mo.chain = chain
 		mo.router = POLY_ROUTER
 		mo.endpoint = POLY_ENDPOINT
 		mo.ticker = time.NewTicker(time.Duration(POLY_BLOCK_TIME) * time.Second)
 		mo.abi = META_ABI
 	case "Ethereum":
+		mo.chain = chain
 		mo.router = ETH_ROUTER
 		mo.endpoint = ETH_ENDPOINT
 		mo.ticker = time.NewTicker(time.Duration(ETH_BLOCK_TIME) * time.Second)
 		mo.abi = META_LOCK_ABI
 	case "BSC":
+		mo.chain = chain
 		mo.router = BSC_ROUTER
 		mo.endpoint = BSC_ENDPOINT
 		mo.ticker = time.NewTicker(time.Duration(BSC_BLOCK_TIME) * time.Second)
 		mo.abi = META_ABI
+	}
+
+	// Initialize Bridge
+	err := mo.createBridge()
+	if err != nil {
+		log.Fatal(err)
+		return
 	}
 }
 
@@ -136,13 +151,18 @@ func (mo *MetaObserver) queryRouter() error {
 	logBurnSendSignature := []byte("BurnSend(address,address,uint256,uint256,string)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
-	// TODO: Monitor some kind of "unlock" event on Poly/BSC
+	// MMinted event signature
+	logMMintedSignature := []byte("MMinted(address,uint256)")
+	logMMintedSignatureHash := crypto.Keccak256Hash(logMMintedSignature)
 
 	// Update last block
 	mo.lastBlock = header.Number
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
+		fmt.Println("Transaction Hash: ", vLog.TxHash.Hex())
+		fmt.Println("TxBlockNumber: ", vLog.BlockNumber)
+
 		switch vLog.Topics[0].Hex() {
 		case logLockSendSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("LockSend", vLog.Data)
@@ -151,8 +171,24 @@ func (mo *MetaObserver) queryRouter() error {
 				continue
 			}
 
-			// read and validate the transaction
-			mo.readAndValidateLockSend(returnVal)
+			// PostSend to meta core
+			metaHash, err := mo.bridge.PostSend(
+				returnVal[0].(ethcommon.Address).String(),
+				mo.chain,
+				returnVal[1].(string),
+				returnVal[3].(string),
+				returnVal[2].(*big.Int).String(),
+				"0",
+				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
+				vLog.TxHash.Hex(),
+				vLog.BlockNumber,
+			)
+			if err != nil {
+				fmt.Println("error posting to meta core")
+				continue
+			}
+
+			fmt.Println("PostSend metahash: ", metaHash)
 		case logBurnSendSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("BurnSend", vLog.Data)
 			if err != nil {
@@ -160,33 +196,59 @@ func (mo *MetaObserver) queryRouter() error {
 				continue
 			}
 
-			// read and validate the transaction
-			mo.readAndValidateBurnSend(returnVal)
+			// PostSend to meta core
+			metaHash, err := mo.bridge.PostSend(
+				returnVal[0].(ethcommon.Address).String(),
+				mo.chain,
+				returnVal[1].(ethcommon.Address).String(),
+				returnVal[3].(*big.Int).String(),
+				returnVal[2].(*big.Int).String(),
+				"0",
+				returnVal[4].(string), // TODO: figure out appropriate format for message
+				vLog.TxHash.Hex(),
+				vLog.BlockNumber,
+			)
+			if err != nil {
+				fmt.Println("error posting to meta core")
+				continue
+			}
+
+			fmt.Println("PostSend metahash: ", metaHash)
 		case logUnlockSignatureHash.Hex():
-			// TODO: What happens here?
-			mo.readAndValidateUnlock()
+			// TODO: Handle Unlock
+		case logMMintedSignatureHash.Hex():
+			// TODO: Handle MMinted
 		}
 	}
 
 	return nil
 }
 
-func (mo *MetaObserver) readAndValidateBurnSend(values []interface{}) {
-	fmt.Println("Send Address: ", values[0])
-	fmt.Println("Rx Address: ", values[1])
-	fmt.Println("Amount: ", values[2])
-	fmt.Println("ChainID: ", values[3])
-	fmt.Println("Message: ", values[4])
-}
+func (mo *MetaObserver) createBridge() error {
+	signerName := "alice"
+	signerPass := "password"
 
-func (mo *MetaObserver) readAndValidateLockSend(values []interface{}) {
-	fmt.Println("Send Address: ", values[0])
-	fmt.Println("Rx Address: ", values[1])
-	fmt.Println("Amount: ", values[2])
-	fmt.Println("ChainID: ", values[3])
-	fmt.Println("Message: ", values[4]) // Shows up as a byte list?
-}
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
 
-func (mo *MetaObserver) readAndValidateUnlock() {
-	fmt.Println("Unlock tokens!")
+	chainHomeFoler := filepath.Join(homeDir, ".metacore")
+
+	kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+	if err != nil {
+		return err
+	}
+
+	k := NewKeysWithKeybase(kb, signerName, signerPass)
+
+	chainIP := "127.0.0.1"
+	bridge, err := NewMetachainBridge(k, chainIP, "alice")
+	if err != nil {
+		return err
+	}
+
+	mo.bridge = bridge
+
+	return nil
 }
