@@ -19332,6 +19332,189 @@ paths:
           type: string
       tags:
         - Query
+  /Meta-Protocol/metacore/metacore/receive:
+    get:
+      summary: Queries a list of receive items.
+      operationId: MetaProtocolMetacoreMetacoreReceiveAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Receive:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    sendHash:
+                      type: string
+                    outTxHash:
+                      type: string
+                    outBlockHeight:
+                      type: string
+                      format: uint64
+                    finalizedMetaHeight:
+                      type: string
+                      format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+              pagination:
+                type: object
+                properties:
+                  nextKey:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.countTotal
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/Meta-Protocol/metacore/metacore/receive/{index}':
+    get:
+      summary: Queries a receive by index.
+      operationId: MetaProtocolMetacoreMetacoreReceive
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Receive:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  sendHash:
+                    type: string
+                  outTxHash:
+                    type: string
+                  outBlockHeight:
+                    type: string
+                    format: uint64
+                  finalizedMetaHeight:
+                    type: string
+                    format: uint64
+                  signers:
+                    type: array
+                    items:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /Meta-Protocol/metacore/metacore/send:
     get:
       summary: Queries a list of send items.
@@ -19514,833 +19697,6 @@ paths:
                     type: array
                     items:
                       type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /Meta-Protocol/metacore/metacore/txin:
-    get:
-      summary: Queries a list of txin items.
-      operationId: MetaProtocolMetacoreMetacoreTxinAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Txin:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    txHash:
-                      type: string
-                    sourceAsset:
-                      type: string
-                    sourceAmount:
-                      type: string
-                      format: uint64
-                    mBurnt:
-                      type: string
-                      format: uint64
-                    destinationAsset:
-                      type: string
-                    fromAddress:
-                      type: string
-                    toAddress:
-                      type: string
-                    blockHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    finalizedHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  nextKey:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/Meta-Protocol/metacore/metacore/txin/{index}':
-    get:
-      summary: Queries a txin by index.
-      operationId: MetaProtocolMetacoreMetacoreTxin
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Txin:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  txHash:
-                    type: string
-                  sourceAsset:
-                    type: string
-                  sourceAmount:
-                    type: string
-                    format: uint64
-                  mBurnt:
-                    type: string
-                    format: uint64
-                  destinationAsset:
-                    type: string
-                  fromAddress:
-                    type: string
-                  toAddress:
-                    type: string
-                  blockHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  finalizedHeight:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /Meta-Protocol/metacore/metacore/txinVoter:
-    get:
-      summary: Queries a list of txinVoter items.
-      operationId: MetaProtocolMetacoreMetacoreTxinVoterAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TxinVoter:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    txHash:
-                      type: string
-                    sourceAsset:
-                      type: string
-                    sourceAmount:
-                      type: string
-                      format: uint64
-                    mBurnt:
-                      type: string
-                      format: uint64
-                    destinationAsset:
-                      type: string
-                    fromAddress:
-                      type: string
-                    toAddress:
-                      type: string
-                    blockHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  nextKey:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/Meta-Protocol/metacore/metacore/txinVoter/{index}':
-    get:
-      summary: Queries a txinVoter by index.
-      operationId: MetaProtocolMetacoreMetacoreTxinVoter
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TxinVoter:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  txHash:
-                    type: string
-                  sourceAsset:
-                    type: string
-                  sourceAmount:
-                    type: string
-                    format: uint64
-                  mBurnt:
-                    type: string
-                    format: uint64
-                  destinationAsset:
-                    type: string
-                  fromAddress:
-                    type: string
-                  toAddress:
-                    type: string
-                  blockHeight:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /Meta-Protocol/metacore/metacore/txout:
-    get:
-      summary: Queries a list of txout items.
-      operationId: MetaProtocolMetacoreMetacoreTxoutAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Txout:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    id:
-                      type: string
-                      format: uint64
-                    txinHash:
-                      type: string
-                    sourceAsset:
-                      type: string
-                    sourceAmount:
-                      type: string
-                      format: uint64
-                    mBurnt:
-                      type: string
-                      format: uint64
-                    mMint:
-                      type: string
-                      format: uint64
-                    destinationAsset:
-                      type: string
-                    destinationAmount:
-                      type: string
-                      format: uint64
-                    fromAddress:
-                      type: string
-                    toAddress:
-                      type: string
-                    blockHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    finalizedHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  nextKey:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/Meta-Protocol/metacore/metacore/txout/{id}':
-    get:
-      summary: Queries a txout by id.
-      operationId: MetaProtocolMetacoreMetacoreTxout
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Txout:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  id:
-                    type: string
-                    format: uint64
-                  txinHash:
-                    type: string
-                  sourceAsset:
-                    type: string
-                  sourceAmount:
-                    type: string
-                    format: uint64
-                  mBurnt:
-                    type: string
-                    format: uint64
-                  mMint:
-                    type: string
-                    format: uint64
-                  destinationAsset:
-                    type: string
-                  destinationAmount:
-                    type: string
-                    format: uint64
-                  fromAddress:
-                    type: string
-                  toAddress:
-                    type: string
-                  blockHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  finalizedHeight:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - Query
-  /Meta-Protocol/metacore/metacore/txoutConfirmation:
-    get:
-      summary: Queries a list of txoutConfirmation items.
-      operationId: MetaProtocolMetacoreMetacoreTxoutConfirmationAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TxoutConfirmation:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    txoutId:
-                      type: string
-                      format: uint64
-                    txHash:
-                      type: string
-                    mMint:
-                      type: string
-                      format: uint64
-                    destinationAsset:
-                      type: string
-                    destinationAmount:
-                      type: string
-                      format: uint64
-                    toAddress:
-                      type: string
-                    blockHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    finalizedHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  nextKey:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.countTotal
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/Meta-Protocol/metacore/metacore/txoutConfirmation/{index}':
-    get:
-      summary: Queries a txoutConfirmation by index.
-      operationId: MetaProtocolMetacoreMetacoreTxoutConfirmation
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TxoutConfirmation:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  txoutId:
-                    type: string
-                    format: uint64
-                  txHash:
-                    type: string
-                  mMint:
-                    type: string
-                    format: uint64
-                  destinationAsset:
-                    type: string
-                  destinationAmount:
-                    type: string
-                    format: uint64
-                  toAddress:
-                    type: string
-                  blockHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  finalizedHeight:
-                    type: string
-                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30532,13 +29888,11 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
-  MetaProtocol.metacore.metacore.MsgCreateTxinVoterResponse:
+  MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgSendVoterResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse:
-    type: object
-  MetaProtocol.metacore.metacore.MsgTxoutConfirmationVoterResponse:
     type: object
   MetaProtocol.metacore.metacore.NodeAccount:
     type: object
@@ -30636,6 +29990,57 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  MetaProtocol.metacore.metacore.QueryAllReceiveResponse:
+    type: object
+    properties:
+      Receive:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            sendHash:
+              type: string
+            outTxHash:
+              type: string
+            outBlockHeight:
+              type: string
+              format: uint64
+            finalizedMetaHeight:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+      pagination:
+        type: object
+        properties:
+          nextKey:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
   MetaProtocol.metacore.metacore.QueryAllSendResponse:
     type: object
     properties:
@@ -30699,257 +30104,6 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllTxinResponse:
-    type: object
-    properties:
-      Txin:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            txHash:
-              type: string
-            sourceAsset:
-              type: string
-            sourceAmount:
-              type: string
-              format: uint64
-            mBurnt:
-              type: string
-              format: uint64
-            destinationAsset:
-              type: string
-            fromAddress:
-              type: string
-            toAddress:
-              type: string
-            blockHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            finalizedHeight:
-              type: string
-              format: uint64
-      pagination:
-        type: object
-        properties:
-          nextKey:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-  MetaProtocol.metacore.metacore.QueryAllTxinVoterResponse:
-    type: object
-    properties:
-      TxinVoter:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            txHash:
-              type: string
-            sourceAsset:
-              type: string
-            sourceAmount:
-              type: string
-              format: uint64
-            mBurnt:
-              type: string
-              format: uint64
-            destinationAsset:
-              type: string
-            fromAddress:
-              type: string
-            toAddress:
-              type: string
-            blockHeight:
-              type: string
-              format: uint64
-      pagination:
-        type: object
-        properties:
-          nextKey:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-  MetaProtocol.metacore.metacore.QueryAllTxoutConfirmationResponse:
-    type: object
-    properties:
-      TxoutConfirmation:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            txoutId:
-              type: string
-              format: uint64
-            txHash:
-              type: string
-            mMint:
-              type: string
-              format: uint64
-            destinationAsset:
-              type: string
-            destinationAmount:
-              type: string
-              format: uint64
-            toAddress:
-              type: string
-            blockHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            finalizedHeight:
-              type: string
-              format: uint64
-      pagination:
-        type: object
-        properties:
-          nextKey:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-  MetaProtocol.metacore.metacore.QueryAllTxoutResponse:
-    type: object
-    properties:
-      Txout:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            id:
-              type: string
-              format: uint64
-            txinHash:
-              type: string
-            sourceAsset:
-              type: string
-            sourceAmount:
-              type: string
-              format: uint64
-            mBurnt:
-              type: string
-              format: uint64
-            mMint:
-              type: string
-              format: uint64
-            destinationAsset:
-              type: string
-            destinationAmount:
-              type: string
-              format: uint64
-            fromAddress:
-              type: string
-            toAddress:
-              type: string
-            blockHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            finalizedHeight:
-              type: string
-              format: uint64
-      pagination:
-        type: object
-        properties:
-          nextKey:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
   MetaProtocol.metacore.metacore.QueryGetNodeAccountResponse:
     type: object
     properties:
@@ -30981,6 +30135,30 @@ definitions:
               - Active
               - Disabled
             default: Unknown
+  MetaProtocol.metacore.metacore.QueryGetReceiveResponse:
+    type: object
+    properties:
+      Receive:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          sendHash:
+            type: string
+          outTxHash:
+            type: string
+          outBlockHeight:
+            type: string
+            format: uint64
+          finalizedMetaHeight:
+            type: string
+            format: uint64
+          signers:
+            type: array
+            items:
+              type: string
   MetaProtocol.metacore.metacore.QueryGetSendResponse:
     type: object
     properties:
@@ -31017,155 +30195,33 @@ definitions:
             type: array
             items:
               type: string
-  MetaProtocol.metacore.metacore.QueryGetTxinResponse:
-    type: object
-    properties:
-      Txin:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          txHash:
-            type: string
-          sourceAsset:
-            type: string
-          sourceAmount:
-            type: string
-            format: uint64
-          mBurnt:
-            type: string
-            format: uint64
-          destinationAsset:
-            type: string
-          fromAddress:
-            type: string
-          toAddress:
-            type: string
-          blockHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          finalizedHeight:
-            type: string
-            format: uint64
-  MetaProtocol.metacore.metacore.QueryGetTxinVoterResponse:
-    type: object
-    properties:
-      TxinVoter:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          txHash:
-            type: string
-          sourceAsset:
-            type: string
-          sourceAmount:
-            type: string
-            format: uint64
-          mBurnt:
-            type: string
-            format: uint64
-          destinationAsset:
-            type: string
-          fromAddress:
-            type: string
-          toAddress:
-            type: string
-          blockHeight:
-            type: string
-            format: uint64
-  MetaProtocol.metacore.metacore.QueryGetTxoutConfirmationResponse:
-    type: object
-    properties:
-      TxoutConfirmation:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          txoutId:
-            type: string
-            format: uint64
-          txHash:
-            type: string
-          mMint:
-            type: string
-            format: uint64
-          destinationAsset:
-            type: string
-          destinationAmount:
-            type: string
-            format: uint64
-          toAddress:
-            type: string
-          blockHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          finalizedHeight:
-            type: string
-            format: uint64
-  MetaProtocol.metacore.metacore.QueryGetTxoutResponse:
-    type: object
-    properties:
-      Txout:
-        type: object
-        properties:
-          creator:
-            type: string
-          id:
-            type: string
-            format: uint64
-          txinHash:
-            type: string
-          sourceAsset:
-            type: string
-          sourceAmount:
-            type: string
-            format: uint64
-          mBurnt:
-            type: string
-            format: uint64
-          mMint:
-            type: string
-            format: uint64
-          destinationAsset:
-            type: string
-          destinationAmount:
-            type: string
-            format: uint64
-          fromAddress:
-            type: string
-          toAddress:
-            type: string
-          blockHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          finalizedHeight:
-            type: string
-            format: uint64
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
       Height:
         type: string
         format: uint64
+  MetaProtocol.metacore.metacore.Receive:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      sendHash:
+        type: string
+      outTxHash:
+        type: string
+      outBlockHeight:
+        type: string
+        format: uint64
+      finalizedMetaHeight:
+        type: string
+        format: uint64
+      signers:
+        type: array
+        items:
+          type: string
   MetaProtocol.metacore.metacore.Send:
     type: object
     properties:
@@ -31199,137 +30255,6 @@ definitions:
         type: array
         items:
           type: string
-  MetaProtocol.metacore.metacore.Txin:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      txHash:
-        type: string
-      sourceAsset:
-        type: string
-      sourceAmount:
-        type: string
-        format: uint64
-      mBurnt:
-        type: string
-        format: uint64
-      destinationAsset:
-        type: string
-      fromAddress:
-        type: string
-      toAddress:
-        type: string
-      blockHeight:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
-  MetaProtocol.metacore.metacore.TxinVoter:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      txHash:
-        type: string
-      sourceAsset:
-        type: string
-      sourceAmount:
-        type: string
-        format: uint64
-      mBurnt:
-        type: string
-        format: uint64
-      destinationAsset:
-        type: string
-      fromAddress:
-        type: string
-      toAddress:
-        type: string
-      blockHeight:
-        type: string
-        format: uint64
-  MetaProtocol.metacore.metacore.Txout:
-    type: object
-    properties:
-      creator:
-        type: string
-      id:
-        type: string
-        format: uint64
-      txinHash:
-        type: string
-      sourceAsset:
-        type: string
-      sourceAmount:
-        type: string
-        format: uint64
-      mBurnt:
-        type: string
-        format: uint64
-      mMint:
-        type: string
-        format: uint64
-      destinationAsset:
-        type: string
-      destinationAmount:
-        type: string
-        format: uint64
-      fromAddress:
-        type: string
-      toAddress:
-        type: string
-      blockHeight:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
-  MetaProtocol.metacore.metacore.TxoutConfirmation:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      txoutId:
-        type: string
-        format: uint64
-      txHash:
-        type: string
-      mMint:
-        type: string
-        format: uint64
-      destinationAsset:
-        type: string
-      destinationAmount:
-        type: string
-        format: uint64
-      toAddress:
-        type: string
-      blockHeight:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
   common.PubKeySet:
     type: object
     properties:

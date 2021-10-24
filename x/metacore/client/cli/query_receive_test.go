@@ -18,23 +18,23 @@ import (
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 )
 
-func networkWithTxoutConfirmationObjects(t *testing.T, n int) (*network.Network, []*types.TxoutConfirmation) {
+func networkWithReceiveObjects(t *testing.T, n int) (*network.Network, []*types.Receive) {
 	t.Helper()
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TxoutConfirmationList = append(state.TxoutConfirmationList, &types.TxoutConfirmation{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
+		state.ReceiveList = append(state.ReceiveList, &types.Receive{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), state.TxoutConfirmationList
+	return network.New(t, cfg), state.ReceiveList
 }
 
-func TestShowTxoutConfirmation(t *testing.T) {
-	net, objs := networkWithTxoutConfirmationObjects(t, 2)
+func TestShowReceive(t *testing.T) {
+	net, objs := networkWithReceiveObjects(t, 2)
 
 	ctx := net.Validators[0].ClientCtx
 	common := []string{
@@ -45,7 +45,7 @@ func TestShowTxoutConfirmation(t *testing.T) {
 		id   string
 		args []string
 		err  error
-		obj  *types.TxoutConfirmation
+		obj  *types.Receive
 	}{
 		{
 			desc: "found",
@@ -64,24 +64,24 @@ func TestShowTxoutConfirmation(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			args := []string{tc.id}
 			args = append(args, tc.args...)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowTxoutConfirmation(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowReceive(), args)
 			if tc.err != nil {
 				stat, ok := status.FromError(tc.err)
 				require.True(t, ok)
 				require.ErrorIs(t, stat.Err(), tc.err)
 			} else {
 				require.NoError(t, err)
-				var resp types.QueryGetTxoutConfirmationResponse
+				var resp types.QueryGetReceiveResponse
 				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				require.NotNil(t, resp.TxoutConfirmation)
-				require.Equal(t, tc.obj, resp.TxoutConfirmation)
+				require.NotNil(t, resp.Receive)
+				require.Equal(t, tc.obj, resp.Receive)
 			}
 		})
 	}
 }
 
-func TestListTxoutConfirmation(t *testing.T) {
-	net, objs := networkWithTxoutConfirmationObjects(t, 5)
+func TestListReceive(t *testing.T) {
+	net, objs := networkWithReceiveObjects(t, 5)
 
 	ctx := net.Validators[0].ClientCtx
 	request := func(next []byte, offset, limit uint64, total bool) []string {
@@ -103,12 +103,12 @@ func TestListTxoutConfirmation(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListTxoutConfirmation(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListReceive(), args)
 			require.NoError(t, err)
-			var resp types.QueryAllTxoutConfirmationResponse
+			var resp types.QueryAllReceiveResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				assert.Equal(t, objs[j], resp.TxoutConfirmation[j-i])
+				assert.Equal(t, objs[j], resp.Receive[j-i])
 			}
 		}
 	})
@@ -117,24 +117,24 @@ func TestListTxoutConfirmation(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListTxoutConfirmation(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListReceive(), args)
 			require.NoError(t, err)
-			var resp types.QueryAllTxoutConfirmationResponse
+			var resp types.QueryAllReceiveResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				assert.Equal(t, objs[j], resp.TxoutConfirmation[j-i])
+				assert.Equal(t, objs[j], resp.Receive[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListTxoutConfirmation(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListReceive(), args)
 		require.NoError(t, err)
-		var resp types.QueryAllTxoutConfirmationResponse
+		var resp types.QueryAllReceiveResponse
 		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
-		require.Equal(t, objs, resp.TxoutConfirmation)
+		require.Equal(t, objs, resp.Receive)
 	})
 }

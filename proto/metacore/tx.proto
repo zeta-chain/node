@@ -2,7 +2,6 @@ syntax = "proto3";
 package MetaProtocol.metacore.metacore;
 
 // this line is used by starport scaffolding # proto/tx/import
-import "metacore/txin_voter.proto";
 import "common/common.proto";
 
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
@@ -10,13 +9,23 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Msg defines the Msg service.
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
+  rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
   rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
-  rpc TxoutConfirmationVoter(MsgTxoutConfirmationVoter) returns (MsgTxoutConfirmationVoterResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
-  rpc CreateTxinVoter(MsgCreateTxinVoter) returns (MsgCreateTxinVoterResponse);
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgReceiveConfirmation {
+  string creator = 1;
+  string sendHash = 2;
+  string outTxHash = 3;
+  uint64 outBlockHeight = 4;
+  string mMint = 5;
+}
+
+message MsgReceiveConfirmationResponse {
+}
+
 message MsgSendVoter {
   string creator = 1;
   string sender = 2;
@@ -33,20 +42,6 @@ message MsgSendVoter {
 message MsgSendVoterResponse {
 }
 
-message MsgTxoutConfirmationVoter {
-  string creator = 1;
-  uint64 txoutId = 2;
-  string txHash = 3;
-  uint64 mMint = 4;
-  string destinationAsset = 5;
-  uint64 destinationAmount = 6;
-  string toAddress = 7;
-  uint64 blockHeight = 8;
-}
-
-message MsgTxoutConfirmationVoterResponse {
-}
-
 message MsgSetNodeKeys {
   string creator = 1;
   common.PubKeySet pubkeySet = 2;
@@ -55,17 +50,3 @@ message MsgSetNodeKeys {
 
 message MsgSetNodeKeysResponse {
 }
-
-message MsgCreateTxinVoter {
-  string creator = 1;
-  string index = 2;
-  string txHash = 3;
-  string sourceAsset = 4;
-  uint64 sourceAmount = 5;
-  uint64 mBurnt = 6;
-  string destinationAsset = 7;
-  string fromAddress = 8;
-  string toAddress = 9;
-  uint64 blockHeight = 10;
-}
-message MsgCreateTxinVoterResponse { }

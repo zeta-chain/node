@@ -9,29 +9,25 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	// this line is used by starport scaffolding # 2
+	cdc.RegisterConcrete(&MsgReceiveConfirmation{}, "metacore/ReceiveConfirmation", nil)
+
 	cdc.RegisterConcrete(&MsgSendVoter{}, "metacore/SendVoter", nil)
 
-	cdc.RegisterConcrete(&MsgTxoutConfirmationVoter{}, "metacore/TxoutConfirmationVoter", nil)
-
 	cdc.RegisterConcrete(&MsgSetNodeKeys{}, "metacore/SetNodeKeys", nil)
-
-	cdc.RegisterConcrete(&MsgCreateTxinVoter{}, "metacore/CreateTxinVoter", nil)
 
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// this line is used by starport scaffolding # 3
 	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgReceiveConfirmation{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSendVoter{},
 	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgTxoutConfirmationVoter{},
-	)
+
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetNodeKeys{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgCreateTxinVoter{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
