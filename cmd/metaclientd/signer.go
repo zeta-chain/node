@@ -34,6 +34,9 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 		return nil, err
 	}
 	chainID, err := client.ChainID(context.TODO())
+	if err != nil {
+		return nil, err
+	}
 	ethSigner := ethtypes.LatestSignerForChainID(chainID)
 
 	return &Signer{
