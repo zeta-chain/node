@@ -85,7 +85,9 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 		return "", err
 	}
 	gasPrice, err := signer.client.SuggestGasPrice(context.Background())
-
+	if err != nil {
+		return "", err
+	}
 	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice)
 	if err != nil {
 		return "", err
