@@ -10,7 +10,6 @@ import (
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 type MySuite struct {
@@ -57,34 +56,4 @@ func (s *MySuite) TestGetAccountNumberAndSeuqeuence(c *C) {
 	an, as, err := s.bridge.GetAccountNumberAndSequenceNumber()
 	c.Assert(err, IsNil)
 	c.Logf("acc number %d acc sequence %d", an, as)
-}
-
-// run this test with tag "voter" and a fresh chain!
-// starport chain serve --reset-once
-func (s *MySuite) TestObservedTxIn(c *C) {
-	b := s.bridge
-	//err := b.PostTxIn("ETH.ETH", 2, 4, "ETH.BSC", "0xdeadbeef", "0x1234", 2345)
-	metaHash, err := b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
-		time.Now().String(), 123123)
-
-	c.Assert(err, IsNil)
-	log.Info().Msgf("PostTxIn metaHash %s", metaHash)
-
-	timer1 := time.NewTimer(500 * time.Millisecond)
-	<-timer1.C
-
-	metaHash, err = b.PostTxIn("0xfrom", "0xto", "0xsource.ETH", 123456, 23245, "0xdest.BSC",
-		time.Now().String(), 12345)
-	c.Assert(err, IsNil)
-	log.Info().Msgf("Second PostTxIn metaHash %s", metaHash)
-
-	//err = s.bridge.PostTxoutConfirmation(0, "0x4445", 23, 1794)
-	//c.Assert(err, IsNil)
-
-	//timer1 := time.NewTimer(6 * time.Second)
-	//<-timer1.C
-	//
-	//chain, _ := common.NewChain("ETH")
-	//_, err = s.bridge.GetLastBlockObserved(chain)
-	//c.Assert(err, IsNil)
 }
