@@ -19731,6 +19731,14 @@ paths:
                       type: array
                       items:
                         type: string
+                    status:
+                      type: string
+                      enum:
+                        - Created
+                        - Finalized
+                        - Mined
+                        - Confirmed
+                      default: Created
               pagination:
                 type: object
                 properties:
@@ -19868,6 +19876,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  status:
+                    type: string
+                    enum:
+                      - Created
+                      - Finalized
+                      - Mined
+                      - Confirmed
+                    default: Created
         default:
           description: An unexpected error response.
           schema:
@@ -30310,6 +30326,14 @@ definitions:
               type: array
               items:
                 type: string
+            status:
+              type: string
+              enum:
+                - Created
+                - Finalized
+                - Mined
+                - Confirmed
+              default: Created
       pagination:
         type: object
         properties:
@@ -30444,6 +30468,14 @@ definitions:
             type: array
             items:
               type: string
+          status:
+            type: string
+            enum:
+              - Created
+              - Finalized
+              - Mined
+              - Confirmed
+            default: Created
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -30504,6 +30536,22 @@ definitions:
         type: array
         items:
           type: string
+      status:
+        type: string
+        enum:
+          - Created
+          - Finalized
+          - Mined
+          - Confirmed
+        default: Created
+  MetaProtocol.metacore.metacore.SendStatus:
+    type: string
+    enum:
+      - Created
+      - Finalized
+      - Mined
+      - Confirmed
+    default: Created
   common.PubKeySet:
     type: object
     properties:
