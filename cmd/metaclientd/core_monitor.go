@@ -46,10 +46,10 @@ func (cm *CoreMonitor) MonitorCore() {
 	go func() {
 		for len(cm.sendQueue) > 0 {
 			// Pull the top
-			rx := cm.sendQueue[0]
+			send := cm.sendQueue[0]
 
-			// TODO: How to pull the data below off rx
-			fmt.Println(rx)
+			// TODO: How to pull the data below off send
+			fmt.Println(send)
 
 			// Process
 			var amount *big.Int
@@ -70,6 +70,9 @@ func (cm *CoreMonitor) MonitorCore() {
 
 			// TODO: What to do with outTxHash now?
 			fmt.Println(outTxHash)
+
+			// TODO: We now have outTxHash and sendHash (from send)
+			// How do we save this for use in observer?
 
 			// Discard top
 			cm.sendQueue = cm.sendQueue[1:]
