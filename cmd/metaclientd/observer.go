@@ -217,6 +217,9 @@ func (mo *MetaObserver) queryRouter() error {
 
 			// Post confirmation to meta core
 			var sendHash, outTxHash string
+
+			// sendHash = empty string for now
+			// outTxHash = tx hash returned by signer.MMint
 			var rxAddress string = returnVal[0].(ethcommon.Address).String()
 			var mMint string = returnVal[1].(*big.Int).String()
 			metaHash, err := mo.bridge.PostReceiveConfirmation(
