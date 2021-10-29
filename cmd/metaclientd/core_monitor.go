@@ -10,15 +10,15 @@ import (
 )
 
 type CoreMonitor struct {
-	rxQueue []*types.Receive
-	bridge  *MetachainBridge
-	signer  *Signer
+	sendQueue []*types.Send
+	bridge    *MetachainBridge
+	signer    *Signer
 }
 
 func (cm *CoreMonitor) InitCoreMonitor(bridge *MetachainBridge, signer *Signer) {
 	cm.bridge = bridge
 	cm.signer = signer
-	cm.rxQueue = make([]*types.Receive, 0)
+	cm.sendQueue = make([]*types.Send, 0)
 }
 
 func (cm *CoreMonitor) MonitorCore() {
@@ -29,24 +29,24 @@ func (cm *CoreMonitor) MonitorCore() {
 	coreTicker := time.NewTicker(5 * time.Second)
 	go func() {
 		for range coreTicker.C {
-			rxList, err := cm.bridge.GetAllReceive()
+			sendList, err := cm.bridge.GetAllSend()
 			if err != nil {
 				fmt.Println("error requesting receives from metacore")
 				return
 			}
 
 			// Add rxList items to queue
-			for _, rx := range rxList {
-				cm.rxQueue = append(cm.rxQueue, rx)
+			for _, send := range sendList {
+				cm.sendQueue = append(cm.sendQueue, send)
 			}
 		}
 	}()
 
 	// Pull items from queue
 	go func() {
-		for len(cm.rxQueue) > 0 {
+		for len(cm.sendQueue) > 0 {
 			// Pull the top
-			rx := cm.rxQueue[0]
+			rx := cm.sendQueue[0]
 
 			// TODO: How to pull the data below off rx
 			fmt.Println(rx)
@@ -72,7 +72,7 @@ func (cm *CoreMonitor) MonitorCore() {
 			fmt.Println(outTxHash)
 
 			// Discard top
-			cm.rxQueue = cm.rxQueue[1:]
+			cm.sendQueue = cm.sendQueue[1:]
 		}
 	}()
 
