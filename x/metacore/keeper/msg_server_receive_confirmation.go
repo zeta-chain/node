@@ -54,6 +54,9 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			lastblock.LastSendHeight = msg.OutBlockHeight
 		}
 		k.SetLastBlockHeight(ctx, lastblock)
+
+		send.Status = types.SendStatus_Mined
+		k.SetSend(ctx, send)
 	}
 
 	k.SetReceive(ctx, receive)
