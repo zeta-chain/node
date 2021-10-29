@@ -48,40 +48,42 @@ func (cm *CoreMonitor) MonitorCore() {
 
 	// Pull items from queue
 	go func() {
-		for len(cm.sendQueue) > 0 {
-			// Pull the top
-			send := cm.sendQueue[0]
+		for range coreTicker.C {
+			for len(cm.sendQueue) > 0 {
+				// Pull the top
+				send := cm.sendQueue[0]
 
-			// Process
-			amount, ok := new(big.Int).SetString(send.MBurnt, 10)
-			if !ok {
-				fmt.Println("error converting MBurnt to big.Int")
-				return
+				// Process
+				amount, ok := new(big.Int).SetString(send.MBurnt, 10)
+				if !ok {
+					fmt.Println("error converting MBurnt to big.Int")
+					return
+				}
+				to := ethcommon.HexToAddress(send.Receiver)
+				message := []byte(send.Message)
+
+				// TODO: How do we set gas limit
+				var gasLimit uint64
+
+				outTxHash, err := cm.signer.MMint(
+					amount,
+					to,
+					gasLimit,
+					message,
+				)
+				if err != nil {
+					fmt.Println("error minting received transaction")
+					return
+				}
+
+				// TODO: We now have outTxHash and sendHash (from send)
+				// How do we save this for use in observer?
+				fmt.Println("sendHash: ", send.Index)
+				fmt.Println("outTxHash: ", outTxHash)
+
+				// Discard top
+				cm.sendQueue = cm.sendQueue[1:]
 			}
-			to := ethcommon.HexToAddress(send.Receiver)
-			message := []byte(send.Message)
-
-			// TODO: How do we set gas limit
-			var gasLimit uint64
-
-			outTxHash, err := cm.signer.MMint(
-				amount,
-				to,
-				gasLimit,
-				message,
-			)
-			if err != nil {
-				fmt.Println("error minting received transaction")
-				return
-			}
-
-			// TODO: We now have outTxHash and sendHash (from send)
-			// How do we save this for use in observer?
-			fmt.Println("sendHash: ", send.Index)
-			fmt.Println("outTxHash: ", outTxHash)
-
-			// Discard top
-			cm.sendQueue = cm.sendQueue[1:]
 		}
 	}()
 
