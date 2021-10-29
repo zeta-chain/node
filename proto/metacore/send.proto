@@ -5,6 +5,14 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 import "gogoproto/gogo.proto";
 
+enum SendStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  Created = 0;
+  Finalized = 1;
+  Mined = 2;
+  Confirmed = 3;
+}
+
 message Send {
   string creator = 1;
   string index = 2;
@@ -19,4 +27,5 @@ message Send {
   uint64 inBlockHeight = 11;
   uint64 finalizedMetaHeight = 12;
   repeated string signers = 13;
+  SendStatus status = 14;
 }
