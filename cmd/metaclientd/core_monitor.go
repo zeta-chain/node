@@ -35,9 +35,13 @@ func (cm *CoreMonitor) MonitorCore() {
 				return
 			}
 
-			// Add rxList items to queue
+			// Add sendList items to queue if status is finalized
+			// TODO: extra check to make sure we don't double add?
+			// ask @pwu
 			for _, send := range sendList {
-				cm.sendQueue = append(cm.sendQueue, send)
+				if types.SendStatus_name[int32(send.Status)] == "Finalized" {
+					cm.sendQueue = append(cm.sendQueue, send)
+				}
 			}
 		}
 	}()
@@ -48,14 +52,17 @@ func (cm *CoreMonitor) MonitorCore() {
 			// Pull the top
 			send := cm.sendQueue[0]
 
-			// TODO: How to pull the data below off send
-			fmt.Println(send)
-
 			// Process
-			var amount *big.Int
-			var to ethcommon.Address
+			amount, ok := new(big.Int).SetString(send.MBurnt, 10)
+			if !ok {
+				fmt.Println("error converting MBurnt to big.Int")
+				return
+			}
+			to := ethcommon.HexToAddress(send.Receiver)
+			message := []byte(send.Message)
+
+			// TODO: How do we set gas limit
 			var gasLimit uint64
-			var message []byte
 
 			outTxHash, err := cm.signer.MMint(
 				amount,
@@ -68,11 +75,10 @@ func (cm *CoreMonitor) MonitorCore() {
 				return
 			}
 
-			// TODO: What to do with outTxHash now?
-			fmt.Println(outTxHash)
-
 			// TODO: We now have outTxHash and sendHash (from send)
 			// How do we save this for use in observer?
+			fmt.Println("sendHash: ", send.Index)
+			fmt.Println("outTxHash: ", outTxHash)
 
 			// Discard top
 			cm.sendQueue = cm.sendQueue[1:]
