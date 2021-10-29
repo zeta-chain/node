@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -53,7 +51,10 @@ type MetaObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func (mo *MetaObserver) InitMetaObserver(chain string) {
+func (mo *MetaObserver) InitMetaObserver(chain string, bridge *MetachainBridge) {
+	// Set bridge
+	mo.bridge = bridge
+
 	// Initialize constants
 	switch chain {
 	case "Polygon":
@@ -74,13 +75,6 @@ func (mo *MetaObserver) InitMetaObserver(chain string) {
 		mo.endpoint = BSC_ENDPOINT
 		mo.ticker = time.NewTicker(time.Duration(BSC_BLOCK_TIME) * time.Second)
 		mo.abi = META_ABI
-	}
-
-	// Initialize Bridge
-	err := mo.createBridge()
-	if err != nil {
-		log.Fatal(err)
-		return
 	}
 }
 
@@ -273,34 +267,4 @@ func (mo *MetaObserver) setLastBlock() {
 		}
 		mo.lastBlock = big.NewInt(0).Sub(header.Number, big.NewInt(int64(10)))
 	}
-}
-
-func (mo *MetaObserver) createBridge() error {
-	// TODO: How do we properly set these values?
-	signerName := "alice"
-	signerPass := "password"
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-
-	chainHomeFoler := filepath.Join(homeDir, ".metacore")
-
-	kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
-	if err != nil {
-		return err
-	}
-
-	k := NewKeysWithKeybase(kb, signerName, signerPass)
-
-	chainIP := "127.0.0.1"
-	bridge, err := NewMetachainBridge(k, chainIP, "alice")
-	if err != nil {
-		return err
-	}
-
-	mo.bridge = bridge
-
-	return nil
 }
