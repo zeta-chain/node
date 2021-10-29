@@ -62,8 +62,9 @@ func (cm *CoreMonitor) MonitorCore() {
 				to := ethcommon.HexToAddress(send.Receiver)
 				message := []byte(send.Message)
 
-				// TODO: How do we set gas limit
-				var gasLimit uint64
+				// Gas limit hard-coded to 80k for now
+				// TODO: Eventually this should come from smart contract
+				var gasLimit uint64 = 80000
 
 				outTxHash, err := cm.signer.MMint(
 					amount,
