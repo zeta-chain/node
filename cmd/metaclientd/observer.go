@@ -209,8 +209,29 @@ func (mo *MetaObserver) queryRouter() error {
 
 			fmt.Println("PostSend metahash: ", metaHash)
 		case logUnlockSignatureHash.Hex():
-			// TODO: Handle Unlock
-			fmt.Println("ObservedUnlock")
+			returnVal, err := contractAbi.Unpack("Unlock", vLog.Data)
+			if err != nil {
+				fmt.Println("error unpacking LockSend")
+				continue
+			}
+
+			// Post confirmation to meta core
+			var sendHash, outTxHash string
+			var rxAddress string = returnVal[0].(ethcommon.Address).String()
+			var mMint string = returnVal[1].(*big.Int).String()
+			metaHash, err := mo.bridge.PostReceiveConfirmation(
+				sendHash,
+				outTxHash,
+				vLog.BlockNumber,
+				mMint,
+			)
+			if err != nil {
+				fmt.Println("error posting confirmation to meta score")
+				continue
+			}
+
+			fmt.Println("Receiver Address: ", rxAddress)
+			fmt.Println("Post confirmation meta hash: ", metaHash)
 		case logMMintedSignatureHash.Hex():
 			// TODO: Handle MMinted
 			fmt.Println("Observed MMinted")
