@@ -29,12 +29,14 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
+			Status: types.SendStatus_Created,
 		}
 	}
 
 	//TODO: proper super majority needed
 	if len(send.Signers) == 2 {
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
+		send.Status = types.SendStatus_Finalized
 		lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
 		if !isFound {
 			lastblock = types.LastBlockHeight{
