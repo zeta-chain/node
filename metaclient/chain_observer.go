@@ -23,14 +23,15 @@ type ChainObserver struct {
 	router    string
 	endpoint  string
 	ticker    *time.Ticker
-	abi       string
+	abiString string
+	abi 	  *abi.ABI
 	client    *ethclient.Client
 	bridge    *MetachainBridge
 	lastBlock *big.Int
 }
 
 // Return configuration based on supplied target chain
-func  NewChainObserver(chain string, bridge *MetachainBridge) *ChainObserver{
+func  NewChainObserver(chain string, bridge *MetachainBridge) (*ChainObserver, error){
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
 
@@ -41,22 +42,27 @@ func  NewChainObserver(chain string, bridge *MetachainBridge) *ChainObserver{
 		chainOb.router = config.POLY_ROUTER
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abi = config.META_ABI
+		chainOb.abiString = config.META_ABI
 	case "Ethereum":
 		chainOb.chain = chain
 		chainOb.router = config.ETH_ROUTER
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abi = config.META_LOCK_ABI
+		chainOb.abiString = config.META_LOCK_ABI
 	case "BSC":
 		chainOb.chain = chain
 		chainOb.router = config.BSC_ROUTER
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abi = config.META_ABI
+		chainOb.abiString = config.META_ABI
 	}
+	abi, err := abi.JSON(strings.NewReader(chainOb.abiString))
+	if err != nil {
+		return nil, err
+	}
+	chainOb.abi = &abi
 
-	return &chainOb
+	return &chainOb, nil
 }
 
 func (chainOb *ChainObserver) WatchRouter() {
@@ -90,9 +96,10 @@ func (chainOb *ChainObserver) queryRouter() error {
 	}
 
 	// Generate query
+	//fmt.Printf("chain %s start observing from %d\n", chainOb.chain, chainOb.lastBlock)
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},
-		FromBlock: chainOb.lastBlock,
+		FromBlock: chainOb.lastBlock.Add(chainOb.lastBlock, big.NewInt(1)),
 		ToBlock:   header.Number,
 	}
 
@@ -103,10 +110,8 @@ func (chainOb *ChainObserver) queryRouter() error {
 	}
 
 	// Read in ABI
-	contractAbi, err := abi.JSON(strings.NewReader(chainOb.abi))
-	if err != nil {
-		return err
-	}
+	contractAbi := chainOb.abi
+
 
 	// LockSend event signature
 	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
@@ -129,8 +134,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
-		fmt.Println("Transaction Hash: ", vLog.TxHash.Hex())
-		fmt.Println("TxBlockNumber: ", vLog.BlockNumber)
+		fmt.Printf("TxBlockNumber %d Transaction Hash: %s", vLog.BlockNumber, vLog.TxHash.Hex())
 
 		switch vLog.Topics[0].Hex() {
 		case logLockSendSignatureHash.Hex():
@@ -215,6 +219,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 			fmt.Println("Observed MMinted")
 		}
 	}
+	chainOb.lastBlock = header.Number
 
 	return nil
 }

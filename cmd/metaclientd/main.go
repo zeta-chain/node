@@ -62,33 +62,59 @@ func mock_integration_test() {
 	// setup mock TSS signers:
 	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
 	privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
+	if err != nil {
+		log.Err(err).Msg("TEST private key error")
+		return
+	}
 	tss := mc.TestSigner{
 		PrivKey: privateKey,
 	}
 
-	metaContractAddress := ethcommon.HexToAddress(mcconfig.META_TEST_GOERLI_ADDRESS)
-	signer, err := mc.NewSigner(common.Chain("ETH"), mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.META_TEST_GOERLI_ABI, metaContractAddress)
+	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
-		log.Fatal().Err(err).Msg("NewSigner")
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
+	signerMap2, err := CreateSignerMap(tss)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
 
 	log.Info().Msg("starting metacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signer)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1)
 	mo1.MonitorCore()
-	mo2 := mc.NewCoreObserver(bridge2, signer)
+	mo2 := mc.NewCoreObserver(bridge2, signerMap2)
 	mo2.MonitorCore()
 
+	//{
+	//	metaHash, err := bridge1.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
+	//		"0xtxhash", 123123)
+	//	log.Info().Msgf("PostSend metaHash %s err %v", metaHash, err)
+	//
+	//	// wait for the next block
+	//	timer1 := time.NewTimer(2 * time.Second)
+	//	<-timer1.C
+	//
+	//	metaHash, err = bridge2.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
+	//		"0xtxhash", 123123)
+	//	log.Info().Msgf("Second PostSend metaHash %s", metaHash)
+	//
+	//	// wait for the next block
+	//	timer2 := time.NewTimer(2 * time.Second)
+	//	<-timer2.C
+	//}
+
 	log.Info().Msg("starting eth observer...")
-	eth1 := mc.NewChainObserver("Ethereum", bridge1)
+	eth1, _ := mc.NewChainObserver("Ethereum", bridge1)
 	go eth1.WatchRouter()
-	eth2 := mc.NewChainObserver("Ethereum", bridge2)
+	eth2, _ := mc.NewChainObserver("Ethereum", bridge2)
 	go eth2.WatchRouter()
 
 	log.Info().Msg("starting bsc observer...")
-	bsc1 := mc.NewChainObserver("BSC", bridge1)
+	bsc1, _ := mc.NewChainObserver("BSC", bridge1)
 	go bsc1.WatchRouter()
-	bsc2 := mc.NewChainObserver("BSC", bridge2)
+	bsc2, _ := mc.NewChainObserver("BSC", bridge2)
 	go bsc2.WatchRouter()
 
 	// wait....
@@ -109,10 +135,30 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	k := mc.NewKeysWithKeybase(kb, signerName, signerPass)
 
 	chainIP := "127.0.0.1"
-	bridge, err := mc.NewMetachainBridge(k, chainIP, "alice")
+	bridge, err := mc.NewMetachainBridge(k, chainIP, signerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewMetachainBridge")
 		return nil, true
 	}
 	return bridge, false
+}
+
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error){
+	metaContractAddress := ethcommon.HexToAddress(mcconfig.META_TEST_GOERLI_ADDRESS)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.META_TEST_GOERLI_ABI, metaContractAddress)
+	if err != nil {
+		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
+		return nil, err
+	}
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.META_ABI, ethcommon.HexToAddress(mcconfig.BSC_ROUTER))
+	if err != nil {
+		log.Fatal().Err(err).Msg("NewSigner BSC error")
+		return nil, err
+	}
+	signerMap := map[common.Chain]*mc.Signer {
+		common.ETHChain: ethSigner,
+		common.BSCChain: bscSigner,
+	}
+
+	return signerMap, nil
 }

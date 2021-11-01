@@ -18,9 +18,10 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("sendHash %s does not exist", index))
 	}
 
-	if msg.MMint != send.MMint {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send MMint %s", msg.MMint, send.MMint))
-	}
+	//TODO: Enable the following check
+	//if msg.MMint != send.MMint {
+	//	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send MMint %s", msg.MMint, send.MMint))
+	//}
 
 	receiveIndex := msg.Digest()
 	receive, isFound := k.GetReceive(ctx, receiveIndex)
