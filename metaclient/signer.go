@@ -3,12 +3,14 @@ package metaclient
 import (
 	"context"
 	"crypto/ecdsa"
+	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog/log"
 	"math/big"
 	"strings"
 )
@@ -49,6 +51,7 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 		return nil, err
 	}
 
+	log.Debug().Msgf("NewSigner nonce: %d", nonce)
 	return &Signer{
 		client:              client,
 		nonce:               nonce,
@@ -64,6 +67,7 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 // given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
 func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int) (*ethtypes.Transaction, []byte, []byte, error) {
+	log.Debug().Msgf("Sign nonce %d", signer.nonce)
 	tx := ethtypes.NewTransaction(signer.nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig := signer.tssSigner.Sign(hashBytes)
@@ -84,19 +88,19 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte) (string, error) {
 	data, err := signer.abi.Pack("mint", to, amount)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("pack error: %w", err)
 	}
 	gasPrice, err := signer.client.SuggestGasPrice(context.Background())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("SuggestGasPrice error: %w", err)
 	}
 	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("sign error: %w", err)
 	}
 	err = signer.Broadcast(tx)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Broadcast error: %w", err)
 	}
 	return tx.Hash().Hex(), nil
 }

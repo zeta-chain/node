@@ -28,10 +28,11 @@ func (s *SignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	metaContractAddress := ethcommon.HexToAddress(config.META_TEST_GOERLI_ADDRESS)
-	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
+	metaContractAddress := ethcommon.HexToAddress(config.BSC_ROUTER)
+	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.META_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
+	c.Logf("Contract on chain %s: %s", signer.chain, metaContractAddress.Hex())
 	s.signer = signer
 
 }
@@ -47,7 +48,7 @@ func (s *SignerSuite) TestSign(c *C) {
 }
 
 func (s *SignerSuite) TestMint(c *C) {
-	txhash, err := s.signer.MMint(big.NewInt(1234), s.signer.metaContractAddress, 80000, []byte{})
+	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{})
 	c.Assert(err, IsNil)
 	c.Logf("txhash %s", txhash)
 }
