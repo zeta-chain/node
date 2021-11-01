@@ -10,13 +10,16 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	mock_integration_test()
 }
 
@@ -57,7 +60,6 @@ func mock_integration_test() {
 	if done {
 		return
 	}
-
 
 	// setup mock TSS signers:
 	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
@@ -143,7 +145,7 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error){
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	metaContractAddress := ethcommon.HexToAddress(mcconfig.META_TEST_GOERLI_ADDRESS)
 	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.META_TEST_GOERLI_ABI, metaContractAddress)
 	if err != nil {
@@ -155,7 +157,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error){
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
-	signerMap := map[common.Chain]*mc.Signer {
+	signerMap := map[common.Chain]*mc.Signer{
 		common.ETHChain: ethSigner,
 		common.BSCChain: bscSigner,
 	}

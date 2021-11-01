@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/tendermint/tendermint/libs/rand"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +51,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			lastblock.LastSendHeight = msg.InBlockHeight
 		}
 		k.SetLastBlockHeight(ctx, lastblock)
+
+		send.Broadcaster = uint64(rand.Intn(len(send.Signers)))
 	}
 
 	k.SetSend(ctx, send)

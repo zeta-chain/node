@@ -28,4 +28,5 @@ message Send {
   uint64 finalizedMetaHeight = 12;
   repeated string signers = 13;
   SendStatus status = 14;
+  uint64 broadcaster = 15;
 }

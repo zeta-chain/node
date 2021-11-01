@@ -19739,6 +19739,9 @@ paths:
                         - Mined
                         - Confirmed
                       default: Created
+                    broadcaster:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19884,6 +19887,9 @@ paths:
                       - Mined
                       - Confirmed
                     default: Created
+                  broadcaster:
+                    type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30334,6 +30340,9 @@ definitions:
                 - Mined
                 - Confirmed
               default: Created
+            broadcaster:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -30476,6 +30485,9 @@ definitions:
               - Mined
               - Confirmed
             default: Created
+          broadcaster:
+            type: string
+            format: uint64
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -30544,6 +30556,9 @@ definitions:
           - Mined
           - Confirmed
         default: Created
+      broadcaster:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:
