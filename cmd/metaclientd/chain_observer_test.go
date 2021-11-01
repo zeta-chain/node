@@ -34,7 +34,7 @@ func TestWatchRouter(t *testing.T) {
 		t.Fail()
 	}
 
-	EthObserver := &MetaObserver{}
-	EthObserver.InitMetaObserver("Ethereum", bridge)
+	EthObserver := &ChainObserver{}
+	EthObserver.InitChainObserver("Ethereum", bridge)
 	//EthObserver.WatchRouter()
 }

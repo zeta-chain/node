@@ -9,19 +9,19 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-type CoreMonitor struct {
+type CoreObserver struct {
 	sendQueue []*types.Send
 	bridge    *MetachainBridge
 	signer    *Signer
 }
 
-func (cm *CoreMonitor) InitCoreMonitor(bridge *MetachainBridge, signer *Signer) {
+func (cm *CoreObserver) InitCoreObserver(bridge *MetachainBridge, signer *Signer) {
 	cm.bridge = bridge
 	cm.signer = signer
 	cm.sendQueue = make([]*types.Send, 0)
 }
 
-func (cm *CoreMonitor) MonitorCore() {
+func (cm *CoreObserver) MonitorCore() {
 	// Pull from meta core and add to queue
 	// TODO: Lock required?
 	// TODO: Need some kind of waitgroup to prevent MonitorCore from

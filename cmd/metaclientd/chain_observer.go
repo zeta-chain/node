@@ -39,7 +39,7 @@ const (
 
 // Chain configuration struct
 // Filled with above constants depending on chain
-type MetaObserver struct {
+type ChainObserver struct {
 	chain     string
 	router    string
 	endpoint  string
@@ -51,7 +51,7 @@ type MetaObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func (mo *MetaObserver) InitMetaObserver(chain string, bridge *MetachainBridge) {
+func (mo *ChainObserver) InitChainObserver(chain string, bridge *MetachainBridge) {
 	// Set bridge
 	mo.bridge = bridge
 
@@ -78,7 +78,7 @@ func (mo *MetaObserver) InitMetaObserver(chain string, bridge *MetachainBridge) 
 	}
 }
 
-func (mo *MetaObserver) WatchRouter() {
+func (mo *ChainObserver) WatchRouter() {
 	// Dial the router
 	client, err := ethclient.Dial(mo.endpoint)
 	if err != nil {
@@ -101,7 +101,7 @@ func (mo *MetaObserver) WatchRouter() {
 	}
 }
 
-func (mo *MetaObserver) queryRouter() error {
+func (mo *ChainObserver) queryRouter() error {
 	// Get most recent block number from client
 	header, err := mo.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
@@ -238,7 +238,7 @@ func (mo *MetaObserver) queryRouter() error {
 	return nil
 }
 
-func (mo *MetaObserver) setLastBlock() {
+func (mo *ChainObserver) setLastBlock() {
 	// Check metacore for last block checked and set initial last block
 	var useLastBlockHeight bool = true
 	lastBlockHeights, err := mo.bridge.GetLastBlockHeight()
