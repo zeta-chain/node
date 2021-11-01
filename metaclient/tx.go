@@ -1,4 +1,4 @@
-package metaclientd
+package metaclient
 
 import (
 	"context"

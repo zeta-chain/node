@@ -3,7 +3,7 @@
 // this is integration test; must be run when a chain is running:
 // starport chain serve
 
-package metaclientd
+package metaclient
 
 import (
 	"github.com/rs/zerolog/log"

@@ -1,4 +1,4 @@
-package metaclientd
+package metaclient
 
 import (
 	"os"
@@ -9,15 +9,12 @@ import (
 )
 
 func TestWatchRouter(t *testing.T) {
-	t.Logf("Settting up test...")
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		t.Logf("UserHomeDir error")
 		t.Fail()
 	}
-	t.Logf("user home dir: %s", homeDir)
 	chainHomeFoler := filepath.Join(homeDir, ".metacore")
-	t.Logf("chain home dir: %s", chainHomeFoler)
 
 	signerName := "alice"
 	signerPass := "password"
