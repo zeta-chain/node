@@ -15,13 +15,13 @@ type CoreObserver struct {
 	signer    *Signer
 }
 
-func (cm *CoreObserver) InitCoreObserver(bridge *MetachainBridge, signer *Signer) {
-	cm.bridge = bridge
-	cm.signer = signer
-	cm.sendQueue = make([]*types.Send, 0)
+func (co *CoreObserver) InitCoreObserver(bridge *MetachainBridge, signer *Signer) {
+	co.bridge = bridge
+	co.signer = signer
+	co.sendQueue = make([]*types.Send, 0)
 }
 
-func (cm *CoreObserver) MonitorCore() {
+func (co *CoreObserver) MonitorCore() {
 	// Pull from meta core and add to queue
 	// TODO: Lock required?
 	// TODO: Need some kind of waitgroup to prevent MonitorCore from
@@ -29,7 +29,7 @@ func (cm *CoreObserver) MonitorCore() {
 	coreTicker := time.NewTicker(5 * time.Second)
 	go func() {
 		for range coreTicker.C {
-			sendList, err := cm.bridge.GetAllSend()
+			sendList, err := co.bridge.GetAllSend()
 			if err != nil {
 				fmt.Println("error requesting receives from metacore")
 				return
@@ -40,7 +40,7 @@ func (cm *CoreObserver) MonitorCore() {
 			// ask @pwu
 			for _, send := range sendList {
 				if types.SendStatus_name[int32(send.Status)] == "Finalized" {
-					cm.sendQueue = append(cm.sendQueue, send)
+					co.sendQueue = append(co.sendQueue, send)
 				}
 			}
 		}
@@ -49,9 +49,9 @@ func (cm *CoreObserver) MonitorCore() {
 	// Pull items from queue
 	go func() {
 		for range coreTicker.C {
-			for len(cm.sendQueue) > 0 {
+			for len(co.sendQueue) > 0 {
 				// Pull the top
-				send := cm.sendQueue[0]
+				send := co.sendQueue[0]
 
 				// Process
 				amount, ok := new(big.Int).SetString(send.MBurnt, 10)
@@ -66,7 +66,7 @@ func (cm *CoreObserver) MonitorCore() {
 				// TODO: Eventually this should come from smart contract
 				var gasLimit uint64 = 80000
 
-				outTxHash, err := cm.signer.MMint(
+				outTxHash, err := co.signer.MMint(
 					amount,
 					to,
 					gasLimit,
@@ -83,7 +83,7 @@ func (cm *CoreObserver) MonitorCore() {
 				fmt.Println("outTxHash: ", outTxHash)
 
 				// Discard top
-				cm.sendQueue = cm.sendQueue[1:]
+				co.sendQueue = co.sendQueue[1:]
 			}
 		}
 	}()
