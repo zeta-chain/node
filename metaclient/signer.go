@@ -1,11 +1,13 @@
-package metaclientd
+package metaclient
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"strings"
@@ -97,4 +99,26 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 		return "", err
 	}
 	return tx.Hash().Hex(), nil
+}
+
+
+type TestSigner struct {
+	PrivKey *ecdsa.PrivateKey
+}
+
+func (s TestSigner) Sign(digest []byte) [65]byte{
+	sig, _ := crypto.Sign(digest, s.PrivKey)
+	var sigbyte [65]byte
+	copy(sigbyte[:], sig[:65])
+	return sigbyte
+}
+
+func (s TestSigner) Pubkey() []byte {
+	publicKeyBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
+	return publicKeyBytes
+}
+
+
+func (s TestSigner) Address() ethcommon.Address {
+	return crypto.PubkeyToAddress(s.PrivKey.PublicKey)
 }

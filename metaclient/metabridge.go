@@ -1,4 +1,4 @@
-package metaclientd
+package metaclient
 
 import (
 	"fmt"
@@ -27,21 +27,10 @@ import (
 	//"strconv"
 	//"strings"
 
-	"github.com/Meta-Protocol/metacore/cmd/metaclientd/config"
+	"github.com/Meta-Protocol/metacore/metaclient/config"
 	stypes "github.com/Meta-Protocol/metacore/x/metacore/types"
 )
 
-const (
-	AuthAccountEndpoint = "/auth/accounts"
-)
-
-type TxStatus int64
-
-const (
-	Pending TxStatus = iota
-	Processed
-	Confirmed
-)
 
 // MetachainBridge will be used to send tx to MetaChain.
 type MetachainBridge struct {
