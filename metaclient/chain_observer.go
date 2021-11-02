@@ -80,6 +80,8 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge) (*ChainObserv
 		chainOb.lastBlock = header.Number.Uint64()
 	}
 
+
+
 	return &chainOb, nil
 }
 
@@ -112,7 +114,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 		FromBlock: big.NewInt(0).SetUint64(chainOb.lastBlock + 1), // lastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
-	log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
+	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
 
 	// Finally query the for the logs
 	logs, err := chainOb.client.FilterLogs(context.Background(), query)
