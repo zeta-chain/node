@@ -62,6 +62,15 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
 					}
+				} else if types.SendStatus_name[int32(send.Status)] == "Mined" {
+					if send, found := co.sendMap[send.Index]; found {
+						co.lock.Lock()
+						if co.sendStatus[send.Index] != Mined {
+							log.Info().Msgf("Send status changed to Mined")
+						}
+						co.sendStatus[send.Index] = Mined
+						co.lock.Unlock()
+					}
 				}
 			}
 			time.Sleep(5 * time.Second)
