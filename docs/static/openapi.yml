@@ -19921,6 +19921,9 @@ paths:
                     broadcaster:
                       type: string
                       format: uint64
+                    nonce:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -20067,6 +20070,9 @@ paths:
                       - Confirmed
                     default: Created
                   broadcaster:
+                    type: string
+                    format: uint64
+                  nonce:
                     type: string
                     format: uint64
         default:
@@ -30592,6 +30598,9 @@ definitions:
             broadcaster:
               type: string
               format: uint64
+            nonce:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -30759,6 +30768,9 @@ definitions:
           broadcaster:
             type: string
             format: uint64
+          nonce:
+            type: string
+            format: uint64
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -30828,6 +30840,9 @@ definitions:
           - Confirmed
         default: Created
       broadcaster:
+        type: string
+        format: uint64
+      nonce:
         type: string
         format: uint64
   MetaProtocol.metacore.metacore.SendStatus:
