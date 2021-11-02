@@ -30,7 +30,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
-			Status: types.SendStatus_Created,
+			Status:              types.SendStatus_Created,
 		}
 	}
 
@@ -53,6 +53,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		k.SetLastBlockHeight(ctx, lastblock)
 
 		send.Broadcaster = uint64(rand.Intn(len(send.Signers)))
+		// TODO: substract gas fee from here
+		send.MMint = send.MBurnt
 	}
 
 	k.SetSend(ctx, send)
