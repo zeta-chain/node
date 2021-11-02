@@ -29,4 +29,5 @@ message Send {
   repeated string signers = 13;
   SendStatus status = 14;
   uint64 broadcaster = 15;
+  uint64 nonce = 16;
 }
