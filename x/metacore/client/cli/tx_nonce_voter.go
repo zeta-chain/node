@@ -18,7 +18,7 @@ func CmdNonceVoter() *cobra.Command {
 		Short: "Broadcast message nonceVoter",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsChain := string(args[0])
+			argsChain := (args[0])
 			argsNonce, err := strconv.Atoi(args[1])
 			if err != nil {
 				return err

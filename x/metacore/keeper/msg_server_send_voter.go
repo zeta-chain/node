@@ -65,7 +65,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		k.SetLastBlockHeight(ctx, lastblock)
 
 		send.Broadcaster = uint64(rand.Intn(len(send.Signers)))
-		// TODO: substract gas fee from here
+		// TODO: subtract gas fee from here
 		send.MMint = send.MBurnt
 		send.Nonce = nonce.Nonce
 		nonce.Nonce++
