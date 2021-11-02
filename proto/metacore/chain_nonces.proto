@@ -10,4 +10,6 @@ message ChainNonces {
   string index = 2;
   string chain = 3; 
   uint64 nonce = 4;
+  repeated string signers = 5;
+  uint64 finalizedHeight = 6;
 }

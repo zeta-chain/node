@@ -19126,6 +19126,13 @@ paths:
                     nonce:
                       type: string
                       format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    finalizedHeight:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19240,6 +19247,13 @@ paths:
                   chain:
                     type: string
                   nonce:
+                    type: string
+                    format: uint64
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  finalizedHeight:
                     type: string
                     format: uint64
         default:
@@ -30258,6 +30272,13 @@ definitions:
       nonce:
         type: string
         format: uint64
+      signers:
+        type: array
+        items:
+          type: string
+      finalizedHeight:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30273,6 +30294,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  MetaProtocol.metacore.metacore.MsgNonceVoterResponse:
+    type: object
   MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgSendVoterResponse:
@@ -30332,6 +30355,13 @@ definitions:
             chain:
               type: string
             nonce:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            finalizedHeight:
               type: string
               format: uint64
       pagination:
@@ -30600,6 +30630,13 @@ definitions:
           chain:
             type: string
           nonce:
+            type: string
+            format: uint64
+          signers:
+            type: array
+            items:
+              type: string
+          finalizedHeight:
             type: string
             format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
