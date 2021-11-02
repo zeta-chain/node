@@ -27,7 +27,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	if b.seqNumber < seqNumber {
 		b.seqNumber = seqNumber
 	}
-	b.logger.Debug().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
+	//b.logger.Debug().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
 	flags := flag.NewFlagSet("metacore", 0)
 
@@ -74,7 +74,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 
 	// increment seqNum
 	atomic.AddUint64(&b.seqNumber, 1)
-	b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
+	//b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
 
 	return commit.TxHash, nil
 }
