@@ -2,6 +2,7 @@ package metaclient
 
 import (
 	"bytes"
+	"encoding/hex"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -29,7 +30,7 @@ func (s *SignerSuite) SetUpTest(c *C) {
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.BSC_ROUTER)
-	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.META_ABI, metaContractAddress)
+	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.BSC_META_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
 	c.Logf("Contract on chain %s: %s", signer.chain, metaContractAddress.Hex())
@@ -48,7 +49,12 @@ func (s *SignerSuite) TestSign(c *C) {
 }
 
 func (s *SignerSuite) TestMint(c *C) {
-	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{})
+	sendHash, err := hex.DecodeString(config.TSS_TEST_PRIVKEY)
+	c.Assert(err, IsNil)
+	c.Assert(len(sendHash), Equals, 32)
+	var sendHashBytes [32]byte
+	copy(sendHashBytes[:32], sendHash[:32])
+	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000,  []byte{}, sendHashBytes)
 	c.Assert(err, IsNil)
 	c.Logf("txhash %s", txhash)
 }

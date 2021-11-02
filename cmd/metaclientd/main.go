@@ -152,7 +152,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.META_ABI, ethcommon.HexToAddress(mcconfig.BSC_ROUTER))
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.BSC_ROUTER))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
