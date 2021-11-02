@@ -85,8 +85,11 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 }
 
 // send outbound tx to smart contract
-func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte) (string, error) {
-	data, err := signer.abi.Pack("mint", to, amount)
+func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte) (string, error) {
+	if len(sendHash) < 32 {
+		return "", fmt.Errorf("sendHash len %d must be 32", len(sendHash))
+	}
+	data, err := signer.abi.Pack("mint", to, amount, sendHash)
 	if err != nil {
 		return "", fmt.Errorf("pack error: %w", err)
 	}

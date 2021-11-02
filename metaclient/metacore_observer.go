@@ -1,6 +1,7 @@
 package metaclient
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/rs/zerolog/log"
@@ -41,6 +42,8 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 }
 
 func (co *CoreObserver) MonitorCore() {
+	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go func() {
 		for {
 			sendList, err := co.bridge.GetAllSend()
@@ -94,12 +97,21 @@ func (co *CoreObserver) MonitorCore() {
 					var gasLimit uint64 = 80000
 
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
-					outTxHash, err := signer.MMint(amount, to, gasLimit, message)
-					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
-					if err != nil {
-						log.Err(err).Msg("error minting received transaction")
+					if send.Signers[send.Broadcaster] == myid {
+						sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
+						if err != nil || len(sendHash) != 32{
+							log.Err(err).Msgf("decode sendHash %s error", send.Index)
+						}
+						var sendhash [32]byte
+						copy(sendhash[:32], sendHash[:32])
+						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash)
+						if err != nil {
+							log.Err(err).Msg("singer %s error minting received transaction")
+						}
+						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}
-					fmt.Printf("sendHash: %s, outTxHash %s\n", send.Index[:6], outTxHash)
+					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
+
 					//for {
 					//	tx, isPending, err := signer.client.TransactionByHash(context.Background(), ethcommon.HexToHash(outTxHash))
 					//	if err != nil {

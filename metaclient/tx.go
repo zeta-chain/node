@@ -2,6 +2,7 @@ package metaclient
 
 import (
 	"context"
+	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	"github.com/rs/zerolog/log"
 )
@@ -52,6 +53,16 @@ func (b *MetachainBridge) GetAllReceive() ([]*types.Receive, error) {
 func (b *MetachainBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("query GetLastBlockHeight error")
+		return nil, err
+	}
+	return resp.LastBlockHeight, nil
+}
+
+func (b *MetachainBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
 	if err != nil {
 		log.Error().Err(err).Msg("query GetLastBlockHeight error")
 		return nil, err

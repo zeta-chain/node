@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
-	"log"
+	"github.com/rs/zerolog/log"
 	"math/big"
 	"strings"
 	"time"
@@ -54,7 +54,7 @@ func  NewChainObserver(chain string, bridge *MetachainBridge) (*ChainObserver, e
 		chainOb.router = config.BSC_ROUTER
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.META_ABI
+		chainOb.abiString = config.BSC_META_ABI
 	}
 	abi, err := abi.JSON(strings.NewReader(chainOb.abiString))
 	if err != nil {
@@ -69,7 +69,8 @@ func (chainOb *ChainObserver) WatchRouter() {
 	// Dial the router
 	client, err := ethclient.Dial(chainOb.endpoint)
 	if err != nil {
-		log.Fatal(err)
+		log.Err(err).Msg("eth client Dial")
+		return
 	}
 
 	// Set observer client
@@ -102,6 +103,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 		FromBlock: chainOb.lastBlock.Add(chainOb.lastBlock, big.NewInt(1)),
 		ToBlock:   header.Number,
 	}
+	log.Debug().Msgf("block from %d to %d", query.FromBlock, query.ToBlock)
 
 	// Finally query the for the logs
 	logs, err := chainOb.client.FilterLogs(context.Background(), query)
@@ -134,7 +136,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
-		fmt.Printf("TxBlockNumber %d Transaction Hash: %s", vLog.BlockNumber, vLog.TxHash.Hex())
+		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s\n", vLog.BlockNumber, vLog.TxHash.Hex())
 
 		switch vLog.Topics[0].Hex() {
 		case logLockSendSignatureHash.Hex():
@@ -225,32 +227,5 @@ func (chainOb *ChainObserver) queryRouter() error {
 }
 
 func (chainOb *ChainObserver) setLastBlock() {
-	// Check metacore for last block checked and set initial last block
-	var useLastBlockHeight bool = true
-	lastBlockHeights, err := chainOb.bridge.GetLastBlockHeight()
 
-	// If there's an error retrieving blocks,
-	// continue and use latest block - 10
-	if err != nil {
-		log.Fatal(err)
-		useLastBlockHeight = false
-	}
-
-	// If metacore reports no previous blocks, use
-	// latest block - 10
-	if len(lastBlockHeights) <= 0 {
-		useLastBlockHeight = false
-	}
-
-	if useLastBlockHeight {
-		// Last block from meta core
-		chainOb.lastBlock = big.NewInt(int64(lastBlockHeights[0].LastSendHeight))
-	} else {
-		// Most recent block - 10
-		header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-		chainOb.lastBlock = big.NewInt(0).Sub(header.Number, big.NewInt(int64(10)))
-	}
 }
