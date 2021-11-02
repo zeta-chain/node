@@ -69,3 +69,13 @@ func (b *MetachainBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.
 	}
 	return resp.LastBlockHeight, nil
 }
+
+func (b *MetachainBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
+	if err != nil {
+		log.Error().Err(err).Msg("query GetNonceByChain error")
+		return nil, err
+	}
+	return resp.ChainNonces, nil
+}

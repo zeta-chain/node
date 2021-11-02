@@ -80,8 +80,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge) (*ChainObserv
 		chainOb.lastBlock = header.Number.Uint64()
 	}
 
-
-
 	return &chainOb, nil
 }
 

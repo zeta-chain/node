@@ -108,12 +108,11 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	return tx.Hash().Hex(), nil
 }
 
-
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
 
-func (s TestSigner) Sign(digest []byte) [65]byte{
+func (s TestSigner) Sign(digest []byte) [65]byte {
 	sig, _ := crypto.Sign(digest, s.PrivKey)
 	var sigbyte [65]byte
 	copy(sigbyte[:], sig[:65])
@@ -124,7 +123,6 @@ func (s TestSigner) Pubkey() []byte {
 	publicKeyBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
 	return publicKeyBytes
 }
-
 
 func (s TestSigner) Address() ethcommon.Address {
 	return crypto.PubkeyToAddress(s.PrivKey.PublicKey)

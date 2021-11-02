@@ -755,5 +755,4 @@ const (
 				"type": "function"
 			}
 		]`
-
 )
