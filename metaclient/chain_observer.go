@@ -167,7 +167,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				log.Err(err).Msg("error posting to meta core")
 				continue
 			}
-			log.Debug().Msgf("LockSend detected: PostSend metahash: ", metaHash)
+			log.Debug().Msgf("LockSend detected: PostSend metahash: %s", metaHash)
 		case logBurnSendSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("BurnSend", vLog.Data)
 			if err != nil {
@@ -192,7 +192,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				continue
 			}
 
-			log.Debug().Msgf("BurnSend detected: PostSend metahash: ", metaHash)
+			log.Debug().Msgf("BurnSend detected: PostSend metahash: %s", metaHash)
 		case logUnlockSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("Unlock", vLog.Data)
 			if err != nil {
