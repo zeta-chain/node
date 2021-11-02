@@ -31,7 +31,6 @@ import (
 	stypes "github.com/Meta-Protocol/metacore/x/metacore/types"
 )
 
-
 // MetachainBridge will be used to send tx to MetaChain.
 type MetachainBridge struct {
 	logger                zerolog.Logger

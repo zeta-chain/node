@@ -57,3 +57,7 @@ const (
 const (
 	LastBlockHeightKey = "LastBlockHeight-value-"
 )
+
+const (
+	ChainNoncesKey = "ChainNonces-value-"
+)

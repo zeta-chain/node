@@ -89,7 +89,6 @@ func mock_integration_test() {
 	mo2 := mc.NewCoreObserver(bridge2, signerMap2)
 	mo2.MonitorCore()
 
-
 	log.Info().Msg("starting eth observer...")
 	eth1, err := mc.NewChainObserver(common.ETHChain, bridge1)
 	if err != nil {

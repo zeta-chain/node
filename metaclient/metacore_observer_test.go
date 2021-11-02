@@ -25,7 +25,7 @@ type COSuite struct {
 var _ = Suite(&COSuite{})
 
 const (
-	TEST_SENDER = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
+	TEST_SENDER   = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
 	TEST_RECEIVER = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
 )
 
@@ -124,8 +124,7 @@ func (s *COSuite) TestSendFlow(c *C) {
 	timer2 := time.NewTimer(2 * time.Second)
 	<-timer2.C
 
-
-	time.Sleep(15*time.Second)
+	time.Sleep(15 * time.Second)
 	//ch := make(chan os.Signal, 1)
 	//signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	//<-ch

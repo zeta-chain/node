@@ -2,6 +2,7 @@ syntax = "proto3";
 package MetaProtocol.metacore.metacore;
 
 // this line is used by starport scaffolding # genesis/proto/import
+import "metacore/chain_nonces.proto";
 import "metacore/last_block_height.proto";
 import "metacore/receive.proto";
 import "metacore/send.proto";
@@ -12,6 +13,7 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
     // this line is used by starport scaffolding # genesis/proto/state
+		repeated ChainNonces chainNoncesList = 5; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated LastBlockHeight lastBlockHeightList = 4; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated Send sendList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated Receive receiveList = 2; // this line is used by starport scaffolding # genesis/proto/stateField

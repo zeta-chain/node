@@ -10,6 +10,11 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the chainNonces
+	for _, elem := range genState.ChainNoncesList {
+		k.SetChainNonces(ctx, *elem)
+	}
+
 	// Set all the lastBlockHeight
 	for _, elem := range genState.LastBlockHeightList {
 		k.SetLastBlockHeight(ctx, *elem)
@@ -38,6 +43,13 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all chainNonces
+	chainNoncesList := k.GetAllChainNonces(ctx)
+	for _, elem := range chainNoncesList {
+		elem := elem
+		genesis.ChainNoncesList = append(genesis.ChainNoncesList, &elem)
+	}
+
 	// Get all lastBlockHeight
 	lastBlockHeightList := k.GetAllLastBlockHeight(ctx)
 	for _, elem := range lastBlockHeightList {
