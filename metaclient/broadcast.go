@@ -1,4 +1,4 @@
-package metaclientd
+package metaclient
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	if b.seqNumber < seqNumber {
 		b.seqNumber = seqNumber
 	}
-	b.logger.Info().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
+	//b.logger.Debug().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
 	flags := flag.NewFlagSet("metacore", 0)
 
@@ -42,7 +42,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 		return "", err
 	}
 	builder.SetGasLimit(200000000)
-	fmt.Printf("signing from name: %s\n", ctx.GetFromName())
+	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
 	if err != nil {
 		return "", err
@@ -68,13 +68,13 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 			}
 		}
 		b.logger.Info().Msgf("messages: %+v", msgs)
-		return commit.TxHash, fmt.Errorf("fail to broadcast to THORChain,code:%d, log:%s", commit.Code, commit.RawLog)
+		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
-	b.logger.Info().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
+	b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
 
 	// increment seqNum
 	atomic.AddUint64(&b.seqNumber, 1)
-	b.logger.Info().Msgf("b.sequence number increased to %d", b.seqNumber)
+	//b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
 
 	return commit.TxHash, nil
 }

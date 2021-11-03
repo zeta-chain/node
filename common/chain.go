@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -47,6 +48,19 @@ func NewChain(chainID string) (Chain, error) {
 		return chain, err
 	}
 	return chain, nil
+}
+
+func ParseChain(chainID string) (Chain, error) {
+	switch chainID {
+	case "ETH":
+		return ETHChain, nil
+	case "BSC":
+		return BSCChain, nil
+	case "POLYGON":
+		return POLYGONChain, nil
+	default:
+		return EmptyChain, fmt.Errorf("Unsupported chain %s", chainID)
+	}
 }
 
 // Equals compare two chain to see whether they represent the same chain
