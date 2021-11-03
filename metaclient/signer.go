@@ -10,7 +10,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog/log"
 	"math/big"
 	"strings"
 )
@@ -23,7 +22,6 @@ type TSSSigner interface {
 
 type Signer struct {
 	client              *ethclient.Client
-	nonce               uint64
 	chain               common.Chain
 	chainID             *big.Int
 	tssSigner           TSSSigner
@@ -37,10 +35,7 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 	if err != nil {
 		return nil, err
 	}
-	nonce, err := client.NonceAt(context.TODO(), tssAddress, nil)
-	if err != nil {
-		return nil, err
-	}
+
 	chainID, err := client.ChainID(context.TODO())
 	if err != nil {
 		return nil, err
@@ -51,10 +46,8 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 		return nil, err
 	}
 
-	log.Debug().Msgf("NewSigner nonce: %d", nonce)
 	return &Signer{
 		client:              client,
-		nonce:               nonce,
 		chain:               chain,
 		tssSigner:           tssSigner,
 		chainID:             chainID,
@@ -66,12 +59,10 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 
 // given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
-func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int) (*ethtypes.Transaction, []byte, []byte, error) {
-	log.Debug().Msgf("Sign nonce %d", signer.nonce)
-	tx := ethtypes.NewTransaction(signer.nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
+func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
+	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig := signer.tssSigner.Sign(hashBytes)
-	signer.nonce++
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
@@ -85,7 +76,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 }
 
 // send outbound tx to smart contract
-func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte) (string, error) {
+func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64) (string, error) {
 	if len(sendHash) < 32 {
 		return "", fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
@@ -97,7 +88,7 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	if err != nil {
 		return "", fmt.Errorf("SuggestGasPrice error: %w", err)
 	}
-	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice)
+	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
 	if err != nil {
 		return "", fmt.Errorf("sign error: %w", err)
 	}
@@ -108,12 +99,11 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	return tx.Hash().Hex(), nil
 }
 
-
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
 
-func (s TestSigner) Sign(digest []byte) [65]byte{
+func (s TestSigner) Sign(digest []byte) [65]byte {
 	sig, _ := crypto.Sign(digest, s.PrivKey)
 	var sigbyte [65]byte
 	copy(sigbyte[:], sig[:65])
@@ -124,7 +114,6 @@ func (s TestSigner) Pubkey() []byte {
 	publicKeyBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
 	return publicKeyBytes
 }
-
 
 func (s TestSigner) Address() ethcommon.Address {
 	return crypto.PubkeyToAddress(s.PrivKey.PublicKey)

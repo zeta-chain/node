@@ -32,7 +32,7 @@ type ChainObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon.Address) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
 
@@ -80,6 +80,18 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge) (*ChainObserv
 		chainOb.lastBlock = header.Number.Uint64()
 	}
 
+	nonce, err := client.NonceAt(context.TODO(), tss, nil)
+	if err != nil {
+		log.Err(err).Msg("NonceAt")
+		return nil, err
+	}
+	log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+	_, err = bridge.PostNonce(chain, nonce)
+	if err != nil {
+		log.Err(err).Msg("PostNonce")
+		return nil, err
+	}
+
 	return &chainOb, nil
 }
 
@@ -112,7 +124,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 		FromBlock: big.NewInt(0).SetUint64(chainOb.lastBlock + 1), // lastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
-	log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
+	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
 
 	// Finally query the for the logs
 	logs, err := chainOb.client.FilterLogs(context.Background(), query)
