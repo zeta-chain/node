@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
+		ChainNoncesList:     []*ChainNonces{},
 		LastBlockHeightList: []*LastBlockHeight{},
 		ReceiveList:         []*Receive{},
 		SendList:            []*Send{},
@@ -26,6 +27,15 @@ func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
 	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in chainNonces
+	chainNoncesIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.ChainNoncesList {
+		if _, ok := chainNoncesIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for chainNonces")
+		}
+		chainNoncesIndexMap[elem.Index] = true
+	}
 	// Check for duplicated index in lastBlockHeight
 	lastBlockHeightIndexMap := make(map[string]bool)
 
