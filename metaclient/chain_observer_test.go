@@ -1,3 +1,5 @@
+// +build dontbuild
+
 package metaclient
 
 import (
