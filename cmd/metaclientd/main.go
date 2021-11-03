@@ -89,32 +89,14 @@ func mock_integration_test() {
 	mo2 := mc.NewCoreObserver(bridge2, signerMap2)
 	mo2.MonitorCore()
 
-	//{
-	//	metaHash, err := bridge1.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
-	//		"0xtxhash", 123123)
-	//	log.Info().Msgf("PostSend metaHash %s err %v", metaHash, err)
-	//
-	//	// wait for the next block
-	//	timer1 := time.NewTimer(2 * time.Second)
-	//	<-timer1.C
-	//
-	//	metaHash, err = bridge2.PostSend("0xfrom", "Ethereum", "0xto", "BSC", "123456", "23245", "little message",
-	//		"0xtxhash", 123123)
-	//	log.Info().Msgf("Second PostSend metaHash %s", metaHash)
-	//
-	//	// wait for the next block
-	//	timer2 := time.NewTimer(2 * time.Second)
-	//	<-timer2.C
-	//}
-
 	log.Info().Msg("starting eth observer...")
-	eth1, err := mc.NewChainObserver(common.ETHChain, bridge1)
+	eth1, err := mc.NewChainObserver(common.ETHChain, bridge1, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver")
 		return
 	}
 	go eth1.WatchRouter()
-	eth2, err := mc.NewChainObserver(common.ETHChain, bridge2)
+	eth2, err := mc.NewChainObserver(common.ETHChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver ETH")
 		return
@@ -122,13 +104,13 @@ func mock_integration_test() {
 	go eth2.WatchRouter()
 
 	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge1)
+	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge1, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver")
 		return
 	}
 	go bsc1.WatchRouter()
-	bsc2, err := mc.NewChainObserver(common.BSCChain, bridge2)
+	bsc2, err := mc.NewChainObserver(common.BSCChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver")
 		return

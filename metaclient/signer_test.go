@@ -2,6 +2,7 @@ package metaclient
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
@@ -16,7 +17,6 @@ type SignerSuite struct {
 }
 
 var _ = Suite(&SignerSuite{})
-
 
 func (s *SignerSuite) SetUpTest(c *C) {
 	// The following PrivKey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
@@ -40,12 +40,12 @@ func (s *SignerSuite) SetUpTest(c *C) {
 
 func (s *SignerSuite) TestSign(c *C) {
 	data := []byte("1234")
-	tx, sig, hash, err := s.signer.Sign(data, s.signer.tssSigner.Address(), 109, big.NewInt(2))
+	tx, sig, hash, err := s.signer.Sign(data, s.signer.tssSigner.Address(), 109, big.NewInt(2), 23)
 	_ = tx
 	c.Assert(err, IsNil)
 	pubkey, err := crypto.Ecrecover(hash, sig)
 	c.Assert(err, IsNil)
-	c.Assert(bytes.Equal(pubkey,s.signer.tssSigner.Pubkey()), Equals, true)
+	c.Assert(bytes.Equal(pubkey, s.signer.tssSigner.Pubkey()), Equals, true)
 }
 
 func (s *SignerSuite) TestMint(c *C) {
@@ -54,7 +54,10 @@ func (s *SignerSuite) TestMint(c *C) {
 	c.Assert(len(sendHash), Equals, 32)
 	var sendHashBytes [32]byte
 	copy(sendHashBytes[:32], sendHash[:32])
-	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000,  []byte{}, sendHashBytes)
+	tssAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	nonce, err := s.signer.client.NonceAt(context.TODO(), tssAddr, nil)
+	c.Assert(err, IsNil)
+	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{}, sendHashBytes, nonce)
 	c.Assert(err, IsNil)
 	c.Logf("txhash %s", txhash)
 }

@@ -62,6 +62,15 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
 					}
+				} else if types.SendStatus_name[int32(send.Status)] == "Mined" {
+					if send, found := co.sendMap[send.Index]; found {
+						co.lock.Lock()
+						if co.sendStatus[send.Index] != Mined {
+							log.Info().Msgf("Send status changed to Mined")
+						}
+						co.sendStatus[send.Index] = Mined
+						co.lock.Unlock()
+					}
 				}
 			}
 			time.Sleep(5 * time.Second)
@@ -78,7 +87,7 @@ func (co *CoreObserver) MonitorCore() {
 					if co.sendStatus[send.Index] != Unprocessed {
 						continue
 					}
-					amount, ok := new(big.Int).SetString(send.MBurnt, 10)
+					amount, ok := new(big.Int).SetString(send.MMint, 10)
 					if !ok {
 						log.Error().Msg("error converting MBurnt to big.Int")
 						time.Sleep(5 * time.Second)
@@ -99,12 +108,12 @@ func (co *CoreObserver) MonitorCore() {
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
 					if send.Signers[send.Broadcaster] == myid {
 						sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
-						if err != nil || len(sendHash) != 32{
+						if err != nil || len(sendHash) != 32 {
 							log.Err(err).Msgf("decode sendHash %s error", send.Index)
 						}
 						var sendhash [32]byte
 						copy(sendhash[:32], sendHash[:32])
-						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash)
+						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce)
 						if err != nil {
 							log.Err(err).Msg("singer %s error minting received transaction")
 						}
