@@ -10,6 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
+	"math/big"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -116,6 +117,10 @@ func mock_integration_test() {
 		return
 	}
 	go bsc2.WatchRouter()
+	price := eth1.GetBaseGasPrice()
+	log.Info().Msgf("eth gas price %d wei, %d gwei", price, price.Div(price, big.NewInt(1_000_000_000)))
+
+
 
 	// wait....
 	ch := make(chan os.Signal, 1)
