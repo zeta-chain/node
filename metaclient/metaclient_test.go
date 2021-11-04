@@ -57,4 +57,3 @@ func (s *MySuite) TestGetAccountNumberAndSeuqeuence(c *C) {
 	c.Assert(err, IsNil)
 	c.Logf("acc number %d acc sequence %d", an, as)
 }
-
