@@ -6,6 +6,7 @@ import (
 	"github.com/Meta-Protocol/metacore/common"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/libs/rand"
+	"strconv"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,11 +66,29 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		k.SetLastBlockHeight(ctx, lastblock)
 
 		send.Broadcaster = uint64(rand.Intn(len(send.Signers)))
-		// TODO: subtract gas fee from here
-		send.MMint = send.MBurnt
+		gasPrice, isFound := k.GetGasPrice(ctx, send.ReceiverChain)
+		if !isFound {
+			return  nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain))
+		}
+		price := float64(gasPrice.Median) * 1.5 // 1.5x Median gas; in wei
+		gasLimit := float64(80_000) //TODO: let user supply this
+		exchangeRate := 1.0 // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
+		gasFeeInZeta := price*gasLimit * exchangeRate
+		mBurnt, err  := strconv.ParseFloat(send.MBurnt, 64)
+		if err != nil {
+			return  nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MBurnt parse error %s", send.MBurnt))
+		}
+		if gasFeeInZeta > mBurnt {
+			//TODO: this send should be garbage collected
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("burnt ZETA not enough to pay gas: ", send.ReceiverChain))
+		}
+		send.MMint = fmt.Sprintf("%.0f", mBurnt - gasFeeInZeta)
+
 		send.Nonce = nonce.Nonce
 		nonce.Nonce++
 		k.SetChainNonces(ctx, nonce)
+
+
 	}
 
 	k.SetSend(ctx, send)
