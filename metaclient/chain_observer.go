@@ -128,7 +128,11 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
+	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
 	return nil
 }
 

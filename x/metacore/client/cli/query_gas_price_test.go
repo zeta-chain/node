@@ -25,7 +25,7 @@ func networkWithGasPriceObjects(t *testing.T, n int) (*network.Network, []*types
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.GasPriceList = append(state.GasPriceList, &types.GasPrice{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.GasPriceList = append(state.GasPriceList, &types.GasPrice{Creator: "ANY", Index: strconv.Itoa(i), Prices: map[string]uint64{}, BlockNum: map[string]uint64{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)

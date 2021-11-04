@@ -80,7 +80,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		}
 		if gasFeeInZeta > mBurnt {
 			//TODO: this send should be garbage collected
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("burnt ZETA not enough to pay gas: ", send.ReceiverChain))
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("burnt ZETA not enough to pay gas on %s: fee %.0f, burnt %.0f", send.ReceiverChain, gasFeeInZeta, mBurnt))
 		}
 		send.MMint = fmt.Sprintf("%.0f", mBurnt - gasFeeInZeta)
 
