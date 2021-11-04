@@ -71,6 +71,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			return  nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain))
 		}
 		price := float64(gasPrice.Median) * 1.5 // 1.5x Median gas; in wei
+		send.GasPrice = fmt.Sprintf("%.0f", price)
 		gasLimit := float64(80_000) //TODO: let user supply this
 		exchangeRate := 1.0 // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
 		gasFeeInZeta := price*gasLimit * exchangeRate

@@ -20115,6 +20115,8 @@ paths:
                     nonce:
                       type: string
                       format: uint64
+                    gasPrice:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -20266,6 +20268,8 @@ paths:
                   nonce:
                     type: string
                     format: uint64
+                  gasPrice:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30874,6 +30878,8 @@ definitions:
             nonce:
               type: string
               format: uint64
+            gasPrice:
+              type: string
       pagination:
         type: object
         properties:
@@ -31072,6 +31078,8 @@ definitions:
           nonce:
             type: string
             format: uint64
+          gasPrice:
+            type: string
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -31146,6 +31154,8 @@ definitions:
       nonce:
         type: string
         format: uint64
+      gasPrice:
+        type: string
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:
