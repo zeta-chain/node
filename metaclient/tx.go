@@ -7,12 +7,22 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func (b *MetachainBridge) PostGasPrice(chain common.Chain, gasPrice uint64, blockNum uint64) (string, error){
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, blockNum)
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
+}
 func (b *MetachainBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
 	metaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostSend broadcast fail")
+		log.Err(err).Msg("PostNonce broadcast fail")
 		return "", err
 	}
 	return metaTxHash, nil

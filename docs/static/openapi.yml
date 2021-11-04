@@ -19310,6 +19310,14 @@ paths:
                     median:
                       type: string
                       format: uint64
+                    blockNum:
+                      type: object
+                      additionalProperties:
+                        type: string
+                        format: uint64
+                    medianBlock:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19429,6 +19437,14 @@ paths:
                       type: string
                       format: uint64
                   median:
+                    type: string
+                    format: uint64
+                  blockNum:
+                    type: object
+                    additionalProperties:
+                      type: string
+                      format: uint64
+                  medianBlock:
                     type: string
                     format: uint64
         default:
@@ -30477,6 +30493,14 @@ definitions:
       median:
         type: string
         format: uint64
+      blockNum:
+        type: object
+        additionalProperties:
+          type: string
+          format: uint64
+      medianBlock:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30492,6 +30516,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  MetaProtocol.metacore.metacore.MsgGasPriceVoterResponse:
+    type: object
   MetaProtocol.metacore.metacore.MsgNonceVoterResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse:
@@ -30607,6 +30633,14 @@ definitions:
                 type: string
                 format: uint64
             median:
+              type: string
+              format: uint64
+            blockNum:
+              type: object
+              additionalProperties:
+                type: string
+                format: uint64
+            medianBlock:
               type: string
               format: uint64
       pagination:
@@ -30905,6 +30939,14 @@ definitions:
               type: string
               format: uint64
           median:
+            type: string
+            format: uint64
+          blockNum:
+            type: object
+            additionalProperties:
+              type: string
+              format: uint64
+          medianBlock:
             type: string
             format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:

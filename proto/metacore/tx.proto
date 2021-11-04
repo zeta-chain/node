@@ -9,6 +9,7 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Msg defines the Msg service.
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
+  rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
   rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
@@ -16,6 +17,16 @@ service Msg {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgGasPriceVoter {
+  string creator = 1;
+  string chain = 2;
+  uint64 price = 3;
+  uint64 blockNumber = 4;
+}
+
+message MsgGasPriceVoterResponse {
+}
+
 message MsgNonceVoter {
   string creator = 1;
   string chain = 2;
