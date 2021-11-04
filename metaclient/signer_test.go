@@ -57,7 +57,7 @@ func (s *SignerSuite) TestMint(c *C) {
 	tssAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	nonce, err := s.signer.client.NonceAt(context.TODO(), tssAddr, nil)
 	c.Assert(err, IsNil)
-	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{}, sendHashBytes, nonce)
+	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{}, sendHashBytes, nonce, big.NewInt(10_000_000_000))
 	c.Assert(err, IsNil)
 	c.Logf("txhash %s", txhash)
 }
