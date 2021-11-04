@@ -10,7 +10,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
-	"math/big"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -97,12 +96,14 @@ func mock_integration_test() {
 		return
 	}
 	go eth1.WatchRouter()
+	go eth1.WatchGasPrice()
 	eth2, err := mc.NewChainObserver(common.ETHChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver ETH")
 		return
 	}
 	go eth2.WatchRouter()
+	go eth2.WatchGasPrice()
 
 	log.Info().Msg("starting bsc observer...")
 	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge1, tss.Address())
@@ -111,14 +112,15 @@ func mock_integration_test() {
 		return
 	}
 	go bsc1.WatchRouter()
+	go bsc1.WatchGasPrice()
 	bsc2, err := mc.NewChainObserver(common.BSCChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver")
 		return
 	}
 	go bsc2.WatchRouter()
-	price := eth1.GetBaseGasPrice()
-	log.Info().Msgf("eth gas price %d wei, %d gwei", price, price.Div(price, big.NewInt(1_000_000_000)))
+	go bsc2.WatchGasPrice()
+
 
 	// wait....
 	ch := make(chan os.Signal, 1)

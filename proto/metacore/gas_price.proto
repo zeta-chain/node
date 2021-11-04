@@ -11,4 +11,6 @@ message GasPrice {
   string chain = 3; 
   map<string, uint64> prices = 4;
   uint64 median = 5;
+  map<string, uint64> blockNum = 6;
+  uint64 medianBlock = 7;
 }

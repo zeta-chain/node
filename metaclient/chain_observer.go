@@ -107,13 +107,28 @@ func (chainOb *ChainObserver) WatchRouter() {
 	}
 }
 
+func (chainOb *ChainObserver) WatchGasPrice() {
+	for range chainOb.ticker.C {
+		err := chainOb.PostGasPrice()
+		if err != nil {
+			log.Err(err).Msg("PostGasPrice error")
+			continue
+		}
+	}
+}
+
 func (chainOb *ChainObserver) PostGasPrice() error {
 	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	_ = gasPrice
+	blockNum, err := chainOb.client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
 	return nil
 }
 
