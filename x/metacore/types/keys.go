@@ -61,3 +61,7 @@ const (
 const (
 	ChainNoncesKey = "ChainNonces-value-"
 )
+
+const (
+	GasPriceKey = "GasPrice-value-"
+)

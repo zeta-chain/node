@@ -120,8 +120,6 @@ func mock_integration_test() {
 	price := eth1.GetBaseGasPrice()
 	log.Info().Msgf("eth gas price %d wei, %d gwei", price, price.Div(price, big.NewInt(1_000_000_000)))
 
-
-
 	// wait....
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)

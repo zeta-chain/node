@@ -1,0 +1,14 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+import "gogoproto/gogo.proto";
+
+message GasPrice {
+  string creator = 1;
+  string index = 2;
+  string chain = 3; 
+  map<string, uint64> prices = 4;
+  uint64 median = 5;
+}

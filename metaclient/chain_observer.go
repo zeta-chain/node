@@ -104,7 +104,6 @@ func (chainOb *ChainObserver) WatchRouter() {
 			continue
 		}
 
-
 	}
 }
 
