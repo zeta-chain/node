@@ -1,9 +1,11 @@
 package types
 
 import (
+	"github.com/Meta-Protocol/metacore/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
+	"math/big"
 )
 
 var _ sdk.Msg = &MsgSendVoter{}
@@ -45,11 +47,39 @@ func (msg *MsgSendVoter) GetSignBytes() []byte {
 }
 
 func (msg *MsgSendVoter) ValidateBasic() error {
-	//TODO: add basic validation
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
 	}
+	senderChain, err := common.ParseChain(msg.SenderChain)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid sender chain (%s): %s", err, msg.SenderChain)
+	}
+	_, err = common.NewAddress(msg.Sender, senderChain)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
+	}
+
+	receiverChain, err := common.ParseChain(msg.ReceiverChain)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid receiver chain (%s): %s", err, msg.ReceiverChain)
+	}
+	_, err = common.NewAddress(msg.Receiver, receiverChain)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid receiver address (%s): %s", err, msg.Receiver)
+	}
+
+	if _, ok := big.NewInt(0).SetString(msg.MBurnt, 10); !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s, %s", err, msg.MBurnt)
+	}
+	if msg.MMint != "" {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "mmint must be empty", err, msg.MMint)
+	}
+	// TODO: should parameterize the hardcoded max len
+	if len(msg.Message) > 1024 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
+	}
+
 	return nil
 }
 

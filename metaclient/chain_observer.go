@@ -200,7 +200,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				returnVal[1].(string),
 				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				"0",
+				"",
 				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
@@ -224,7 +224,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				returnVal[1].(ethcommon.Address).String(),
 				returnVal[3].(*big.Int).String(),
 				returnVal[2].(*big.Int).String(),
-				"0",
+				"",
 				returnVal[4].(string), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
