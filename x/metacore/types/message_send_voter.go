@@ -70,10 +70,10 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 	}
 
 	if _, ok := big.NewInt(0).SetString(msg.MBurnt, 10); !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s, %s", err, msg.MBurnt)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s", err, msg.MBurnt)
 	}
 	if msg.MMint != "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "mmint must be empty", err, msg.MMint)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "mmint must be empty: %s",  msg.MMint)
 	}
 	// TODO: should parameterize the hardcoded max len
 	if len(msg.Message) > 1024 {
