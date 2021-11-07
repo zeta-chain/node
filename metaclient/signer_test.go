@@ -29,7 +29,7 @@ func (s *SignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	metaContractAddress := ethcommon.HexToAddress(config.BSC_ROUTER)
+	metaContractAddress := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
 	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.BSC_META_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())

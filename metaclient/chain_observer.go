@@ -3,6 +3,7 @@ package metaclient
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/rs/zerolog/log"
@@ -25,7 +26,8 @@ type ChainObserver struct {
 	endpoint  string
 	ticker    *time.Ticker
 	abiString string
-	abi       *abi.ABI
+	abi       *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	zetaAbi   *abi.ABI // only useful for ethereum; the token contract
 	client    *ethclient.Client
 	bridge    *MetachainBridge
 	lastBlock uint64
@@ -40,19 +42,20 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.router = config.POLY_ROUTER
+		chainOb.router = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.META_ABI
+		//chainOb.abiString = config.META_ABI
 	case common.ETHChain:
 		chainOb.chain = chain
-		chainOb.router = config.ETH_ROUTER
+		chainOb.router = config.ETH_METALOCK_ADDRESS
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.META_LOCK_ABI
+
 	case common.BSCChain:
 		chainOb.chain = chain
-		chainOb.router = config.BSC_ROUTER
+		chainOb.router = config.BSC_TOKEN_ADDRESS
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.BSC_META_ABI
@@ -62,6 +65,13 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		return nil, err
 	}
 	chainOb.abi = &contractABI
+	if chain == common.ETHChain {
+		tokenABI, err := abi.JSON(strings.NewReader(config.ETH_META_ABI))
+		if err != nil {
+			return nil, err
+		}
+		chainOb.zetaAbi = &tokenABI
+	}
 
 	// Dial the router
 	client, err := ethclient.Dial(chainOb.endpoint)
@@ -116,6 +126,72 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 		}
 	}
 }
+
+func (chainOb *ChainObserver) WatchZetaSupply() {
+	for range chainOb.ticker.C {
+		err := chainOb.PostZetaSupply()
+		if err != nil {
+			log.Err(err).Msg("PostZetaSupply error")
+			continue
+		}
+	}
+}
+
+func (chainOb *ChainObserver) PostZetaSupply() error {
+	if chainOb.chain == common.ETHChain {
+		input, err := chainOb.abi.Pack("getLockedAmount")
+		if err != nil {
+			return fmt.Errorf("fail to getLockedAmount")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.ETH_METALOCK_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, nil)
+		if err != nil {
+			return err
+		}
+		output, err := chainOb.abi.Unpack("getLockedAmount", res)
+		if err != nil {
+			return err
+		}
+		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
+	} else if chainOb.chain == common.BSCChain {
+		input, err := chainOb.abi.Pack("totalSupply")
+		if err != nil {
+			return fmt.Errorf("fail to totalSupply")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, nil)
+		if err != nil {
+			return err
+		}
+		output, err := chainOb.abi.Unpack("totalSupply", res)
+		if err != nil {
+			return err
+		}
+		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		fmt.Printf("BSC: block %d: totalSupply %d\n", bn, lockedAmount)
+	}
+	return nil
+}
+
 
 func (chainOb *ChainObserver) PostGasPrice() error {
 	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
