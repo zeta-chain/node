@@ -97,6 +97,7 @@ func mock_integration_test() {
 	}
 	go eth1.WatchRouter()
 	go eth1.WatchGasPrice()
+	go eth1.WatchZetaSupply()
 	eth2, err := mc.NewChainObserver(common.ETHChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver ETH")
@@ -104,6 +105,8 @@ func mock_integration_test() {
 	}
 	go eth2.WatchRouter()
 	go eth2.WatchGasPrice()
+	go eth2.WatchZetaSupply()
+
 
 	log.Info().Msg("starting bsc observer...")
 	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge1, tss.Address())
@@ -113,6 +116,7 @@ func mock_integration_test() {
 	}
 	go bsc1.WatchRouter()
 	go bsc1.WatchGasPrice()
+	go bsc1.WatchZetaSupply()
 	bsc2, err := mc.NewChainObserver(common.BSCChain, bridge2, tss.Address())
 	if err != nil {
 		log.Err(err).Msg("NewChainObserver")
@@ -120,6 +124,7 @@ func mock_integration_test() {
 	}
 	go bsc2.WatchRouter()
 	go bsc2.WatchGasPrice()
+	go bsc2.WatchZetaSupply()
 
 
 	// wait....
@@ -155,7 +160,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.BSC_ROUTER))
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.BSC_TOKEN_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
