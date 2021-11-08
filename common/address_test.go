@@ -12,30 +12,29 @@ type AddressSuite struct{}
 var _ = Suite(&AddressSuite{})
 
 func (s *AddressSuite) TestAddress(c *C) {
-	addr, err := NewAddress("bnb1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6")
+	_, err := NewAddress("bnb1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6", ETHChain)
 	c.Assert(err, NotNil)
 
-	_, err = NewAddress("1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6")
+	_, err = NewAddress("1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6", ETHChain)
 	c.Check(err, NotNil)
-	_, err = NewAddress("bnb1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6X")
+	_, err = NewAddress("bnb1lejrrtta9cgr49fuh7ktu3sddhe0ff7wenlpn6X", ETHChain)
 	c.Check(err, NotNil)
-	_, err = NewAddress("bogus")
+	_, err = NewAddress("bogus", ETHChain)
 	c.Check(err, NotNil)
 	c.Check(Address("").IsEmpty(), Equals, true)
 	c.Check(NoAddress.Equals(Address("")), Equals, true)
-	_, err = NewAddress("")
-	c.Assert(err, IsNil)
+	_, err = NewAddress("", ETHChain)
+	c.Assert(err, NotNil)
 
 	// eth tests
-	addr, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab635a")
+	_, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab635a", ETHChain)
 	c.Check(err, IsNil)
-	c.Check(addr.IsChain(ETHChain), Equals, true)
 	// wrong length
-	_, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab635aaaaaaaaa")
+	_, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab635aaaaaaaaa", ETHChain)
 	c.Check(err, NotNil)
 
 	// good length but not valid hex string
-	_, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab63zz")
+	_, err = NewAddress("0x90f2b1ae50e6018230e90a33f98c7844a0ab63zz", ETHChain)
 	c.Check(err, NotNil)
 
 }
