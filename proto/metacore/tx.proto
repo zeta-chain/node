@@ -22,6 +22,7 @@ message MsgGasPriceVoter {
   string chain = 2;
   uint64 price = 3;
   uint64 blockNumber = 4;
+  uint64 supply = 5;
 }
 
 message MsgGasPriceVoterResponse {
