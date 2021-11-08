@@ -19321,7 +19321,21 @@ paths:
                     supply:
                       type: object
                       additionalProperties:
-                        type: string
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                          blockNum:
+                            type: string
+                            format: uint64
+                    medianSupply:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        blockNum:
+                          type: string
+                          format: uint64
               pagination:
                 type: object
                 properties:
@@ -19454,7 +19468,21 @@ paths:
                   supply:
                     type: object
                     additionalProperties:
-                      type: string
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        blockNum:
+                          type: string
+                          format: uint64
+                  medianSupply:
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                      blockNum:
+                        type: string
+                        format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30516,7 +30544,29 @@ definitions:
       supply:
         type: object
         additionalProperties:
-          type: string
+          type: object
+          properties:
+            value:
+              type: string
+            blockNum:
+              type: string
+              format: uint64
+      medianSupply:
+        type: object
+        properties:
+          value:
+            type: string
+          blockNum:
+            type: string
+            format: uint64
+  MetaProtocol.metacore.metacore.GasPrice.ValueBlockPair:
+    type: object
+    properties:
+      value:
+        type: string
+      blockNum:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30662,7 +30712,21 @@ definitions:
             supply:
               type: object
               additionalProperties:
-                type: string
+                type: object
+                properties:
+                  value:
+                    type: string
+                  blockNum:
+                    type: string
+                    format: uint64
+            medianSupply:
+              type: object
+              properties:
+                value:
+                  type: string
+                blockNum:
+                  type: string
+                  format: uint64
       pagination:
         type: object
         properties:
@@ -30974,7 +31038,21 @@ definitions:
           supply:
             type: object
             additionalProperties:
-              type: string
+              type: object
+              properties:
+                value:
+                  type: string
+                blockNum:
+                  type: string
+                  format: uint64
+          medianSupply:
+            type: object
+            properties:
+              value:
+                type: string
+              blockNum:
+                type: string
+                format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:

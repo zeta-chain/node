@@ -138,6 +138,25 @@ func (chainOb *ChainObserver) WatchZetaSupply() {
 }
 
 func (chainOb *ChainObserver) PostZetaSupply() error {
+	return nil
+}
+
+
+func (chainOb *ChainObserver) PostGasPrice() error {
+	// GAS PRICE
+	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	blockNum, err := chainOb.client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+
+	// SUPPLY
+	var supply string // lockedAmount on ETH, totalSupply on other chains
 	if chainOb.chain == common.ETHChain {
 		input, err := chainOb.abi.Pack("getLockedAmount")
 		if err != nil {
@@ -163,6 +182,7 @@ func (chainOb *ChainObserver) PostZetaSupply() error {
 		}
 		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 		fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
+		supply = lockedAmount.String()
 	} else if chainOb.chain == common.BSCChain {
 		input, err := chainOb.abi.Pack("totalSupply")
 		if err != nil {
@@ -186,25 +206,14 @@ func (chainOb *ChainObserver) PostZetaSupply() error {
 		if err != nil {
 			return err
 		}
-		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		fmt.Printf("BSC: block %d: totalSupply %d\n", bn, lockedAmount)
+		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+		supply = totalSupply.String()
+	} else {
+		log.Error().Msgf("Chain %s not supported", chainOb.chain)
 	}
-	return nil
-}
 
-
-func (chainOb *ChainObserver) PostGasPrice() error {
-	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
-	if err != nil {
-		log.Err(err).Msg("PostGasPrice:")
-		return err
-	}
-	blockNum, err := chainOb.client.BlockNumber(context.TODO())
-	if err != nil {
-		log.Err(err).Msg("PostGasPrice:")
-		return err
-	}
-	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
+	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
