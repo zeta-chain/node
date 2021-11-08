@@ -19318,6 +19318,10 @@ paths:
                     medianBlock:
                       type: string
                       format: uint64
+                    supply:
+                      type: object
+                      additionalProperties:
+                        type: string
               pagination:
                 type: object
                 properties:
@@ -19447,6 +19451,10 @@ paths:
                   medianBlock:
                     type: string
                     format: uint64
+                  supply:
+                    type: object
+                    additionalProperties:
+                      type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30505,6 +30513,10 @@ definitions:
       medianBlock:
         type: string
         format: uint64
+      supply:
+        type: object
+        additionalProperties:
+          type: string
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30647,6 +30659,10 @@ definitions:
             medianBlock:
               type: string
               format: uint64
+            supply:
+              type: object
+              additionalProperties:
+                type: string
       pagination:
         type: object
         properties:
@@ -30955,6 +30971,10 @@ definitions:
           medianBlock:
             type: string
             format: uint64
+          supply:
+            type: object
+            additionalProperties:
+              type: string
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
