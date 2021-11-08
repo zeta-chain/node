@@ -127,19 +127,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	}
 }
 
-func (chainOb *ChainObserver) WatchZetaSupply() {
-	for range chainOb.ticker.C {
-		err := chainOb.PostZetaSupply()
-		if err != nil {
-			log.Err(err).Msg("PostZetaSupply error")
-			continue
-		}
-	}
-}
 
-func (chainOb *ChainObserver) PostZetaSupply() error {
-	return nil
-}
 
 
 func (chainOb *ChainObserver) PostGasPrice() error {
