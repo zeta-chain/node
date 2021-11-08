@@ -7,12 +7,13 @@ import (
 
 var _ sdk.Msg = &MsgGasPriceVoter{}
 
-func NewMsgGasPriceVoter(creator string, chain string, price uint64, blockNumber uint64) *MsgGasPriceVoter {
+func NewMsgGasPriceVoter(creator string, chain string, price uint64, supply string, blockNumber uint64) *MsgGasPriceVoter {
 	return &MsgGasPriceVoter{
 		Creator:     creator,
 		Chain:       chain,
 		Price:       price,
 		BlockNumber: blockNumber,
+		Supply:      supply,
 	}
 }
 
