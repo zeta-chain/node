@@ -1,41 +1,15 @@
-// +build dontbuild
-
 package metaclient
 
 import (
-	"os"
-	"path/filepath"
-	"testing"
-
-	"github.com/rs/zerolog/log"
+	. "gopkg.in/check.v1"
 )
 
-func TestWatchRouter(t *testing.T) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		t.Logf("UserHomeDir error")
-		t.Fail()
-	}
-	chainHomeFoler := filepath.Join(homeDir, ".metacore")
+type ChainObSuite struct {
+	chainob *ChainObserver
+}
 
-	signerName := "alice"
-	signerPass := "password"
-	kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
-	if err != nil {
-		log.Fatal().Err(err).Msg("fail to get keyring keybase")
-	}
+var _ = Suite(&ChainObSuite{})
 
-	k := NewKeysWithKeybase(kb, signerName, signerPass)
+func (s *ChainObSuite) SetUpTest(c *C) {
 
-	chainIP := "127.0.0.1"
-	bridge, err := NewMetachainBridge(k, chainIP, "alice")
-	if err != nil {
-		t.Fail()
-	}
-
-	EthObserver := &ChainObserver{}
-	_ = bridge
-	_ = EthObserver
-	//EthObserver.InitChainObserver("Ethereum", bridge)
-	//EthObserver.WatchRouter()
 }
