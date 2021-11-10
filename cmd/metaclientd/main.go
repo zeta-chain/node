@@ -168,18 +168,17 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	metaContractAddress := ethcommon.HexToAddress(mcconfig.META_TEST_GOERLI_ADDRESS)
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.META_TEST_GOERLI_ABI, metaContractAddress)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.ETH_ZETA_LOCK_ABI, ethcommon.HexToAddress(mcconfig.ETH_METALOCK_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.BSC_TOKEN_ADDRESS))
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_ZETA_ABI, ethcommon.HexToAddress(mcconfig.BSC_TOKEN_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
-	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.POLYGON_TOKEN_ADDRESS))
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.BSC_ZETA_ABI, ethcommon.HexToAddress(mcconfig.POLYGON_TOKEN_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
 		return nil, err

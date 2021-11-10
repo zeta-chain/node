@@ -45,20 +45,20 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		chainOb.router = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.BSC_META_ABI
+		chainOb.abiString = config.BSC_ZETA_ABI
 	case common.ETHChain:
 		chainOb.chain = chain
 		chainOb.router = config.ETH_METALOCK_ADDRESS
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.META_LOCK_ABI
+		chainOb.abiString = config.ETH_ZETA_LOCK_ABI
 
 	case common.BSCChain:
 		chainOb.chain = chain
 		chainOb.router = config.BSC_TOKEN_ADDRESS
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.BSC_META_ABI
+		chainOb.abiString = config.BSC_ZETA_ABI
 	}
 	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
 	if err != nil {
@@ -270,11 +270,11 @@ func (chainOb *ChainObserver) queryRouter() error {
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
 	// Unlock event signature
-	logUnlockSignature := []byte("Unlock(address,uint256)")
+	logUnlockSignature := []byte("Unlock(address,uint256,bytes32)")
 	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
 
 	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,address,uint256,uint256,string)")
+	logBurnSendSignature := []byte("BurnSend(address,string,uint256,string,bytes)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
 	// MMinted event signature
@@ -321,11 +321,11 @@ func (chainOb *ChainObserver) queryRouter() error {
 			metaHash, err := chainOb.bridge.PostSend(
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
-				returnVal[1].(ethcommon.Address).String(),
-				returnVal[3].(*big.Int).String(),
+				returnVal[1].(string),
+				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
 				"",
-				returnVal[4].(string), // TODO: figure out appropriate format for message
+				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -342,24 +342,22 @@ func (chainOb *ChainObserver) queryRouter() error {
 				continue
 			}
 
-			// Post confirmation to meta core
-			var sendHash, outTxHash string
-
-			// sendHash = empty string for now
-			// outTxHash = tx hash returned by signer.MMint
+			sendhash := returnVal[2].([32]byte)
+			sendHash := "0x" + hex.EncodeToString(sendhash[:])
 			var rxAddress string = returnVal[0].(ethcommon.Address).String()
 			var mMint string = returnVal[1].(*big.Int).String()
 			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
 				sendHash,
-				outTxHash,
+				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
 			)
 			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta score")
+				log.Err(err).Msg("error posting confirmation to meta core")
 				continue
 			}
 			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
+			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%d", sendHash[:6], vLog.TxHash.Hex()[:6],vLog.BlockNumber, mMint)
 
 		case logMMintedSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)
@@ -380,7 +378,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				mMint,
 			)
 			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta score")
+				log.Err(err).Msg("error posting confirmation to meta core")
 				continue
 			}
 			log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
