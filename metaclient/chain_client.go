@@ -357,7 +357,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				continue
 			}
 			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%d", sendHash[:6], vLog.TxHash.Hex()[:6],vLog.BlockNumber, mMint)
+			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6],vLog.BlockNumber, mMint)
 
 		case logMMintedSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)
