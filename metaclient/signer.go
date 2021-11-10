@@ -76,7 +76,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 }
 
 // send outbound tx to smart contract
-func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64) (string, error) {
+func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (string, error) {
 	if len(sendHash) < 32 {
 		return "", fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
@@ -84,10 +84,10 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	if err != nil {
 		return "", fmt.Errorf("pack error: %w", err)
 	}
-	gasPrice, err := signer.client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return "", fmt.Errorf("SuggestGasPrice error: %w", err)
-	}
+	//gasPriceSuggested, err := signer.client.SuggestGasPrice(context.Background())
+	//if err != nil {
+	//	return "", fmt.Errorf("SuggestGasPrice error: %w", err)
+	//}
 	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
 	if err != nil {
 		return "", fmt.Errorf("sign error: %w", err)

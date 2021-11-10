@@ -103,7 +103,37 @@ func (chainOb *ChainObserver) WatchRouter() {
 			log.Err(err).Msg("queryRouter error")
 			continue
 		}
+
 	}
+}
+
+func (chainOb *ChainObserver) WatchGasPrice() {
+	for range chainOb.ticker.C {
+		err := chainOb.PostGasPrice()
+		if err != nil {
+			log.Err(err).Msg("PostGasPrice error")
+			continue
+		}
+	}
+}
+
+func (chainOb *ChainObserver) PostGasPrice() error {
+	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	blockNum, err := chainOb.client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	return nil
 }
 
 func (chainOb *ChainObserver) queryRouter() error {
@@ -272,4 +302,14 @@ func (chainOb *ChainObserver) setLastBlock() uint64 {
 		return 0
 	}
 	return lastheight.LastSendHeight
+}
+
+// query the base gas price for the block number bn.
+func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
+	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
+	if err != nil {
+		log.Err(err).Msg("GetBaseGasPrice")
+		return nil
+	}
+	return gasPrice
 }

@@ -9,6 +9,8 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	// this line is used by starport scaffolding # 2
+	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "metacore/GasPriceVoter", nil)
+
 	cdc.RegisterConcrete(&MsgNonceVoter{}, "metacore/NonceVoter", nil)
 
 	cdc.RegisterConcrete(&MsgReceiveConfirmation{}, "metacore/ReceiveConfirmation", nil)
@@ -21,6 +23,9 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// this line is used by starport scaffolding # 3
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgGasPriceVoter{},
+	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgNonceVoter{},
 	)

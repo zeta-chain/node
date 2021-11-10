@@ -113,7 +113,11 @@ func (co *CoreObserver) MonitorCore() {
 						}
 						var sendhash [32]byte
 						copy(sendhash[:32], sendHash[:32])
-						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce)
+						gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
+						if !ok {
+							log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+						}
+						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 						if err != nil {
 							log.Err(err).Msg("singer %s error minting received transaction")
 						}
