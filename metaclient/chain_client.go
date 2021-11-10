@@ -45,7 +45,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		chainOb.router = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		//chainOb.abiString = config.META_ABI
+		chainOb.abiString = config.BSC_META_ABI
 	case common.ETHChain:
 		chainOb.chain = chain
 		chainOb.router = config.ETH_METALOCK_ADDRESS
@@ -160,7 +160,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			From: fromAddr,
 			To: &toAddr,
 			Data: input,
-		}, nil)
+		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			return err
 		}
 		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
+		//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
 		supply = lockedAmount.String()
 	} else if chainOb.chain == common.BSCChain {
 		input, err := chainOb.abi.Pack("totalSupply")
@@ -186,7 +186,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			From: fromAddr,
 			To: &toAddr,
 			Data: input,
-		}, nil)
+		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
 			return err
 		}
@@ -195,10 +195,37 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			return err
 		}
 		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+		supply = totalSupply.String()
+	} else if chainOb.chain == common.POLYGONChain {
+		input, err := chainOb.abi.Pack("totalSupply")
+		if err != nil {
+			return fmt.Errorf("fail to totalSupply")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, big.NewInt(0).SetUint64(bn))
+		if err != nil {
+			return err
+		}
+		output, err := chainOb.abi.Unpack("totalSupply", res)
+		if err != nil {
+			return err
+		}
+		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
 		supply = totalSupply.String()
 	} else {
-		log.Error().Msgf("Chain %s not supported", chainOb.chain)
+		log.Error().Msgf("chain not supported %s", chainOb.chain)
+		return fmt.Errorf("unsupported chain %s", chainOb.chain)
 	}
 
 	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)

@@ -123,6 +123,22 @@ func mock_integration_test() {
 	go bsc2.WatchRouter()
 	go bsc2.WatchGasPrice()
 
+	log.Info().Msg("starting polygon observer...")
+	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge1, tss.Address())
+	if err != nil {
+		log.Err(err).Msg("NewChainObserver")
+		return
+	}
+	go poly1.WatchRouter()
+	go poly1.WatchGasPrice()
+
+	poly2, err := mc.NewChainObserver(common.POLYGONChain, bridge2, tss.Address())
+	if err != nil {
+		log.Err(err).Msg("NewChainObserver")
+		return
+	}
+	go poly2.WatchRouter()
+	go poly2.WatchGasPrice()
 
 
 	// wait....
@@ -163,9 +179,15 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.POLYGON_TOKEN_ADDRESS))
+	if err != nil {
+		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
+		return nil, err
+	}
 	signerMap := map[common.Chain]*mc.Signer{
 		common.ETHChain: ethSigner,
 		common.BSCChain: bscSigner,
+		common.POLYGONChain: polygonSigner,
 	}
 
 	return signerMap, nil
