@@ -103,7 +103,7 @@ func (co *CoreObserver) MonitorCore() {
 					signer := co.signerMap[toChain]
 					message := []byte(send.Message)
 
-					var gasLimit uint64 = 80000
+					var gasLimit uint64 = 90000
 
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
 					if send.Signers[send.Broadcaster] == myid {
