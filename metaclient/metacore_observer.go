@@ -119,37 +119,12 @@ func (co *CoreObserver) MonitorCore() {
 						}
 						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 						if err != nil {
-							log.Err(err).Msgf("MMint error")
+							log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
 							continue
 						}
 						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
-
-					//for {
-					//	tx, isPending, err := signer.client.TransactionByHash(context.Background(), ethcommon.HexToHash(outTxHash))
-					//	if err != nil {
-					//		log.Warn().Msgf("TransactionByHash %s err %s", outTxHash, err)
-					//		time.Sleep(2*time.Second)
-					//		continue
-					//	}
-					//	if !isPending {
-					//		receipt, err := signer.client.TransactionReceipt(context.Background(), tx.Hash())
-					//		if err != nil {
-					//			log.Err(err).Msg("TransactionReceipt")
-					//		}
-					//		if receipt.Status == 1 { // success execution
-					//			fmt.Printf("PostReceive %s %s %d\n", send.Index[:6], outTxHash[:6], receipt.BlockNumber.Uint64())
-					//			metahash, err := co.bridge.PostReceiveConfirmation(send.Index, outTxHash, receipt.BlockNumber.Uint64(), "111")
-					//			if err != nil {
-					//				log.Err(err).Msgf("PostReceiveConfirmation metahash %s", metahash)
-					//			}
-					//		}
-					//		break
-					//	}
-					//	time.Sleep(2*time.Second)
-					//}
-
 				}
 
 			}
