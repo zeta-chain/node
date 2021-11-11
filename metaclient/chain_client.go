@@ -31,6 +31,7 @@ type ChainObserver struct {
 	client    *ethclient.Client
 	bridge    *MetachainBridge
 	lastBlock uint64
+	confCount uint64 // must wait this many blocks to be considered "confirmed"
 }
 
 // Return configuration based on supplied target chain
@@ -46,12 +47,15 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
+
 	case common.ETHChain:
 		chainOb.chain = chain
 		chainOb.router = config.ETH_METALOCK_ADDRESS
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.ETH_ZETA_LOCK_ABI
+		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 
 	case common.BSCChain:
 		chainOb.chain = chain
@@ -59,6 +63,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 	}
 	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
 	if err != nil {
@@ -108,9 +113,9 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 func (chainOb *ChainObserver) WatchRouter() {
 	// At each tick, query the router
 	for range chainOb.ticker.C {
-		err := chainOb.queryRouter()
+		err := chainOb.observeChain()
 		if err != nil {
-			log.Err(err).Msg("queryRouter error")
+			log.Err(err).Msg("observeChain error")
 			continue
 		}
 
@@ -152,6 +157,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		}
 		bn, err := chainOb.client.BlockNumber(context.TODO())
 		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
@@ -162,10 +168,12 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 			return err
 		}
 		output, err := chainOb.abi.Unpack("getLockedAmount", res)
 		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 			return err
 		}
 		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
@@ -178,6 +186,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		}
 		bn, err := chainOb.client.BlockNumber(context.TODO())
 		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
@@ -188,10 +197,12 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 			return err
 		}
 		output, err := chainOb.abi.Unpack("totalSupply", res)
 		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 			return err
 		}
 		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
@@ -204,6 +215,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		}
 		bn, err := chainOb.client.BlockNumber(context.TODO())
 		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
@@ -214,10 +226,12 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 			return err
 		}
 		output, err := chainOb.abi.Unpack("totalSupply", res)
 		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 			return err
 		}
 		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
@@ -236,18 +250,20 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) queryRouter() error {
+func (chainOb *ChainObserver) observeChain() error {
 	header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
 	}
+	// "confirmed" current block number
+	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
-	if header.Number.Uint64() <= chainOb.lastBlock {
+	if confirmedBlockNum <= chainOb.lastBlock {
 		return nil
 	}
-	toBlock := chainOb.lastBlock + 10 // read 10 blocks at time at most
-	if toBlock >= header.Number.Uint64() {
-		toBlock = header.Number.Uint64()
+	toBlock := chainOb.lastBlock + 10 // read at most 10 blocks in one go
+	if toBlock >= confirmedBlockNum {
+		toBlock = confirmedBlockNum
 	}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},

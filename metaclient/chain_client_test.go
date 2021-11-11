@@ -3,6 +3,7 @@ package metaclient
 import (
 	"context"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	. "gopkg.in/check.v1"
 )
@@ -28,5 +29,7 @@ func (s *ChainClientSuite) TestPolygonClient(c *C) {
 	c.Assert(err, IsNil)
 	c.Logf("gas price %d", gas)
 
-
+	receipt,  err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash("0xa8ab7e7242ee1b00c7e4de581d9c87b2465bae76115bce086e7ff0e8d6a7e1ef"))
+	c.Assert(err, IsNil)
+	c.Log(receipt.Status, receipt.PostState, receipt.GasUsed, receipt.Logs[0], receipt.BlockNumber)
 }

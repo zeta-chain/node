@@ -119,7 +119,8 @@ func (co *CoreObserver) MonitorCore() {
 						}
 						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 						if err != nil {
-							log.Err(err).Msg("singer %s error minting received transaction")
+							log.Err(err).Msgf("MMint error")
+							continue
 						}
 						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}

@@ -84,7 +84,6 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	var err error
 	if signer.chain == common.ETHChain {
 		data, err = signer.abi.Pack("unlock", to, amount, sendHash)
-		fmt.Println(signer.abi.Methods)
 	} else {
 		data, err = signer.abi.Pack("mint", to, amount, sendHash)
 	}
