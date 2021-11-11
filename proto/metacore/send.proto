@@ -7,9 +7,9 @@ import "gogoproto/gogo.proto";
 
 enum SendStatus {
   option (gogoproto.goproto_enum_stringer) = true;
-  Created = 0;
-  Finalized = 1;
-  Mined = 2;
+  Created = 0; // some observer sees inbound tx
+  Finalized = 1; // super majority observer see inbound tx
+  Mined = 2;  // the corresponding outbound tx is mined
   Confirmed = 3;
 }
 
