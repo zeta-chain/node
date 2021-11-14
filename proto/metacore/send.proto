@@ -11,6 +11,8 @@ enum SendStatus {
   Finalized = 1; // super majority observer see inbound tx
   Mined = 2;  // the corresponding outbound tx is mined
   Confirmed = 3;
+  Abort = 4; // outbound cannot succeed; should revert inbound
+  Reverted =5; // inbound reverted.
 }
 
 message Send {
