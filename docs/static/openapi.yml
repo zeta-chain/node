@@ -20144,6 +20144,8 @@ paths:
                         - Finalized
                         - Mined
                         - Confirmed
+                        - Abort
+                        - Reverted
                       default: Created
                     broadcaster:
                       type: string
@@ -20297,6 +20299,8 @@ paths:
                       - Finalized
                       - Mined
                       - Confirmed
+                      - Abort
+                      - Reverted
                     default: Created
                   broadcaster:
                     type: string
@@ -30951,6 +30955,8 @@ definitions:
                 - Finalized
                 - Mined
                 - Confirmed
+                - Abort
+                - Reverted
               default: Created
             broadcaster:
               type: string
@@ -31169,6 +31175,8 @@ definitions:
               - Finalized
               - Mined
               - Confirmed
+              - Abort
+              - Reverted
             default: Created
           broadcaster:
             type: string
@@ -31245,6 +31253,8 @@ definitions:
           - Finalized
           - Mined
           - Confirmed
+          - Abort
+          - Reverted
         default: Created
       broadcaster:
         type: string
@@ -31261,6 +31271,8 @@ definitions:
       - Finalized
       - Mined
       - Confirmed
+      - Abort
+      - Reverted
     default: Created
   common.PubKeySet:
     type: object
