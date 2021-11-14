@@ -168,7 +168,7 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.ETH_ZETA_LOCK_ABI, ethcommon.HexToAddress(mcconfig.ETH_METALOCK_ADDRESS))
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss.Address(), tss, mcconfig.ETH_ZETA_LOCK_ABI, ethcommon.HexToAddress(mcconfig.ETH_METALOCK_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
