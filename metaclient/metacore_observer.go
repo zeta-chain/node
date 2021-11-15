@@ -53,7 +53,7 @@ func (co *CoreObserver) MonitorCore() {
 				continue
 			}
 			for _, send := range sendList {
-				if types.SendStatus_name[int32(send.Status)] == "Finalized" {
+				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort  {
 					if _, found := co.sendMap[send.Index]; !found {
 						co.lock.Lock()
 						log.Info().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
@@ -62,7 +62,7 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
 					}
-				} else if types.SendStatus_name[int32(send.Status)] == "Mined" {
+				} else if send.Status == types.SendStatus_Mined  {
 					if send, found := co.sendMap[send.Index]; found {
 						co.lock.Lock()
 						if co.sendStatus[send.Index] != Mined {
@@ -93,8 +93,18 @@ func (co *CoreObserver) MonitorCore() {
 						time.Sleep(5 * time.Second)
 						continue
 					}
-					to := ethcommon.HexToAddress(send.Receiver)
-					toChain, err := common.ParseChain(send.ReceiverChain)
+
+					var to ethcommon.Address
+					var err error
+					var toChain common.Chain
+					if send.Status == types.SendStatus_Abort {
+						to = ethcommon.HexToAddress(send.Sender)
+						toChain, err = common.ParseChain(send.SenderChain)
+						log.Info().Msgf("Abort: reverting inbound")
+					} else {
+						to = ethcommon.HexToAddress(send.Receiver)
+						toChain, err = common.ParseChain(send.ReceiverChain)
+					}
 					if err != nil {
 						log.Err(err).Msg("ParseChain fail; skip")
 						time.Sleep(5 * time.Second)
