@@ -28,16 +28,18 @@ type CoreObserver struct {
 	sendStatus map[string]TxStatus
 	bridge     *MetachainBridge
 	signerMap  map[common.Chain]*Signer
+	clientMap  map[common.Chain]*ChainObserver
 	lock       sync.Mutex
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver) *CoreObserver {
 	co := CoreObserver{}
 	co.bridge = bridge
 	co.signerMap = signerMap
 	co.sendQueue = make([]*types.Send, 0)
 	co.sendMap = make(map[string]*types.Send)
 	co.sendStatus = make(map[string]TxStatus)
+	co.clientMap = clientMap
 	return &co
 }
 
@@ -116,23 +118,29 @@ func (co *CoreObserver) MonitorCore() {
 					var gasLimit uint64 = 90000
 
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
+					sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
+					if err != nil || len(sendHash) != 32 {
+						log.Err(err).Msgf("decode sendHash %s error", send.Index)
+					}
+					var sendhash [32]byte
+					copy(sendhash[:32], sendHash[:32])
+					gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
+					if !ok {
+						log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+					}
+					tx, err := signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+					if err != nil {
+						log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+						continue
+					}
+					outTxHash := tx.Hash().Hex()
+					fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					if send.Signers[send.Broadcaster] == myid {
-						sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
-						if err != nil || len(sendHash) != 32 {
-							log.Err(err).Msgf("decode sendHash %s error", send.Index)
-						}
-						var sendhash [32]byte
-						copy(sendhash[:32], sendHash[:32])
-						gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
-						if !ok {
-							log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
-						}
-						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+						err := signer.Broadcast(tx)
 						if err != nil {
-							log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+							log.Err(err).Msgf("Broadcast error: nonce %d", send.Nonce)
 							continue
 						}
-						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
 				}
