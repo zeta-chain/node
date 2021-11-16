@@ -32,12 +32,14 @@ type ChainObserver struct {
 	bridge    *MetachainBridge
 	lastBlock uint64
 	confCount uint64 // must wait this many blocks to be considered "confirmed"
+	txWatchList map[ethcommon.Hash]string
 }
 
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon.Address) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
+	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 
 	// Initialize constants
 	switch chain {
@@ -118,7 +120,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 			log.Err(err).Msg("observeChain error")
 			continue
 		}
-
+		chainOb.observeFailedTx()
 	}
 }
 
@@ -132,7 +134,10 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	}
 }
 
-
+func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string)  {
+	hash := ethcommon.HexToHash(txhash)
+	chainOb.txWatchList[hash] = sendhash
+}
 
 
 func (chainOb *ChainObserver) PostGasPrice() error {
@@ -248,6 +253,25 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		return err
 	}
 	return nil
+}
+
+func (chainOb *ChainObserver) observeFailedTx()  {
+	for txhash, sendHash := range chainOb.txWatchList {
+		receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
+		if err != nil {
+			continue
+		}
+		if receipt.Status == 0 { // failed tx
+			log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+			_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+			if err != nil {
+				log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
+			}
+		} else {
+			log.Debug().Msgf("success tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+		}
+		delete(chainOb.txWatchList, txhash)
+	}
 }
 
 func (chainOb *ChainObserver) observeChain() error {
@@ -368,6 +392,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				vLog.BlockNumber,
 				mMint,
 				common.ReceiveStatus_Success,
+				chainOb.chain.String(),
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting confirmation to meta core")
@@ -394,6 +419,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				vLog.BlockNumber,
 				mMint,
 				common.ReceiveStatus_Success,
+				chainOb.chain.String(),
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting confirmation to meta core")

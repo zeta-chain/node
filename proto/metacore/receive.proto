@@ -15,4 +15,5 @@ message Receive {
   uint64 finalizedMetaHeight = 6;
   repeated string signers = 7;
   common.ReceiveStatus status = 8;
+  string chain = 9;
 }

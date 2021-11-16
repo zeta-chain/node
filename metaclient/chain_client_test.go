@@ -39,6 +39,9 @@ func (s *ChainClientSuite) TestPolygonClient(c *C) {
 
 	_, err = client.TransactionReceipt(context.TODO(), ethcommon.HexToHash("0x2c5d00aa638f04e49eb5d86499d1ea25d6ed1c62279008b93963d09b70fba270"))
 	c.Assert(err, NotNil)
+
+	x := ethcommon.HexToHash("0x33")
+	c.Log(x)
 }
 
 func (s *ChainClientSuite) TestBSCClient(c *C) {
