@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/Meta-Protocol/metacore/common"
 	"github.com/spf13/cobra"
 	"strconv"
 
@@ -31,7 +32,7 @@ func CmdReceiveConfirmation() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint))
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), common.ReceiveStatus_Success)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/Meta-Protocol/metacore/common"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
@@ -33,6 +34,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			OutBlockHeight:      msg.OutBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
+			Status:              msg.Status,
 		}
 	} else {
 		receive.Signers = append(receive.Signers, msg.Creator)
@@ -40,26 +42,28 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 
 	//TODO: do proper super majority check
 	if len(receive.Signers) == 2 {
-		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
-		if !isFound {
-			lastblock = types.LastBlockHeight{
-				Creator:           msg.Creator,
-				Index:             send.ReceiverChain,
-				Chain:             send.ReceiverChain,
-				LastSendHeight:    0,
-				LastReceiveHeight: msg.OutBlockHeight,
+		if receive.Status == common.ReceiveStatus_Success {
+			receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
+			lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
+			if !isFound {
+				lastblock = types.LastBlockHeight{
+					Creator:           msg.Creator,
+					Index:             send.ReceiverChain,
+					Chain:             send.ReceiverChain,
+					LastSendHeight:    0,
+					LastReceiveHeight: msg.OutBlockHeight,
+				}
+			} else {
+				lastblock.LastSendHeight = msg.OutBlockHeight
 			}
-		} else {
-			lastblock.LastSendHeight = msg.OutBlockHeight
+			k.SetLastBlockHeight(ctx, lastblock)
+			if send.Status == types.SendStatus_Abort {
+				send.Status = types.SendStatus_Reverted
+			} else {
+				send.Status = types.SendStatus_Mined
+			}
+			k.SetSend(ctx, send)
 		}
-		k.SetLastBlockHeight(ctx, lastblock)
-		if send.Status == types.SendStatus_Abort{
-			send.Status = types.SendStatus_Reverted
-		} else {
-			send.Status = types.SendStatus_Mined
-		}
-		k.SetSend(ctx, send)
 	}
 
 	k.SetReceive(ctx, receive)

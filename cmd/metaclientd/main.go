@@ -100,9 +100,6 @@ func mock_integration_test() {
 	mo2 := mc.NewCoreObserver(bridge2, signerMap2, *chainClientMap2)
 	mo2.MonitorCore()
 
-
-
-
 	// wait....
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
