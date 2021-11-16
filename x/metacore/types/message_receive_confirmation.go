@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/Meta-Protocol/metacore/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -8,13 +9,14 @@ import (
 
 var _ sdk.Msg = &MsgReceiveConfirmation{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint string) *MsgReceiveConfirmation {
+func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus) *MsgReceiveConfirmation {
 	return &MsgReceiveConfirmation{
 		Creator:        creator,
 		SendHash:       sendHash,
 		OutTxHash:      outTxHash,
 		OutBlockHeight: outBlockHeight,
 		MMint:          mMint,
+		Status:         status,
 	}
 }
 

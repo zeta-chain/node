@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 
 import "gogoproto/gogo.proto";
+import "common/common.proto";
 
 message Receive {
   string creator = 1;
@@ -13,4 +14,5 @@ message Receive {
   uint64 outBlockHeight = 5;
   uint64 finalizedMetaHeight = 6;
   repeated string signers = 7;
+  common.ReceiveStatus status = 8;
 }

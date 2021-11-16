@@ -143,6 +143,7 @@ func (co *CoreObserver) MonitorCore() {
 						}
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
+					co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created)
 				}
 
 			}

@@ -367,6 +367,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
+				common.ReceiveStatus_Success,
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting confirmation to meta core")
@@ -392,6 +393,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
+				common.ReceiveStatus_Success,
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting confirmation to meta core")
