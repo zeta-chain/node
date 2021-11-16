@@ -32,7 +32,7 @@ func CmdReceiveConfirmation() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), common.ReceiveStatus_Success)
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), common.ReceiveStatus_Success, "ETH")
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

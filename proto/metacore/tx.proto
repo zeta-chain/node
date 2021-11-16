@@ -44,6 +44,7 @@ message MsgReceiveConfirmation {
   uint64 outBlockHeight = 4;
   string mMint = 5;
   common.ReceiveStatus status = 6;
+  string chain = 7;
 }
 
 message MsgReceiveConfirmationResponse {

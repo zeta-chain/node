@@ -19949,6 +19949,8 @@ paths:
                         - Success
                         - Failed
                       default: Created
+                    chain:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -20081,6 +20083,8 @@ paths:
                       - Success
                       - Failed
                     default: Created
+                  chain:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30912,6 +30916,8 @@ definitions:
                 - Success
                 - Failed
               default: Created
+            chain:
+              type: string
       pagination:
         type: object
         properties:
@@ -31169,6 +31175,8 @@ definitions:
               - Success
               - Failed
             default: Created
+          chain:
+            type: string
   MetaProtocol.metacore.metacore.QueryGetSendResponse:
     type: object
     properties:
@@ -31260,6 +31268,8 @@ definitions:
           - Success
           - Failed
         default: Created
+      chain:
+        type: string
   MetaProtocol.metacore.metacore.Send:
     type: object
     properties:
