@@ -19318,6 +19318,24 @@ paths:
                     medianBlock:
                       type: string
                       format: uint64
+                    supply:
+                      type: object
+                      additionalProperties:
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                          blockNum:
+                            type: string
+                            format: uint64
+                    medianSupply:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        blockNum:
+                          type: string
+                          format: uint64
               pagination:
                 type: object
                 properties:
@@ -19447,6 +19465,24 @@ paths:
                   medianBlock:
                     type: string
                     format: uint64
+                  supply:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+                        blockNum:
+                          type: string
+                          format: uint64
+                  medianSupply:
+                    type: object
+                    properties:
+                      value:
+                        type: string
+                      blockNum:
+                        type: string
+                        format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -20108,6 +20144,9 @@ paths:
                         - Finalized
                         - Mined
                         - Confirmed
+                        - Abort
+                        - Reverted
+                        - Aborted
                       default: Created
                     broadcaster:
                       type: string
@@ -20116,6 +20155,8 @@ paths:
                       type: string
                       format: uint64
                     gasPrice:
+                      type: string
+                    statusMessage:
                       type: string
               pagination:
                 type: object
@@ -20261,6 +20302,9 @@ paths:
                       - Finalized
                       - Mined
                       - Confirmed
+                      - Abort
+                      - Reverted
+                      - Aborted
                     default: Created
                   broadcaster:
                     type: string
@@ -20269,6 +20313,8 @@ paths:
                     type: string
                     format: uint64
                   gasPrice:
+                    type: string
+                  statusMessage:
                     type: string
         default:
           description: An unexpected error response.
@@ -30505,6 +30551,32 @@ definitions:
       medianBlock:
         type: string
         format: uint64
+      supply:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            value:
+              type: string
+            blockNum:
+              type: string
+              format: uint64
+      medianSupply:
+        type: object
+        properties:
+          value:
+            type: string
+          blockNum:
+            type: string
+            format: uint64
+  MetaProtocol.metacore.metacore.GasPrice.ValueBlockPair:
+    type: object
+    properties:
+      value:
+        type: string
+      blockNum:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30647,6 +30719,24 @@ definitions:
             medianBlock:
               type: string
               format: uint64
+            supply:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  blockNum:
+                    type: string
+                    format: uint64
+            medianSupply:
+              type: object
+              properties:
+                value:
+                  type: string
+                blockNum:
+                  type: string
+                  format: uint64
       pagination:
         type: object
         properties:
@@ -30871,6 +30961,9 @@ definitions:
                 - Finalized
                 - Mined
                 - Confirmed
+                - Abort
+                - Reverted
+                - Aborted
               default: Created
             broadcaster:
               type: string
@@ -30879,6 +30972,8 @@ definitions:
               type: string
               format: uint64
             gasPrice:
+              type: string
+            statusMessage:
               type: string
       pagination:
         type: object
@@ -30955,6 +31050,24 @@ definitions:
           medianBlock:
             type: string
             format: uint64
+          supply:
+            type: object
+            additionalProperties:
+              type: object
+              properties:
+                value:
+                  type: string
+                blockNum:
+                  type: string
+                  format: uint64
+          medianSupply:
+            type: object
+            properties:
+              value:
+                type: string
+              blockNum:
+                type: string
+                format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
@@ -31071,6 +31184,9 @@ definitions:
               - Finalized
               - Mined
               - Confirmed
+              - Abort
+              - Reverted
+              - Aborted
             default: Created
           broadcaster:
             type: string
@@ -31079,6 +31195,8 @@ definitions:
             type: string
             format: uint64
           gasPrice:
+            type: string
+          statusMessage:
             type: string
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
@@ -31147,6 +31265,9 @@ definitions:
           - Finalized
           - Mined
           - Confirmed
+          - Abort
+          - Reverted
+          - Aborted
         default: Created
       broadcaster:
         type: string
@@ -31156,6 +31277,8 @@ definitions:
         format: uint64
       gasPrice:
         type: string
+      statusMessage:
+        type: string
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:
@@ -31163,6 +31286,9 @@ definitions:
       - Finalized
       - Mined
       - Confirmed
+      - Abort
+      - Reverted
+      - Aborted
     default: Created
   common.PubKeySet:
     type: object
