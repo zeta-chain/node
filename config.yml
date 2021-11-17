@@ -12,3 +12,6 @@ client:
 faucet:
   name: bob
   coins: ["5token", "100000stake"]
+init:
+  config:
+      consensus.timeout_commit: "5s"
