@@ -39,9 +39,10 @@ func (b *MetachainBridge) PostSend(sender string, senderChain string, receiver s
 	return metaTxHash, nil
 }
 
-func (b *MetachainBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string) (string, error) {
+func (b *MetachainBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain)
+	log.Debug().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	metaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		log.Err(err).Msg("PostReceiveConfirmation broadcast fail")
