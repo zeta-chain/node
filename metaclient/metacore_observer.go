@@ -53,7 +53,7 @@ func (co *CoreObserver) MonitorCore() {
 				continue
 			}
 			for _, send := range sendList {
-				if types.SendStatus_name[int32(send.Status)] == "Finalized" {
+				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort  {
 					if _, found := co.sendMap[send.Index]; !found {
 						co.lock.Lock()
 						log.Info().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
@@ -62,7 +62,7 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
 					}
-				} else if types.SendStatus_name[int32(send.Status)] == "Mined" {
+				} else if send.Status == types.SendStatus_Mined  {
 					if send, found := co.sendMap[send.Index]; found {
 						co.lock.Lock()
 						if co.sendStatus[send.Index] != Mined {
@@ -93,8 +93,18 @@ func (co *CoreObserver) MonitorCore() {
 						time.Sleep(5 * time.Second)
 						continue
 					}
-					to := ethcommon.HexToAddress(send.Receiver)
-					toChain, err := common.ParseChain(send.ReceiverChain)
+
+					var to ethcommon.Address
+					var err error
+					var toChain common.Chain
+					if send.Status == types.SendStatus_Abort {
+						to = ethcommon.HexToAddress(send.Sender)
+						toChain, err = common.ParseChain(send.SenderChain)
+						log.Info().Msgf("Abort: reverting inbound")
+					} else {
+						to = ethcommon.HexToAddress(send.Receiver)
+						toChain, err = common.ParseChain(send.ReceiverChain)
+					}
 					if err != nil {
 						log.Err(err).Msg("ParseChain fail; skip")
 						time.Sleep(5 * time.Second)
@@ -103,7 +113,7 @@ func (co *CoreObserver) MonitorCore() {
 					signer := co.signerMap[toChain]
 					message := []byte(send.Message)
 
-					var gasLimit uint64 = 80000
+					var gasLimit uint64 = 90000
 
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
 					if send.Signers[send.Broadcaster] == myid {
@@ -119,36 +129,12 @@ func (co *CoreObserver) MonitorCore() {
 						}
 						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 						if err != nil {
-							log.Err(err).Msg("singer %s error minting received transaction")
+							log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+							continue
 						}
 						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
-
-					//for {
-					//	tx, isPending, err := signer.client.TransactionByHash(context.Background(), ethcommon.HexToHash(outTxHash))
-					//	if err != nil {
-					//		log.Warn().Msgf("TransactionByHash %s err %s", outTxHash, err)
-					//		time.Sleep(2*time.Second)
-					//		continue
-					//	}
-					//	if !isPending {
-					//		receipt, err := signer.client.TransactionReceipt(context.Background(), tx.Hash())
-					//		if err != nil {
-					//			log.Err(err).Msg("TransactionReceipt")
-					//		}
-					//		if receipt.Status == 1 { // success execution
-					//			fmt.Printf("PostReceive %s %s %d\n", send.Index[:6], outTxHash[:6], receipt.BlockNumber.Uint64())
-					//			metahash, err := co.bridge.PostReceiveConfirmation(send.Index, outTxHash, receipt.BlockNumber.Uint64(), "111")
-					//			if err != nil {
-					//				log.Err(err).Msgf("PostReceiveConfirmation metahash %s", metahash)
-					//			}
-					//		}
-					//		break
-					//	}
-					//	time.Sleep(2*time.Second)
-					//}
-
 				}
 
 			}

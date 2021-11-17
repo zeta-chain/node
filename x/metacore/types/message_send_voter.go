@@ -60,14 +60,15 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
 	}
 
-	receiverChain, err := common.ParseChain(msg.ReceiverChain)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid receiver chain (%s): %s", err, msg.ReceiverChain)
-	}
-	_, err = common.NewAddress(msg.Receiver, receiverChain)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid receiver address (%s): %s", err, msg.Receiver)
-	}
+	// TODO: Verify the following logic: should validate receiverChain in msg handler rather than denying it here.
+	//receiverChain, err := common.ParseChain(msg.ReceiverChain)
+	//if err != nil {
+	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid receiver chain (%s): %s", err, msg.ReceiverChain)
+	//}
+	//_, err = common.NewAddress(msg.Receiver, receiverChain)
+	//if err != nil {
+	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid receiver address (%s): %s", err, msg.Receiver)
+	//}
 
 	if _, ok := big.NewInt(0).SetString(msg.MBurnt, 10); !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s", err, msg.MBurnt)
