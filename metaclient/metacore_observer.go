@@ -24,20 +24,26 @@ const (
 
 type CoreObserver struct {
 	sendQueue  []*types.Send
-	sendMap    map[string]*types.Send
-	sendStatus map[string]TxStatus
+	sendMap    map[string]*types.Send // send.Index => send
+	sendStatus map[string]TxStatus // send.Index => status
+	recvMap    map[string]*types.Receive
+	recvStatus map[string]TxStatus
 	bridge     *MetachainBridge
 	signerMap  map[common.Chain]*Signer
+	clientMap  map[common.Chain]*ChainObserver
 	lock       sync.Mutex
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver) *CoreObserver {
 	co := CoreObserver{}
 	co.bridge = bridge
 	co.signerMap = signerMap
 	co.sendQueue = make([]*types.Send, 0)
 	co.sendMap = make(map[string]*types.Send)
 	co.sendStatus = make(map[string]TxStatus)
+	co.recvMap = make(map[string]*types.Receive)
+	co.recvStatus = make(map[string]TxStatus)
+	co.clientMap = clientMap
 	return &co
 }
 
@@ -48,15 +54,20 @@ func (co *CoreObserver) MonitorCore() {
 		for {
 			sendList, err := co.bridge.GetAllSend()
 			if err != nil {
-				fmt.Println("error requesting receives from metacore")
+				fmt.Println("error requesting sends from metacore")
 				time.Sleep(5 * time.Second)
 				continue
 			}
 			for _, send := range sendList {
 				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort  {
-					if _, found := co.sendMap[send.Index]; !found {
+					if oldSend, found := co.sendMap[send.Index]; !found || oldSend.Status != send.Status {
 						co.lock.Lock()
-						log.Info().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
+						if !found {
+							log.Debug().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
+						}
+						if found && oldSend.Status != send.Status {
+							log.Debug().Msgf("Old send status updated from %s to %s", types.SendStatus_name[int32(oldSend.Status)], types.SendStatus_name[int32(send.Status)])
+						}
 						co.sendMap[send.Index] = send
 						co.sendQueue = append(co.sendQueue, send)
 						co.sendStatus[send.Index] = Unprocessed
@@ -69,6 +80,37 @@ func (co *CoreObserver) MonitorCore() {
 							log.Info().Msgf("Send status changed to Mined")
 						}
 						co.sendStatus[send.Index] = Mined
+						co.lock.Unlock()
+					}
+				}
+			}
+			time.Sleep(5 * time.Second)
+
+		}
+
+	}()
+
+	go func() {
+		for {
+			recvList, err := co.bridge.GetAllReceive()
+			if err != nil {
+				fmt.Println("error requesting receives from metacore")
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			for _, recv:= range recvList {
+				if recv.Status == common.ReceiveStatus_Created {
+					if _, found := co.recvMap[recv.Index]; !found {
+						co.lock.Lock()
+						log.Debug().Msgf("New recv created with finalized block")
+						co.recvMap[recv.Index] = recv
+						co.recvStatus[recv.Index] = Unprocessed
+						chain, err := common.ParseChain(recv.Chain)
+						if err != nil {
+							fmt.Printf("recv chain invalid: %s\n", recv.Chain)
+							continue
+						}
+						co.clientMap[chain].AddTxToWatchList(recv.OutTxHash, recv.SendHash)
 						co.lock.Unlock()
 					}
 				}
@@ -113,28 +155,38 @@ func (co *CoreObserver) MonitorCore() {
 					signer := co.signerMap[toChain]
 					message := []byte(send.Message)
 
-					var gasLimit uint64 = 90000
+					var gasLimit uint64 = 90_000
 
 					log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
+					sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
+					if err != nil || len(sendHash) != 32 {
+						log.Err(err).Msgf("decode sendHash %s error", send.Index)
+					}
+					var sendhash [32]byte
+					copy(sendhash[:32], sendHash[:32])
+					gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
+					if !ok {
+						log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+					}
+					tx, err := signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+					if err != nil {
+						log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+						continue
+					}
+					outTxHash := tx.Hash().Hex()
+					fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					if send.Signers[send.Broadcaster] == myid {
-						sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
-						if err != nil || len(sendHash) != 32 {
-							log.Err(err).Msgf("decode sendHash %s error", send.Index)
-						}
-						var sendhash [32]byte
-						copy(sendhash[:32], sendHash[:32])
-						gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
-						if !ok {
-							log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
-						}
-						outTxHash, err := signer.MMint(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+						err := signer.Broadcast(tx)
 						if err != nil {
-							log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+							log.Err(err).Msgf("Broadcast error: nonce %d", send.Nonce)
 							continue
 						}
-						fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
+					_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
+					if err != nil {
+						log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+					}
 				}
 
 			}
@@ -142,5 +194,7 @@ func (co *CoreObserver) MonitorCore() {
 		}
 
 	}()
+
+
 
 }

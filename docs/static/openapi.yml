@@ -19942,6 +19942,15 @@ paths:
                       type: array
                       items:
                         type: string
+                    status:
+                      type: string
+                      enum:
+                        - Created
+                        - Success
+                        - Failed
+                      default: Created
+                    chain:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -20067,6 +20076,15 @@ paths:
                     type: array
                     items:
                       type: string
+                  status:
+                    type: string
+                    enum:
+                      - Created
+                      - Success
+                      - Failed
+                    default: Created
+                  chain:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -30891,6 +30909,15 @@ definitions:
               type: array
               items:
                 type: string
+            status:
+              type: string
+              enum:
+                - Created
+                - Success
+                - Failed
+              default: Created
+            chain:
+              type: string
       pagination:
         type: object
         properties:
@@ -31141,6 +31168,15 @@ definitions:
             type: array
             items:
               type: string
+          status:
+            type: string
+            enum:
+              - Created
+              - Success
+              - Failed
+            default: Created
+          chain:
+            type: string
   MetaProtocol.metacore.metacore.QueryGetSendResponse:
     type: object
     properties:
@@ -31225,6 +31261,15 @@ definitions:
         type: array
         items:
           type: string
+      status:
+        type: string
+        enum:
+          - Created
+          - Success
+          - Failed
+        default: Created
+      chain:
+        type: string
   MetaProtocol.metacore.metacore.Send:
     type: object
     properties:
@@ -31298,3 +31343,10 @@ definitions:
       ed25519:
         type: string
     title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
+  common.ReceiveStatus:
+    type: string
+    enum:
+      - Created
+      - Success
+      - Failed
+    default: Created

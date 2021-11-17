@@ -102,6 +102,30 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	return tx.Hash().Hex(), nil
 }
 
+func (signer *Signer) SignOutboundTx(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error){
+	if len(sendHash) < 32 {
+		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
+	}
+	var data []byte
+	var err error
+	if signer.chain == common.ETHChain {
+		data, err = signer.abi.Pack("unlock", to, amount, sendHash)
+	} else {
+		data, err = signer.abi.Pack("mint", to, amount, sendHash)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
+}
+
+
 
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey

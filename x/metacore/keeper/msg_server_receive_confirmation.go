@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/Meta-Protocol/metacore/common"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
@@ -18,8 +19,10 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("sendHash %s does not exist", index))
 	}
 
-	if msg.MMint != send.MMint {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send MMint %s", msg.MMint, send.MMint))
+	if msg.Status != common.ReceiveStatus_Failed {
+		if msg.MMint != send.MMint {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send MMint %s", msg.MMint, send.MMint))
+		}
 	}
 
 	receiveIndex := msg.Digest()
@@ -33,6 +36,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			OutBlockHeight:      msg.OutBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
+			Status:              msg.Status,
+			Chain:               msg.Chain,
 		}
 	} else {
 		receive.Signers = append(receive.Signers, msg.Creator)
@@ -54,12 +59,20 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			lastblock.LastSendHeight = msg.OutBlockHeight
 		}
 		k.SetLastBlockHeight(ctx, lastblock)
-		if send.Status == types.SendStatus_Abort{
-			send.Status = types.SendStatus_Reverted
-		} else {
-			send.Status = types.SendStatus_Mined
+
+		if receive.Status == common.ReceiveStatus_Success {
+			if send.Status == types.SendStatus_Abort {
+				send.Status = types.SendStatus_Reverted
+			} else {
+				send.Status = types.SendStatus_Mined
+			}
+		} else if receive.Status == common.ReceiveStatus_Failed {
+			if send.Status == types.SendStatus_Finalized {
+				send.Status = types.SendStatus_Abort
+			}
 		}
 		k.SetSend(ctx, send)
+
 	}
 
 	k.SetReceive(ctx, receive)
