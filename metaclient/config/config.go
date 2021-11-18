@@ -23,6 +23,7 @@ const (
 )
 
 // Constants
+// #nosec G101
 const (
 	// Routers
 	ETH_METALOCK_ADDRESS  = "0x6acb5209d48d80E457Faeb70550b78959490d6b5"
