@@ -3,6 +3,7 @@ package metaclient
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/rs/zerolog/log"
@@ -25,43 +26,59 @@ type ChainObserver struct {
 	endpoint  string
 	ticker    *time.Ticker
 	abiString string
-	abi       *abi.ABI
+	abi       *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	zetaAbi   *abi.ABI // only useful for ethereum; the token contract
 	client    *ethclient.Client
 	bridge    *MetachainBridge
 	lastBlock uint64
+	confCount uint64 // must wait this many blocks to be considered "confirmed"
+	txWatchList map[ethcommon.Hash]string
 }
 
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon.Address) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
+	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 
 	// Initialize constants
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.router = config.POLY_ROUTER
+		chainOb.router = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.META_ABI
+		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
+
 	case common.ETHChain:
 		chainOb.chain = chain
-		chainOb.router = config.ETH_ROUTER
+		chainOb.router = config.ETH_METALOCK_ADDRESS
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.META_LOCK_ABI
+		chainOb.abiString = config.ETH_ZETA_LOCK_ABI
+		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
+
 	case common.BSCChain:
 		chainOb.chain = chain
-		chainOb.router = config.BSC_ROUTER
+		chainOb.router = config.BSC_TOKEN_ADDRESS
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.BSC_META_ABI
+		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 	}
 	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
 	if err != nil {
 		return nil, err
 	}
 	chainOb.abi = &contractABI
+	if chain == common.ETHChain {
+		tokenABI, err := abi.JSON(strings.NewReader(config.ETH_META_ABI))
+		if err != nil {
+			return nil, err
+		}
+		chainOb.zetaAbi = &tokenABI
+	}
 
 	// Dial the router
 	client, err := ethclient.Dial(chainOb.endpoint)
@@ -98,12 +115,12 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 func (chainOb *ChainObserver) WatchRouter() {
 	// At each tick, query the router
 	for range chainOb.ticker.C {
-		err := chainOb.queryRouter()
+		err := chainOb.observeChain()
 		if err != nil {
-			log.Err(err).Msg("queryRouter error")
+			log.Err(err).Msg("observeChain error")
 			continue
 		}
-
+		chainOb.observeFailedTx()
 	}
 }
 
@@ -117,7 +134,14 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	}
 }
 
+func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string)  {
+	hash := ethcommon.HexToHash(txhash)
+	chainOb.txWatchList[hash] = sendhash
+}
+
+
 func (chainOb *ChainObserver) PostGasPrice() error {
+	// GAS PRICE
 	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
@@ -128,7 +152,102 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), blockNum)
+
+	// SUPPLY
+	var supply string // lockedAmount on ETH, totalSupply on other chains
+	if chainOb.chain == common.ETHChain {
+		input, err := chainOb.abi.Pack("getLockedAmount")
+		if err != nil {
+			return fmt.Errorf("fail to getLockedAmount")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.ETH_METALOCK_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, big.NewInt(0).SetUint64(bn))
+		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+			return err
+		}
+		output, err := chainOb.abi.Unpack("getLockedAmount", res)
+		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+			return err
+		}
+		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
+		supply = lockedAmount.String()
+	} else if chainOb.chain == common.BSCChain {
+		input, err := chainOb.abi.Pack("totalSupply")
+		if err != nil {
+			return fmt.Errorf("fail to totalSupply")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, big.NewInt(0).SetUint64(bn))
+		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+			return err
+		}
+		output, err := chainOb.abi.Unpack("totalSupply", res)
+		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+			return err
+		}
+		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+		supply = totalSupply.String()
+	} else if chainOb.chain == common.POLYGONChain {
+		input, err := chainOb.abi.Pack("totalSupply")
+		if err != nil {
+			return fmt.Errorf("fail to totalSupply")
+		}
+		bn, err := chainOb.client.BlockNumber(context.TODO())
+		if err != nil {
+			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+			return err
+		}
+		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
+		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+			From: fromAddr,
+			To: &toAddr,
+			Data: input,
+		}, big.NewInt(0).SetUint64(bn))
+		if err != nil {
+			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+			return err
+		}
+		output, err := chainOb.abi.Unpack("totalSupply", res)
+		if err != nil {
+			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+			return err
+		}
+		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+		supply = totalSupply.String()
+	} else {
+		log.Error().Msgf("chain not supported %s", chainOb.chain)
+		return fmt.Errorf("unsupported chain %s", chainOb.chain)
+	}
+
+	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
@@ -136,18 +255,39 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) queryRouter() error {
+func (chainOb *ChainObserver) observeFailedTx()  {
+	for txhash, sendHash := range chainOb.txWatchList {
+		receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
+		if err != nil {
+			continue
+		}
+		if receipt.Status == 0 { // failed tx
+			log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+			_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+			if err != nil {
+				log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
+			}
+		} else {
+			log.Debug().Msgf("success tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+		}
+		delete(chainOb.txWatchList, txhash)
+	}
+}
+
+func (chainOb *ChainObserver) observeChain() error {
 	header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
 	}
+	// "confirmed" current block number
+	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
-	if header.Number.Uint64() <= chainOb.lastBlock {
+	if confirmedBlockNum <= chainOb.lastBlock {
 		return nil
 	}
-	toBlock := chainOb.lastBlock + 10 // read 10 blocks at time at most
-	if toBlock >= header.Number.Uint64() {
-		toBlock = header.Number.Uint64()
+	toBlock := chainOb.lastBlock + 10 // read at most 10 blocks in one go
+	if toBlock >= confirmedBlockNum {
+		toBlock = confirmedBlockNum
 	}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},
@@ -170,11 +310,11 @@ func (chainOb *ChainObserver) queryRouter() error {
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
 	// Unlock event signature
-	logUnlockSignature := []byte("Unlock(address,uint256)")
+	logUnlockSignature := []byte("Unlock(address,uint256,bytes32)")
 	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
 
 	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,address,uint256,uint256,string)")
+	logBurnSendSignature := []byte("BurnSend(address,string,uint256,string,bytes)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
 	// MMinted event signature
@@ -200,7 +340,7 @@ func (chainOb *ChainObserver) queryRouter() error {
 				returnVal[1].(string),
 				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				"0",
+				"",
 				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
@@ -221,11 +361,11 @@ func (chainOb *ChainObserver) queryRouter() error {
 			metaHash, err := chainOb.bridge.PostSend(
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
-				returnVal[1].(ethcommon.Address).String(),
-				returnVal[3].(*big.Int).String(),
+				returnVal[1].(string),
+				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				"0",
-				returnVal[4].(string), // TODO: figure out appropriate format for message
+				"",
+				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -242,24 +382,24 @@ func (chainOb *ChainObserver) queryRouter() error {
 				continue
 			}
 
-			// Post confirmation to meta core
-			var sendHash, outTxHash string
-
-			// sendHash = empty string for now
-			// outTxHash = tx hash returned by signer.MMint
+			sendhash := returnVal[2].([32]byte)
+			sendHash := "0x" + hex.EncodeToString(sendhash[:])
 			var rxAddress string = returnVal[0].(ethcommon.Address).String()
 			var mMint string = returnVal[1].(*big.Int).String()
 			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
 				sendHash,
-				outTxHash,
+				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
+				common.ReceiveStatus_Success,
+				chainOb.chain.String(),
 			)
 			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta score")
+				log.Err(err).Msg("error posting confirmation to meta core")
 				continue
 			}
 			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
+			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6],vLog.BlockNumber, mMint)
 
 		case logMMintedSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)
@@ -278,9 +418,11 @@ func (chainOb *ChainObserver) queryRouter() error {
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
+				common.ReceiveStatus_Success,
+				chainOb.chain.String(),
 			)
 			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta score")
+				log.Err(err).Msg("error posting confirmation to meta core")
 				continue
 			}
 			log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])

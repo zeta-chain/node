@@ -83,44 +83,22 @@ func mock_integration_test() {
 		return
 	}
 
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
+	chainClientMap2, err := CreateChainClientMap(bridge2, tss)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
+
 	log.Info().Msg("starting metacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
 	mo1.MonitorCore()
-	mo2 := mc.NewCoreObserver(bridge2, signerMap2)
+	mo2 := mc.NewCoreObserver(bridge2, signerMap2, *chainClientMap2)
 	mo2.MonitorCore()
-
-	log.Info().Msg("starting eth observer...")
-	eth1, err := mc.NewChainObserver(common.ETHChain, bridge1, tss.Address())
-	if err != nil {
-		log.Err(err).Msg("NewChainObserver")
-		return
-	}
-	go eth1.WatchRouter()
-	go eth1.WatchGasPrice()
-	eth2, err := mc.NewChainObserver(common.ETHChain, bridge2, tss.Address())
-	if err != nil {
-		log.Err(err).Msg("NewChainObserver ETH")
-		return
-	}
-	go eth2.WatchRouter()
-	go eth2.WatchGasPrice()
-
-	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge1, tss.Address())
-	if err != nil {
-		log.Err(err).Msg("NewChainObserver")
-		return
-	}
-	go bsc1.WatchRouter()
-	go bsc1.WatchGasPrice()
-	bsc2, err := mc.NewChainObserver(common.BSCChain, bridge2, tss.Address())
-	if err != nil {
-		log.Err(err).Msg("NewChainObserver")
-		return
-	}
-	go bsc2.WatchRouter()
-	go bsc2.WatchGasPrice()
-
 
 	// wait....
 	ch := make(chan os.Signal, 1)
@@ -149,21 +127,64 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	metaContractAddress := ethcommon.HexToAddress(mcconfig.META_TEST_GOERLI_ADDRESS)
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.GOERLI_RPC_ENDPOINT, tss.Address(), tss, mcconfig.META_TEST_GOERLI_ABI, metaContractAddress)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss.Address(), tss, mcconfig.ETH_ZETA_LOCK_ABI, ethcommon.HexToAddress(mcconfig.ETH_METALOCK_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_META_ABI, ethcommon.HexToAddress(mcconfig.BSC_ROUTER))
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.BSC_ZETA_ABI, ethcommon.HexToAddress(mcconfig.BSC_TOKEN_ADDRESS))
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
+		return nil, err
+	}
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.BSC_ZETA_ABI, ethcommon.HexToAddress(mcconfig.POLYGON_TOKEN_ADDRESS))
+	if err != nil {
+		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
 		return nil, err
 	}
 	signerMap := map[common.Chain]*mc.Signer{
 		common.ETHChain: ethSigner,
 		common.BSCChain: bscSigner,
+		common.POLYGONChain: polygonSigner,
 	}
 
 	return signerMap, nil
+}
+
+func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TestSigner) (*map[common.Chain]*mc.ChainObserver, error){
+	log.Info().Msg("starting eth observer...")
+	clientMap := make(map[common.Chain]*mc.ChainObserver)
+	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss.Address())
+	if err != nil {
+		log.Err(err).Msg("ETH NewChainObserver")
+		return nil, err
+	}
+	clientMap[common.ETHChain] = eth1
+	go eth1.WatchRouter()
+	go eth1.WatchGasPrice()
+
+
+	log.Info().Msg("starting bsc observer...")
+	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss.Address())
+	if err != nil {
+		log.Err(err).Msg("BSC NewChainObserver")
+		return nil, err
+	}
+	clientMap[common.BSCChain] = bsc1
+	go bsc1.WatchRouter()
+	go bsc1.WatchGasPrice()
+
+
+
+	log.Info().Msg("starting polygon observer...")
+	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss.Address())
+	if err != nil {
+		log.Err(err).Msg("POLYGON NewChainObserver")
+		return nil, err
+	}
+	clientMap[common.POLYGONChain] = poly1
+	go poly1.WatchRouter()
+	go poly1.WatchGasPrice()
+
+	return &clientMap, nil
 }
