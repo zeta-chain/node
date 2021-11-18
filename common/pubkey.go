@@ -89,7 +89,7 @@ func (pubKey PubKey) GetAddress(chain Chain) (Address, error) {
 			return NoAddress, err
 		}
 		str := strings.ToLower(eth.PubkeyToAddress(*pub.ToECDSA()).String())
-		return NewAddress(str)
+		return NewAddress(str, chain)
 	}
 	return NoAddress, nil
 }

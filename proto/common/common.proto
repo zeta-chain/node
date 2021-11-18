@@ -14,3 +14,10 @@ message PubKeySet {
   string secp256k1 = 1 [(gogoproto.casttype) = "PubKey", (gogoproto.customname) = "Secp256k1"];
   string ed25519   = 2 [(gogoproto.casttype) = "PubKey"];
 }
+
+enum ReceiveStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  Created = 0; // some observer sees inbound tx
+  Success = 1;
+  Failed = 2;
+}

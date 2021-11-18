@@ -15,36 +15,35 @@ var NoAddress Address = Address("")
 const ETHAddressLen = 42
 
 // NewAddress create a new Address. Supports Ethereum, BSC, Polygon
-func NewAddress(address string) (Address, error) {
-	if len(address) == 0 {
-		return NoAddress, nil
-	}
+func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
-	if eth.IsHexAddress(address) {
-		return Address(address), nil
+	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain {
+		if eth.IsHexAddress(address) {
+			return Address(address), nil
+		}
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
 }
 
-func (addr Address) IsChain(chain Chain) bool {
-	switch chain {
-	case ETHChain:
-		return strings.HasPrefix(addr.String(), "0x")
-	default:
-		return false
-	}
-}
+//func (addr Address) IsChain(chain Chain) bool {
+//	switch chain {
+//	case ETHChain:
+//		return strings.HasPrefix(addr.String(), "0x")
+//	default:
+//		return false
+//	}
+//}
 
-func (addr Address) GetChain() Chain {
-	for _, chain := range []Chain{ETHChain} {
-		if addr.IsChain(chain) {
-			return chain
-		}
-	}
-	return EmptyChain
-}
+//func (addr Address) GetChain() Chain {
+//	for _, chain := range []Chain{ETHChain} {
+//		if addr.IsChain(chain) {
+//			return chain
+//		}
+//	}
+//	return EmptyChain
+//}
 
 func (addr Address) GetNetwork(chain Chain) ChainNetwork {
 	switch chain {
