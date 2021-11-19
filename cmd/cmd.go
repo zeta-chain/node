@@ -13,4 +13,5 @@ const (
 	METAChainCoinType    uint32 = 933
 	METAChainHDPath      string = `m/44'/933'/0'/0/0`
 	NET                         = "MAINNET"
+	CHAINID                     = "testing"
 )
