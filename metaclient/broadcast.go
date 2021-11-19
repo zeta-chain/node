@@ -3,6 +3,7 @@ package metaclient
 import (
 	"fmt"
 	"github.com/Meta-Protocol/metacore/app"
+	"github.com/Meta-Protocol/metacore/cmd"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	stypes "github.com/cosmos/cosmos-sdk/types"
@@ -83,7 +84,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 func (b *MetachainBridge) GetContext() client.Context {
 	ctx := client.Context{}
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	ctx = ctx.WithChainID("metacore")
+	ctx = ctx.WithChainID(cmd.CHAINID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
 	ctx = ctx.WithFromAddress(b.keys.GetSignerInfo().GetAddress())
