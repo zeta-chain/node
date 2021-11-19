@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
-	"github.com/tendermint/tendermint/libs/rand"
 	"strconv"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
@@ -56,7 +55,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			lastblock.LastSendHeight = msg.InBlockHeight
 		}
 		k.SetLastBlockHeight(ctx, lastblock)
-		send.Broadcaster = uint64(rand.Intn(len(send.Signers)))
+		bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
+		send.Broadcaster = uint64(bftTime.Nanosecond() % len(send.Signers))
 
 		// validate; abort if  failed
 		abort := false
