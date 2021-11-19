@@ -28,16 +28,18 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 				msg.Creator: msg.BlockNumber,
 			},
 			MedianBlock: msg.BlockNumber,
-			Supply: map[string]*types.GasPrice_ValueBlockPair{
-				msg.Creator: {
-					Value:    msg.Supply,
-					BlockNum: msg.BlockNumber,
-				},
-			},
-			MedianSupply: &types.GasPrice_ValueBlockPair{
-				Value: msg.Supply,
-				BlockNum: msg.BlockNumber,
-			},
+			// TODO: fix supply data type; cannot use pointer
+			// Otherwise conesensus failure
+			//Supply: map[string]*types.GasPrice_ValueBlockPair{
+			//	msg.Creator: {
+			//		Value:    msg.Supply,
+			//		BlockNum: msg.BlockNumber,
+			//	},
+			//},
+			//MedianSupply: &types.GasPrice_ValueBlockPair{
+			//	Value: msg.Supply,
+			//	BlockNum: msg.BlockNumber,
+			//},
 		}
 	} else {
 		signer := msg.Creator
@@ -48,7 +50,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 			BlockNum: msg.BlockNumber,
 		}
 		gasPrice.Median, gasPrice.MedianBlock = calMedian(gasPrice.Prices, gasPrice.BlockNum)
-		gasPrice.MedianSupply = calMedianSupply(gasPrice.Supply)
+		//gasPrice.MedianSupply = calMedianSupply(gasPrice.Supply)
 	}
 	k.SetGasPrice(ctx, gasPrice)
 
@@ -67,7 +69,7 @@ func calMedianSupply(supplyMap map[string]*types.GasPrice_ValueBlockPair) *types
 		}
 		p = append(p, SignerValue{signer, supply, valueblock.BlockNum})
 	}
-	sort.Slice(p, func(i, j int) bool {
+	sort.SliceStable(p, func(i, j int) bool {
 		return p[i].Value.Cmp(p[j].Value) < 0
 	})
 	return &types.GasPrice_ValueBlockPair{p[len(p)/2].Value.String(), p[len(p)/2].BlockNum}
@@ -81,7 +83,7 @@ func calMedian(prices map[string]uint64, blocks map[string]uint64) (uint64, uint
 	for signer, price := range prices {
 		p = append(p, SignerValue{signer, big.NewInt(0).SetUint64(price), blocks[signer]})
 	}
-	sort.Slice(p, func(i, j int) bool {
+	sort.SliceStable(p, func(i, j int) bool {
 		return p[i].Value.Cmp(p[j].Value) < 0
 	})
 	median := p[len(p)/2]
