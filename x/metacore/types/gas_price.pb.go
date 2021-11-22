@@ -24,13 +24,13 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type GasPrice struct {
-	Creator     string            `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Index       string            `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	Chain       string            `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain,omitempty"`
-	Prices      map[string]uint64 `protobuf:"bytes,4,rep,name=prices,proto3" json:"prices,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Median      uint64            `protobuf:"varint,5,opt,name=median,proto3" json:"median,omitempty"`
-	BlockNum    map[string]uint64 `protobuf:"bytes,6,rep,name=blockNum,proto3" json:"blockNum,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	MedianBlock uint64            `protobuf:"varint,7,opt,name=medianBlock,proto3" json:"medianBlock,omitempty"`
+	Creator     string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Index       string   `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
+	Chain       string   `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain,omitempty"`
+	Signers     []string `protobuf:"bytes,4,rep,name=signers,proto3" json:"signers,omitempty"`
+	BlockNums   []uint64 `protobuf:"varint,5,rep,packed,name=blockNums,proto3" json:"blockNums,omitempty"`
+	Prices      []uint64 `protobuf:"varint,6,rep,packed,name=prices,proto3" json:"prices,omitempty"`
+	MedianIndex uint64   `protobuf:"varint,7,opt,name=medianIndex,proto3" json:"medianIndex,omitempty"`
 }
 
 func (m *GasPrice) Reset()         { *m = GasPrice{} }
@@ -87,66 +87,59 @@ func (m *GasPrice) GetChain() string {
 	return ""
 }
 
-func (m *GasPrice) GetPrices() map[string]uint64 {
+func (m *GasPrice) GetSigners() []string {
+	if m != nil {
+		return m.Signers
+	}
+	return nil
+}
+
+func (m *GasPrice) GetBlockNums() []uint64 {
+	if m != nil {
+		return m.BlockNums
+	}
+	return nil
+}
+
+func (m *GasPrice) GetPrices() []uint64 {
 	if m != nil {
 		return m.Prices
 	}
 	return nil
 }
 
-func (m *GasPrice) GetMedian() uint64 {
+func (m *GasPrice) GetMedianIndex() uint64 {
 	if m != nil {
-		return m.Median
-	}
-	return 0
-}
-
-func (m *GasPrice) GetBlockNum() map[string]uint64 {
-	if m != nil {
-		return m.BlockNum
-	}
-	return nil
-}
-
-func (m *GasPrice) GetMedianBlock() uint64 {
-	if m != nil {
-		return m.MedianBlock
+		return m.MedianIndex
 	}
 	return 0
 }
 
 func init() {
 	proto.RegisterType((*GasPrice)(nil), "MetaProtocol.metacore.metacore.GasPrice")
-	proto.RegisterMapType((map[string]uint64)(nil), "MetaProtocol.metacore.metacore.GasPrice.BlockNumEntry")
-	proto.RegisterMapType((map[string]uint64)(nil), "MetaProtocol.metacore.metacore.GasPrice.PricesEntry")
 }
 
 func init() { proto.RegisterFile("metacore/gas_price.proto", fileDescriptor_b9e5b34c42eaebdf) }
 
 var fileDescriptor_b9e5b34c42eaebdf = []byte{
-	// 337 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xcf, 0x6a, 0xfa, 0x40,
-	0x18, 0x74, 0x8d, 0x46, 0x7f, 0x2b, 0x3f, 0x28, 0x8b, 0x94, 0xc5, 0xc3, 0x12, 0x7a, 0xf2, 0xd2,
-	0x0d, 0xd8, 0x52, 0xfa, 0xe7, 0x26, 0x94, 0x5e, 0x6c, 0x91, 0x1c, 0x7b, 0x29, 0xeb, 0xba, 0xc4,
-	0xa0, 0xc9, 0xca, 0x66, 0x2d, 0xfa, 0x16, 0x7d, 0x88, 0x3e, 0x4c, 0x8f, 0x1e, 0x7b, 0x2c, 0xfa,
-	0x22, 0x65, 0x77, 0x93, 0xd4, 0x5e, 0x4a, 0x7b, 0x09, 0x33, 0xc3, 0xf7, 0xcd, 0x7c, 0x99, 0x04,
-	0xe2, 0x54, 0x68, 0xc6, 0xa5, 0x12, 0x61, 0xcc, 0xf2, 0xa7, 0xa5, 0x4a, 0xb8, 0xa0, 0x4b, 0x25,
-	0xb5, 0x44, 0xe4, 0x5e, 0x68, 0x36, 0x36, 0x90, 0xcb, 0x05, 0x2d, 0xc7, 0x2a, 0xd0, 0xeb, 0xc6,
-	0x32, 0x96, 0x76, 0x34, 0x34, 0xc8, 0x6d, 0x9d, 0xbc, 0x7a, 0xb0, 0x7d, 0xc7, 0xf2, 0xb1, 0x31,
-	0x42, 0x18, 0xb6, 0xb8, 0x12, 0x4c, 0x4b, 0x85, 0x41, 0x00, 0xfa, 0xff, 0xa2, 0x92, 0xa2, 0x2e,
-	0x6c, 0x26, 0xd9, 0x54, 0xac, 0x71, 0xdd, 0xea, 0x8e, 0x18, 0x95, 0xcf, 0x58, 0x92, 0x61, 0xcf,
-	0xa9, 0x96, 0xa0, 0x11, 0xf4, 0xed, 0x5d, 0x39, 0x6e, 0x04, 0x5e, 0xbf, 0x33, 0x38, 0xa7, 0x3f,
-	0x5f, 0x46, 0xcb, 0x7c, 0x6a, 0x9f, 0xf9, 0x6d, 0xa6, 0xd5, 0x26, 0x2a, 0x3c, 0xd0, 0x31, 0xf4,
-	0x53, 0x31, 0x4d, 0x58, 0x86, 0x9b, 0x01, 0xe8, 0x37, 0xa2, 0x82, 0xa1, 0x08, 0xb6, 0x27, 0x0b,
-	0xc9, 0xe7, 0x0f, 0xab, 0x14, 0xfb, 0x36, 0xe7, 0xe2, 0xd7, 0x39, 0xc3, 0x62, 0xd1, 0x25, 0x55,
-	0x3e, 0x28, 0x80, 0x1d, 0xe7, 0x6e, 0x07, 0x70, 0xcb, 0x06, 0x1e, 0x4a, 0xbd, 0x2b, 0xd8, 0x39,
-	0x38, 0x12, 0x1d, 0x41, 0x6f, 0x2e, 0x36, 0x45, 0x59, 0x06, 0x9a, 0x4a, 0x9e, 0xd9, 0x62, 0x25,
-	0x6c, 0x51, 0x8d, 0xc8, 0x91, 0xeb, 0xfa, 0x25, 0xe8, 0xdd, 0xc0, 0xff, 0xdf, 0x72, 0xff, 0xb2,
-	0x3c, 0x1c, 0xbd, 0xed, 0x08, 0xd8, 0xee, 0x08, 0xf8, 0xd8, 0x11, 0xf0, 0xb2, 0x27, 0xb5, 0xed,
-	0x9e, 0xd4, 0xde, 0xf7, 0xa4, 0xf6, 0x38, 0x88, 0x13, 0x3d, 0x5b, 0x4d, 0x28, 0x97, 0x69, 0x68,
-	0xde, 0xff, 0xb4, 0x2c, 0x20, 0xac, 0xfe, 0x94, 0xf5, 0x17, 0xd4, 0x9b, 0xa5, 0xc8, 0x27, 0xbe,
-	0xfd, 0xf6, 0x67, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x79, 0x7c, 0xd9, 0xc5, 0x4d, 0x02, 0x00,
-	0x00,
+	// 269 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0xc1, 0x4a, 0xc3, 0x30,
+	0x18, 0xc7, 0x1b, 0xdb, 0x75, 0x2e, 0xde, 0xc2, 0x90, 0x20, 0x12, 0x82, 0xa7, 0x5e, 0x6c, 0x41,
+	0xdf, 0xc0, 0x8b, 0x08, 0x2a, 0xa3, 0x47, 0x2f, 0x92, 0x66, 0x21, 0x0b, 0xae, 0x4d, 0x49, 0x32,
+	0x98, 0x6f, 0xe1, 0x33, 0x79, 0xf2, 0xb8, 0xa3, 0x47, 0x69, 0x5f, 0x44, 0x92, 0xae, 0xdb, 0x6e,
+	0xff, 0xdf, 0x2f, 0x5f, 0x3e, 0x92, 0x3f, 0xc4, 0xb5, 0x70, 0x8c, 0x6b, 0x23, 0x0a, 0xc9, 0xec,
+	0x7b, 0x6b, 0x14, 0x17, 0x79, 0x6b, 0xb4, 0xd3, 0x88, 0xbc, 0x08, 0xc7, 0x16, 0x3e, 0x72, 0xbd,
+	0xce, 0xc7, 0xb1, 0x43, 0xb8, 0x9a, 0x4b, 0x2d, 0x75, 0x18, 0x2d, 0x7c, 0x1a, 0x6e, 0xdd, 0x7c,
+	0x03, 0x78, 0xfe, 0xc8, 0xec, 0xc2, 0x2f, 0x42, 0x18, 0x4e, 0xb9, 0x11, 0xcc, 0x69, 0x83, 0x01,
+	0x05, 0xd9, 0xac, 0x1c, 0x11, 0xcd, 0xe1, 0x44, 0x35, 0x4b, 0xb1, 0xc5, 0x67, 0xc1, 0x0f, 0xe0,
+	0x2d, 0x5f, 0x31, 0xd5, 0xe0, 0x78, 0xb0, 0x01, 0xfc, 0x16, 0xab, 0x64, 0x23, 0x8c, 0xc5, 0x09,
+	0x8d, 0xfd, 0x96, 0x3d, 0xa2, 0x6b, 0x38, 0xab, 0xd6, 0x9a, 0x7f, 0xbc, 0x6e, 0x6a, 0x8b, 0x27,
+	0x34, 0xce, 0x92, 0xf2, 0x28, 0xd0, 0x25, 0x4c, 0xc3, 0x7f, 0x2c, 0x4e, 0xc3, 0xd1, 0x9e, 0x10,
+	0x85, 0x17, 0xb5, 0x58, 0x2a, 0xd6, 0x3c, 0x85, 0x17, 0x4c, 0x29, 0xc8, 0x92, 0xf2, 0x54, 0x3d,
+	0x3c, 0xff, 0x74, 0x04, 0xec, 0x3a, 0x02, 0xfe, 0x3a, 0x02, 0xbe, 0x7a, 0x12, 0xed, 0x7a, 0x12,
+	0xfd, 0xf6, 0x24, 0x7a, 0xbb, 0x93, 0xca, 0xad, 0x36, 0x55, 0xce, 0x75, 0x5d, 0xf8, 0x7e, 0x6e,
+	0xc7, 0x82, 0x8a, 0x43, 0x8f, 0xdb, 0x63, 0x74, 0x9f, 0xad, 0xb0, 0x55, 0x1a, 0x9a, 0xb9, 0xff,
+	0x0f, 0x00, 0x00, 0xff, 0xff, 0xf6, 0x32, 0x3c, 0xd6, 0x6b, 0x01, 0x00, 0x00,
 }
 
 func (m *GasPrice) Marshal() (dAtA []byte, err error) {
@@ -169,46 +162,52 @@ func (m *GasPrice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.MedianBlock != 0 {
-		i = encodeVarintGasPrice(dAtA, i, uint64(m.MedianBlock))
+	if m.MedianIndex != 0 {
+		i = encodeVarintGasPrice(dAtA, i, uint64(m.MedianIndex))
 		i--
 		dAtA[i] = 0x38
 	}
-	if len(m.BlockNum) > 0 {
-		for k := range m.BlockNum {
-			v := m.BlockNum[k]
-			baseI := i
-			i = encodeVarintGasPrice(dAtA, i, uint64(v))
-			i--
-			dAtA[i] = 0x10
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintGasPrice(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintGasPrice(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x32
-		}
-	}
-	if m.Median != 0 {
-		i = encodeVarintGasPrice(dAtA, i, uint64(m.Median))
-		i--
-		dAtA[i] = 0x28
-	}
 	if len(m.Prices) > 0 {
-		for k := range m.Prices {
-			v := m.Prices[k]
-			baseI := i
-			i = encodeVarintGasPrice(dAtA, i, uint64(v))
-			i--
-			dAtA[i] = 0x10
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintGasPrice(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintGasPrice(dAtA, i, uint64(baseI-i))
+		dAtA2 := make([]byte, len(m.Prices)*10)
+		var j1 int
+		for _, num := range m.Prices {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintGasPrice(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.BlockNums) > 0 {
+		dAtA4 := make([]byte, len(m.BlockNums)*10)
+		var j3 int
+		for _, num := range m.BlockNums {
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
+			}
+			dAtA4[j3] = uint8(num)
+			j3++
+		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintGasPrice(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintGasPrice(dAtA, i, uint64(len(m.Signers[iNdEx])))
 			i--
 			dAtA[i] = 0x22
 		}
@@ -266,27 +265,28 @@ func (m *GasPrice) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGasPrice(uint64(l))
 	}
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovGasPrice(uint64(l))
+		}
+	}
+	if len(m.BlockNums) > 0 {
+		l = 0
+		for _, e := range m.BlockNums {
+			l += sovGasPrice(uint64(e))
+		}
+		n += 1 + sovGasPrice(uint64(l)) + l
+	}
 	if len(m.Prices) > 0 {
-		for k, v := range m.Prices {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovGasPrice(uint64(len(k))) + 1 + sovGasPrice(uint64(v))
-			n += mapEntrySize + 1 + sovGasPrice(uint64(mapEntrySize))
+		l = 0
+		for _, e := range m.Prices {
+			l += sovGasPrice(uint64(e))
 		}
+		n += 1 + sovGasPrice(uint64(l)) + l
 	}
-	if m.Median != 0 {
-		n += 1 + sovGasPrice(uint64(m.Median))
-	}
-	if len(m.BlockNum) > 0 {
-		for k, v := range m.BlockNum {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovGasPrice(uint64(len(k))) + 1 + sovGasPrice(uint64(v))
-			n += mapEntrySize + 1 + sovGasPrice(uint64(mapEntrySize))
-		}
-	}
-	if m.MedianBlock != 0 {
-		n += 1 + sovGasPrice(uint64(m.MedianBlock))
+	if m.MedianIndex != 0 {
+		n += 1 + sovGasPrice(uint64(m.MedianIndex))
 	}
 	return n
 }
@@ -424,9 +424,9 @@ func (m *GasPrice) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Prices", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGasPrice
@@ -436,161 +436,27 @@ func (m *GasPrice) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGasPrice
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGasPrice
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Prices == nil {
-				m.Prices = make(map[string]uint64)
-			}
-			var mapkey string
-			var mapvalue uint64
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowGasPrice
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGasPrice
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGasPrice
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipGasPrice(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Prices[mapkey] = mapvalue
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Median", wireType)
-			}
-			m.Median = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGasPrice
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Median |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BlockNum", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGasPrice
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGasPrice
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGasPrice
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.BlockNum == nil {
-				m.BlockNum = make(map[string]uint64)
-			}
-			var mapkey string
-			var mapvalue uint64
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
+			if wireType == 0 {
+				var v uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return ErrIntOverflowGasPrice
@@ -600,78 +466,151 @@ func (m *GasPrice) Unmarshal(dAtA []byte) error {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					wire |= uint64(b&0x7F) << shift
+					v |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGasPrice
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
+				m.BlockNums = append(m.BlockNums, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGasPrice
 					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					if postStringIndexmapkey > l {
+					if iNdEx >= l {
 						return io.ErrUnexpectedEOF
 					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowGasPrice
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
 					}
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipGasPrice(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthGasPrice
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
 				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGasPrice
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGasPrice
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.BlockNums) == 0 {
+					m.BlockNums = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGasPrice
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.BlockNums = append(m.BlockNums, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockNums", wireType)
 			}
-			m.BlockNum[mapkey] = mapvalue
-			iNdEx = postIndex
+		case 6:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGasPrice
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Prices = append(m.Prices, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGasPrice
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGasPrice
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGasPrice
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Prices) == 0 {
+					m.Prices = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGasPrice
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Prices = append(m.Prices, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Prices", wireType)
+			}
 		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MedianBlock", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MedianIndex", wireType)
 			}
-			m.MedianBlock = 0
+			m.MedianIndex = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGasPrice
@@ -681,7 +620,7 @@ func (m *GasPrice) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MedianBlock |= uint64(b&0x7F) << shift
+				m.MedianIndex |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

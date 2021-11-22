@@ -88,7 +88,9 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			send.Status = types.SendStatus_Aborted
 			goto END
 		}
-		price := float64(gasPrice.Median) * 1.5 // 1.5x Median gas; in wei
+		mi := gasPrice.MedianIndex
+		medianPrice := gasPrice.Prices[mi]
+		price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
 		send.GasPrice = fmt.Sprintf("%.0f", price)
 		gasLimit := float64(90_000) //TODO: let user supply this
 		exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
