@@ -8,16 +8,9 @@ import "gogoproto/gogo.proto";
 message GasPrice {
   string creator = 1;
   string index = 2;
-  string chain = 3; 
-  map<string, uint64> prices = 4;
-  uint64 median = 5;
-  map<string, uint64> blockNum = 6;
-  uint64 medianBlock = 7;
-//  message ValueBlockPair {
-//    string value = 1;
-//    uint64 blockNum = 2;
-//  }
-//  map<string,ValueBlockPair> supply = 8;
-//
-//  ValueBlockPair medianSupply = 9;
+  string chain = 3;
+  repeated string signers = 4 ;
+  repeated uint64 blockNums = 5;
+  repeated uint64 prices = 6;
+  uint64 medianIndex = 7;
 }

@@ -19302,20 +19302,21 @@ paths:
                       type: string
                     chain:
                       type: string
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    blockNums:
+                      type: array
+                      items:
+                        type: string
+                        format: uint64
                     prices:
-                      type: object
-                      additionalProperties:
+                      type: array
+                      items:
                         type: string
                         format: uint64
-                    median:
-                      type: string
-                      format: uint64
-                    blockNum:
-                      type: object
-                      additionalProperties:
-                        type: string
-                        format: uint64
-                    medianBlock:
+                    medianIndex:
                       type: string
                       format: uint64
               pagination:
@@ -19431,20 +19432,21 @@ paths:
                     type: string
                   chain:
                     type: string
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  blockNums:
+                    type: array
+                    items:
+                      type: string
+                      format: uint64
                   prices:
-                    type: object
-                    additionalProperties:
+                    type: array
+                    items:
                       type: string
                       format: uint64
-                  median:
-                    type: string
-                    format: uint64
-                  blockNum:
-                    type: object
-                    additionalProperties:
-                      type: string
-                      format: uint64
-                  medianBlock:
+                  medianIndex:
                     type: string
                     format: uint64
         default:
@@ -30517,20 +30519,21 @@ definitions:
         type: string
       chain:
         type: string
+      signers:
+        type: array
+        items:
+          type: string
+      blockNums:
+        type: array
+        items:
+          type: string
+          format: uint64
       prices:
-        type: object
-        additionalProperties:
+        type: array
+        items:
           type: string
           format: uint64
-      median:
-        type: string
-        format: uint64
-      blockNum:
-        type: object
-        additionalProperties:
-          type: string
-          format: uint64
-      medianBlock:
+      medianIndex:
         type: string
         format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
@@ -30659,20 +30662,21 @@ definitions:
               type: string
             chain:
               type: string
+            signers:
+              type: array
+              items:
+                type: string
+            blockNums:
+              type: array
+              items:
+                type: string
+                format: uint64
             prices:
-              type: object
-              additionalProperties:
+              type: array
+              items:
                 type: string
                 format: uint64
-            median:
-              type: string
-              format: uint64
-            blockNum:
-              type: object
-              additionalProperties:
-                type: string
-                format: uint64
-            medianBlock:
+            medianIndex:
               type: string
               format: uint64
       pagination:
@@ -30981,20 +30985,21 @@ definitions:
             type: string
           chain:
             type: string
+          signers:
+            type: array
+            items:
+              type: string
+          blockNums:
+            type: array
+            items:
+              type: string
+              format: uint64
           prices:
-            type: object
-            additionalProperties:
+            type: array
+            items:
               type: string
               format: uint64
-          median:
-            type: string
-            format: uint64
-          blockNum:
-            type: object
-            additionalProperties:
-              type: string
-              format: uint64
-          medianBlock:
+          medianIndex:
             type: string
             format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
