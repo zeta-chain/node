@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	var mockFlag = flag.Bool("mock", false, "mock 2 nodes enviroment")
+	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
 	flag.Parse()
 
@@ -33,7 +33,6 @@ func main() {
 		return
 	}
 
-	return
 }
 
 func SetupConfigForTest() {
