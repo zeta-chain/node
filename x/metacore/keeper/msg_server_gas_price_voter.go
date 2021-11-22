@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"math/big"
 	"sort"
 
@@ -45,10 +44,10 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		signer := msg.Creator
 		gasPrice.Prices[signer] = msg.Price
 		gasPrice.BlockNum[signer] = msg.BlockNumber
-		gasPrice.Supply[signer] = &types.GasPrice_ValueBlockPair{
-			Value: msg.Supply,
-			BlockNum: msg.BlockNumber,
-		}
+		//gasPrice.Supply[signer] = &types.GasPrice_ValueBlockPair{
+		//	Value: msg.Supply,
+		//	BlockNum: msg.BlockNumber,
+		//}
 		gasPrice.Median, gasPrice.MedianBlock = calMedian(gasPrice.Prices, gasPrice.BlockNum)
 		//gasPrice.MedianSupply = calMedianSupply(gasPrice.Supply)
 	}
@@ -57,23 +56,23 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
 
-func calMedianSupply(supplyMap map[string]*types.GasPrice_ValueBlockPair) *types.GasPrice_ValueBlockPair {
-	if len(supplyMap) == 0 {
-		return nil
-	}
-	p := []SignerValue{}
-	for signer, valueblock := range supplyMap {
-		supply, ok := big.NewInt(0).SetString(valueblock.Value, 10)
-		if !ok {
-			log.Error().Msgf("calMedianSupply SetString error %s ", valueblock.Value)
-		}
-		p = append(p, SignerValue{signer, supply, valueblock.BlockNum})
-	}
-	sort.SliceStable(p, func(i, j int) bool {
-		return p[i].Value.Cmp(p[j].Value) < 0
-	})
-	return &types.GasPrice_ValueBlockPair{p[len(p)/2].Value.String(), p[len(p)/2].BlockNum}
-}
+//func calMedianSupply(supplyMap map[string]*types.GasPrice_ValueBlockPair) *types.GasPrice_ValueBlockPair {
+//	if len(supplyMap) == 0 {
+//		return nil
+//	}
+//	p := []SignerValue{}
+//	for signer, valueblock := range supplyMap {
+//		supply, ok := big.NewInt(0).SetString(valueblock.Value, 10)
+//		if !ok {
+//			log.Error().Msgf("calMedianSupply SetString error %s ", valueblock.Value)
+//		}
+//		p = append(p, SignerValue{signer, supply, valueblock.BlockNum})
+//	}
+//	sort.SliceStable(p, func(i, j int) bool {
+//		return p[i].Value.Cmp(p[j].Value) < 0
+//	})
+//	return &types.GasPrice_ValueBlockPair{p[len(p)/2].Value.String(), p[len(p)/2].BlockNum}
+//}
 
 //TODO: Remove calMedian; replace with calMedianSupply.
 //This is allocation intensive.

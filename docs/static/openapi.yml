@@ -19318,24 +19318,6 @@ paths:
                     medianBlock:
                       type: string
                       format: uint64
-                    supply:
-                      type: object
-                      additionalProperties:
-                        type: object
-                        properties:
-                          value:
-                            type: string
-                          blockNum:
-                            type: string
-                            format: uint64
-                    medianSupply:
-                      type: object
-                      properties:
-                        value:
-                          type: string
-                        blockNum:
-                          type: string
-                          format: uint64
               pagination:
                 type: object
                 properties:
@@ -19465,24 +19447,6 @@ paths:
                   medianBlock:
                     type: string
                     format: uint64
-                  supply:
-                    type: object
-                    additionalProperties:
-                      type: object
-                      properties:
-                        value:
-                          type: string
-                        blockNum:
-                          type: string
-                          format: uint64
-                  medianSupply:
-                    type: object
-                    properties:
-                      value:
-                        type: string
-                      blockNum:
-                        type: string
-                        format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30569,32 +30533,6 @@ definitions:
       medianBlock:
         type: string
         format: uint64
-      supply:
-        type: object
-        additionalProperties:
-          type: object
-          properties:
-            value:
-              type: string
-            blockNum:
-              type: string
-              format: uint64
-      medianSupply:
-        type: object
-        properties:
-          value:
-            type: string
-          blockNum:
-            type: string
-            format: uint64
-  MetaProtocol.metacore.metacore.GasPrice.ValueBlockPair:
-    type: object
-    properties:
-      value:
-        type: string
-      blockNum:
-        type: string
-        format: uint64
   MetaProtocol.metacore.metacore.LastBlockHeight:
     type: object
     properties:
@@ -30737,24 +30675,6 @@ definitions:
             medianBlock:
               type: string
               format: uint64
-            supply:
-              type: object
-              additionalProperties:
-                type: object
-                properties:
-                  value:
-                    type: string
-                  blockNum:
-                    type: string
-                    format: uint64
-            medianSupply:
-              type: object
-              properties:
-                value:
-                  type: string
-                blockNum:
-                  type: string
-                  format: uint64
       pagination:
         type: object
         properties:
@@ -31077,24 +30997,6 @@ definitions:
           medianBlock:
             type: string
             format: uint64
-          supply:
-            type: object
-            additionalProperties:
-              type: object
-              properties:
-                value:
-                  type: string
-                blockNum:
-                  type: string
-                  format: uint64
-          medianSupply:
-            type: object
-            properties:
-              value:
-                type: string
-              blockNum:
-                type: string
-                format: uint64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
