@@ -32,6 +32,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 
 	receiveIndex := msg.Digest()
 	receive, isFound := k.GetReceive(ctx, receiveIndex)
+
+	if isDuplicateSigner(msg.Creator, receive.Signers) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+	}
+
 	if !isFound {
 		receive = types.Receive{
 			Creator:             "",
