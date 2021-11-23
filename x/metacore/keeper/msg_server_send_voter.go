@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
@@ -12,6 +13,11 @@ import (
 
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !isBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator"))
+	}
 
 	index := msg.Digest()
 	send, isFound := k.GetSend(ctx, index)
@@ -37,9 +43,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		}
 	}
 
-	//TODO: proper super majority needed
-	if len(send.Signers) == 2 {
-
+	if hasSuperMajorityValidators(len(send.Signers), validators) {
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		send.Status = types.SendStatus_Finalized
 		lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
