@@ -342,8 +342,9 @@ func New(
 		appCodec,
 		keys[metacoremoduletypes.StoreKey],
 		keys[metacoremoduletypes.MemStoreKey],
+		app.StakingKeeper,
 	)
-	metacoreModule := metacoremodule.NewAppModule(appCodec, app.MetacoreKeeper)
+	metacoreModule := metacoremodule.NewAppModule(appCodec, app.MetacoreKeeper, app.StakingKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
