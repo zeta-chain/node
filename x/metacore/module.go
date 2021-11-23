@@ -102,12 +102,17 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
+	stakingKeeper types.StakingKeeper
 }
 
-func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
+func NewAppModule(
+	cdc codec.Marshaler,
+	keeper keeper.Keeper,
+	stakingKeeper types.StakingKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+		stakingKeeper:  stakingKeeper,
 	}
 }
 

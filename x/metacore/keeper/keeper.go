@@ -16,6 +16,8 @@ type (
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
+
+		StakingKeeper types.StakingKeeper
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 
 	}
@@ -25,6 +27,7 @@ func NewKeeper(
 	cdc codec.Marshaler,
 	storeKey,
 	memKey sdk.StoreKey,
+	stakingKeeper types.StakingKeeper,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 
 ) *Keeper {
@@ -32,6 +35,7 @@ func NewKeeper(
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
+		StakingKeeper: stakingKeeper,
 		// this line is used by starport scaffolding # ibc/keeper/return
 
 	}
