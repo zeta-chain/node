@@ -16,11 +16,14 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
 	if !isBondedValidator(msg.Creator, validators) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator"))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
 	chain := msg.Chain
 	chainNonce, isFound := k.GetChainNonces(ctx, chain)
+	if isDuplicateSigner(msg.Creator, chainNonce.Signers) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+	}
 	if isFound && chainNonce.Nonce == msg.Nonce {
 		chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
 	} else if !isFound {
@@ -41,6 +44,15 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 
 	k.SetChainNonces(ctx, chainNonce)
 	return &types.MsgNonceVoterResponse{}, nil
+}
+
+func isDuplicateSigner(creator string, signers []string) bool {
+	for _, v := range signers {
+		if creator == v {
+			return true
+		}
+	}
+	return false
 }
 
 func isBondedValidator(creator string, validators []stakingtypes.Validator) bool {

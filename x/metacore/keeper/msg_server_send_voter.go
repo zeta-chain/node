@@ -21,6 +21,11 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 	index := msg.Digest()
 	send, isFound := k.GetSend(ctx, index)
+
+	if isDuplicateSigner(msg.Creator, send.Signers) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+	}
+
 	if isFound { // send exists; add creator to signers
 		send.Signers = append(send.Signers, msg.Creator)
 	} else {
