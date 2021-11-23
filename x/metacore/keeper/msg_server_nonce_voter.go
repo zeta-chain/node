@@ -35,7 +35,7 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("chainNonce vote msg does not match state: %v vs %v", msg, chainNonce))
 	}
 
-	if len(chainNonce.Signers) == len(validators) {
+	if hasSuperMajorityValidators(len(chainNonce.Signers), validators) {
 		chainNonce.FinalizedHeight = uint64(ctx.BlockHeader().Height)
 	}
 
@@ -55,4 +55,14 @@ func isBondedValidator(creator string, validators []stakingtypes.Validator) bool
 		}
 	}
 	return false
+}
+
+func hasSuperMajorityValidators(numSigners int, validators []stakingtypes.Validator) bool {
+	numValidValidators := 0
+	for _, v := range validators {
+		if v.IsBonded() {
+			numValidValidators += 1
+		}
+	}
+	return numSigners > numValidValidators*2/3
 }

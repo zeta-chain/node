@@ -13,6 +13,11 @@ import (
 func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgReceiveConfirmation) (*types.MsgReceiveConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !isBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator"))
+	}
+
 	index := msg.SendHash
 	send, isFound := k.GetSend(ctx, index)
 	if !isFound {
@@ -43,8 +48,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		receive.Signers = append(receive.Signers, msg.Creator)
 	}
 
-	//TODO: do proper super majority check
-	if len(receive.Signers) == 2 {
+	if hasSuperMajorityValidators(len(receive.Signers), validators){
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
 		if !isFound {
