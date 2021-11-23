@@ -2,13 +2,20 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"sort"
 )
 
 func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVoter) (*types.MsgGasPriceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !isBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	}
 
 	chain := msg.Chain
 	gasPrice, isFound := k.GetGasPrice(ctx, chain)
