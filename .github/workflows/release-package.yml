@@ -4,7 +4,7 @@ on:
   release:
     types: [ created ]
   push:
-    branches: [ multinode ]
+
 
 
 env:
