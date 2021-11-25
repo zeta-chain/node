@@ -81,6 +81,16 @@ func (b *MetachainBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error)
 	return resp.LastBlockHeight, nil
 }
 
+func (b *MetachainBridge) GetMetaBlockHeight() (uint64, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+	if err != nil {
+		log.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		return 0, err
+	}
+	return resp.Height, nil
+}
+
 func (b *MetachainBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
