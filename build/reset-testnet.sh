@@ -40,7 +40,9 @@ done
 
 jq '.chain_id = "testing"' ~/.metacore/config/genesis.json > temp.json && mv temp.json ~/.metacore/config/genesis.json
 sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.metacore/config/app.toml
+sed -i '/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/' ~/.metacore/config/app.toml
 for NODE in $NODES; do
     ssh -i ~/.ssh/meta.pem $NODE jq \'.chain_id = \"testing\"\' ~/.metacore/config/genesis.json > temp.json && mv temp.json ~/.metacore/config/genesis.json
     ssh -i ~/.ssh/meta.pem $NODE sed -i \'/\[api\]/,+3 s/enable = false/enable = true/\' ~/.metacore/config/app.toml
+    ssh -i ~/.ssh/meta.pem $NODE sed -i \'/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/\' ~/.metacore/config/app.toml
 done
