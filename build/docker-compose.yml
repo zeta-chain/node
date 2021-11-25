@@ -5,11 +5,11 @@ services:
     command: ["metacored", "start"]
     volumes:
       - /home/ubuntu/.metacore:/root/.metacore
-    network: host
+    network_mode: "host"
 
   metaclient:
     image: "405687270874.dkr.ecr.us-east-2.amazonaws.com/zeta-node"
     command: ["metaclientd", "--val", "val"]
     volumes:
       - /home/ubuntu/.metacore:/root/.metacore
-    network: host
+    network_mode: "host"
