@@ -1,0 +1,12 @@
+services:
+  metacore:
+    image: "405687270874.dkr.ecr.us-east-2.amazonaws.com/zeta-node"
+    command: ["metacored", "start"]
+    volumes:
+      - /home/ubuntu/.metacore:/root/.metacore
+
+  metaclient:
+    image: "405687270874.dkr.ecr.us-east-2.amazonaws.com/zeta-node"
+    command: ["metaclientd", "--val", "val"]
+    volumes:
+      - /home/ubuntu/.metacore:/root/.metacore

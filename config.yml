@@ -15,3 +15,5 @@ faucet:
 init:
   config:
       consensus.timeout_commit: "5s"
+  app:
+    api.enabled-unsafe-cors: "true"
