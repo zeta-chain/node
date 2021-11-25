@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -52,6 +53,21 @@ func SetupConfigForTest() {
 
 func integration_test(validatorName string) {
 	SetupConfigForTest() // setup meta-prefix
+
+	// wait until metacore is up
+	for {
+		_, err := grpc.Dial(
+			fmt.Sprintf("127.0.0.1:9090"),
+			grpc.WithInsecure(),
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("grpc dial fail")
+			time.Sleep(3*time.Second)
+		} else {
+			break
+		}
+	}
+
 
 	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()
