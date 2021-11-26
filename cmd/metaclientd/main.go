@@ -44,7 +44,7 @@ func main() {
 			}
 			peers = append(peers, address)
 		}
-		tssServer, httpServer, err := mc.SetupTSSServer(peers, "")
+		tssServer, _, err := mc.SetupTSSServer(peers, "")
 		if err != nil {
 			log.Error().Err(err).Msg("setup TSS server error")
 			return
@@ -54,8 +54,9 @@ func main() {
 		kgRes := mc.TestKeygen(tssServer)
 		log.Debug().Msgf("keygen succeeds! TSS pubkey: %s", kgRes.PubKey)
 
-		_ = tssServer
-		_ = httpServer
+		log.Debug().Msgf("Keysign test begins...")
+
+		mc.TestKeysign(kgRes.PubKey, tssServer)
 
 		// wait....
 		ch := make(chan os.Signal, 1)
