@@ -33,6 +33,7 @@ func main() {
 	//BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
 
 	if *tssTestFlag {
+		SetupConfigForTest()
 		fmt.Println("testing TSS signing")
 		var peers addr.AddrList
 		fmt.Println("peer", *peer)
