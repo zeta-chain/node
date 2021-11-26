@@ -9,6 +9,9 @@ import (
 	mcconfig "github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	maddr "github.com/multiformats/go-multiaddr"
+	"github.com/libp2p/go-libp2p-peerstore/addr"
+
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"math/rand"
@@ -18,11 +21,46 @@ import (
 	"syscall"
 	"time"
 )
+const (
 
+)
 func main() {
 	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
+	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
+	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	flag.Parse()
+	BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+
+	if *tssTestFlag {
+		fmt.Println("testing TSS signing")
+		var peers addr.AddrList
+		if peer == nil || *peer == ""{
+			peer = &BOOTSTRAP_PEER
+		}
+		fmt.Println("peer", *peer)
+		address, err := maddr.NewMultiaddr(*peer)
+		if err != nil {
+			log.Error().Err(err).Msg("NewMultiaddr error")
+			return
+		}
+		peers = append(peers, address)
+		tssServer, httpServer, err := mc.SetupTSSServer(peers, "")
+
+		time.Sleep(5*time.Second)
+		kgRes := mc.TestKeygen(tssServer)
+		log.Debug().Msgf("keygen succeeds! TSS pubkey: %s", kgRes.PubKey)
+
+		_ = tssServer
+		_ = httpServer
+
+		// wait....
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		<-ch
+		log.Info().Msg("stop signal received")
+		return
+	}
 
 	if *mockFlag {
 		fmt.Println("single node multiple clients tests")
@@ -123,3 +161,4 @@ func integration_test(validatorName string) {
 	<-ch
 	log.Info().Msg("stop signal received")
 }
+
