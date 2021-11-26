@@ -36,13 +36,19 @@ func main() {
 		fmt.Println("testing TSS signing")
 		var peers addr.AddrList
 		fmt.Println("peer", *peer)
-		address, err := maddr.NewMultiaddr(*peer)
+		if *peer != ""{
+			address, err := maddr.NewMultiaddr(*peer)
+			if err != nil {
+				log.Error().Err(err).Msg("NewMultiaddr error")
+				return
+			}
+			peers = append(peers, address)
+		}
+		tssServer, httpServer, err := mc.SetupTSSServer(peers, "")
 		if err != nil {
-			log.Error().Err(err).Msg("NewMultiaddr error")
+			log.Error().Err(err).Msg("setup TSS server error")
 			return
 		}
-		peers = append(peers, address)
-		tssServer, httpServer, err := mc.SetupTSSServer(peers, "")
 
 		time.Sleep(5*time.Second)
 		kgRes := mc.TestKeygen(tssServer)
