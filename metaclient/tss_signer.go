@@ -8,6 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
+	"path"
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -68,15 +69,6 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
-	//conversion.SetupBech32Prefix()
-
-	// Read stdin for the private key
-	//inBuf := bufio.NewReader(os.Stdin)
-	//priKeyBytes, err := input.GetPassword("input node secret key:", inBuf)
-	//if err != nil {
-	//	log.Err(err).Msg("GetPassword fail")
-	//	return nil, nil, err
-	//}
 	nodeIdxStr := os.Getenv("IDX")
 	nodeIdx, err := strconv.Atoi(nodeIdxStr)
 	if nodeIdxStr == "" || err != nil || nodeIdx < 0 || nodeIdx >= 4 {
@@ -92,7 +84,12 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 	tsspath := os.Getenv("TSSPATH")
 	if len(tsspath) == 0 {
 		log.Err(err).Msg("empty env TSSPATH")
-		tsspath, err = os.MkdirTemp("", "tsspath")
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			log.Error().Err(err).Msgf("cannot get UserHomeDir")
+			return nil, nil, err
+		}
+		tsspath = path.Join(homedir, ".tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
 	IP := os.Getenv("MYIP")
