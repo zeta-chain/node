@@ -30,14 +30,11 @@ func main() {
 	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	flag.Parse()
-	BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
+	//BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
 
 	if *tssTestFlag {
 		fmt.Println("testing TSS signing")
 		var peers addr.AddrList
-		if peer == nil || *peer == ""{
-			peer = &BOOTSTRAP_PEER
-		}
 		fmt.Println("peer", *peer)
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {
