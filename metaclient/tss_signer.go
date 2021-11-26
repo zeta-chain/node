@@ -13,22 +13,14 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
-	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/tss/go-tss/conversion"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
 	"os"
-	"strings"
 	"time"
 )
 
-//var testPubKeys = []string{
-//	"thorpub1addwnpepqtdklw8tf3anjz7nn5fly3uvq2e67w2apn560s4smmrt9e3x52nt2svmmu3",
-//	"thorpub1addwnpepqtspqyy6gk22u37ztra4hq3hdakc0w0k60sfy849mlml2vrpfr0wvm6uz09",
-//	"thorpub1addwnpepq2ryyje5zr09lq7gqptjwnxqsy2vcdngvwd6z7yt5yjcnyj8c8cn559xe69",
-//	"thorpub1addwnpepqfjcw5l4ay5t00c32mmlky7qrppepxzdlkcwfs2fd5u73qrwna0vzag3y4j",
-//}
 var testPubKeys = []string{
 	"metapub1addwnpepqtdklw8tf3anjz7nn5fly3uvq2e67w2apn560s4smmrt9e3x52nt2y5225d",
 	"metapub1addwnpepqtspqyy6gk22u37ztra4hq3hdakc0w0k60sfy849mlml2vrpfr0wv0zdn8e",
@@ -43,26 +35,6 @@ var testPrivKeys = []string{
 	"ZTc2ZjI5OTIwOGVlMDk2N2M3Yzc1MjYyODQ0OGUyMjE3NGJiOGRmNGQyZmVmODg0NzQwNmUzYTk1YmQyODlmNA==",
 }
 
-type addrList []maddr.Multiaddr
-
-// String implement fmt.Stringer
-func (al *addrList) String() string {
-	addresses := make([]string, len(*al))
-	for i, address := range *al {
-		addresses[i] = address.String()
-	}
-	return strings.Join(addresses, ",")
-}
-
-// Set add the given value to addList
-func (al *addrList) Set(value string) error {
-	address, err := maddr.NewMultiaddr(value)
-	if err != nil {
-		return err
-	}
-	*al = append(*al, address)
-	return nil
-}
 
 func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHttpServer, error) {
 	bootstrapPeers := peer
