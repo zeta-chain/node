@@ -55,6 +55,7 @@ func integration_test(validatorName string) {
 	SetupConfigForTest() // setup meta-prefix
 
 	// wait until metacore is up
+	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
 			fmt.Sprintf("127.0.0.1:9090"),
@@ -67,6 +68,7 @@ func integration_test(validatorName string) {
 			break
 		}
 	}
+	log.Info().Msgf("ZetaCore to open 9090 port...")
 
 
 	// setup 2 metabridges
