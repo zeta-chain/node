@@ -124,7 +124,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 	return tssServer, s, nil
 }
 
-func test_keysign(tssPubkey string, tssServer *tss.TssServer) {
+func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	log.Info().Msg("trying keysign...")
 	data := []byte("hello meta")
 	H := crypto.Keccak256Hash(data)
