@@ -86,9 +86,13 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 	tsspath := os.Getenv("TSSPATH")
 	if len(tsspath) == 0 {
 		log.Err(err).Msg("empty env TSSPATH")
-		//return nil, nil, fmt.Errorf("empty env var TSSPATH")
 		tsspath, err = os.MkdirTemp("", "tsspath")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
+	}
+	IP := os.Getenv("MYIP")
+	if len(IP) == 0 {
+		log.Err(err).Msg("empty env MYIP")
+		return nil, nil, fmt.Errorf("no MYIP")
 	}
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,
@@ -104,7 +108,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 			PreParamTimeout: 5 * time.Minute,
 		},
 		nil, // don't set to precomputed values
-		"",  // for docker test
+		IP,  // for docker test
 	)
 
 	tssServer.Start()
