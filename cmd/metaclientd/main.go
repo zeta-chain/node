@@ -6,6 +6,8 @@ import (
 	"github.com/Meta-Protocol/metacore/cmd"
 	"github.com/Meta-Protocol/metacore/common/cosmos"
 	mc "github.com/Meta-Protocol/metacore/metaclient"
+	"github.com/rs/zerolog"
+
 	//mcconfig "github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
@@ -98,6 +100,7 @@ func SetupConfigForTest() {
 
 func integration_test(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	// wait until metacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
