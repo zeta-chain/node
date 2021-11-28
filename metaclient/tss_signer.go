@@ -35,6 +35,81 @@ var testPrivKeys = []string{
 	"ZTc2ZjI5OTIwOGVlMDk2N2M3Yzc1MjYyODQ0OGUyMjE3NGJiOGRmNGQyZmVmODg0NzQwNmUzYTk1YmQyODlmNA==",
 }
 
+type TSS struct {
+	Server *tss.TssServer
+	PubkeyInBytes []byte
+	PubkeyInBech32 string
+	AddressInHex string
+}
+
+func (tss *TSS) Pubkey() []byte {
+	return tss.PubkeyInBytes
+}
+
+func (tss *TSS) Sign(data []byte) ([65]byte, error) {
+
+	H := crypto.Keccak256Hash(data)
+	log.Debug().Msgf("hash of data is %s", H)
+
+	tssPubkey := tss.PubkeyInBech32
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys, "0.14.0")
+	ks_res, err := tss.Server.KeySign(keysignReq)
+	if err != nil {
+		log.Warn().Msg("keysign fail")
+	}
+	signature := ks_res.Signatures
+	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
+	// 32B msg hash, 32B R, 32B S, 1B RC
+	log.Info().Msgf("signature of helloworld... %v", signature)
+
+	if len(signature) == 0 {
+		log.Warn().Err(err).Msgf("signature has length 0")
+		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
+	}
+	if !verify_signature(tssPubkey, signature, H) {
+		log.Error().Err(err).Msgf("signature verification failure")
+		return [65]byte{}, fmt.Errorf("signuature verification fail: %s", err)
+	}
+	var sigbyte [65]byte
+	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
+	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+
+	return sigbyte, nil
+}
+
+func (tss *TSS) Address() ethcommon.Address {
+	return ethcommon.HexToAddress(tss.AddressInHex)
+}
+
+func NewTSS(peer addr.AddrList) (*TSS, error) {
+	server, _, err  := SetupTSSServer(peer, "")
+	if err != nil {
+		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
+	}
+	tss := TSS{
+		Server: server,
+	}
+	// Do a keygen
+	var req keygen.Request
+	req = keygen.NewRequest(testPubKeys[:2], 10, "0.13.0")
+	res, err := server.Keygen(req)
+	if err != nil {
+		log.Fatal().Msg("keygen fail")
+		return nil, fmt.Errorf("Keygen error: %w", err)
+	}
+
+	log.Info().Msgf("pubkey: %s", res.PubKey)
+	tss.PubkeyInBech32 = res.PubKey
+	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, res.PubKey)
+	if err != nil {
+		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", res.PubKey)
+		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
+	}
+	tss.PubkeyInBytes = pubkey.Bytes()
+	tss.AddressInHex = pubkey.Address().String()
+	return &tss, nil
+}
 
 func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHttpServer, error) {
 	bootstrapPeers := peer
@@ -117,7 +192,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	if len(signature) == 0 {
 		log.Info().Msgf("signature has length, skipping verify", signature)
 	} else {
-		verify_signature(err, tssPubkey, signature, H)
+		verify_signature(tssPubkey, signature, H)
 	}
 }
 
@@ -132,24 +207,23 @@ func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 	}
 
 	log.Info().Msgf("pubkey: %s", res.PubKey)
-	log.Info().Msgf("persist to")
 
 	return res
 }
 
 
-func verify_signature(err error, tssPubkey string, signature []keysign.Signature, H ethcommon.Hash) {
+func verify_signature(tssPubkey string, signature []keysign.Signature, H ethcommon.Hash) bool {
 	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Fatal().Msg("get pubkey from bech32 fail")
 	}
-	log.Info().Msgf("tss pubkey %s, size in B: %d", hex.EncodeToString(pubkey.Bytes()),
-		len(pubkey.Bytes()))
 	// verify the signature of msg.
 	var sigbyte [65]byte
 	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
 	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	sigPublicKey, err := crypto.SigToPub(H.Bytes(), sigbyte[:])
-	log.Info().Msgf("tss pubkey recovered in bytes: %s", hex.EncodeToString(crypto.CompressPubkey(sigPublicKey)))
+	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
+	log.Debug().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
+	return pubkey.String() == hex.EncodeToString(compressedPubkey)
 }

@@ -129,7 +129,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TestSigner) (*map[common.Chain]*mc.ChainObserver, error){
+func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[common.Chain]*mc.ChainObserver, error){
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
 	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss.Address())
