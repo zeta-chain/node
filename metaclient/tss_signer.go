@@ -54,7 +54,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.PubkeyInBech32
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys[:2], "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, testPubKeys[:2], "0.14.0")
 	ks_res, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
@@ -226,7 +226,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	if len(signature) == 0 {
 		log.Info().Msgf("signature has length, skipping verify", signature)
 	} else {
-		verify_signature(tssPubkey, signature, H)
+		verify_signature(tssPubkey, signature, H.Bytes())
 	}
 }
 
@@ -246,7 +246,7 @@ func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 }
 
 
-func verify_signature(tssPubkey string, signature []keysign.Signature, H ethcommon.Hash) bool {
+func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
 	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Fatal().Msg("get pubkey from bech32 fail")
@@ -256,7 +256,7 @@ func verify_signature(tssPubkey string, signature []keysign.Signature, H ethcomm
 	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
 	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
-	sigPublicKey, err := crypto.SigToPub(H.Bytes(), sigbyte[:])
+	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Debug().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
