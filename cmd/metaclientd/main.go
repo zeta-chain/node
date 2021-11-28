@@ -6,9 +6,9 @@ import (
 	"github.com/Meta-Protocol/metacore/cmd"
 	"github.com/Meta-Protocol/metacore/common/cosmos"
 	mc "github.com/Meta-Protocol/metacore/metaclient"
-	mcconfig "github.com/Meta-Protocol/metacore/metaclient/config"
+	//mcconfig "github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	//"github.com/ethereum/go-ethereum/crypto"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 
@@ -32,19 +32,21 @@ func main() {
 	flag.Parse()
 	//BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
 
+	var peers addr.AddrList
+	fmt.Println("peer", *peer)
+	if *peer != ""{
+		address, err := maddr.NewMultiaddr(*peer)
+		if err != nil {
+			log.Error().Err(err).Msg("NewMultiaddr error")
+			return
+		}
+		peers = append(peers, address)
+	}
+
 	if *tssTestFlag {
 		SetupConfigForTest()
 		fmt.Println("testing TSS signing")
-		var peers addr.AddrList
-		fmt.Println("peer", *peer)
-		if *peer != ""{
-			address, err := maddr.NewMultiaddr(*peer)
-			if err != nil {
-				log.Error().Err(err).Msg("NewMultiaddr error")
-				return
-			}
-			peers = append(peers, address)
-		}
+
 		tssServer, _, err := mc.SetupTSSServer(peers, "")
 		if err != nil {
 			log.Error().Err(err).Msg("setup TSS server error")
@@ -73,7 +75,7 @@ func main() {
 		return
 	} else {
 		fmt.Println("multi-node client")
-		integration_test(*validatorName)
+		integration_test(*validatorName, peers)
 		return
 	}
 
@@ -94,7 +96,7 @@ func SetupConfigForTest() {
 
 }
 
-func integration_test(validatorName string) {
+func integration_test(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 
 	// wait until metacore is up
@@ -132,14 +134,17 @@ func integration_test(validatorName string) {
 
 	// setup mock TSS signers:
 	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
-	if err != nil {
-		log.Err(err).Msg("TEST private key error")
-		return
-	}
-	tss := mc.TestSigner{
-		PrivKey: privateKey,
-	}
+	//privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
+	//if err != nil {
+	//	log.Err(err).Msg("TEST private key error")
+	//	return
+	//}
+	//tss := mc.TestSigner{
+	//	PrivKey: privateKey,
+	//}
+
+	tss, err := mc.NewTSS(peers)
+
 
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 
 type TSSSigner interface {
 	Pubkey() []byte
-	Sign(data []byte) [65]byte
+	Sign(data []byte) ([65]byte, error)
 	Address() ethcommon.Address
 }
 
@@ -62,7 +62,10 @@ func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address
 func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig := signer.tssSigner.Sign(hashBytes)
+	sig, err := signer.tssSigner.Sign(hashBytes)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
@@ -131,11 +134,14 @@ type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
 
-func (s TestSigner) Sign(digest []byte) [65]byte {
-	sig, _ := crypto.Sign(digest, s.PrivKey)
+func (s TestSigner) Sign(digest []byte) ([65]byte, error) {
+	sig, err := crypto.Sign(digest, s.PrivKey)
+	if err != nil {
+		return [65]byte{}, err
+	}
 	var sigbyte [65]byte
 	copy(sigbyte[:], sig[:65])
-	return sigbyte
+	return sigbyte, nil
 }
 
 func (s TestSigner) Pubkey() []byte {
