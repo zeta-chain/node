@@ -144,7 +144,10 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	//}
 
 	tss, err := mc.NewTSS(peers)
-
+	if err != nil {
+		log.Error().Err(err).Msg("NewTSS error")
+		return
+	}
 
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
