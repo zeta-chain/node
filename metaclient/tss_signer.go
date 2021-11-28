@@ -80,7 +80,34 @@ func (tss *TSS) Sign(data []byte) ([65]byte, error) {
 }
 
 func (tss *TSS) Address() ethcommon.Address {
-	return ethcommon.HexToAddress(tss.AddressInHex)
+	addr, err := getKeyAddr(tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msg("getKeyAddr error")
+		return ethcommon.Address{}
+	}
+	return addr
+}
+
+func getKeyAddr(tssPubkey string) (ethcommon.Address, error ){
+	var keyAddr ethcommon.Address
+	pubk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		log.Fatal().Err(err)
+		return keyAddr, err
+	}
+	//keyAddrBytes := pubk.Address().Bytes()
+	pubk.Bytes()
+	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
+	if err != nil {
+		log.Fatal().Err(err).Msg("decompress err")
+		return keyAddr, err
+	}
+
+	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
+	//keyAddr = ethcommon.BytesToAddress(keyAddrBytes)
+	log.Info().Msgf("keyAddr: %s", keyAddr.String())
+
+	return keyAddr, nil
 }
 
 func NewTSS(peer addr.AddrList) (*TSS, error) {

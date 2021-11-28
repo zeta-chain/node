@@ -20,6 +20,7 @@ const (
 	Pending
 	Mined
 	Confirmed
+	Error
 )
 
 type CoreObserver struct {
@@ -171,6 +172,7 @@ func (co *CoreObserver) MonitorCore() {
 					tx, err := signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 					if err != nil {
 						log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+						co.sendStatus[send.Index] = Error // do not process this; other signers might already done it
 						continue
 					}
 					outTxHash := tx.Hash().Hex()
