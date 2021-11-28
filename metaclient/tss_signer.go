@@ -1,6 +1,7 @@
 package metaclient
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -68,7 +69,7 @@ func (tss *TSS) Sign(data []byte) ([65]byte, error) {
 	}
 	if !verify_signature(tssPubkey, signature, H) {
 		log.Error().Err(err).Msgf("signature verification failure")
-		return [65]byte{}, fmt.Errorf("signuature verification fail: %s", err)
+		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
 	var sigbyte [65]byte
 	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
@@ -225,5 +226,5 @@ func verify_signature(tssPubkey string, signature []keysign.Signature, H ethcomm
 	sigPublicKey, err := crypto.SigToPub(H.Bytes(), sigbyte[:])
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Debug().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
-	return pubkey.String() == hex.EncodeToString(compressedPubkey)
+	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
 }
