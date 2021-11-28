@@ -47,13 +47,14 @@ func (tss *TSS) Pubkey() []byte {
 	return tss.PubkeyInBytes
 }
 
-func (tss *TSS) Sign(data []byte) ([65]byte, error) {
+// digest should be Keccak256 Hash of some data
+func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 
-	H := crypto.Keccak256Hash(data)
-	log.Debug().Msgf("hash of data is %s", H)
+	H := digest
+	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.PubkeyInBech32
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys[:2], "0.14.0")
 	ks_res, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
@@ -61,7 +62,7 @@ func (tss *TSS) Sign(data []byte) ([65]byte, error) {
 	signature := ks_res.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
-	log.Info().Msgf("signature of data is... %v", signature)
+	log.Info().Msgf("signature of digest is... %v", signature)
 
 	if len(signature) == 0 {
 		log.Warn().Err(err).Msgf("signature has length 0")
@@ -120,7 +121,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	}
 	// Do a keygen
 	var req keygen.Request
-	req = keygen.NewRequest(testPubKeys[:2], 10, "0.13.0")
+	req = keygen.NewRequest(testPubKeys[:2], 10, "0.14.0")
 	res, err := server.Keygen(req)
 	if err != nil {
 		log.Fatal().Msg("keygen fail")
@@ -134,9 +135,13 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", res.PubKey)
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
 	}
-	tss.PubkeyInBytes = pubkey.Bytes()
-	tss.AddressInHex = ethcommon.BytesToAddress(tss.PubkeyInBytes).Hex()
-	log.Info().Msgf("TSS Address ETH %s", tss.Address().String())
+	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
+	tss.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
+	log.Info().Msgf("pubkey.Bytes() gives %d Bytes", len(tss.PubkeyInBytes))
+
+
+	tss.AddressInHex = crypto.PubkeyToAddress(*decompresspubkey).Hex()
+	log.Info().Msgf("TSS Address ETH %s", tss.AddressInHex)
 	return &tss, nil
 }
 
