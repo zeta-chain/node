@@ -61,7 +61,7 @@ func (tss *TSS) Sign(data []byte) ([65]byte, error) {
 	signature := ks_res.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
-	log.Info().Msgf("signature of helloworld... %v", signature)
+	log.Info().Msgf("signature of data is... %v", signature)
 
 	if len(signature) == 0 {
 		log.Warn().Err(err).Msgf("signature has length 0")
@@ -108,7 +108,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
 	}
 	tss.PubkeyInBytes = pubkey.Bytes()
-	tss.AddressInHex = pubkey.Address().String()
+	tss.AddressInHex = ethcommon.BytesToAddress(tss.PubkeyInBytes).Hex()
 	log.Info().Msgf("TSS Address ETH %s", tss.Address().String())
 	return &tss, nil
 }
