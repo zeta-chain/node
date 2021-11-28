@@ -109,6 +109,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	}
 	tss.PubkeyInBytes = pubkey.Bytes()
 	tss.AddressInHex = pubkey.Address().String()
+	log.Info().Msgf("TSS Address ETH %s", tss.Address().String())
 	return &tss, nil
 }
 
