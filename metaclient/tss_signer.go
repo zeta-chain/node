@@ -10,7 +10,10 @@ import (
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"path"
+	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
@@ -119,29 +122,66 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	tss := TSS{
 		Server: server,
 	}
-	// Do a keygen
-	var req keygen.Request
-	req = keygen.NewRequest(testPubKeys[:2], 10, "0.14.0")
-	res, err := server.Keygen(req)
-	if err != nil {
-		log.Fatal().Msg("keygen fail")
-		return nil, fmt.Errorf("Keygen error: %w", err)
+	tsspath := os.Getenv(("TSSPATH"))
+	if len(tsspath) == 0 {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal().Err(err).Msg("UserHomeDir")
+			return nil, err
+		}
+		tsspath = filepath.Join(home, ".tss")
 	}
-
-	log.Info().Msgf("pubkey: %s", res.PubKey)
-	tss.PubkeyInBech32 = res.PubKey
-	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, res.PubKey)
+	files, err := os.ReadDir(tsspath)
 	if err != nil {
-		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", res.PubKey)
+		return nil, err
+	}
+	found := false
+	sharefiles := []os.DirEntry{}
+	for _, file := range files {
+		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), "localstate"){
+			sharefiles = append(sharefiles, file)
+		}
+	}
+	if len(sharefiles) > 0 {
+		sort.SliceStable(sharefiles, func(i, j int) bool {
+			fi, _ := sharefiles[i].Info()
+			fj, _ := sharefiles[j].Info()
+			return fi.ModTime().After(fj.ModTime())
+		})
+		localStateFile := sharefiles[0]
+		filename := filepath.Base(localStateFile.Name())
+		filearray := strings.Split(filename, "-")
+		if len(filearray) == 2 {
+			tss.PubkeyInBech32 = filearray[1]
+			log.Info().Msgf("Found stored Pubkey in local state: %s", filearray[1])
+			found = true
+		}
+	}
+	if !found {
+		log.Info().Msgf("Local state not found; new Keygen starting...")
+		var req keygen.Request
+		req = keygen.NewRequest(testPubKeys[:2], 10, "0.14.0")
+		res, err := server.Keygen(req)
+		if err != nil {
+			log.Fatal().Msg("keygen fail")
+			return nil, fmt.Errorf("Keygen error: %w", err)
+		}
+
+		log.Info().Msgf("pubkey: %s", res.PubKey)
+		tss.PubkeyInBech32 = res.PubKey
+	}
+	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", tss.PubkeyInBech32)
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
 	}
 	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
 	tss.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
 	log.Info().Msgf("pubkey.Bytes() gives %d Bytes", len(tss.PubkeyInBytes))
 
-
 	tss.AddressInHex = crypto.PubkeyToAddress(*decompresspubkey).Hex()
 	log.Info().Msgf("TSS Address ETH %s", tss.AddressInHex)
+
 	return &tss, nil
 }
 
