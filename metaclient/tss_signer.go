@@ -152,8 +152,8 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		filename := filepath.Base(localStateFile.Name())
 		filearray := strings.Split(filename, "-")
 		if len(filearray) == 2 {
-			tss.PubkeyInBech32 = filearray[1]
 			log.Info().Msgf("Found stored Pubkey in local state: %s", filearray[1])
+			tss.PubkeyInBech32 = strings.TrimSuffix(filearray[1], ".json")
 			found = true
 		}
 	}
