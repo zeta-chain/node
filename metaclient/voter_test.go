@@ -1,3 +1,4 @@
+//go:build voter
 // +build voter
 
 // this is integration test; must be run when a chain is running:

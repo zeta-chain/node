@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 // this is integration test; must be run when a chain is running:

@@ -21,12 +21,12 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	gasPrice, isFound := k.GetGasPrice(ctx, chain)
 	if !isFound {
 		gasPrice = types.GasPrice{
-			Creator: msg.Creator,
-			Index:   chain,
-			Chain:   chain,
-			Prices:  []uint64{msg.Price},
-			BlockNums: []uint64{msg.BlockNumber},
-			Signers: []string{msg.Creator},
+			Creator:     msg.Creator,
+			Index:       chain,
+			Chain:       chain,
+			Prices:      []uint64{msg.Price},
+			BlockNums:   []uint64{msg.BlockNumber},
+			Signers:     []string{msg.Creator},
 			MedianIndex: 0,
 		}
 	} else {
@@ -58,7 +58,8 @@ type IndexValue struct {
 	Index int
 	Value uint64
 }
-func medianOfArray(values []uint64 ) int {
+
+func medianOfArray(values []uint64) int {
 	var array []IndexValue
 	for i, v := range values {
 		array = append(array, IndexValue{Index: i, Value: v})

@@ -21,17 +21,17 @@ import (
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain     common.Chain
-	router    string
-	endpoint  string
-	ticker    *time.Ticker
-	abiString string
-	abi       *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
-	zetaAbi   *abi.ABI // only useful for ethereum; the token contract
-	client    *ethclient.Client
-	bridge    *MetachainBridge
-	lastBlock uint64
-	confCount uint64 // must wait this many blocks to be considered "confirmed"
+	chain       common.Chain
+	router      string
+	endpoint    string
+	ticker      *time.Ticker
+	abiString   string
+	abi         *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	zetaAbi     *abi.ABI // only useful for ethereum; the token contract
+	client      *ethclient.Client
+	bridge      *MetachainBridge
+	lastBlock   uint64
+	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
 }
 
@@ -134,11 +134,10 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	}
 }
 
-func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string)  {
+func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
 	hash := ethcommon.HexToHash(txhash)
 	chainOb.txWatchList[hash] = sendhash
 }
-
 
 func (chainOb *ChainObserver) PostGasPrice() error {
 	// GAS PRICE
@@ -169,7 +168,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		toAddr := ethcommon.HexToAddress(config.ETH_METALOCK_ADDRESS)
 		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
-			To: &toAddr,
+			To:   &toAddr,
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
@@ -198,7 +197,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
 		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
-			To: &toAddr,
+			To:   &toAddr,
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
@@ -227,7 +226,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
 		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
-			To: &toAddr,
+			To:   &toAddr,
 			Data: input,
 		}, big.NewInt(0).SetUint64(bn))
 		if err != nil {
@@ -255,7 +254,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) observeFailedTx()  {
+func (chainOb *ChainObserver) observeFailedTx() {
 	for txhash, sendHash := range chainOb.txWatchList {
 		receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
 		if err != nil {
@@ -399,7 +398,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				continue
 			}
 			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6],vLog.BlockNumber, mMint)
+			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
 
 		case logMMintedSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)

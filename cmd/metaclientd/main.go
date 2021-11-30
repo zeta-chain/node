@@ -11,8 +11,8 @@ import (
 	//mcconfig "github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
-	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
+	maddr "github.com/multiformats/go-multiaddr"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -23,9 +23,9 @@ import (
 	"syscall"
 	"time"
 )
-const (
 
-)
+const ()
+
 func main() {
 	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
@@ -36,7 +36,7 @@ func main() {
 
 	var peers addr.AddrList
 	fmt.Println("peer", *peer)
-	if *peer != ""{
+	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {
 			log.Error().Err(err).Msg("NewMultiaddr error")
@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 		kgRes := mc.TestKeygen(tssServer)
 		log.Debug().Msgf("keygen succeeds! TSS pubkey: %s", kgRes.PubKey)
 
@@ -111,13 +111,12 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		)
 		if err != nil {
 			log.Warn().Err(err).Msg("grpc dial fail")
-			time.Sleep(3*time.Second)
+			time.Sleep(3 * time.Second)
 		} else {
 			break
 		}
 	}
 	log.Info().Msgf("ZetaCore to open 9090 port...")
-
 
 	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()
@@ -158,18 +157,15 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-
 	chainClientMap1, err := CreateChainClientMap(bridge1, tss)
 	if err != nil {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
 
-
 	log.Info().Msg("starting metacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
 	mo1.MonitorCore()
-
 
 	// wait....
 	ch := make(chan os.Signal, 1)
@@ -177,4 +173,3 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	<-ch
 	log.Info().Msg("stop signal received")
 }
-

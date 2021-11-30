@@ -65,3 +65,7 @@ const (
 const (
 	GasPriceKey = "GasPrice-value-"
 )
+
+const (
+	GasBalanceKey = "GasBalance-value-"
+)

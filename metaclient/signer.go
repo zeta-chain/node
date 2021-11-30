@@ -112,7 +112,7 @@ func (signer *Signer) MMint(amount *big.Int, to ethcommon.Address, gasLimit uint
 	return tx.Hash().Hex(), nil
 }
 
-func (signer *Signer) SignOutboundTx(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error){
+func (signer *Signer) SignOutboundTx(amount *big.Int, to ethcommon.Address, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
@@ -134,8 +134,6 @@ func (signer *Signer) SignOutboundTx(amount *big.Int, to ethcommon.Address, gasL
 
 	return tx, nil
 }
-
-
 
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
