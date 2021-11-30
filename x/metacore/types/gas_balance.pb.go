@@ -24,13 +24,13 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type GasBalance struct {
-	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Index       string `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	Chain       string `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain,omitempty"`
-	Signer      string `protobuf:"bytes,4,opt,name=signer,proto3" json:"signer,omitempty"`
-	BlockNums   string `protobuf:"bytes,5,opt,name=blockNums,proto3" json:"blockNums,omitempty"`
-	Balance     string `protobuf:"bytes,6,opt,name=balance,proto3" json:"balance,omitempty"`
-	MedianIndex string `protobuf:"bytes,7,opt,name=medianIndex,proto3" json:"medianIndex,omitempty"`
+	Creator     string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Index       string   `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
+	Chain       string   `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain,omitempty"`
+	Signers     []string `protobuf:"bytes,4,rep,name=signers,proto3" json:"signers,omitempty"`
+	BlockNums   []uint64 `protobuf:"varint,5,rep,packed,name=blockNums,proto3" json:"blockNums,omitempty"`
+	Balances    []string `protobuf:"bytes,6,rep,name=balances,proto3" json:"balances,omitempty"`
+	MedianIndex uint64   `protobuf:"varint,7,opt,name=medianIndex,proto3" json:"medianIndex,omitempty"`
 }
 
 func (m *GasBalance) Reset()         { *m = GasBalance{} }
@@ -87,32 +87,32 @@ func (m *GasBalance) GetChain() string {
 	return ""
 }
 
-func (m *GasBalance) GetSigner() string {
+func (m *GasBalance) GetSigners() []string {
 	if m != nil {
-		return m.Signer
+		return m.Signers
 	}
-	return ""
+	return nil
 }
 
-func (m *GasBalance) GetBlockNums() string {
+func (m *GasBalance) GetBlockNums() []uint64 {
 	if m != nil {
 		return m.BlockNums
 	}
-	return ""
+	return nil
 }
 
-func (m *GasBalance) GetBalance() string {
+func (m *GasBalance) GetBalances() []string {
 	if m != nil {
-		return m.Balance
+		return m.Balances
 	}
-	return ""
+	return nil
 }
 
-func (m *GasBalance) GetMedianIndex() string {
+func (m *GasBalance) GetMedianIndex() uint64 {
 	if m != nil {
 		return m.MedianIndex
 	}
-	return ""
+	return 0
 }
 
 func init() {
@@ -122,24 +122,24 @@ func init() {
 func init() { proto.RegisterFile("metacore/gas_balance.proto", fileDescriptor_4c211ff54c314dc1) }
 
 var fileDescriptor_4c211ff54c314dc1 = []byte{
-	// 263 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0x41, 0x4a, 0x03, 0x31,
-	0x18, 0x85, 0x27, 0x6a, 0xa7, 0x34, 0xee, 0x42, 0x91, 0x50, 0x24, 0x14, 0x57, 0x6e, 0x9c, 0x01,
-	0xbd, 0x41, 0x37, 0x22, 0xa8, 0x88, 0x4b, 0x37, 0x92, 0x49, 0x43, 0x1a, 0x9c, 0xc9, 0x5f, 0x92,
-	0x14, 0xea, 0x2d, 0x3c, 0x94, 0x0b, 0x97, 0x5d, 0xba, 0x94, 0x99, 0x8b, 0x48, 0x92, 0x99, 0xb6,
-	0xbb, 0xf7, 0xbe, 0xff, 0x4f, 0x5e, 0xf2, 0xf0, 0xac, 0x91, 0x9e, 0x0b, 0xb0, 0xb2, 0x54, 0xdc,
-	0xbd, 0x57, 0xbc, 0xe6, 0x46, 0xc8, 0x62, 0x6d, 0xc1, 0x03, 0x61, 0x4f, 0xd2, 0xf3, 0x97, 0x20,
-	0x05, 0xd4, 0xc5, 0xb0, 0xb8, 0x17, 0xb3, 0xa9, 0x02, 0x05, 0x71, 0xb5, 0x0c, 0x2a, 0x9d, 0xba,
-	0xfa, 0x46, 0x18, 0xdf, 0x73, 0xb7, 0x48, 0x57, 0x11, 0x8a, 0xc7, 0xc2, 0x4a, 0xee, 0xc1, 0x52,
-	0x34, 0x47, 0xd7, 0x93, 0xd7, 0xc1, 0x92, 0x29, 0x1e, 0x69, 0xb3, 0x94, 0x5b, 0x7a, 0x12, 0x79,
-	0x32, 0x81, 0x8a, 0x15, 0xd7, 0x86, 0x9e, 0x26, 0x1a, 0x0d, 0xb9, 0xc0, 0xb9, 0xd3, 0xca, 0x48,
-	0x4b, 0xcf, 0x22, 0xee, 0x1d, 0xb9, 0xc4, 0x93, 0xaa, 0x06, 0xf1, 0xf1, 0xbc, 0x69, 0x1c, 0x1d,
-	0xc5, 0xd1, 0x01, 0x84, 0xec, 0xfe, 0x47, 0x34, 0x4f, 0xd9, 0xbd, 0x25, 0x73, 0x7c, 0xde, 0xc8,
-	0xa5, 0xe6, 0xe6, 0x21, 0xbe, 0x60, 0x1c, 0xa7, 0xc7, 0x68, 0xf1, 0xf8, 0xd3, 0x32, 0xb4, 0x6b,
-	0x19, 0xfa, 0x6b, 0x19, 0xfa, 0xea, 0x58, 0xb6, 0xeb, 0x58, 0xf6, 0xdb, 0xb1, 0xec, 0xed, 0x56,
-	0x69, 0xbf, 0xda, 0x54, 0x85, 0x80, 0xa6, 0x0c, 0x0d, 0xdd, 0x0c, 0x15, 0x95, 0xfb, 0x2e, 0xb7,
-	0x07, 0xe9, 0x3f, 0xd7, 0xd2, 0x55, 0x79, 0xec, 0xe6, 0xee, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x0d,
-	0x52, 0x84, 0x4d, 0x6f, 0x01, 0x00, 0x00,
+	// 271 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0xb1, 0x6a, 0xeb, 0x30,
+	0x14, 0x86, 0xad, 0x6b, 0x27, 0xb9, 0x51, 0x37, 0x91, 0x41, 0x98, 0x22, 0x4c, 0x27, 0x2f, 0xb5,
+	0xa1, 0x7d, 0x83, 0x2c, 0xa5, 0xd0, 0x96, 0xe2, 0xb1, 0x4b, 0x91, 0x15, 0xa1, 0x88, 0xda, 0x52,
+	0x90, 0x14, 0x48, 0xdf, 0xa2, 0x8f, 0x95, 0x31, 0x63, 0xc7, 0x62, 0xbf, 0x48, 0x91, 0x1c, 0x3b,
+	0xdd, 0xfe, 0xef, 0xe3, 0x9c, 0x83, 0xf4, 0xc3, 0xb4, 0xe5, 0x8e, 0x32, 0x6d, 0x78, 0x29, 0xa8,
+	0x7d, 0xaf, 0x69, 0x43, 0x15, 0xe3, 0xc5, 0xce, 0x68, 0xa7, 0x11, 0x79, 0xe6, 0x8e, 0xbe, 0xfa,
+	0xc8, 0x74, 0x53, 0x8c, 0x83, 0x53, 0x48, 0x57, 0x42, 0x0b, 0x1d, 0x46, 0x4b, 0x9f, 0x86, 0xad,
+	0x9b, 0x23, 0x80, 0xf0, 0x81, 0xda, 0xf5, 0x70, 0x0a, 0x61, 0xb8, 0x60, 0x86, 0x53, 0xa7, 0x0d,
+	0x06, 0x19, 0xc8, 0x97, 0xd5, 0x88, 0x68, 0x05, 0x67, 0x52, 0x6d, 0xf8, 0x01, 0xff, 0x0b, 0x7e,
+	0x00, 0x6f, 0xd9, 0x96, 0x4a, 0x85, 0xe3, 0xc1, 0x06, 0xf0, 0x57, 0xac, 0x14, 0x8a, 0x1b, 0x8b,
+	0x93, 0x2c, 0xf6, 0x57, 0xce, 0x88, 0xae, 0xe1, 0xb2, 0x6e, 0x34, 0xfb, 0x78, 0xd9, 0xb7, 0x16,
+	0xcf, 0xb2, 0x38, 0x4f, 0xaa, 0x8b, 0x40, 0x29, 0xfc, 0x7f, 0xfe, 0x93, 0xc5, 0xf3, 0xb0, 0x38,
+	0x31, 0xca, 0xe0, 0x55, 0xcb, 0x37, 0x92, 0xaa, 0xc7, 0xf0, 0x8a, 0x45, 0x06, 0xf2, 0xa4, 0xfa,
+	0xab, 0xd6, 0x4f, 0xc7, 0x8e, 0x80, 0x53, 0x47, 0xc0, 0x4f, 0x47, 0xc0, 0x57, 0x4f, 0xa2, 0x53,
+	0x4f, 0xa2, 0xef, 0x9e, 0x44, 0x6f, 0x77, 0x42, 0xba, 0xed, 0xbe, 0x2e, 0x98, 0x6e, 0x4b, 0xdf,
+	0xd2, 0xed, 0x58, 0x53, 0x39, 0xf5, 0x79, 0xb8, 0x44, 0xf7, 0xb9, 0xe3, 0xb6, 0x9e, 0x87, 0x7e,
+	0xee, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x39, 0xfe, 0x1e, 0x55, 0x73, 0x01, 0x00, 0x00,
 }
 
 func (m *GasBalance) Marshal() (dAtA []byte, err error) {
@@ -162,33 +162,46 @@ func (m *GasBalance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.MedianIndex) > 0 {
-		i -= len(m.MedianIndex)
-		copy(dAtA[i:], m.MedianIndex)
-		i = encodeVarintGasBalance(dAtA, i, uint64(len(m.MedianIndex)))
+	if m.MedianIndex != 0 {
+		i = encodeVarintGasBalance(dAtA, i, uint64(m.MedianIndex))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x38
 	}
-	if len(m.Balance) > 0 {
-		i -= len(m.Balance)
-		copy(dAtA[i:], m.Balance)
-		i = encodeVarintGasBalance(dAtA, i, uint64(len(m.Balance)))
-		i--
-		dAtA[i] = 0x32
+	if len(m.Balances) > 0 {
+		for iNdEx := len(m.Balances) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Balances[iNdEx])
+			copy(dAtA[i:], m.Balances[iNdEx])
+			i = encodeVarintGasBalance(dAtA, i, uint64(len(m.Balances[iNdEx])))
+			i--
+			dAtA[i] = 0x32
+		}
 	}
 	if len(m.BlockNums) > 0 {
-		i -= len(m.BlockNums)
-		copy(dAtA[i:], m.BlockNums)
-		i = encodeVarintGasBalance(dAtA, i, uint64(len(m.BlockNums)))
+		dAtA2 := make([]byte, len(m.BlockNums)*10)
+		var j1 int
+		for _, num := range m.BlockNums {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintGasBalance(dAtA, i, uint64(j1))
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintGasBalance(dAtA, i, uint64(len(m.Signer)))
-		i--
-		dAtA[i] = 0x22
+	if len(m.Signers) > 0 {
+		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signers[iNdEx])
+			copy(dAtA[i:], m.Signers[iNdEx])
+			i = encodeVarintGasBalance(dAtA, i, uint64(len(m.Signers[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
 	}
 	if len(m.Chain) > 0 {
 		i -= len(m.Chain)
@@ -243,21 +256,27 @@ func (m *GasBalance) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGasBalance(uint64(l))
 	}
-	l = len(m.Signer)
-	if l > 0 {
-		n += 1 + l + sovGasBalance(uint64(l))
+	if len(m.Signers) > 0 {
+		for _, s := range m.Signers {
+			l = len(s)
+			n += 1 + l + sovGasBalance(uint64(l))
+		}
 	}
-	l = len(m.BlockNums)
-	if l > 0 {
-		n += 1 + l + sovGasBalance(uint64(l))
+	if len(m.BlockNums) > 0 {
+		l = 0
+		for _, e := range m.BlockNums {
+			l += sovGasBalance(uint64(e))
+		}
+		n += 1 + sovGasBalance(uint64(l)) + l
 	}
-	l = len(m.Balance)
-	if l > 0 {
-		n += 1 + l + sovGasBalance(uint64(l))
+	if len(m.Balances) > 0 {
+		for _, s := range m.Balances {
+			l = len(s)
+			n += 1 + l + sovGasBalance(uint64(l))
+		}
 	}
-	l = len(m.MedianIndex)
-	if l > 0 {
-		n += 1 + l + sovGasBalance(uint64(l))
+	if m.MedianIndex != 0 {
+		n += 1 + sovGasBalance(uint64(m.MedianIndex))
 	}
 	return n
 }
@@ -395,7 +414,7 @@ func (m *GasBalance) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -423,43 +442,87 @@ func (m *GasBalance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
+			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 5:
-			if wireType != 2 {
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGasBalance
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.BlockNums = append(m.BlockNums, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowGasBalance
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthGasBalance
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthGasBalance
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.BlockNums) == 0 {
+					m.BlockNums = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowGasBalance
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.BlockNums = append(m.BlockNums, v)
+				}
+			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field BlockNums", wireType)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGasBalance
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGasBalance
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGasBalance
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BlockNums = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Balance", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Balances", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -487,13 +550,13 @@ func (m *GasBalance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Balance = string(dAtA[iNdEx:postIndex])
+			m.Balances = append(m.Balances, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 7:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MedianIndex", wireType)
 			}
-			var stringLen uint64
+			m.MedianIndex = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGasBalance
@@ -503,24 +566,11 @@ func (m *GasBalance) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.MedianIndex |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGasBalance
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGasBalance
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MedianIndex = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGasBalance(dAtA[iNdEx:])
