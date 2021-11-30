@@ -109,7 +109,6 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 
 	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
 	//keyAddr = ethcommon.BytesToAddress(keyAddrBytes)
-	log.Info().Msgf("keyAddr: %s", keyAddr.String())
 
 	return keyAddr, nil
 }
