@@ -36,7 +36,6 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 
 	registry := codectypes.NewInterfaceRegistry()
 
-
 	keeper := NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,

@@ -24,6 +24,7 @@ type TssHttpServer struct {
 	tssServer tss.Server
 	s         *http.Server
 }
+
 // NewTssHttpServer should only listen to the loopback
 func NewTssHttpServer(tssAddr string, t tss.Server) *TssHttpServer {
 	hs := &TssHttpServer{
@@ -178,4 +179,3 @@ func (t *TssHttpServer) getP2pIDHandler(w http.ResponseWriter, _ *http.Request) 
 		t.logger.Error().Err(err).Msg("fail to write to response")
 	}
 }
-

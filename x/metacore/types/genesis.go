@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
+		GasBalanceList:      []*GasBalance{},
 		GasPriceList:        []*GasPrice{},
 		ChainNoncesList:     []*ChainNonces{},
 		LastBlockHeightList: []*LastBlockHeight{},
@@ -28,6 +29,15 @@ func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
 	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in gasBalance
+	gasBalanceIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.GasBalanceList {
+		if _, ok := gasBalanceIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for gasBalance")
+		}
+		gasBalanceIndexMap[elem.Index] = true
+	}
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)
 

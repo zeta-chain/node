@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/gas_balance.proto";
 import "metacore/gas_price.proto";
 import "metacore/chain_nonces.proto";
 import "metacore/last_block_height.proto";
@@ -16,6 +17,17 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a gasBalance by index.
+	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/gasBalance/{index}";
+	}
+
+	// Queries a list of gasBalance items.
+	rpc GasBalanceAll(QueryAllGasBalanceRequest) returns (QueryAllGasBalanceResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/gasBalance";
+	}
+
 
 	// Queries a gasPrice by index.
 	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
@@ -93,6 +105,22 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetGasBalanceRequest {
+	string index = 1;
+}
+
+message QueryGetGasBalanceResponse {
+	GasBalance GasBalance = 1;
+}
+
+message QueryAllGasBalanceRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllGasBalanceResponse {
+	repeated GasBalance GasBalance = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetGasPriceRequest {
 	string index = 1;
 }

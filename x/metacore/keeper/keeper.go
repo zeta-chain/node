@@ -32,9 +32,9 @@ func NewKeeper(
 
 ) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
 		StakingKeeper: stakingKeeper,
 		// this line is used by starport scaffolding # ibc/keeper/return
 

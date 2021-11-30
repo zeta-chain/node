@@ -34,7 +34,7 @@ func CmdGasPriceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), (argsChain), uint64(argsPrice), (argsSupply),  uint64(argsBlockNumber))
+			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), (argsChain), uint64(argsPrice), (argsSupply), uint64(argsBlockNumber))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

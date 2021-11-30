@@ -40,10 +40,10 @@ var testPrivKeys = []string{
 }
 
 type TSS struct {
-	Server *tss.TssServer
-	PubkeyInBytes []byte
+	Server         *tss.TssServer
+	PubkeyInBytes  []byte
 	PubkeyInBech32 string
-	AddressInHex string
+	AddressInHex   string
 }
 
 func (tss *TSS) Pubkey() []byte {
@@ -92,7 +92,7 @@ func (tss *TSS) Address() ethcommon.Address {
 	return addr
 }
 
-func getKeyAddr(tssPubkey string) (ethcommon.Address, error ){
+func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
@@ -115,7 +115,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error ){
 }
 
 func NewTSS(peer addr.AddrList) (*TSS, error) {
-	server, _, err  := SetupTSSServer(peer, "")
+	server, _, err := SetupTSSServer(peer, "")
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -138,7 +138,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	found := false
 	sharefiles := []os.DirEntry{}
 	for _, file := range files {
-		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), "localstate"){
+		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), "localstate") {
 			sharefiles = append(sharefiles, file)
 		}
 	}
@@ -270,7 +270,6 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	}
 }
 
-
 func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 	// check if we already have LocalState persisted in files
 	var req keygen.Request
@@ -284,7 +283,6 @@ func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 
 	return res
 }
-
 
 func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
 	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)

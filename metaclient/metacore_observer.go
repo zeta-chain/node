@@ -26,7 +26,7 @@ const (
 type CoreObserver struct {
 	sendQueue  []*types.Send
 	sendMap    map[string]*types.Send // send.Index => send
-	sendStatus map[string]TxStatus // send.Index => status
+	sendStatus map[string]TxStatus    // send.Index => status
 	recvMap    map[string]*types.Receive
 	recvStatus map[string]TxStatus
 	bridge     *MetachainBridge
@@ -60,7 +60,7 @@ func (co *CoreObserver) MonitorCore() {
 				continue
 			}
 			for _, send := range sendList {
-				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort  {
+				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort {
 					if oldSend, found := co.sendMap[send.Index]; !found || oldSend.Status != send.Status {
 						co.lock.Lock()
 						if !found {
@@ -74,7 +74,7 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
 					}
-				} else if send.Status == types.SendStatus_Mined  {
+				} else if send.Status == types.SendStatus_Mined {
 					if send, found := co.sendMap[send.Index]; found {
 						co.lock.Lock()
 						if co.sendStatus[send.Index] != Mined {
@@ -99,7 +99,7 @@ func (co *CoreObserver) MonitorCore() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
-			for _, recv:= range recvList {
+			for _, recv := range recvList {
 				if recv.Status == common.ReceiveStatus_Created {
 					if _, found := co.recvMap[recv.Index]; !found {
 						co.lock.Lock()
@@ -196,7 +196,5 @@ func (co *CoreObserver) MonitorCore() {
 		}
 
 	}()
-
-
 
 }

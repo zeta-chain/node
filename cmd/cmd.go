@@ -1,3 +1,4 @@
+//go:build !testnet && !mocknet
 // +build !testnet,!mocknet
 
 package cmd

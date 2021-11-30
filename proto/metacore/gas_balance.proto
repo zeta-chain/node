@@ -1,0 +1,16 @@
+syntax = "proto3";
+package MetaProtocol.metacore.metacore;
+
+option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
+
+import "gogoproto/gogo.proto";
+
+message GasBalance {
+  string creator = 1;
+  string index = 2;
+  string chain = 3; 
+  repeated string signer = 4;
+  repeated uint64 blockNums = 5;
+  repeated string balance = 6;
+  uint64 medianIndex = 7;
+}

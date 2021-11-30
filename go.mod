@@ -9,6 +9,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.42.6
 	github.com/ethereum/go-ethereum v1.10.9
 	github.com/gogo/protobuf v1.3.3
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/mux v1.8.0

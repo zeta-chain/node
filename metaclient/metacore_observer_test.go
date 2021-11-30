@@ -1,3 +1,4 @@
+//go:build metacore_observer
 // +build metacore_observer
 
 package metaclient
