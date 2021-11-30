@@ -30,17 +30,18 @@ type ChainObserver struct {
 	zetaAbi     *abi.ABI // only useful for ethereum; the token contract
 	client      *ethclient.Client
 	bridge      *MetachainBridge
+	tss         TSSSigner
 	lastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon.Address) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
-
+	chainOb.tss = tss
 	// Initialize constants
 	switch chain {
 	case common.POLYGONChain:
@@ -97,7 +98,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss ethcommon
 		chainOb.lastBlock = header.Number.Uint64()
 	}
 
-	nonce, err := client.NonceAt(context.TODO(), tss, nil)
+	nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
 	if err != nil {
 		log.Err(err).Msg("NonceAt")
 		return nil, err
@@ -183,6 +184,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 		//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
 		supply = lockedAmount.String()
+
 	} else if chainOb.chain == common.BSCChain {
 		input, err := chainOb.abi.Pack("totalSupply")
 		if err != nil {
@@ -249,6 +251,13 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+
+	bal, err := chainOb.client.BalanceAt(context.TODO(), chainOb.tss.Address(), nil)
+	_, err = chainOb.bridge.PostGasBalance(chainOb.chain, bal.String(), blockNum)
+	if err != nil {
+		log.Err(err).Msg("PostGasBalance:")
 		return err
 	}
 	return nil

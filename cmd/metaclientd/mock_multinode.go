@@ -132,7 +132,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[common.Chain]*mc.ChainObserver, error) {
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
-	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss.Address())
+	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss)
 	if err != nil {
 		log.Err(err).Msg("ETH NewChainObserver")
 		return nil, err
@@ -142,7 +142,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[co
 	go eth1.WatchGasPrice()
 
 	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss.Address())
+	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss)
 	if err != nil {
 		log.Err(err).Msg("BSC NewChainObserver")
 		return nil, err
@@ -152,7 +152,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[co
 	go bsc1.WatchGasPrice()
 
 	log.Info().Msg("starting polygon observer...")
-	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss.Address())
+	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss)
 	if err != nil {
 		log.Err(err).Msg("POLYGON NewChainObserver")
 		return nil, err
