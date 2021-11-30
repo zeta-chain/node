@@ -19302,14 +19302,22 @@ paths:
                       type: string
                     chain:
                       type: string
-                    signer:
-                      type: string
+                    signers:
+                      type: array
+                      items:
+                        type: string
                     blockNums:
-                      type: string
-                    balance:
-                      type: string
+                      type: array
+                      items:
+                        type: string
+                        format: uint64
+                    balances:
+                      type: array
+                      items:
+                        type: string
                     medianIndex:
                       type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -19423,14 +19431,22 @@ paths:
                     type: string
                   chain:
                     type: string
-                  signer:
-                    type: string
+                  signers:
+                    type: array
+                    items:
+                      type: string
                   blockNums:
-                    type: string
-                  balance:
-                    type: string
+                    type: array
+                    items:
+                      type: string
+                      format: uint64
+                  balances:
+                    type: array
+                    items:
+                      type: string
                   medianIndex:
                     type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30694,14 +30710,22 @@ definitions:
         type: string
       chain:
         type: string
-      signer:
-        type: string
+      signers:
+        type: array
+        items:
+          type: string
       blockNums:
-        type: string
-      balance:
-        type: string
+        type: array
+        items:
+          type: string
+          format: uint64
+      balances:
+        type: array
+        items:
+          type: string
       medianIndex:
         type: string
+        format: uint64
   MetaProtocol.metacore.metacore.GasPrice:
     type: object
     properties:
@@ -30743,6 +30767,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  MetaProtocol.metacore.metacore.MsgGasBalanceVoterResponse:
+    type: object
   MetaProtocol.metacore.metacore.MsgGasPriceVoterResponse:
     type: object
   MetaProtocol.metacore.metacore.MsgNonceVoterResponse:
@@ -30854,14 +30880,22 @@ definitions:
               type: string
             chain:
               type: string
-            signer:
-              type: string
+            signers:
+              type: array
+              items:
+                type: string
             blockNums:
-              type: string
-            balance:
-              type: string
+              type: array
+              items:
+                type: string
+                format: uint64
+            balances:
+              type: array
+              items:
+                type: string
             medianIndex:
               type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -31224,14 +31258,22 @@ definitions:
             type: string
           chain:
             type: string
-          signer:
-            type: string
+          signers:
+            type: array
+            items:
+              type: string
           blockNums:
-            type: string
-          balance:
-            type: string
+            type: array
+            items:
+              type: string
+              format: uint64
+          balances:
+            type: array
+            items:
+              type: string
           medianIndex:
             type: string
+            format: uint64
   MetaProtocol.metacore.metacore.QueryGetGasPriceResponse:
     type: object
     properties:
