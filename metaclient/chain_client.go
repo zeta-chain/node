@@ -2,11 +2,13 @@ package metaclient
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/rs/zerolog/log"
+	"github.com/syndtr/goleveldb/leveldb"
 	"math/big"
 	"strings"
 	"time"
@@ -16,6 +18,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+)
+
+const (
+	PosKey = "PosKey"
+	NUM_BLOCKS_PER_OBSERVE = 32
 )
 
 // Chain configuration struct
@@ -34,10 +41,11 @@ type ChainObserver struct {
 	lastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
+	db          *leveldb.DB
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
@@ -88,26 +96,43 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		return nil, err
 	}
 	chainOb.client = client
-	chainOb.lastBlock = chainOb.getLastHeight()
-	// if ZetaCore does not have last heard block height, then use current
-	if chainOb.lastBlock == 0 {
-		header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
+
+	path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
+	db, err := leveldb.OpenFile(path, nil)
+	if err != nil {
+		return nil, err
+	}
+	buf, err := db.Get([]byte(PosKey), nil)
+	if nil != nil {
+		chainOb.lastBlock = chainOb.getLastHeight()
+		// if ZetaCore does not have last heard block height, then use current
+		if chainOb.lastBlock == 0 {
+			header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
+			if err != nil {
+				return nil, err
+			}
+			chainOb.lastBlock = header.Number.Uint64()
+		}
+		buf := make([]byte, 8)
+		binary.PutUvarint(buf, chainOb.lastBlock)
+	} else {
+		chainOb.lastBlock, _ = binary.Uvarint(buf)
+	}
+	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.lastBlock)
+
+	_, err = bridge.GetNonceByChain(chain)
+	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
 		if err != nil {
+			log.Err(err).Msg("NonceAt")
 			return nil, err
 		}
-		chainOb.lastBlock = header.Number.Uint64()
-	}
-
-	nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-	if err != nil {
-		log.Err(err).Msg("NonceAt")
-		return nil, err
-	}
-	log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-	_, err = bridge.PostNonce(chain, nonce)
-	if err != nil {
-		log.Err(err).Msg("PostNonce")
-		return nil, err
+		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+		_, err = bridge.PostNonce(chain, nonce)
+		if err != nil {
+			log.Err(err).Msg("PostNonce")
+			return nil, err
+		}
 	}
 
 	return &chainOb, nil
@@ -293,7 +318,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	if confirmedBlockNum <= chainOb.lastBlock {
 		return nil
 	}
-	toBlock := chainOb.lastBlock + 10 // read at most 10 blocks in one go
+	toBlock := chainOb.lastBlock + NUM_BLOCKS_PER_OBSERVE
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
@@ -439,7 +464,9 @@ func (chainOb *ChainObserver) observeChain() error {
 	}
 
 	chainOb.lastBlock = toBlock
-
+	var buf [8]byte
+	n := binary.PutUvarint(buf[:], toBlock)
+	chainOb.db.Put([]byte(PosKey), buf[:n], nil)
 	return nil
 }
 
