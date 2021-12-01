@@ -88,7 +88,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		return nil, err
 	}
 	chainOb.client = client
-	chainOb.lastBlock = chainOb.setLastBlock()
+	chainOb.lastBlock = chainOb.getLastHeight()
 	// if ZetaCore does not have last heard block height, then use current
 	if chainOb.lastBlock == 0 {
 		header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
@@ -445,10 +445,10 @@ func (chainOb *ChainObserver) observeChain() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (chainOb *ChainObserver) setLastBlock() uint64 {
+func (chainOb *ChainObserver) getLastHeight() uint64 {
 	lastheight, err := chainOb.bridge.GetLastBlockHeightByChain(chainOb.chain)
 	if err != nil {
-		log.Warn().Err(err).Msgf("setLastBlock")
+		log.Warn().Err(err).Msgf("getLastHeight")
 		return 0
 	}
 	return lastheight.LastSendHeight
