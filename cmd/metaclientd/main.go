@@ -190,4 +190,8 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 	log.Info().Msg("stop signal received")
+
+	(*chainClientMap1)[common.ETHChain].Stop()
+	(*chainClientMap1)[common.BSCChain].Stop()
+	(*chainClientMap1)[common.POLYGONChain].Stop()
 }
