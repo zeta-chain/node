@@ -466,7 +466,7 @@ func (chainOb *ChainObserver) observeChain() error {
 
 	chainOb.LastBlock = toBlock
 	buf := make([]byte, 8)
-	n := binary.PutUvarint(buf[:], toBlock)
+	n := binary.PutUvarint(buf, toBlock)
 	chainOb.db.Put([]byte(PosKey), buf[:n], nil)
 	return nil
 }
