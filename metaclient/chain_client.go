@@ -99,9 +99,11 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
 	db, err := leveldb.OpenFile(path, nil)
+
 	if err != nil {
 		return nil, err
 	}
+	chainOb.db = db
 	buf, err := db.Get([]byte(PosKey), nil)
 	if err != nil {
 		log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
@@ -114,8 +116,9 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 			}
 			chainOb.LastBlock = header.Number.Uint64()
 		}
-		buf := make([]byte, 8)
-		binary.PutUvarint(buf, chainOb.LastBlock)
+		buf2 := make([]byte, binary.MaxVarintLen64)
+		n := binary.PutUvarint(buf2, chainOb.LastBlock)
+		db.Put([]byte(PosKey), buf2[:n], nil)
 	} else {
 		chainOb.LastBlock, _ = binary.Uvarint(buf)
 	}
@@ -465,7 +468,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	}
 
 	chainOb.LastBlock = toBlock
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
 	chainOb.db.Put([]byte(PosKey), buf[:n], nil)
 	return nil
@@ -490,4 +493,8 @@ func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
 		return nil
 	}
 	return gasPrice
+}
+
+func (chainOb *ChainObserver) Stop() error {
+	return chainOb.db.Close()
 }
