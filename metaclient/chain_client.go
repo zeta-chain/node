@@ -38,7 +38,7 @@ type ChainObserver struct {
 	client      *ethclient.Client
 	bridge      *MetachainBridge
 	tss         TSSSigner
-	lastBlock   uint64
+	LastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
 	db          *leveldb.DB
@@ -103,22 +103,23 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		return nil, err
 	}
 	buf, err := db.Get([]byte(PosKey), nil)
-	if nil != nil {
-		chainOb.lastBlock = chainOb.getLastHeight()
+	if err != nil {
+		log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
+		chainOb.LastBlock = chainOb.getLastHeight()
 		// if ZetaCore does not have last heard block height, then use current
-		if chainOb.lastBlock == 0 {
+		if chainOb.LastBlock == 0 {
 			header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return nil, err
 			}
-			chainOb.lastBlock = header.Number.Uint64()
+			chainOb.LastBlock = header.Number.Uint64()
 		}
 		buf := make([]byte, 8)
-		binary.PutUvarint(buf, chainOb.lastBlock)
+		binary.PutUvarint(buf, chainOb.LastBlock)
 	} else {
-		chainOb.lastBlock, _ = binary.Uvarint(buf)
+		chainOb.LastBlock, _ = binary.Uvarint(buf)
 	}
-	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.lastBlock)
+	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
 	_, err = bridge.GetNonceByChain(chain)
 	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
@@ -315,16 +316,16 @@ func (chainOb *ChainObserver) observeChain() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= chainOb.lastBlock {
+	if confirmedBlockNum <= chainOb.LastBlock {
 		return nil
 	}
-	toBlock := chainOb.lastBlock + NUM_BLOCKS_PER_OBSERVE
+	toBlock := chainOb.LastBlock + NUM_BLOCKS_PER_OBSERVE
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},
-		FromBlock: big.NewInt(0).SetUint64(chainOb.lastBlock + 1), // lastBlock has been processed;
+		FromBlock: big.NewInt(0).SetUint64(chainOb.LastBlock + 1), // LastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
@@ -463,7 +464,7 @@ func (chainOb *ChainObserver) observeChain() error {
 		}
 	}
 
-	chainOb.lastBlock = toBlock
+	chainOb.LastBlock = toBlock
 	var buf [8]byte
 	n := binary.PutUvarint(buf[:], toBlock)
 	chainOb.db.Put([]byte(PosKey), buf[:n], nil)

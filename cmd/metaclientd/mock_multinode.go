@@ -61,12 +61,15 @@ func mock_integration_test() {
 		return
 	}
 
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss)
+	userDir, _ := os.UserHomeDir()
+	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
-	chainClientMap2, err := CreateChainClientMap(bridge2, tss)
+	chainClientMap2, err := CreateChainClientMap(bridge2, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("CreateSignerMap")
 		return
@@ -129,10 +132,10 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[common.Chain]*mc.ChainObserver, error) {
+func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string) (*map[common.Chain]*mc.ChainObserver, error) {
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
-	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss)
+	eth1, err := mc.NewChainObserver(common.ETHChain, bridge, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("ETH NewChainObserver")
 		return nil, err
@@ -142,7 +145,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[co
 	go eth1.WatchGasPrice()
 
 	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss)
+	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("BSC NewChainObserver")
 		return nil, err
@@ -152,7 +155,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner) (*map[co
 	go bsc1.WatchGasPrice()
 
 	log.Info().Msg("starting polygon observer...")
-	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss)
+	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("POLYGON NewChainObserver")
 		return nil, err
