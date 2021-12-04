@@ -49,15 +49,15 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.router = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.abiString = config.NONETH_ZETA_ABI
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 
 	case common.ETHChain:
 		chainOb.chain = chain
-		chainOb.router = config.ETH_METALOCK_ADDRESS
+		chainOb.router = config.ETH_ZETALOCK_ADDRESS
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.ETH_ZETA_LOCK_ABI
+		chainOb.abiString = config.ETH_ZETALOCK_ABI
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 
 	case common.BSCChain:
@@ -65,7 +65,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.router = config.BSC_TOKEN_ADDRESS
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.BSC_ZETA_ABI
+		chainOb.abiString = config.NONETH_ZETA_ABI
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 	}
 	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
@@ -74,7 +74,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	}
 	chainOb.abi = &contractABI
 	if chain == common.ETHChain {
-		tokenABI, err := abi.JSON(strings.NewReader(config.ETH_META_ABI))
+		tokenABI, err := abi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-		toAddr := ethcommon.HexToAddress(config.ETH_METALOCK_ADDRESS)
+		toAddr := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
 		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
 			To:   &toAddr,
@@ -314,7 +314,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	contractAbi := chainOb.abi
 
 	// LockSend event signature
-	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
+	logLockSendSignature := []byte("LockSend(address,string,uint256,uint256,string,bytes)")
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
 	// Unlock event signature
@@ -322,7 +322,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
 
 	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,string,uint256,string,bytes)")
+	logBurnSendSignature := []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
 	// MMinted event signature
@@ -346,10 +346,10 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
 				returnVal[1].(string),
-				returnVal[3].(string),
+				returnVal[4].(string),
 				returnVal[2].(*big.Int).String(),
-				"",
-				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
+				returnVal[3].(*big.Int).String(),
+				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -372,8 +372,8 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[1].(string),
 				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				"",
-				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
+				returnVal[3].(*big.Int).String(),
+				string(returnVal[4].([]byte)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
