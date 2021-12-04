@@ -2,11 +2,13 @@ package metaclient
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/rs/zerolog/log"
+	"github.com/syndtr/goleveldb/leveldb"
 	"math/big"
 	"strings"
 	"time"
@@ -16,6 +18,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+)
+
+const (
+	PosKey                 = "PosKey"
+	NUM_BLOCKS_PER_OBSERVE = 32
 )
 
 // Chain configuration struct
@@ -31,13 +38,14 @@ type ChainObserver struct {
 	client      *ethclient.Client
 	bridge      *MetachainBridge
 	tss         TSSSigner
-	lastBlock   uint64
+	LastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
+	db          *leveldb.DB
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
@@ -88,26 +96,47 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		return nil, err
 	}
 	chainOb.client = client
-	chainOb.lastBlock = chainOb.setLastBlock()
-	// if ZetaCore does not have last heard block height, then use current
-	if chainOb.lastBlock == 0 {
-		header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
+
+	path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
+	db, err := leveldb.OpenFile(path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+	chainOb.db = db
+	buf, err := db.Get([]byte(PosKey), nil)
+	if err != nil {
+		log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
+		chainOb.LastBlock = chainOb.getLastHeight()
+		// if ZetaCore does not have last heard block height, then use current
+		if chainOb.LastBlock == 0 {
+			header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
+			if err != nil {
+				return nil, err
+			}
+			chainOb.LastBlock = header.Number.Uint64()
+		}
+		buf2 := make([]byte, binary.MaxVarintLen64)
+		n := binary.PutUvarint(buf2, chainOb.LastBlock)
+		db.Put([]byte(PosKey), buf2[:n], nil)
+	} else {
+		chainOb.LastBlock, _ = binary.Uvarint(buf)
+	}
+	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
+
+	_, err = bridge.GetNonceByChain(chain)
+	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
 		if err != nil {
+			log.Err(err).Msg("NonceAt")
 			return nil, err
 		}
-		chainOb.lastBlock = header.Number.Uint64()
-	}
-
-	nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-	if err != nil {
-		log.Err(err).Msg("NonceAt")
-		return nil, err
-	}
-	log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-	_, err = bridge.PostNonce(chain, nonce)
-	if err != nil {
-		log.Err(err).Msg("PostNonce")
-		return nil, err
+		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+		_, err = bridge.PostNonce(chain, nonce)
+		if err != nil {
+			log.Err(err).Msg("PostNonce")
+			return nil, err
+		}
 	}
 
 	return &chainOb, nil
@@ -290,16 +319,16 @@ func (chainOb *ChainObserver) observeChain() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= chainOb.lastBlock {
+	if confirmedBlockNum <= chainOb.LastBlock {
 		return nil
 	}
-	toBlock := chainOb.lastBlock + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
+	toBlock := chainOb.LastBlock + 10 // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},
-		FromBlock: big.NewInt(0).SetUint64(chainOb.lastBlock + 1), // lastBlock has been processed;
+		FromBlock: big.NewInt(0).SetUint64(chainOb.LastBlock + 1), // LastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
@@ -314,7 +343,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	contractAbi := chainOb.abi
 
 	// LockSend event signature
-	logLockSendSignature := []byte("LockSend(address,string,uint256,uint256,string,bytes)")
+	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
 	// Unlock event signature
@@ -322,7 +351,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
 
 	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
+	logBurnSendSignature := []byte("BurnSend(address,string,uint256,string,bytes)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
 	// MMinted event signature
@@ -346,10 +375,10 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
 				returnVal[1].(string),
-				returnVal[4].(string),
+				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				returnVal[3].(*big.Int).String(),
-				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
+				"",
+				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -372,8 +401,8 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[1].(string),
 				returnVal[3].(string),
 				returnVal[2].(*big.Int).String(),
-				returnVal[3].(*big.Int).String(),
-				string(returnVal[4].([]byte)), // TODO: figure out appropriate format for message
+				"",
+				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -438,17 +467,19 @@ func (chainOb *ChainObserver) observeChain() error {
 		}
 	}
 
-	chainOb.lastBlock = toBlock
-
+	chainOb.LastBlock = toBlock
+	buf := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutUvarint(buf, toBlock)
+	chainOb.db.Put([]byte(PosKey), buf[:n], nil)
 	return nil
 }
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (chainOb *ChainObserver) setLastBlock() uint64 {
+func (chainOb *ChainObserver) getLastHeight() uint64 {
 	lastheight, err := chainOb.bridge.GetLastBlockHeightByChain(chainOb.chain)
 	if err != nil {
-		log.Warn().Err(err).Msgf("setLastBlock")
+		log.Warn().Err(err).Msgf("getLastHeight")
 		return 0
 	}
 	return lastheight.LastSendHeight
@@ -462,4 +493,8 @@ func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
 		return nil
 	}
 	return gasPrice
+}
+
+func (chainOb *ChainObserver) Stop() error {
+	return chainOb.db.Close()
 }
