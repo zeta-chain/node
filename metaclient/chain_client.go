@@ -343,7 +343,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	contractAbi := chainOb.abi
 
 	// LockSend event signature
-	logLockSendSignature := []byte("LockSend(address,string,uint256,string,bytes)")
+	logLockSendSignature := []byte("LockSend(address,string,uint256,uint256,string,bytes)")
 	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
 
 	// Unlock event signature
@@ -351,7 +351,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
 
 	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,string,uint256,string,bytes)")
+	logBurnSendSignature := []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
 	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
 
 	// MMinted event signature
@@ -375,10 +375,10 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
 				returnVal[1].(string),
-				returnVal[3].(string),
+				returnVal[4].(string),
 				returnVal[2].(*big.Int).String(),
-				"",
-				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
+				returnVal[3].(*big.Int).String(),
+				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -399,10 +399,10 @@ func (chainOb *ChainObserver) observeChain() error {
 				returnVal[0].(ethcommon.Address).String(),
 				chainOb.chain.String(),
 				returnVal[1].(string),
-				returnVal[3].(string),
+				returnVal[4].(string),
 				returnVal[2].(*big.Int).String(),
-				"",
-				string(returnVal[4].([]uint8)), // TODO: figure out appropriate format for message
+				returnVal[3].(*big.Int).String(),
+				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
