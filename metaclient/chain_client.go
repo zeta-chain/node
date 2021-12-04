@@ -322,7 +322,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	if confirmedBlockNum <= chainOb.LastBlock {
 		return nil
 	}
-	toBlock := chainOb.LastBlock + 10 // read at most 10 blocks in one go
+	toBlock := chainOb.LastBlock + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
