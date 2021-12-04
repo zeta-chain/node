@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/cmd"
+	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/common/cosmos"
 	mc "github.com/Meta-Protocol/metacore/metaclient"
 	"github.com/rs/zerolog"
@@ -157,7 +158,9 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss)
+	userDir, _ := os.UserHomeDir()
+	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("CreateSignerMap")
 		return
@@ -167,9 +170,28 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
 	mo1.MonitorCore()
 
+	// printout debug info from SIGUSR1
+	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
+	usr := make(chan os.Signal, 1)
+	signal.Notify(usr, syscall.SIGUSR1)
+	go func() {
+		for {
+			<-usr
+			fmt.Printf("Last blocks:\n")
+			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
+			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
+			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
+
+		}
+	}()
+
 	// wait....
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 	log.Info().Msg("stop signal received")
+
+	(*chainClientMap1)[common.ETHChain].Stop()
+	(*chainClientMap1)[common.BSCChain].Stop()
+	(*chainClientMap1)[common.POLYGONChain].Stop()
 }
