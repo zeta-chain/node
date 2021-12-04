@@ -16,20 +16,19 @@ const (
 )
 
 const (
-	TSS_TEST_PRIVKEY         = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
-	TSS_TEST_ADDRESS         = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
-	META_TEST_GOERLI_ADDRESS = "0x9f6f62a8d2853810E00B639C231bc7dC2e0018f2"
-	TEST_RECEIVER            = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
+	TSS_TEST_PRIVKEY = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
+	TSS_TEST_ADDRESS = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
+	TEST_RECEIVER    = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
 )
 
 // Constants
 // #nosec G101
 const (
 	// Routers
-	ETH_METALOCK_ADDRESS  = "0x6acb5209d48d80E457Faeb70550b78959490d6b5"
-	ETH_TOKEN_ADDRESS     = "0x5a5ad17a5be6bd856752e742a151d49995af6fce"
-	POLYGON_TOKEN_ADDRESS = "0x931310eEa6E5b8144Ba400A8205fdC5316fAEe43"
-	BSC_TOKEN_ADDRESS     = "0x86c9AbaEf7460d1057D946A459FAEC887b9843B1"
+	ETH_ZETALOCK_ADDRESS  = "0x73Bd3bc3f9e54fe0Ca6cfD837e41D20a6e549cF3"
+	ETH_TOKEN_ADDRESS     = "0x9BBff31cF0E0B7689470Fb2834295217813eCBfC"
+	POLYGON_TOKEN_ADDRESS = "0xF146f7E7b9C404874b7B0f84E62886b721101E49"
+	BSC_TOKEN_ADDRESS     = "0xC7e08ceb6bbaCaC1F4Fe1dA7EdBAEA949391a365"
 
 	// API Endpoints
 	ETH_ENDPOINT  = "https://goerli.infura.io/v3/9ba38292be764be9bca3d4ce01b9617d"
@@ -37,13 +36,13 @@ const (
 	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
 
 	// Ticker timers
-	ETH_BLOCK_TIME  = 5
+	ETH_BLOCK_TIME  = 12
 	POLY_BLOCK_TIME = 5
 	BSC_BLOCK_TIME  = 5
 )
 
 const (
-	BSC_ZETA_ABI = ` [
+	NONETH_ZETA_ABI = `[
 			{
 				"inputs": [
 					{
@@ -129,6 +128,12 @@ const (
 						"indexed": false,
 						"internalType": "uint256",
 						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "wanted",
 						"type": "uint256"
 					},
 					{
@@ -418,6 +423,11 @@ const (
 						"type": "uint256"
 					},
 					{
+						"internalType": "uint256",
+						"name": "wanted",
+						"type": "uint256"
+					},
+					{
 						"internalType": "string",
 						"name": "chainid",
 						"type": "string"
@@ -428,7 +438,7 @@ const (
 						"type": "bytes"
 					}
 				],
-				"name": "burn_send",
+				"name": "burnSend",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -595,7 +605,7 @@ const (
 						"type": "bytes32"
 					}
 				],
-				"name": "permit_burn",
+				"name": "permitBurn",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -638,7 +648,7 @@ const (
 						"type": "bytes32"
 					}
 				],
-				"name": "permit_mint",
+				"name": "permitMint",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -756,7 +766,7 @@ const (
 				"type": "function"
 			}
 		]`
-	ETH_META_ABI = `[
+	ETH_ZETA_ABI = `[
 			{
 				"inputs": [
 					{
@@ -1001,7 +1011,7 @@ const (
 				"type": "function"
 			}
 		]`
-	ETH_ZETA_LOCK_ABI = `[
+	ETH_ZETALOCK_ABI = `[
 			{
 				"inputs": [
 					{
@@ -1052,6 +1062,12 @@ const (
 						"indexed": false,
 						"internalType": "uint256",
 						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "wanted",
 						"type": "uint256"
 					},
 					{
@@ -1170,6 +1186,11 @@ const (
 					{
 						"internalType": "uint256",
 						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "wanted",
 						"type": "uint256"
 					},
 					{

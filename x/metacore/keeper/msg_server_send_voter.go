@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"math/big"
 	"strconv"
 
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
@@ -77,6 +78,38 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		if err != nil {
 			abort = true
 		}
+		{
+			gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
+			if !isFound {
+				send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
+				send.Status = types.SendStatus_Aborted
+				goto END
+			}
+			mi := gasPrice.MedianIndex
+			medianPrice := gasPrice.Prices[mi]
+			price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
+			send.GasPrice = fmt.Sprintf("%.0f", price)
+			gasLimit := float64(90_000) //TODO: let user supply this
+			exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
+			gasFeeInZeta := price * gasLimit * exchangeRate
+			mBurnt, ok := big.NewInt(0).SetString(send.MBurnt, 10)
+			if !ok {
+				send.StatusMessage = fmt.Sprintf("MBurnt cannot parse")
+				send.Status = types.SendStatus_Aborted
+				goto END
+			}
+			mMint, ok := big.NewInt(0).SetString(send.MMint, 10)
+			if !ok {
+				send.StatusMessage = fmt.Sprintf("MMint cannot parse")
+				send.Status = types.SendStatus_Aborted
+				goto END
+			}
+			gasFee := big.NewInt(int64(gasFeeInZeta))
+			toMint := big.NewInt(0).Sub(mBurnt, gasFee)
+			if toMint.Cmp(mMint) < 0 { // not enough burnt
+				abort = true
+			}
+		}
 
 		var chain common.Chain // the chain for outbound
 		if abort {
@@ -115,7 +148,9 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			send.Status = types.SendStatus_Aborted
 			goto END
 		}
-		send.MMint = fmt.Sprintf("%.0f", mBurnt-gasFeeInZeta)
+		if abort {
+			send.MMint = fmt.Sprintf("%.0f", mBurnt-gasFeeInZeta)
+		} // if not abort, then MMint is small enough that we can mint.
 
 		nonce, found := k.GetChainNonces(ctx, chain.String())
 		if !found {
