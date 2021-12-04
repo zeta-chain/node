@@ -31,7 +31,7 @@ const (
 	BSC_TOKEN_ADDRESS     = "0xC7e08ceb6bbaCaC1F4Fe1dA7EdBAEA949391a365"
 
 	// API Endpoints
-	ETH_ENDPOINT  = "https://goerli.infura.io/v3/9ba38292be764be9bca3d4ce01b9617d"
+	ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
 	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
 	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
 
