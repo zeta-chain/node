@@ -80,5 +80,9 @@ func hasSuperMajorityValidators(numSigners int, validators []stakingtypes.Valida
 			numValidValidators += 1
 		}
 	}
-	return numSigners > numValidValidators*2/3
+	threshold := numValidValidators * 2 / 3
+	if threshold < 2 {
+		threshold = 2
+	}
+	return numSigners == threshold
 }

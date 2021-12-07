@@ -46,6 +46,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			Signers:             []string{msg.Creator},
 			Status:              types.SendStatus_Created,
 			Nonce:               0,
+			RecvHash:            "",
+			IndexTxList:         -1,
 		}
 	}
 
@@ -66,6 +68,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				OutTxHash:  "",
 				OutTxChain: "",
 			})
+			send.IndexTxList = int64(len(txList.Tx) - 1)
 		}
 		k.SetTxList(ctx, txList)
 

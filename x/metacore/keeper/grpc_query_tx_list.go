@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) TxList(c context.Context, req *types.QueryGetTxListRequest) (*types.QueryGetTxListResponse, error) {
+func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.QueryGetTxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -20,5 +20,18 @@ func (k Keeper) TxList(c context.Context, req *types.QueryGetTxListRequest) (*ty
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
-	return &types.QueryGetTxListResponse{TxList: &val}, nil
+	len := int64(len(val.Tx))
+	to := req.To
+	from := req.From
+
+	if to > len || to == -1 {
+		to = len
+	}
+	if from > to {
+		from = to
+	}
+	if len == 0 {
+		return &types.QueryGetTxResponse{Tx: []*types.Tx{}}, nil
+	}
+	return &types.QueryGetTxResponse{Tx: val.Tx[from:to]}, nil
 }

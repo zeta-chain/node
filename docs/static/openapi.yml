@@ -20333,6 +20333,11 @@ paths:
                       type: string
                     statusMessage:
                       type: string
+                    recvHash:
+                      type: string
+                    indexTxList:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -20491,6 +20496,11 @@ paths:
                     type: string
                   statusMessage:
                     type: string
+                  recvHash:
+                    type: string
+                  indexTxList:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -20526,13 +20536,23 @@ paths:
           schema:
             type: object
             properties:
-              TxList:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  tx:
-                    type: string
+              tx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sendHash:
+                      type: string
+                    recvHash:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inTxChain:
+                      type: string
+                    outTxHash:
+                      type: string
+                    outTxChain:
+                      type: string
         default:
           description: An unexpected error response.
           schema:
@@ -20551,6 +20571,17 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      parameters:
+        - name: from
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: to
+          in: query
+          required: false
+          type: string
+          format: int64
       tags:
         - Query
 definitions:
@@ -31236,6 +31267,11 @@ definitions:
               type: string
             statusMessage:
               type: string
+            recvHash:
+              type: string
+            indexTxList:
+              type: string
+              format: int64
       pagination:
         type: object
         properties:
@@ -31479,16 +31515,31 @@ definitions:
             type: string
           statusMessage:
             type: string
-  MetaProtocol.metacore.metacore.QueryGetTxListResponse:
+          recvHash:
+            type: string
+          indexTxList:
+            type: string
+            format: int64
+  MetaProtocol.metacore.metacore.QueryGetTxResponse:
     type: object
     properties:
-      TxList:
-        type: object
-        properties:
-          creator:
-            type: string
-          tx:
-            type: string
+      tx:
+        type: array
+        items:
+          type: object
+          properties:
+            sendHash:
+              type: string
+            recvHash:
+              type: string
+            inTxHash:
+              type: string
+            inTxChain:
+              type: string
+            outTxHash:
+              type: string
+            outTxChain:
+              type: string
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -31579,6 +31630,11 @@ definitions:
         type: string
       statusMessage:
         type: string
+      recvHash:
+        type: string
+      indexTxList:
+        type: string
+        format: int64
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:
@@ -31590,12 +31646,20 @@ definitions:
       - Reverted
       - Aborted
     default: Created
-  MetaProtocol.metacore.metacore.TxList:
+  MetaProtocol.metacore.metacore.Tx:
     type: object
     properties:
-      creator:
+      sendHash:
         type: string
-      tx:
+      recvHash:
+        type: string
+      inTxHash:
+        type: string
+      inTxChain:
+        type: string
+      outTxHash:
+        type: string
+      outTxChain:
         type: string
   common.PubKeySet:
     type: object

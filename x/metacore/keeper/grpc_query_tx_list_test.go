@@ -17,14 +17,14 @@ func TestTxListQuery(t *testing.T) {
 	item := createTestTxList(keeper, ctx)
 	for _, tc := range []struct {
 		desc     string
-		request  *types.QueryGetTxListRequest
-		response *types.QueryGetTxListResponse
+		request  *types.QueryGetTxRequest
+		response *types.QueryGetTxResponse
 		err      error
 	}{
 		{
 			desc:     "First",
-			request:  &types.QueryGetTxListRequest{},
-			response: &types.QueryGetTxListResponse{TxList: &item},
+			request:  &types.QueryGetTxRequest{},
+			response: &types.QueryGetTxResponse{Tx: item.Tx},
 		},
 		{
 			desc: "InvalidRequest",
