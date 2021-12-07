@@ -20553,6 +20553,9 @@ paths:
                       type: string
                     outTxChain:
                       type: string
+              length:
+                type: string
+                format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -20578,6 +20581,11 @@ paths:
           type: string
           format: int64
         - name: to
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: last
           in: query
           required: false
           type: string
@@ -31540,6 +31548,9 @@ definitions:
               type: string
             outTxChain:
               type: string
+      length:
+        type: string
+        format: int64
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
