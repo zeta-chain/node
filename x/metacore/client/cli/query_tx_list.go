@@ -19,7 +19,7 @@ func CmdShowTxList() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetTxListRequest{}
+			params := &types.QueryGetTxRequest{From: 0, To: -1}
 
 			res, err := queryClient.TxList(context.Background(), params)
 			if err != nil {

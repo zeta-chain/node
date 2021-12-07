@@ -20,7 +20,7 @@ service Query {
     // this line is used by starport scaffolding # 2
 
 	// Queries a txList by index.
-	rpc TxList(QueryGetTxListRequest) returns (QueryGetTxListResponse) {
+	rpc TxList(QueryGetTxRequest) returns (QueryGetTxResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txList";
 	}
 
@@ -112,10 +112,13 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
-message QueryGetTxListRequest {}
+message QueryGetTxRequest {
+	int64 from = 1;
+	int64 to = 2;
+}
 
-message QueryGetTxListResponse {
-	TxList TxList = 1;
+message QueryGetTxResponse {
+	repeated Tx tx = 1;
 }
 message QueryGetGasBalanceRequest {
 	string index = 1;

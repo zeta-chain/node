@@ -35,4 +35,6 @@ message Send {
   uint64 nonce = 16;
   string gasPrice = 17;
   string statusMessage = 18;
+  string recvHash = 19;
+  int64  indexTxList = 20;
 }
