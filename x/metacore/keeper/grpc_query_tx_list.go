@@ -25,7 +25,8 @@ func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.
 	}
 
 	len := int64(len(val.Tx))
-	var from, to int64
+	from := req.From
+	to := req.To
 	if req.Last != 0 {
 		to = len
 		from = to - req.Last
