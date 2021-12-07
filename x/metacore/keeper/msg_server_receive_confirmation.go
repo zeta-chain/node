@@ -88,7 +88,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Receive Confirmation; but txList not found! Or wrong send.IndexTxList %d", idx))
 		}
 		tx := txList.Tx[send.IndexTxList]
-		tx.RecvHash = receive.SendHash
+		tx.RecvHash = receive.Index
 		tx.OutTxHash = receive.OutTxHash
 		tx.OutTxChain = receive.Chain
 		k.SetTxList(ctx, txList)

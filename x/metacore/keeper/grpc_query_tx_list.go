@@ -9,6 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	MAX_TX_QUERY = 100
+)
+
 func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.QueryGetTxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -21,17 +25,30 @@ func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.
 	}
 
 	len := int64(len(val.Tx))
-	to := req.To
-	from := req.From
+	var from, to int64
+	if req.Last != 0 {
+		to = req.To
+		from = to - req.Last
+	}
+	from, to = validateFromTo(req.From, req.To, len)
 
-	if to > len || to == -1 {
+	return &types.QueryGetTxResponse{Tx: val.Tx[from:to], Length: len}, nil
+}
+
+// make sure that [from, to) <= [0, len)
+func validateFromTo(from, to, len int64) (int64, int64) {
+	//if from < to-MAX_TX_QUERY {
+	//	from = to - MAX_TX_QUERY
+	//}
+	if from < 0 {
+		from = 0
+	}
+
+	if to > len || to < 0 {
 		to = len
 	}
 	if from > to {
 		from = to
 	}
-	if len == 0 {
-		return &types.QueryGetTxResponse{Tx: []*types.Tx{}}, nil
-	}
-	return &types.QueryGetTxResponse{Tx: val.Tx[from:to]}, nil
+	return from, to
 }

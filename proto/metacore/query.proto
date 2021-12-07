@@ -115,10 +115,12 @@ service Query {
 message QueryGetTxRequest {
 	int64 from = 1;
 	int64 to = 2;
+	int64 last = 3; 
 }
 
 message QueryGetTxResponse {
 	repeated Tx tx = 1;
+	int64 length = 2;
 }
 message QueryGetGasBalanceRequest {
 	string index = 1;
