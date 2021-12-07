@@ -30,7 +30,7 @@ func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.
 		to = len
 		from = to - req.Last
 	}
-	from, to = validateFromTo(req.From, req.To, len)
+	from, to = validateFromTo(from, to, len)
 
 	return &types.QueryGetTxResponse{Tx: val.Tx[from:to], Length: len}, nil
 }
