@@ -27,7 +27,7 @@ func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.
 	len := int64(len(val.Tx))
 	var from, to int64
 	if req.Last != 0 {
-		to = req.To
+		to = len
 		from = to - req.Last
 	}
 	from, to = validateFromTo(req.From, req.To, len)
