@@ -10,6 +10,11 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set if defined
+	if genState.TxList != nil {
+		k.SetTxList(ctx, *genState.TxList)
+	}
+
 	// Set all the gasBalance
 	for _, elem := range genState.GasBalanceList {
 		k.SetGasBalance(ctx, *elem)
@@ -53,6 +58,12 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all txList
+	txList, found := k.GetTxList(ctx)
+	if found {
+		genesis.TxList = &txList
+	}
+
 	// Get all gasBalance
 	gasBalanceList := k.GetAllGasBalance(ctx)
 	for _, elem := range gasBalanceList {

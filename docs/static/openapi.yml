@@ -20516,6 +20516,43 @@ paths:
           type: string
       tags:
         - Query
+  /Meta-Protocol/metacore/metacore/txList:
+    get:
+      summary: Queries a txList by index.
+      operationId: MetaProtocolMetacoreMetacoreTxList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TxList:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  tx:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.bank.v1beta1.DenomUnit:
     type: object
@@ -31442,6 +31479,16 @@ definitions:
             type: string
           statusMessage:
             type: string
+  MetaProtocol.metacore.metacore.QueryGetTxListResponse:
+    type: object
+    properties:
+      TxList:
+        type: object
+        properties:
+          creator:
+            type: string
+          tx:
+            type: string
   MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
     type: object
     properties:
@@ -31543,6 +31590,13 @@ definitions:
       - Reverted
       - Aborted
     default: Created
+  MetaProtocol.metacore.metacore.TxList:
+    type: object
+    properties:
+      creator:
+        type: string
+      tx:
+        type: string
   common.PubKeySet:
     type: object
     properties:

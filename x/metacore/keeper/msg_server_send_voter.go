@@ -50,6 +50,25 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	}
 
 	if hasSuperMajorityValidators(len(send.Signers), validators) {
+		//updateTxList()
+		txList, found := k.GetTxList(ctx)
+		if !found {
+			txList = types.TxList{
+				Creator: "",
+				Tx:      []*types.Tx{},
+			}
+		} else {
+			txList.Tx = append(txList.Tx, &types.Tx{
+				SendHash:   send.Index,
+				RecvHash:   "",
+				InTxHash:   send.InTxHash,
+				InTxChain:  send.SenderChain,
+				OutTxHash:  "",
+				OutTxChain: "",
+			})
+		}
+		k.SetTxList(ctx, txList)
+
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		send.Status = types.SendStatus_Finalized
 		lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
