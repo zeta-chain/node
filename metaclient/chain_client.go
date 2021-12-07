@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/metaclient/config"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"math/big"
@@ -42,11 +43,14 @@ type ChainObserver struct {
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
 	db          *leveldb.DB
+	sampleLoger *zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
+	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
+	chainOb.sampleLoger = &sampled
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 	chainOb.tss = tss
@@ -332,6 +336,7 @@ func (chainOb *ChainObserver) observeChain() error {
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
+	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock)
 
 	// Finally query the for the logs
 	logs, err := chainOb.client.FilterLogs(context.Background(), query)
