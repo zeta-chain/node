@@ -336,7 +336,7 @@ func (chainOb *ChainObserver) observeChain() error {
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
-	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, toBlock-confirmedBlockNum)
+	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum))
 
 	// Finally query the for the logs
 	logs, err := chainOb.client.FilterLogs(context.Background(), query)
