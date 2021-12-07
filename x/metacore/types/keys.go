@@ -69,3 +69,7 @@ const (
 const (
 	GasBalanceKey = "GasBalance-value-"
 )
+
+const (
+	TxListKey = "TxList-value-"
+)

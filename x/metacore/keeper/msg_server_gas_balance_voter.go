@@ -26,7 +26,7 @@ func (k msgServer) GasBalanceVoter(goCtx context.Context, msg *types.MsgGasBalan
 			Creator:     msg.Creator,
 			Index:       chain,
 			Chain:       chain,
-			Balances:      []string{msg.Balance},
+			Balances:    []string{msg.Balance},
 			BlockNums:   []uint64{msg.BlockNumber},
 			Signers:     []string{msg.Creator},
 			MedianIndex: 0,

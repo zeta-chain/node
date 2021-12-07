@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/tx_list.proto";
 import "metacore/gas_balance.proto";
 import "metacore/gas_price.proto";
 import "metacore/chain_nonces.proto";
@@ -17,6 +18,12 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a txList by index.
+	rpc TxList(QueryGetTxListRequest) returns (QueryGetTxListResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txList";
+	}
+
 
 	// Queries a gasBalance by index.
 	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
@@ -105,6 +112,11 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetTxListRequest {}
+
+message QueryGetTxListResponse {
+	TxList TxList = 1;
+}
 message QueryGetGasBalanceRequest {
 	string index = 1;
 }
