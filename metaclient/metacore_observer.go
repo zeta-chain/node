@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/Meta-Protocol/metacore/common"
+	"github.com/Meta-Protocol/metacore/metaclient/config"
 	"github.com/rs/zerolog/log"
 	"math/big"
 	"sync"
@@ -53,15 +54,23 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go func() {
 		for {
+			zetaHeight, err := co.bridge.GetMetaBlockHeight()
+			if err != nil {
+				log.Warn().Err(err).Msgf("GetMetaBlockHeight error")
+				continue
+			}
+
 			sendList, err := co.bridge.GetAllSend()
 			if err != nil {
 				fmt.Println("error requesting sends from metacore")
 				time.Sleep(5 * time.Second)
 				continue
 			}
+
 			for _, send := range sendList {
 				if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort {
-					if oldSend, found := co.sendMap[send.Index]; !found || oldSend.Status != send.Status {
+					oldSend, found := co.sendMap[send.Index]
+					if !found || oldSend.Status != send.Status {
 						co.lock.Lock()
 						if !found {
 							log.Debug().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
@@ -73,7 +82,22 @@ func (co *CoreObserver) MonitorCore() {
 						co.sendQueue = append(co.sendQueue, send)
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
+					} else {
+						status, found := co.sendStatus[send.Index]
+						if !found {
+							log.Error().Msgf("status of send: %s not found", send.Index)
+							continue
+						}
+						// the send is not successfully process; re-process is needed
+						if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY && status == Pending {
+							log.Warn().Msgf("Timeout send: sendHash %s; re-processs...", send.Index)
+							co.lock.Lock()
+							co.sendStatus[send.Index] = Unprocessed
+							co.lock.Unlock()
+						}
+
 					}
+
 				} else if send.Status == types.SendStatus_Mined {
 					if send, found := co.sendMap[send.Index]; found {
 						co.lock.Lock()
