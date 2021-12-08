@@ -213,6 +213,8 @@ func (co *CoreObserver) MonitorCore() {
 					if err != nil {
 						log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
 					}
+					co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
+
 				}
 
 			}
