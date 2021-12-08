@@ -12,6 +12,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"math/big"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -22,9 +23,20 @@ import (
 )
 
 const (
-	PosKey                 = "PosKey"
-	NUM_BLOCKS_PER_OBSERVE = 32
+	PosKey = "PosKey"
 )
+
+var logLockSendSignature = []byte("LockSend(address,string,uint256,uint256,string,bytes)")
+var logLockSendSignatureHash = crypto.Keccak256Hash(logLockSendSignature)
+
+var logUnlockSignature = []byte("Unlock(address,uint256,bytes32)")
+var logUnlockSignatureHash = crypto.Keccak256Hash(logUnlockSignature)
+
+var logBurnSendSignature = []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
+var logBurnSendSignatureHash = crypto.Keccak256Hash(logBurnSendSignature)
+
+var logMMintedSignature = []byte("MMinted(address,uint256,bytes32)")
+var logMMintedSignatureHash = crypto.Keccak256Hash(logMMintedSignature)
 
 // Chain configuration struct
 // Filled with above constants depending on chain
@@ -42,6 +54,7 @@ type ChainObserver struct {
 	LastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
+	mu          *sync.Mutex
 	db          *leveldb.DB
 	sampleLoger *zerolog.Logger
 }
@@ -49,6 +62,7 @@ type ChainObserver struct {
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
+	chainOb.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 	chainOb.sampleLoger = &sampled
 	chainOb.bridge = bridge
@@ -170,7 +184,9 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 
 func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
 	hash := ethcommon.HexToHash(txhash)
+	chainOb.mu.Lock()
 	chainOb.txWatchList[hash] = sendhash
+	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) PostGasPrice() error {
@@ -297,6 +313,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 }
 
 func (chainOb *ChainObserver) observeFailedTx() {
+	chainOb.mu.Lock()
 	for txhash, sendHash := range chainOb.txWatchList {
 		receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
 		if err != nil {
@@ -310,9 +327,65 @@ func (chainOb *ChainObserver) observeFailedTx() {
 			}
 		} else {
 			log.Debug().Msgf("success tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+			var returnVal []interface{}
+			for _, vLog := range receipt.Logs {
+				if chainOb.chain == common.ETHChain && vLog.Topics[0].Hex() == logUnlockSignatureHash.Hex() {
+					returnVal, err = chainOb.abi.Unpack("Unlock", vLog.Data)
+					if err != nil {
+						log.Err(err).Msg("error unpacking Unlock")
+						continue
+					}
+
+					sendhash := returnVal[2].([32]byte)
+					sendHash := "0x" + hex.EncodeToString(sendhash[:])
+					var rxAddress string = returnVal[0].(ethcommon.Address).String()
+					var mMint string = returnVal[1].(*big.Int).String()
+					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
+						sendHash,
+						vLog.TxHash.Hex(),
+						vLog.BlockNumber,
+						mMint,
+						common.ReceiveStatus_Success,
+						chainOb.chain.String(),
+					)
+					if err != nil {
+						log.Err(err).Msg("error posting confirmation to meta core")
+						continue
+					}
+					log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
+					log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
+				} else if chainOb.chain != common.ETHChain && vLog.Topics[0].Hex() == logMMintedSignatureHash.Hex() {
+					returnVal, err = chainOb.abi.Unpack("MMinted", vLog.Data)
+					if err != nil {
+						log.Err(err).Msg("error unpacking Unlock")
+						continue
+					}
+
+					// outTxHash = tx hash returned by signer.MMint
+					rxAddress := returnVal[0].(ethcommon.Address).String()
+					mMint := returnVal[1].(*big.Int).String()
+					sendhash := returnVal[2].([32]byte)
+					sendHash := "0x" + hex.EncodeToString(sendhash[:])
+					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
+						sendHash,
+						vLog.TxHash.Hex(),
+						vLog.BlockNumber,
+						mMint,
+						common.ReceiveStatus_Success,
+						chainOb.chain.String(),
+					)
+					if err != nil {
+						log.Err(err).Msg("error posting confirmation to meta core")
+						continue
+					}
+					log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
+					log.Debug().Msgf("MMinted(sendhash=%s, outTxHash=%s, blockHeight=%d, mMint=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
+				}
+			}
 		}
 		delete(chainOb.txWatchList, txhash)
 	}
+	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) observeChain() error {
@@ -346,22 +419,6 @@ func (chainOb *ChainObserver) observeChain() error {
 
 	// Read in ABI
 	contractAbi := chainOb.abi
-
-	// LockSend event signature
-	logLockSendSignature := []byte("LockSend(address,string,uint256,uint256,string,bytes)")
-	logLockSendSignatureHash := crypto.Keccak256Hash(logLockSendSignature)
-
-	// Unlock event signature
-	logUnlockSignature := []byte("Unlock(address,uint256,bytes32)")
-	logUnlockSignatureHash := crypto.Keccak256Hash(logUnlockSignature)
-
-	// BurnSend event signature
-	logBurnSendSignature := []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
-	logBurnSendSignatureHash := crypto.Keccak256Hash(logBurnSendSignature)
-
-	// MMinted event signature
-	logMMintedSignature := []byte("MMinted(address,uint256,bytes32)")
-	logMMintedSignatureHash := crypto.Keccak256Hash(logMMintedSignature)
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
