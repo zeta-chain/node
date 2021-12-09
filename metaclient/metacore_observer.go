@@ -205,7 +205,6 @@ func (co *CoreObserver) MonitorCore() {
 						err := signer.Broadcast(tx)
 						if err != nil {
 							log.Err(err).Msgf("Broadcast error: nonce %d", send.Nonce)
-							continue
 						}
 					}
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
