@@ -89,7 +89,9 @@ func (co *CoreObserver) MonitorCore() {
 							continue
 						}
 						// the send is not successfully process; re-process is needed
-						if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY && status == Pending {
+						if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY &&
+							zetaHeight-send.FinalizedMetaHeight < 2*config.TIMEOUT_THRESHOLD_FOR_RETRY &&
+							status == Pending {
 							log.Warn().Msgf("Timeout send: sendHash %s; re-processs...", send.Index)
 							co.lock.Lock()
 							co.sendStatus[send.Index] = Unprocessed
