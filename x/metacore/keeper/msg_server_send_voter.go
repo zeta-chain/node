@@ -52,7 +52,11 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	}
 
 	if hasSuperMajorityValidators(len(send.Signers), validators) {
-		//updateTxList()
+		inTx, _ := k.GetInTx(ctx, send.InTxHash)
+		inTx.Index = send.InTxHash
+		inTx.SendHash = send.Index
+		k.SetInTx(ctx, inTx)
+
 		tx := &types.Tx{
 			SendHash:   send.Index,
 			RecvHash:   "",

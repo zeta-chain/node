@@ -54,6 +54,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
+		inTx, _ := k.GetInTx(ctx, send.InTxHash)
+		inTx.RecvHash = receive.Index
+		inTx.OutTxHash = receive.OutTxHash
+		k.SetInTx(ctx, inTx)
+
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
 		if !isFound {
