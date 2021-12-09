@@ -73,3 +73,7 @@ const (
 const (
 	TxListKey = "TxList-value-"
 )
+
+const (
+	InTxKey = "InTx-value-"
+)

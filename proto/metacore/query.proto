@@ -4,6 +4,7 @@ package MetaProtocol.metacore.metacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "metacore/in_tx.proto";
 import "metacore/tx_list.proto";
 import "metacore/gas_balance.proto";
 import "metacore/gas_price.proto";
@@ -18,6 +19,17 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a inTx by index.
+	rpc InTx(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTx/{index}";
+	}
+
+	// Queries a list of inTx items.
+	rpc InTxAll(QueryAllInTxRequest) returns (QueryAllInTxResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTx";
+	}
+
 
 	// Queries a txList by index.
 	rpc TxList(QueryGetTxRequest) returns (QueryGetTxResponse) {
@@ -112,6 +124,22 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetInTxRequest {
+	string index = 1;
+}
+
+message QueryGetInTxResponse {
+	InTx InTx = 1;
+}
+
+message QueryAllInTxRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInTxResponse {
+	repeated InTx InTx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryGetTxRequest {
 	int64 from = 1;
 	int64 to = 2;
