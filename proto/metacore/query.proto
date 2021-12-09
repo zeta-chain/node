@@ -102,6 +102,11 @@ service Query {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/send";
 	}
 
+	// Queries a list of send items.
+	rpc SendAllPending(QueryAllSendRequest) returns (QueryAllSendResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/sendPending";
+	}
+
 
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
