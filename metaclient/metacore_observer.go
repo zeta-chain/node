@@ -60,7 +60,7 @@ func (co *CoreObserver) MonitorCore() {
 				continue
 			}
 
-			sendList, err := co.bridge.GetAllSend()
+			sendList, err := co.bridge.GetAllPendingSend()
 			if err != nil {
 				fmt.Println("error requesting sends from metacore")
 				time.Sleep(5 * time.Second)
