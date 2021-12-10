@@ -20975,6 +20975,102 @@ paths:
           format: int64
       tags:
         - Query
+  /Meta-Protocol/metacore/metacore/txListRich:
+    get:
+      summary: Queries a list of txListRich items.
+      operationId: MetaProtocolMetacoreMetacoreTxListRich
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    sender:
+                      type: string
+                    senderChain:
+                      type: string
+                    receiver:
+                      type: string
+                    receiverChain:
+                      type: string
+                    mBurnt:
+                      type: string
+                    mMint:
+                      type: string
+                    message:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inBlockHeight:
+                      type: string
+                      format: uint64
+                    finalizedMetaHeight:
+                      type: string
+                      format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    status:
+                      type: string
+                      enum:
+                        - Created
+                        - Finalized
+                        - Mined
+                        - Confirmed
+                        - Abort
+                        - Reverted
+                        - Aborted
+                      default: Created
+                    broadcaster:
+                      type: string
+                      format: uint64
+                    nonce:
+                      type: string
+                      format: uint64
+                    gasPrice:
+                      type: string
+                    statusMessage:
+                      type: string
+                    recvHash:
+                      type: string
+                    indexTxList:
+                      type: string
+                      format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: last
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
 definitions:
   cosmos.bank.v1beta1.DenomUnit:
     type: object
@@ -32015,6 +32111,70 @@ definitions:
       Height:
         type: string
         format: uint64
+  MetaProtocol.metacore.metacore.QueryTxListRichResponse:
+    type: object
+    properties:
+      tx:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            sender:
+              type: string
+            senderChain:
+              type: string
+            receiver:
+              type: string
+            receiverChain:
+              type: string
+            mBurnt:
+              type: string
+            mMint:
+              type: string
+            message:
+              type: string
+            inTxHash:
+              type: string
+            inBlockHeight:
+              type: string
+              format: uint64
+            finalizedMetaHeight:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              enum:
+                - Created
+                - Finalized
+                - Mined
+                - Confirmed
+                - Abort
+                - Reverted
+                - Aborted
+              default: Created
+            broadcaster:
+              type: string
+              format: uint64
+            nonce:
+              type: string
+              format: uint64
+            gasPrice:
+              type: string
+            statusMessage:
+              type: string
+            recvHash:
+              type: string
+            indexTxList:
+              type: string
+              format: int64
   MetaProtocol.metacore.metacore.Receive:
     type: object
     properties:

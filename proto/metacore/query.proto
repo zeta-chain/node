@@ -20,6 +20,12 @@ option go_package = "github.com/Meta-Protocol/metacore/x/metacore/types";
 service Query {
     // this line is used by starport scaffolding # 2
 
+	// Queries a list of txListRich items.
+	rpc TxListRich(QueryTxListRichRequest) returns (QueryTxListRichResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/txListRich";
+	}
+
+
 	// Queries a inTx by index.
 	rpc InTx(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTx/{index}";
@@ -134,6 +140,15 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryTxListRichRequest {
+  uint64 last = 1;
+}
+
+message QueryTxListRichResponse {
+	repeated Send tx = 1;
+	uint64 length = 2; 
+}
+
 message QueryGetInTxRequest {
 	string index = 1;
 }
