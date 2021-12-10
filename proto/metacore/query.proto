@@ -25,6 +25,11 @@ service Query {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTx/{index}";
 	}
 
+	// Queries a inTx by index.
+	rpc InTxNS(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
+		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTxNS/{index}";
+	}
+
 	// Queries a list of inTx items.
 	rpc InTxAll(QueryAllInTxRequest) returns (QueryAllInTxResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/inTx";

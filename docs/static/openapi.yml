@@ -19834,6 +19834,55 @@ paths:
           type: string
       tags:
         - Query
+  '/Meta-Protocol/metacore/metacore/inTxNS/{index}':
+    get:
+      summary: Queries a inTx by index.
+      operationId: MetaProtocolMetacoreMetacoreInTxNS
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              InTx:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  outTxHash:
+                    type: string
+                    title: string inTxHash = 3;
+                  sendHash:
+                    type: string
+                  recvHash:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /Meta-Protocol/metacore/metacore/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
