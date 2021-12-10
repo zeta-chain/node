@@ -19883,6 +19883,102 @@ paths:
           type: string
       tags:
         - Query
+  '/Meta-Protocol/metacore/metacore/inTxRich/{index}':
+    get:
+      summary: Queries a inTx by index.
+      operationId: MetaProtocolMetacoreMetacoreInTxRich
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tx:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  sender:
+                    type: string
+                  senderChain:
+                    type: string
+                  receiver:
+                    type: string
+                  receiverChain:
+                    type: string
+                  mBurnt:
+                    type: string
+                  mMint:
+                    type: string
+                  message:
+                    type: string
+                  inTxHash:
+                    type: string
+                  inBlockHeight:
+                    type: string
+                    format: uint64
+                  finalizedMetaHeight:
+                    type: string
+                    format: uint64
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  status:
+                    type: string
+                    enum:
+                      - Created
+                      - Finalized
+                      - Mined
+                      - Confirmed
+                      - Abort
+                      - Reverted
+                      - Aborted
+                    default: Created
+                  broadcaster:
+                    type: string
+                    format: uint64
+                  nonce:
+                    type: string
+                    format: uint64
+                  gasPrice:
+                    type: string
+                  statusMessage:
+                    type: string
+                  recvHash:
+                    type: string
+                  indexTxList:
+                    type: string
+                    format: int64
+                  outTxHash:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /Meta-Protocol/metacore/metacore/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
@@ -20556,6 +20652,8 @@ paths:
                     indexTxList:
                       type: string
                       format: int64
+                    outTxHash:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -20719,6 +20817,8 @@ paths:
                   indexTxList:
                     type: string
                     format: int64
+                  outTxHash:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -20815,6 +20915,8 @@ paths:
                     indexTxList:
                       type: string
                       format: int64
+                    outTxHash:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -21046,6 +21148,11 @@ paths:
                     indexTxList:
                       type: string
                       format: int64
+                    outTxHash:
+                      type: string
+              length:
+                type: string
+                format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -21069,6 +21176,7 @@ paths:
           in: query
           required: false
           type: string
+          format: uint64
       tags:
         - Query
 definitions:
@@ -31817,6 +31925,8 @@ definitions:
             indexTxList:
               type: string
               format: int64
+            outTxHash:
+              type: string
       pagination:
         type: object
         properties:
@@ -31937,6 +32047,70 @@ definitions:
           sendHash:
             type: string
           recvHash:
+            type: string
+  MetaProtocol.metacore.metacore.QueryGetInTxRichResponse:
+    type: object
+    properties:
+      tx:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          sender:
+            type: string
+          senderChain:
+            type: string
+          receiver:
+            type: string
+          receiverChain:
+            type: string
+          mBurnt:
+            type: string
+          mMint:
+            type: string
+          message:
+            type: string
+          inTxHash:
+            type: string
+          inBlockHeight:
+            type: string
+            format: uint64
+          finalizedMetaHeight:
+            type: string
+            format: uint64
+          signers:
+            type: array
+            items:
+              type: string
+          status:
+            type: string
+            enum:
+              - Created
+              - Finalized
+              - Mined
+              - Confirmed
+              - Abort
+              - Reverted
+              - Aborted
+            default: Created
+          broadcaster:
+            type: string
+            format: uint64
+          nonce:
+            type: string
+            format: uint64
+          gasPrice:
+            type: string
+          statusMessage:
+            type: string
+          recvHash:
+            type: string
+          indexTxList:
+            type: string
+            format: int64
+          outTxHash:
             type: string
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
@@ -32082,6 +32256,8 @@ definitions:
           indexTxList:
             type: string
             format: int64
+          outTxHash:
+            type: string
   MetaProtocol.metacore.metacore.QueryGetTxResponse:
     type: object
     properties:
@@ -32175,6 +32351,11 @@ definitions:
             indexTxList:
               type: string
               format: int64
+            outTxHash:
+              type: string
+      length:
+        type: string
+        format: uint64
   MetaProtocol.metacore.metacore.Receive:
     type: object
     properties:
@@ -32264,6 +32445,8 @@ definitions:
       indexTxList:
         type: string
         format: int64
+      outTxHash:
+        type: string
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:
