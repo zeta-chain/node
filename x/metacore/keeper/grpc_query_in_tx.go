@@ -63,3 +63,21 @@ func (k Keeper) InTxNS(c context.Context, req *types.QueryGetInTxRequest) (*type
 
 	return &types.QueryGetInTxResponse{InTx: &val}, nil
 }
+
+func (k Keeper) InTxRich(c context.Context, req *types.QueryGetInTxRichRequest) (*types.QueryGetInTxRichResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	val, found := k.GetInTx(ctx, req.Index)
+	if !found {
+		return &types.QueryGetInTxRichResponse{}, nil
+	}
+	sendHash := val.SendHash
+	send, found := k.GetSend(ctx, sendHash)
+	if !found {
+		return &types.QueryGetInTxRichResponse{}, nil
+	}
+	return &types.QueryGetInTxRichResponse{Tx: &send}, nil
+}
