@@ -100,10 +100,12 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		recvChain, err := common.ParseChain(send.ReceiverChain)
 		if err != nil {
 			abort = true
+			send.StatusMessage = fmt.Sprintf("cannot parse receiver chain")
 		}
 		_, err = common.NewAddress(send.Receiver, recvChain)
 		if err != nil {
 			abort = true
+			send.StatusMessage = fmt.Sprintf("cannot parse receiver address")
 		}
 		{
 			gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
@@ -135,6 +137,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			toMint := big.NewInt(0).Sub(mBurnt, gasFee)
 			if toMint.Cmp(mMint) < 0 { // not enough burnt
 				abort = true
+				send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", toMint, mMint)
 			}
 		}
 
@@ -147,7 +150,6 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				goto END
 			}
 			send.Status = types.SendStatus_Abort
-			send.StatusMessage = fmt.Sprintf("cannot parse recever address/chain")
 		} else {
 			chain = recvChain
 		}
