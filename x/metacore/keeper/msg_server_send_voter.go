@@ -137,7 +137,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			toMint := big.NewInt(0).Sub(mBurnt, gasFee)
 			if toMint.Cmp(mMint) < 0 { // not enough burnt
 				abort = true
-				send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", toMint, mMint)
+				send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", mMint, toMint)
 			}
 		}
 
