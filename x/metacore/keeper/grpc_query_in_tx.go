@@ -45,10 +45,8 @@ func (k Keeper) InTx(c context.Context, req *types.QueryGetInTxRequest) (*types.
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetInTx(ctx, req.Index)
-	if !found {
-		return nil, status.Error(codes.InvalidArgument, "not found")
-	}
+	// Do not return error when not found; this is request from frontend
+	val, _ := k.GetInTx(ctx, req.Index)
 
 	return &types.QueryGetInTxResponse{InTx: &val}, nil
 }
