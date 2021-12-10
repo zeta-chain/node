@@ -90,9 +90,9 @@ func (co *CoreObserver) MonitorCore() {
 						}
 						// the send is not successfully process; re-process is needed
 						if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY &&
-							zetaHeight-send.FinalizedMetaHeight < 2*config.TIMEOUT_THRESHOLD_FOR_RETRY &&
+							zetaHeight%config.TIMEOUT_THRESHOLD_FOR_RETRY == 0 &&
 							status == Pending {
-							log.Warn().Msgf("Timeout send: sendHash %s; re-processs...", send.Index)
+							log.Warn().Msgf("Zeta block %d: Timeout send: sendHash %s; re-processs...", zetaHeight, send.Index)
 							co.lock.Lock()
 							co.sendStatus[send.Index] = Unprocessed
 							co.lock.Unlock()
@@ -203,12 +203,13 @@ func (co *CoreObserver) MonitorCore() {
 					}
 					outTxHash := tx.Hash().Hex()
 					fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
-					if send.Signers[send.Broadcaster] == myid {
-						err := signer.Broadcast(tx)
-						if err != nil {
-							log.Err(err).Msgf("Broadcast error: nonce %d", send.Nonce)
-						}
+
+					log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d", outTxHash, toChain, amount)
+					err = signer.Broadcast(tx)
+					if err != nil {
+						log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
 					}
+
 					co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
 					_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
 					if err != nil {
