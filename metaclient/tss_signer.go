@@ -284,9 +284,13 @@ func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 }
 
 func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
+	if len(signature) == 0 {
+		log.Warn().Msg("verify_signature: empty signature array")
+		return false
+	}
 	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
-		log.Fatal().Msg("get pubkey from bech32 fail")
+		log.Error().Msg("get pubkey from bech32 fail")
 	}
 	// verify the signature of msg.
 	var sigbyte [65]byte
@@ -294,6 +298,10 @@ func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte)
 	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
 	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
+	if err != nil {
+		log.Error().Err(err).Msg("SigToPub error in verify_signature")
+		return false
+	}
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Debug().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
