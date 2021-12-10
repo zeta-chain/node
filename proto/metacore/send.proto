@@ -37,4 +37,5 @@ message Send {
   string statusMessage = 18;
   string recvHash = 19;
   int64  indexTxList = 20;
+  string outTxHash = 21; 
 }

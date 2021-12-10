@@ -87,6 +87,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 
 		send.RecvHash = receive.Index
+		send.OutTxHash = receive.OutTxHash
+
 		idx := send.IndexTxList
 		txList, found := k.GetTxList(ctx)
 		if !found || int(idx) >= len(txList.Tx) || idx < 0 { // should not happen
