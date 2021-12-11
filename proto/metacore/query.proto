@@ -119,7 +119,7 @@ service Query {
 	}
 
 	// Queries a list of send items.
-	rpc SendAllPending(QueryAllSendRequest) returns (QueryAllSendResponse) {
+	rpc SendAllPending(QueryAllSendPendingRequest) returns (QueryAllSendPendingResponse) {
 		option (google.api.http).get = "/Meta-Protocol/metacore/metacore/sendPending";
 	}
 
@@ -283,6 +283,14 @@ message QueryAllSendRequest {
 message QueryAllSendResponse {
 	repeated Send Send = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllSendPendingRequest {
+
+}
+
+message QueryAllSendPendingResponse {
+	repeated Send Send = 1;
 }
 
 message QueryGetNodeAccountRequest {
