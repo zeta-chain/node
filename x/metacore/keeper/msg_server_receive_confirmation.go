@@ -105,6 +105,6 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		k.SetTxList(ctx, txList)
 
 	}
-
+	k.SetReceive(ctx, receive)
 	return &types.MsgReceiveConfirmationResponse{}, nil
 }
