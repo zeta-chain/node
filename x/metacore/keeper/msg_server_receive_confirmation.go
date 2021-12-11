@@ -51,6 +51,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 	} else {
 		receive.Signers = append(receive.Signers, msg.Creator)
+		k.SetReceive(ctx, receive)
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
@@ -60,6 +61,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		k.SetInTx(ctx, inTx)
 
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
+		k.SetReceive(ctx, receive)
+
 		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
 		if !isFound {
 			lastblock = types.LastBlockHeight{
@@ -88,6 +91,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 
 		send.RecvHash = receive.Index
 		send.OutTxHash = receive.OutTxHash
+		k.SetSend(ctx, send)
 
 		idx := send.IndexTxList
 		txList, found := k.GetTxList(ctx)
@@ -99,9 +103,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		tx.OutTxHash = receive.OutTxHash
 		tx.OutTxChain = receive.Chain
 		k.SetTxList(ctx, txList)
-		k.SetSend(ctx, send)
+
 	}
 
-	k.SetReceive(ctx, receive)
 	return &types.MsgReceiveConfirmationResponse{}, nil
 }
