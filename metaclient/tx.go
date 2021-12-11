@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Meta-Protocol/metacore/common"
 	"github.com/Meta-Protocol/metacore/x/metacore/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/rs/zerolog/log"
 )
 
@@ -75,7 +74,7 @@ func (b *MetachainBridge) GetAllSend() ([]*types.Send, error) {
 
 func (b *MetachainBridge) GetAllPendingSend() ([]*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendRequest{Pagination: &query.PageRequest{Limit: 1000}})
+	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
 	if err != nil {
 		log.Error().Err(err).Msg("query SendAllPending error")
 		return nil, err
