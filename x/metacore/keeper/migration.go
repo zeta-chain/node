@@ -14,7 +14,7 @@ import (
 // on Goerli
 func (k Keeper) CleanupEthNonce44Mess(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if ctx.BlockHeight() != 175100 {
+	if ctx.BlockHeight() != 175110 {
 		return
 	}
 	fmt.Println("Purge ETH outbound with nonce >=45")
