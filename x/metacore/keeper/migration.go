@@ -14,7 +14,7 @@ import (
 // on Goerli
 func (k Keeper) CleanupEthNonce44Mess(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if ctx.BlockHeight() != 175110 {
+	if ctx.BlockHeight() != 175340 {
 		return
 	}
 	fmt.Println("Purge ETH outbound with nonce >=45")
@@ -29,5 +29,21 @@ func (k Keeper) CleanupEthNonce44Mess(goCtx context.Context) {
 			fmt.Printf("removing send (finalized) with nonce %d\n", send.Nonce)
 			k.RemoveSend(ctx, send.Index)
 		}
+
+	}
+	fmt.Println("restoring ETH nonce to 45")
+	nonce, found := k.GetChainNonces(ctx, common.ETHChain.String())
+	if found {
+		fmt.Println("found nonce; restoring it...")
+		nonce.Nonce = 45
+		k.SetChainNonces(ctx, nonce)
+	}
+
+	fmt.Println("manually confirming POLYGON send with nonce==22")
+	send, found := k.GetSend(ctx, "0xfd197a093a82ff211284b89fe106ec9251e1ed14ca7a0a37393cca95c517c014")
+	if found {
+		fmt.Println("found send 0xfd19; changing its status to mined...")
+		send.Status = types.SendStatus_Mined
+		k.SetSend(ctx, send)
 	}
 }

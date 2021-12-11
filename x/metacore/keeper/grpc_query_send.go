@@ -53,7 +53,7 @@ func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.
 	return &types.QueryGetSendResponse{Send: &val}, nil
 }
 
-func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendRequest) (*types.QueryAllSendResponse, error) {
+func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPendingRequest) (*types.QueryAllSendPendingResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -63,22 +63,14 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendRequest
 
 	store := ctx.KVStore(k.storeKey)
 	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
+	iterator := sdk.KVStorePrefixIterator(sendStore, []byte{})
+	defer iterator.Close()
 
-	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
-		var send types.Send
-		if err := k.cdc.UnmarshalBinaryBare(value, &send); err != nil {
-			return err
-		}
-
-		if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort {
-			sends = append(sends, &send)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Send
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		sends = append(sends, &val)
 	}
 
-	return &types.QueryAllSendResponse{Send: sends, Pagination: pageRes}, nil
+	return &types.QueryAllSendPendingResponse{Send: sends}, nil
 }
