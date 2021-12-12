@@ -19954,6 +19954,9 @@ paths:
                     format: int64
                   outTxHash:
                     type: string
+                  lastUpdateTimestamp:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -20654,6 +20657,9 @@ paths:
                       format: int64
                     outTxHash:
                       type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -20819,6 +20825,9 @@ paths:
                     format: int64
                   outTxHash:
                     type: string
+                  lastUpdateTimestamp:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -20917,6 +20926,9 @@ paths:
                       format: int64
                     outTxHash:
                       type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -21076,6 +21088,9 @@ paths:
                       format: int64
                     outTxHash:
                       type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
               length:
                 type: string
                 format: uint64
@@ -31853,6 +31868,9 @@ definitions:
               format: int64
             outTxHash:
               type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
   MetaProtocol.metacore.metacore.QueryAllSendResponse:
     type: object
     properties:
@@ -31919,6 +31937,9 @@ definitions:
               format: int64
             outTxHash:
               type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
       pagination:
         type: object
         properties:
@@ -32104,6 +32125,9 @@ definitions:
             format: int64
           outTxHash:
             type: string
+          lastUpdateTimestamp:
+            type: string
+            format: int64
   MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
@@ -32250,6 +32274,9 @@ definitions:
             format: int64
           outTxHash:
             type: string
+          lastUpdateTimestamp:
+            type: string
+            format: int64
   MetaProtocol.metacore.metacore.QueryGetTxResponse:
     type: object
     properties:
@@ -32345,6 +32372,9 @@ definitions:
               format: int64
             outTxHash:
               type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
       length:
         type: string
         format: uint64
@@ -32439,6 +32469,9 @@ definitions:
         format: int64
       outTxHash:
         type: string
+      lastUpdateTimestamp:
+        type: string
+        format: int64
   MetaProtocol.metacore.metacore.SendStatus:
     type: string
     enum:

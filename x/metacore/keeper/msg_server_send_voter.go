@@ -48,10 +48,13 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			Nonce:               0,
 			RecvHash:            "",
 			IndexTxList:         -1,
+			LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		}
 	}
 
 	if hasSuperMajorityValidators(len(send.Signers), validators) {
+		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
+
 		inTx, _ := k.GetInTx(ctx, send.InTxHash)
 		inTx.Index = send.InTxHash
 		inTx.SendHash = send.Index
