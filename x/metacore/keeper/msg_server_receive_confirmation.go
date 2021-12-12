@@ -91,6 +91,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 
 		send.RecvHash = receive.Index
 		send.OutTxHash = receive.OutTxHash
+		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 		k.SetSend(ctx, send)
 
 		idx := send.IndexTxList
