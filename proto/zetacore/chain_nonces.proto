@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+import "gogoproto/gogo.proto";
+
+message ChainNonces {
+  string creator = 1;
+  string index = 2;
+  string chain = 3; 
+  uint64 nonce = 4;
+  repeated string signers = 5;
+  uint64 finalizedHeight = 6;
+}

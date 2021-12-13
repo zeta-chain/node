@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Meta-Protocol/metacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	eth "github.com/ethereum/go-ethereum/common"
 )
 

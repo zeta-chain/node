@@ -34,9 +34,9 @@ test:
 
 
 install: go.sum
-		@echo "--> Installing metacored & metaclientd"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/metacored
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/metaclientd
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"

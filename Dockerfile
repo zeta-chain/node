@@ -36,4 +36,4 @@ COPY --from=build /go/bin/metaclientd /usr/bin/
 
 #COPY build/scripts /scripts
 
-RUN mkdir /metacore
+RUN mkdir /zetacore
