@@ -3,7 +3,6 @@ package zetaclient
 import (
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -336,20 +335,19 @@ func (chainOb *ChainObserver) observeFailedTx() {
 						continue
 					}
 
-					sendhash := returnVal[2].([32]byte)
-					sendHash := "0x" + hex.EncodeToString(sendhash[:])
-					var rxAddress string = returnVal[0].(ethcommon.Address).String()
-					var mMint string = returnVal[1].(*big.Int).String()
-					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-						sendHash,
+					metaHash, err := chainOb.bridge.PostSend(
+						ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
+						chainOb.chain.String(),
+						returnVal[0].(string),
+						returnVal[3].(string),
+						returnVal[1].(*big.Int).String(),
+						returnVal[2].(*big.Int).String(),
+						string(returnVal[4].([]byte)),
 						vLog.TxHash.Hex(),
 						vLog.BlockNumber,
-						mMint,
-						common.ReceiveStatus_Success,
-						chainOb.chain.String(),
 					)
 					if err != nil {
-						log.Err(err).Msg("error posting confirmation to meta core")
+						log.Err(err).Msg("error posting to meta core")
 						continue
 					}
 					log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
@@ -361,13 +359,13 @@ func (chainOb *ChainObserver) observeFailedTx() {
 						continue
 					}
 
-					// outTxHash = tx hash returned by signer.MMint
-					rxAddress := returnVal[0].(ethcommon.Address).String()
-					mMint := returnVal[1].(*big.Int).String()
-					sendhash := returnVal[2].([32]byte)
-					sendHash := "0x" + hex.EncodeToString(sendhash[:])
+					// event MMinted(address indexed mintee, uint amount, bytes32 indexed sendHash);
+					// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
+					sendhash := vLog.Topics[2].Hex()
+					var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
+					var mMint string = returnVal[0].(*big.Int).String()
 					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-						sendHash,
+						sendhash,
 						vLog.TxHash.Hex(),
 						vLog.BlockNumber,
 						mMint,
