@@ -57,7 +57,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.PubkeyInBech32
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, testPubKeys[:2], "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, testPubKeys, "0.14.0")
 	ks_res, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
@@ -159,7 +159,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	if !found {
 		log.Info().Msgf("Local state not found; new Keygen starting...")
 		var req keygen.Request
-		req = keygen.NewRequest(testPubKeys[:2], 10, "0.14.0")
+		req = keygen.NewRequest(testPubKeys, 10, "0.14.0")
 		res, err := server.Keygen(req)
 		if err != nil {
 			log.Fatal().Msg("keygen fail")
@@ -272,7 +272,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 func TestKeygen(tssServer *tss.TssServer) keygen.Response {
 	// check if we already have LocalState persisted in files
 	var req keygen.Request
-	req = keygen.NewRequest(testPubKeys[:2], 10, "0.13.0")
+	req = keygen.NewRequest(testPubKeys, 10, "0.13.0")
 	res, err := tssServer.Keygen(req)
 	if err != nil {
 		log.Fatal().Msg("keygen fail")
