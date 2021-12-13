@@ -27,7 +27,7 @@ done
 
 $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=testing
 for NODE in $NODES; do
-    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=testing
+    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=testing -ip $NODE
     scp -i ~/.ssh/meta.pem $NODE:~/.zetacore/config/gentx/*.json ~/.zetacore/config/gentx/
 done
 
