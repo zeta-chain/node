@@ -25,10 +25,10 @@ const (
 // #nosec G101
 const (
 	// Routers
-	ETH_ZETALOCK_ADDRESS  = "0x73Bd3bc3f9e54fe0Ca6cfD837e41D20a6e549cF3"
+	ETH_ZETALOCK_ADDRESS  = "0xAA8e5c4b142d5c8ab75e7710E579C8e76cc15b85"
 	ETH_TOKEN_ADDRESS     = "0x9BBff31cF0E0B7689470Fb2834295217813eCBfC"
-	POLYGON_TOKEN_ADDRESS = "0xF146f7E7b9C404874b7B0f84E62886b721101E49"
-	BSC_TOKEN_ADDRESS     = "0xC7e08ceb6bbaCaC1F4Fe1dA7EdBAEA949391a365"
+	POLYGON_TOKEN_ADDRESS = "0xd85c6f3A7b1C4281448a4E5C68c66894e779b953"
+	BSC_TOKEN_ADDRESS     = "0xdb9828f2bB2f9ab7C876768618768cC51fE10BAc"
 
 	// API Endpoints
 	ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
@@ -117,7 +117,7 @@ const (
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "address",
 						"name": "sender",
 						"type": "address"
@@ -160,7 +160,7 @@ const (
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "address",
 						"name": "burnee",
 						"type": "address"
@@ -179,7 +179,7 @@ const (
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "address",
 						"name": "mintee",
 						"type": "address"
@@ -191,7 +191,7 @@ const (
 						"type": "uint256"
 					},
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "bytes32",
 						"name": "sendHash",
 						"type": "bytes32"
@@ -1051,7 +1051,7 @@ const (
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "address",
 						"name": "sender",
 						"type": "address"
@@ -1094,7 +1094,7 @@ const (
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "address",
 						"name": "receiver",
 						"type": "address"
@@ -1106,7 +1106,7 @@ const (
 						"type": "uint256"
 					},
 					{
-						"indexed": false,
+						"indexed": true,
 						"internalType": "bytes32",
 						"name": "sendHash",
 						"type": "bytes32"
