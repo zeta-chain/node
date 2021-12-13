@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
@@ -157,6 +158,8 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		}
 	}
 	if !found {
+		fmt.Print("Press 'Enter' to keygen...")
+		bufio.NewReader(os.Stdin).ReadBytes('\n')
 		log.Info().Msgf("Local state not found; new Keygen starting...")
 		var req keygen.Request
 		req = keygen.NewRequest(testPubKeys, 10, "0.14.0")
