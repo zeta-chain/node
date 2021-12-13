@@ -263,7 +263,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	log.Info().Msgf("signature of helloworld... %v", signature)
 
 	if len(signature) == 0 {
-		log.Info().Msgf("signature has length, skipping verify", signature)
+		log.Info().Msgf("signature has length 0, skipping verify")
 	} else {
 		verify_signature(tssPubkey, signature, H.Bytes())
 	}

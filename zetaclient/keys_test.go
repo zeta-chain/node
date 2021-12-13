@@ -33,7 +33,7 @@ func SetupConfigForTest() {
 	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
 	//config.SetCoinType(cmd.MetaChainCoinType)
-	config.SetFullFundraiserPath(cmd.METAChainHDPath)
+	config.SetFullFundraiserPath(cmd.ZetaChainHDPath)
 	types.SetCoinDenomRegex(func() string {
 		return cmd.DenomRegex
 	})
@@ -55,7 +55,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	buf.WriteByte('\n')
 	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf)
 	c.Assert(err, IsNil)
-	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.METAChainHDPath, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.ZetaChainHDPath, hd.Secp256k1)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }
