@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -69,7 +69,10 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Send
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
-		sends = append(sends, &val)
+		// if the status of send is pending, which means Finalized/Revert
+		if val.Status == types.SendStatus_Finalized || val.Status == types.SendStatus_Revert {
+			sends = append(sends, &val)
+		}
 	}
 
 	return &types.QueryAllSendPendingResponse{Send: sends}, nil
