@@ -152,7 +152,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				send.Status = types.SendStatus_Aborted
 				goto END
 			}
-			send.Status = types.SendStatus_Abort
+			send.Status = types.SendStatus_Revert
 		} else {
 			chain = recvChain
 		}

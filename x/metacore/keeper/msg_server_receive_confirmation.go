@@ -78,14 +78,14 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		k.SetLastBlockHeight(ctx, lastblock)
 
 		if receive.Status == common.ReceiveStatus_Success {
-			if send.Status == types.SendStatus_Abort {
+			if send.Status == types.SendStatus_Revert {
 				send.Status = types.SendStatus_Reverted
 			} else {
 				send.Status = types.SendStatus_Mined
 			}
 		} else if receive.Status == common.ReceiveStatus_Failed {
 			if send.Status == types.SendStatus_Finalized {
-				send.Status = types.SendStatus_Abort
+				send.Status = types.SendStatus_Revert
 			}
 		}
 
