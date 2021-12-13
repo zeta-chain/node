@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+import "gogoproto/gogo.proto";
+
+message LastBlockHeight {
+  string creator = 1;
+  string index = 2;
+  string chain = 3; 
+  uint64 lastSendHeight = 4;
+  uint64 lastReceiveHeight = 5;
+}

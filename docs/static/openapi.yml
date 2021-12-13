@@ -19102,10 +19102,10 @@ paths:
           format: uint64
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/chainNonces:
+  /Meta-Protocol/zetacore/zetacore/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
-      operationId: MetaProtocolMetacoreMetacoreChainNoncesAll
+      operationId: ZetachainZetacoreZetacoreChainNoncesAll
       responses:
         '200':
           description: A successful response.
@@ -19227,10 +19227,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/chainNonces/{index}':
+  '/Meta-Protocol/zetacore/zetacore/chainNonces/{index}':
     get:
       summary: Queries a chainNonces by index.
-      operationId: MetaProtocolMetacoreMetacoreChainNonces
+      operationId: ZetachainZetacoreZetacoreChainNonces
       responses:
         '200':
           description: A successful response.
@@ -19281,10 +19281,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/gasBalance:
+  /Meta-Protocol/zetacore/zetacore/gasBalance:
     get:
       summary: Queries a list of gasBalance items.
-      operationId: MetaProtocolMetacoreMetacoreGasBalanceAll
+      operationId: ZetachainZetacoreZetacoreGasBalanceAll
       responses:
         '200':
           description: A successful response.
@@ -19412,10 +19412,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/gasBalance/{index}':
+  '/Meta-Protocol/zetacore/zetacore/gasBalance/{index}':
     get:
       summary: Queries a gasBalance by index.
-      operationId: MetaProtocolMetacoreMetacoreGasBalance
+      operationId: ZetachainZetacoreZetacoreGasBalance
       responses:
         '200':
           description: A successful response.
@@ -19472,10 +19472,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/gasPrice:
+  /Meta-Protocol/zetacore/zetacore/gasPrice:
     get:
       summary: Queries a list of gasPrice items.
-      operationId: MetaProtocolMetacoreMetacoreGasPriceAll
+      operationId: ZetachainZetacoreZetacoreGasPriceAll
       responses:
         '200':
           description: A successful response.
@@ -19604,10 +19604,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/gasPrice/{index}':
+  '/Meta-Protocol/zetacore/zetacore/gasPrice/{index}':
     get:
       summary: Queries a gasPrice by index.
-      operationId: MetaProtocolMetacoreMetacoreGasPrice
+      operationId: ZetachainZetacoreZetacoreGasPrice
       responses:
         '200':
           description: A successful response.
@@ -19665,10 +19665,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/inTx:
+  /Meta-Protocol/zetacore/zetacore/inTx:
     get:
       summary: Queries a list of inTx items.
-      operationId: MetaProtocolMetacoreMetacoreInTxAll
+      operationId: ZetachainZetacoreZetacoreInTxAll
       responses:
         '200':
           description: A successful response.
@@ -19785,10 +19785,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/inTx/{index}':
+  '/Meta-Protocol/zetacore/zetacore/inTx/{index}':
     get:
       summary: Queries a inTx by index.
-      operationId: MetaProtocolMetacoreMetacoreInTx
+      operationId: ZetachainZetacoreZetacoreInTx
       responses:
         '200':
           description: A successful response.
@@ -19834,10 +19834,10 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/inTxNS/{index}':
+  '/Meta-Protocol/zetacore/zetacore/inTxNS/{index}':
     get:
       summary: Queries a inTx by index.
-      operationId: MetaProtocolMetacoreMetacoreInTxNS
+      operationId: ZetachainZetacoreZetacoreInTxNS
       responses:
         '200':
           description: A successful response.
@@ -19883,10 +19883,10 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/inTxRich/{index}':
+  '/Meta-Protocol/zetacore/zetacore/inTxRich/{index}':
     get:
       summary: Queries a inTx by index.
-      operationId: MetaProtocolMetacoreMetacoreInTxRich
+      operationId: ZetachainZetacoreZetacoreInTxRich
       responses:
         '200':
           description: A successful response.
@@ -19982,10 +19982,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/lastBlockHeight:
+  /Meta-Protocol/zetacore/zetacore/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
-      operationId: MetaProtocolMetacoreMetacoreLastBlockHeightAll
+      operationId: ZetachainZetacoreZetacoreLastBlockHeightAll
       responses:
         '200':
           description: A successful response.
@@ -20103,10 +20103,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/lastBlockHeight/{index}':
+  '/Meta-Protocol/zetacore/zetacore/lastBlockHeight/{index}':
     get:
       summary: Queries a lastBlockHeight by index.
-      operationId: MetaProtocolMetacoreMetacoreLastBlockHeight
+      operationId: ZetachainZetacoreZetacoreLastBlockHeight
       responses:
         '200':
           description: A successful response.
@@ -20153,10 +20153,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/lastMetaHeight:
+  /Meta-Protocol/zetacore/zetacore/lastMetaHeight:
     get:
       summary: Queries a list of lastMetaHeight items.
-      operationId: MetaProtocolMetacoreMetacoreLastMetaHeight
+      operationId: ZetachainZetacoreZetacoreLastMetaHeight
       responses:
         '200':
           description: A successful response.
@@ -20186,10 +20186,10 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/nodeAccount:
+  /Meta-Protocol/zetacore/zetacore/nodeAccount:
     get:
       summary: Queries a list of nodeAccount items.
-      operationId: MetaProtocolMetacoreMetacoreNodeAccountAll
+      operationId: ZetachainZetacoreZetacoreNodeAccountAll
       responses:
         '200':
           description: A successful response.
@@ -20320,10 +20320,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/nodeAccount/{index}':
+  '/Meta-Protocol/zetacore/zetacore/nodeAccount/{index}':
     get:
       summary: Queries a nodeAccount by index.
-      operationId: MetaProtocolMetacoreMetacoreNodeAccount
+      operationId: ZetachainZetacoreZetacoreNodeAccount
       responses:
         '200':
           description: A successful response.
@@ -20383,10 +20383,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/receive:
+  /Meta-Protocol/zetacore/zetacore/receive:
     get:
       summary: Queries a list of receive items.
-      operationId: MetaProtocolMetacoreMetacoreReceiveAll
+      operationId: ZetachainZetacoreZetacoreReceiveAll
       responses:
         '200':
           description: A successful response.
@@ -20519,10 +20519,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/receive/{index}':
+  '/Meta-Protocol/zetacore/zetacore/receive/{index}':
     get:
       summary: Queries a receive by index.
-      operationId: MetaProtocolMetacoreMetacoreReceive
+      operationId: ZetachainZetacoreZetacoreReceive
       responses:
         '200':
           description: A successful response.
@@ -20584,10 +20584,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/send:
+  /Meta-Protocol/zetacore/zetacore/send:
     get:
       summary: Queries a list of send items.
-      operationId: MetaProtocolMetacoreMetacoreSendAll
+      operationId: ZetachainZetacoreZetacoreSendAll
       responses:
         '200':
           description: A successful response.
@@ -20754,10 +20754,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/metacore/metacore/send/{index}':
+  '/Meta-Protocol/zetacore/zetacore/send/{index}':
     get:
       summary: Queries a send by index.
-      operationId: MetaProtocolMetacoreMetacoreSend
+      operationId: ZetachainZetacoreZetacoreSend
       responses:
         '200':
           description: A successful response.
@@ -20853,10 +20853,10 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/sendPending:
+  /Meta-Protocol/zetacore/zetacore/sendPending:
     get:
       summary: Queries a list of send items.
-      operationId: MetaProtocolMetacoreMetacoreSendAllPending
+      operationId: ZetachainZetacoreZetacoreSendAllPending
       responses:
         '200':
           description: A successful response.
@@ -20949,10 +20949,10 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/txList:
+  /Meta-Protocol/zetacore/zetacore/txList:
     get:
       summary: Queries a txList by index.
-      operationId: MetaProtocolMetacoreMetacoreTxList
+      operationId: ZetachainZetacoreZetacoreTxList
       responses:
         '200':
           description: A successful response.
@@ -21015,10 +21015,10 @@ paths:
           format: int64
       tags:
         - Query
-  /Meta-Protocol/metacore/metacore/txListRich:
+  /Meta-Protocol/zetacore/zetacore/txListRich:
     get:
       summary: Queries a list of txListRich items.
-      operationId: MetaProtocolMetacoreMetacoreTxListRich
+      operationId: ZetachainZetacoreZetacoreTxListRich
       responses:
         '200':
           description: A successful response.
@@ -31286,7 +31286,22 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
-  MetaProtocol.metacore.metacore.ChainNonces:
+  common.PubKeySet:
+    type: object
+    properties:
+      secp256k1:
+        type: string
+      ed25519:
+        type: string
+    title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
+  common.ReceiveStatus:
+    type: string
+    enum:
+      - Created
+      - Success
+      - Failed
+    default: Created
+  zetachain.zetacore.zetacore.ChainNonces:
     type: object
     properties:
       creator:
@@ -31305,7 +31320,7 @@ definitions:
       finalizedHeight:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.GasBalance:
+  zetachain.zetacore.zetacore.GasBalance:
     type: object
     properties:
       creator:
@@ -31330,7 +31345,7 @@ definitions:
       medianIndex:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.GasPrice:
+  zetachain.zetacore.zetacore.GasPrice:
     type: object
     properties:
       creator:
@@ -31356,7 +31371,7 @@ definitions:
       medianIndex:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.InTx:
+  zetachain.zetacore.zetacore.InTx:
     type: object
     properties:
       creator:
@@ -31370,7 +31385,7 @@ definitions:
         type: string
       recvHash:
         type: string
-  MetaProtocol.metacore.metacore.LastBlockHeight:
+  zetachain.zetacore.zetacore.LastBlockHeight:
     type: object
     properties:
       creator:
@@ -31385,19 +31400,19 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.MsgGasBalanceVoterResponse:
+  zetachain.zetacore.zetacore.MsgGasBalanceVoterResponse:
     type: object
-  MetaProtocol.metacore.metacore.MsgGasPriceVoterResponse:
+  zetachain.zetacore.zetacore.MsgGasPriceVoterResponse:
     type: object
-  MetaProtocol.metacore.metacore.MsgNonceVoterResponse:
+  zetachain.zetacore.zetacore.MsgNonceVoterResponse:
     type: object
-  MetaProtocol.metacore.metacore.MsgReceiveConfirmationResponse:
+  zetachain.zetacore.zetacore.MsgReceiveConfirmationResponse:
     type: object
-  MetaProtocol.metacore.metacore.MsgSendVoterResponse:
+  zetachain.zetacore.zetacore.MsgSendVoterResponse:
     type: object
-  MetaProtocol.metacore.metacore.MsgSetNodeKeysResponse:
+  zetachain.zetacore.zetacore.MsgSetNodeKeysResponse:
     type: object
-  MetaProtocol.metacore.metacore.NodeAccount:
+  zetachain.zetacore.zetacore.NodeAccount:
     type: object
     properties:
       creator:
@@ -31425,7 +31440,7 @@ definitions:
           - Active
           - Disabled
         default: Unknown
-  MetaProtocol.metacore.metacore.NodeStatus:
+  zetachain.zetacore.zetacore.NodeStatus:
     type: string
     enum:
       - Unknown
@@ -31435,7 +31450,7 @@ definitions:
       - Active
       - Disabled
     default: Unknown
-  MetaProtocol.metacore.metacore.QueryAllChainNoncesResponse:
+  zetachain.zetacore.zetacore.QueryAllChainNoncesResponse:
     type: object
     properties:
       ChainNonces:
@@ -31484,7 +31499,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllGasBalanceResponse:
+  zetachain.zetacore.zetacore.QueryAllGasBalanceResponse:
     type: object
     properties:
       GasBalance:
@@ -31539,7 +31554,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllGasPriceResponse:
+  zetachain.zetacore.zetacore.QueryAllGasPriceResponse:
     type: object
     properties:
       GasPrice:
@@ -31595,7 +31610,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllInTxResponse:
+  zetachain.zetacore.zetacore.QueryAllInTxResponse:
     type: object
     properties:
       InTx:
@@ -31639,7 +31654,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllLastBlockHeightResponse:
+  zetachain.zetacore.zetacore.QueryAllLastBlockHeightResponse:
     type: object
     properties:
       LastBlockHeight:
@@ -31684,7 +31699,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllNodeAccountResponse:
+  zetachain.zetacore.zetacore.QueryAllNodeAccountResponse:
     type: object
     properties:
       NodeAccount:
@@ -31742,7 +31757,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllReceiveResponse:
+  zetachain.zetacore.zetacore.QueryAllReceiveResponse:
     type: object
     properties:
       Receive:
@@ -31802,7 +31817,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryAllSendPendingResponse:
+  zetachain.zetacore.zetacore.QueryAllSendPendingResponse:
     type: object
     properties:
       Send:
@@ -31871,7 +31886,7 @@ definitions:
             lastUpdateTimestamp:
               type: string
               format: int64
-  MetaProtocol.metacore.metacore.QueryAllSendResponse:
+  zetachain.zetacore.zetacore.QueryAllSendResponse:
     type: object
     properties:
       Send:
@@ -31965,7 +31980,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  MetaProtocol.metacore.metacore.QueryGetChainNoncesResponse:
+  zetachain.zetacore.zetacore.QueryGetChainNoncesResponse:
     type: object
     properties:
       ChainNonces:
@@ -31987,7 +32002,7 @@ definitions:
           finalizedHeight:
             type: string
             format: uint64
-  MetaProtocol.metacore.metacore.QueryGetGasBalanceResponse:
+  zetachain.zetacore.zetacore.QueryGetGasBalanceResponse:
     type: object
     properties:
       GasBalance:
@@ -32015,7 +32030,7 @@ definitions:
           medianIndex:
             type: string
             format: uint64
-  MetaProtocol.metacore.metacore.QueryGetGasPriceResponse:
+  zetachain.zetacore.zetacore.QueryGetGasPriceResponse:
     type: object
     properties:
       GasPrice:
@@ -32044,7 +32059,7 @@ definitions:
           medianIndex:
             type: string
             format: uint64
-  MetaProtocol.metacore.metacore.QueryGetInTxResponse:
+  zetachain.zetacore.zetacore.QueryGetInTxResponse:
     type: object
     properties:
       InTx:
@@ -32061,7 +32076,7 @@ definitions:
             type: string
           recvHash:
             type: string
-  MetaProtocol.metacore.metacore.QueryGetInTxRichResponse:
+  zetachain.zetacore.zetacore.QueryGetInTxRichResponse:
     type: object
     properties:
       tx:
@@ -32128,7 +32143,7 @@ definitions:
           lastUpdateTimestamp:
             type: string
             format: int64
-  MetaProtocol.metacore.metacore.QueryGetLastBlockHeightResponse:
+  zetachain.zetacore.zetacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
       LastBlockHeight:
@@ -32146,7 +32161,7 @@ definitions:
           lastReceiveHeight:
             type: string
             format: uint64
-  MetaProtocol.metacore.metacore.QueryGetNodeAccountResponse:
+  zetachain.zetacore.zetacore.QueryGetNodeAccountResponse:
     type: object
     properties:
       NodeAccount:
@@ -32177,7 +32192,7 @@ definitions:
               - Active
               - Disabled
             default: Unknown
-  MetaProtocol.metacore.metacore.QueryGetReceiveResponse:
+  zetachain.zetacore.zetacore.QueryGetReceiveResponse:
     type: object
     properties:
       Receive:
@@ -32210,7 +32225,7 @@ definitions:
             default: Created
           chain:
             type: string
-  MetaProtocol.metacore.metacore.QueryGetSendResponse:
+  zetachain.zetacore.zetacore.QueryGetSendResponse:
     type: object
     properties:
       Send:
@@ -32277,7 +32292,7 @@ definitions:
           lastUpdateTimestamp:
             type: string
             format: int64
-  MetaProtocol.metacore.metacore.QueryGetTxResponse:
+  zetachain.zetacore.zetacore.QueryGetTxResponse:
     type: object
     properties:
       tx:
@@ -32300,13 +32315,13 @@ definitions:
       length:
         type: string
         format: int64
-  MetaProtocol.metacore.metacore.QueryLastMetaHeightResponse:
+  zetachain.zetacore.zetacore.QueryLastMetaHeightResponse:
     type: object
     properties:
       Height:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.QueryTxListRichResponse:
+  zetachain.zetacore.zetacore.QueryTxListRichResponse:
     type: object
     properties:
       tx:
@@ -32378,7 +32393,7 @@ definitions:
       length:
         type: string
         format: uint64
-  MetaProtocol.metacore.metacore.Receive:
+  zetachain.zetacore.zetacore.Receive:
     type: object
     properties:
       creator:
@@ -32408,7 +32423,7 @@ definitions:
         default: Created
       chain:
         type: string
-  MetaProtocol.metacore.metacore.Send:
+  zetachain.zetacore.zetacore.Send:
     type: object
     properties:
       creator:
@@ -32472,7 +32487,7 @@ definitions:
       lastUpdateTimestamp:
         type: string
         format: int64
-  MetaProtocol.metacore.metacore.SendStatus:
+  zetachain.zetacore.zetacore.SendStatus:
     type: string
     enum:
       - Created
@@ -32483,7 +32498,7 @@ definitions:
       - Reverted
       - Aborted
     default: Created
-  MetaProtocol.metacore.metacore.Tx:
+  zetachain.zetacore.zetacore.Tx:
     type: object
     properties:
       sendHash:
@@ -32498,18 +32513,3 @@ definitions:
         type: string
       outTxChain:
         type: string
-  common.PubKeySet:
-    type: object
-    properties:
-      secp256k1:
-        type: string
-      ed25519:
-        type: string
-    title: 'PubKeySet contains two pub keys , secp256k1 and ed25519'
-  common.ReceiveStatus:
-    type: string
-    enum:
-      - Created
-      - Success
-      - Failed
-    default: Created

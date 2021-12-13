@@ -2,14 +2,14 @@ version: "3.9"
 services:
   metacore:
     image: "405687270874.dkr.ecr.us-east-2.amazonaws.com/zeta-node"
-    command: ["metacored", "start"]
+    command: ["zetacored", "start"]
     volumes:
-      - /home/ubuntu/.metacore:/root/.metacore
+      - /home/ubuntu/.zetacore:/root/.zetacore
     network_mode: "host"
 
   metaclient:
     image: "405687270874.dkr.ecr.us-east-2.amazonaws.com/zeta-node"
-    command: ["metaclientd", "--val", "val"]
+    command: ["zetaclientd", "--val", "val"]
     volumes:
-      - /home/ubuntu/.metacore:/root/.metacore
+      - /home/ubuntu/.zetacore:/root/.zetacore
     network_mode: "host"

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+import "gogoproto/gogo.proto";
+
+message InTx {
+  string creator = 1;
+  string index = 2; // the index  the inTxHash
+//  string inTxHash = 3;
+  string outTxHash = 4;
+  string sendHash = 5;
+  string recvHash = 6;
+}

@@ -14,7 +14,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/crypto"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/Meta-Protocol/metacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 // PubKey is bech32 encoded string
@@ -94,8 +94,8 @@ func (pubKey PubKey) GetAddress(chain Chain) (Address, error) {
 	return NoAddress, nil
 }
 
-func (pubKey PubKey) GetMetaAddress() (cosmos.AccAddress, error) {
-	addr, err := pubKey.GetAddress(METAChain)
+func (pubKey PubKey) GetZetaAddress() (cosmos.AccAddress, error) {
+	addr, err := pubKey.GetAddress(ZETAChain)
 	if err != nil {
 		return nil, err
 	}

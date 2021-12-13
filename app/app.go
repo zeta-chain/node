@@ -15,7 +15,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/Meta-Protocol/metacore/docs"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -83,17 +82,18 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/zeta-chain/zetacore/docs"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	metacoremodule "github.com/Meta-Protocol/metacore/x/metacore"
-	metacoremodulekeeper "github.com/Meta-Protocol/metacore/x/metacore/keeper"
-	metacoremoduletypes "github.com/Meta-Protocol/metacore/x/metacore/types"
+	metacoremodule "github.com/zeta-chain/zetacore/x/zetacore"
+	metacoremodulekeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
+	metacoremoduletypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	"github.com/tendermint/spm/cosmoscmd"
 )
 
 const (
-	AccountAddressPrefix = "meta"
-	Name                 = "metacore"
+	AccountAddressPrefix = "zeta"
+	Name                 = "zetacore"
 )
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals

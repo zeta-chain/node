@@ -1,0 +1,87 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+// this line is used by starport scaffolding # proto/tx/import
+import "common/common.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+  rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
+  rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
+  rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
+  rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
+  rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
+  rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
+}
+
+// this line is used by starport scaffolding # proto/tx/message
+message MsgGasBalanceVoter {
+  string creator = 1;
+  string chain = 2;
+  string balance = 3;
+  uint64 blockNumber = 4;
+}
+
+message MsgGasBalanceVoterResponse {
+}
+
+message MsgGasPriceVoter {
+  string creator = 1;
+  string chain = 2;
+  uint64 price = 3;
+  uint64 blockNumber = 4;
+  string supply = 5;
+}
+
+message MsgGasPriceVoterResponse {
+}
+
+message MsgNonceVoter {
+  string creator = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+}
+
+message MsgNonceVoterResponse {
+}
+
+message MsgReceiveConfirmation {
+  string creator = 1;
+  string sendHash = 2;
+  string outTxHash = 3;
+  uint64 outBlockHeight = 4;
+  string mMint = 5;
+  common.ReceiveStatus status = 6;
+  string chain = 7;
+}
+
+message MsgReceiveConfirmationResponse {
+}
+
+message MsgSendVoter {
+  string creator = 1;
+  string sender = 2;
+  string senderChain = 3;
+  string receiver = 4;
+  string receiverChain = 5;
+  string mBurnt = 6;
+  string mMint = 7;
+  string message = 8;
+  string inTxHash = 9;
+  uint64 inBlockHeight = 10;
+}
+
+message MsgSendVoterResponse {
+}
+
+message MsgSetNodeKeys {
+  string creator = 1;
+  common.PubKeySet pubkeySet = 2;
+  string validatorConsensusPubkey = 3;
+}
+
+message MsgSetNodeKeysResponse {
+}
