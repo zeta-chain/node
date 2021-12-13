@@ -504,7 +504,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				continue
 			}
 			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
+			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendhash, vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
 
 		case logMMintedSignatureHash.Hex():
 			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)
@@ -531,7 +531,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				continue
 			}
 			log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("MMinted(sendhash=%s, outTxHash=%s, blockHeight=%d, mMint=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
+			log.Debug().Msgf("MMinted(sendhash=%s, outTxHash=%s, blockHeight=%d, mMint=%s", sendhash, vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
 		}
 	}
 
