@@ -325,61 +325,7 @@ func (chainOb *ChainObserver) observeFailedTx() {
 				log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
 			}
 		} else {
-			log.Debug().Msgf("success tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
-			var returnVal []interface{}
-			for _, vLog := range receipt.Logs {
-				if chainOb.chain == common.ETHChain && vLog.Topics[0].Hex() == logUnlockSignatureHash.Hex() {
-					returnVal, err = chainOb.abi.Unpack("Unlock", vLog.Data)
-					if err != nil {
-						log.Err(err).Msg("error unpacking Unlock")
-						continue
-					}
 
-					metaHash, err := chainOb.bridge.PostSend(
-						ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
-						chainOb.chain.String(),
-						returnVal[0].(string),
-						returnVal[3].(string),
-						returnVal[1].(*big.Int).String(),
-						returnVal[2].(*big.Int).String(),
-						string(returnVal[4].([]byte)),
-						vLog.TxHash.Hex(),
-						vLog.BlockNumber,
-					)
-					if err != nil {
-						log.Err(err).Msg("error posting to meta core")
-						continue
-					}
-					log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-					log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
-				} else if chainOb.chain != common.ETHChain && vLog.Topics[0].Hex() == logMMintedSignatureHash.Hex() {
-					returnVal, err = chainOb.abi.Unpack("MMinted", vLog.Data)
-					if err != nil {
-						log.Err(err).Msg("error unpacking Unlock")
-						continue
-					}
-
-					// event MMinted(address indexed mintee, uint amount, bytes32 indexed sendHash);
-					// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
-					sendhash := vLog.Topics[2].Hex()
-					var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					var mMint string = returnVal[0].(*big.Int).String()
-					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-						sendhash,
-						vLog.TxHash.Hex(),
-						vLog.BlockNumber,
-						mMint,
-						common.ReceiveStatus_Success,
-						chainOb.chain.String(),
-					)
-					if err != nil {
-						log.Err(err).Msg("error posting confirmation to meta core")
-						continue
-					}
-					log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-					log.Debug().Msgf("MMinted(sendhash=%s, outTxHash=%s, blockHeight=%d, mMint=%s", sendHash[:6], vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
-				}
-			}
 		}
 		delete(chainOb.txWatchList, txhash)
 	}
