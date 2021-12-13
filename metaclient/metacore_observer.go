@@ -77,7 +77,7 @@ func (co *CoreObserver) observeSend() {
 		}
 
 		for _, send := range sendList {
-			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Abort {
+			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
 				oldSend, found := co.sendMap[send.Index]
 				if !found || oldSend.Status != send.Status {
 					co.lock.Lock()
@@ -167,7 +167,7 @@ func (co *CoreObserver) processOutboundQueue() {
 			var to ethcommon.Address
 			var err error
 			var toChain common.Chain
-			if send.Status == types.SendStatus_Abort {
+			if send.Status == types.SendStatus_Revert {
 				to = ethcommon.HexToAddress(send.Sender)
 				toChain, err = common.ParseChain(send.SenderChain)
 				log.Info().Msgf("Abort: reverting inbound")

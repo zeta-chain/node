@@ -19933,7 +19933,7 @@ paths:
                       - Finalized
                       - Mined
                       - Confirmed
-                      - Abort
+                      - Revert
                       - Reverted
                       - Aborted
                     default: Created
@@ -20636,7 +20636,7 @@ paths:
                         - Finalized
                         - Mined
                         - Confirmed
-                        - Abort
+                        - Revert
                         - Reverted
                         - Aborted
                       default: Created
@@ -20804,7 +20804,7 @@ paths:
                       - Finalized
                       - Mined
                       - Confirmed
-                      - Abort
+                      - Revert
                       - Reverted
                       - Aborted
                     default: Created
@@ -20905,7 +20905,7 @@ paths:
                         - Finalized
                         - Mined
                         - Confirmed
-                        - Abort
+                        - Revert
                         - Reverted
                         - Aborted
                       default: Created
@@ -21067,7 +21067,7 @@ paths:
                         - Finalized
                         - Mined
                         - Confirmed
-                        - Abort
+                        - Revert
                         - Reverted
                         - Aborted
                       default: Created
@@ -31847,7 +31847,7 @@ definitions:
                 - Finalized
                 - Mined
                 - Confirmed
-                - Abort
+                - Revert
                 - Reverted
                 - Aborted
               default: Created
@@ -31916,7 +31916,7 @@ definitions:
                 - Finalized
                 - Mined
                 - Confirmed
-                - Abort
+                - Revert
                 - Reverted
                 - Aborted
               default: Created
@@ -32104,7 +32104,7 @@ definitions:
               - Finalized
               - Mined
               - Confirmed
-              - Abort
+              - Revert
               - Reverted
               - Aborted
             default: Created
@@ -32253,7 +32253,7 @@ definitions:
               - Finalized
               - Mined
               - Confirmed
-              - Abort
+              - Revert
               - Reverted
               - Aborted
             default: Created
@@ -32351,7 +32351,7 @@ definitions:
                 - Finalized
                 - Mined
                 - Confirmed
-                - Abort
+                - Revert
                 - Reverted
                 - Aborted
               default: Created
@@ -32448,7 +32448,7 @@ definitions:
           - Finalized
           - Mined
           - Confirmed
-          - Abort
+          - Revert
           - Reverted
           - Aborted
         default: Created
@@ -32479,7 +32479,7 @@ definitions:
       - Finalized
       - Mined
       - Confirmed
-      - Abort
+      - Revert
       - Reverted
       - Aborted
     default: Created
