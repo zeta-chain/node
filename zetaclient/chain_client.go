@@ -5,11 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"strings"
 	"sync"
@@ -433,14 +433,17 @@ func (chainOb *ChainObserver) observeChain() error {
 			}
 
 			// PostSend to meta core
+			// LockSend Event:     event LockSend(address indexed sender, string receiver, uint amount, uint wanted, string chainid, bytes message);
+			// Topic1: Sender address
+			// Data fields: 0: receiver; 1: amount; 2: wanted; 3: chainid; 4: message
 			metaHash, err := chainOb.bridge.PostSend(
-				returnVal[0].(ethcommon.Address).String(),
+				ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
 				chainOb.chain.String(),
-				returnVal[1].(string),
-				returnVal[4].(string),
+				returnVal[0].(string),
+				returnVal[3].(string),
+				returnVal[1].(*big.Int).String(),
 				returnVal[2].(*big.Int).String(),
-				returnVal[3].(*big.Int).String(),
-				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
+				string(returnVal[4].([]byte)),
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -457,14 +460,17 @@ func (chainOb *ChainObserver) observeChain() error {
 			}
 
 			// PostSend to meta core
+			//    event BurnSend(address indexed sender, string receiver, uint amount, uint wanted, string chainid, bytes message);
+			// Topic 1: sender address
+			// Data fields: 0: receiver; 1: amount; 2: wanted; 3: chainid; 4: message
 			metaHash, err := chainOb.bridge.PostSend(
-				returnVal[0].(ethcommon.Address).String(),
+				ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
 				chainOb.chain.String(),
-				returnVal[1].(string),
-				returnVal[4].(string),
+				returnVal[0].(string),
+				returnVal[3].(string),
+				returnVal[1].(*big.Int).String(),
 				returnVal[2].(*big.Int).String(),
-				returnVal[3].(*big.Int).String(),
-				string(returnVal[5].([]byte)), // TODO: figure out appropriate format for message
+				string(returnVal[4].([]byte)),
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -480,13 +486,13 @@ func (chainOb *ChainObserver) observeChain() error {
 				log.Err(err).Msg("error unpacking Unlock")
 				continue
 			}
-
-			sendhash := returnVal[2].([32]byte)
-			sendHash := "0x" + hex.EncodeToString(sendhash[:])
-			var rxAddress string = returnVal[0].(ethcommon.Address).String()
-			var mMint string = returnVal[1].(*big.Int).String()
+			//    event Unlock(address indexed receiver, uint256 amount, bytes32 indexed sendHash);
+			// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
+			sendhash := vLog.Topics[2].Hex()
+			var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
+			var mMint string = returnVal[0].(*big.Int).String()
 			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-				sendHash,
+				sendhash,
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,
@@ -507,13 +513,13 @@ func (chainOb *ChainObserver) observeChain() error {
 				continue
 			}
 
-			// outTxHash = tx hash returned by signer.MMint
-			rxAddress := returnVal[0].(ethcommon.Address).String()
-			mMint := returnVal[1].(*big.Int).String()
-			sendhash := returnVal[2].([32]byte)
-			sendHash := "0x" + hex.EncodeToString(sendhash[:])
+			// event MMinted(address indexed mintee, uint amount, bytes32 indexed sendHash);
+			// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
+			sendhash := vLog.Topics[2].Hex()
+			var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
+			var mMint string = returnVal[0].(*big.Int).String()
 			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-				sendHash,
+				sendhash,
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 				mMint,

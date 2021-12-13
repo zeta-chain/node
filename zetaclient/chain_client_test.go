@@ -2,10 +2,15 @@ package zetaclient
 
 import (
 	"context"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"fmt"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
+	"math/big"
+	"strings"
 )
 
 type ChainClientSuite struct {
@@ -57,4 +62,33 @@ func (s *ChainClientSuite) TestBSCClient(c *C) {
 	receipt, err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash("0x63326995eb00cc49df7d2aa249ec473dc351cea30f230001c4d310d6e6763490"))
 	c.Assert(err, IsNil)
 	c.Log(receipt.Status, receipt.PostState, receipt.GasUsed, receipt.Logs[0], receipt.BlockNumber)
+}
+
+func (s *ChainClientSuite) TestGoerliClient(c *C) {
+	client, err := ethclient.Dial(config.ETH_ENDPOINT)
+	c.Assert(err, IsNil)
+	query := ethereum.FilterQuery{
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)},
+		FromBlock: big.NewInt(0).SetUint64(6013558), // LastBlock has been processed;
+		ToBlock:   big.NewInt(0).SetUint64(6013558),
+	}
+	logs, err := client.FilterLogs(context.Background(), query)
+	c.Assert(err, IsNil)
+	contractAbi, err := abi.JSON(strings.NewReader(config.ETH_ZETALOCK_ABI))
+	c.Assert(err, IsNil)
+	for _, vLog := range logs {
+		switch vLog.Topics[0].Hex() {
+		case logLockSendSignatureHash.Hex():
+			returnVal, err := contractAbi.Unpack("LockSend", vLog.Data)
+			c.Assert(err, IsNil)
+			fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
+			fmt.Printf("Topic 1: %s\n", ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex())
+			fmt.Printf("# of data fields: %d\n", len(returnVal))
+			fmt.Printf("F0: receiver? %s\n", returnVal[0].(string))
+			fmt.Printf("F1: amount %d\n", returnVal[1].(*big.Int))
+			fmt.Printf("F2: wanted %d\n", returnVal[2].(*big.Int))
+			fmt.Printf("F3: chainid? %s\n", returnVal[3].(string))
+			fmt.Printf("F4: message %s\n", string(returnVal[4].([]byte)))
+		}
+	}
 }
