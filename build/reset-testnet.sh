@@ -1,7 +1,7 @@
 set -e
 set -x
 ZETACORED=/home/ubuntu/go/bin/zetacored
-NODES="3.137.46.147"
+NODES="3.137.46.147 3.20.194.40 3.21.29.248"
 
 rm -rf ~/.zetacore
 for NODE in $NODES; do
