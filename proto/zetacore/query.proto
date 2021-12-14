@@ -4,6 +4,8 @@ package zetachain.zetacore.zetacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "zetacore/tss_voter.proto";
+import "zetacore/tss.proto";
 import "zetacore/in_tx.proto";
 import "zetacore/tx_list.proto";
 import "zetacore/gas_balance.proto";
@@ -19,6 +21,28 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a tSSVoter by index.
+	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSSVoter/{index}";
+	}
+
+	// Queries a list of tSSVoter items.
+	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSSVoter";
+	}
+
+
+	// Queries a tSS by index.
+	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSS/{index}";
+	}
+
+	// Queries a list of tSS items.
+	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSS";
+	}
+
 
 	// Queries a list of txListRich items.
 	rpc TxListRich(QueryTxListRichRequest) returns (QueryTxListRichResponse) {
@@ -145,6 +169,38 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetTSSVoterRequest {
+	string index = 1;
+}
+
+message QueryGetTSSVoterResponse {
+	TSSVoter TSSVoter = 1;
+}
+
+message QueryAllTSSVoterRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTSSVoterResponse {
+	repeated TSSVoter TSSVoter = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetTSSRequest {
+	string index = 1;
+}
+
+message QueryGetTSSResponse {
+	TSS TSS = 1;
+}
+
+message QueryAllTSSRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTSSResponse {
+	repeated TSS TSS = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 message QueryTxListRichRequest {
   uint64 last = 1;
 }

@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 var _ = strconv.Itoa(0)

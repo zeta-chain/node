@@ -3,13 +3,13 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {

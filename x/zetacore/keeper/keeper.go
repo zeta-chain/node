@@ -5,9 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	// this line is used by starport scaffolding # ibc/keeper/import
 )
 

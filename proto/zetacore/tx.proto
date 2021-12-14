@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.zetacore;
 
 // this line is used by starport scaffolding # proto/tx/import
+import "zetacore/tss_voter.proto";
 import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
@@ -9,6 +10,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 // Msg defines the Msg service.
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
+  rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
@@ -18,6 +20,16 @@ service Msg {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgCreateTSSVoter {
+  string creator = 1;
+  string chain = 3;
+  string address = 4;
+  string pubkey = 5;
+}
+
+message MsgCreateTSSVoterResponse { }
+
+
 message MsgGasBalanceVoter {
   string creator = 1;
   string chain = 2;

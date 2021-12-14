@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 func (k msgServer) GasBalanceVoter(goCtx context.Context, msg *types.MsgGasBalanceVoter) (*types.MsgGasBalanceVoterResponse, error) {

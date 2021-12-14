@@ -1,9 +1,9 @@
 package types
 
 import (
-	"github.com/zeta-chain/zetacore/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgSetNodeKeys{}
