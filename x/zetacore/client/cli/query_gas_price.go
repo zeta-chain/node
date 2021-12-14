@@ -3,10 +3,10 @@ package cli
 import (
 	"context"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 func CmdListGasPrice() *cobra.Command {

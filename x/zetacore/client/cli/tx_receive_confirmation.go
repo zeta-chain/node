@@ -1,14 +1,14 @@
 package cli
 
 import (
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 var _ = strconv.Itoa(0)

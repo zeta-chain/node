@@ -77,3 +77,11 @@ const (
 const (
 	InTxKey = "InTx-value-"
 )
+
+const (
+	TSSKey = "TSS-value-"
+)
+
+const (
+	TSSVoterKey = "TSSVoter-value-"
+)

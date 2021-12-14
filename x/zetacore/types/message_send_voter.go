@@ -1,10 +1,10 @@
 package types
 
 import (
-	"github.com/zeta-chain/zetacore/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 )
 

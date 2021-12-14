@@ -3,10 +3,10 @@ package zetacore
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 // NewHandler ...
@@ -18,6 +18,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		// this line is used by starport scaffolding # 1
+		case *types.MsgCreateTSSVoter:
+			res, err := msgServer.CreateTSSVoter(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		case *types.MsgGasBalanceVoter:
 			res, err := msgServer.GasBalanceVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)

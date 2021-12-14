@@ -1,15 +1,25 @@
 package zetacore
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the tSSVoter
+	for _, elem := range genState.TSSVoterList {
+		k.SetTSSVoter(ctx, *elem)
+	}
+
+	// Set all the tSS
+	for _, elem := range genState.TSSList {
+		k.SetTSS(ctx, *elem)
+	}
+
 	// Set all the inTx
 	for _, elem := range genState.InTxList {
 		k.SetInTx(ctx, *elem)
@@ -63,6 +73,20 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// this line is used by starport scaffolding # genesis/module/export
+	// Get all tSSVoter
+	tSSVoterList := k.GetAllTSSVoter(ctx)
+	for _, elem := range tSSVoterList {
+		elem := elem
+		genesis.TSSVoterList = append(genesis.TSSVoterList, &elem)
+	}
+
+	// Get all tSS
+	tSSList := k.GetAllTSS(ctx)
+	for _, elem := range tSSList {
+		elem := elem
+		genesis.TSSList = append(genesis.TSSList, &elem)
+	}
+
 	// Get all inTx
 	inTxList := k.GetAllInTx(ctx)
 	for _, elem := range inTxList {

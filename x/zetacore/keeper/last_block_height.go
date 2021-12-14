@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 // SetLastBlockHeight set a specific lastBlockHeight in the store from its index

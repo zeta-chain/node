@@ -2,9 +2,9 @@ package zetaclient
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	"github.com/rs/zerolog/log"
 )
 
 func (b *MetachainBridge) PostGasBalance(chain common.Chain, gasBalance string, blockNum uint64) (string, error) {
