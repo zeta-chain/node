@@ -13,7 +13,7 @@ import (
 
 func CmdCreateTSSVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-tss-voter [index] [chain] [address] [pubkey] [signers] [finalizedHeight]",
+		Use:   "create-tss-voter [chain] [address] [pubkey]",
 		Short: "Create a new TSSVoter",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
