@@ -115,6 +115,7 @@ func (co *CoreObserver) observeSend() {
 			} else if send.Status == types.SendStatus_Mined {
 				co.lock.Lock()
 				send, found := co.sendMap[send.Index]
+				delete(co.sendMap, send.Index)
 				co.lock.Unlock()
 				if found {
 					co.lock.Lock()
@@ -136,47 +137,50 @@ func (co *CoreObserver) observeSend() {
 }
 
 func (co *CoreObserver) observeReceive() {
-	for {
-		recvList, err := co.bridge.GetAllReceive()
-		if err != nil {
-			fmt.Println("error requesting receives from zetacore")
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		for _, recv := range recvList {
-			if recv.Status == common.ReceiveStatus_Created {
-				if _, found := co.recvMap[recv.Index]; !found {
-					co.lock.Lock()
-					log.Debug().Msgf("New recv created with finalized block")
-					co.recvMap[recv.Index] = recv
-					co.recvStatus[recv.Index] = Unprocessed
-					chain, err := common.ParseChain(recv.Chain)
-					if err != nil {
-						fmt.Printf("recv chain invalid: %s\n", recv.Chain)
-						continue
-					}
-					co.clientMap[chain].AddTxToWatchList(recv.OutTxHash, recv.SendHash)
-					co.lock.Unlock()
-				}
-			}
-		}
-		time.Sleep(5 * time.Second)
-	}
+	//for {
+	//	recvList, err := co.bridge.GetAllReceive()
+	//	if err != nil {
+	//		fmt.Println("error requesting receives from zetacore")
+	//		time.Sleep(5 * time.Second)
+	//		continue
+	//	}
+	//	for _, recv := range recvList {
+	//		if recv.Status == common.ReceiveStatus_Created {
+	//			if _, found := co.recvMap[recv.Index]; !found {
+	//				co.lock.Lock()
+	//				log.Debug().Msgf("New recv created with finalized block")
+	//				co.recvMap[recv.Index] = recv
+	//				co.recvStatus[recv.Index] = Unprocessed
+	//				chain, err := common.ParseChain(recv.Chain)
+	//				if err != nil {
+	//					fmt.Printf("recv chain invalid: %s\n", recv.Chain)
+	//					continue
+	//				}
+	//				co.clientMap[chain].AddTxToWatchList(recv.OutTxHash, recv.SendHash)
+	//				co.lock.Unlock()
+	//			}
+	//		}
+	//	}
+	//	time.Sleep(5 * time.Second)
+	//}
 }
 
 func (co *CoreObserver) processOutboundQueue() {
 	for {
+		startTime := time.Now()
 		for _, send := range co.sendQueue {
 			co.lock.Lock()
+			nPendingSend := len(co.sendMap)
 			if co.sendStatus[send.Index] != Unprocessed {
 				co.lock.Unlock()
 				continue
 			}
 			co.lock.Unlock()
+			log.Info().Msgf("# of Pending send %d", nPendingSend)
 			amount, ok := new(big.Int).SetString(send.MMint, 10)
 			if !ok {
 				log.Error().Msg("error converting MBurnt to big.Int")
-				time.Sleep(5 * time.Second)
+				//time.Sleep(5 * time.Second)
 				continue
 			}
 
@@ -237,8 +241,15 @@ func (co *CoreObserver) processOutboundQueue() {
 				log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
 			}
 			co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
-		}
 
-		time.Sleep(5 * time.Second)
+			if nPendingSend > 5 {
+				log.Warn().Msgf("Too many pending send; focus on the first one")
+			}
+			break
+		}
+		endTime := time.Now()
+		if endTime.Sub(startTime).Seconds() < 5 {
+			time.Sleep(time.Duration(5-endTime.Sub(startTime).Seconds()) * time.Second)
+		}
 	}
 }
