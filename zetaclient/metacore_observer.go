@@ -76,13 +76,29 @@ func (co *CoreObserver) observeSend() {
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		startTime := time.Now()
+
+		sendListMap := make(map[string]bool)
+		for _, send := range sendList {
+			sendListMap[send.Index] = true
+		}
+
+		// clean up sendMap and sendStatus and sendQueue
+		co.lock.Lock()
+		for key, _ := range co.sendMap {
+			if _, ok := sendListMap[key]; !ok {
+				log.Info().Msgf("removing %s from sendMap", key)
+				delete(co.sendMap, key)
+				delete(co.sendStatus, key)
+			}
+		}
+		co.lock.Unlock()
+
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
 				co.lock.Lock()
 				oldSend, found := co.sendMap[send.Index]
 				co.lock.Unlock()
-				if !found || oldSend.Status != send.Status {
+				if !found || oldSend.Status != send.Status { // new send or send status changed; needs to process
 					co.lock.Lock()
 					if !found {
 						log.Debug().Msgf("New send queued with finalized block %d", send.FinalizedMetaHeight)
@@ -112,7 +128,7 @@ func (co *CoreObserver) observeSend() {
 						co.lock.Unlock()
 					}
 				}
-			} else if send.Status == types.SendStatus_Mined {
+			} else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
 				co.lock.Lock()
 				send, found := co.sendMap[send.Index]
 				delete(co.sendMap, send.Index)
@@ -126,13 +142,9 @@ func (co *CoreObserver) observeSend() {
 					co.lock.Unlock()
 				}
 			}
-			if time.Now().Sub(startTime).Seconds() > 60 {
-				break
-			}
+
 		}
-		if elapsed := time.Now().Sub(startTime).Seconds(); elapsed < 5 {
-			time.Sleep(time.Duration(5-elapsed) * time.Second)
-		}
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -171,11 +183,12 @@ func (co *CoreObserver) processOutboundQueue() {
 		for _, send := range co.sendQueue {
 			co.lock.Lock()
 			nPendingSend := len(co.sendMap)
-			if co.sendStatus[send.Index] != Unprocessed {
-				co.lock.Unlock()
+			status, ok := co.sendStatus[send.Index]
+			co.lock.Unlock()
+			if status != Unprocessed || !ok {
 				continue
 			}
-			co.lock.Unlock()
+
 			log.Info().Msgf("# of Pending send %d", nPendingSend)
 			amount, ok := new(big.Int).SetString(send.MMint, 10)
 			if !ok {
@@ -234,7 +247,10 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 
 			co.lock.Lock()
-			co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
+			_, ok = co.sendStatus[send.Index]
+			if ok {
+				co.sendStatus[send.Index] = Pending
+			}
 			co.lock.Unlock()
 			_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
 			if err != nil {
