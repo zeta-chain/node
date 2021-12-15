@@ -125,7 +125,7 @@ func (co *CoreObserver) observeSend() {
 					co.lock.Unlock()
 				}
 			}
-			if time.Now().Sub(startTime).Seconds() > 5 {
+			if time.Now().Sub(startTime).Seconds() > 60 {
 				break
 			}
 		}

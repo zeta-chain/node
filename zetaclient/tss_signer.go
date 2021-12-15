@@ -255,7 +255,7 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 	H := crypto.Keccak256Hash(data)
 	log.Info().Msgf("hash of data (hello meta) is %s", H)
 
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, testPubKeys, "0.13.0")
 	ks_res, err := tssServer.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
