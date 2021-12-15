@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,6 +75,10 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 			sends = append(sends, &val)
 		}
 	}
+	sort.SliceStable(sends,
+		func(i, j int) bool {
+			return sends[i].FinalizedMetaHeight < sends[j].FinalizedMetaHeight
+		})
 
 	return &types.QueryAllSendPendingResponse{Send: sends}, nil
 }
