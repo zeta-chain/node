@@ -208,14 +208,13 @@ func (co *CoreObserver) processOutboundQueue() {
 				log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
 			}
 			var tx *ethtypes.Transaction
-			for {
-				tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
-				if err != nil {
-					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
-					continue
-				}
-				break
+
+			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+			if err != nil {
+				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+				continue
 			}
+
 			outTxHash := tx.Hash().Hex()
 			//fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
 

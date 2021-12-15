@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/rs/zerolog"
@@ -168,6 +169,9 @@ func integration_test(validatorName string, peers addr.AddrList) {
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
+
+	fmt.Print("Press 'Enter' to start...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
 	mo1.MonitorCore()
 
 	// printout debug info from SIGUSR1
