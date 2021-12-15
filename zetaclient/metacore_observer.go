@@ -78,7 +78,9 @@ func (co *CoreObserver) observeSend() {
 
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
+				co.lock.Lock()
 				oldSend, found := co.sendMap[send.Index]
+				co.lock.Unlock()
 				if !found || oldSend.Status != send.Status {
 					co.lock.Lock()
 					if !found {
@@ -92,7 +94,9 @@ func (co *CoreObserver) observeSend() {
 					co.sendStatus[send.Index] = Unprocessed
 					co.lock.Unlock()
 				} else {
+					co.lock.Lock()
 					status, found := co.sendStatus[send.Index]
+					co.lock.Unlock()
 					if !found {
 						log.Error().Msgf("status of send: %s not found", send.Index)
 						continue
@@ -108,7 +112,10 @@ func (co *CoreObserver) observeSend() {
 					}
 				}
 			} else if send.Status == types.SendStatus_Mined {
-				if send, found := co.sendMap[send.Index]; found {
+				co.lock.Lock()
+				send, found := co.sendMap[send.Index]
+				co.lock.Unlock()
+				if found {
 					co.lock.Lock()
 					if co.sendStatus[send.Index] != Mined {
 						log.Info().Msgf("Send status changed to Mined")
@@ -154,9 +161,12 @@ func (co *CoreObserver) observeReceive() {
 func (co *CoreObserver) processOutboundQueue() {
 	for {
 		for _, send := range co.sendQueue {
+			co.lock.Lock()
 			if co.sendStatus[send.Index] != Unprocessed {
+				co.lock.Unlock()
 				continue
 			}
+			co.lock.Unlock()
 			amount, ok := new(big.Int).SetString(send.MMint, 10)
 			if !ok {
 				log.Error().Msg("error converting MBurnt to big.Int")
@@ -199,7 +209,9 @@ func (co *CoreObserver) processOutboundQueue() {
 			tx, err := signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 			if err != nil {
 				log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
+				co.lock.Lock()
 				co.sendStatus[send.Index] = Error // do not process this; other signers might already done it
+				co.lock.Unlock()
 				continue
 			}
 			outTxHash := tx.Hash().Hex()
@@ -211,7 +223,9 @@ func (co *CoreObserver) processOutboundQueue() {
 				log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
 			}
 
+			co.lock.Lock()
 			co.sendStatus[send.Index] = Pending // do not process this; other signers might already done it
+			co.lock.Unlock()
 			_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
 			if err != nil {
 				log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
