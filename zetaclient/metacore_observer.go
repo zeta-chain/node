@@ -221,7 +221,7 @@ func (co *CoreObserver) processOutboundQueue() {
 			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 			if err != nil {
 				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
-				continue
+				break
 			}
 
 			outTxHash := tx.Hash().Hex()
@@ -244,8 +244,9 @@ func (co *CoreObserver) processOutboundQueue() {
 
 			if nPendingSend > 5 {
 				log.Warn().Msgf("Too many pending send; focus on the first one")
+				break
 			}
-			break
+
 		}
 		endTime := time.Now()
 		if endTime.Sub(startTime).Seconds() < 5 {
