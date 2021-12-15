@@ -76,7 +76,7 @@ func (co *CoreObserver) observeSend() {
 			time.Sleep(5 * time.Second)
 			continue
 		}
-
+		startTime := time.Now()
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
 				co.lock.Lock()
@@ -105,7 +105,7 @@ func (co *CoreObserver) observeSend() {
 					// the send is not successfully process; re-process is needed
 					if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY &&
 						(zetaHeight-send.FinalizedMetaHeight)%config.TIMEOUT_THRESHOLD_FOR_RETRY == 0 &&
-						status != Unprocessed {
+						status != Unprocessed && send.OutTxHash == "" {
 						log.Warn().Msgf("Zeta block %d: Timeout send: sendHash %s chain %s nonce %s; re-processs...", zetaHeight, send.Index, send.ReceiverChain, send.Nonce)
 						co.lock.Lock()
 						co.sendStatus[send.Index] = Unprocessed
@@ -125,8 +125,13 @@ func (co *CoreObserver) observeSend() {
 					co.lock.Unlock()
 				}
 			}
+			if time.Now().Sub(startTime).Seconds() > 5 {
+				break
+			}
 		}
-		time.Sleep(5 * time.Second)
+		if elapsed := time.Now().Sub(startTime).Seconds(); elapsed < 5 {
+			time.Sleep(time.Duration(5-elapsed) * time.Second)
+		}
 	}
 }
 
