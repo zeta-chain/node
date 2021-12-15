@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/hex"
 	"fmt"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -206,13 +207,14 @@ func (co *CoreObserver) processOutboundQueue() {
 			if !ok {
 				log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
 			}
-			tx, err := signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
-			if err != nil {
-				log.Err(err).Msgf("MMint error: nonce %d", send.Nonce)
-				co.lock.Lock()
-				co.sendStatus[send.Index] = Error // do not process this; other signers might already done it
-				co.lock.Unlock()
-				continue
+			var tx *ethtypes.Transaction
+			for {
+				tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+				if err != nil {
+					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+					continue
+				}
+				break
 			}
 			outTxHash := tx.Hash().Hex()
 			//fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
