@@ -77,6 +77,9 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	}
 	sort.SliceStable(sends,
 		func(i, j int) bool {
+			if sends[i].FinalizedMetaHeight == sends[j].FinalizedMetaHeight {
+				return sends[i].Nonce < sends[j].Nonce
+			}
 			return sends[i].FinalizedMetaHeight < sends[j].FinalizedMetaHeight
 		})
 
