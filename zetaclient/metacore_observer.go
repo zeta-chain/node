@@ -178,6 +178,7 @@ func (co *CoreObserver) observeReceive() {
 }
 
 func (co *CoreObserver) processOutboundQueue() {
+	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	for {
 		startTime := time.Now()
 		for _, send := range co.sendQueue {
@@ -218,7 +219,7 @@ func (co *CoreObserver) processOutboundQueue() {
 
 			var gasLimit uint64 = 90_000
 
-			log.Info().Msgf("chain %s minting %d to %s", toChain, amount, to.Hex())
+			log.Info().Msgf("chain %s minting %d to %s, nonce %d", toChain, amount, to.Hex(), send.Nonce)
 			sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 			if err != nil || len(sendHash) != 32 {
 				log.Err(err).Msgf("decode sendHash %s error", send.Index)
@@ -238,12 +239,14 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 
 			outTxHash := tx.Hash().Hex()
-			//fmt.Printf("sendHash: %s, outTxHash %s signer %s\n", send.Index[:6], outTxHash, myid)
+			fmt.Printf("nonce %d, sendHash: %s, outTxHash %s signer %s\n", send.Nonce, send.Index[:6], outTxHash, myid)
 
-			log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d", outTxHash, toChain, amount)
-			err = signer.Broadcast(tx)
-			if err != nil {
-				log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+			if myid == send.Signers[send.Broadcaster] {
+				log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %", outTxHash, toChain, amount, send.Nonce)
+				err = signer.Broadcast(tx)
+				if err != nil {
+					log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+				}
 			}
 
 			co.lock.Lock()
