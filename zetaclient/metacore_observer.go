@@ -261,15 +261,16 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 			co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
 
-			if nPendingSend > 5 {
-				log.Warn().Msgf("Too many pending send; focus on the first one")
-				break
-			}
+			//if nPendingSend > 5 {
+			//	log.Warn().Msgf("Too many pending send; focus on the first one")
+			//	break
+			//}
+			break
 
 		}
 		endTime := time.Now()
-		if endTime.Sub(startTime).Seconds() < 5 {
-			time.Sleep(time.Duration(5-endTime.Sub(startTime).Seconds()) * time.Second)
+		if endTime.Sub(startTime).Seconds() < 1 {
+			time.Sleep(time.Duration(1-endTime.Sub(startTime).Seconds()) * time.Second)
 		}
 	}
 }
