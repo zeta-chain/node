@@ -241,7 +241,7 @@ func (co *CoreObserver) processOutboundQueue() {
 			outTxHash := tx.Hash().Hex()
 			fmt.Printf("nonce %d, sendHash: %s, outTxHash %s signer %s\n", send.Nonce, send.Index[:6], outTxHash, myid)
 
-			if myid == send.Signers[send.Broadcaster] {
+			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 				log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %", outTxHash, toChain, amount, send.Nonce)
 				err = signer.Broadcast(tx)
 				if err != nil {
