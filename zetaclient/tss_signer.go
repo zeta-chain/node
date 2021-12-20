@@ -228,8 +228,8 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
 			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  15 * time.Second,  // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    10 * time.Second,
+			KeySignTimeout:  5 * time.Second,   // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    5 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
 		nil, // don't set to precomputed values
