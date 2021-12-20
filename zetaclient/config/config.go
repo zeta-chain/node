@@ -37,8 +37,8 @@ const (
 
 	// Ticker timers
 	ETH_BLOCK_TIME  = 12
-	POLY_BLOCK_TIME = 5
-	BSC_BLOCK_TIME  = 5
+	POLY_BLOCK_TIME = 10
+	BSC_BLOCK_TIME  = 10
 
 	// to catch up:
 	MAX_BLOCKS_PER_PERIOD       = 64
