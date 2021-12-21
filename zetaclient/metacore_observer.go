@@ -181,7 +181,7 @@ func (co *CoreObserver) processOutboundQueue() {
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	for {
 		startTime := time.Now()
-		for _, send := range co.sendQueue {
+		for idx, send := range co.sendQueue {
 			co.lock.Lock()
 			nPendingSend := len(co.sendMap)
 			status, ok := co.sendStatus[send.Index]
@@ -219,7 +219,7 @@ func (co *CoreObserver) processOutboundQueue() {
 
 			var gasLimit uint64 = 90_000
 
-			log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
+			log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d, in queue %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight, idx)
 			sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 			if err != nil || len(sendHash) != 32 {
 				log.Err(err).Msgf("decode sendHash %s error", send.Index)
