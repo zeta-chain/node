@@ -219,7 +219,7 @@ func (co *CoreObserver) processOutboundQueue() {
 
 			var gasLimit uint64 = 90_000
 
-			log.Info().Msgf("chain %s minting %d to %s, nonce %d", toChain, amount, to.Hex(), send.Nonce)
+			log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
 			sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 			if err != nil || len(sendHash) != 32 {
 				log.Err(err).Msgf("decode sendHash %s error", send.Index)
