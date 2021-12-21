@@ -235,7 +235,7 @@ func (co *CoreObserver) processOutboundQueue() {
 			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 			if err != nil {
 				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
-				//break
+				break
 			}
 
 			outTxHash := tx.Hash().Hex()
