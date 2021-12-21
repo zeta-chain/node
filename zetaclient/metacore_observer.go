@@ -269,8 +269,8 @@ func (co *CoreObserver) processOutboundQueue() {
 
 		}
 		endTime := time.Now()
-		if endTime.Sub(startTime).Milliseconds() < 500 {
-			time.Sleep(time.Duration(500-endTime.Sub(startTime).Milliseconds()) * time.Millisecond)
+		if endTime.Sub(startTime).Milliseconds() < 2000 {
+			time.Sleep(time.Duration(2000-endTime.Sub(startTime).Milliseconds()) * time.Millisecond)
 		}
 	}
 }
