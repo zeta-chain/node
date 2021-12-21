@@ -10,7 +10,7 @@ type ClientConfiguration struct {
 }
 
 const (
-	ETH_CONFIRMATION_COUNT     = 5
+	ETH_CONFIRMATION_COUNT     = 3
 	BSC_CONFIRMATION_COUNT     = 5
 	POLYGON_CONFIRMATION_COUNT = 5
 )
@@ -42,7 +42,7 @@ const (
 
 	// to catch up:
 	MAX_BLOCKS_PER_PERIOD       = 64
-	TIMEOUT_THRESHOLD_FOR_RETRY = 12 // 120 blocks for Zetachain; roughly 600s or 10min
+	TIMEOUT_THRESHOLD_FOR_RETRY = 8 // 120 blocks for Zetachain; roughly 600s or 10min
 )
 
 const (
