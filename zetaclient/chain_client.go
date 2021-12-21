@@ -313,22 +313,22 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 
 func (chainOb *ChainObserver) observeFailedTx() {
 	chainOb.mu.Lock()
-	for txhash, sendHash := range chainOb.txWatchList {
-		receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
-		if err != nil {
-			continue
-		}
-		if receipt.Status == 0 { // failed tx
-			log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
-			_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
-			if err != nil {
-				log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
-			}
-		} else {
-
-		}
-		delete(chainOb.txWatchList, txhash)
-	}
+	//for txhash, sendHash := range chainOb.txWatchList {
+	//	receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
+	//	if err != nil {
+	//		continue
+	//	}
+	//	if receipt.Status == 0 { // failed tx
+	//		log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
+	//		_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+	//		if err != nil {
+	//			log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
+	//		}
+	//	} else {
+	//
+	//	}
+	//	delete(chainOb.txWatchList, txhash)
+	//}
 	chainOb.mu.Unlock()
 }
 
