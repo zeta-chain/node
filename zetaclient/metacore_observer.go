@@ -122,7 +122,7 @@ func (co *CoreObserver) observeSend() {
 					if zetaHeight-send.FinalizedMetaHeight > config.TIMEOUT_THRESHOLD_FOR_RETRY &&
 						(zetaHeight-send.FinalizedMetaHeight)%config.TIMEOUT_THRESHOLD_FOR_RETRY == 0 &&
 						status != Unprocessed {
-						log.Warn().Msgf("Zeta block %d: Timeout send: sendHash %s chain %s nonce %s; re-processs...", zetaHeight, send.Index, send.ReceiverChain, send.Nonce)
+						log.Warn().Msgf("Zeta block %d: Timeout send: sendHash %s chain %s nonce %d; re-processs...", zetaHeight, send.Index, send.ReceiverChain, send.Nonce)
 						co.lock.Lock()
 						co.sendStatus[send.Index] = Unprocessed
 						co.lock.Unlock()
@@ -214,6 +214,19 @@ func (co *CoreObserver) processOutboundQueue() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
+
+			processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+			if err != nil {
+				log.Err(err).Msg("IsSendOutTxProcessed error")
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			if processed {
+				log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
 			signer := co.signerMap[toChain]
 			message := []byte(send.Message)
 
@@ -239,10 +252,10 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 
 			outTxHash := tx.Hash().Hex()
-			fmt.Printf("nonce %d, sendHash: %s, outTxHash %s signer %s\n", send.Nonce, send.Index[:6], outTxHash, myid)
+			log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
 
 			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
-				log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %", outTxHash, toChain, amount, send.Nonce)
+				log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
 				err = signer.Broadcast(tx)
 				if err != nil {
 					log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
@@ -261,10 +274,6 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 			co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
 
-			//if nPendingSend > 5 {
-			//	log.Warn().Msgf("Too many pending send; focus on the first one")
-			//	break
-			//}
 			break
 
 		}
