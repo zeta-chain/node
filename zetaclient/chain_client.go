@@ -609,9 +609,9 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 			switch vLog.Topics[0].Hex() {
 			case logUnlockSignatureHash.Hex():
 				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-				retval, err := chainOb.abi.Unpack("Unlock", vLog.Data)
+				retval, err := chainOb.abi.Unpack("MMinted", vLog.Data)
 				if err != nil {
-					fmt.Println("error unpacking Unlock")
+					fmt.Println("error unpacking MMinted")
 					continue
 				}
 				fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
