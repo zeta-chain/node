@@ -57,7 +57,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	// broadcast to a Tendermint node
 	commit, err := ctx.BroadcastTxSync(txBytes)
 	if err != nil {
-		return "", fmt.Errorf("fail to broadcast tx: %w", err)
+		b.logger.Error().Err(err).Msgf("fail to broadcast tx")
 	}
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
 	if commit.Code > 0 {
