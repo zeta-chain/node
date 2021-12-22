@@ -65,8 +65,10 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 			// bad sequence number, fetch new one
 			_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
 			if seqNum > 0 {
+				b.logger.Warn().Msgf("update seq num from % to %", b.seqNumber, seqNum)
 				b.seqNumber = seqNum
 			}
+
 		}
 		b.logger.Info().Msgf("messages: %+v", msgs)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
