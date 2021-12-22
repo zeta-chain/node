@@ -65,7 +65,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 			// bad sequence number, fetch new one
 			_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
 			if seqNum > 0 {
-				b.logger.Warn().Msgf("update seq num from % to %", b.seqNumber, seqNum)
+				b.logger.Warn().Msgf("update seq num from %d to %d", b.seqNumber, seqNum)
 				b.seqNumber = seqNum
 			}
 
