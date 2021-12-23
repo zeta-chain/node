@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -19,6 +20,7 @@ type HTTPServer struct {
 	logger    zerolog.Logger
 	s         *http.Server
 	pendingTx uint64
+	mu        sync.Mutex
 }
 
 // NewHTTPServer should only listen to the loopback
@@ -88,5 +90,7 @@ func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	json.NewEncoder(w).Encode(t.pendingTx)
 }

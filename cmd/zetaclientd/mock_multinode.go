@@ -75,10 +75,11 @@ func mock_integration_test() {
 		return
 	}
 
+	hs := mc.NewHTTPServer()
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, hs)
 	mo1.MonitorCore()
-	mo2 := mc.NewCoreObserver(bridge2, signerMap2, *chainClientMap2)
+	mo2 := mc.NewCoreObserver(bridge2, signerMap2, *chainClientMap2, hs)
 	mo2.MonitorCore()
 
 	// wait....
