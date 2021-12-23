@@ -187,7 +187,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHttpServer, error) {
+func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
@@ -238,7 +238,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *TssHtt
 
 	tssServer.Start()
 
-	s := NewTssHttpServer(tssAddr, tssServer)
+	s := NewHTTPServer(tssAddr, tssServer)
 	go func() {
 		if err := s.Start(); err != nil {
 			fmt.Println(err)

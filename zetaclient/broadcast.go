@@ -64,11 +64,10 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 		if commit.Code == 32 {
 			// bad sequence number, fetch new one
 			_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
-			if seqNum > 0 {
-				b.logger.Warn().Msgf("update seq num from %d to %d", b.seqNumber, seqNum)
-				b.seqNumber = seqNum
+			if seqNum == b.seqNumber {
+				b.logger.Warn().Msgf("seq # %d is the most current that zetacore tells us, not sure why it's not accepting it; increment it and try later. ")
+				b.seqNumber += 1
 			}
-
 		}
 		b.logger.Info().Msgf("messages: %+v", msgs)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
