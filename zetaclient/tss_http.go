@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,12 +22,12 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer should only listen to the loopback
-func NewHTTPServer(tssAddr string) *HTTPServer {
+func NewHTTPServer() *HTTPServer {
 	hs := &HTTPServer{
 		logger: log.With().Str("module", "http").Logger(),
 	}
 	s := &http.Server{
-		Addr:    tssAddr,
+		Addr:    ":8888",
 		Handler: hs.Handlers(),
 	}
 	hs.s = s
@@ -38,6 +39,7 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/metrics", promhttp.Handler())
+	router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 	return router
 }
@@ -81,4 +83,10 @@ func (t *HTTPServer) Stop() error {
 
 func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(t.pendingTx)
 }
