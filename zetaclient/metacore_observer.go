@@ -218,7 +218,7 @@ func (co *CoreObserver) processOutboundQueue() {
 			processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
 			if err != nil {
 				log.Err(err).Msg("IsSendOutTxProcessed error")
-				time.Sleep(1 * time.Second)
+				//time.Sleep(1 * time.Second)
 				continue
 			}
 			if processed {
