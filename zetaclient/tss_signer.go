@@ -238,7 +238,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPSe
 
 	tssServer.Start()
 
-	s := NewHTTPServer(tssAddr)
+	s := NewHTTPServer()
 	go func() {
 		if err := s.Start(); err != nil {
 			fmt.Println(err)
