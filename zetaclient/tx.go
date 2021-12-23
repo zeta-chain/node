@@ -2,9 +2,11 @@ package zetaclient
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"time"
 )
 
 func (b *MetachainBridge) PostGasBalance(chain common.Chain, gasBalance string, blockNum uint64) (string, error) {
@@ -41,25 +43,34 @@ func (b *MetachainBridge) PostNonce(chain common.Chain, nonce uint64) (string, e
 func (b *MetachainBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight)
-
-	metaTxHash, err := b.Broadcast(msg)
-	if err != nil {
-		log.Err(err).Msg("PostSend broadcast fail")
-		return "", err
+	var metaTxHash string
+	for {
+		metaTxHash, err := b.Broadcast(msg)
+		if err != nil {
+			log.Err(err).Msg("PostSend broadcast fail; re-trying...")
+		} else {
+			return metaTxHash, nil
+		}
+		time.Sleep(2 * time.Second)
 	}
-	return metaTxHash, nil
+	return metaTxHash, fmt.Errorf("PostSend: should not reach here!")
 }
 
 func (b *MetachainBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain)
 	log.Debug().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
-	metaTxHash, err := b.Broadcast(msg)
-	if err != nil {
-		log.Err(err).Msg("PostReceiveConfirmation broadcast fail")
-		return "", err
+	var metaTxHash string
+	for {
+		metaTxHash, err := b.Broadcast(msg)
+		if err != nil {
+			log.Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
+		} else {
+			return metaTxHash, nil
+		}
+		time.Sleep(2 * time.Second)
 	}
-	return metaTxHash, nil
+	return metaTxHash, fmt.Errorf("PostReceiveConfirmation: should not reach here!")
 }
 
 func (b *MetachainBridge) GetAllSend() ([]*types.Send, error) {
