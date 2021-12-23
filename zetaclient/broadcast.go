@@ -65,8 +65,10 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 			// bad sequence number, fetch new one
 			_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
 			if seqNum == b.seqNumber {
-				b.logger.Warn().Msgf("seq # %d is the most current that zetacore tells us, not sure why it's not accepting it; increment it and try later. ")
-				b.seqNumber += 1
+				b.logger.Warn().Msgf("seq # %d is the most current that zetacore tells us, not sure why it's not accepting it; increment it and try later. ", seqNum)
+				//atomic.AddUint64(&b.seqNumber, 1)
+			} else {
+				b.seqNumber = seqNum
 			}
 		}
 		b.logger.Info().Msgf("messages: %+v", msgs)
