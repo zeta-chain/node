@@ -170,8 +170,10 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	fmt.Print("Press 'Enter' to start...")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
+	httpServer := mc.NewHTTPServer()
+
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, httpServer)
 
 	mo1.MonitorCore()
 

@@ -35,9 +35,10 @@ type CoreObserver struct {
 	signerMap  map[common.Chain]*Signer
 	clientMap  map[common.Chain]*ChainObserver
 	lock       sync.Mutex
+	httpServer *HTTPServer
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, server *HTTPServer) *CoreObserver {
 	co := CoreObserver{}
 	co.bridge = bridge
 	co.signerMap = signerMap
@@ -47,6 +48,7 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.recvMap = make(map[string]*types.Receive)
 	co.recvStatus = make(map[string]TxStatus)
 	co.clientMap = clientMap
+	co.httpServer = server
 	return &co
 }
 
@@ -186,6 +188,9 @@ func (co *CoreObserver) processOutboundQueue() {
 			nPendingSend := len(co.sendMap)
 			status, ok := co.sendStatus[send.Index]
 			co.lock.Unlock()
+			co.httpServer.mu.Lock()
+			co.httpServer.pendingTx = uint64(nPendingSend)
+			co.httpServer.mu.Unlock()
 			if status != Unprocessed || !ok {
 				continue
 			}
