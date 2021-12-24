@@ -172,10 +172,10 @@ func (s *ChainClientSuite) TestBSCFilterByHash(c *C) {
 	c.Assert(err, IsNil)
 	topics := make([][]ethcommon.Hash, 3)
 	topics[2] = make([]ethcommon.Hash, 1)
-	topics[2][0] = ethcommon.HexToHash("0xdf79baae2602a70c4044575a7d62113f74453b75bfa72022e591dcd81f078956")
+	topics[2][0] = ethcommon.HexToHash("0x2ea2d1f24b36c236487d0b6d8b1ed894b78785db0af88b8e32616ed810b69a30")
 	fmt.Printf("Polygon filter logs by topic: %s\n", topics)
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)},
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)},
 		FromBlock: big.NewInt(0), // LastBlock has been processed;
 		ToBlock:   nil,
 		Topics:    topics,
