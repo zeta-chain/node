@@ -20,13 +20,21 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
-	accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber()
+	blockHeight, err := b.GetMetaBlockHeight()
 	if err != nil {
 		return "", err
 	}
-	b.accountNumber = accountNumber
-	if b.seqNumber < seqNumber {
-		b.seqNumber = seqNumber
+
+	if int64(blockHeight) > b.blockHeight {
+		b.blockHeight = int64(blockHeight)
+		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber()
+		if err != nil {
+			return "", err
+		}
+		b.accountNumber = accountNumber
+		if b.seqNumber < seqNumber {
+			b.seqNumber = seqNumber
+		}
 	}
 	//b.logger.Debug().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
