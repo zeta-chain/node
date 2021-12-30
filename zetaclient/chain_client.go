@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -69,6 +70,21 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 	chainOb.tss = tss
+
+	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	if ethEndPoint != "" {
+		config.ETH_ENDPOINT = ethEndPoint
+		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+	}
+	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	if bscEndPoint != "" {
+		config.BSC_ENDPOINT = bscEndPoint
+	}
+	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	if polygonEndPoint != "" {
+		config.POLY_ENDPOINT = polygonEndPoint
+	}
+
 	// Initialize constants
 	switch chain {
 	case common.POLYGONChain:

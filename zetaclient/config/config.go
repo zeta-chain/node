@@ -15,6 +15,13 @@ const (
 	POLYGON_CONFIRMATION_COUNT = 5
 )
 
+var (
+	// API Endpoints
+	ETH_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
+	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
+	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
+)
+
 const (
 	TSS_TEST_PRIVKEY = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
 	TSS_TEST_ADDRESS = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
@@ -29,11 +36,6 @@ const (
 	ETH_TOKEN_ADDRESS     = "0xf5e744B79337ed1D72DC51768c2022aA6ca60De1"
 	POLYGON_TOKEN_ADDRESS = "0x6b8344F178CaaAc2068967c7ee6a067c3F9dC9AC"
 	BSC_TOKEN_ADDRESS     = "0xdb9828f2bB2f9ab7C876768618768cC51fE10BAc"
-
-	// API Endpoints
-	ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
-	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
-	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
 
 	// Ticker timers
 	ETH_BLOCK_TIME  = 12
