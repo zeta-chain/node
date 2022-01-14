@@ -52,7 +52,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	builder.SetGasLimit(200000000)
+	builder.SetGasLimit(300000000)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
 	if err != nil {
