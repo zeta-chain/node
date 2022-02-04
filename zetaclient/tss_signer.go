@@ -129,7 +129,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 			log.Fatal().Err(err).Msg("UserHomeDir")
 			return nil, err
 		}
-		tsspath = filepath.Join(home, ".tss")
+		tsspath = filepath.Join(home, ".Tss")
 	}
 	files, err := os.ReadDir(tsspath)
 	if err != nil {
@@ -212,7 +212,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPSe
 			log.Error().Err(err).Msgf("cannot get UserHomeDir")
 			return nil, nil, err
 		}
-		tsspath = path.Join(homedir, ".tss")
+		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
 	IP := os.Getenv("MYIP")

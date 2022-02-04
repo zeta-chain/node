@@ -11,7 +11,7 @@ import (
 	//"fmt"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	//"github.com/armon/go-metrics"
-	//"github.com/cosmos/cosmos-sdk/client"
+	//"github.com/cosmos/cosmos-sdk/Client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	//"github.com/cosmos/cosmos-sdk/std"
