@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// HTTPServer provide http endpoint for tss server
+// HTTPServer provide http endpoint for Tss server
 type HTTPServer struct {
 	logger    zerolog.Logger
 	s         *http.Server

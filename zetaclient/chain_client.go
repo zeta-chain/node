@@ -50,9 +50,9 @@ type ChainObserver struct {
 	abiString   string
 	abi         *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
 	zetaAbi     *abi.ABI // only useful for ethereum; the token contract
-	client      *ethclient.Client
+	Client      *ethclient.Client
 	bridge      *MetachainBridge
-	tss         TSSSigner
+	Tss         TSSSigner
 	LastBlock   uint64
 	confCount   uint64 // must wait this many blocks to be considered "confirmed"
 	txWatchList map[ethcommon.Hash]string
@@ -69,7 +69,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	chainOb.sampleLoger = &sampled
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
-	chainOb.tss = tss
+	chainOb.Tss = tss
 
 	ethEndPoint := os.Getenv("ETH_ENDPOINT")
 	if ethEndPoint != "" {
@@ -127,50 +127,54 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	// Dial the router
 	client, err := ethclient.Dial(chainOb.endpoint)
 	if err != nil {
-		log.Err(err).Msg("eth client Dial")
+		log.Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
-	chainOb.client = client
+	chainOb.Client = client
 
-	path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
-	db, err := leveldb.OpenFile(path, nil)
+	if dbpath != "" {
+		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
+		db, err := leveldb.OpenFile(path, nil)
 
-	if err != nil {
-		return nil, err
-	}
-	chainOb.db = db
-	buf, err := db.Get([]byte(PosKey), nil)
-	if err != nil {
-		log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
-		chainOb.LastBlock = chainOb.getLastHeight()
-		// if ZetaCore does not have last heard block height, then use current
-		if chainOb.LastBlock == 0 {
-			header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
-			if err != nil {
-				return nil, err
-			}
-			chainOb.LastBlock = header.Number.Uint64()
+		if err != nil {
+			return nil, err
 		}
-		buf2 := make([]byte, binary.MaxVarintLen64)
-		n := binary.PutUvarint(buf2, chainOb.LastBlock)
-		db.Put([]byte(PosKey), buf2[:n], nil)
-	} else {
-		chainOb.LastBlock, _ = binary.Uvarint(buf)
+		chainOb.db = db
+		buf, err := db.Get([]byte(PosKey), nil)
+		if err != nil {
+			log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
+			chainOb.LastBlock = chainOb.getLastHeight()
+			// if ZetaCore does not have last heard block height, then use current
+			if chainOb.LastBlock == 0 {
+				header, err := chainOb.Client.HeaderByNumber(context.Background(), nil)
+				if err != nil {
+					return nil, err
+				}
+				chainOb.LastBlock = header.Number.Uint64()
+			}
+			buf2 := make([]byte, binary.MaxVarintLen64)
+			n := binary.PutUvarint(buf2, chainOb.LastBlock)
+			db.Put([]byte(PosKey), buf2[:n], nil)
+		} else {
+			chainOb.LastBlock, _ = binary.Uvarint(buf)
+		}
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
-	_, err = bridge.GetNonceByChain(chain)
-	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-		if err != nil {
-			log.Err(err).Msg("NonceAt")
-			return nil, err
-		}
-		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-		_, err = bridge.PostNonce(chain, nonce)
-		if err != nil {
-			log.Err(err).Msg("PostNonce")
-			return nil, err
+	if bridge != nil {
+		_, err = bridge.GetNonceByChain(chain)
+		if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+			nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
+			if err != nil {
+				log.Err(err).Msg("NonceAt")
+				return nil, err
+			}
+			log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+			_, err = bridge.PostNonce(chain, nonce)
+			if err != nil {
+				log.Err(err).Msg("PostNonce")
+				return nil, err
+			}
 		}
 	}
 
@@ -211,12 +215,12 @@ func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
 
 func (chainOb *ChainObserver) PostGasPrice() error {
 	// GAS PRICE
-	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
+	gasPrice, err := chainOb.Client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	blockNum, err := chainOb.client.BlockNumber(context.TODO())
+	blockNum, err := chainOb.Client.BlockNumber(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
@@ -229,14 +233,14 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		if err != nil {
 			return fmt.Errorf("fail to getLockedAmount")
 		}
-		bn, err := chainOb.client.BlockNumber(context.TODO())
+		bn, err := chainOb.Client.BlockNumber(context.TODO())
 		if err != nil {
 			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 		toAddr := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
-		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
 			To:   &toAddr,
 			Data: input,
@@ -259,14 +263,14 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		if err != nil {
 			return fmt.Errorf("fail to totalSupply")
 		}
-		bn, err := chainOb.client.BlockNumber(context.TODO())
+		bn, err := chainOb.Client.BlockNumber(context.TODO())
 		if err != nil {
 			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 		toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
-		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
 			To:   &toAddr,
 			Data: input,
@@ -288,14 +292,14 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		if err != nil {
 			return fmt.Errorf("fail to totalSupply")
 		}
-		bn, err := chainOb.client.BlockNumber(context.TODO())
+		bn, err := chainOb.Client.BlockNumber(context.TODO())
 		if err != nil {
 			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
 			return err
 		}
 		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 		toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
-		res, err := chainOb.client.CallContract(context.TODO(), ethereum.CallMsg{
+		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 			From: fromAddr,
 			To:   &toAddr,
 			Data: input,
@@ -323,7 +327,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		return err
 	}
 
-	bal, err := chainOb.client.BalanceAt(context.TODO(), chainOb.tss.Address(), nil)
+	bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.Address(), nil)
 	_, err = chainOb.bridge.PostGasBalance(chainOb.chain, bal.String(), blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasBalance:")
@@ -335,7 +339,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 func (chainOb *ChainObserver) observeFailedTx() {
 	chainOb.mu.Lock()
 	//for txhash, sendHash := range chainOb.txWatchList {
-	//	receipt, err := chainOb.client.TransactionReceipt(context.TODO(), txhash)
+	//	receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), txhash)
 	//	if err != nil {
 	//		continue
 	//	}
@@ -354,7 +358,7 @@ func (chainOb *ChainObserver) observeFailedTx() {
 }
 
 func (chainOb *ChainObserver) observeChain() error {
-	header, err := chainOb.client.HeaderByNumber(context.Background(), nil)
+	header, err := chainOb.Client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -377,7 +381,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum))
 
 	// Finally query the for the logs
-	logs, err := chainOb.client.FilterLogs(context.Background(), query)
+	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 	if err != nil {
 		return err
 	}
@@ -520,7 +524,7 @@ func (chainOb *ChainObserver) getLastHeight() uint64 {
 
 // query the base gas price for the block number bn.
 func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
-	gasPrice, err := chainOb.client.SuggestGasPrice(context.TODO())
+	gasPrice, err := chainOb.Client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("GetBaseGasPrice")
 		return nil
@@ -541,9 +545,9 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 			ToBlock:   nil,
 			Topics:    topics,
 		}
-		logs, err := chainOb.client.FilterLogs(context.Background(), query)
+		logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
+			return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
 		}
 		if len(logs) == 0 {
 			return false, nil
@@ -609,9 +613,9 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 			ToBlock:   nil,
 			Topics:    topics,
 		}
-		logs, err := chainOb.client.FilterLogs(context.Background(), query)
+		logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
+			return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
 		}
 		if len(logs) == 0 {
 			return false, nil
