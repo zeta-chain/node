@@ -15,7 +15,9 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"math/big"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -77,77 +79,180 @@ func main() {
 		return
 	}
 
-
 	fmt.Println("begining listening to BSC log...")
-	for {
-		select {
-		case err := <-sub.Err():
-			log.Fatal().Err(err).Msg("sub error")
-		case log := <-ch:
-			//fmt.Printf("%#v\n", log)
-			fmt.Printf("txhash %s\n", log.TxHash)
-			vals, err  := abi_mpi.Unpack("ZetaMessageSendEvent", log.Data)
-			if err != nil {
-				fmt.Printf("Unpack error %s\n", err)
-				continue
-			}
-			//    event ZetaMessageSendEvent(address sender, string destChainID, string  destContract, uint zetaAmount, uint gasLimit, bytes message, bytes32 messageID);
+	go func() {
+		for {
+			select {
+			case err := <-sub.Err():
+				log.Fatal().Err(err).Msg("sub error")
+			case log := <-ch:
+				//fmt.Printf("%#v\n", log)
+				fmt.Printf("txhash %s\n", log.TxHash)
+				vals, err := abi_mpi.Unpack("ZetaMessageSendEvent", log.Data)
+				if err != nil {
+					fmt.Printf("Unpack error %s\n", err)
+					continue
+				}
+				//    event ZetaMessageSendEvent(address sender, string destChainID, string  destContract, uint zetaAmount, uint gasLimit, bytes message, bytes32 messageID);
 
-			sender := vals[0].(ethcommon.Address)
-			fmt.Printf("sender %s\n", sender)
-			destChainID := vals[1].(string)
-			fmt.Printf("destChainID %s\n", destChainID)
-			destContract := vals[2].(string)
-			if destContract == "" {
-				destContract = "0xF47bd84B86d1667e7621c38c72C6905Ca8710b0d"
+				sender := vals[0].(ethcommon.Address)
+				fmt.Printf("sender %s\n", sender)
+				destChainID := vals[1].(string)
+				fmt.Printf("destChainID %s\n", destChainID)
+				destContract := vals[2].(string)
+				if destContract == "" {
+					destContract = "0xF47bd84B86d1667e7621c38c72C6905Ca8710b0d"
+				}
+				fmt.Printf("destContract %s\n", destContract)
+				zetaAmount := vals[3].(*big.Int)
+				fmt.Printf("zetaAmount %d\n", zetaAmount)
+				gasLimit := vals[4].(*big.Int)
+				fmt.Printf("gasLimit %d\n", gasLimit)
+				message := vals[5].([]byte)
+				fmt.Printf("message %s\n", hex.EncodeToString(message))
+				msgid := vals[6].([32]byte)
+				fmt.Printf("messageID %s\n", hex.EncodeToString(msgid[:]))
+				//     function zetaMessageReceive(address sender, string calldata destChainID, address destContract, uint zetaAmount, uint gasLimit, bytes calldata message, bytes32 messageID, bytes32 sendHash) external {
+				data, err := abi_mpi.Pack("zetaMessageReceive", sender, destChainID, ethcommon.HexToAddress(destContract), zetaAmount, gasLimit, message, msgid, msgid)
+				if err != nil {
+					fmt.Printf("Pack error %s\n", err)
+					continue
+				}
+				nonce, err := eth_client.PendingNonceAt(context.Background(), tss.Address())
+				if err != nil {
+					fmt.Printf("PendingNonceAt error %s\n", err)
+					continue
+				}
+				gasPrice, err := eth_client.SuggestGasPrice(context.Background())
+				if err != nil {
+					fmt.Printf("SuggestGasPrice error %s\n", err)
+					continue
+				}
+				//GasLimit := uint64(300000) // in units
+				GasLimit := gasLimit.Uint64()
+				ethSigner := ethtypes.LatestSignerForChainID(eth_chainID)
+				eth_mpi := ethcommon.HexToAddress(ETH_MPI)
+				tx := ethtypes.NewTransaction(nonce, eth_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+				hashBytes := ethSigner.Hash(tx).Bytes()
+				sig, err := tss.Sign(hashBytes)
+				if err != nil {
+					fmt.Printf("tss.Sign error %s\n", err)
+					continue
+				}
+				signedTX, err := tx.WithSignature(ethSigner, sig[:])
+				if err != nil {
+					fmt.Printf("tx.WithSignature error %s\n", err)
+					continue
+				}
+				err = eth_client.SendTransaction(ctxt, signedTX)
+				if err != nil {
+					fmt.Printf("SendTransaction error %s\n", err)
+					continue
+				}
+				fmt.Printf("bcast tx %s done!\n", signedTX.Hash().Hex())
 			}
-			fmt.Printf("destContract %s\n", destContract)
-			zetaAmount := vals[3].(*big.Int)
-			fmt.Printf("zetaAmount %d\n", zetaAmount)
-			gasLimit := vals[4].(*big.Int)
-			fmt.Printf("gasLimit %d\n", gasLimit)
-			message := vals[5].([]byte)
-			fmt.Printf("message %s\n", hex.EncodeToString(message))
-			msgid := vals[6].([32]byte)
-			fmt.Printf("messageID %s\n", hex.EncodeToString(msgid[:]))
-			//     function zetaMessageReceive(address sender, string calldata destChainID, address destContract, uint zetaAmount, uint gasLimit, bytes calldata message, bytes32 messageID, bytes32 sendHash) external {
-			data, err := abi_mpi.Pack("zetaMessageReceive", sender, destChainID, ethcommon.HexToAddress(destContract), zetaAmount, gasLimit, message, msgid, msgid)
-			if err != nil {
-				fmt.Printf("Pack error %s\n", err)
-				continue
-			}
-			nonce, err := eth_client.PendingNonceAt(context.Background(), tss.Address())
-			if err != nil {
-				fmt.Printf("PendingNonceAt error %s\n", err)
-				continue
-			}
-			gasPrice, err := eth_client.SuggestGasPrice(context.Background())
-			if err != nil {
-				fmt.Printf("SuggestGasPrice error %s\n", err)
-				continue
-			}
-			GasLimit := uint64(300000) // in units
-
-			ethSigner := ethtypes.LatestSignerForChainID(eth_chainID)
-			eth_mpi := ethcommon.HexToAddress(ETH_MPI)
-			tx := ethtypes.NewTransaction(nonce, eth_mpi, big.NewInt(0), GasLimit, gasPrice, data)
-			hashBytes := ethSigner.Hash(tx).Bytes()
-			sig, err := tss.Sign(hashBytes)
-			if err != nil {
-				fmt.Printf("tss.Sign error %s\n", err)
-				continue
-			}
-			signedTX, err := tx.WithSignature(ethSigner, sig[:])
-			if err != nil {
-				fmt.Printf("tx.WithSignature error %s\n", err)
-				continue
-			}
-			err = eth_client.SendTransaction(ctxt, signedTX)
-			if err != nil {
-				fmt.Printf("SendTransaction error %s\n", err)
-				continue
-			}
-			fmt.Printf("bcast tx %s done!\n", signedTX.Hash().Hex())
 		}
+	}()
+
+
+	eth_cid, _ := eth_client.ChainID(ctxt)
+	fmt.Printf("eth chain id %d\n", eth_cid)
+	bsc_chainID, err := bsc_client.ChainID(context.TODO())
+	if err != nil {
+		fmt.Printf("eth_client.ChainID error %s\n", err)
+		return
 	}
+
+	eth_topics := 	make([][]ethcommon.Hash,1)
+	eth_topics[0] = []ethcommon.Hash{ethcommon.HexToHash("0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a")}
+	eth_filter := ethereum.FilterQuery{
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(ETH_MPI)},
+		Topics: bsc_topics,
+	}
+
+	ch2 := make(chan types.Log)
+	sub2, err := eth_client.SubscribeFilterLogs(ctxt, eth_filter, ch2)
+	if err != nil {
+		fmt.Printf("SubscribeFilterLogs error %s\n", err)
+		return
+	}
+	fmt.Println("begining listening to Goerli log...")
+	go func() {
+		for {
+			select {
+			case err := <-sub2.Err():
+				log.Fatal().Err(err).Msg("sub error")
+			case log := <-ch2:
+				//fmt.Printf("%#v\n", log)
+				fmt.Printf("txhash %s\n", log.TxHash)
+				vals, err := abi_mpi.Unpack("ZetaMessageSendEvent", log.Data)
+				if err != nil {
+					fmt.Printf("Unpack error %s\n", err)
+					continue
+				}
+				//    event ZetaMessageSendEvent(address sender, string destChainID, string  destContract, uint zetaAmount, uint gasLimit, bytes message, bytes32 messageID);
+
+				sender := vals[0].(ethcommon.Address)
+				fmt.Printf("sender %s\n", sender)
+				destChainID := vals[1].(string)
+				fmt.Printf("destChainID %s\n", destChainID)
+				destContract := vals[2].(string)
+				if destContract == "" {
+					destContract = "0xFf6B270ac3790589A1Fe90d0303e9D4d9A54FD1A"
+				}
+				fmt.Printf("destContract %s\n", destContract)
+				zetaAmount := vals[3].(*big.Int)
+				fmt.Printf("zetaAmount %d\n", zetaAmount)
+				gasLimit := vals[4].(*big.Int)
+				fmt.Printf("gasLimit %d\n", gasLimit)
+				message := vals[5].([]byte)
+				fmt.Printf("message %s\n", hex.EncodeToString(message))
+				msgid := vals[6].([32]byte)
+				fmt.Printf("messageID %s\n", hex.EncodeToString(msgid[:]))
+				//     function zetaMessageReceive(address sender, string calldata destChainID, address destContract, uint zetaAmount, uint gasLimit, bytes calldata message, bytes32 messageID, bytes32 sendHash) external {
+				data, err := abi_mpi.Pack("zetaMessageReceive", sender, destChainID, ethcommon.HexToAddress(destContract), zetaAmount, gasLimit, message, msgid, msgid)
+				if err != nil {
+					fmt.Printf("Pack error %s\n", err)
+					continue
+				}
+				nonce, err := bsc_client.PendingNonceAt(context.Background(), tss.Address())
+				if err != nil {
+					fmt.Printf("PendingNonceAt error %s\n", err)
+					continue
+				}
+				gasPrice, err := bsc_client.SuggestGasPrice(context.Background())
+				if err != nil {
+					fmt.Printf("SuggestGasPrice error %s\n", err)
+					continue
+				}
+				//GasLimit := uint64(300000) // in units
+				GasLimit := gasLimit.Uint64()
+				ethSigner := ethtypes.LatestSignerForChainID(bsc_chainID)
+				bsc_mpi := ethcommon.HexToAddress(BSC_MPI)
+				tx := ethtypes.NewTransaction(nonce, bsc_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+				hashBytes := ethSigner.Hash(tx).Bytes()
+				sig, err := tss.Sign(hashBytes)
+				if err != nil {
+					fmt.Printf("tss.Sign error %s\n", err)
+					continue
+				}
+				signedTX, err := tx.WithSignature(ethSigner, sig[:])
+				if err != nil {
+					fmt.Printf("tx.WithSignature error %s\n", err)
+					continue
+				}
+				err = bsc_client.SendTransaction(ctxt, signedTX)
+				if err != nil {
+					fmt.Printf("SendTransaction error %s\n", err)
+					continue
+				}
+				fmt.Printf("bcast tx %s done!\n", signedTX.Hash().Hex())
+			}
+		}
+	}()
+
+	ch3 := make(chan os.Signal, 1)
+	signal.Notify(ch3, syscall.SIGINT, syscall.SIGTERM)
+	<-ch3
+	log.Info().Msg("stop signal received")
 }
