@@ -4,39 +4,64 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
-	"math/big"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
 )
 
 const (
 	BSC_MPI = "0xCC3e1C9460B7803d4d79F32342b2b27543362536"
 	ETH_MPI = "0xDe8802902Ff3136bdACe5FFC9a2423B1d37F6833"
-	ABI_MPI = `[{"inputs":[{"internalType":"address","name":"zetaAddress","type":"address"},{"internalType":"address","name":"oracleAddress","type":"address"},{"internalType":"address","name":"_TSSAddress","type":"address"},{"internalType":"address","name":"_TSSAddressUpdater","type":"address"},{"internalType":"address","name":"_OracleUpdater","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"destChainID","type":"string"},{"indexed":false,"internalType":"address","name":"destContract","type":"address"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes32","name":"messageID","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"utxoHash","type":"bytes32"}],"name":"ZetaMessageReceiveEvent","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"destChainID","type":"string"},{"indexed":false,"internalType":"string","name":"destContract","type":"string"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes32","name":"messageID","type":"bytes32"}],"name":"ZetaMessageSendEvent","type":"event"},{"inputs":[],"name":"OracleUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TSSAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TSSAddressUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOracleAddres","type":"address"}],"name":"changeOracle","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getLockedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceTSSAddressUpdater","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint8","name":"newFlexibility","type":"uint8"}],"name":"updateSupplyOracleFlexibility","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"}],"name":"updateTSSAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"destChainID","type":"string"},{"internalType":"address","name":"destContract","type":"address"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"messageID","type":"bytes32"},{"internalType":"bytes32","name":"sendHash","type":"bytes32"}],"name":"zetaMessageReceive","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"destChainID","type":"string"},{"internalType":"string","name":"destContract","type":"string"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"messageID","type":"bytes32"}],"name":"zetaMessageSend","outputs":[],"stateMutability":"nonpayable","type":"function"}]
-`
+	ABI_MPI = `[{"inputs":[{"internalType":"address","name":"zetaAddress","type":"address"},{"internalType":"address","name":"oracleAddress","type":"address"},{"internalType":"address","name":"_TSSAddress","type":"address"},{"internalType":"address","name":"_TSSAddressUpdater","type":"address"},{"internalType":"address","name":"_OracleUpdater","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"destChainID","type":"string"},{"indexed":false,"internalType":"address","name":"destContract","type":"address"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes32","name":"messageID","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"utxoHash","type":"bytes32"}],"name":"ZetaMessageReceiveEvent","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"},{"indexed":false,"internalType":"string","name":"destChainID","type":"string"},{"indexed":false,"internalType":"string","name":"destContract","type":"string"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes32","name":"messageID","type":"bytes32"}],"name":"ZetaMessageSendEvent","type":"event"},{"inputs":[],"name":"OracleUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TSSAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TSSAddressUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOracleAddres","type":"address"}],"name":"changeOracle","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getLockedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceTSSAddressUpdater","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint8","name":"newFlexibility","type":"uint8"}],"name":"updateSupplyOracleFlexibility","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"}],"name":"updateTSSAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"destChainID","type":"string"},{"internalType":"address","name":"destContract","type":"address"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"messageID","type":"bytes32"},{"internalType":"bytes32","name":"sendHash","type":"bytes32"}],"name":"zetaMessageReceive","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"string","name":"destChainID","type":"string"},{"internalType":"string","name":"destContract","type":"string"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"messageID","type":"bytes32"}],"name":"zetaMessageSend","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
 )
 
 func main() {
+	tss, eth_client, bsc_client, abi_mpi, eth_chainID, bsc_subscription, ctxt, ch, bsc_topics, bsc_chainID := setup()
+
+	bsc_listen(bsc_subscription, ch, abi_mpi, eth_client, eth_chainID, tss, ctxt)
+	eth_listen(bsc_topics, eth_client, abi_mpi, bsc_client, bsc_chainID, tss, ctxt)
+
+	ch3 := make(chan os.Signal, 1)
+	signal.Notify(ch3, syscall.SIGINT, syscall.SIGTERM)
+	<-ch3
+	log.Info().Msg("stop signal received")
+}
+
+func setup() (
+	mc.TestSigner,
+	*ethclient.Client,
+	*ethclient.Client,
+	abi.ABI,
+	*big.Int,
+	ethereum.Subscription,
+	context.Context,
+	<-chan types.Log,
+	[][]ethcommon.Hash,
+	*big.Int,
+) {
+
 	pkstring := os.Getenv("PRIVKEY")
 	if pkstring == "" {
 		log.Fatal().Msg("missing env variable PRIVKEY")
-		return
+		os.Exit(1)
 	}
 	privateKey, err := crypto.HexToECDSA(pkstring)
 	if err != nil {
 		log.Err(err).Msg("TEST private key error")
-		return
+		os.Exit(1)
 	}
 	tss := mc.TestSigner{
 		PrivKey: privateKey,
@@ -47,22 +72,31 @@ func main() {
 	_ = eth_chain
 	fmt.Printf("tss key address: %s\n", tss.Address())
 
-	abi_mpi, err := abi.JSON(strings.NewReader(ABI_MPI))
+	eth_abi_mpi, err := abi.JSON(strings.NewReader(ABI_MPI))
 	if err != nil {
 		log.Err(err).Msg("abi.JSON")
-		return
+		os.Exit(1)
 	}
 
 	ctxt := context.TODO()
 
 	bsc_client := bsc_chain.Client
 	eth_client := eth_chain.Client
-	cid, _ := bsc_client.ChainID(ctxt)
-	fmt.Printf("chain id %d\n", cid)
+
+	bsc_cid, _ := bsc_client.ChainID(ctxt)
+	fmt.Printf("BSC chain id %d\n", bsc_cid)
 	eth_chainID, err := eth_client.ChainID(context.TODO())
 	if err != nil {
 		fmt.Printf("eth_client.ChainID error %s\n", err)
-		return
+		os.Exit(1)
+	}
+
+	eth_cid, _ := eth_client.ChainID(ctxt)
+	fmt.Printf("ETH chain id %d\n", eth_cid)
+	bsc_chainID, err := bsc_client.ChainID(context.TODO())
+	if err != nil {
+		fmt.Printf("bsc_client.ChainID error %s\n", err)
+		os.Exit(1)
 	}
 
 	bsc_topics := make([][]ethcommon.Hash, 1)
@@ -73,11 +107,23 @@ func main() {
 	}
 
 	ch := make(chan types.Log)
-	sub, err := bsc_client.SubscribeFilterLogs(ctxt, bsc_query, ch)
+	bsc_subscription, err := bsc_client.SubscribeFilterLogs(ctxt, bsc_query, ch)
 	if err != nil {
 		fmt.Printf("SubscribeFilterLogs error %s\n", err)
-		return
+		os.Exit(1)
 	}
+
+	return tss, eth_client, bsc_client, eth_abi_mpi, eth_chainID, bsc_subscription, ctxt, ch, bsc_topics, bsc_chainID
+}
+
+func bsc_listen(
+	sub ethereum.Subscription,
+	bsc_logs_channel <-chan types.Log,
+	abi_mpi abi.ABI,
+	eth_client *ethclient.Client,
+	eth_chainID *big.Int,
+	tss mc.TestSigner,
+	ctxt context.Context) {
 
 	fmt.Println("begining listening to BSC log...")
 	go func() {
@@ -85,7 +131,7 @@ func main() {
 			select {
 			case err := <-sub.Err():
 				log.Fatal().Err(err).Msg("sub error")
-			case log := <-ch:
+			case log := <-bsc_logs_channel:
 				//fmt.Printf("%#v\n", log)
 				fmt.Printf("txhash %s\n", log.TxHash)
 				vals, err := abi_mpi.Unpack("ZetaMessageSendEvent", log.Data)
@@ -153,15 +199,17 @@ func main() {
 			}
 		}
 	}()
+}
 
-	eth_cid, _ := eth_client.ChainID(ctxt)
-	fmt.Printf("eth chain id %d\n", eth_cid)
-	bsc_chainID, err := bsc_client.ChainID(context.TODO())
-	if err != nil {
-		fmt.Printf("eth_client.ChainID error %s\n", err)
-		return
-	}
-
+func eth_listen(
+	bsc_topics [][]ethcommon.Hash,
+	eth_client *ethclient.Client,
+	abi_mpi abi.ABI,
+	bsc_client *ethclient.Client,
+	bsc_chainID *big.Int,
+	tss mc.TestSigner,
+	ctxt context.Context,
+) {
 	eth_topics := make([][]ethcommon.Hash, 1)
 	eth_topics[0] = []ethcommon.Hash{ethcommon.HexToHash("0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a")}
 	eth_filter := ethereum.FilterQuery{
@@ -175,6 +223,7 @@ func main() {
 		fmt.Printf("SubscribeFilterLogs error %s\n", err)
 		return
 	}
+
 	fmt.Println("begining listening to Goerli log...")
 	go func() {
 		for {
@@ -249,9 +298,4 @@ func main() {
 			}
 		}
 	}()
-
-	ch3 := make(chan os.Signal, 1)
-	signal.Notify(ch3, syscall.SIGINT, syscall.SIGTERM)
-	<-ch3
-	log.Info().Msg("stop signal received")
 }
