@@ -21,11 +21,13 @@ import (
 const MAGIC_HASH = "0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a"
 
 type ChainETHish struct {
-	tss                          zetaclient.TSSSigner
-	mpi_abi                      abi.ABI
+	// TODO: Could these 3 be refactored out?
+	tss     zetaclient.TSSSigner
+	mpi_abi abi.ABI
+	context context.Context
+
 	MPI_CONTRACT                 string
 	DEFAULT_DESTINATION_CONTRACT string
-	context                      context.Context
 	client                       *ethclient.Client
 	name                         common.Chain
 	id                           *big.Int

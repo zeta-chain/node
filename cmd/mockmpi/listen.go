@@ -40,36 +40,53 @@ func (cl *ChainETHish) Listen() {
 	}()
 }
 
+// Contract signature:
+//
+// event ZetaMessageSendEvent(
+//   address sender,
+//   string destChainID,
+//   string  destContract,
+//   uint zetaAmount,
+//   uint gasLimit,
+//   bytes message,
+//   bytes32 messageID);
 func (cl *ChainETHish) recievePayload(data []byte) (Payload, error) {
+	var log_message string
+
 	vals, err := cl.mpi_abi.Unpack("ZetaMessageSendEvent", data)
 	if err != nil {
 		return Payload{}, fmt.Errorf("Unpack error %s\n", err)
 	}
-	//    event ZetaMessageSendEvent(address sender, string destChainID, string  destContract, uint zetaAmount, uint gasLimit, bytes message, bytes32 messageID);
 
 	sender := vals[0].(ethcommon.Address)
-	fmt.Printf("sender %s\n", sender)
+	log_message = fmt.Sprintf("sender %s", sender)
 
 	destChainID := vals[1].(string)
-	fmt.Printf("destChainID %s\n", destChainID)
+	log_message = fmt.Sprintf("destChainID %s", destChainID)
+	log.Debug().Msg(log_message)
 
 	destContract := vals[2].(string)
 	if destContract == "" {
 		destContract = cl.DEFAULT_DESTINATION_CONTRACT
 	}
-	fmt.Printf("destContract %s\n", destContract)
+	log_message = fmt.Sprintf("destContract %s", destContract)
+	log.Debug().Msg(log_message)
 
 	zetaAmount := vals[3].(*big.Int)
-	fmt.Printf("zetaAmount %d\n", zetaAmount)
+	log_message = fmt.Sprintf("zetaAmount %d", zetaAmount)
+	log.Debug().Msg(log_message)
 
 	gasLimit := vals[4].(*big.Int)
-	fmt.Printf("gasLimit %d\n", gasLimit)
+	log_message = fmt.Sprintf("gasLimit %d", gasLimit)
+	log.Debug().Msg(log_message)
 
 	message := vals[5].([]byte)
-	fmt.Printf("message %s\n", hex.EncodeToString(message))
+	log_message = fmt.Sprintf("message %s", hex.EncodeToString(message))
+	log.Debug().Msg(log_message)
 
 	msgid := vals[6].([32]byte)
-	fmt.Printf("messageID %s\n", hex.EncodeToString(msgid[:]))
+	log_message = fmt.Sprintf("messageID %s", hex.EncodeToString(msgid[:]))
+	log.Debug().Msg(log_message)
 
 	return Payload{
 		sender:       sender,
@@ -105,48 +122,50 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 		payload.msgid,
 		payload.msgid)
 	if err != nil {
-		fmt.Printf("Pack error %s\n", err)
+		log.Err(err).Msg("sendTransaction() ABI Pack() error")
 		return
 	}
 
 	pair, err := FindChainByID(payload.destChainID)
 	if err != nil {
-		fmt.Printf("Chain ID error %s\n", err)
+		log.Err(err).Msg("sendTransaction() Chain ID error")
 		return
 	}
 
 	nonce, err := pair.client.PendingNonceAt(context.Background(), cl.tss.Address())
 	if err != nil {
-		fmt.Printf("PendingNonceAt error %s\n", err)
+		log.Err(err).Msg("sendTransaction() PendingNonceAt error")
 		return
 	}
 
 	gasPrice, err := pair.client.SuggestGasPrice(context.Background())
 	if err != nil {
-		fmt.Printf("SuggestGasPrice error %s\n", err)
+		log.Err(err).Msg("sendTransaction() SuggestGasPrice error")
 		return
 	}
 	GasLimit := payload.gasLimit.Uint64()
+
 	ethSigner := ethtypes.LatestSignerForChainID(pair.id)
 	pair_mpi := ethcommon.HexToAddress(pair.MPI_CONTRACT)
 	tx := ethtypes.NewTransaction(nonce, pair_mpi, big.NewInt(0), GasLimit, gasPrice, data)
 	hashBytes := ethSigner.Hash(tx).Bytes()
 	sig, err := cl.tss.Sign(hashBytes)
 	if err != nil {
-		fmt.Printf("tss.Sign error %s\n", err)
+		log.Err(err).Msg("sendTransaction() tss.Sign error")
 		return
 	}
 
 	signedTX, err := tx.WithSignature(ethSigner, sig[:])
 	if err != nil {
-		fmt.Printf("tx.WithSignature error %s\n", err)
+		log.Err(err).Msg("sendTransaction() tx.WithSignature error")
 		return
 	}
 
 	err = pair.client.SendTransaction(cl.context, signedTX)
 	if err != nil {
-		fmt.Printf("SendTransaction error %s\n", err)
+		log.Err(err).Msg("sendTransaction() error")
 		return
 	}
-	fmt.Printf("bcast tx %s done!\n", signedTX.Hash().Hex())
+
+	log.Info().Str("hash", signedTX.Hash().Hex()).Msg("bcast tx done!")
 }
