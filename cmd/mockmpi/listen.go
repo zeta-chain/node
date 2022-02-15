@@ -21,7 +21,7 @@ type Payload struct {
 	msgid        [32]byte
 }
 
-func (cl *ChainETHish) Listen(pair *ChainETHish) {
+func (cl *ChainETHish) Listen() {
 	log.Info().Msg(fmt.Sprintf("begining listening to %s log...", cl.chain))
 
 	go func() {
@@ -33,7 +33,7 @@ func (cl *ChainETHish) Listen(pair *ChainETHish) {
 				fmt.Printf("txhash %s\n", log.TxHash)
 				payload, err := cl.recievePayload(log.Data)
 				if err == nil {
-					cl.sendTransaction(payload, pair)
+					cl.sendTransaction(payload)
 				}
 			}
 		}
@@ -82,18 +82,18 @@ func (cl *ChainETHish) recievePayload(data []byte) (Payload, error) {
 	}, nil
 }
 
-func (cl *ChainETHish) sendTransaction(payload Payload, pair *ChainETHish) {
-	// Contract signature:
-	//
-	// function zetaMessageReceive(
-	//	 address sender,
-	//	 string calldata destChainID,
-	//	 address destContract,
-	//	 uint zetaAmount,
-	//	 uint gasLimit,
-	//	 bytes calldata message,
-	//	 bytes32 messageID,
-	//	 bytes32 sendHash) external {
+// Contract signature:
+//
+// function zetaMessageReceive(
+//	 address sender,
+//	 string calldata destChainID,
+//	 address destContract,
+//	 uint zetaAmount,
+//	 uint gasLimit,
+//	 bytes calldata message,
+//	 bytes32 messageID,
+//	 bytes32 sendHash) external {
+func (cl *ChainETHish) sendTransaction(payload Payload) {
 	data, err := cl.mpi_abi.Pack(
 		"zetaMessageReceive",
 		payload.sender,
@@ -106,6 +106,12 @@ func (cl *ChainETHish) sendTransaction(payload Payload, pair *ChainETHish) {
 		payload.msgid)
 	if err != nil {
 		fmt.Printf("Pack error %s\n", err)
+		return
+	}
+
+	pair, err := FindChainByID(payload.destChainID)
+	if err != nil {
+		fmt.Printf("Chain ID error %s\n", err)
 		return
 	}
 
