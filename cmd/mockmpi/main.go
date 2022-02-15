@@ -65,11 +65,11 @@ func main() {
 		return
 	}
 
-	bsc_topics := 	make([][]ethcommon.Hash,1)
+	bsc_topics := make([][]ethcommon.Hash, 1)
 	bsc_topics[0] = []ethcommon.Hash{ethcommon.HexToHash("0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a")}
 	bsc_query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(BSC_MPI)},
-		Topics: bsc_topics,
+		Topics:    bsc_topics,
 	}
 
 	ch := make(chan types.Log)
@@ -154,7 +154,6 @@ func main() {
 		}
 	}()
 
-
 	eth_cid, _ := eth_client.ChainID(ctxt)
 	fmt.Printf("eth chain id %d\n", eth_cid)
 	bsc_chainID, err := bsc_client.ChainID(context.TODO())
@@ -163,11 +162,11 @@ func main() {
 		return
 	}
 
-	eth_topics := 	make([][]ethcommon.Hash,1)
+	eth_topics := make([][]ethcommon.Hash, 1)
 	eth_topics[0] = []ethcommon.Hash{ethcommon.HexToHash("0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a")}
 	eth_filter := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(ETH_MPI)},
-		Topics: bsc_topics,
+		Topics:    bsc_topics,
 	}
 
 	ch2 := make(chan types.Log)
