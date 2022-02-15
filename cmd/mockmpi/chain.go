@@ -73,3 +73,12 @@ func (cl *ChainETHish) Init() {
 	}
 	cl.subscription = _subscription
 }
+
+func FindChainByID(id string) (*ChainETHish, error) {
+	for _, chain := range ALL_CHAINS {
+		if chain.id.String() == id {
+			return chain, nil
+		}
+	}
+	return nil, fmt.Errorf("Not listening for chain with ID: %s", id)
+}
