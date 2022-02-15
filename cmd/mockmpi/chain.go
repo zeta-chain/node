@@ -23,11 +23,11 @@ const MAGIC_HASH = "0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95d
 type ChainETHish struct {
 	tss                          zetaclient.TSSSigner
 	mpi_abi                      abi.ABI
-	contract                     string
+	MPI_CONTRACT                 string
 	DEFAULT_DESTINATION_CONTRACT string
 	context                      context.Context
 	client                       *ethclient.Client
-	chain                        common.Chain
+	name                         common.Chain
 	id                           *big.Int
 	topics                       [][]ethcommon.Hash
 	channel                      chan types.Log
@@ -46,11 +46,11 @@ func (cl *ChainETHish) Init() {
 
 	cl.context = context.TODO()
 
-	chain, err := zetaclient.NewChainObserver(cl.chain, nil, cl.tss, "")
+	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "")
 	cl.client = chain.Client
 
 	_id, _ := cl.client.ChainID(cl.context)
-	fmt.Printf("BSC chain id %d\n", _id)
+	log.Debug().Msg(fmt.Sprintf("%s chain id %d", cl.name, _id))
 	cl.id, err = cl.client.ChainID(context.TODO())
 	if err != nil {
 		fmt.Printf("Chain.id error %s\n", err)
@@ -60,7 +60,7 @@ func (cl *ChainETHish) Init() {
 	cl.topics = make([][]ethcommon.Hash, 1)
 	cl.topics[0] = []ethcommon.Hash{ethcommon.HexToHash(MAGIC_HASH)}
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(cl.contract)},
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(cl.MPI_CONTRACT)},
 		Topics:    cl.topics,
 	}
 
@@ -68,10 +68,15 @@ func (cl *ChainETHish) Init() {
 
 	_subscription, err := cl.client.SubscribeFilterLogs(cl.context, query, cl.channel)
 	if err != nil {
-		log.Printf("SubscribeFilterLogs error %s\n", err)
+		log.Fatal().Err(err).Msg("SubscribeFilterLogs")
 		os.Exit(1)
 	}
 	cl.subscription = _subscription
+}
+
+func (cl *ChainETHish) Start() {
+	cl.Init()
+	cl.Listen()
 }
 
 func FindChainByID(id string) (*ChainETHish, error) {
@@ -81,4 +86,13 @@ func FindChainByID(id string) (*ChainETHish, error) {
 		}
 	}
 	return nil, fmt.Errorf("Not listening for chain with ID: %s", id)
+}
+
+func FindChainByName(name string) (*ChainETHish, error) {
+	for _, chain := range ALL_CHAINS {
+		if chain.name.String() == name {
+			return chain, nil
+		}
+	}
+	return nil, fmt.Errorf("Couldn't find chain: %s", name)
 }

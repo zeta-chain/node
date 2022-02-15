@@ -22,7 +22,7 @@ type Payload struct {
 }
 
 func (cl *ChainETHish) Listen() {
-	log.Info().Msg(fmt.Sprintf("begining listening to %s log...", cl.chain))
+	log.Info().Msg(fmt.Sprintf("begining listening to %s log...", cl.name))
 
 	go func() {
 		for {
@@ -128,7 +128,7 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 	}
 	GasLimit := payload.gasLimit.Uint64()
 	ethSigner := ethtypes.LatestSignerForChainID(pair.id)
-	pair_mpi := ethcommon.HexToAddress(pair.contract)
+	pair_mpi := ethcommon.HexToAddress(pair.MPI_CONTRACT)
 	tx := ethtypes.NewTransaction(nonce, pair_mpi, big.NewInt(0), GasLimit, gasPrice, data)
 	hashBytes := ethSigner.Hash(tx).Bytes()
 	sig, err := cl.tss.Sign(hashBytes)
