@@ -126,28 +126,28 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 		return
 	}
 
-	pair, err := FindChainByID(payload.destChainID)
+	other, err := FindChainByID(payload.destChainID)
 	if err != nil {
 		log.Err(err).Msg("sendTransaction() Chain ID error")
 		return
 	}
 
-	nonce, err := pair.client.PendingNonceAt(context.Background(), cl.tss.Address())
+	nonce, err := other.client.PendingNonceAt(context.Background(), cl.tss.Address())
 	if err != nil {
 		log.Err(err).Msg("sendTransaction() PendingNonceAt error")
 		return
 	}
 
-	gasPrice, err := pair.client.SuggestGasPrice(context.Background())
+	gasPrice, err := other.client.SuggestGasPrice(context.Background())
 	if err != nil {
 		log.Err(err).Msg("sendTransaction() SuggestGasPrice error")
 		return
 	}
 	GasLimit := payload.gasLimit.Uint64()
 
-	ethSigner := ethtypes.LatestSignerForChainID(pair.id)
-	pair_mpi := ethcommon.HexToAddress(pair.MPI_CONTRACT)
-	tx := ethtypes.NewTransaction(nonce, pair_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+	ethSigner := ethtypes.LatestSignerForChainID(other.id)
+	other_mpi := ethcommon.HexToAddress(other.MPI_CONTRACT)
+	tx := ethtypes.NewTransaction(nonce, other_mpi, big.NewInt(0), GasLimit, gasPrice, data)
 	hashBytes := ethSigner.Hash(tx).Bytes()
 	sig, err := cl.tss.Sign(hashBytes)
 	if err != nil {
@@ -161,7 +161,7 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 		return
 	}
 
-	err = pair.client.SendTransaction(cl.context, signedTX)
+	err = other.client.SendTransaction(cl.context, signedTX)
 	if err != nil {
 		log.Err(err).Msg("sendTransaction() error")
 		return
