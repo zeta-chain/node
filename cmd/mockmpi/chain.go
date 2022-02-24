@@ -18,13 +18,14 @@ import (
 )
 
 // What is this?
-const MAGIC_HASH = "0x38f8fa9ce079e7e087c700936fd84330f80123e22a6aea6e125b55e95dcd585a"
+const MAGIC_HASH = "0xcccb58610b0b65d5b1d8e5f16435254a787e324209d9b3877a8ece68859a0f55"
 
 type ChainETHish struct {
 	// TODO: Could these 3 be refactored out?
-	tss     zetaclient.TSSSigner
-	mpi_abi abi.ABI
-	context context.Context
+	tss      zetaclient.TSSSigner
+	mpi_abi  abi.ABI
+	context  context.Context
+	chain_id uint16
 
 	MPI_CONTRACT                 string
 	DEFAULT_DESTINATION_CONTRACT string
@@ -81,9 +82,9 @@ func (cl *ChainETHish) Start() {
 	cl.Listen()
 }
 
-func FindChainByID(id string) (*ChainETHish, error) {
+func FindChainByID(id uint16) (*ChainETHish, error) {
 	for _, chain := range ALL_CHAINS {
-		if chain.id.String() == id {
+		if chain.chain_id == id {
 			return chain, nil
 		}
 	}
