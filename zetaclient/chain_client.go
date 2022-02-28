@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	"github.com/rs/zerolog"
@@ -9,6 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
 	"os"
 	"strings"
@@ -26,30 +28,40 @@ const (
 	PosKey = "PosKey"
 )
 
-var logLockSendSignature = []byte("LockSend(address,string,uint256,uint256,string,bytes)")
-var logLockSendSignatureHash = crypto.Keccak256Hash(logLockSendSignature)
+// DELETE
+//var logLockSendSignature = []byte("LockSend(address,string,uint256,uint256,string,bytes)")
+//var logLockSendSignatureHash = crypto.Keccak256Hash(logLockSendSignature)
+//
+//var logUnlockSignature = []byte("Unlock(address,uint256,bytes32)")
+//var logUnlockSignatureHash = crypto.Keccak256Hash(logUnlockSignature)
+//
+//var logBurnSendSignature = []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
+//var logBurnSendSignatureHash = crypto.Keccak256Hash(logBurnSendSignature)
+//
+//var logMMintedSignature = []byte("MMinted(address,uint256,bytes32)")
+//var logMMintedSignatureHash = crypto.Keccak256Hash(logMMintedSignature)
 
-var logUnlockSignature = []byte("Unlock(address,uint256,bytes32)")
-var logUnlockSignatureHash = crypto.Keccak256Hash(logUnlockSignature)
+// END DELETE
 
-var logBurnSendSignature = []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
-var logBurnSendSignatureHash = crypto.Keccak256Hash(logBurnSendSignature)
+//   event ZetaMessageSendEvent(address indexed sender, uint16 destChainID, bytes destContract, uint zetaAmount, uint gasLimit, bytes message, bytes zetaParams);
+var logMPISendSignature = []byte("ZetaMessageSendEvent(address,uint16,bytes,uint256,uint256,bytes,bytes)")
+var logMPISendSignatureHash = crypto.Keccak256Hash(logMPISendSignature)
 
-var logMMintedSignature = []byte("MMinted(address,uint256,bytes32)")
-var logMMintedSignatureHash = crypto.Keccak256Hash(logMMintedSignature)
+var logMPIReceiveSignature = []byte("ZetaMessageReceiveEvent(bytes,uint16,address,uint256,bytes,bytes32)")
+var logMPIReceiveSignatureHash = crypto.Keccak256Hash(logMPIReceiveSignature)
 
-var topics = make([][]ethcommon.Hash, 3)
+var topics = make([][]ethcommon.Hash, 1)
 
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain       common.Chain
-	router      string
-	endpoint    string
-	ticker      *time.Ticker
-	abiString   string
-	abi         *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
-	zetaAbi     *abi.ABI // only useful for ethereum; the token contract
+	chain      common.Chain
+	mpiAddress string
+	endpoint   string
+	ticker     *time.Ticker
+	abiString  string
+	abi        *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	//zetaAbi     *abi.ABI // only useful for ethereum; the token contract
 	Client      *ethclient.Client
 	bridge      *MetachainBridge
 	Tss         TSSSigner
@@ -89,26 +101,26 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.router = config.POLYGON_TOKEN_ADDRESS
+		chainOb.mpiAddress = config.POLYGON_TOKEN_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.NONETH_ZETA_ABI
+		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 
 	case common.ETHChain:
 		chainOb.chain = chain
-		chainOb.router = config.ETH_ZETALOCK_ADDRESS
+		chainOb.mpiAddress = config.Chains["ETH"].MPIContractAddress
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.ETH_ZETALOCK_ABI
+		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 
 	case common.BSCChain:
 		chainOb.chain = chain
-		chainOb.router = config.BSC_TOKEN_ADDRESS
+		chainOb.mpiAddress = config.Chains["BSC"].MPIContractAddress
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.NONETH_ZETA_ABI
+		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 	}
 	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
@@ -116,15 +128,15 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		return nil, err
 	}
 	chainOb.abi = &contractABI
-	if chain == common.ETHChain {
-		tokenABI, err := abi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
-		if err != nil {
-			return nil, err
-		}
-		chainOb.zetaAbi = &tokenABI
-	}
+	//if chain == common.ETHChain {
+	//	tokenABI, err := abi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	chainOb.zetaAbi = &tokenABI
+	//}
 
-	// Dial the router
+	// Dial the mpiAddress
 	client, err := ethclient.Dial(chainOb.endpoint)
 	if err != nil {
 		log.Err(err).Msg("eth Client Dial")
@@ -179,13 +191,13 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	}
 
 	// this is shared structure to query logs by sendHash
-	topics[2] = make([]ethcommon.Hash, 1)
+	//topics[2] = make([]ethcommon.Hash, 1)
 
 	return &chainOb, nil
 }
 
 func (chainOb *ChainObserver) WatchRouter() {
-	// At each tick, query the router
+	// At each tick, query the mpiAddress
 	for range chainOb.ticker.C {
 		err := chainOb.observeChain()
 		if err != nil {
@@ -372,10 +384,14 @@ func (chainOb *ChainObserver) observeChain() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
+
+	topics[0] = []ethcommon.Hash{logMPISendSignatureHash}
+
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.router)},
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.mpiAddress)},
 		FromBlock: big.NewInt(0).SetUint64(chainOb.LastBlock + 1), // LastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
+		Topics:    topics,
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
 	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum))
@@ -394,25 +410,31 @@ func (chainOb *ChainObserver) observeChain() error {
 		log.Debug().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
 
 		switch vLog.Topics[0].Hex() {
-		case logLockSendSignatureHash.Hex():
-			returnVal, err := contractAbi.Unpack("LockSend", vLog.Data)
+		case logMPISendSignatureHash.Hex():
+			vals, err := contractAbi.Unpack("ZetaMessageSendEvent", vLog.Data)
 			if err != nil {
-				log.Err(err).Msg("error unpacking LockSend")
+				log.Err(err).Msg("error unpacking ZetaMessageSendEvent")
 				continue
 			}
+			sender := vLog.Topics[1]
+			destChainID := vals[0].(uint16)
+			destContract := vals[1].([]byte)
+			zetaAmount := vals[2].(*big.Int)
+			gasLimit := vals[3].(*big.Int)
+			message := vals[4].([]byte)
+			zetaParams := vals[5].([]byte)
 
-			// PostSend to meta core
-			// LockSend Event:     event LockSend(address indexed sender, string receiver, uint amount, uint wanted, string chainid, bytes message);
-			// Topic1: Sender address
-			// Data fields: 0: receiver; 1: amount; 2: wanted; 3: chainid; 4: message
+			_ = gasLimit
+			_ = zetaParams
+
 			metaHash, err := chainOb.bridge.PostSend(
-				ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
+				ethcommon.HexToAddress(sender.Hex()).Hex(),
 				chainOb.chain.String(),
-				returnVal[0].(string),
-				returnVal[3].(string),
-				returnVal[1].(*big.Int).String(),
-				returnVal[2].(*big.Int).String(),
-				string(returnVal[4].([]byte)),
+				types.BytesToEthHex(destContract),
+				config.FindChainByID(destChainID),
+				zetaAmount.String(),
+				zetaAmount.String(),
+				base64.StdEncoding.EncodeToString(message),
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
 			)
@@ -421,86 +443,6 @@ func (chainOb *ChainObserver) observeChain() error {
 				continue
 			}
 			log.Debug().Msgf("LockSend detected: PostSend metahash: %s", metaHash)
-		case logBurnSendSignatureHash.Hex():
-			returnVal, err := contractAbi.Unpack("BurnSend", vLog.Data)
-			if err != nil {
-				log.Err(err).Msg("error unpacking LockSend")
-				continue
-			}
-
-			// PostSend to meta core
-			//    event BurnSend(address indexed sender, string receiver, uint amount, uint wanted, string chainid, bytes message);
-			// Topic 1: sender address
-			// Data fields: 0: receiver; 1: amount; 2: wanted; 3: chainid; 4: message
-			metaHash, err := chainOb.bridge.PostSend(
-				ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex(),
-				chainOb.chain.String(),
-				returnVal[0].(string),
-				returnVal[3].(string),
-				returnVal[1].(*big.Int).String(),
-				returnVal[2].(*big.Int).String(),
-				string(returnVal[4].([]byte)),
-				vLog.TxHash.Hex(),
-				vLog.BlockNumber,
-			)
-			if err != nil {
-				log.Err(err).Msg("error posting to meta core")
-				continue
-			}
-
-			log.Debug().Msgf("BurnSend detected: PostSend metahash: %s", metaHash)
-		case logUnlockSignatureHash.Hex():
-			returnVal, err := contractAbi.Unpack("Unlock", vLog.Data)
-			if err != nil {
-				log.Err(err).Msg("error unpacking Unlock")
-				continue
-			}
-			//    event Unlock(address indexed receiver, uint256 amount, bytes32 indexed sendHash);
-			// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
-			sendhash := vLog.Topics[2].Hex()
-			var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-			var mMint string = returnVal[0].(*big.Int).String()
-			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-				sendhash,
-				vLog.TxHash.Hex(),
-				vLog.BlockNumber,
-				mMint,
-				common.ReceiveStatus_Success,
-				chainOb.chain.String(),
-			)
-			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta core")
-				continue
-			}
-			log.Debug().Msgf("Unlock detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("Unlocked(sendhash=%s, outTxHash=%s, blockHeight=%d, amount=%s", sendhash, vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
-
-		case logMMintedSignatureHash.Hex():
-			returnVal, err := contractAbi.Unpack("MMinted", vLog.Data)
-			if err != nil {
-				log.Err(err).Msg("error unpacking Unlock")
-				continue
-			}
-
-			// event MMinted(address indexed mintee, uint amount, bytes32 indexed sendHash);
-			// Topic 1: reciver address; Topic 2: sendhash; Data0: mMint
-			sendhash := vLog.Topics[2].Hex()
-			var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-			var mMint string = returnVal[0].(*big.Int).String()
-			metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-				sendhash,
-				vLog.TxHash.Hex(),
-				vLog.BlockNumber,
-				mMint,
-				common.ReceiveStatus_Success,
-				chainOb.chain.String(),
-			)
-			if err != nil {
-				log.Err(err).Msg("error posting confirmation to meta core")
-				continue
-			}
-			log.Debug().Msgf("MMinted event detected; recv %s Post confirmation meta hash %s", rxAddress, metaHash[:6])
-			log.Debug().Msgf("MMinted(sendhash=%s, outTxHash=%s, blockHeight=%d, mMint=%s", sendhash, vLog.TxHash.Hex()[:6], vLog.BlockNumber, mMint)
 		}
 	}
 
@@ -537,109 +479,44 @@ func (chainOb *ChainObserver) Stop() error {
 }
 
 func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error) {
-	if chainOb.chain == common.ETHChain {
-		topics[2][0] = ethcommon.HexToHash(sendHash)
-		query := ethereum.FilterQuery{
-			Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)},
-			FromBlock: big.NewInt(0), // LastBlock has been processed;
-			ToBlock:   nil,
-			Topics:    topics,
-		}
-		logs, err := chainOb.Client.FilterLogs(context.Background(), query)
-		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
-		}
-		if len(logs) == 0 {
-			return false, nil
-		}
-		if len(logs) > 1 {
-			log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
-			log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-			return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
-		}
-		for _, vLog := range logs {
-			switch vLog.Topics[0].Hex() {
-			case logUnlockSignatureHash.Hex():
-				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-				retval, err := chainOb.abi.Unpack("Unlock", vLog.Data)
-				if err != nil {
-					fmt.Println("error unpacking Unlock")
-					continue
-				}
-				fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				fmt.Printf("data: %d\n", retval[0].(*big.Int))
-				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
-
-				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
-					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
-					sendhash := vLog.Topics[2].Hex()
-					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					var mMint string = retval[0].(*big.Int).String()
-					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-						sendhash,
-						vLog.TxHash.Hex(),
-						vLog.BlockNumber,
-						mMint,
-						common.ReceiveStatus_Success,
-						chainOb.chain.String(),
-					)
-					if err != nil {
-						log.Err(err).Msg("error posting confirmation to meta core")
-						continue
-					}
-					fmt.Printf("Zeta tx hash: %s\n", metaHash)
-				} else {
-					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-					return false, nil
-				}
-				return true, nil
+	recvTopics := make([][]ethcommon.Hash, 4)
+	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
+	recvTopics[0] = []ethcommon.Hash{logMPIReceiveSignatureHash}
+	query := ethereum.FilterQuery{
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].MPIContractAddress)},
+		FromBlock: big.NewInt(0), // LastBlock has been processed;
+		ToBlock:   nil,
+		Topics:    recvTopics,
+	}
+	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
+	if err != nil {
+		return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
+	}
+	if len(logs) == 0 {
+		return false, nil
+	}
+	if len(logs) > 1 {
+		log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
+		log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
+		return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
+	}
+	for _, vLog := range logs {
+		switch vLog.Topics[0].Hex() {
+		case logMPIReceiveSignatureHash.Hex():
+			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
+			retval, err := chainOb.abi.Unpack("Unlock", vLog.Data)
+			if err != nil {
+				fmt.Println("error unpacking Unlock")
+				continue
 			}
-		}
-	} else { // for BSC and Polygon
-		topics[2][0] = ethcommon.HexToHash(sendHash)
-		contractAddresses := make([]ethcommon.Address, 1)
-		if chainOb.chain == common.BSCChain {
-			contractAddresses[0] = ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
-		} else if chainOb.chain == common.POLYGONChain {
-			contractAddresses[0] = ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
-		} else {
-			return false, fmt.Errorf("unsupported chain %s", chainOb.chain)
-		}
-		query := ethereum.FilterQuery{
-			Addresses: contractAddresses,
-			FromBlock: big.NewInt(0), // LastBlock has been processed;
-			ToBlock:   nil,
-			Topics:    topics,
-		}
-		logs, err := chainOb.Client.FilterLogs(context.Background(), query)
-		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
-		}
-		if len(logs) == 0 {
-			return false, nil
-		}
-		if len(logs) > 1 {
-			log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
-			log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-			return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
-		}
-		for _, vLog := range logs {
-			switch vLog.Topics[0].Hex() {
-			case logMMintedSignatureHash.Hex():
-				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-				retval, err := chainOb.abi.Unpack("MMinted", vLog.Data)
-				if err != nil {
-					fmt.Println("error unpacking MMinted")
-					continue
-				}
-				fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				fmt.Printf("data: %d\n", retval[0].(*big.Int))
-				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
-				fmt.Printf("Sending PostConfirmation to zetacore...\n")
+			fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
+			fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
+			fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
+			fmt.Printf("data: %d\n", retval[0].(*big.Int))
+			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
+
+			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
+				fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
 				sendhash := vLog.Topics[2].Hex()
 				//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 				var mMint string = retval[0].(*big.Int).String()
@@ -656,9 +533,11 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					continue
 				}
 				fmt.Printf("Zeta tx hash: %s\n", metaHash)
-
-				return true, nil
+			} else {
+				fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
+				return false, nil
 			}
+			return true, nil
 		}
 	}
 
