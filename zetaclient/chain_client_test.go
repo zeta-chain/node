@@ -19,13 +19,13 @@ import (
 )
 
 type ChainClientSuite struct {
+	ethOB *ChainObserver
 }
 
 var _ = Suite(&ChainClientSuite{})
 
 func (s *ChainClientSuite) SetUpTest(c *C) {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 }
 
 //
@@ -319,5 +319,47 @@ func (s *ChainClientSuite) TestGoerliSendHash(c *C) {
 		message := vals[2].([]byte)
 		log_message = fmt.Sprintf("message  %d", message)
 		log.Info().Msg(log_message)
+	}
+}
+
+func (s *ChainClientSuite) TestGoerliIsSendOutTxProcessed(c *C) {
+	sendHash := "CCCB58610B0B65D5B1D8E5F16435254A787E324209D9B3877A8ECE68859A0F55"
+	recvTopics := make([][]ethcommon.Hash, 4)
+	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
+	recvTopics[0] = []ethcommon.Hash{logMPIReceiveSignatureHash}
+	query := ethereum.FilterQuery{
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains["ETH"].MPIContractAddress)},
+		FromBlock: big.NewInt(0), // LastBlock has been processed;
+		ToBlock:   nil,
+		Topics:    recvTopics,
+	}
+	log.Debug().Msg("TestGoerliIsSendOutTxProcessed")
+	client, err := ethclient.Dial(config.ETH_ENDPOINT)
+	c.Assert(err, IsNil)
+	logs, err := client.FilterLogs(context.Background(), query)
+	c.Assert(err, IsNil)
+	contractAbi, err := abi.JSON(strings.NewReader(config.MPI_ABI_STRING))
+	c.Assert(err, IsNil)
+	for _, vLog := range logs {
+		switch vLog.Topics[0].Hex() {
+		case logMPIReceiveSignatureHash.Hex():
+			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, "ETH")
+			retval, err := contractAbi.Unpack("ZetaMessageReceiveEvent", vLog.Data)
+			if err != nil {
+				fmt.Println("error unpacking Unlock")
+				continue
+			}
+			fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
+			fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
+			fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
+			//fmt.Printf("data: %d\n", retval[0].(*big.Int))
+			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
+			mMint := retval[1].(*big.Int).String()
+
+			fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+			sendhash := vLog.Topics[3].Hex()
+			fmt.Printf("mMint: %s\n", mMint)
+			fmt.Printf("sendHash %s\n", sendhash)
+		}
 	}
 }
