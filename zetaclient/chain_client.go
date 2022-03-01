@@ -504,7 +504,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 		switch vLog.Topics[0].Hex() {
 		case logMPIReceiveSignatureHash.Hex():
 			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-			retval, err := chainOb.abi.Unpack("Unlock", vLog.Data)
+			retval, err := chainOb.abi.Unpack("ZetaMessageReceiveEvent", vLog.Data)
 			if err != nil {
 				fmt.Println("error unpacking Unlock")
 				continue
@@ -512,14 +512,14 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 			fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
 			fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
 			fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-			fmt.Printf("data: %d\n", retval[0].(*big.Int))
+			//fmt.Printf("data: %d\n", retval[0].(*big.Int))
 			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
 				fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
-				sendhash := vLog.Topics[2].Hex()
+				sendhash := vLog.Topics[3].Hex()
 				//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-				var mMint string = retval[0].(*big.Int).String()
+				var mMint string = retval[1].(*big.Int).String()
 				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
 					sendhash,
 					vLog.TxHash.Hex(),

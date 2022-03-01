@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -233,9 +234,12 @@ func (co *CoreObserver) processOutboundQueue() {
 			}
 
 			signer := co.signerMap[toChain]
-			message := []byte(send.Message)
-
-			var gasLimit uint64 = 90_000
+			//message := []byte(send.Message)
+			message, err := base64.StdEncoding.DecodeString(send.Message)
+			if err != nil {
+				log.Err(err).Msgf("decode send.Message %s error", send.Message)
+			}
+			var gasLimit uint64 = 250_000
 
 			log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d, in queue %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight, idx)
 			sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
@@ -249,8 +253,10 @@ func (co *CoreObserver) processOutboundQueue() {
 				log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
 			}
 			var tx *ethtypes.Transaction
+			//func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID uint16, to ethcommon.Address, amount *big.Int,, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 
-			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+			srcChainID := config.Chains[send.SenderChain].ChainID
+			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 			if err != nil {
 				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				break
