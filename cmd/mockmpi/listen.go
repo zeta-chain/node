@@ -23,7 +23,7 @@ type Payload struct {
 
 func (cl *ChainETHish) Listen() {
 	log.Info().Msg(fmt.Sprintf("begining listening to %s log...", cl.name))
-
+	dedup := make(map[ethcommon.Hash]bool)
 	go func() {
 		for {
 			select {
@@ -31,9 +31,14 @@ func (cl *ChainETHish) Listen() {
 				log.Fatal().Err(err).Msg("sub error")
 			case log := <-cl.channel:
 				fmt.Printf("txhash %s\n", log.TxHash)
-				payload, err := cl.recievePayload(log.Topics, log.Data)
-				if err == nil {
-					cl.sendTransaction(payload)
+				if _, ok := dedup[log.TxHash]; ok {
+					fmt.Printf("txhash %s already processed!\n", log.TxHash)
+				} else {
+					dedup[log.TxHash] = true
+					payload, err := cl.recievePayload(log.Topics, log.Data)
+					if err == nil {
+						cl.sendTransaction(payload)
+					}
 				}
 			}
 		}
