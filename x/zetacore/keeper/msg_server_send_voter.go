@@ -5,7 +5,6 @@ import (
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,37 +110,37 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			send.StatusMessage = fmt.Sprintf("cannot parse receiver address")
 		}
 		{
-			gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
-			if !isFound {
-				send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
-				send.Status = types.SendStatus_Aborted
-				goto END
-			}
-			mi := gasPrice.MedianIndex
-			medianPrice := gasPrice.Prices[mi]
-			price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
-			send.GasPrice = fmt.Sprintf("%.0f", price)
-			gasLimit := float64(90_000) //TODO: let user supply this
-			exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
-			gasFeeInZeta := price * gasLimit * exchangeRate
-			mBurnt, ok := big.NewInt(0).SetString(send.MBurnt, 10)
-			if !ok {
-				send.StatusMessage = fmt.Sprintf("MBurnt cannot parse")
-				send.Status = types.SendStatus_Aborted
-				goto END
-			}
-			mMint, ok := big.NewInt(0).SetString(send.MMint, 10)
-			if !ok {
-				send.StatusMessage = fmt.Sprintf("MMint cannot parse")
-				send.Status = types.SendStatus_Aborted
-				goto END
-			}
-			gasFee := big.NewInt(int64(gasFeeInZeta))
-			toMint := big.NewInt(0).Sub(mBurnt, gasFee)
-			if toMint.Cmp(mMint) < 0 { // not enough burnt
-				abort = true
-				send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", mMint, toMint)
-			}
+			//gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
+			//if !isFound {
+			//	send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
+			//	send.Status = types.SendStatus_Aborted
+			//	goto END
+			//}
+			//mi := gasPrice.MedianIndex
+			//medianPrice := gasPrice.Prices[mi]
+			//price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
+			//send.GasPrice = fmt.Sprintf("%.0f", price)
+			//gasLimit := float64(90_000) //TODO: let user supply this
+			//exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
+			//gasFeeInZeta := price * gasLimit * exchangeRate
+			//mBurnt, ok := big.NewInt(0).SetString(send.MBurnt, 10)
+			//if !ok {
+			//	send.StatusMessage = fmt.Sprintf("MBurnt cannot parse")
+			//	send.Status = types.SendStatus_Aborted
+			//	goto END
+			//}
+			//mMint, ok := big.NewInt(0).SetString(send.MMint, 10)
+			//if !ok {
+			//	send.StatusMessage = fmt.Sprintf("MMint cannot parse")
+			//	send.Status = types.SendStatus_Aborted
+			//	goto END
+			//}
+			//gasFee := big.NewInt(int64(gasFeeInZeta))
+			//toMint := big.NewInt(0).Sub(mBurnt, gasFee)
+			//if toMint.Cmp(mMint) < 0 { // not enough burnt
+			//	abort = true
+			//	send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", mMint, toMint)
+			//}
 		}
 
 		var chain common.Chain // the chain for outbound
@@ -166,8 +165,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		medianPrice := gasPrice.Prices[mi]
 		price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
 		send.GasPrice = fmt.Sprintf("%.0f", price)
-		gasLimit := float64(90_000) //TODO: let user supply this
-		exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
+		gasLimit := float64(250_000) //TODO: let user supply this
+		exchangeRate := 1.0          // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
 		gasFeeInZeta := price * gasLimit * exchangeRate
 		mBurnt, err := strconv.ParseFloat(send.MBurnt, 64)
 		if err != nil {
