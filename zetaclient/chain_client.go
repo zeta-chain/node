@@ -240,98 +240,99 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 
 	// SUPPLY
 	var supply string // lockedAmount on ETH, totalSupply on other chains
-	if chainOb.chain == common.ETHChain {
-		input, err := chainOb.abi.Pack("getLockedAmount")
-		if err != nil {
-			return fmt.Errorf("fail to getLockedAmount")
-		}
-		bn, err := chainOb.Client.BlockNumber(context.TODO())
-		if err != nil {
-			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-			return err
-		}
-		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-		toAddr := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
-		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-			From: fromAddr,
-			To:   &toAddr,
-			Data: input,
-		}, big.NewInt(0).SetUint64(bn))
-		if err != nil {
-			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-			return err
-		}
-		output, err := chainOb.abi.Unpack("getLockedAmount", res)
-		if err != nil {
-			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-			return err
-		}
-		lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
-		supply = lockedAmount.String()
-
-	} else if chainOb.chain == common.BSCChain {
-		input, err := chainOb.abi.Pack("totalSupply")
-		if err != nil {
-			return fmt.Errorf("fail to totalSupply")
-		}
-		bn, err := chainOb.Client.BlockNumber(context.TODO())
-		if err != nil {
-			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-			return err
-		}
-		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-		toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
-		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-			From: fromAddr,
-			To:   &toAddr,
-			Data: input,
-		}, big.NewInt(0).SetUint64(bn))
-		if err != nil {
-			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-			return err
-		}
-		output, err := chainOb.abi.Unpack("totalSupply", res)
-		if err != nil {
-			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-			return err
-		}
-		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
-		supply = totalSupply.String()
-	} else if chainOb.chain == common.POLYGONChain {
-		input, err := chainOb.abi.Pack("totalSupply")
-		if err != nil {
-			return fmt.Errorf("fail to totalSupply")
-		}
-		bn, err := chainOb.Client.BlockNumber(context.TODO())
-		if err != nil {
-			log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-			return err
-		}
-		fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-		toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
-		res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-			From: fromAddr,
-			To:   &toAddr,
-			Data: input,
-		}, big.NewInt(0).SetUint64(bn))
-		if err != nil {
-			log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-			return err
-		}
-		output, err := chainOb.abi.Unpack("totalSupply", res)
-		if err != nil {
-			log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-			return err
-		}
-		totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-		//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
-		supply = totalSupply.String()
-	} else {
-		log.Error().Msgf("chain not supported %s", chainOb.chain)
-		return fmt.Errorf("unsupported chain %s", chainOb.chain)
-	}
+	supply = "100"
+	//if chainOb.chain == common.ETHChain {
+	//	input, err := chainOb.abi.Pack("getLockedAmount")
+	//	if err != nil {
+	//		return fmt.Errorf("fail to getLockedAmount")
+	//	}
+	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+	//		return err
+	//	}
+	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
+	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
+	//		From: fromAddr,
+	//		To:   &toAddr,
+	//		Data: input,
+	//	}, big.NewInt(0).SetUint64(bn))
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+	//		return err
+	//	}
+	//	output, err := chainOb.abi.Unpack("getLockedAmount", res)
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+	//		return err
+	//	}
+	//	lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
+	//	supply = lockedAmount.String()
+	//
+	//} else if chainOb.chain == common.BSCChain {
+	//	input, err := chainOb.abi.Pack("totalSupply")
+	//	if err != nil {
+	//		return fmt.Errorf("fail to totalSupply")
+	//	}
+	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+	//		return err
+	//	}
+	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
+	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
+	//		From: fromAddr,
+	//		To:   &toAddr,
+	//		Data: input,
+	//	}, big.NewInt(0).SetUint64(bn))
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+	//		return err
+	//	}
+	//	output, err := chainOb.abi.Unpack("totalSupply", res)
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+	//		return err
+	//	}
+	//	totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+	//	supply = totalSupply.String()
+	//} else if chainOb.chain == common.POLYGONChain {
+	//	input, err := chainOb.abi.Pack("totalSupply")
+	//	if err != nil {
+	//		return fmt.Errorf("fail to totalSupply")
+	//	}
+	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
+	//		return err
+	//	}
+	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
+	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
+	//		From: fromAddr,
+	//		To:   &toAddr,
+	//		Data: input,
+	//	}, big.NewInt(0).SetUint64(bn))
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
+	//		return err
+	//	}
+	//	output, err := chainOb.abi.Unpack("totalSupply", res)
+	//	if err != nil {
+	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
+	//		return err
+	//	}
+	//	totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
+	//	supply = totalSupply.String()
+	//} else {
+	//	log.Error().Msgf("chain not supported %s", chainOb.chain)
+	//	return fmt.Errorf("unsupported chain %s", chainOb.chain)
+	//}
 
 	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
@@ -394,7 +395,7 @@ func (chainOb *ChainObserver) observeChain() error {
 		Topics:    topics,
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
-	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum))
+	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(chainOb.mpiAddress))
 
 	// Finally query the for the logs
 	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
@@ -407,7 +408,7 @@ func (chainOb *ChainObserver) observeChain() error {
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
-		log.Debug().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
+		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
 
 		switch vLog.Topics[0].Hex() {
 		case logMPISendSignatureHash.Hex():

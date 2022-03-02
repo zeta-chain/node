@@ -119,7 +119,7 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID uint16
 	var data []byte
 	var err error
 
-	data, err = signer.abi.Pack("zetaMessageReceive", sender, srcChainID, to, amount, message, sendHash)
+	data, err = signer.abi.Pack("zetaMessageReceive", sender.Bytes(), srcChainID, to, amount, message, sendHash)
 	if err != nil {
 		return nil, fmt.Errorf("pack error: %w", err)
 	}

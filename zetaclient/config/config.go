@@ -606,14 +606,19 @@ const (
 
 var Chains = map[string]*types.ChainETHish{
 	"ETH": {
-		Name:               common.Chain("ETH"),
+		Name:               common.ETHChain,
 		MPIContractAddress: "0x132b042bD5198a48E4D273f46b979E5f13Bd9239",
 		ChainID:            5,
 	},
 	"BSC": {
-		Name:               common.Chain("BSC"),
+		Name:               common.BSCChain,
 		MPIContractAddress: "0x96cE47e42A73649CFe33d93D93ACFbEc6FD5ee14",
 		ChainID:            97,
+	},
+	"POLYGON": {
+		Name:               common.POLYGONChain,
+		MPIContractAddress: "0x692E8A48634B530b4BFF1e621FC18C82F471892c",
+		ChainID:            8001, // Should be 80001, but the chainid is uint16 (should be uint32 instead??)
 	},
 }
 

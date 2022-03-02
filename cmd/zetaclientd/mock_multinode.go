@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
@@ -12,6 +13,25 @@ import (
 	"path/filepath"
 	"syscall"
 )
+
+func GetZetaTestSignature() mc.TestSigner {
+	pkstring := os.Getenv("PRIVKEY")
+	if pkstring == "" {
+		log.Fatal().Msg("missing env variable PRIVKEY")
+		os.Exit(1)
+	}
+	privateKey, err := crypto.HexToECDSA(pkstring)
+	if err != nil {
+		log.Err(err).Msg("TEST private key error")
+		os.Exit(1)
+	}
+	tss := mc.TestSigner{
+		PrivKey: privateKey,
+	}
+	log.Debug().Msg(fmt.Sprintf("tss key address: %s", tss.Address()))
+
+	return tss
+}
 
 func mock_integration_test() {
 	SetupConfigForTest() // setup meta-prefix
@@ -39,16 +59,7 @@ func mock_integration_test() {
 		return
 	}
 
-	// setup mock TSS signers:
-	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
-	if err != nil {
-		log.Err(err).Msg("TEST private key error")
-		return
-	}
-	tss := mc.TestSigner{
-		PrivKey: privateKey,
-	}
+	tss := GetZetaTestSignature()
 
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
@@ -109,17 +120,20 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss.Address(), tss, mcconfig.ETH_ZETALOCK_ABI, ethcommon.HexToAddress(mcconfig.ETH_ZETALOCK_ADDRESS))
+	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["ETH"].MPIContractAddress)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, ethMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.NONETH_ZETA_ABI, ethcommon.HexToAddress(mcconfig.BSC_TOKEN_ADDRESS))
+	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["BSC"].MPIContractAddress)
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, bscMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
-	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.NONETH_ZETA_ABI, ethcommon.HexToAddress(mcconfig.POLYGON_TOKEN_ADDRESS))
+	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["POLYGON"].MPIContractAddress)
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, polygonMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
 		return nil, err
