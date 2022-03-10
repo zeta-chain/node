@@ -3,5 +3,6 @@ vue/node_modules
 vue/dist
 release/
 .idea/
+.DS_Store
 
 coverage.out
