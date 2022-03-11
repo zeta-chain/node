@@ -17,8 +17,8 @@ import (
 func GetZetaTestSignature() mc.TestSigner {
 	pkstring := os.Getenv("PRIVKEY")
 	if pkstring == "" {
-		log.Fatal().Msg("missing env variable PRIVKEY")
-		os.Exit(1)
+		log.Info().Msgf("missing env variable PRIVKEY; using default with address %s", mcconfig.TSS_TEST_ADDRESS)
+		pkstring = mcconfig.TSS_TEST_PRIVKEY
 	}
 	privateKey, err := crypto.HexToECDSA(pkstring)
 	if err != nil {
