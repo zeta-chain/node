@@ -1,6 +1,3 @@
-//go:build testnet
-// +build testnet
-
 package cmd
 
 const (
