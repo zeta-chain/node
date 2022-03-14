@@ -239,15 +239,6 @@ func (co *CoreObserver) processSend(send *types.Send, idx int) {
 		return
 	}
 
-	processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-	if err != nil {
-		log.Err(err).Msg("IsSendOutTxProcessed error")
-	}
-	if processed {
-		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
-		return
-	}
-
 	signer := co.signerMap[toChain]
 	message := []byte(send.Message)
 
@@ -268,16 +259,39 @@ func (co *CoreObserver) processSend(send *types.Send, idx int) {
 	}
 	var tx *ethtypes.Transaction
 
-	for {
-		if time.Now().Second()%5 == 0 {
-			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+	done := make(chan bool)
+	go func() {
+		for {
+			processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
 			if err != nil {
-				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
-			} else {
+				log.Err(err).Msg("IsSendOutTxProcessed error")
+			}
+			if processed {
+				log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
+				done <- true
 				break
 			}
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
+	}()
+
+	for {
+		select {
+		case <-done:
+			log.Info().Msg("breaking SignOutBoundTx loop")
+			break
+		default:
+			if time.Now().Second()%5 == 0 {
+				tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
+				if err != nil {
+					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+				} else {
+					break
+				}
+			}
+			time.Sleep(time.Second)
+		}
+
 	}
 
 	outTxHash := tx.Hash().Hex()
