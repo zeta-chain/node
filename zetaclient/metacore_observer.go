@@ -259,7 +259,7 @@ func (co *CoreObserver) processSend(send *types.Send, idx int) {
 	}
 	var tx *ethtypes.Transaction
 
-	done := make(chan bool)
+	done := make(chan bool, 1)
 	go func() {
 		for {
 			processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
