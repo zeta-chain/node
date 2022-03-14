@@ -269,7 +269,7 @@ func (co *CoreObserver) processSend(send *types.Send, idx int) {
 			if processed {
 				log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
 				done <- true
-				break
+				return
 			}
 			time.Sleep(5 * time.Second)
 		}
