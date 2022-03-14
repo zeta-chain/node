@@ -271,22 +271,23 @@ func (co *CoreObserver) processSend(send *types.Send, idx int) {
 				done <- true
 				break
 			}
-			time.Sleep(time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
+SIGNLOOP:
 	for {
 		select {
 		case <-done:
 			log.Info().Msg("breaking SignOutBoundTx loop")
-			break
+			break SIGNLOOP
 		default:
 			if time.Now().Second()%5 == 0 {
 				tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				} else {
-					break
+					break SIGNLOOP
 				}
 			}
 			time.Sleep(time.Second)
