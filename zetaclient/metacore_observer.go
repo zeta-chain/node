@@ -303,7 +303,11 @@ SIGNLOOP:
 		if err != nil {
 			log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
 		}
-
+		_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
+		if err != nil {
+			log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+		}
+		co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
 	}
 
 	co.lock.Lock()
@@ -312,12 +316,7 @@ SIGNLOOP:
 		co.sendStatus[send.Index] = Pending
 	}
 	co.lock.Unlock()
-	_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-	if err != nil {
-		log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
-	}
-	co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
-
+	
 	co.sendProcessorLock.Lock()
 	delete(co.sendProcessorMap, send.Index)
 	co.sendProcessorLock.Unlock()
