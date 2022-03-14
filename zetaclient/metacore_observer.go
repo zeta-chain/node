@@ -183,7 +183,7 @@ func (co *CoreObserver) observeReceive() {
 }
 
 func (co *CoreObserver) processOutboundQueueParallel() {
-	MAX_PROCESSOR := 10 // max send processor
+	MAX_PROCESSOR := 5 // max send processor
 	guard := make(chan struct{}, MAX_PROCESSOR)
 
 	for {
@@ -277,7 +277,7 @@ func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct
 				done <- true
 				return
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(8 * time.Second)
 		}
 	}()
 
@@ -288,7 +288,7 @@ SIGNLOOP:
 			log.Info().Msg("breaking SignOutBoundTx loop")
 			break SIGNLOOP
 		default:
-			if time.Now().Second()%5 == 0 {
+			if time.Now().Second()%8 == int(sendhash[0])%8 {
 				tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
