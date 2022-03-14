@@ -183,6 +183,9 @@ func (co *CoreObserver) observeReceive() {
 }
 
 func (co *CoreObserver) processOutboundQueueParallel() {
+	MAX_PROCESSOR := 10 // max send processor
+	guard := make(chan struct{}, MAX_PROCESSOR)
+
 	for {
 		for idx, send := range co.sendQueue {
 			co.lock.Lock()
@@ -208,14 +211,17 @@ func (co *CoreObserver) processOutboundQueueParallel() {
 			}
 
 			log.Info().Msgf("# of Pending send %d", nPendingSend)
-
-			go co.processSend(send, idx)
+			guard <- struct{}{}
+			go co.processSend(send, idx, guard)
 		}
 		time.Sleep(time.Second)
 	}
 }
 
-func (co *CoreObserver) processSend(send *types.Send, idx int) {
+func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct{}) {
+	defer func() {
+		<-guard
+	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.MMint, 10)
 	if !ok {
@@ -316,7 +322,7 @@ SIGNLOOP:
 		co.sendStatus[send.Index] = Pending
 	}
 	co.lock.Unlock()
-	
+
 	co.sendProcessorLock.Lock()
 	delete(co.sendProcessorMap, send.Index)
 	co.sendProcessorLock.Unlock()
