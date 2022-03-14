@@ -295,15 +295,15 @@ SIGNLOOP:
 
 	}
 
-	outTxHash := tx.Hash().Hex()
-	log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
-
-	if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
+	if tx != nil {
+		outTxHash := tx.Hash().Hex()
+		log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
 		log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
 		err = signer.Broadcast(tx)
 		if err != nil {
 			log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
 		}
+
 	}
 
 	co.lock.Lock()
