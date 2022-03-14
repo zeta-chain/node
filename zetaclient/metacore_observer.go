@@ -26,16 +26,18 @@ const (
 )
 
 type CoreObserver struct {
-	sendQueue  []*types.Send
-	sendMap    map[string]*types.Send // send.Index => send
-	sendStatus map[string]TxStatus    // send.Index => status
-	recvMap    map[string]*types.Receive
-	recvStatus map[string]TxStatus
-	bridge     *MetachainBridge
-	signerMap  map[common.Chain]*Signer
-	clientMap  map[common.Chain]*ChainObserver
-	lock       sync.Mutex
-	httpServer *HTTPServer
+	sendQueue         []*types.Send
+	sendMap           map[string]*types.Send // send.Index => send
+	sendStatus        map[string]TxStatus    // send.Index => status
+	recvMap           map[string]*types.Receive
+	recvStatus        map[string]TxStatus
+	bridge            *MetachainBridge
+	signerMap         map[common.Chain]*Signer
+	clientMap         map[common.Chain]*ChainObserver
+	sendProcessorMap  map[string]bool
+	sendProcessorLock sync.Mutex
+	lock              sync.Mutex
+	httpServer        *HTTPServer
 }
 
 func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, server *HTTPServer) *CoreObserver {
@@ -47,6 +49,7 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.sendStatus = make(map[string]TxStatus)
 	co.recvMap = make(map[string]*types.Receive)
 	co.recvStatus = make(map[string]TxStatus)
+	co.sendProcessorMap = make(map[string]bool)
 	co.clientMap = clientMap
 	co.httpServer = server
 	return &co
@@ -60,7 +63,7 @@ func (co *CoreObserver) MonitorCore() {
 	go co.observeReceive()
 
 	// Pull items from queue
-	go co.processOutboundQueue()
+	go co.processOutboundQueueParallel()
 
 }
 
@@ -179,10 +182,8 @@ func (co *CoreObserver) observeReceive() {
 	//}
 }
 
-func (co *CoreObserver) processOutboundQueue() {
-	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+func (co *CoreObserver) processOutboundQueueParallel() {
 	for {
-		startTime := time.Now()
 		for idx, send := range co.sendQueue {
 			co.lock.Lock()
 			nPendingSend := len(co.sendMap)
@@ -195,96 +196,114 @@ func (co *CoreObserver) processOutboundQueue() {
 				continue
 			}
 
-			log.Info().Msgf("# of Pending send %d", nPendingSend)
-			amount, ok := new(big.Int).SetString(send.MMint, 10)
-			if !ok {
-				log.Error().Msg("error converting MBurnt to big.Int")
-				//time.Sleep(5 * time.Second)
+			co.sendProcessorLock.Lock()
+			_, ok = co.sendProcessorMap[send.Index]
+			co.sendProcessorLock.Unlock()
+			if ok { // a go routine has already been spawned to handle this Send.
 				continue
-			}
-
-			var to ethcommon.Address
-			var err error
-			var toChain common.Chain
-			if send.Status == types.SendStatus_Revert {
-				to = ethcommon.HexToAddress(send.Sender)
-				toChain, err = common.ParseChain(send.SenderChain)
-				log.Info().Msgf("Abort: reverting inbound")
 			} else {
-				to = ethcommon.HexToAddress(send.Receiver)
-				toChain, err = common.ParseChain(send.ReceiverChain)
-			}
-			if err != nil {
-				log.Err(err).Msg("ParseChain fail; skip")
-				time.Sleep(5 * time.Second)
-				continue
+				co.sendProcessorLock.Lock()
+				co.sendProcessorMap[send.Index] = true
+				co.sendProcessorLock.Unlock()
 			}
 
-			processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-			if err != nil {
-				log.Err(err).Msg("IsSendOutTxProcessed error")
-				//time.Sleep(1 * time.Second)
-				continue
-			}
-			if processed {
-				log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
-				time.Sleep(1 * time.Second)
-				continue
-			}
+			log.Info().Msgf("# of Pending send %d", nPendingSend)
 
-			signer := co.signerMap[toChain]
-			message := []byte(send.Message)
+			go co.processSend(send, idx)
+		}
+		time.Sleep(time.Second)
+	}
+}
 
-			var gasLimit uint64 = 90_000
+func (co *CoreObserver) processSend(send *types.Send, idx int) {
+	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	amount, ok := new(big.Int).SetString(send.MMint, 10)
+	if !ok {
+		log.Error().Msg("error converting MBurnt to big.Int")
+		return
+	}
 
-			log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d, in queue %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight, idx)
-			sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
-			if err != nil || len(sendHash) != 32 {
-				log.Err(err).Msgf("decode sendHash %s error", send.Index)
-			}
-			var sendhash [32]byte
-			copy(sendhash[:32], sendHash[:32])
-			gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
-			if !ok {
-				log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
-			}
-			var tx *ethtypes.Transaction
+	var to ethcommon.Address
+	var err error
+	var toChain common.Chain
+	if send.Status == types.SendStatus_Revert {
+		to = ethcommon.HexToAddress(send.Sender)
+		toChain, err = common.ParseChain(send.SenderChain)
+		log.Info().Msgf("Abort: reverting inbound")
+	} else {
+		to = ethcommon.HexToAddress(send.Receiver)
+		toChain, err = common.ParseChain(send.ReceiverChain)
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("ParseChain fail; skip")
+		return
+	}
 
+	processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+	if err != nil {
+		log.Err(err).Msg("IsSendOutTxProcessed error")
+	}
+	if processed {
+		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
+		return
+	}
+
+	signer := co.signerMap[toChain]
+	message := []byte(send.Message)
+
+	var gasLimit uint64 = 90_000
+
+	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d, in queue %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight, idx)
+	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
+	if err != nil || len(sendHash) != 32 {
+		log.Err(err).Msgf("decode sendHash %s error", send.Index)
+		return
+	}
+	var sendhash [32]byte
+	copy(sendhash[:32], sendHash[:32])
+	gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
+	if !ok {
+		log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+		return
+	}
+	var tx *ethtypes.Transaction
+
+	for {
+		if time.Now().Second()%5 == 0 {
 			tx, err = signer.SignOutboundTx(amount, to, gasLimit, message, sendhash, send.Nonce, gasprice)
 			if err != nil {
 				log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+			} else {
 				break
 			}
-
-			outTxHash := tx.Hash().Hex()
-			log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
-
-			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
-				log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
-				err = signer.Broadcast(tx)
-				if err != nil {
-					log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
-				}
-			}
-
-			co.lock.Lock()
-			_, ok = co.sendStatus[send.Index]
-			if ok {
-				co.sendStatus[send.Index] = Pending
-			}
-			co.lock.Unlock()
-			_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-			if err != nil {
-				log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
-			}
-			co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
-
-			break
-
 		}
-		endTime := time.Now()
-		if endTime.Sub(startTime).Milliseconds() < 1000 {
-			time.Sleep(time.Duration(1000-endTime.Sub(startTime).Milliseconds()) * time.Millisecond)
+		time.Sleep(time.Second)
+	}
+
+	outTxHash := tx.Hash().Hex()
+	log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
+
+	if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
+		log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
+		err = signer.Broadcast(tx)
+		if err != nil {
+			log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
 		}
 	}
+
+	co.lock.Lock()
+	_, ok = co.sendStatus[send.Index]
+	if ok {
+		co.sendStatus[send.Index] = Pending
+	}
+	co.lock.Unlock()
+	_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
+	if err != nil {
+		log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+	}
+	co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
+
+	co.sendProcessorLock.Lock()
+	delete(co.sendProcessorMap, send.Index)
+	co.sendProcessorLock.Unlock()
 }
