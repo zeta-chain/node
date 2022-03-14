@@ -43,7 +43,7 @@ const (
 	BSC_BLOCK_TIME  = 10
 
 	// to catch up:
-	MAX_BLOCKS_PER_PERIOD       = 64
+	MAX_BLOCKS_PER_PERIOD       = 10000
 	TIMEOUT_THRESHOLD_FOR_RETRY = 12 // 120 blocks for Zetachain; roughly 600s or 10min
 )
 
