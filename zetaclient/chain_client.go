@@ -193,7 +193,8 @@ func (chainOb *ChainObserver) WatchRouter() {
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	for range chainOb.ticker.C {
+	gasTicker := time.NewTicker(60 * time.Second)
+	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
 			log.Err(err).Msg("PostGasPrice error")
@@ -562,10 +563,10 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					fmt.Println("error unpacking Unlock")
 					continue
 				}
-				fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				fmt.Printf("data: %d\n", retval[0].(*big.Int))
+				//fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
+				//fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
+				//fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
+				//fmt.Printf("data: %d\n", retval[0].(*big.Int))
 				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
@@ -630,10 +631,10 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					fmt.Println("error unpacking MMinted")
 					continue
 				}
-				fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				fmt.Printf("data: %d\n", retval[0].(*big.Int))
+				//fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
+				//fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
+				//fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
+				//fmt.Printf("data: %d\n", retval[0].(*big.Int))
 				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 				fmt.Printf("Sending PostConfirmation to zetacore...\n")
 				sendhash := vLog.Topics[2].Hex()
