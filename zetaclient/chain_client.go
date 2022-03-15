@@ -589,7 +589,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					fmt.Printf("Zeta tx hash: %s\n", metaHash)
 				} else {
 					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-					return false, nil
+					return true, nil
 				}
 				return true, nil
 			}
