@@ -213,8 +213,9 @@ func (co *CoreObserver) processOutboundQueueParallel() {
 			log.Info().Msgf("# of Pending send %d", nPendingSend)
 			guard <- struct{}{}
 			go co.processSend(send, idx, guard)
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
+
 	}
 }
 
@@ -223,6 +224,7 @@ func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct
 		<-guard
 	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+
 	amount, ok := new(big.Int).SetString(send.MMint, 10)
 	if !ok {
 		log.Error().Msg("error converting MBurnt to big.Int")
@@ -242,6 +244,17 @@ func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("ParseChain fail; skip")
+		return
+	}
+
+	// Early return if the send is already processed
+	time.Sleep(3 * time.Second)
+	processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+	if err != nil {
+		log.Err(err).Msg("IsSendOutTxProcessed error")
+	}
+	if processed {
+		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
 		return
 	}
 
@@ -304,10 +317,12 @@ SIGNLOOP:
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
 		log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
-		log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
-		err = signer.Broadcast(tx)
-		if err != nil {
-			log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+		if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
+			log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
+			err = signer.Broadcast(tx)
+			if err != nil {
+				log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+			}
 		}
 		_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
 		if err != nil {
