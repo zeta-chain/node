@@ -247,7 +247,6 @@ func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct
 	}
 
 	// Early return if the send is already processed
-	time.Sleep(3 * time.Second)
 	processed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
 	if err != nil {
 		log.Err(err).Msg("IsSendOutTxProcessed error")
@@ -289,7 +288,7 @@ func (co *CoreObserver) processSend(send *types.Send, idx int, guard chan struct
 				done <- true
 				return
 			}
-			time.Sleep(16 * time.Second)
+			time.Sleep(8 * time.Second)
 		}
 	}()
 
@@ -298,7 +297,7 @@ SIGNLOOP:
 	for range signTicker.C {
 		select {
 		case <-done:
-			log.Info().Msg("breaking SignOutBoundTx loop")
+			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
 			if time.Now().Second()%16 == int(sendhash[0])%16 {
@@ -308,26 +307,24 @@ SIGNLOOP:
 				} else {
 					break SIGNLOOP
 				}
+				if tx != nil {
+					outTxHash := tx.Hash().Hex()
+					log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
+					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
+						log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
+						err = signer.Broadcast(tx)
+						if err != nil {
+							log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+						}
+					}
+					_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
+					if err != nil {
+						log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+					}
+					co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
+				}
 			}
 		}
-
-	}
-
-	if tx != nil {
-		outTxHash := tx.Hash().Hex()
-		log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
-		if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
-			log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
-			err = signer.Broadcast(tx)
-			if err != nil {
-				log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
-			}
-		}
-		_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-		if err != nil {
-			log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
-		}
-		co.clientMap[toChain].AddTxToWatchList(outTxHash, send.Index)
 	}
 
 	co.lock.Lock()
