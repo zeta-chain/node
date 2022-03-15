@@ -22,6 +22,7 @@ type CoreObserver struct {
 	sendNew     chan *types.Send
 	sendDone    chan *types.Send
 	signerSlots chan bool
+	shepherds   map[string]bool
 }
 
 func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, server *HTTPServer) *CoreObserver {
@@ -39,6 +40,8 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	for i := 0; i < 10; i++ {
 		co.signerSlots <- true
 	}
+	co.shepherds = make(map[string]bool)
+
 	return &co
 }
 
@@ -70,19 +73,19 @@ func (co *CoreObserver) startObserve() {
 }
 
 func (co *CoreObserver) shepherdManager() {
-	shepherds := make(map[string]bool)
 	for {
 		select {
 		case send := <-co.sendNew:
-			if _, ok := shepherds[send.Index]; !ok {
+			if _, ok := co.shepherds[send.Index]; !ok {
 				log.Info().Msgf("shepherd manager: new send %s", send.Index)
-				shepherds[send.Index] = true
+				co.shepherds[send.Index] = true
+				log.Info().Msg("waiting on a signer slot...")
 				<-co.signerSlots
+				log.Info().Msg("got back a signer slot! spawn shepherd")
 				go co.shepherdSend(send)
 			}
 		case send := <-co.sendDone:
-			delete(shepherds, send.Index)
-			co.signerSlots <- true
+			delete(co.shepherds, send.Index)
 		}
 	}
 }
@@ -91,7 +94,11 @@ func (co *CoreObserver) shepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
-	defer func() { co.sendDone <- send }()
+	defer func() {
+		log.Info().Msg("Giving back a signer slot")
+		co.signerSlots <- true
+		co.sendDone <- send
+	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.MMint, 10)
 	if !ok {
