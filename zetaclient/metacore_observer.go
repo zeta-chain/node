@@ -36,6 +36,9 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
 	co.signerSlots = make(chan bool, 10)
+	for i := 0; i < 10; i++ {
+		co.signerSlots <- true
+	}
 	return &co
 }
 
