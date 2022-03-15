@@ -19,8 +19,9 @@ type CoreObserver struct {
 	clientMap  map[common.Chain]*ChainObserver
 	httpServer *HTTPServer
 	// channels for shepherd manager
-	sendNew  chan *types.Send
-	sendDone chan *types.Send
+	sendNew     chan *types.Send
+	sendDone    chan *types.Send
+	signerSlots chan bool
 }
 
 func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, server *HTTPServer) *CoreObserver {
@@ -34,6 +35,7 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
+	co.signerSlots = make(chan bool, 10)
 	return &co
 }
 
@@ -72,10 +74,12 @@ func (co *CoreObserver) shepherdManager() {
 			if _, ok := shepherds[send.Index]; !ok {
 				log.Info().Msgf("shepherd manager: new send %s", send.Index)
 				shepherds[send.Index] = true
+				<-co.signerSlots
 				go co.shepherdSend(send)
 			}
 		case send := <-co.sendDone:
 			delete(shepherds, send.Index)
+			co.signerSlots <- true
 		}
 	}
 }
