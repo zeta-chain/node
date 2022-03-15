@@ -533,7 +533,9 @@ func (chainOb *ChainObserver) Stop() error {
 	return chainOb.db.Close()
 }
 
-func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error) {
+// returns: isIncluded, isConfirmed, Error
+// If isConfirmed, it also post to ZetaCore
+func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool, error) {
 	if chainOb.chain == common.ETHChain {
 		topics[2][0] = ethcommon.HexToHash(sendHash)
 		query := ethereum.FilterQuery{
@@ -544,15 +546,15 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 		}
 		logs, err := chainOb.client.FilterLogs(context.Background(), query)
 		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
+			return false, false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
 		}
 		if len(logs) == 0 {
-			return false, nil
+			return false, false, nil
 		}
 		if len(logs) > 1 {
 			log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
 			log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-			return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
+			return true, true, fmt.Errorf("More than two logs with send hash %s", sendHash)
 		}
 		for _, vLog := range logs {
 			switch vLog.Topics[0].Hex() {
@@ -563,16 +565,11 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					fmt.Println("error unpacking Unlock")
 					continue
 				}
-				//fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				//fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				//fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				//fmt.Printf("data: %d\n", retval[0].(*big.Int))
 				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
-					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[2].Hex()
-					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 					var mMint string = retval[0].(*big.Int).String()
 					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
 						sendhash,
@@ -587,11 +584,11 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 						continue
 					}
 					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					return true, true, nil
 				} else {
-					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-					return true, nil
+					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d, chain %s\n", vLog.BlockNumber, chainOb.LastBlock, chainOb.chain)
+					return true, false, nil
 				}
-				return true, nil
 			}
 		}
 	} else { // for BSC and Polygon
@@ -602,7 +599,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 		} else if chainOb.chain == common.POLYGONChain {
 			contractAddresses[0] = ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
 		} else {
-			return false, fmt.Errorf("unsupported chain %s", chainOb.chain)
+			return false, false, fmt.Errorf("unsupported chain %s", chainOb.chain)
 		}
 		query := ethereum.FilterQuery{
 			Addresses: contractAddresses,
@@ -612,52 +609,51 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 		}
 		logs, err := chainOb.client.FilterLogs(context.Background(), query)
 		if err != nil {
-			return false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
+			return false, false, fmt.Errorf("IsSendOutTxProcessed: client FilterLog fail %w", err)
 		}
 		if len(logs) == 0 {
-			return false, nil
+			return false, false, nil
 		}
 		if len(logs) > 1 {
-			log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
-			log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-			return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
+			log.Error().Msgf("More than two logs with send hash %s", sendHash)
+			log.Error().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
+			return true, true, fmt.Errorf("More than two logs with send hash %s", sendHash)
 		}
 		for _, vLog := range logs {
 			switch vLog.Topics[0].Hex() {
 			case logMMintedSignatureHash.Hex():
-				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
+				log.Info().Msgf("Found sendHash %s on chain %s", sendHash, chainOb.chain)
 				retval, err := chainOb.abi.Unpack("MMinted", vLog.Data)
 				if err != nil {
 					fmt.Println("error unpacking MMinted")
 					continue
 				}
-				//fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-				//fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-				//fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-				//fmt.Printf("data: %d\n", retval[0].(*big.Int))
 				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
-				fmt.Printf("Sending PostConfirmation to zetacore...\n")
-				sendhash := vLog.Topics[2].Hex()
-				//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-				var mMint string = retval[0].(*big.Int).String()
-				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-					sendhash,
-					vLog.TxHash.Hex(),
-					vLog.BlockNumber,
-					mMint,
-					common.ReceiveStatus_Success,
-					chainOb.chain.String(),
-				)
-				if err != nil {
-					log.Err(err).Msg("error posting confirmation to meta core")
-					continue
+				if vLog.BlockNumber+config.BSC_CONFIRMATION_COUNT < chainOb.LastBlock {
+					fmt.Printf("Sending PostConfirmation to zetacore...\n")
+					sendhash := vLog.Topics[2].Hex()
+					var mMint string = retval[0].(*big.Int).String()
+					metaHash, err := chainOb.bridge.PostReceiveConfirmation(
+						sendhash,
+						vLog.TxHash.Hex(),
+						vLog.BlockNumber,
+						mMint,
+						common.ReceiveStatus_Success,
+						chainOb.chain.String(),
+					)
+					if err != nil {
+						log.Err(err).Msg("error posting confirmation to meta core")
+						continue
+					}
+					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					return true, true, nil
+				} else {
+					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d, chain %s\n", vLog.BlockNumber, chainOb.LastBlock, chainOb.chain)
+					return true, false, nil
 				}
-				fmt.Printf("Zeta tx hash: %s\n", metaHash)
-
-				return true, nil
 			}
 		}
 	}
 
-	return false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
+	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
 }
