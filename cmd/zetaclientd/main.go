@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/rs/zerolog"
@@ -168,7 +167,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	}
 
 	//fmt.Print("Press 'Enter' to start...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	//bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	httpServer := mc.NewHTTPServer()
 
