@@ -167,7 +167,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	fmt.Print("Press 'Enter' to start...")
+	//fmt.Print("Press 'Enter' to start...")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	httpServer := mc.NewHTTPServer()
