@@ -183,7 +183,7 @@ func (co *CoreObserver) observeReceive() {
 }
 
 func (co *CoreObserver) processOutboundQueueParallel() {
-	MAX_PROCESSOR := 5 // max send processor
+	MAX_PROCESSOR := 100 // max send processor
 	guard := make(chan struct{}, MAX_PROCESSOR)
 
 	for {
@@ -213,9 +213,8 @@ func (co *CoreObserver) processOutboundQueueParallel() {
 			log.Info().Msgf("# of Pending send %d", nPendingSend)
 			guard <- struct{}{}
 			go co.processSend(send, idx, guard)
-			time.Sleep(time.Second)
 		}
-
+		time.Sleep(10 * time.Second)
 	}
 }
 
