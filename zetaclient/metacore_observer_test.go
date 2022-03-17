@@ -90,7 +90,7 @@ func (s *COSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	metaContractAddress := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
+	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
 	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())

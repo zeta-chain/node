@@ -25,6 +25,11 @@ var (
 	ETH_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
 	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
 	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
+
+	// MPI contract addresses
+	ETH_MPI_ADDRESS     = "0xAA8e5c4b142d5c8ab75e7710E579C8e76cc15b85"
+	POLYGON_MPI_ADDRESS = "0x6b8344F178CaaAc2068967c7ee6a067c3F9dC9AC"
+	BSC_MPI_ADDRESS     = "0xdb9828f2bB2f9ab7C876768618768cC51fE10BAc"
 )
 
 const (
@@ -36,11 +41,6 @@ const (
 // Constants
 // #nosec G101
 const (
-	// Routers
-	ETH_ZETALOCK_ADDRESS  = "0xAA8e5c4b142d5c8ab75e7710E579C8e76cc15b85"
-	ETH_TOKEN_ADDRESS     = "0xf5e744B79337ed1D72DC51768c2022aA6ca60De1"
-	POLYGON_TOKEN_ADDRESS = "0x6b8344F178CaaAc2068967c7ee6a067c3F9dC9AC"
-	BSC_TOKEN_ADDRESS     = "0xdb9828f2bB2f9ab7C876768618768cC51fE10BAc"
 
 	// Ticker timers
 	ETH_BLOCK_TIME  = 12
