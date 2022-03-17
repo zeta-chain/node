@@ -13,6 +13,7 @@ import (
 
 type Payload struct {
 	sender       []byte
+	srcChainID   uint16
 	destChainID  uint16
 	destContract []byte
 	zetaAmount   *big.Int
@@ -91,6 +92,7 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 
 	return Payload{
 		sender:       sender.Bytes(),
+		srcChainID:   cl.chain_id,
 		destChainID:  destChainID,
 		destContract: destContract,
 		zetaAmount:   zetaAmount,
@@ -116,7 +118,7 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 	data, err := cl.mpi_abi.Pack(
 		"zetaMessageReceive",
 		payload.sender,
-		payload.destChainID,
+		payload.srcChainID,
 		ethcommon.BytesToAddress(payload.destContract),
 		payload.zetaAmount,
 		payload.message,
