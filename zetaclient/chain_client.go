@@ -101,7 +101,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.POLYGON_TOKEN_ADDRESS
+		chainOb.mpiAddress = config.POLYGON_MPI_ADDRESS
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.MPI_ABI_STRING
@@ -252,7 +252,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		return err
 	//	}
 	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
 	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 	//		From: fromAddr,
 	//		To:   &toAddr,
@@ -282,7 +282,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		return err
 	//	}
 	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.BSC_MPI_ADDRESS)
 	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 	//		From: fromAddr,
 	//		To:   &toAddr,
@@ -311,7 +311,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		return err
 	//	}
 	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)
+	//	toAddr := ethcommon.HexToAddress(config.POLYGON_MPI_ADDRESS)
 	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
 	//		From: fromAddr,
 	//		To:   &toAddr,

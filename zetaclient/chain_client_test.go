@@ -75,7 +75,7 @@ func (s *ChainClientSuite) SetUpTest(c *C) {
 //	client, err := ethclient.Dial(config.ETH_ENDPOINT)
 //	c.Assert(err, IsNil)
 //	query := ethereum.FilterQuery{
-//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)},
+//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)},
 //		FromBlock: big.NewInt(0).SetUint64(6013558), // LastBlock has been processed;
 //		ToBlock:   big.NewInt(0).SetUint64(6013558),
 //	}
@@ -108,7 +108,7 @@ func (s *ChainClientSuite) SetUpTest(c *C) {
 //	topics[2][0] = ethcommon.HexToHash("0xae2c0ed83822269932b4b0dc55fd677b03b75e7eed10016b155ac61b0dea21d0")
 //	fmt.Printf("Goerli filter logs by topic: %s\n", topics)
 //	query := ethereum.FilterQuery{
-//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_ZETALOCK_ADDRESS)},
+//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)},
 //		FromBlock: big.NewInt(0), // LastBlock has been processed;
 //		ToBlock:   nil,
 //		Topics:    topics,
@@ -144,7 +144,7 @@ func (s *ChainClientSuite) SetUpTest(c *C) {
 //	topics[2][0] = ethcommon.HexToHash("0xdf79baae2602a70c4044575a7d62113f74453b75bfa72022e591dcd81f078956")
 //	fmt.Printf("Polygon filter logs by topic: %s\n", topics)
 //	query := ethereum.FilterQuery{
-//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.POLYGON_TOKEN_ADDRESS)},
+//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.POLYGON_MPI_ADDRESS)},
 //		FromBlock: big.NewInt(0), // LastBlock has been processed;
 //		ToBlock:   nil,
 //		Topics:    topics,
@@ -182,7 +182,7 @@ func (s *ChainClientSuite) SetUpTest(c *C) {
 //	topics[2][0] = ethcommon.HexToHash("0x2ea2d1f24b36c236487d0b6d8b1ed894b78785db0af88b8e32616ed810b69a30")
 //	fmt.Printf("Polygon filter logs by topic: %s\n", topics)
 //	query := ethereum.FilterQuery{
-//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)},
+//		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.BSC_MPI_ADDRESS)},
 //		FromBlock: big.NewInt(0), // LastBlock has been processed;
 //		ToBlock:   nil,
 //		Topics:    topics,

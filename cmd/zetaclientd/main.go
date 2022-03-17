@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -197,6 +198,17 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Info().Msg("Fake TSS")
 
+	// Configure MPI contract addresses
+	if ethMPIAddress := os.Getenv("ETH_MPI_ADDRESS"); ethMPIAddress != "" {
+		config.ETH_MPI_ADDRESS = ethMPIAddress
+	}
+	if bscMPIAddress := os.Getenv("BSC_MPI_ADDRESS"); bscMPIAddress != "" {
+		config.BSC_MPI_ADDRESS = bscMPIAddress
+	}
+	if polygonMPIAddress := os.Getenv("POLYGON_MPI_ADDRESS"); polygonMPIAddress != "" {
+		config.POLYGON_MPI_ADDRESS = polygonMPIAddress
+	}
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
@@ -246,8 +258,8 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	fmt.Print("Press 'Enter' to start...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	//fmt.Print("Press 'Enter' to start...")
+	//bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	httpServer := mc.NewHTTPServer()
 
