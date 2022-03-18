@@ -1,5 +1,6 @@
 
 FILE="/root/.zetacore/config"
+export MYIP=$(hostname -i)
 if [[ -d "$FILE" ]]; then
     echo "$FILE already exists."
     echo "Skipping ZetaCore Init"

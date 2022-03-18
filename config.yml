@@ -9,11 +9,16 @@ validator:
 client:
   openapi:
     path: "docs/static/openapi.yml"
+  node: "tcp://0.0.0.0:26657"
 faucet:
   name: bob
   coins: ["5token", "100000stake"]
 init:
+  proxy_app: "tcp://0.0.0.0:26658"
+  rpc: 
+    laddr: "tcp://0.0.0.0:26657"
   config:
       consensus.timeout_commit: "5s"
   app:
     api.enabled-unsafe-cors: "true"
+ 
