@@ -5,14 +5,14 @@ NODE_NUMBER=$1
 
 NODE_0_ID=$2
 
-NODE_0_IP=$3
+NODE_0_DNS=$3
  
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
 
 ## Start ZetaClient
-FILE="/root/.zetaclient/chainobserver"
+FILE="/root/.tssnew/e3234"
 if  (( $NODE_NUMBER == 0 )) && [ -d "$FILE" ]; then
     echo "This is Node 0"
     echo "$FILE already exists."
@@ -33,13 +33,13 @@ fi
 if  (( $NODE_NUMBER > 0 )) && [ -d "$FILE" ]; then
     echo "$FILE already exists."
     echo "Skipping ZetaClient Init"
-    zetaclientd  -peer /ip4/${NODE_0_IP}tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    zetaclientd  -peer /dns/${NODE_0_DNS}tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
 elif (( $NODE_NUMBER > 0 )); then
     # Setup Zeta Client
     rm -f ~/.tssnew/address_book.seed 
     IDX=1 
     TSSPATH=/root/.tssnew 
-    yes |  zetaclientd  -peer /ip4/${NODE_0_IP}/tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    yes |  zetaclientd  -peer /dns/${NODE_0_DNS}/tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
 fi
 
 
