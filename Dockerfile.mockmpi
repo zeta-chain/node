@@ -1,10 +1,7 @@
 FROM golang:latest
 
-ARG ACCOUNT_PASSWORD
-
 RUN apt-get update -y && apt-get upgrade -y \
     && apt install build-essential git make gcc jq vim -y
-
 
 WORKDIR /go/delivery
 COPY ./ ./zeta-node/
