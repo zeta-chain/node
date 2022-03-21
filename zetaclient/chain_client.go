@@ -220,7 +220,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 	for range chainOb.ticker.C {
 		err := chainOb.observeChain()
 		if err != nil {
-			log.Err(err).Msg("observeChain error on %s", chainOb.chain)
+			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
 			continue
 		}
 		chainOb.observeFailedTx()
@@ -231,7 +231,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	for range chainOb.ticker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
-			log.Err(err).Msg("PostGasPrice error on %s", chainOb.chain)
+			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
 			continue
 		}
 	}
