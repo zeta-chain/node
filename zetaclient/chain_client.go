@@ -100,6 +100,22 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
 	}
 
+	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	if ethEndPoint != "" {
+		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
+		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
+	}
+	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	if bscMpiAddress != "" {
+		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
+		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
+	}
+	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	if polygonMpiAddress != "" {
+		config.POLYGON_MPI_ADDRESS = polygonMpiAddress
+		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
+	}
+
 	// Initialize constants
 	switch chain {
 	case common.POLYGONChain:
@@ -204,7 +220,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 	for range chainOb.ticker.C {
 		err := chainOb.observeChain()
 		if err != nil {
-			log.Err(err).Msg("observeChain error")
+			log.Err(err).Msg("observeChain error on %s", chainOb.chain)
 			continue
 		}
 		chainOb.observeFailedTx()
@@ -215,7 +231,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	for range chainOb.ticker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
-			log.Err(err).Msg("PostGasPrice error")
+			log.Err(err).Msg("PostGasPrice error on %s", chainOb.chain)
 			continue
 		}
 	}

@@ -1,11 +1,11 @@
 
-FILE="/root/.zetacore/config"
+DIR="/root/.zetacore/config/gentx"
 export MYIP=$(hostname -i)
-if [[ -d "$FILE" ]]; then
-    echo "$FILE already exists."
+if [[ -d "$DIR" ]]; then
+    echo "$DIR already exists."
     echo "Skipping ZetaCore Init"
 else
-    rm -rf ~/.zetacore/* # zetacored stores all states in this directory
+    # rm -rf ~/.zetacore/* # zetacored stores all states in this directory
     zetacored init mocknet
     cd ~/.zetacore/config
     zetacored config keyring-backend test

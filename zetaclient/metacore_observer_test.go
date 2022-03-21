@@ -100,6 +100,8 @@ func (s *COSuite) SetUpTest(c *C) {
 	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
+	c.Logf("ETH MPI Address: %s", config.ETH_MPI_ADDRESS)
+
 	s.signer = signer
 
 	// setup zetacore observer
