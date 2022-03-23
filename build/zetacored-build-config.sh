@@ -36,7 +36,7 @@ if (( $NODE_NUMBER == 0 )); then
         until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
             echo "Waiting for Node $i to generate new keys"
             do
-                sleep 5
+                sleep 3
             done
         echo "VALIDATOR_ID for node$i found"
         VALIDATOR_ID=$(cat /zetashared/node$i/config/NODE_VALIDATOR_ID)
@@ -54,7 +54,7 @@ if (( $NODE_NUMBER == 0 )); then
         until [ -f /zetashared/node$i/config/gentx/gentx-*.json ]
             do
                 echo "Waiting for Node $i to generate gentx files"
-                sleep 5
+                sleep 3
             done
         cp /zetashared/node$i/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
         i=$[$i+1]
@@ -86,24 +86,24 @@ if (( $NODE_NUMBER > 0 )); then
 
     until [ -f /zetashared/genesis/init-genesis.json ]
         do
-            sleep 5
+            sleep 3
         done
     echo "init-genesis.json found"
-    # This needs to happen after Node 0 creates the init-genesis file but before it runs collect-gentxs
 
+    sleep 5 # Can probably be removed
+
+    # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-
-    sleep 20
     zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
 
-    echo "Waiting for updated genesis file"  # Should be loop, waiting for the file to show up
     until [ -f /zetashared/genesis/genesis.json ]
-    do
-        sleep 5
-    done
+        do
+            echo "Waiting for updated genesis file..."
+            sleep 3
+        done
     echo "Final genesis.json found"
     cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
