@@ -2,8 +2,8 @@ echo "Starting ZetaClient"
 echo $1 $2 $3 $4 $5
 
 NODE_NUMBER=$1
-NODE_0_ID=$2
-NODE_0_DNS=$3
+NODE_0_DNS=$2
+NODE_0_ID=$3
  
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
@@ -15,33 +15,37 @@ sleep 5
 ## Start ZetaClient
 FILE="/root/.tssnew/e3234"
 if  (( $NODE_NUMBER == 0 )) && [ -f "$FILE" ]; then
-    echo "This is Node 0"
+    echo "This is Node $NODE_NUMBER"
     echo "$FILE already exists."
     echo "Skipping ZetaClient Init"
     export MYIP=$(hostname -i)
     yes | zetaclientd -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
 elif (( $NODE_NUMBER == 0 )); then
-    echo "This is Node 0"
-    echo "Setting up ZetaClient For First Time Run"
+    echo "This is Node $NODE_NUMBER"
+    echo "First Time Run -- Setting Up ZetaClient Init"
     export MYIP=$(hostname -i)
-    rm -f ~/.tssnew/address_book.seed 
+    # rm -f ~/.tssnew/address_book.seed 
     IDX=0 
     TSSPATH=/root/.tssnew 
+    # sleep 100000
     yes | zetaclientd -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
 fi
 
 
 if  (( $NODE_NUMBER > 0 )) && [ -d "$FILE" ]; then
+    echo "This is Node $NODE_NUMBER"
     echo "$FILE already exists."
     echo "Skipping ZetaClient Init"
-    zetaclientd  -peer /dns/${NODE_0_DNS}tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    # zetaclientd  -peer /dns/${NODE_0_DNS}tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    zetaclientd  -peer /dns/${NODE_0_DNS}tcp/6668/ -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+
 elif (( $NODE_NUMBER > 0 )); then
-    # Setup Zeta Client
-    rm -f ~/.tssnew/address_book.seed 
+    echo "This is Node $NODE_NUMBER"
+    echo "First Time Run -- Setting Up ZetaClient Init"
+    # rm -f ~/.tssnew/address_book.seed 
     IDX=1 
     TSSPATH=/root/.tssnew 
-    yes |  zetaclientd  -peer /dns/${NODE_0_DNS}/tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    yes |  zetaclientd  -peer /dns/${NODE_0_DNS}/tcp/6668/ -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    # yes |  zetaclientd  -peer /dns/${NODE_0_DNS}/tcp/6668/p2p/${NODE_0_ID} -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+
 fi
-
-
-
