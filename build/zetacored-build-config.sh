@@ -2,17 +2,20 @@ echo "Starting Zetacore"
 echo $1 $2 $3
 
 NODE_NUMBER=$1
-NODE_0_DNS=$2
+MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
+echo "MAX_NODE_NUMBER: $MAX_NODE_NUMBER"
+
  
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 export MYIP=$(hostname -i)
 
 rm -rf ~/.zetacore/
-rm -rf /zetashared/*/data/* /zetashared/*/config/* /zetashared/*/keyring-test/*
-rm -rf /zetashared/genesis/*
 
-mkdir -p ~/.zetacore/config/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
+# rm -rf /zetashared/*/data/* /zetashared/*/config/* /zetashared/*/keyring-test/*
+# rm -rf /zetashared/genesis/*
+
+mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -26,40 +29,39 @@ if (( $NODE_NUMBER == 0 )); then
     echo $NODE_0_VALIDATOR > NODE_VALIDATOR_ID
     zetacored add-genesis-account $NODE_0_VALIDATOR 100000000000stake
 
-    echo "Waiting for other Nodes to Generate Keys"
-    until [ -f /zetashared/node1/config/NODE_VALIDATOR_ID ]
+    i=1
+    while [ $i -le $MAX_NODE_NUMBER ]
     do
-        sleep 5
+        echo "i = $i"
+        until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
+            echo "Waiting for Node $i to generate new keys"
+            do
+                sleep 5
+            done
+        echo "VALIDATOR_ID for node$i found"
+        VALIDATOR_ID=$(cat /zetashared/node$i/config/NODE_VALIDATOR_ID)
+        echo "Node $i VALIDATOR_ID: $VALIDATOR_ID"
+        zetacored add-genesis-account $VALIDATOR_ID 100000000000stake
+        i=$[$i+1]
     done
-    echo "NODE_1_VALIDATOR_ID found"
-    NODE_1_VALIDATOR_ID=$(cat /zetashared/node1/config/NODE_VALIDATOR_ID)
-    zetacored add-genesis-account $NODE_1_VALIDATOR_ID 100000000000stake
-
-    # until [ -f /zetashared/node2/config/NODE_VALIDATOR_ID ]
-    # do
-    #     sleep 5
-    # done
-    # NODE_2_VALIDATOR_ID=$(cat /zetashared/node2/config/NODE_VALIDATOR_ID)
-    # zetacored add-genesis-account $NODE_2_VALIDATOR_ID 100000000000stake
 
     cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
 
-    echo "Waiting for other Nodes to generate gentx files"
-    until [ -f /zetashared/node1/config/gentx/gentx-*.json ]
+    i=1
+    while [ $i -le $MAX_NODE_NUMBER ]
     do
-        sleep 5
+        echo "i = $i"
+        until [ -f /zetashared/node$i/config/gentx/gentx-*.json ]
+            do
+                echo "Waiting for Node $i to generate gentx files"
+                sleep 5
+            done
+        cp /zetashared/node$i/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
+        i=$[$i+1]
     done
-    cp /zetashared/node1/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
+
     zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
-
-    # Node 2 
-    # cp /zetashared/node2/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
-    # NODE_2_VALIDATOR_ID=$(cat /zetashared/node2/config/NODE_VALIDATOR_ID)
-
     zetacored collect-gentxs &> gentxs
-
-    # echo $(cat gentxs | jq -r .node_id) > NODE_0_ID
-    # cp ~/.zetacore/config/NODE_0_ID /zetashared/
 
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
@@ -76,21 +78,23 @@ if (( $NODE_NUMBER > 0 )); then
     zetacored config keyring-backend test
     zetacored keys add val
     NODE_VALIDATOR=$(zetacored keys show val -a)
+    echo $NODE_VALIDATOR
     echo $NODE_VALIDATOR > NODE_VALIDATOR_ID
     cp NODE_VALIDATOR_ID /zetashared/node$NODE_NUMBER/config/
 
     echo "Waiting for Node 0 to Create Genesis..."
 
     until [ -f /zetashared/genesis/init-genesis.json ]
-    do
-        sleep 5
-    done
+        do
+            sleep 5
+        done
     echo "init-genesis.json found"
     # This needs to happen after Node 0 creates the init-genesis file but before it runs collect-gentxs
 
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-    zetacored gentx val 1000000000stake --chain-id zetacore --ip $MYIP
 
+    sleep 20
+    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
@@ -104,7 +108,7 @@ if (( $NODE_NUMBER > 0 )); then
     cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
 
-   echo "Config Built -- Node $NODE_NUMBER"
+    echo "Config Built -- Node $NODE_NUMBER"
 
 fi
 
