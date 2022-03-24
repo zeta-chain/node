@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
@@ -17,14 +18,15 @@ import (
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 	maddr "github.com/multiformats/go-multiaddr"
 
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
 	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 )
 
 const ()
@@ -105,11 +107,16 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
+	chainIP := os.Getenv("CHAIN_IP")
+	if chainIP == "" {
+		chainIP = "127.0.0.1"
+	}
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("127.0.0.1:9090"),
+			fmt.Sprintf("%s:9090", chainIP),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -209,11 +216,15 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 		config.POLYGON_MPI_ADDRESS = polygonMPIAddress
 	}
 
+	chainIP := os.Getenv("CHAIN_IP")
+	if chainIP == "" {
+		chainIP = "127.0.0.1"
+	}
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("127.0.0.1:9090"),
+			fmt.Sprintf("%s:9090", chainIP),
 			grpc.WithInsecure(),
 		)
 		if err != nil {

@@ -5,17 +5,18 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"math/big"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"math/big"
-	"os"
-	"strings"
-	"sync"
-	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -91,10 +92,28 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	bscEndPoint := os.Getenv("BSC_ENDPOINT")
 	if bscEndPoint != "" {
 		config.BSC_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
 	}
 	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
 	if polygonEndPoint != "" {
 		config.POLY_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+	}
+
+	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	if ethEndPoint != "" {
+		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
+		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
+	}
+	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	if bscMpiAddress != "" {
+		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
+		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
+	}
+	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	if polygonMpiAddress != "" {
+		config.POLYGON_MPI_ADDRESS = polygonMpiAddress
+		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
 	}
 
 	// Initialize constants
@@ -154,7 +173,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.db = db
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
-			log.Info().Msg("db PosKey does not exsit; read from ZetaCore")
+			log.Info().Msg("db PosKey does not exist; read from ZetaCore")
 			chainOb.LastBlock = chainOb.getLastHeight()
 			// if ZetaCore does not have last heard block height, then use current
 			if chainOb.LastBlock == 0 {
@@ -201,7 +220,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 	for range chainOb.ticker.C {
 		err := chainOb.observeChain()
 		if err != nil {
-			log.Err(err).Msg("observeChain error")
+			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
 			continue
 		}
 		chainOb.observeFailedTx()
@@ -212,7 +231,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 	for range chainOb.ticker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
-			log.Err(err).Msg("PostGasPrice error")
+			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
 			continue
 		}
 	}

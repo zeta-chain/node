@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
 )
 
 func GetZetaTestSignature() mc.TestSigner {
@@ -110,7 +111,11 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 
 	k := mc.NewKeysWithKeybase(kb, signerName, signerPass)
 
-	chainIP := "127.0.0.1"
+	chainIP := os.Getenv("CHAIN_IP")
+	if chainIP == "" {
+		chainIP = "127.0.0.1"
+	}
+
 	bridge, err := mc.NewMetachainBridge(k, chainIP, signerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewMetachainBridge")
