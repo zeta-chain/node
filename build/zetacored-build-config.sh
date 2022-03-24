@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Starting Zetacore"
 echo $1 $2 $3
 
@@ -5,15 +7,11 @@ NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
 echo "MAX_NODE_NUMBER: $MAX_NODE_NUMBER"
 
- 
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 export MYIP=$(hostname -i)
 
 rm -rf ~/.zetacore/
-
-# rm -rf /zetashared/*/data/* /zetashared/*/config/* /zetashared/*/keyring-test/*
-# rm -rf /zetashared/genesis/*
 
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
 

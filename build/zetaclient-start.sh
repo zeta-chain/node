@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Starting ZetaClient"
 echo $1 $2 $3 $4 $5
 
@@ -9,7 +11,7 @@ export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 export MYIP=$(hostname -i)
 
-sleep 10 # Waiting for Zetacored to boot
+sleep 5 # Waiting for Zetacored to boot
 
 FILE="/root/.tssnew/address_book.seed"
 if [ -f "$FILE" ]; then
