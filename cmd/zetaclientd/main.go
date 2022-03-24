@@ -82,7 +82,8 @@ func main() {
 		return
 	} else {
 		fmt.Println("multi-node client")
-		integration_test_notss(*validatorName, peers)
+		integration_test(*validatorName, peers)
+		// integration_test_notss(*validatorName, peers)
 		return
 	}
 
@@ -173,6 +174,17 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, httpServer)
 
 	mo1.MonitorCore()
+
+	// do a test keysign when block reaches 30
+	ticker := time.NewTicker(2 * time.Second)
+	go func() {
+		for range ticker.C {
+			bn, _ := bridge1.GetMetaBlockHeight()
+			if bn == 30 {
+				mc.TestKeysign(tss.PubkeyInBech32, tss.Server)
+			}
+		}
+	}()
 
 	// printout debug info from SIGUSR1
 	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
