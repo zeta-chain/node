@@ -14,10 +14,16 @@ type Metrics struct {
 	s *http.Server
 }
 
-var (
-	counters = map[string]prometheus.Counter{}
+type MetricName int
 
-	gauges = map[string]prometheus.Gauge{}
+const (
+	GAUGE_PENDING_TX MetricName = iota
+)
+
+var (
+	Counters = map[MetricName]prometheus.Counter{}
+
+	Gauges = map[MetricName]prometheus.Gauge{}
 )
 
 func NewMetrics() (*Metrics, error) {
@@ -25,6 +31,7 @@ func NewMetrics() (*Metrics, error) {
 		Name: "num_pending_send",
 		Help: "current number of Sends from the ZetaCore pendingSend API",
 	})
+	Gauges[GAUGE_PENDING_TX] = pendingSendGauge
 
 	prometheus.MustRegister(pendingSendGauge)
 

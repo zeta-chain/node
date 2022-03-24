@@ -2,93 +2,11 @@ package main
 
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
 )
-
-func mock_integration_test() {
-	SetupConfigForTest() // setup meta-prefix
-
-	// setup 2 metabridges
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Err(err).Msg("UserHomeDir error")
-		return
-	}
-	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
-
-	// first signer & bridge
-	signerName := "alice"
-	signerPass := "password"
-	bridge1, done := CreateMetaBridge(chainHomeFoler, signerName, signerPass)
-	if done {
-		return
-	}
-
-	signerName = "bob"
-	signerPass = "password"
-	bridge2, done := CreateMetaBridge(chainHomeFoler, signerName, signerPass)
-	if done {
-		return
-	}
-
-	// setup mock TSS signers:
-	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
-	if err != nil {
-		log.Err(err).Msg("TEST private key error")
-		return
-	}
-	tss := mc.TestSigner{
-		PrivKey: privateKey,
-	}
-
-	signerMap1, err := CreateSignerMap(tss)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-	signerMap2, err := CreateSignerMap(tss)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-
-	userDir, _ := os.UserHomeDir()
-	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-	chainClientMap2, err := CreateChainClientMap(bridge2, tss, dbpath)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-
-	hs := mc.NewHTTPServer()
-	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, hs)
-	mo1.MonitorCore()
-	mo2 := mc.NewCoreObserver(bridge2, signerMap2, *chainClientMap2, hs)
-	mo2.MonitorCore()
-
-	// wait....
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-	log.Info().Msg("stop signal received")
-
-}
 
 func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.MetachainBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
