@@ -55,7 +55,10 @@ func (s *COSuite) SetUpTest(c *C) {
 
 		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
-		chainIP := "127.0.0.1"
+		chainIP := os.Getenv("CHAIN_IP")
+		if chainIP == "" {
+			chainIP = "127.0.0.1"
+		}
 		bridge, err := NewMetachainBridge(k, chainIP, "alice")
 		if err != nil {
 			c.Fail()
@@ -75,7 +78,10 @@ func (s *COSuite) SetUpTest(c *C) {
 
 		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
-		chainIP := "127.0.0.1"
+		chainIP := os.Getenv("CHAIN_IP")
+		if chainIP == "" {
+			chainIP = "127.0.0.1"
+		}
 		bridge, err := NewMetachainBridge(k, chainIP, "bob")
 		if err != nil {
 			c.Fail()
@@ -94,6 +100,8 @@ func (s *COSuite) SetUpTest(c *C) {
 	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
+	c.Logf("ETH MPI Address: %s", config.ETH_MPI_ADDRESS)
+
 	s.signer = signer
 
 	// setup zetacore observer
