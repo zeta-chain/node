@@ -164,6 +164,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msg("NewMetric")
 		return
 	}
+	metrics.Start()
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics)
@@ -194,4 +195,5 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	(*chainClientMap1)[common.ETHChain].Stop()
 	(*chainClientMap1)[common.BSCChain].Stop()
 	(*chainClientMap1)[common.POLYGONChain].Stop()
+	metrics.Stop()
 }
