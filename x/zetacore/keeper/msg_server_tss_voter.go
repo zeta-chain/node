@@ -43,8 +43,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 
 	// this needs full consensus on all validators.
 	if len(tssVoter.Signers) == len(validators) {
-		tss, _ := k.GetTSS(ctx, tssVoter.Chain)
-		tss = types.TSS{
+		tss := types.TSS{
 			Creator:             "",
 			Index:               tssVoter.Chain,
 			Chain:               tssVoter.Chain,

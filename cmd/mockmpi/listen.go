@@ -23,7 +23,7 @@ type Payload struct {
 }
 
 func (cl *ChainETHish) Listen() {
-	log.Info().Msg(fmt.Sprintf("begining listening to %s log...", cl.name))
+	log.Info().Msg(fmt.Sprintf("beginning listening to %s log...", cl.name))
 	dedup := make(map[ethcommon.Hash]bool)
 	go func() {
 		for {
@@ -65,6 +65,7 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 
 	sender := topics[1]
 	log_message = fmt.Sprintf("sender %x", sender)
+	log.Debug().Msg(log_message)
 
 	destChainID := vals[0].(uint16)
 	log_message = fmt.Sprintf("destChainID %d", destChainID)
@@ -113,6 +114,9 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 //	 bytes32 sendHash) external {
 func (cl *ChainETHish) sendTransaction(payload Payload) {
 	sendHash, err := hex.DecodeString(MAGIC_HASH[2:])
+	if err != nil {
+		log.Error().Err(err).Msg("sendTransaction: DecodeString err")
+	}
 	var sendHash32 [32]byte
 	copy(sendHash32[:], sendHash[:32])
 	data, err := cl.mpi_abi.Pack(

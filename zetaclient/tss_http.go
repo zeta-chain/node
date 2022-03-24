@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -93,5 +92,5 @@ func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	json.NewEncoder(w).Encode(t.pendingTx)
+	//json.NewEncoder(w).Encode(t.pendingTx)
 }

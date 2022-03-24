@@ -82,7 +82,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 			//	b.seqNumber = seqNum
 			//}
 
-			// The above logic does not work when the fecthed new one is stuck at out-of-date values. (why?)
+			// The above logic does not work when the fetched new one is stuck at out-of-date values. (why?)
 			// Here are directly parse the error message and get the expected seq num
 			err_msg := commit.RawLog
 			re := regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
