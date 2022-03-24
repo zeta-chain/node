@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,6 @@ import (
 const ()
 
 func main() {
-	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
 	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
@@ -72,16 +72,9 @@ func main() {
 		return
 	}
 
-	if *mockFlag {
-		fmt.Println("single node multiple clients tests")
-		mock_integration_test() // single node testing environment; mocking multiple clients
-		return
-	} else {
-		fmt.Println("multi-node client")
-		integration_test(*validatorName, peers)
-		return
-	}
-
+	fmt.Println("multi-node client")
+	integration_test(*validatorName, peers)
+	return
 }
 
 func SetupConfigForTest() {
@@ -166,13 +159,14 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	//fmt.Print("Press 'Enter' to start...")
-	//bufio.NewReader(os.Stdin).ReadBytes('\n')
-
-	httpServer := mc.NewHTTPServer()
+	metrics, err := metrics2.NewMetrics()
+	if err != nil {
+		log.Error().Err(err).Msg("NewMetric")
+		return
+	}
 
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, httpServer)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics)
 
 	mo1.MonitorCore()
 

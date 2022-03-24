@@ -5,6 +5,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math/big"
 	"time"
 
@@ -13,11 +14,12 @@ import (
 )
 
 type CoreObserver struct {
-	sendQueue  []*types.Send
-	bridge     *MetachainBridge
-	signerMap  map[common.Chain]*Signer
-	clientMap  map[common.Chain]*ChainObserver
-	httpServer *HTTPServer
+	sendQueue []*types.Send
+	bridge    *MetachainBridge
+	signerMap map[common.Chain]*Signer
+	clientMap map[common.Chain]*ChainObserver
+	metrics   *metrics.Metrics
+
 	// channels for shepherd manager
 	sendNew     chan *types.Send
 	sendDone    chan *types.Send
@@ -25,14 +27,14 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, server *HTTPServer) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics) *CoreObserver {
 	co := CoreObserver{}
 	co.bridge = bridge
 	co.signerMap = signerMap
 	co.sendQueue = make([]*types.Send, 0)
 
 	co.clientMap = clientMap
-	co.httpServer = server
+	co.metrics = metrics
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
@@ -64,6 +66,7 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
+		metrics.Gauges[metrics.GAUGE_PENDING_TX].Set(float64(len(sendList)))
 		for _, send := range sendList {
 			log.Info().Msgf("#pending send: %d", len(sendList))
 			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
