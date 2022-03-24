@@ -185,7 +185,8 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
 			n := binary.PutUvarint(buf2, chainOb.LastBlock)
-			db.Put([]byte(PosKey), buf2[:n], nil)
+			err := db.Put([]byte(PosKey), buf2[:n], nil)
+			log.Error().Err(err).Msg("error writing chainOb.LastBlock to db: ")
 		} else {
 			chainOb.LastBlock, _ = binary.Uvarint(buf)
 		}
@@ -360,6 +361,10 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	}
 
 	bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.Address(), nil)
+	if err != nil {
+		log.Err(err).Msg("BalanceAt:")
+		return err
+	}
 	_, err = chainOb.bridge.PostGasBalance(chainOb.chain, bal.String(), blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasBalance:")
@@ -469,7 +474,10 @@ func (chainOb *ChainObserver) observeChain() error {
 	chainOb.LastBlock = toBlock
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
-	chainOb.db.Put([]byte(PosKey), buf[:n], nil)
+	err = chainOb.db.Put([]byte(PosKey), buf[:n], nil)
+	if err != nil {
+		log.Error().Err(err).Msg("error writing toBlock to db")
+	}
 	return nil
 }
 

@@ -50,6 +50,9 @@ func (cl *ChainETHish) Init() {
 	cl.context = context.TODO()
 
 	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "")
+	if err != nil {
+		log.Error().Err(err).Msg("NewChainObserver")
+	}
 	cl.client = chain.Client
 
 	_id, _ := cl.client.ChainID(cl.context)
@@ -88,7 +91,7 @@ func FindChainByID(id uint16) (*ChainETHish, error) {
 			return chain, nil
 		}
 	}
-	return nil, fmt.Errorf("Not listening for chain with ID: %s", id)
+	return nil, fmt.Errorf("Not listening for chain with ID: %d", id)
 }
 
 func FindChainByName(name string) (*ChainETHish, error) {

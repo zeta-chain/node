@@ -32,6 +32,7 @@ import (
 const ()
 
 func main() {
+	var notss = flag.Bool("notss", false, "use fake TSS")
 	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
 	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
@@ -73,6 +74,12 @@ func main() {
 		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 		<-ch
 		log.Info().Msg("stop signal received")
+		return
+	}
+
+	if *notss {
+		fmt.Println("fake TSS mode")
+		integration_test_notss(*validatorName, peers)
 		return
 	}
 
@@ -166,7 +173,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	}
 
 	fmt.Print("Press 'Enter' to start...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	httpServer := mc.NewHTTPServer()
 
@@ -207,9 +214,9 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	<-ch
 	log.Info().Msg("stop signal received")
 
-	(*chainClientMap1)[common.ETHChain].Stop()
-	(*chainClientMap1)[common.BSCChain].Stop()
-	(*chainClientMap1)[common.POLYGONChain].Stop()
+	_ = (*chainClientMap1)[common.ETHChain].Stop()
+	_ = (*chainClientMap1)[common.BSCChain].Stop()
+	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
 }
 
 func integration_test_notss(validatorName string, peers addr.AddrList) {
@@ -312,7 +319,7 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 	<-ch
 	log.Info().Msg("stop signal received")
 
-	(*chainClientMap1)[common.ETHChain].Stop()
-	(*chainClientMap1)[common.BSCChain].Stop()
-	(*chainClientMap1)[common.POLYGONChain].Stop()
+	_ = (*chainClientMap1)[common.ETHChain].Stop()
+	_ = (*chainClientMap1)[common.BSCChain].Stop()
+	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
 }
