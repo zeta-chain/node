@@ -175,6 +175,17 @@ func integration_test(validatorName string, peers addr.AddrList) {
 
 	mo1.MonitorCore()
 
+	// do a test keysign when block reaches 30
+	ticker := time.NewTicker(2 * time.Second)
+	go func() {
+		for range ticker.C {
+			bn, _ := bridge1.GetMetaBlockHeight()
+			if bn == 30 {
+				mc.TestKeysign(tss.PubkeyInBech32, tss.Server)
+			}
+		}
+	}()
+
 	// printout debug info from SIGUSR1
 	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
 	usr := make(chan os.Signal, 1)
