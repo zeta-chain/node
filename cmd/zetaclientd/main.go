@@ -82,7 +82,8 @@ func main() {
 		return
 	} else {
 		fmt.Println("multi-node client")
-		integration_test_notss(*validatorName, peers)
+		integration_test(*validatorName, peers)
+		// integration_test_notss(*validatorName, peers)
 		return
 	}
 
