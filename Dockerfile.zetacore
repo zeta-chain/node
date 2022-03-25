@@ -1,0 +1,16 @@
+FROM golang:latest
+
+RUN apt-get update -y && apt-get upgrade -y \
+    && apt install build-essential git make gcc jq vim -y
+
+WORKDIR /go/delivery
+COPY ./ ./zeta-node/
+
+WORKDIR /go/delivery/zeta-node
+RUN make install-zetacore
+
+WORKDIR /go/delivery/
+ENV SHELL /bin/bash
+EXPOSE 8400
+
+ENTRYPOINT ["bash"]

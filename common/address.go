@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Meta-Protocol/metacore/common/cosmos"
 	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 type Address string

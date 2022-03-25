@@ -15,7 +15,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/Meta-Protocol/metacore/docs"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -83,17 +82,18 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/zeta-chain/zetacore/docs"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	metacoremodule "github.com/Meta-Protocol/metacore/x/metacore"
-	metacoremodulekeeper "github.com/Meta-Protocol/metacore/x/metacore/keeper"
-	metacoremoduletypes "github.com/Meta-Protocol/metacore/x/metacore/types"
+	metacoremodule "github.com/zeta-chain/zetacore/x/zetacore"
+	metacoremodulekeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
+	metacoremoduletypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	"github.com/tendermint/spm/cosmoscmd"
 )
 
 const (
-	AccountAddressPrefix = "meta"
-	Name                 = "metacore"
+	AccountAddressPrefix = "zeta"
+	Name                 = "zetacore"
 )
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
@@ -342,8 +342,9 @@ func New(
 		appCodec,
 		keys[metacoremoduletypes.StoreKey],
 		keys[metacoremoduletypes.MemStoreKey],
+		app.StakingKeeper,
 	)
-	metacoreModule := metacoremodule.NewAppModule(appCodec, app.MetacoreKeeper)
+	metacoreModule := metacoremodule.NewAppModule(appCodec, app.MetacoreKeeper, app.StakingKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
@@ -392,10 +393,10 @@ func New(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, metacoremoduletypes.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, metacoremoduletypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
