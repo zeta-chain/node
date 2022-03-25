@@ -154,14 +154,14 @@ func SignerCreds() (string, string) {
 }
 
 // GetKeybase will create an instance of Keybase
-func GetKeybase(metachainHome string) (KeybaseStore, error) {
+func GetKeybase(zetachainHome string) (KeybaseStore, error) {
 	username, password := SignerCreds()
 	buf := bytes.NewBufferString(password)
 	// the library used by keyring is using ReadLine , which expect a new line
 	buf.WriteByte('\n')
 
-	cliDir := metachainHome
-	if len(metachainHome) == 0 {
+	cliDir := zetachainHome
+	if len(zetachainHome) == 0 {
 		usr, err := user.Current()
 		if err != nil {
 			return KeybaseStore{}, fmt.Errorf("fail to get current user,err:%w", err)

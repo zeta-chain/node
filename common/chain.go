@@ -11,7 +11,7 @@ var (
 	BSCChain     = Chain("BSC")
 	ETHChain     = Chain("ETH")
 	POLYGONChain = Chain("POLYGON")
-	METAChain    = Chain("META")
+	ZETAChain    = Chain("ZETA")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
@@ -68,8 +68,8 @@ func (c Chain) Equals(c2 Chain) bool {
 	return strings.EqualFold(c.String(), c2.String())
 }
 
-func (c Chain) IsMETAChain() bool {
-	return c.Equals(METAChain)
+func (c Chain) IsZetaChain() bool {
+	return c.Equals(ZETAChain)
 }
 
 // IsEmpty is to determinate whether the chain is empty
