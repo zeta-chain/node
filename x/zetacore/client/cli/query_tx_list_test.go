@@ -20,7 +20,7 @@ func networkWithTxListObjects(t *testing.T) (*network.Network, *types.TxList) {
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
-	state.TxList = &types.TxList{Creator: "ANY"}
+	state.TxList = &types.TxList{Tx: []*types.Tx{}}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
@@ -57,10 +57,10 @@ func TestShowTxList(t *testing.T) {
 				require.ErrorIs(t, stat.Err(), tc.err)
 			} else {
 				require.NoError(t, err)
-				var resp types.QueryGetTxListResponse
+				var resp types.QueryGetTxResponse
 				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				require.NotNil(t, resp.TxList)
-				require.Equal(t, tc.obj, resp.TxList)
+				require.NotNil(t, resp.Tx)
+				require.Equal(t, tc.obj.Tx, resp.Tx)
 			}
 		})
 	}

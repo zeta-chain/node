@@ -25,7 +25,7 @@ func networkWithTSSVoterObjects(t *testing.T, n int) (*network.Network, []*types
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TSSVoterList = append(state.TSSVoterList, &types.TSSVoter{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.TSSVoterList = append(state.TSSVoterList, &types.TSSVoter{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
