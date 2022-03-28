@@ -22,7 +22,6 @@ if (( $NODE_NUMBER == 0 )); then
     zetacored config keyring-backend test
     zetacored keys add val
     cd ~/.zetacore/config
-
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo $NODE_0_VALIDATOR > NODE_VALIDATOR_ID
     zetacored add-genesis-account $NODE_0_VALIDATOR 100000000000stake
@@ -61,6 +60,8 @@ if (( $NODE_NUMBER == 0 )); then
     zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
     zetacored collect-gentxs &> gentxs
 
+    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
+
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
@@ -93,6 +94,9 @@ if (( $NODE_NUMBER > 0 )); then
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
     zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
+
+    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
+
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
