@@ -32,11 +32,23 @@ test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
 
-
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+
+install-zetaclient: go.sum
+		@echo "--> Installing zetaclientd"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+
+install-zetacore: go.sum
+		@echo "--> Installing zetacored"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+
+install-mockmpi:
+	@echo "--> Installing MockMPI"
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/mockmpi
+
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"

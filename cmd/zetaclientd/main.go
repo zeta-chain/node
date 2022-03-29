@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
@@ -29,6 +30,7 @@ import (
 const ()
 
 func main() {
+	var notss = flag.Bool("notss", false, "use fake TSS")
 	var validatorName = flag.String("val", "alice", "validator name")
 	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
@@ -72,9 +74,16 @@ func main() {
 		return
 	}
 
-	fmt.Println("multi-node client")
-	integration_test(*validatorName, peers)
-	return
+	if *notss {
+		fmt.Println("fake TSS mode")
+		integration_test_notss(*validatorName, peers)
+		return
+	} else {
+		fmt.Println("multi-node client")
+		integration_test(*validatorName, peers)
+		return
+	}
+
 }
 
 func SetupConfigForTest() {
@@ -96,11 +105,137 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
+	chainIP := os.Getenv("CHAIN_IP")
+	if chainIP == "" {
+		chainIP = "127.0.0.1"
+	}
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("127.0.0.1:9090"),
+			fmt.Sprintf("%s:9090", chainIP),
+			grpc.WithInsecure(),
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("grpc dial fail")
+			time.Sleep(3 * time.Second)
+		} else {
+			break
+		}
+	}
+	log.Info().Msgf("ZetaCore to open 9090 port...")
+
+	// setup 2 metabridges
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Err(err).Msg("UserHomeDir error")
+		return
+	}
+	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
+
+	// first signer & bridge
+	signerName := validatorName
+	signerPass := "password"
+	bridge1, done := CreateMetaBridge(chainHomeFoler, signerName, signerPass)
+	if done {
+		return
+	}
+
+	tss, err := mc.NewTSS(peers)
+	if err != nil {
+		log.Error().Err(err).Msg("NewTSS error")
+		return
+	}
+
+	signerMap1, err := CreateSignerMap(tss)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
+
+	userDir, _ := os.UserHomeDir()
+	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
+
+	metrics, err := metrics2.NewMetrics()
+	if err != nil {
+		log.Error().Err(err).Msg("NewMetric")
+		return
+	}
+	metrics.Start()
+
+	log.Info().Msg("starting zetacore observer...")
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics)
+
+	mo1.MonitorCore()
+
+	// do a test keysign when block reaches 30
+	ticker := time.NewTicker(2 * time.Second)
+	go func() {
+		for range ticker.C {
+			bn, _ := bridge1.GetMetaBlockHeight()
+			if bn == 30 {
+				mc.TestKeysign(tss.PubkeyInBech32, tss.Server)
+			}
+		}
+	}()
+
+	// printout debug info from SIGUSR1
+	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
+	usr := make(chan os.Signal, 1)
+	signal.Notify(usr, syscall.SIGUSR1)
+	go func() {
+		for {
+			<-usr
+			fmt.Printf("Last blocks:\n")
+			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
+			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
+			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
+
+		}
+	}()
+
+	// wait....
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
+	log.Info().Msg("stop signal received")
+
+	_ = (*chainClientMap1)[common.ETHChain].Stop()
+	_ = (*chainClientMap1)[common.BSCChain].Stop()
+	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
+}
+
+func integration_test_notss(validatorName string, peers addr.AddrList) {
+	SetupConfigForTest() // setup meta-prefix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Info().Msg("Fake TSS")
+
+	// Configure MPI contract addresses
+	if ethMPIAddress := os.Getenv("ETH_MPI_ADDRESS"); ethMPIAddress != "" {
+		config.ETH_MPI_ADDRESS = ethMPIAddress
+	}
+	if bscMPIAddress := os.Getenv("BSC_MPI_ADDRESS"); bscMPIAddress != "" {
+		config.BSC_MPI_ADDRESS = bscMPIAddress
+	}
+	if polygonMPIAddress := os.Getenv("POLYGON_MPI_ADDRESS"); polygonMPIAddress != "" {
+		config.POLYGON_MPI_ADDRESS = polygonMPIAddress
+	}
+
+	chainIP := os.Getenv("CHAIN_IP")
+	if chainIP == "" {
+		chainIP = "127.0.0.1"
+	}
+	// wait until zetacore is up
+	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
+	for {
+		_, err := grpc.Dial(
+			fmt.Sprintf("%s:9090", chainIP),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -129,21 +264,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	}
 
 	// setup mock TSS signers:
-	// The following privkey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	//privateKey, err := crypto.HexToECDSA(mcconfig.TSS_TEST_PRIVKEY)
-	//if err != nil {
-	//	log.Err(err).Msg("TEST private key error")
-	//	return
-	//}
-	//tss := mc.TestSigner{
-	//	PrivKey: privateKey,
-	//}
-
-	tss, err := mc.NewTSS(peers)
-	if err != nil {
-		log.Error().Err(err).Msg("NewTSS error")
-		return
-	}
+	tss := GetZetaTestSignature()
 
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
@@ -192,8 +313,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	<-ch
 	log.Info().Msg("stop signal received")
 
-	(*chainClientMap1)[common.ETHChain].Stop()
-	(*chainClientMap1)[common.BSCChain].Stop()
-	(*chainClientMap1)[common.POLYGONChain].Stop()
-	metrics.Stop()
+	_ = (*chainClientMap1)[common.ETHChain].Stop()
+	_ = (*chainClientMap1)[common.BSCChain].Stop()
+	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
 }

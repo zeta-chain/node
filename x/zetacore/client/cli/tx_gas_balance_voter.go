@@ -18,8 +18,8 @@ func CmdGasBalanceVoter() *cobra.Command {
 		Short: "Broadcast message gasBalanceVoter",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsChain := string(args[0])
-			argsBalance := string(args[1])
+			argsChain := (args[0])
+			argsBalance := (args[1])
 			argsBlockNumber, _ := strconv.Atoi(args[2])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -27,7 +27,7 @@ func CmdGasBalanceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGasBalanceVoter(clientCtx.GetFromAddress().String(), string(argsChain), string(argsBalance), uint64(argsBlockNumber))
+			msg := types.NewMsgGasBalanceVoter(clientCtx.GetFromAddress().String(), (argsChain), (argsBalance), uint64(argsBlockNumber))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

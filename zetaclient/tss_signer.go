@@ -77,9 +77,21 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
 	var sigbyte [65]byte
-	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature R")
+		return [65]byte{}, fmt.Errorf("signuature verification fail")
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature S")
+		return [65]byte{}, fmt.Errorf("signuature verification fail")
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature RecoveryID")
+		return [65]byte{}, fmt.Errorf("signuature verification fail")
+	}
 
 	return sigbyte, nil
 }
@@ -129,7 +141,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 			log.Fatal().Err(err).Msg("UserHomeDir")
 			return nil, err
 		}
-		tsspath = filepath.Join(home, ".tss")
+		tsspath = filepath.Join(home, ".Tss")
 	}
 	files, err := os.ReadDir(tsspath)
 	if err != nil {
@@ -159,7 +171,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	}
 	if !found {
 		fmt.Print("Press 'Enter' to keygen...")
-		bufio.NewReader(os.Stdin).ReadBytes('\n')
+		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 		log.Info().Msgf("Local state not found; new Keygen starting...")
 		var req keygen.Request
 		req = keygen.NewRequest(testPubKeys, 10, "0.14.0")
@@ -178,6 +190,9 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
 	}
 	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("NewTSS: DecompressPubkey error: %w", err)
+	}
 	tss.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
 	log.Info().Msgf("pubkey.Bytes() gives %d Bytes", len(tss.PubkeyInBytes))
 
@@ -212,7 +227,7 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPSe
 			log.Error().Err(err).Msgf("cannot get UserHomeDir")
 			return nil, nil, err
 		}
-		tsspath = path.Join(homedir, ".tss")
+		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
 	IP := os.Getenv("MYIP")
@@ -235,8 +250,15 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPSe
 		nil, // don't set to precomputed values
 		IP,  // for docker test
 	)
+	if err != nil {
+		log.Error().Err(err).Msg("NewTSS error")
+		return nil, nil, fmt.Errorf("NewTSS error: %w", err)
+	}
 
-	tssServer.Start()
+	err = tssServer.Start()
+	if err != nil {
+		log.Error().Err(err).Msg("tss server start error")
+	}
 
 	s := NewHTTPServer()
 	go func() {
@@ -297,9 +319,9 @@ func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte)
 	}
 	// verify the signature of msg.
 	var sigbyte [65]byte
-	base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
+	_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
 	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
 	if err != nil {
 		log.Error().Err(err).Msg("SigToPub error in verify_signature")

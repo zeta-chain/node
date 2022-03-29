@@ -23,8 +23,8 @@ func (b *MetachainBridge) GetBlockHeight() (uint64, error) {
 }
 
 //func (b *MetachainBridge) GetLastBlockObserved(chain common.Chain) (uint64, error) {
-//	client := types.NewQueryClient(b.grpcConn)
-//	last_obs, err := client.LastBlockObserved(
+//	Client := types.NewQueryClient(b.grpcConn)
+//	last_obs, err := Client.LastBlockObserved(
 //		context.Background(),
 //		&types.QueryGetLastBlockObservedRequest{
 //			Index: chain.String(),

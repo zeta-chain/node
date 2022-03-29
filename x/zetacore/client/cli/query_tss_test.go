@@ -25,7 +25,7 @@ func networkWithTSSObjects(t *testing.T, n int) (*network.Network, []*types.TSS)
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.TSSList = append(state.TSSList, &types.TSS{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.TSSList = append(state.TSSList, &types.TSS{Creator: "ANY", Index: strconv.Itoa(i), Signer: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)

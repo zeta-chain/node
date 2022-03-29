@@ -25,7 +25,7 @@ func networkWithGasBalanceObjects(t *testing.T, n int) (*network.Network, []*typ
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.GasBalanceList = append(state.GasBalanceList, &types.GasBalance{Creator: "ANY", Index: strconv.Itoa(i)})
+		state.GasBalanceList = append(state.GasBalanceList, &types.GasBalance{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}, BlockNums: []uint64{}, Balances: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
