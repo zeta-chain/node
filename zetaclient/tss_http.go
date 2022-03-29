@@ -2,20 +2,20 @@ package zetaclient
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-// HTTPServer provide http endpoint for tss server
+// HTTPServer provide http endpoint for Tss server
 type HTTPServer struct {
 	logger    zerolog.Logger
 	s         *http.Server
@@ -92,5 +92,5 @@ func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	json.NewEncoder(w).Encode(t.pendingTx)
+	//json.NewEncoder(w).Encode(t.pendingTx)
 }

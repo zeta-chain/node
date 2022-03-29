@@ -2,8 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"context"
-	"encoding/hex"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
@@ -29,8 +27,8 @@ func (s *SignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	metaContractAddress := ethcommon.HexToAddress(config.BSC_TOKEN_ADDRESS)
-	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.NONETH_ZETA_ABI, metaContractAddress)
+	metaContractAddress := ethcommon.HexToAddress(config.BSC_MPI_ADDRESS)
+	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.MPI_ABI_STRING, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
 	c.Logf("Contract on chain %s: %s", signer.chain, metaContractAddress.Hex())
@@ -48,16 +46,16 @@ func (s *SignerSuite) TestSign(c *C) {
 	c.Assert(bytes.Equal(pubkey, s.signer.tssSigner.Pubkey()), Equals, true)
 }
 
-func (s *SignerSuite) TestMint(c *C) {
-	sendHash, err := hex.DecodeString(config.TSS_TEST_PRIVKEY)
-	c.Assert(err, IsNil)
-	c.Assert(len(sendHash), Equals, 32)
-	var sendHashBytes [32]byte
-	copy(sendHashBytes[:32], sendHash[:32])
-	tssAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	nonce, err := s.signer.client.NonceAt(context.TODO(), tssAddr, nil)
-	c.Assert(err, IsNil)
-	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{}, sendHashBytes, nonce, big.NewInt(10_000_000_000))
-	c.Assert(err, IsNil)
-	c.Logf("txhash %s", txhash)
-}
+//func (s *SignerSuite) TestMint(c *C) {
+//	sendHash, err := hex.DecodeString(config.TSS_TEST_PRIVKEY)
+//	c.Assert(err, IsNil)
+//	c.Assert(len(sendHash), Equals, 32)
+//	var sendHashBytes [32]byte
+//	copy(sendHashBytes[:32], sendHash[:32])
+//	tssAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+//	nonce, err := s.signer.client.NonceAt(context.TODO(), tssAddr, nil)
+//	c.Assert(err, IsNil)
+//	txhash, err := s.signer.MMint(big.NewInt(1234), ethcommon.HexToAddress(config.TEST_RECEIVER), 80000, []byte{}, sendHashBytes, nonce, big.NewInt(10_000_000_000))
+//	c.Assert(err, IsNil)
+//	c.Logf("txhash %s", txhash)
+//}

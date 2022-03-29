@@ -3,23 +3,26 @@ package zetaclient
 import (
 	"fmt"
 	//sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/hashicorp/go-retryablehttp"
-	"google.golang.org/grpc"
 	"net/url"
 	"sync"
+
+	"github.com/hashicorp/go-retryablehttp"
+	"google.golang.org/grpc"
 
 	//"fmt"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	//"github.com/armon/go-metrics"
-	//"github.com/cosmos/cosmos-sdk/client"
+	//"github.com/cosmos/cosmos-sdk/Client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	//"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	//"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
 	//"golang.org/x/tools/go/cfg"
 	//"io/ioutil"
 	//"net/http"

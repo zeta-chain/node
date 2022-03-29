@@ -46,7 +46,10 @@ func (s *VoterSuite) SetUpTest(c *C) {
 
 		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
-		chainIP := "127.0.0.1"
+		chainIP := os.Getenv("CHAIN_IP")
+		if chainIP == "" {
+			chainIP = "127.0.0.1"
+		}
 		bridge, err := NewMetachainBridge(k, chainIP, "alice")
 		if err != nil {
 			c.Fail()
@@ -66,7 +69,10 @@ func (s *VoterSuite) SetUpTest(c *C) {
 
 		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
-		chainIP := "127.0.0.1"
+		chainIP := os.Getenv("CHAIN_IP")
+		if chainIP == "" {
+			chainIP = "127.0.0.1"
+		}
 		bridge, err := NewMetachainBridge(k, chainIP, "bob")
 		if err != nil {
 			c.Fail()

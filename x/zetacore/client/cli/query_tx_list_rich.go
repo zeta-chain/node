@@ -17,7 +17,7 @@ func CmdTxListRich() *cobra.Command {
 		Short: "Query txListRich",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			reqLast := string(args[0])
+			reqLast := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
