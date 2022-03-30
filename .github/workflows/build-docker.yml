@@ -1,0 +1,37 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches: [ main, development, staging, charlie/git-build-fix ]
+  pull_request:
+    branches: [ main, development, staging ]
+
+jobs:
+  build-zetaclient:
+    name: Build Docker Image - Zetaclient
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Out Code
+      uses: actions/checkout@v2
+    - name: Build Zetaclient Docker Image
+      run: ./build/build.sh zetaclient 
+
+  build-zetacore:
+    name: Build Docker Image - Zetacore
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Out Code
+      uses: actions/checkout@v2
+    - name: Build Zetacore Docker Image
+      run: ./build/build.sh zetacore
+
+  build-mockmpi:
+    name: Build Docker Image - Zetacore
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Out Code
+      uses: actions/checkout@v2
+    - name: Build MockMPI Docker Image
+      run: ./build/build.sh zetaMockMPI
+
+  
