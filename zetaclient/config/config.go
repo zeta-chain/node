@@ -22,7 +22,8 @@ const (
 
 var (
 	// API Endpoints
-	ETH_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
+	//ETH_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
+	ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
 	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
 	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
 
@@ -48,7 +49,7 @@ const (
 	BSC_BLOCK_TIME  = 10
 
 	// to catch up:
-	MAX_BLOCKS_PER_PERIOD       = 64
+	MAX_BLOCKS_PER_PERIOD       = 2000
 	TIMEOUT_THRESHOLD_FOR_RETRY = 12 // 120 blocks for Zetachain; roughly 600s or 10min
 )
 

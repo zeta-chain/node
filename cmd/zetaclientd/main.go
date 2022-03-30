@@ -1,16 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
-
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -18,22 +17,20 @@ import (
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 	maddr "github.com/multiformats/go-multiaddr"
 
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
-
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
 )
 
 const ()
 
 func main() {
 	var notss = flag.Bool("notss", false, "use fake TSS")
-	var mockFlag = flag.Bool("mock", false, "mock 2 nodes environment")
 	var validatorName = flag.String("val", "alice", "validator name")
 	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
@@ -81,16 +78,9 @@ func main() {
 		fmt.Println("fake TSS mode")
 		integration_test_notss(*validatorName, peers)
 		return
-	}
-
-	if *mockFlag {
-		fmt.Println("single node multiple clients tests")
-		mock_integration_test() // single node testing environment; mocking multiple clients
-		return
 	} else {
 		fmt.Println("multi-node client")
 		integration_test(*validatorName, peers)
-		// integration_test_notss(*validatorName, peers)
 		return
 	}
 
@@ -172,13 +162,15 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	fmt.Print("Press 'Enter' to start...")
-	_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
-
-	httpServer := mc.NewHTTPServer()
+	metrics, err := metrics2.NewMetrics()
+	if err != nil {
+		log.Error().Err(err).Msg("NewMetric")
+		return
+	}
+	metrics.Start()
 
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, httpServer)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics)
 
 	mo1.MonitorCore()
 
@@ -288,13 +280,15 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	//fmt.Print("Press 'Enter' to start...")
-	//bufio.NewReader(os.Stdin).ReadBytes('\n')
-
-	httpServer := mc.NewHTTPServer()
+	metrics, err := metrics2.NewMetrics()
+	if err != nil {
+		log.Error().Err(err).Msg("NewMetric")
+		return
+	}
+	metrics.Start()
 
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, httpServer)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics)
 
 	mo1.MonitorCore()
 

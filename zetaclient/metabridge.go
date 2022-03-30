@@ -36,17 +36,16 @@ import (
 
 // MetachainBridge will be used to send tx to MetaChain.
 type MetachainBridge struct {
-	logger                zerolog.Logger
-	blockHeight           int64
-	accountNumber         uint64
-	seqNumber             uint64
-	grpcConn              *grpc.ClientConn
-	httpClient            *retryablehttp.Client
-	cfg                   config.ClientConfiguration
-	keys                  *Keys
-	broadcastLock         *sync.RWMutex
-	ProcessedTransactions map[string]TxStatus
-	ChainNonces           map[string]uint64
+	logger        zerolog.Logger
+	blockHeight   int64
+	accountNumber uint64
+	seqNumber     uint64
+	grpcConn      *grpc.ClientConn
+	httpClient    *retryablehttp.Client
+	cfg           config.ClientConfiguration
+	keys          *Keys
+	broadcastLock *sync.RWMutex
+	ChainNonces   map[string]uint64
 }
 
 // NewMetachainBridge create a new instance of MetachainBridge
@@ -74,14 +73,13 @@ func NewMetachainBridge(k *Keys, chainIP string, signerName string) (*MetachainB
 	}
 
 	return &MetachainBridge{
-		logger:                logger,
-		grpcConn:              grpcConn,
-		httpClient:            httpClient,
-		cfg:                   cfg,
-		keys:                  k,
-		broadcastLock:         &sync.RWMutex{},
-		ProcessedTransactions: map[string]TxStatus{},
-		ChainNonces:           map[string]uint64{},
+		logger:        logger,
+		grpcConn:      grpcConn,
+		httpClient:    httpClient,
+		cfg:           cfg,
+		keys:          k,
+		broadcastLock: &sync.RWMutex{},
+		ChainNonces:   map[string]uint64{},
 	}, nil
 }
 
