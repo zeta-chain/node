@@ -506,7 +506,9 @@ func (chainOb *ChainObserver) Stop() error {
 	return chainOb.db.Close()
 }
 
-func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error) {
+// returns: isIncluded, isConfirmed, Error
+// If isConfirmed, it also post to ZetaCore
+func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool, error) {
 	recvTopics := make([][]ethcommon.Hash, 4)
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
 	recvTopics[0] = []ethcommon.Hash{logMPIReceiveSignatureHash}
@@ -518,15 +520,14 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 	}
 	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 	if err != nil {
-		return false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
+		return false, false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
 	}
 	if len(logs) == 0 {
-		return false, nil
+		return false, false, nil
 	}
 	if len(logs) > 1 {
 		log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
 		log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-		return true, fmt.Errorf("More than two logs with send hash %s", sendHash)
 	}
 	for _, vLog := range logs {
 		switch vLog.Topics[0].Hex() {
@@ -561,13 +562,13 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, error
 					continue
 				}
 				fmt.Printf("Zeta tx hash: %s\n", metaHash)
+				return true, true, nil
 			} else {
 				fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-				return false, nil
+				return true, false, nil
 			}
-			return true, nil
 		}
 	}
 
-	return false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
+	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
 }
