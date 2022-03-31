@@ -305,17 +305,17 @@ const (
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "zetaAddress",
+				"name": "_zetaTokenAddress",
 				"type": "address"
 			},
 			{
 				"internalType": "address",
-				"name": "_TSSAddress",
+				"name": "_tssAddress",
 				"type": "address"
 			},
 			{
 				"internalType": "address",
-				"name": "_TSSAddressUpdater",
+				"name": "_tssAddressUpdater",
 				"type": "address"
 			}
 		],
@@ -328,7 +328,7 @@ const (
 			{
 				"indexed": false,
 				"internalType": "address",
-				"name": "sender",
+				"name": "account",
 				"type": "address"
 			}
 		],
@@ -341,7 +341,7 @@ const (
 			{
 				"indexed": false,
 				"internalType": "address",
-				"name": "sender",
+				"name": "account",
 				"type": "address"
 			}
 		],
@@ -354,19 +354,19 @@ const (
 			{
 				"indexed": false,
 				"internalType": "bytes",
-				"name": "sender",
+				"name": "originSenderAddress",
 				"type": "bytes"
 			},
 			{
 				"indexed": true,
 				"internalType": "uint16",
-				"name": "srcChainID",
+				"name": "originChainId",
 				"type": "uint16"
 			},
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "destContract",
+				"name": "destinationAddress",
 				"type": "address"
 			},
 			{
@@ -384,11 +384,54 @@ const (
 			{
 				"indexed": true,
 				"internalType": "bytes32",
-				"name": "sendHash",
+				"name": "internalSendHash",
 				"type": "bytes32"
 			}
 		],
-		"name": "ZetaMessageReceiveEvent",
+		"name": "ZetaReceived",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "originSenderAddress",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint16",
+				"name": "destinationChainId",
+				"type": "uint16"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes",
+				"name": "destinationAddress",
+				"type": "bytes"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "zetaAmount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes",
+				"name": "message",
+				"type": "bytes"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "internalSendHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "ZetaReverted",
 		"type": "event"
 	},
 	{
@@ -397,19 +440,19 @@ const (
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "sender",
+				"name": "originSenderAddress",
 				"type": "address"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint16",
-				"name": "destChainID",
+				"name": "destinationChainId",
 				"type": "uint16"
 			},
 			{
 				"indexed": false,
 				"internalType": "bytes",
-				"name": "destContract",
+				"name": "destinationAddress",
 				"type": "bytes"
 			},
 			{
@@ -437,46 +480,110 @@ const (
 				"type": "bytes"
 			}
 		],
-		"name": "ZetaMessageSendEvent",
+		"name": "ZetaSent",
 		"type": "event"
 	},
 	{
 		"inputs": [],
-		"name": "TSSAddress",
+		"name": "getLockedAmount",
 		"outputs": [
 			{
-				"internalType": "address",
+				"internalType": "uint256",
 				"name": "",
-				"type": "address"
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "TSSAddressUpdater",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
+				"components": [
+					{
+						"internalType": "bytes",
+						"name": "originSenderAddress",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint16",
+						"name": "originChainId",
+						"type": "uint16"
+					},
+					{
+						"internalType": "address",
+						"name": "destinationAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "zetaAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "message",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "internalSendHash",
+						"type": "bytes32"
+					}
+				],
+				"internalType": "struct ZetaInterfaces.ZetaMessage",
+				"name": "_zetaMessage",
+				"type": "tuple"
 			}
 		],
-		"stateMutability": "view",
+		"name": "onReceive",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "ZETA_TOKEN",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
+				"components": [
+					{
+						"internalType": "address",
+						"name": "originSenderAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes",
+						"name": "destinationAddress",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint16",
+						"name": "destinationChainId",
+						"type": "uint16"
+					},
+					{
+						"internalType": "uint256",
+						"name": "zetaAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "message",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "internalSendHash",
+						"type": "bytes32"
+					}
+				],
+				"internalType": "struct ZetaInterfaces.ZetaRevert",
+				"name": "_zetaRevert",
+				"type": "tuple"
 			}
 		],
-		"stateMutability": "view",
+		"name": "onRevert",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -501,9 +608,80 @@ const (
 	},
 	{
 		"inputs": [],
-		"name": "renounceTSSAddressUpdater",
+		"name": "renounceTssAddressUpdater",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint16",
+						"name": "destinationChainId",
+						"type": "uint16"
+					},
+					{
+						"internalType": "bytes",
+						"name": "destinationAddress",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256",
+						"name": "gasLimit",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "message",
+						"type": "bytes"
+					},
+					{
+						"internalType": "uint256",
+						"name": "zetaAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "zetaParams",
+						"type": "bytes"
+					}
+				],
+				"internalType": "struct ZetaInterfaces.SendInput",
+				"name": "_input",
+				"type": "tuple"
+			}
+		],
+		"name": "send",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tssAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "tssAddressUpdater",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -521,85 +699,22 @@ const (
 				"type": "address"
 			}
 		],
-		"name": "updateTSSAddress",
+		"name": "updateTssAddress",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "bytes",
-				"name": "srcContract",
-				"type": "bytes"
-			},
-			{
-				"internalType": "uint16",
-				"name": "srcChainID",
-				"type": "uint16"
-			},
+		"inputs": [],
+		"name": "zetaToken",
+		"outputs": [
 			{
 				"internalType": "address",
-				"name": "destContract",
+				"name": "",
 				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "zetaAmount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes",
-				"name": "message",
-				"type": "bytes"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "sendHash",
-				"type": "bytes32"
 			}
 		],
-		"name": "zetaMessageReceive",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint16",
-				"name": "destChainID",
-				"type": "uint16"
-			},
-			{
-				"internalType": "bytes",
-				"name": "destContract",
-				"type": "bytes"
-			},
-			{
-				"internalType": "uint256",
-				"name": "zetaAmount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "gasLimit",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes",
-				"name": "message",
-				"type": "bytes"
-			},
-			{
-				"internalType": "bytes",
-				"name": "zetaParams",
-				"type": "bytes"
-			}
-		],
-		"name": "zetaMessageSend",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	}
 ]`
