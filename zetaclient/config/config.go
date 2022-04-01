@@ -499,41 +499,34 @@ const (
 	{
 		"inputs": [
 			{
-				"components": [
-					{
-						"internalType": "bytes",
-						"name": "originSenderAddress",
-						"type": "bytes"
-					},
-					{
-						"internalType": "uint16",
-						"name": "originChainId",
-						"type": "uint16"
-					},
-					{
-						"internalType": "address",
-						"name": "destinationAddress",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "zetaAmount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bytes",
-						"name": "message",
-						"type": "bytes"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "internalSendHash",
-						"type": "bytes32"
-					}
-				],
-				"internalType": "struct ZetaInterfaces.ZetaMessage",
-				"name": "_zetaMessage",
-				"type": "tuple"
+				"internalType": "bytes",
+				"name": "originSenderAddress",
+				"type": "bytes"
+			},
+			{
+				"internalType": "uint16",
+				"name": "originChainId",
+				"type": "uint16"
+			},
+			{
+				"internalType": "address",
+				"name": "destinationAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "zetaAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "message",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "internalSendHash",
+				"type": "bytes32"
 			}
 		],
 		"name": "onReceive",
@@ -544,41 +537,34 @@ const (
 	{
 		"inputs": [
 			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "originSenderAddress",
-						"type": "address"
-					},
-					{
-						"internalType": "bytes",
-						"name": "destinationAddress",
-						"type": "bytes"
-					},
-					{
-						"internalType": "uint16",
-						"name": "destinationChainId",
-						"type": "uint16"
-					},
-					{
-						"internalType": "uint256",
-						"name": "zetaAmount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bytes",
-						"name": "message",
-						"type": "bytes"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "internalSendHash",
-						"type": "bytes32"
-					}
-				],
-				"internalType": "struct ZetaInterfaces.ZetaRevert",
-				"name": "_zetaRevert",
-				"type": "tuple"
+				"internalType": "address",
+				"name": "originSenderAddress",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes",
+				"name": "destinationAddress",
+				"type": "bytes"
+			},
+			{
+				"internalType": "uint16",
+				"name": "destinationChainId",
+				"type": "uint16"
+			},
+			{
+				"internalType": "uint256",
+				"name": "zetaAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "message",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "internalSendHash",
+				"type": "bytes32"
 			}
 		],
 		"name": "onRevert",
