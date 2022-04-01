@@ -1,8 +1,9 @@
-package main
+package eth
 
 import (
 	"context"
 	"fmt"
+	common2 "github.com/zeta-chain/zetacore/cmd/mockmpi/common"
 	"math/big"
 	"os"
 	"strings"
@@ -25,16 +26,44 @@ type ChainETHish struct {
 	tss      zetaclient.TSSSigner
 	mpi_abi  abi.ABI
 	context  context.Context
-	chain_id uint16
+	Chain_id uint16
 
 	MPI_CONTRACT                 string
 	DEFAULT_DESTINATION_CONTRACT string
 	client                       *ethclient.Client
-	name                         common.Chain
+	name                         string
 	id                           *big.Int
 	topics                       [][]ethcommon.Hash
 	channel                      chan types.Log
 	subscription                 ethereum.Subscription
+}
+
+func RegisterChains() {
+	common2.ALL_CHAINS = append(common2.ALL_CHAINS, &ChainETHish{
+		name:                         "ETH",
+		MPI_CONTRACT:                 "0x132b042bD5198a48E4D273f46b979E5f13Bd9239",
+		DEFAULT_DESTINATION_CONTRACT: "0xFf6B270ac3790589A1Fe90d0303e9D4d9A54FD1A",
+		Chain_id:                     5,
+	})
+	common2.ALL_CHAINS = append(common2.ALL_CHAINS, &ChainETHish{
+		name:                         "BSC",
+		MPI_CONTRACT:                 "0x96cE47e42A73649CFe33d93D93ACFbEc6FD5ee14",
+		DEFAULT_DESTINATION_CONTRACT: "0xF47bd84B86d1667e7621c38c72C6905Ca8710b0d",
+		Chain_id:                     97,
+	})
+	//{
+	//	name:                         common.Chain("POLYGON"),
+	//	MPI_CONTRACT:                 "0x692E8A48634B530b4BFF1e621FC18C82F471892c",
+	//	DEFAULT_DESTINATION_CONTRACT: "0x22696Bef41E49FEf5beac1D4765a5b7B1E0Dcb01",
+	//},
+}
+
+func (cl *ChainETHish) ID() uint16 {
+	return cl.Chain_id
+}
+
+func (cl *ChainETHish) Name() string {
+	return cl.name
 }
 
 func (cl *ChainETHish) Init() {
@@ -49,7 +78,7 @@ func (cl *ChainETHish) Init() {
 
 	cl.context = context.TODO()
 
-	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "")
+	chain, err := zetaclient.NewChainObserver(common.Chain(cl.name), nil, cl.tss, "")
 	if err != nil {
 		log.Error().Err(err).Msg("NewChainObserver")
 	}
@@ -83,22 +112,4 @@ func (cl *ChainETHish) Init() {
 func (cl *ChainETHish) Start() {
 	cl.Init()
 	cl.Listen()
-}
-
-func FindChainByID(id uint16) (*ChainETHish, error) {
-	for _, chain := range ALL_CHAINS {
-		if chain.chain_id == id {
-			return chain, nil
-		}
-	}
-	return nil, fmt.Errorf("Not listening for chain with ID: %d", id)
-}
-
-func FindChainByName(name string) (*ChainETHish, error) {
-	for _, chain := range ALL_CHAINS {
-		if chain.name.String() == name {
-			return chain, nil
-		}
-	}
-	return nil, fmt.Errorf("Couldn't find chain: %s", name)
 }
