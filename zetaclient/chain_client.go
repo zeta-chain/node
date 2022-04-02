@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -84,43 +83,11 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 	chainOb.Tss = tss
 
-	ethEndPoint := os.Getenv("ETH_ENDPOINT")
-	if ethEndPoint != "" {
-		config.ETH_ENDPOINT = ethEndPoint
-		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
-	}
-	bscEndPoint := os.Getenv("BSC_ENDPOINT")
-	if bscEndPoint != "" {
-		config.BSC_ENDPOINT = bscEndPoint
-		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
-	}
-	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
-	if polygonEndPoint != "" {
-		config.POLY_ENDPOINT = polygonEndPoint
-		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
-	}
-
-	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
-	if ethEndPoint != "" {
-		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
-		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
-	}
-	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
-	if bscMpiAddress != "" {
-		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
-		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
-	}
-	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
-	if polygonMpiAddress != "" {
-		config.POLYGON_MPI_ADDRESS = polygonMpiAddress
-		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
-	}
-
 	// Initialize constants
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.POLYGON_MPI_ADDRESS
+		chainOb.mpiAddress = config.Chains["POLYGON"].MPIContractAddress
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.abiString = config.MPI_ABI_STRING

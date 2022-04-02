@@ -110,6 +110,38 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		chainIP = "127.0.0.1"
 	}
 
+	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	if ethEndPoint != "" {
+		config.ETH_ENDPOINT = ethEndPoint
+		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+	}
+	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	if bscEndPoint != "" {
+		config.BSC_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+	}
+	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	if polygonEndPoint != "" {
+		config.POLY_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+	}
+
+	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	if ethMpiAddress != "" {
+		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
+		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
+	}
+	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	if bscMpiAddress != "" {
+		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
+		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
+	}
+	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	if polygonMpiAddress != "" {
+		config.Chains["POLYGON"].MPIContractAddress = polygonMpiAddress
+		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
+	}
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
@@ -216,21 +248,43 @@ func integration_test_notss(validatorName string, peers addr.AddrList) {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Info().Msg("Fake TSS")
 
-	// Configure MPI contract addresses
-	if ethMPIAddress := os.Getenv("ETH_MPI_ADDRESS"); ethMPIAddress != "" {
-		config.ETH_MPI_ADDRESS = ethMPIAddress
-	}
-	if bscMPIAddress := os.Getenv("BSC_MPI_ADDRESS"); bscMPIAddress != "" {
-		config.BSC_MPI_ADDRESS = bscMPIAddress
-	}
-	if polygonMPIAddress := os.Getenv("POLYGON_MPI_ADDRESS"); polygonMPIAddress != "" {
-		config.POLYGON_MPI_ADDRESS = polygonMPIAddress
-	}
-
 	chainIP := os.Getenv("CHAIN_IP")
 	if chainIP == "" {
 		chainIP = "127.0.0.1"
 	}
+
+	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	if ethEndPoint != "" {
+		config.ETH_ENDPOINT = ethEndPoint
+		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+	}
+	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	if bscEndPoint != "" {
+		config.BSC_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+	}
+	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	if polygonEndPoint != "" {
+		config.POLY_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+	}
+
+	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	if ethMpiAddress != "" {
+		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
+		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
+	}
+	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	if bscMpiAddress != "" {
+		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
+		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
+	}
+	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	if polygonMpiAddress != "" {
+		config.Chains["POLYGON"].MPIContractAddress = polygonMpiAddress
+		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
+	}
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {

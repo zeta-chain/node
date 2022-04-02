@@ -202,6 +202,7 @@ SIGNLOOP:
 					break SIGNLOOP
 				}
 				srcChainID := config.Chains[send.SenderChain].ChainID
+				log.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
 				tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
@@ -209,12 +210,14 @@ SIGNLOOP:
 				// if tx is nil, maybe I'm not an active signer?
 				if tx != nil {
 					outTxHash := tx.Hash().Hex()
-					log.Info().Msgf("nonce %d, sendHash: %s, outTxHash %s signer %s", send.Nonce, send.Index[:6], outTxHash, myid)
+					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
 						err = signer.Broadcast(tx)
 						if err != nil {
-							log.Err(err).Msgf("Broadcast error: nonce %d chain %s", send.Nonce, toChain)
+							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+						} else {
+							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
 					}
 					_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
