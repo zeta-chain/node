@@ -18,7 +18,7 @@ import (
 )
 
 // What is this?
-const MAGIC_HASH = "0xcccb58610b0b65d5b1d8e5f16435254a787e324209d9b3877a8ece68859a0f55"
+var MAGIC_HASH = "0xcccb58610b0b65d5b1d8e5f16435254a787e324209d9b3877a8ece68859a0f55"
 
 type ChainETHish struct {
 	// TODO: Could these 3 be refactored out?
