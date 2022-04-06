@@ -52,7 +52,7 @@ func main() {
 		SetupConfigForTest()
 		fmt.Println("testing TSS signing")
 
-		tssServer, _, err := mc.SetupTSSServer(peers, "")
+		tssServer, _, err := mc.SetupTSSServer(peers)
 		if err != nil {
 			log.Error().Err(err).Msg("setup TSS server error")
 			return
