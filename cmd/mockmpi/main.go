@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"math/big"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,18 +18,18 @@ import (
 var ALL_CHAINS = []*ChainETHish{
 	{
 		name:         common.Chain("ETH"),
-		MPI_CONTRACT: "0x4740f4051eA6D896C694303228D86Ba3141065ca",
-		chain_id:     5,
+		MPI_CONTRACT: "0x68Bc806414e743D88436AEB771Be387A55B4df70",
+		chain_id:     big.NewInt(5),
 	},
 	{
 		name:         common.Chain("BSC"),
-		MPI_CONTRACT: "0x4a2d53e16ebe3feC54B407c9e29590951Ce2b6ad",
-		chain_id:     97,
+		MPI_CONTRACT: "0xE626402550fB921E4a47c11568F89dF3496fbEF0",
+		chain_id:     big.NewInt(97),
 	},
 	{
 		name:         common.Chain("POLYGON"),
-		MPI_CONTRACT: "0xD9D3f57800033a1b403c62927398E97FA2Ce0c24",
-		chain_id:     8001,
+		MPI_CONTRACT: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
+		chain_id:     big.NewInt(80001),
 	},
 }
 
@@ -57,7 +58,7 @@ func main() {
 		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
 	}
 
-	var logZetaSentSignature = []byte("ZetaSent(address,uint16,bytes,uint256,uint256,bytes,bytes)")
+	var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
 	logZetaSentSignatureHash := crypto.Keccak256Hash(logZetaSentSignature)
 	MAGIC_HASH = logZetaSentSignatureHash.String()
 	log.Info().Msgf("Magic Hash: %s", MAGIC_HASH)
