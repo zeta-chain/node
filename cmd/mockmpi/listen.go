@@ -14,8 +14,8 @@ import (
 
 type Payload struct {
 	sender       []byte
-	srcChainID   uint16
-	destChainID  uint16
+	srcChainID   *big.Int
+	destChainID  *big.Int
 	destContract []byte
 	zetaAmount   *big.Int
 	gasLimit     *big.Int
@@ -50,7 +50,7 @@ func (cl *ChainETHish) Listen() {
 // Contract signature:
 //
 // event ZetaMessageSendEvent(
-//   uint16 destChainID,
+//   uint256 destChainID,
 //   bytes  destContract,
 //   uint zetaAmount,
 //   uint gasLimit,
@@ -64,7 +64,7 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 	}
 
 	sender := topics[1]
-	destChainID := vals[0].(uint16)
+	destChainID := vals[0].(*big.Int)
 	destContract := vals[1].([]byte)
 	zetaAmount := vals[2].(*big.Int)
 	gasLimit := vals[3].(*big.Int)
@@ -122,7 +122,8 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 
 	other, err := FindChainByID(payload.destChainID)
 	if err != nil {
-		log.Err(err).Msg("sendTransaction() Chain ID error")
+		log.Err(err).Msg("sendTransaction() Chain ID error; reverting...")
+		cl.revertTransaction(payload)
 		return
 	}
 
@@ -204,6 +205,7 @@ func (cl *ChainETHish) revertTransaction(payload Payload) {
 	data, err := cl.mpi_abi.Pack(
 		"onRevert",
 		ethcommon.BytesToAddress(payload.sender),
+		payload.srcChainID,
 		payload.destContract,
 		payload.destChainID,
 		payload.zetaAmount,

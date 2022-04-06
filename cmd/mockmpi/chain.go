@@ -25,7 +25,7 @@ type ChainETHish struct {
 	tss      zetaclient.TSSSigner
 	mpi_abi  abi.ABI
 	context  context.Context
-	chain_id uint16
+	chain_id *big.Int
 
 	MPI_CONTRACT                 string
 	DEFAULT_DESTINATION_CONTRACT string
@@ -85,9 +85,9 @@ func (cl *ChainETHish) Start() {
 	cl.Listen()
 }
 
-func FindChainByID(id uint16) (*ChainETHish, error) {
+func FindChainByID(id *big.Int) (*ChainETHish, error) {
 	for _, chain := range ALL_CHAINS {
-		if chain.chain_id == id {
+		if chain.chain_id.Cmp(id) == 0 {
 			return chain, nil
 		}
 	}
