@@ -151,7 +151,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		)
 		if err != nil {
 			log.Warn().Err(err).Msg("grpc dial fail")
-			time.Sleep(3 * time.Second)
+			time.Sleep(5 * time.Second)
 		} else {
 			break
 		}
