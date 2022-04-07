@@ -123,6 +123,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	//}
 
 	// Dial the mpiAddress
+	log.Info().Msgf("Chain %s endpoint %s", chainOb.chain, chainOb.endpoint)
 	client, err := ethclient.Dial(chainOb.endpoint)
 	if err != nil {
 		log.Err(err).Msg("eth Client Dial")

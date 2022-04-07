@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -13,8 +14,8 @@ import (
 
 type Payload struct {
 	sender       []byte
-	srcChainID   uint16
-	destChainID  uint16
+	srcChainID   *big.Int
+	destChainID  *big.Int
 	destContract []byte
 	zetaAmount   *big.Int
 	gasLimit     *big.Int
@@ -49,47 +50,34 @@ func (cl *ChainETHish) Listen() {
 // Contract signature:
 //
 // event ZetaMessageSendEvent(
-//   uint16 destChainID,
+//   uint256 destChainID,
 //   bytes  destContract,
 //   uint zetaAmount,
 //   uint gasLimit,
 //   bytes message,
 //   bytes zetaParams);
 func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Payload, error) {
-	var log_message string
-
-	vals, err := cl.mpi_abi.Unpack("ZetaMessageSendEvent", data)
+	//("ZetaSent(address,uint16,bytes,uint256,uint256,bytes,bytes)")
+	vals, err := cl.mpi_abi.Unpack("ZetaSent", data)
 	if err != nil {
 		return Payload{}, fmt.Errorf("Unpack error %s\n", err)
 	}
 
 	sender := topics[1]
-	log_message = fmt.Sprintf("sender %x", sender)
-	log.Debug().Msg(log_message)
-
-	destChainID := vals[0].(uint16)
-	log_message = fmt.Sprintf("destChainID %d", destChainID)
-	log.Debug().Msg(log_message)
-
+	destChainID := vals[0].(*big.Int)
 	destContract := vals[1].([]byte)
-	log_message = fmt.Sprintf("destContract %x", destContract)
-	log.Debug().Msg(log_message)
-
 	zetaAmount := vals[2].(*big.Int)
-	log_message = fmt.Sprintf("zetaAmount %d", zetaAmount)
-	log.Debug().Msg(log_message)
-
 	gasLimit := vals[3].(*big.Int)
-	log_message = fmt.Sprintf("gasLimit %d", gasLimit)
-	log.Debug().Msg(log_message)
-
 	message := vals[4].([]byte)
-	log_message = fmt.Sprintf("message %s", hex.EncodeToString(message))
-	log.Debug().Msg(log_message)
-
 	zetaParams := vals[5].([]byte)
-	log_message = fmt.Sprintf("zetaParams %s", hex.EncodeToString(zetaParams[:]))
-	log.Debug().Msg(log_message)
+
+	log.Debug().Msgf("sender %s", sender)
+	log.Debug().Msgf("destChainID %d", destChainID)
+	log.Debug().Msgf("destContract %s, len %d", hex.EncodeToString(destContract), len(destContract))
+	log.Debug().Msgf("zetaAmount %d", zetaAmount)
+	log.Debug().Msgf("gasLimit %s", gasLimit)
+	log.Debug().Msgf("message %s", message)
+	log.Debug().Msgf("zetaParams %s", zetaParams)
 
 	return Payload{
 		sender:       sender.Bytes(),
@@ -120,7 +108,7 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 	var sendHash32 [32]byte
 	copy(sendHash32[:], sendHash[:32])
 	data, err := cl.mpi_abi.Pack(
-		"zetaMessageReceive",
+		"onReceive",
 		payload.sender,
 		payload.srcChainID,
 		ethcommon.BytesToAddress(payload.destContract),
@@ -134,7 +122,8 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 
 	other, err := FindChainByID(payload.destChainID)
 	if err != nil {
-		log.Err(err).Msg("sendTransaction() Chain ID error")
+		log.Err(err).Msg("sendTransaction() Chain ID error; reverting...")
+		cl.revertTransaction(payload)
 		return
 	}
 
@@ -174,4 +163,113 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 	}
 
 	log.Info().Str("hash", signedTX.Hash().Hex()).Msg("bcast tx done!")
+
+	// tracking outbound tx:
+	go func() {
+		log.Info().Msgf("[%s] tracking outbound tx %s", other.name, signedTX.Hash().Hex())
+		ticker := time.NewTicker(10 * time.Second)
+		for range ticker.C {
+			receipt, err := other.client.TransactionReceipt(context.TODO(), signedTX.Hash())
+			if err != nil {
+				log.Debug().Err(err).Msgf("receipt non-existent: chain %s tx %s", other.name, signedTX.Hash())
+				continue
+			}
+			if receipt.Status == 1 { // Successful tx
+				log.Info().Msgf("tx %s succeed!", signedTX.Hash())
+				return
+			} else { // revert
+				log.Info().Msgf("tx %s reverted! initiating revert on origin chain...", signedTX.Hash())
+				cl.revertTransaction(payload)
+				return
+			}
+		}
+	}()
+}
+
+// Contract signature:
+//
+// function zetaMessageReceive(
+//	 bytes sender,
+//	 uint16  destChainID,
+//	 address destContract,
+//	 uint zetaAmount,
+//	 bytes calldata message,
+//	 bytes32 sendHash) external {
+func (cl *ChainETHish) revertTransaction(payload Payload) {
+	sendHash, err := hex.DecodeString(MAGIC_HASH[2:])
+	if err != nil {
+		log.Error().Err(err).Msg("revertTransaction: DecodeString err")
+	}
+	var sendHash32 [32]byte
+	copy(sendHash32[:], sendHash[:32])
+	data, err := cl.mpi_abi.Pack(
+		"onRevert",
+		ethcommon.BytesToAddress(payload.sender),
+		payload.srcChainID,
+		payload.destContract,
+		payload.destChainID,
+		payload.zetaAmount,
+		payload.message,
+		sendHash32)
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() ABI Pack() error")
+		return
+	}
+
+	nonce, err := cl.client.PendingNonceAt(context.Background(), cl.tss.Address())
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() PendingNonceAt error")
+		return
+	}
+
+	gasPrice, err := cl.client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() SuggestGasPrice error")
+		return
+	}
+	GasLimit := payload.gasLimit.Uint64()
+
+	ethSigner := ethtypes.LatestSignerForChainID(cl.id)
+	other_mpi := ethcommon.HexToAddress(cl.MPI_CONTRACT)
+	tx := ethtypes.NewTransaction(nonce, other_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+	hashBytes := ethSigner.Hash(tx).Bytes()
+	sig, err := cl.tss.Sign(hashBytes)
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() tss.Sign error")
+		return
+	}
+
+	signedTX, err := tx.WithSignature(ethSigner, sig[:])
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() tx.WithSignature error")
+		return
+	}
+
+	err = cl.client.SendTransaction(cl.context, signedTX)
+	if err != nil {
+		log.Err(err).Msg("revertTransaction() error")
+		return
+	}
+
+	log.Info().Str("hash", signedTX.Hash().Hex()).Msg("bcast tx done!")
+
+	// tracking outbound tx:
+	go func() {
+		log.Info().Msgf("[%s] tracking outbound tx %s", cl.name, signedTX.Hash().Hex())
+
+		ticker := time.NewTicker(5 * time.Second)
+		for range ticker.C {
+			receipt, err := cl.client.TransactionReceipt(context.TODO(), signedTX.Hash())
+			if err != nil {
+				log.Debug().Err(err).Msgf("revert receipt non-existent: chain %s tx %s", cl.name, signedTX.Hash())
+				continue
+			}
+			if receipt.Status == 1 { // Successful tx
+				log.Info().Msgf("onRevert tx %s succeed!", signedTX.Hash())
+			} else { // revert
+				log.Info().Msgf("onRevert tx %s reverted!", signedTX.Hash())
+			}
+			return
+		}
+	}()
 }
