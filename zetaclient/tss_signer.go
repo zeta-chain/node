@@ -1,7 +1,6 @@
 package zetaclient
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
@@ -105,6 +104,26 @@ func (tss *TSS) Address() ethcommon.Address {
 	return addr
 }
 
+func (tss *TSS) ComputeAddress() error {
+	log.Info().Msg("Computing TSS addresses from TSS pubkey...")
+	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", tss.PubkeyInBech32)
+		return fmt.Errorf("GetPubKeyFromBech32: %w", err)
+	}
+	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
+	if err != nil {
+		return fmt.Errorf("NewTSS: DecompressPubkey error: %w", err)
+	}
+	tss.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
+	log.Info().Msgf("pubkey.Bytes() gives %d Bytes", len(tss.PubkeyInBytes))
+
+	tss.AddressInHex = crypto.PubkeyToAddress(*decompresspubkey).Hex()
+	log.Info().Msgf("TSS Address ETH %s", tss.AddressInHex)
+
+	return nil
+}
+
 func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
@@ -170,34 +189,12 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		}
 	}
 	if !found {
-		fmt.Print("Press 'Enter' to keygen...")
-		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
-		log.Info().Msgf("Local state not found; new Keygen starting...")
-		var req keygen.Request
-		req = keygen.NewRequest(testPubKeys, 10, "0.14.0")
-		res, err := server.Keygen(req)
-		if err != nil {
-			log.Fatal().Msg("keygen fail")
-			return nil, fmt.Errorf("Keygen error: %w", err)
-		}
+		log.Info().Msg("TSS Keyshare file NOT found")
+	}
 
-		log.Info().Msgf("pubkey: %s", res.PubKey)
-		tss.PubkeyInBech32 = res.PubKey
+	if err = tss.ComputeAddress(); err != nil {
+		log.Error().Err(err).Msg("error computing TSS address:")
 	}
-	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
-	if err != nil {
-		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", tss.PubkeyInBech32)
-		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
-	}
-	decompresspubkey, err := crypto.DecompressPubkey(pubkey.Bytes())
-	if err != nil {
-		return nil, fmt.Errorf("NewTSS: DecompressPubkey error: %w", err)
-	}
-	tss.PubkeyInBytes = crypto.FromECDSAPub(decompresspubkey)
-	log.Info().Msgf("pubkey.Bytes() gives %d Bytes", len(tss.PubkeyInBytes))
-
-	tss.AddressInHex = crypto.PubkeyToAddress(*decompresspubkey).Hex()
-	log.Info().Msgf("TSS Address ETH %s", tss.AddressInHex)
 
 	return &tss, nil
 }
