@@ -10,7 +10,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
@@ -206,16 +205,26 @@ func integration_test(validatorName string, peers addr.AddrList) {
 
 	mo1.MonitorCore()
 
-	// do a test keysign when block reaches 30
-	ticker := time.NewTicker(2 * time.Second)
-	go func() {
-		for range ticker.C {
-			bn, _ := bridge1.GetMetaBlockHeight()
-			if bn == 30 {
-				mc.TestKeysign(tss.PubkeyInBech32, tss.Server)
-			}
-		}
-	}()
+	// do a test keygen when block reaches 30
+	//ticker := time.NewTicker(2 * time.Second)
+	//go func() {
+	//	for range ticker.C {
+	//		bn, _ := bridge1.GetMetaBlockHeight()
+	//		if bn == 30 {
+	//			log.Info().Msgf("Local state not found; new Keygen starting...")
+	//			var req keygen.Request
+	//			req = keygen.NewRequest([]string{}, 10, "0.14.0")
+	//			res, err := server.Keygen(req)
+	//			if err != nil {
+	//				log.Fatal().Msg("keygen fail")
+	//				return nil, fmt.Errorf("Keygen error: %w", err)
+	//			}
+	//
+	//			log.Info().Msgf("pubkey: %s", res.PubKey)
+	//			tss.PubkeyInBech32 = res.PubKey
+	//		}
+	//	}
+	//}()
 
 	// printout debug info from SIGUSR1
 	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
@@ -228,7 +237,6 @@ func integration_test(validatorName string, peers addr.AddrList) {
 			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
 			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
 			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
-
 		}
 	}()
 
