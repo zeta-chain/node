@@ -127,7 +127,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 }
 
 func NewTSS(peer addr.AddrList) (*TSS, error) {
-	server, _, err := SetupTSSServer(peer, "")
+	server, _, err := SetupTSSServer(peer)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -202,7 +202,7 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer addr.AddrList) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
@@ -262,12 +262,14 @@ func SetupTSSServer(peer addr.AddrList, tssAddr string) (*tss.TssServer, *HTTPSe
 
 	s := NewHTTPServer()
 	go func() {
+		log.Info().Msg("Starting TSS HTTP Server...")
 		if err := s.Start(); err != nil {
 			fmt.Println(err)
 		}
 	}()
 
 	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
+	s.p2pid = tssServer.GetLocalPeerID()
 	return tssServer, s, nil
 }
 
