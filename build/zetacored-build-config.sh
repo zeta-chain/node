@@ -43,8 +43,6 @@ if (( $NODE_NUMBER == 0 )); then
     done
 
     cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
-    # cp NODE_VALIDATOR_ID /zetashared/genesis/NODE_VALIDATOR_ID
-
 
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
@@ -116,3 +114,23 @@ if (( $NODE_NUMBER > 0 )); then
 
 fi
 
+
+
+## Manual Steps for setting up Node 1+ the first time 
+    # export MYIP=$(hostname -i)
+   
+    # mkdir -p ~/.zetacore/config/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
+    #  cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
+    #  zetacored config keyring-backend test
+    #  zetacored keys add val # or  cp -r /zetashared/node$NODE_NUMBER/keyring-test/* ~/.zetacore/keyring-test/
+    # NODE_VALIDATOR=$(zetacored keys show val -a)
+    # zetacored add-genesis-account $NODE_VALIDATOR 100000000000stake
+    # MYIP=$(hostname -i)
+    # zetacored gentx val 1000000000stake --node "tcp://$MYIP:26657" --ip $MYIP --chain-id zetacore
+    # cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
+    # cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
+    # cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
+
+    # cp -r /root/.zetacore/config/gentx/gentx-*.json /zetashared/node$NODE_NUMBER/config/gentx/
+    # cp /root/.zetacore/config/node_key.json /zetashared/node$NODE_NUMBER/config/node_key.json
+    # cp /root/.zetacore/config/priv_validator_key.json /zetashared/node$NODE_NUMBER/config/priv_validator_key.json

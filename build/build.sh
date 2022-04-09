@@ -5,7 +5,12 @@ cd $DIR
 echo "You Entered $INPUT"
 
 if  [ "$INPUT" == "" ]; then
-    echo "Building zetacore Only"
+    echo "Building zetacore, zetaclient, and zetaMockMPI"
+    docker build -f ../Dockerfile.zetacore ../  -t zetacore
+#    docker build -f ../Dockerfile.mockmpi ../ -t zeta-mockmpi
+    docker build -f ../Dockerfile.zetaclient ../  -t zetaclient
+elif  [ "$INPUT" == "zetacore" ]; then
+    echo "Building $INPUT Only"
     docker build -f ../Dockerfile.zetacore ../  -t zetacore
 elif [ "$INPUT" == "zetaclient" ]; then
     echo "Building $INPUT Only"

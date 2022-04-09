@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -19,7 +21,6 @@ type HTTPServer struct {
 	s         *http.Server
 	pendingTx uint64
 	mu        sync.Mutex
-	p2pid     string
 }
 
 // NewHTTPServer should only listen to the loopback
@@ -28,7 +29,7 @@ func NewHTTPServer() *HTTPServer {
 		logger: log.With().Str("module", "http").Logger(),
 	}
 	s := &http.Server{
-		Addr:    ":8123",
+		Addr:    ":8888",
 		Handler: hs.Handlers(),
 	}
 	hs.s = s
@@ -39,8 +40,8 @@ func NewHTTPServer() *HTTPServer {
 func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
-	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
-	//router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
+	router.Handle("/metrics", promhttp.Handler())
+	router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 	return router
 }
@@ -84,11 +85,6 @@ func (t *HTTPServer) Stop() error {
 
 func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
-}
-
-func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "%s", t.p2pid)
 }
 
 func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-name: Build Docker Images
+name: Push Image To ECR
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-zetaclient:
-    name: Build Docker Image
+    name: Push Image To ECR
     runs-on: ubuntu-latest
     steps:
     - name: Check Out Code
@@ -34,11 +34,3 @@ jobs:
         docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
     
-
-    # - name: Build Zetaclient Docker Image
-    #   run: ./build/build.sh 
-    # - name: Build MockMPI Docker Image
-    #   run: ./build/build.sh zetaMockMPI
-
-
-  
