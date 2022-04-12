@@ -8,6 +8,7 @@ COPY ./ ./zeta-node/
 
 WORKDIR /go/delivery/zeta-node
 RUN make install-zetacore
+RUN make install-zetaclient
 
 WORKDIR /go/delivery/
 ENV SHELL /bin/bash
