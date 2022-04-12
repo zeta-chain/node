@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"math/big"
 	"time"
 
@@ -21,6 +22,7 @@ type CoreObserver struct {
 	signerMap map[common.Chain]*Signer
 	clientMap map[common.Chain]*ChainObserver
 	metrics   *metrics.Metrics
+	tss       *TSS
 
 	// channels for shepherd manager
 	sendNew     chan *types.Send
@@ -29,8 +31,9 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
+	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 	co.sendQueue = make([]*types.Send, 0)
@@ -55,6 +58,32 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
+	go co.keygenObserve()
+}
+
+func (co *CoreObserver) keygenObserve() {
+	observeTicker := time.NewTicker(3 * time.Second)
+	for range observeTicker.C {
+		kg, err := co.bridge.GetKeyGen()
+		if err != nil {
+			log.Error().Err(err).Msg("error GetKeyGen from zetacore")
+			continue
+		}
+		if co.bridge.blockHeight != int64(kg.BlockNumber) {
+			continue
+		}
+
+		log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
+		var req keygen.Request
+		req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+		res, err := co.tss.Server.Keygen(req)
+		if err != nil {
+			log.Fatal().Msg("keygen fail")
+			continue
+		}
+		log.Info().Msgf("Keygen success! Setting TSS pubkey: %s...", res.PubKey)
+		co.tss.SetPubKey(res.PubKey)
+	}
 }
 
 // startObserve retrieves the pending list of Sends from ZetaCore every 10s

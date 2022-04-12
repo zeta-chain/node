@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		// this line is used by starport scaffolding # genesis/types/default
+		Keygen:              nil,
 		TSSVoterList:        []*TSSVoter{},
 		TSSList:             []*TSS{},
 		InTxList:            []*InTx{},

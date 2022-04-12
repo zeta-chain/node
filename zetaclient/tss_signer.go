@@ -104,7 +104,8 @@ func (tss *TSS) Address() ethcommon.Address {
 	return addr
 }
 
-func (tss *TSS) ComputeAddress() error {
+func (tss *TSS) SetPubKey(pk string) error {
+	tss.PubkeyInBech32 = pk
 	log.Info().Msg("Computing TSS addresses from TSS pubkey...")
 	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
 	if err != nil {
@@ -184,16 +185,13 @@ func NewTSS(peer addr.AddrList) (*TSS, error) {
 		filearray := strings.Split(filename, "-")
 		if len(filearray) == 2 {
 			log.Info().Msgf("Found stored Pubkey in local state: %s", filearray[1])
-			tss.PubkeyInBech32 = strings.TrimSuffix(filearray[1], ".json")
+			pk := strings.TrimSuffix(filearray[1], ".json")
+			tss.SetPubKey(pk)
 			found = true
 		}
 	}
 	if !found {
 		log.Info().Msg("TSS Keyshare file NOT found")
-	}
-
-	if err = tss.ComputeAddress(); err != nil {
-		log.Error().Err(err).Msg("error computing TSS address:")
 	}
 
 	return &tss, nil
