@@ -34,6 +34,9 @@ jobs:
         ECR_REPOSITORY: zetachain-sparta
         IMAGE_TAG: zetacore
       run: |
-        docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG:${{ steps.extract_branch.outputs.branch }} .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG:${{ steps.extract_branch.outputs.branch }}
+        docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG:${{ steps.extract_branch.outputs.branch }}
+        # docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG:${{ steps.extract_branch.outputs.branch }} .
+
     
