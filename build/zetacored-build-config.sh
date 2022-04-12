@@ -1,20 +1,18 @@
 #!/bin/bash
 
-echo "Starting Zetacore"
-echo $1 $2 $3
-
 NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
-echo "MAX_NODE_NUMBER: $MAX_NODE_NUMBER"
 
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 export MYIP=$(hostname -i)
 
+# Remove old files and make sure folders exist
 rm -rf ~/.zetacore/
-
+rm -rf /zetashared/node${NODE_NUMBER}/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
-mkdir -p /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/genesis/ /zetashared/[data,keyring-test]/
+mkdir -p /zetashared/node{0,1,2,3}/{data,keyring-test} /zetashared/node{0,1,2,3}/config/gentx
+mkdir -p /zetashared/genesis/ 
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -30,7 +28,7 @@ if (( $NODE_NUMBER == 0 )); then
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do
-        echo "i = $i"
+        # echo "i = $i"
         until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
             echo "Waiting for Node $i to generate new keys"
             do
@@ -47,7 +45,7 @@ if (( $NODE_NUMBER == 0 )); then
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do
-        echo "i = $i"
+        # echo "i = $i"
         until [ -f /zetashared/node$i/config/gentx/gentx-*.json ]
             do
                 echo "Waiting for Node $i to generate gentx files"
@@ -106,7 +104,7 @@ if (( $NODE_NUMBER > 0 )); then
             echo "Waiting for updated genesis file..."
             sleep 3
         done
-    echo "Final genesis.json found"
+    # echo "Final genesis.json found"
     cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
 
