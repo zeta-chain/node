@@ -142,3 +142,24 @@ func (b *MetachainBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonce
 	}
 	return resp.ChainNonces, nil
 }
+
+func (b *MetachainBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("SetNodeKey broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
+}
+
+func (b *MetachainBridge) GetKeyGen() (*types.Keygen, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.Keygen(context.Background(), &types.QueryGetKeygenRequest{})
+	if err != nil {
+		log.Error().Err(err).Msg("query GetNonceByChain error")
+		return nil, err
+	}
+	return resp.Keygen, nil
+}
