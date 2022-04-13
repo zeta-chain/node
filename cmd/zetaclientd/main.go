@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/rs/zerolog"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -30,7 +31,6 @@ const ()
 
 func main() {
 	var validatorName = flag.String("val", "alice", "validator name")
-	var tssTestFlag = flag.Bool("tss", false, "2 node TSS test mode")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	flag.Parse()
 	//BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
@@ -44,32 +44,6 @@ func main() {
 			return
 		}
 		peers = append(peers, address)
-	}
-
-	if *tssTestFlag {
-		SetupConfigForTest()
-		fmt.Println("testing TSS signing")
-
-		tssServer, _, err := mc.SetupTSSServer(peers)
-		if err != nil {
-			log.Error().Err(err).Msg("setup TSS server error")
-			return
-		}
-
-		time.Sleep(5 * time.Second)
-		kgRes := mc.TestKeygen(tssServer)
-		log.Debug().Msgf("keygen succeeds! TSS pubkey: %s", kgRes.PubKey)
-
-		log.Debug().Msgf("Keysign test begins...")
-
-		mc.TestKeysign(kgRes.PubKey, tssServer)
-
-		// wait....
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-		<-ch
-		log.Info().Msg("stop signal received")
-		return
 	}
 
 	fmt.Println("multi-node client")
@@ -164,7 +138,19 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	tss, err := mc.NewTSS(peers)
+	key, err := bridge1.GetKeys().GetPrivateKey()
+	if err != nil {
+		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+	}
+	if len(key.Bytes()) != 32 {
+		log.Error().Msgf("key bytes len %e != 32", len(key.Bytes()))
+		return
+	}
+	var priKey secp256k1.PrivKey
+	priKey = key.Bytes()[:32]
+
+	log.Info().Msgf("NewTSS: with peer pubkey %s", key.PubKey())
+	tss, err := mc.NewTSS(peers, priKey)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
 		return
@@ -197,11 +183,15 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	mo1.MonitorCore()
 
 	// report node key
-	key, err := bridge1.GetKeys().GetPrivateKey()
+
+	// convert key.PubKey() [cosmos-sdk/crypto/PubKey] to bech32?
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, key.PubKey())
+	log.Info().Msgf("GetPrivateKey for pubkey bech32 %s", s)
+
+	pubkey, err := common.NewPubKey(s)
 	if err != nil {
-		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+		log.Error().Err(err).Msgf("NewPubKey error from string %s:", key.PubKey().String())
 	}
-	pubkey, err := common.NewPubKey(key.PubKey().String())
 	pubkeyset := common.PubKeySet{
 		Secp256k1: pubkey,
 		Ed25519:   "",

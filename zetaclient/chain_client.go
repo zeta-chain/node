@@ -327,16 +327,16 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 		return err
 	}
 
-	bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.Address(), nil)
-	if err != nil {
-		log.Err(err).Msg("BalanceAt:")
-		return err
-	}
-	_, err = chainOb.bridge.PostGasBalance(chainOb.chain, bal.String(), blockNum)
-	if err != nil {
-		log.Err(err).Msg("PostGasBalance:")
-		return err
-	}
+	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.Address(), nil)
+	//if err != nil {
+	//	log.Err(err).Msg("BalanceAt:")
+	//	return err
+	//}
+	//_, err = chainOb.bridge.PostGasBalance(chainOb.chain, bal.String(), blockNum)
+	//if err != nil {
+	//	log.Err(err).Msg("PostGasBalance:")
+	//	return err
+	//}
 	return nil
 }
 
