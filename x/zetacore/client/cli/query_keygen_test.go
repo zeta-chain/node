@@ -20,7 +20,7 @@ func networkWithKeygenObjects(t *testing.T) (*network.Network, *types.Keygen) {
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
-	state.Keygen = &types.Keygen{Creator: "ANY"}
+	state.Keygen = &types.Keygen{Creator: "ANY", Pubkeys: []string{}}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
