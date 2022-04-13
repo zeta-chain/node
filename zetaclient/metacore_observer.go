@@ -14,6 +14,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )
 
 type CoreObserver struct {
@@ -62,27 +64,43 @@ func (co *CoreObserver) MonitorCore() {
 }
 
 func (co *CoreObserver) keygenObserve() {
-	observeTicker := time.NewTicker(3 * time.Second)
+	observeTicker := time.NewTicker(2 * time.Second)
 	for range observeTicker.C {
 		kg, err := co.bridge.GetKeyGen()
 		if err != nil {
-			log.Error().Err(err).Msg("error GetKeyGen from zetacore")
 			continue
 		}
-		if co.bridge.blockHeight != int64(kg.BlockNumber) {
+		bn, _ := co.bridge.GetMetaBlockHeight()
+		if bn != kg.BlockNumber {
 			continue
 		}
 
-		log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
-		var req keygen.Request
-		req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
-		res, err := co.tss.Server.Keygen(req)
-		if err != nil {
-			log.Fatal().Msg("keygen fail")
-			continue
-		}
-		log.Info().Msgf("Keygen success! Setting TSS pubkey: %s...", res.PubKey)
-		co.tss.SetPubKey(res.PubKey)
+		go func() {
+			for {
+				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
+				var req keygen.Request
+				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+				res, err := co.tss.Server.Keygen(req)
+				if err != nil || res.Status != tsscommon.Success {
+					log.Fatal().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					continue
+				}
+				// Keygen succeed! Report TSS address
+				log.Info().Msgf("Keygen success! keygen response: %v...", res)
+				co.tss.SetPubKey(res.PubKey)
+
+				co.bridge.SetTSS(common.ETHChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				co.bridge.SetTSS(common.BSCChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				co.bridge.SetTSS(common.POLYGONChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+
+				// Keysign test: sanity test
+				log.Info().Msgf("test keysign...")
+				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				log.Info().Msg("test keysign finished. exit keygen loop. ")
+				return
+			}
+		}()
+		return
 	}
 }
 

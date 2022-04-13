@@ -54,19 +54,19 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["ETH"].MPIContractAddress)
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, ethMPIAddress)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, ethMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
 	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["BSC"].MPIContractAddress)
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, bscMPIAddress)
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, bscMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
 	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["POLYGON"].MPIContractAddress)
-	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss.Address(), tss, mcconfig.MPI_ABI_STRING, polygonMPIAddress)
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, polygonMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
 		return nil, err

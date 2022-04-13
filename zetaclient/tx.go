@@ -158,8 +158,19 @@ func (b *MetachainBridge) GetKeyGen() (*types.Keygen, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Keygen(context.Background(), &types.QueryGetKeygenRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("query GetNonceByChain error")
+		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err
 	}
 	return resp.Keygen, nil
+}
+
+func (b *MetachainBridge) SetTSS(chain common.Chain, address string, pubkey string) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.String(), address, pubkey)
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("SetNodeKey broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
 }

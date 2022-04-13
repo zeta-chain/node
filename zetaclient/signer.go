@@ -31,7 +31,7 @@ type Signer struct {
 	metaContractAddress ethcommon.Address
 }
 
-func NewSigner(chain common.Chain, endpoint string, tssAddress ethcommon.Address, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
+func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err

@@ -22,7 +22,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 			Creator:     "genesis keygen",
 			Status:      0, // to keygen
 			Pubkeys:     pubkeys,
-			BlockNumber: 30,
+			BlockNumber: 25,
 		}
 		k.SetKeygen(ctx, kg)
 	}
