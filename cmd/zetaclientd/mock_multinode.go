@@ -1,34 +1,13 @@
 package main
 
 import (
-	"fmt"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"os"
 )
-
-func GetZetaTestSignature() mc.TestSigner {
-	pkstring := os.Getenv("PRIVKEY")
-	if pkstring == "" {
-		log.Info().Msgf("missing env variable PRIVKEY; using default with address %s", mcconfig.TSS_TEST_ADDRESS)
-		pkstring = mcconfig.TSS_TEST_PRIVKEY
-	}
-	privateKey, err := crypto.HexToECDSA(pkstring)
-	if err != nil {
-		log.Err(err).Msg("TEST private key error")
-		os.Exit(1)
-	}
-	tss := mc.TestSigner{
-		PrivKey: privateKey,
-	}
-	log.Debug().Msg(fmt.Sprintf("tss key address: %s", tss.Address()))
-
-	return tss
-}
 
 func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.MetachainBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)

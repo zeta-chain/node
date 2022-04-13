@@ -143,7 +143,7 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
 	if len(key.Bytes()) != 32 {
-		log.Error().Msgf("key bytes len %e != 32", len(key.Bytes()))
+		log.Error().Msgf("key bytes len %d != 32", len(key.Bytes()))
 		return
 	}
 	var priKey secp256k1.PrivKey
@@ -186,6 +186,9 @@ func integration_test(validatorName string, peers addr.AddrList) {
 
 	// convert key.PubKey() [cosmos-sdk/crypto/PubKey] to bech32?
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, key.PubKey())
+	if err != nil {
+		log.Error().Err(err).Msgf("Bech32ifyPubKey fail in main")
+	}
 	log.Info().Msgf("GetPrivateKey for pubkey bech32 %s", s)
 
 	pubkey, err := common.NewPubKey(s)

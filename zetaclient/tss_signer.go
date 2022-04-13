@@ -185,7 +185,8 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey) (*TSS, error) {
 		if len(filearray) == 2 {
 			log.Info().Msgf("Found stored Pubkey in local state: %s", filearray[1])
 			pk := strings.TrimSuffix(filearray[1], ".json")
-			tss.SetPubKey(pk)
+			err = tss.SetPubKey(pk)
+			log.Error().Err(err).Msg("SetPubKey  in NewTSS fail")
 			found = true
 		}
 	}

@@ -87,11 +87,24 @@ func (co *CoreObserver) keygenObserve() {
 				}
 				// Keygen succeed! Report TSS address
 				log.Info().Msgf("Keygen success! keygen response: %v...", res)
-				co.tss.SetPubKey(res.PubKey)
+				err = co.tss.SetPubKey(res.PubKey)
+				if err != nil {
+					log.Error().Msgf("SetPubKey fail")
+					continue
+				}
 
-				co.bridge.SetTSS(common.ETHChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				co.bridge.SetTSS(common.BSCChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				co.bridge.SetTSS(common.POLYGONChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.ETHChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
+				_, err = co.bridge.SetTSS(common.BSCChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
+				_, err = co.bridge.SetTSS(common.POLYGONChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
 
 				// Keysign test: sanity test
 				log.Info().Msgf("test keysign...")
