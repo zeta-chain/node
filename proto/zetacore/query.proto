@@ -4,6 +4,7 @@ package zetachain.zetacore.zetacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "zetacore/keygen.proto";
 import "zetacore/tss_voter.proto";
 import "zetacore/tss.proto";
 import "zetacore/in_tx.proto";
@@ -21,6 +22,12 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+
+	// Queries a keygen by index.
+	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/keygen";
+	}
+
 
 	// Queries a tSSVoter by index.
 	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
@@ -169,6 +176,11 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetKeygenRequest {}
+
+message QueryGetKeygenResponse {
+	Keygen Keygen = 1;
+}
 message QueryGetTSSVoterRequest {
 	string index = 1;
 }
