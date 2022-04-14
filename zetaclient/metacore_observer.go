@@ -8,11 +8,14 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )
 
 type CoreObserver struct {
@@ -21,6 +24,7 @@ type CoreObserver struct {
 	signerMap map[common.Chain]*Signer
 	clientMap map[common.Chain]*ChainObserver
 	metrics   *metrics.Metrics
+	tss       *TSS
 
 	// channels for shepherd manager
 	sendNew     chan *types.Send
@@ -29,8 +33,9 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics) *CoreObserver {
+func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
+	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 	co.sendQueue = make([]*types.Send, 0)
@@ -55,6 +60,61 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
+	go co.keygenObserve()
+}
+
+func (co *CoreObserver) keygenObserve() {
+	observeTicker := time.NewTicker(2 * time.Second)
+	for range observeTicker.C {
+		kg, err := co.bridge.GetKeyGen()
+		if err != nil {
+			continue
+		}
+		bn, _ := co.bridge.GetMetaBlockHeight()
+		if bn != kg.BlockNumber {
+			continue
+		}
+
+		go func() {
+			for {
+				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
+				var req keygen.Request
+				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+				res, err := co.tss.Server.Keygen(req)
+				if err != nil || res.Status != tsscommon.Success {
+					log.Fatal().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					continue
+				}
+				// Keygen succeed! Report TSS address
+				log.Info().Msgf("Keygen success! keygen response: %v...", res)
+				err = co.tss.SetPubKey(res.PubKey)
+				if err != nil {
+					log.Error().Msgf("SetPubKey fail")
+					continue
+				}
+
+				_, err = co.bridge.SetTSS(common.ETHChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
+				_, err = co.bridge.SetTSS(common.BSCChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
+				_, err = co.bridge.SetTSS(common.POLYGONChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				if err != nil {
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+				}
+
+				// Keysign test: sanity test
+				log.Info().Msgf("test keysign...")
+				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				log.Info().Msg("test keysign finished. exit keygen loop. ")
+				return
+			}
+		}()
+		return
+	}
 }
 
 // startObserve retrieves the pending list of Sends from ZetaCore every 10s

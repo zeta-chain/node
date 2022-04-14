@@ -20,9 +20,8 @@ else
     until [ -f SEED_NODE_ID ]
         do
             echo "Waiting for Seed Node Validator ID"
-            sleep 5
-            # curl ${SEED_NODE}:8123/p2p -o SEED_NODE_ID
-            curl 172.24.0.220:8123/p2p -o SEED_NODE_ID
+            sleep 10
+            curl -s ${SEED_NODE}:8123/p2p -o SEED_NODE_ID
 
         done
     SEED_NODE_ID=$(cat SEED_NODE_ID)
@@ -31,4 +30,8 @@ else
     yes | zetaclientd -val val \
         --peer /dns/${SEED_NODE}/tcp/6668/p2p/${SEED_NODE_ID} \
         2>&1 | tee ~/.zetaclient/zetaclient.log
+
 fi
+
+
+

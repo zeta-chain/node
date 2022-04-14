@@ -11,8 +11,7 @@ export MYIP=$(hostname -i)
 rm -rf ~/.zetacore/
 rm -rf /zetashared/node${NODE_NUMBER}/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
-mkdir -p /zetashared/node{0,1,2,3}/{data,keyring-test} /zetashared/node{0,1,2,3}/config/gentx
-mkdir -p /zetashared/genesis/ 
+mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/node${NODE_NUMBER}/data/ /zetashared/node${NODE_NUMBER}/keyring-test/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -42,6 +41,7 @@ if (( $NODE_NUMBER == 0 )); then
     done
 
     cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
+    
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do

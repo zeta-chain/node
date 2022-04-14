@@ -10,7 +10,7 @@ echo "Starting Zetacore Node $NODE_NUMBER"
 FILE="/root/.zetacore/config/app.toml"
 if  [[ ! -f "$FILE" ]]; then
     echo "Copying Config From /zetashared/node$NODE_NUMBER/"
-    cp -rf /zetashared/node$NODE_NUMBER/* /root/.zetacore/else
+    cp -rf /zetashared/node$NODE_NUMBER/* /root/.zetacore/
 fi
 
 zetacored start --rpc.laddr "tcp://0.0.0.0:26657" \

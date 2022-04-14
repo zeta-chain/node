@@ -17281,7 +17281,7 @@ paths:
             latest_height overrrides the height field and queries the latest
             stored
 
-            ConsensusState.
+            ConsensusState
           in: query
           required: false
           type: boolean
@@ -21118,6 +21118,51 @@ paths:
           required: false
           type: string
           format: uint64
+      tags:
+        - Query
+  /zeta-chain/zetacore/zetacore/keygen:
+    get:
+      summary: Queries a keygen by index.
+      operationId: ZetachainZetacoreZetacoreKeygen
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Keygen:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  status:
+                    type: string
+                    format: uint64
+                  pubkeys:
+                    type: array
+                    items:
+                      type: string
+                  blockNumber:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
       tags:
         - Query
   /zeta-chain/zetacore/zetacore/tSS:
@@ -31747,6 +31792,21 @@ definitions:
         type: string
       recvHash:
         type: string
+  zetachain.zetacore.zetacore.Keygen:
+    type: object
+    properties:
+      creator:
+        type: string
+      status:
+        type: string
+        format: uint64
+      pubkeys:
+        type: array
+        items:
+          type: string
+      blockNumber:
+        type: string
+        format: uint64
   zetachain.zetacore.zetacore.LastBlockHeight:
     type: object
     properties:
@@ -32607,6 +32667,24 @@ definitions:
           lastUpdateTimestamp:
             type: string
             format: int64
+  zetachain.zetacore.zetacore.QueryGetKeygenResponse:
+    type: object
+    properties:
+      Keygen:
+        type: object
+        properties:
+          creator:
+            type: string
+          status:
+            type: string
+            format: uint64
+          pubkeys:
+            type: array
+            items:
+              type: string
+          blockNumber:
+            type: string
+            format: uint64
   zetachain.zetacore.zetacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
