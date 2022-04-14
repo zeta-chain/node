@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"math/big"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,22 +17,20 @@ import (
 
 var ALL_CHAINS = []*ChainETHish{
 	{
-		name:                         common.Chain("ETH"),
-		MPI_CONTRACT:                 "0x132b042bD5198a48E4D273f46b979E5f13Bd9239",
-		DEFAULT_DESTINATION_CONTRACT: "0xFf6B270ac3790589A1Fe90d0303e9D4d9A54FD1A",
-		chain_id:                     5,
+		name:         common.Chain("ETH"),
+		MPI_CONTRACT: "0x68Bc806414e743D88436AEB771Be387A55B4df70",
+		chain_id:     big.NewInt(5),
 	},
 	{
-		name:                         common.Chain("BSC"),
-		MPI_CONTRACT:                 "0x96cE47e42A73649CFe33d93D93ACFbEc6FD5ee14",
-		DEFAULT_DESTINATION_CONTRACT: "0xF47bd84B86d1667e7621c38c72C6905Ca8710b0d",
-		chain_id:                     97,
+		name:         common.Chain("BSC"),
+		MPI_CONTRACT: "0xE626402550fB921E4a47c11568F89dF3496fbEF0",
+		chain_id:     big.NewInt(97),
 	},
-	//{
-	//	name:                         common.Chain("POLYGON"),
-	//	MPI_CONTRACT:                 "0x692E8A48634B530b4BFF1e621FC18C82F471892c",
-	//	DEFAULT_DESTINATION_CONTRACT: "0x22696Bef41E49FEf5beac1D4765a5b7B1E0Dcb01",
-	//},
+	{
+		name:         common.Chain("POLYGON"),
+		MPI_CONTRACT: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
+		chain_id:     big.NewInt(80001),
+	},
 }
 
 func startAllChainListeners() {
@@ -40,6 +41,27 @@ func startAllChainListeners() {
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	if ethEndPoint != "" {
+		config.ETH_ENDPOINT = ethEndPoint
+		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+	}
+	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	if bscEndPoint != "" {
+		config.BSC_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+	}
+	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	if polygonEndPoint != "" {
+		config.POLY_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+	}
+
+	var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
+	logZetaSentSignatureHash := crypto.Keccak256Hash(logZetaSentSignature)
+	MAGIC_HASH = logZetaSentSignatureHash.String()
+	log.Info().Msgf("Magic Hash: %s", MAGIC_HASH)
 
 	debug := flag.Bool("debug", false, "sets log level to debug")
 	onlyChain := flag.String("only-chain", "all", "Uppercase name of a supported chain")
