@@ -85,3 +85,7 @@ const (
 const (
 	TSSVoterKey = "TSSVoter-value-"
 )
+
+const (
+	KeygenKey = "Keygen-value-"
+)

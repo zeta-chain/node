@@ -28,7 +28,7 @@ func (s *SignerSuite) SetUpTest(c *C) {
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.Chains["BSC"].MPIContractAddress)
-	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss.Address(), tss, config.MPI_ABI_STRING, metaContractAddress)
+	signer, err := NewSigner(common.Chain("BSC"), config.BSC_ENDPOINT, tss, config.MPI_ABI_STRING, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS Address %s", tss.Address().Hex())
 	c.Logf("Contract on chain %s: %s", signer.chain, metaContractAddress.Hex())
