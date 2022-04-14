@@ -14,6 +14,7 @@ export MYIP=$(hostname -i)
 rm -rf ~/.zetacore/
 
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
+mkdir -p /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/genesis/ /zetashared/data/ /zetashared/keyring-test/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -43,9 +44,7 @@ if (( $NODE_NUMBER == 0 )); then
     done
 
     cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
-    # cp NODE_VALIDATOR_ID /zetashared/genesis/NODE_VALIDATOR_ID
-
-
+    
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do
