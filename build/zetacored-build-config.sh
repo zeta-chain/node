@@ -5,10 +5,16 @@ MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX
 
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
-export MYIP=$(hostname -i)
+
+if [ -z ${MYIP} ]; then 
+    # If MYIP is not set, use the private IP of the host
+    export MYIP=$(hostname -i)
+fi
 
 # Remove old files and make sure folders exist
 rm -rf ~/.zetacore/
+rm -rf ~/.tss*
+rm -rf ~/.zetaclient*
 rm -rf /zetashared/node${NODE_NUMBER}/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
 mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/node${NODE_NUMBER}/data/ /zetashared/node${NODE_NUMBER}/keyring-test/

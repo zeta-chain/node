@@ -3,7 +3,11 @@
 NODE_NUMBER=$1
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
-export MYIP=$(hostname -i)
+
+if [ -z ${MYIP} ]; then 
+    # If MYIP is not set, use the private IP of the host
+    export MYIP=$(hostname -i)
+fi
 
 echo "Starting Zetacore Node $NODE_NUMBER"
 
