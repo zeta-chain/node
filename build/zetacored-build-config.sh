@@ -11,10 +11,14 @@ if [ -z ${MYIP} ]; then
     export MYIP=$(hostname -i)
 fi
 
+echo "MYIP: $MYIP"
+echo "MyLocalIP: $$(hostname -i)"
+
 # Remove old files and make sure folders exist
 rm -rf ~/.zetacore/
-rm -rf ~/.tss*
-rm -rf ~/.zetaclient*
+rm -rf ~/.tssnew/
+rm -rf ~/.tss/
+rm -rf ~/.zetaclient/
 rm -rf /zetashared/node${NODE_NUMBER}/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
 mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/node${NODE_NUMBER}/data/ /zetashared/node${NODE_NUMBER}/keyring-test/
