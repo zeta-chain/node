@@ -24,7 +24,7 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.200
-    command: -c "/scripts/zetacored-build-config.sh 0 3"
+    command: -c "/scripts/zetacored-build-config.sh 0 1"
     
   zetacore1:
     container_name: zetacore1
@@ -43,44 +43,44 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.201
-    command: -c "/scripts/zetacored-build-config.sh 1 3"
+    command: -c "/scripts/zetacored-build-config.sh 1 1"
 
-  zetacore2:
-    container_name: zetacore2
-    env_file:
-      - .env
-    image: zetacore:latest
-    environment:
-      - NODE_NUMBER=2
-    volumes:
-      - ./storage/node2/zetaclient:/root/.zetaclient
-      - ./storage/node2/zetacore:/root/.zetacore
-      - ./storage/node2/tss:/root/.tss/
-      - ./storage/node2/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
-      - ./config/:/zetashared/
-    networks:
-      localnet:
-        ipv4_address: 172.24.0.202
-    command: -c "/scripts/zetacored-build-config.sh 2 3"
-  zetacore3:
-    container_name: zetacore3
-    env_file:
-      - .env
-    image: zetacore:latest
-    environment:
-      - NODE_NUMBER=3
-    volumes:
-      - ./storage/node3/zetaclient:/root/.zetaclient
-      - ./storage/node3/zetacore:/root/.zetacore
-      - ./storage/node3/tss:/root/.tss/
-      - ./storage/node3/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
-      - ./config/:/zetashared/
-    networks:
-      localnet:
-        ipv4_address: 172.24.0.203
-    command: -c "/scripts/zetacored-build-config.sh 3 3"
+#   zetacore2:
+#     container_name: zetacore2
+#     env_file:
+#       - .env
+#     image: zetacore:latest
+#     environment:
+#       - NODE_NUMBER=2
+#     volumes:
+#       - ./storage/node2/zetaclient:/root/.zetaclient
+#       - ./storage/node2/zetacore:/root/.zetacore
+#       - ./storage/node2/tss:/root/.tss/
+#       - ./storage/node2/tssnew/:/root/.tssnew/
+#       - ../../../build:/scripts
+#       - ./config/:/zetashared/
+#     networks:
+#       localnet:
+#         ipv4_address: 172.24.0.202
+#     command: -c "/scripts/zetacored-build-config.sh 2 3"
+#   zetacore3:
+#     container_name: zetacore3
+#     env_file:
+#       - .env
+#     image: zetacore:latest
+#     environment:
+#       - NODE_NUMBER=3
+#     volumes:
+#       - ./storage/node3/zetaclient:/root/.zetaclient
+#       - ./storage/node3/zetacore:/root/.zetacore
+#       - ./storage/node3/tss:/root/.tss/
+#       - ./storage/node3/tssnew/:/root/.tssnew/
+#       - ../../../build:/scripts
+#       - ./config/:/zetashared/
+#     networks:
+#       localnet:
+#         ipv4_address: 172.24.0.203
+#     command: -c "/scripts/zetacored-build-config.sh 3 3"
 
 networks:
   localnet: 
