@@ -16,6 +16,7 @@ if [ -z ${MYIP} ]; then
     export MYIP=$(hostname -i)
 fi
 
+MYIP=$(hostname -i)
 echo "Hostname: $(hostname)"
 echo "MYIP: $MYIP"
 
