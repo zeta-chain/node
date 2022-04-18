@@ -1,0 +1,208 @@
+# Do not use this for production.
+version: "3"
+
+services:
+  zetacore0:
+    container_name: zetacore0
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=0
+    volumes:
+      - ./storage/node0/zetaclient:/root/.zetaclient
+      - ./storage/node0/zetacore:/root/.zetacore
+      - ./storage/node0/tss:/root/.tss/
+      - ./storage/node0/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+
+    ports:
+        - "${REST_ENDPOINT}:1317" # REST_ENDPOINT
+        - "${gRPC_PORT}:9090" # gRPC_PORT
+        - "${RPC_PORT}:26657" # RPC_PORT
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.200
+    command: -c "/scripts/zetacored-start.sh 0"
+  zetacore1:
+    container_name: zetacore1
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=1
+    volumes:
+      - ./storage/node1/zetaclient:/root/.zetaclient
+      - ./storage/node1/zetacore:/root/.zetacore
+      - ./storage/node1/tss:/root/.tss/
+      - ./storage/node1/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.201
+    command: -c "/scripts/zetacored-start.sh 1 zetacore0"
+  zetacore2:
+    container_name: zetacore2
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=2
+    volumes:
+      - ./storage/node2/zetaclient:/root/.zetaclient
+      - ./storage/node2/zetacore:/root/.zetacore
+      - ./storage/node2/tss:/root/.tss/
+      - ./storage/node2/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.202
+    command: -c "/scripts/zetacored-start.sh 2 zetacore0"
+
+  zetacore3:
+    container_name: zetacore3
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=3
+    volumes:
+      - ./storage/node3/zetaclient:/root/.zetaclient
+      - ./storage/node3/zetacore:/root/.zetacore
+      - ./storage/node3/tss:/root/.tss/
+      - ./storage/node3/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.203
+    command: -c "/scripts/zetacored-start.sh 3 zetacore0"
+
+  zetaclient0:
+    container_name: zetaclient0
+    restart: unless-stopped
+    env_file:
+      - .env
+    image: zetacore:latest
+    depends_on:
+      - zetacore0
+    environment:
+      - NODE_NUMBER=0
+      - BOOTNODE_IP=zetacore0
+      - CHAIN_IP=zetacore0
+      - ETH_MPI_ADDRESS=$ETH_MPI_ADDRESS
+      - BSC_MPI_ADDRESS=$BSC_MPI_ADDRESS
+      - POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS
+      - ETH_ENDPOINT=http://ethereum-geth-rpc-endpoint-1.localnet:8545
+      - BSC_ENDPOINT=http://bsc-rpc:8545
+      - POLYGON_ENDPOINT=http://bor.localnet:8545
+    volumes:
+      - ./storage/node0/zetaclient:/root/.zetaclient
+      - ./storage/node0/zetacore:/root/.zetacore
+      - ./storage/node0/tss:/root/.tss
+      - ./storage/node0/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    ports:
+      - 8123:8123
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.220
+    command: -c "/scripts/zetaclient-start.sh 0"
+  zetaclient1:
+    container_name: zetaclient1
+    restart: unless-stopped
+    env_file:
+      - .env
+    image: zetacore:latest
+    depends_on:
+      - zetacore1
+    environment:
+      - NODE_NUMBER=1
+      - BOOTNODE_IP=zetacore1
+      - CHAIN_IP=zetacore1
+      - ETH_MPI_ADDRESS=$ETH_MPI_ADDRESS
+      - BSC_MPI_ADDRESS=$BSC_MPI_ADDRESS
+      - POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS
+      - ETH_ENDPOINT=http://ethereum-geth-rpc-endpoint-1.localnet:8545
+      - BSC_ENDPOINT=http://bsc-rpc:8545
+      - POLYGON_ENDPOINT=http://bor.localnet:8545
+    volumes:
+      - ./storage/node1/zetaclient:/root/.zetaclient
+      - ./storage/node1/zetacore:/root/.zetacore
+      - ./storage/node1/tss:/root/.tss
+      - ./storage/node1/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.221
+    command: -c "/scripts/zetaclient-start.sh 1 zetaclient0"
+    
+  zetaclient2:
+    container_name: zetaclient2
+    restart: unless-stopped
+    env_file:
+      - .env
+    image: zetacore:latest
+    depends_on:
+      - zetacore2
+    environment:
+      - NODE_NUMBER=2
+      - BOOTNODE_IP=zetacore2
+      - CHAIN_IP=zetacore2
+      - ETH_MPI_ADDRESS=$ETH_MPI_ADDRESS
+      - BSC_MPI_ADDRESS=$BSC_MPI_ADDRESS
+      - POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS
+      - ETH_ENDPOINT=http://ethereum-geth-rpc-endpoint-1.localnet:8545
+      - BSC_ENDPOINT=http://bsc-rpc:8545
+      - POLYGON_ENDPOINT=http://bor.localnet:8545
+    volumes:
+      - ./storage/node2/zetaclient:/root/.zetaclient
+      - ./storage/node2/zetacore:/root/.zetacore
+      - ./storage/node2/tss:/root/.tss
+      - ./storage/node2/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.222
+    command: -c "/scripts/zetaclient-start.sh 2 zetaclient0"
+
+  zetaclient3:
+    container_name: zetaclient3
+    restart: unless-stopped
+    env_file:
+      - .env
+    image: zetacore:latest
+    depends_on:
+      - zetacore3
+    environment:
+      - NODE_NUMBER=3
+      - BOOTNODE_IP=zetacore3
+      - CHAIN_IP=zetacore3
+      - ETH_MPI_ADDRESS=$ETH_MPI_ADDRESS
+      - BSC_MPI_ADDRESS=$BSC_MPI_ADDRESS
+      - POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS
+      - ETH_ENDPOINT=http://ethereum-geth-rpc-endpoint-1.localnet:8545
+      - BSC_ENDPOINT=http://bsc-rpc:8545
+      - POLYGON_ENDPOINT=http://bor.localnet:8545
+    volumes:
+      - ./storage/node3/zetaclient:/root/.zetaclient
+      - ./storage/node3/zetacore:/root/.zetacore
+      - ./storage/node3/tss:/root/.tss
+      - ./storage/node3/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.223
+    command: -c "/scripts/zetaclient-start.sh 3 zetaclient0"
+networks:
+  localnet: 
+    external: true
+    name: localnet
+

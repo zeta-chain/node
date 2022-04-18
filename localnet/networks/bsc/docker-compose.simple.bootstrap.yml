@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  bootstrap-simple:
+    build:
+      context: ./bsc-docker/.
+      dockerfile: Dockerfile.bootstrap
+    platform: linux/amd64
+
+    env_file: .env
+    environment:
+      INIT_HOLDER_BALANCE: "500000000000000000000"
+      NUMS_OF_VALIDATOR: 1
+    volumes:
+      - ./storage:/root/storage
+      - ./bsc-docker/scripts:/root/scripts
+      - ./bsc-docker/config:/root/config
+      - ./bsc-docker/init-holders:/root/init-holders
+    command: /root/scripts/bootstrap.sh
+    networks: 
+      - localnet
+
+networks:
+  localnet: 
+    external: true
+    name: localnet
