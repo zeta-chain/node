@@ -1,0 +1,7 @@
+# The ID of Ethereum Network
+NETWORK_ID=1214
+RPC_PORT=8100
+NETWORK_NAME=Ethereum
+
+# The password to create and access the primary account
+ACCOUNT_PASSWORD=5uper53cr3t
