@@ -12,7 +12,7 @@ if [ -z ${MYIP} ]; then
 fi
 
 echo "MYIP: $MYIP"
-echo "MyLocalIP: $$(hostname -i)"
+echo "MyLocalIP: $(hostname -i)"
 
 # Remove old files and make sure folders exist
 rm -rf ~/.zetacore/

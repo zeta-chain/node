@@ -1,0 +1,20 @@
+{
+  "goerli": {
+    "mpi": "",
+    "tss": "",
+    "tssUpdater": "",
+    "zetaToken": ""
+  },
+  "bsc-testnet": {
+    "mpi": "",
+    "tss": "",
+    "tssUpdater": "",
+    "zetaToken": ""
+  },
+  "matic-mumbai": {
+    "mpi": "",
+    "tss": "",
+    "tssUpdater": "",
+    "zetaToken": ""
+  }
+}
