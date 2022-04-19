@@ -15,7 +15,7 @@ for d in $(ls -d */); do
 done
 
 echo "Pausing for LocalNet Nodes to start -- Please Wait..."
-sleep 30
+sleep 20
 
 echo "Deploying ZetaChain Contracts"
 ../hardhat/scripts/multi-chain/deploy_multi_chain.sh
