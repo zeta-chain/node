@@ -12,14 +12,11 @@ export PATH=$PATH:/root/go/bin
 export IDX=$NODE_NUMBER
 export TSSPATH=/root/.tssnew
 
-
 if [ -z ${MYIP} ]; then
     # If MYIP is not set, use the private IP of the host
+    echo "MYIP Not Set"
     export MYIP=$(hostname -i)
 fi
-
-MYIP=$(hostname -i)
-echo "Hostname: $(hostname)"
 echo "MYIP: $MYIP"
 
 if (($NODE_NUMBER == 0)); then

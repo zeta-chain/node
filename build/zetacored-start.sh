@@ -7,7 +7,7 @@ export PATH=$PATH:/root/go/bin
 
 if [ -z ${MYIP} ]; then 
     # If MYIP is not set, use the private IP of the host
-    echo git"MYIP Not Set"
+    echo "MYIP Not Set"
     export MYIP=$(hostname -i)
 fi
 
