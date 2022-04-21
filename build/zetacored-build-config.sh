@@ -6,10 +6,10 @@ MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
-# if [ -z ${MYIP} ]; then 
-#     # If MYIP is not set, use the private IP of the host
-#     export MYIP=$(hostname -i)
-# fi
+if [ -z ${MYIP} ]; then 
+    # If MYIP is not set, use the private IP of the host
+    export MYIP=$(hostname -i)
+fi
 
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
@@ -99,7 +99,7 @@ if (( $NODE_NUMBER > 0 )); then
         done
     echo "init-genesis.json found"
 
-    # sleep 5 # Can probably be removed
+    sleep 5 # Wait to make sure node0 has finished configuring the genesis file
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
