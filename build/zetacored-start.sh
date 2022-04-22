@@ -19,6 +19,18 @@ if  [[ ! -f "$FILE" ]]; then
     cp -rf /zetashared/node$NODE_NUMBER/* /root/.zetacore/
 fi
 
-zetacored start --rpc.laddr "tcp://0.0.0.0:26657" \
-    --proxy_app "tcp://0.0.0.0:26658" \
-    --rpc.pprof_laddr "0.0.0.0:6060" 2>&1 | tee /root/.zetacore/zetacored.log
+
+zetacored start \
+    --rpc.laddr "tcp://0.0.0.0:26657" \
+    --rpc.pprof_laddr "0.0.0.0:6060"  \
+    --address "tcp://$MYIP:26658" \
+    --moniker "node$NODE_NUMBER" 2>&1 | tee /root/.zetacore/zetacored.log
+
+    # --proxy_app "tcp://0.0.0.0:26658" \
+
+# Original Working Localnet 
+# zetacored start \
+#     --rpc.laddr "tcp://0.0.0.0:26657" \
+#     --rpc.pprof_laddr "0.0.0.0:6060"  \
+#     --proxy_app "tcp://0.0.0.0:26658" \
+#     2>&1 | tee /root/.zetacore/zetacored.log

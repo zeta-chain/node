@@ -20,7 +20,7 @@ rm -rf ~/.tssnew/
 rm -rf ~/.tss/
 rm -rf ~/.zetaclient/
 rm -rf /zetashared/node${NODE_NUMBER}/*
-mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
+mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/node${NODE_NUMBER}/data/ /zetashared/node${NODE_NUMBER}/keyring-test/
 
 if (( $NODE_NUMBER == 0 )); then
@@ -65,12 +65,12 @@ if (( $NODE_NUMBER == 0 )); then
         i=$[$i+1]
     done
 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
+    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
-    sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
-    sed -i '/\[api\]/,+3 s/seed_mode = false/seed_mode = true/' /root/.zetacore/config/config.toml
+    # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
+    # sed -i '/\[api\]/,+3 s/seed_mode = false/seed_mode = true/' /root/.zetacore/config/config.toml
 
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
@@ -103,10 +103,10 @@ if (( $NODE_NUMBER > 0 )); then
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
+    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
-    sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
+    # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
@@ -118,6 +118,7 @@ if (( $NODE_NUMBER > 0 )); then
             sleep 3
         done
     # echo "Final genesis.json found"
+    sleep 5 
     cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
 
