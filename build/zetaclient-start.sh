@@ -17,6 +17,7 @@ if [ -z ${MYIP} ]; then
     echo "MYIP Not Set"
     export MYIP=$(hostname -i)
 fi
+export MYIP=$MYIP
 echo "MYIP: $MYIP"
 
 if (($NODE_NUMBER == 0)); then
