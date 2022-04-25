@@ -58,12 +58,12 @@ describe("LocalNet Testing", () => {
   it("MPI contract can send() messages", async () => {
     await transferTest;
     messageSendTest = await Promise.all([
-      testSendMessage(eth, bsc, zeta),
-      testSendMessage(eth, polygon, zeta),
-      testSendMessage(bsc, eth, zeta),
-      testSendMessage(bsc, polygon, zeta),
-      testSendMessage(polygon, eth, zeta),
-      testSendMessage(polygon, bsc, zeta),
+      testSendMessage(eth, bsc, false),
+      testSendMessage(eth, polygon, true),
+      testSendMessage(bsc, eth, false),
+      testSendMessage(bsc, polygon, true),
+      testSendMessage(polygon, eth, false),
+      testSendMessage(polygon, bsc, true),
     ]);
     await messageSendTest;
   });
