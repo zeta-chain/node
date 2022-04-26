@@ -48,7 +48,7 @@ var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
 //        bytes message,
 //        bytes32 indexed internalSendHash
 //    );
-var logZetaReceivedSignature = []byte("ZetaReceived(address,uint256,address,uint256,bytes,bytes32)")
+var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
 var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
 
 var topics = make([][]ethcommon.Hash, 1)
@@ -163,7 +163,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
 	// this is shared structure to query logs by sendHash
-	//topics[2] = make([]ethcommon.Hash, 1)
+	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", chainOb.chain, logZetaReceivedSignatureHash.Hex())
 
 	return &chainOb, nil
 }
