@@ -1,7 +1,8 @@
 set -e
 set -x
 ZETACORED=/home/ubuntu/go/bin/zetacored
-NODES="3.137.46.147 3.20.194.40 3.21.29.248"
+# AWS EC2: testnet1, testnet2, testnet3, testnet5
+NODES="3.137.46.147 3.20.194.40 3.19.64.252"
 
 rm -rf ~/.zetacore
 for NODE in $NODES; do
@@ -43,7 +44,7 @@ done
 #
 
 jq '.chain_id = "testing"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
-# sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacore/config/app.toml
+sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacore/config/app.toml
 sed -i '/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/' ~/.zetacore/config/app.toml
 
 for NODE in $NODES; do
