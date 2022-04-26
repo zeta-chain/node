@@ -162,27 +162,34 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
-	if bridge != nil {
-		_, err = bridge.GetNonceByChain(chain)
-		if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-			nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-			if err != nil {
-				log.Err(err).Msg("NonceAt")
-				return nil, err
-			}
-			log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-			_, err = bridge.PostNonce(chain, nonce)
-			if err != nil {
-				log.Err(err).Msg("PostNonce")
-				return nil, err
-			}
-		}
-	}
-
 	// this is shared structure to query logs by sendHash
 	//topics[2] = make([]ethcommon.Hash, 1)
 
 	return &chainOb, nil
+}
+
+func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
+	bridge := chainOb.bridge
+	client := chainOb.Client
+	tss := chainOb.Tss
+	chain := chainOb.chain
+
+	_, err := bridge.GetNonceByChain(chain)
+	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
+		if err != nil {
+			log.Err(err).Msg("NonceAt")
+			return err
+		}
+		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+		_, err = bridge.PostNonce(chain, nonce)
+		if err != nil {
+			log.Err(err).Msg("PostNonce")
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (chainOb *ChainObserver) WatchRouter() {

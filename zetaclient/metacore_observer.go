@@ -110,6 +110,19 @@ func (co *CoreObserver) keygenObserve() {
 				log.Info().Msgf("test keysign...")
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
 				log.Info().Msg("test keysign finished. exit keygen loop. ")
+
+				err = co.clientMap[common.ETHChain].PostNonceIfNotRecorded()
+				if err != nil {
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ETHChain)
+				}
+				err = co.clientMap[common.BSCChain].PostNonceIfNotRecorded()
+				if err != nil {
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCChain)
+				}
+				err = co.clientMap[common.POLYGONChain].PostNonceIfNotRecorded()
+				if err != nil {
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
+				}
 				return
 			}
 		}()
