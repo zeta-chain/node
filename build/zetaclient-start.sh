@@ -14,7 +14,7 @@ export TSSPATH=/root/.tssnew
 
 if [ -z ${MYIP} ]; then
     # If MYIP is not set, use the private IP of the host
-    echo "MYIP Not Set"
+    echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
     export MYIP=$(hostname -i)
 fi
 echo "MYIP: $MYIP"

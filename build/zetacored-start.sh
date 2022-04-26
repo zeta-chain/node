@@ -7,7 +7,7 @@ export PATH=$PATH:/root/go/bin
 
 if [ -z ${MYIP} ]; then 
     # If MYIP is not set, use the private IP of the host
-    echo "MYIP Not Set"
+    echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
     export MYIP=$(hostname -i)
 fi
 
@@ -28,9 +28,4 @@ zetacored start \
 
     # --proxy_app "tcp://0.0.0.0:26658" \
 
-# Original Working Localnet 
-# zetacored start \
-#     --rpc.laddr "tcp://0.0.0.0:26657" \
-#     --rpc.pprof_laddr "0.0.0.0:6060"  \
-#     --proxy_app "tcp://0.0.0.0:26658" \
-#     2>&1 | tee /root/.zetacore/zetacored.log
+

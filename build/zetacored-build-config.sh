@@ -7,7 +7,7 @@ export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
 if [ -z ${MYIP} ]; then 
-    # If MYIP is not set, use the private IP of the host
+    echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
     export MYIP=$(hostname -i)
 fi
 

@@ -59,11 +59,11 @@ describe("LocalNet Testing", () => {
     await transferTest;
     messageSendTest = await Promise.all([
       testSendMessage(eth, bsc, false),
-      testSendMessage(eth, polygon, true),
+      testSendMessage(eth, polygon, false),
       testSendMessage(bsc, eth, false),
-      testSendMessage(bsc, polygon, true),
+      testSendMessage(bsc, polygon, false),
       testSendMessage(polygon, eth, false),
-      testSendMessage(polygon, bsc, true),
+      testSendMessage(polygon, bsc, false),
     ]);
     await messageSendTest;
   });

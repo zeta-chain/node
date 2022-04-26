@@ -2,7 +2,7 @@ name: Push Image To ECR
 
 on:
   push:
-    branches: [ main, development, staging, sparta, ecs-deployment]
+    branches: [ main, development, staging, sparta, athens, ecs-deployment, start-script-updates-aws]
 
 jobs:
   build-zetaclient:

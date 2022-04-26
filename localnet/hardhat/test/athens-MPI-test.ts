@@ -1035,7 +1035,7 @@ const polygon = new EVMChain(
   privatekey
 );
 
-const zeta = new ZetaChain("zeta-athens", "http://zetanode0.staging.zetachain.com:1317", 1317);
+const zeta = new ZetaChain("zeta-athens", "https://api.staging.zetachain.com", 1317);
 
 let approvalTest;
 let transferTest;
