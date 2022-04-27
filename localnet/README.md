@@ -82,5 +82,8 @@ If this happens stop all the BSC containers and then start them again. That usua
 - Optimization! There's a lot of room for optimzation in the build process and the docker compose configurations. 
 - Better solution for .env than copying it
 - Move contract values to JSON or another better storage solution that a bunch of text files
+    - Use Lucas's solution in the other repo for this
 - Test which images can work as ARM and then removing the platform flags. I ran into issues with some of them earlier on so to be save I started forcing them all to run at amd64
 - Long term - Rewrite contract deployments and test as a more full featured and flexible node script
+- Improve the testing scripts so the same one can be used for all networks and just pass in different network values. 
+- Use 
