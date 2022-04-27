@@ -11,5 +11,5 @@ const (
 	ZetaChainCoinType    uint32 = 933
 	ZetaChainHDPath      string = `m/44'/933'/0'/0/0`
 	NET                         = "MAINNET"
-	CHAINID                     = "zetacore"
+	CHAINID                     = "athens-1"
 )

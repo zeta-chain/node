@@ -55,16 +55,3 @@ go.sum: go.mod
 		GO111MODULE=on go mod verify
 
 
-reset:
-	sudo rm -rf ~/.metachain
-	./build/scripts/make-localnet.sh
-
-down:
-	docker-compose -f build/mocknet/metachain.yml down --remove-orphans
-
-up:
-	source build/scripts/env.sh && docker-compose -f build/mocknet/metachain.yml up --remove-orphans -d
-
-
-build:
-	docker-compose -f build/mocknet/metachain.yml build

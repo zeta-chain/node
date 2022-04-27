@@ -48,7 +48,7 @@ var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
 //        bytes message,
 //        bytes32 indexed internalSendHash
 //    );
-var logZetaReceivedSignature = []byte("ZetaReceived(address,uint256,address,uint256,bytes,bytes32)")
+var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
 var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
 
 var topics = make([][]ethcommon.Hash, 1)
@@ -162,27 +162,34 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
-	if bridge != nil {
-		_, err = bridge.GetNonceByChain(chain)
-		if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-			nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-			if err != nil {
-				log.Err(err).Msg("NonceAt")
-				return nil, err
-			}
-			log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-			_, err = bridge.PostNonce(chain, nonce)
-			if err != nil {
-				log.Err(err).Msg("PostNonce")
-				return nil, err
-			}
+	// this is shared structure to query logs by sendHash
+	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", chainOb.chain, logZetaReceivedSignatureHash.Hex())
+
+	return &chainOb, nil
+}
+
+func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
+	bridge := chainOb.bridge
+	client := chainOb.Client
+	tss := chainOb.Tss
+	chain := chainOb.chain
+
+	_, err := bridge.GetNonceByChain(chain)
+	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
+		if err != nil {
+			log.Err(err).Msg("NonceAt")
+			return err
+		}
+		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+		_, err = bridge.PostNonce(chain, nonce)
+		if err != nil {
+			log.Err(err).Msg("PostNonce")
+			return err
 		}
 	}
 
-	// this is shared structure to query logs by sendHash
-	//topics[2] = make([]ethcommon.Hash, 1)
-
-	return &chainOb, nil
+	return nil
 }
 
 func (chainOb *ChainObserver) WatchRouter() {
@@ -193,25 +200,18 @@ func (chainOb *ChainObserver) WatchRouter() {
 			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
 			continue
 		}
-		chainOb.observeFailedTx()
 	}
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	for range chainOb.ticker.C {
+	gasTicker := time.NewTicker(24 * time.Second)
+	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
 			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
 			continue
 		}
 	}
-}
-
-func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
-	hash := ethcommon.HexToHash(txhash)
-	chainOb.mu.Lock()
-	chainOb.txWatchList[hash] = sendhash
-	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) PostGasPrice() error {
@@ -340,27 +340,6 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//	return err
 	//}
 	return nil
-}
-
-func (chainOb *ChainObserver) observeFailedTx() {
-	chainOb.mu.Lock()
-	//for txhash, sendHash := range chainOb.txWatchList {
-	//	receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), txhash)
-	//	if err != nil {
-	//		continue
-	//	}
-	//	if receipt.Status == 0 { // failed tx
-	//		log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
-	//		_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
-	//		if err != nil {
-	//			log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
-	//		}
-	//	} else {
-	//
-	//	}
-	//	delete(chainOb.txWatchList, txhash)
-	//}
-	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) observeChain() error {
