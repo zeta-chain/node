@@ -1,20 +1,27 @@
 #!/bin/bash
 
-echo "Starting Zetacore"
-echo $1 $2 $3
-
 NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
-echo "MAX_NODE_NUMBER: $MAX_NODE_NUMBER"
 
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
-export MYIP=$(hostname -i)
 
+if [ -z ${MYIP} ]; then 
+    echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
+    export MYIP=$(hostname -i)
+fi
+
+echo "MYIP: $MYIP"
+echo "MyLocalIP: $(hostname -i)"
+
+# Remove old files and make sure folders exist
 rm -rf ~/.zetacore/
-
-mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/
-mkdir -p /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/genesis/ /zetashared/data/ /zetashared/keyring-test/
+rm -rf ~/.tssnew/
+rm -rf ~/.tss/
+rm -rf ~/.zetaclient/
+rm -rf /zetashared/node${NODE_NUMBER}/*
+mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
+mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zetashared/node${NODE_NUMBER}/data/ /zetashared/node${NODE_NUMBER}/keyring-test/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -30,7 +37,7 @@ if (( $NODE_NUMBER == 0 )); then
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do
-        echo "i = $i"
+        # echo "i = $i"
         until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
             echo "Waiting for Node $i to generate new keys"
             do
@@ -48,7 +55,7 @@ if (( $NODE_NUMBER == 0 )); then
     i=1
     while [ $i -le $MAX_NODE_NUMBER ]
     do
-        echo "i = $i"
+        # echo "i = $i"
         until [ -f /zetashared/node$i/config/gentx/gentx-*.json ]
             do
                 echo "Waiting for Node $i to generate gentx files"
@@ -58,10 +65,12 @@ if (( $NODE_NUMBER == 0 )); then
         i=$[$i+1]
     done
 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
+    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
+    # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
+    # sed -i '/\[api\]/,+3 s/seed_mode = false/seed_mode = true/' /root/.zetacore/config/config.toml
 
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
@@ -90,13 +99,14 @@ if (( $NODE_NUMBER > 0 )); then
         done
     echo "init-genesis.json found"
 
-    sleep 5 # Can probably be removed
+    sleep 5 # Wait to make sure node0 has finished configuring the genesis file
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP 
+    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
+    # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
@@ -107,11 +117,11 @@ if (( $NODE_NUMBER > 0 )); then
             echo "Waiting for updated genesis file..."
             sleep 3
         done
-    echo "Final genesis.json found"
+    # echo "Final genesis.json found"
+    sleep 5 
     cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
 
     echo "Config Built -- Node $NODE_NUMBER"
 
 fi
-

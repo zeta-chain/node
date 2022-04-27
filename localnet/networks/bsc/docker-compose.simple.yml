@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  bsc-rpc: # This is the bootstrap node
+    image: bsc-geth:docker-local
+    platform: linux/amd64
+    env_file: .env
+    ports:
+      - ${RPC_PORT}:8545
+    environment:
+      NODE_ID: bsc-rpc
+    volumes:
+      - ./storage/bsc-rpc:/root/.ethereum
+      - ./bsc-docker/scripts:/scripts
+      - ./bsc-docker/config:/config
+    networks:
+      - localnet
+    command: ash /scripts/bsc-rpc.sh
+
+  bsc-validator1:
+    image: bsc-geth:docker-local
+    platform: linux/amd64
+    env_file: .env
+    environment:
+      NODE_ID: bsc-validator1
+      BOOTSTRAP_HOST: bsc-rpc
+    volumes:
+      - ./storage/bsc-validator1:/root/.ethereum
+      - ./bsc-docker/scripts:/scripts
+    networks:
+      localnet:
+      #   ipv4_address: 172.24.200.5
+    command: ash /scripts/bsc-validator.sh
+
+  netstats:
+    build: ./bsc-docker/netstats/
+    ports:
+      - 3010:3000
+    environment:
+      WS_SECRET: bscpwd
+    restart: always
+    networks:
+      - localnet
+    
+networks:
+  localnet: 
+    external: true
+    name: localnet
