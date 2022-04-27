@@ -45,18 +45,20 @@ func main() {
 	ethEndPoint := os.Getenv("ETH_ENDPOINT")
 	if ethEndPoint != "" {
 		config.ETH_ENDPOINT = ethEndPoint
-		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
 	}
+	log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+
 	bscEndPoint := os.Getenv("BSC_ENDPOINT")
 	if bscEndPoint != "" {
 		config.BSC_ENDPOINT = bscEndPoint
-		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
 	}
+	log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+
 	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
 	if polygonEndPoint != "" {
 		config.POLY_ENDPOINT = polygonEndPoint
-		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
 	}
+	log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
 
 	var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
 	logZetaSentSignatureHash := crypto.Keccak256Hash(logZetaSentSignature)
