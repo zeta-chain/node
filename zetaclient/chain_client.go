@@ -200,25 +200,18 @@ func (chainOb *ChainObserver) WatchRouter() {
 			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
 			continue
 		}
-		chainOb.observeFailedTx()
 	}
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	for range chainOb.ticker.C {
+	gasTicker := time.NewTicker(24 * time.Second)
+	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
 			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
 			continue
 		}
 	}
-}
-
-func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
-	hash := ethcommon.HexToHash(txhash)
-	chainOb.mu.Lock()
-	chainOb.txWatchList[hash] = sendhash
-	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) PostGasPrice() error {
@@ -347,27 +340,6 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//	return err
 	//}
 	return nil
-}
-
-func (chainOb *ChainObserver) observeFailedTx() {
-	chainOb.mu.Lock()
-	//for txhash, sendHash := range chainOb.txWatchList {
-	//	receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), txhash)
-	//	if err != nil {
-	//		continue
-	//	}
-	//	if receipt.Status == 0 { // failed tx
-	//		log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
-	//		_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
-	//		if err != nil {
-	//			log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
-	//		}
-	//	} else {
-	//
-	//	}
-	//	delete(chainOb.txWatchList, txhash)
-	//}
-	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) observeChain() error {
