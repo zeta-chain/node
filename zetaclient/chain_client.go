@@ -28,27 +28,28 @@ const (
 	PosKey = "PosKey"
 )
 
-// DELETE
-//var logLockSendSignature = []byte("LockSend(address,string,uint256,uint256,string,bytes)")
-//var logLockSendSignatureHash = crypto.Keccak256Hash(logLockSendSignature)
-//
-//var logUnlockSignature = []byte("Unlock(address,uint256,bytes32)")
-//var logUnlockSignatureHash = crypto.Keccak256Hash(logUnlockSignature)
-//
-//var logBurnSendSignature = []byte("BurnSend(address,string,uint256,uint256,string,bytes)")
-//var logBurnSendSignatureHash = crypto.Keccak256Hash(logBurnSendSignature)
-//
-//var logMMintedSignature = []byte("MMinted(address,uint256,bytes32)")
-//var logMMintedSignatureHash = crypto.Keccak256Hash(logMMintedSignature)
+//    event ZetaSent(
+//        address indexed originSenderAddress,
+//        uint256 destinationChainId,
+//        bytes destinationAddress,
+//        uint256 zetaAmount,
+//        uint256 gasLimit,
+//        bytes message,
+//        bytes zetaParams
+//    );
+var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
+var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
 
-// END DELETE
-
-//   event ZetaMessageSendEvent(address indexed sender, uint16 destChainID, bytes destContract, uint zetaAmount, uint gasLimit, bytes message, bytes zetaParams);
-var logMPISendSignature = []byte("ZetaMessageSendEvent(address,uint16,bytes,uint256,uint256,bytes,bytes)")
-var logMPISendSignatureHash = crypto.Keccak256Hash(logMPISendSignature)
-
-var logMPIReceiveSignature = []byte("ZetaMessageReceiveEvent(bytes,uint16,address,uint256,bytes,bytes32)")
-var logMPIReceiveSignatureHash = crypto.Keccak256Hash(logMPIReceiveSignature)
+//    event ZetaReceived(
+//        bytes originSenderAddress,
+//        uint256 indexed originChainId,
+//        address indexed destinationAddress,
+//        uint256 zetaAmount,
+//        bytes message,
+//        bytes32 indexed internalSendHash
+//    );
+var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
+var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
 
 var topics = make([][]ethcommon.Hash, 1)
 
@@ -161,27 +162,34 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
 
-	if bridge != nil {
-		_, err = bridge.GetNonceByChain(chain)
-		if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-			nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
-			if err != nil {
-				log.Err(err).Msg("NonceAt")
-				return nil, err
-			}
-			log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
-			_, err = bridge.PostNonce(chain, nonce)
-			if err != nil {
-				log.Err(err).Msg("PostNonce")
-				return nil, err
-			}
+	// this is shared structure to query logs by sendHash
+	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", chainOb.chain, logZetaReceivedSignatureHash.Hex())
+
+	return &chainOb, nil
+}
+
+func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
+	bridge := chainOb.bridge
+	client := chainOb.Client
+	tss := chainOb.Tss
+	chain := chainOb.chain
+
+	_, err := bridge.GetNonceByChain(chain)
+	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
+		nonce, err := client.NonceAt(context.TODO(), tss.Address(), nil)
+		if err != nil {
+			log.Err(err).Msg("NonceAt")
+			return err
+		}
+		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", bridge.GetKeys().signerName, chain, nonce)
+		_, err = bridge.PostNonce(chain, nonce)
+		if err != nil {
+			log.Err(err).Msg("PostNonce")
+			return err
 		}
 	}
 
-	// this is shared structure to query logs by sendHash
-	//topics[2] = make([]ethcommon.Hash, 1)
-
-	return &chainOb, nil
+	return nil
 }
 
 func (chainOb *ChainObserver) WatchRouter() {
@@ -192,25 +200,18 @@ func (chainOb *ChainObserver) WatchRouter() {
 			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
 			continue
 		}
-		chainOb.observeFailedTx()
 	}
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	for range chainOb.ticker.C {
+	gasTicker := time.NewTicker(24 * time.Second)
+	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
 			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
 			continue
 		}
 	}
-}
-
-func (chainOb *ChainObserver) AddTxToWatchList(txhash string, sendhash string) {
-	hash := ethcommon.HexToHash(txhash)
-	chainOb.mu.Lock()
-	chainOb.txWatchList[hash] = sendhash
-	chainOb.mu.Unlock()
 }
 
 func (chainOb *ChainObserver) PostGasPrice() error {
@@ -341,27 +342,6 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) observeFailedTx() {
-	chainOb.mu.Lock()
-	//for txhash, sendHash := range chainOb.txWatchList {
-	//	receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), txhash)
-	//	if err != nil {
-	//		continue
-	//	}
-	//	if receipt.Status == 0 { // failed tx
-	//		log.Debug().Msgf("failed tx receipts: txhash %s sendHash %s", txhash.Hex(), sendHash)
-	//		_, err = chainOb.bridge.PostReceiveConfirmation(sendHash, txhash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
-	//		if err != nil {
-	//			log.Err(err).Msg("failed tx: PostReceiveConfirmation error ")
-	//		}
-	//	} else {
-	//
-	//	}
-	//	delete(chainOb.txWatchList, txhash)
-	//}
-	chainOb.mu.Unlock()
-}
-
 func (chainOb *ChainObserver) observeChain() error {
 	header, err := chainOb.Client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
@@ -378,7 +358,7 @@ func (chainOb *ChainObserver) observeChain() error {
 		toBlock = confirmedBlockNum
 	}
 
-	topics[0] = []ethcommon.Hash{logMPISendSignatureHash}
+	topics[0] = []ethcommon.Hash{logZetaSentSignatureHash}
 
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.mpiAddress)},
@@ -401,16 +381,15 @@ func (chainOb *ChainObserver) observeChain() error {
 	// Pull out arguments from logs
 	for _, vLog := range logs {
 		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
-
 		switch vLog.Topics[0].Hex() {
-		case logMPISendSignatureHash.Hex():
-			vals, err := contractAbi.Unpack("ZetaMessageSendEvent", vLog.Data)
+		case logZetaSentSignatureHash.Hex():
+			vals, err := contractAbi.Unpack("ZetaSent", vLog.Data)
 			if err != nil {
 				log.Err(err).Msg("error unpacking ZetaMessageSendEvent")
 				continue
 			}
 			sender := vLog.Topics[1]
-			destChainID := vals[0].(uint16)
+			destChainID := vals[0].(*big.Int)
 			destContract := vals[1].([]byte)
 			zetaAmount := vals[2].(*big.Int)
 			gasLimit := vals[3].(*big.Int)
@@ -479,7 +458,7 @@ func (chainOb *ChainObserver) Stop() error {
 func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool, error) {
 	recvTopics := make([][]ethcommon.Hash, 4)
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
-	recvTopics[0] = []ethcommon.Hash{logMPIReceiveSignatureHash}
+	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].MPIContractAddress)},
 		FromBlock: big.NewInt(0), // LastBlock has been processed;
@@ -499,17 +478,17 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	}
 	for _, vLog := range logs {
 		switch vLog.Topics[0].Hex() {
-		case logMPIReceiveSignatureHash.Hex():
+		case logZetaReceivedSignatureHash.Hex():
 			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-			retval, err := chainOb.abi.Unpack("ZetaMessageReceiveEvent", vLog.Data)
+			retval, err := chainOb.abi.Unpack("ZetaReceived", vLog.Data)
 			if err != nil {
 				fmt.Println("error unpacking Unlock")
 				continue
 			}
-			fmt.Printf("Topic 0: %s\n", vLog.Topics[0])
-			fmt.Printf("Topic 1: %s\n", vLog.Topics[1])
-			fmt.Printf("Topic 2: %s\n", vLog.Topics[2])
-			//fmt.Printf("data: %d\n", retval[0].(*big.Int))
+			fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
+			fmt.Printf("Topic 1 (origin chain id): %d\n", vLog.Topics[1])
+			fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
+			fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
 			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
