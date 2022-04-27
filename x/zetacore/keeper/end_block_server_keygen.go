@@ -10,7 +10,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if ctx.BlockHeight() == 20 {
+	if ctx.BlockHeight() == 100 {
 		accts := k.GetAllNodeAccount(ctx)
 		var pubkeys []string
 		for _, acct := range accts {
@@ -22,7 +22,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 			Creator:     "genesis keygen",
 			Status:      0, // to keygen
 			Pubkeys:     pubkeys,
-			BlockNumber: 25,
+			BlockNumber: 110,
 		}
 		k.SetKeygen(ctx, kg)
 	}

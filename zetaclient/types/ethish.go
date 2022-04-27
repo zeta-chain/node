@@ -6,12 +6,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/common"
+	"math/big"
 )
 
 type ChainETHish struct {
 	//TSSSigner          zetaclient.TSSSigner
 	MPIABI             abi.ABI
-	ChainID            uint16
+	ChainID            *big.Int
 	MPIContractAddress string
 	Client             *ethclient.Client
 	Name               common.Chain
