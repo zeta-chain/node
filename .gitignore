@@ -6,3 +6,33 @@ release/
 .DS_Store
 
 coverage.out
+
+node_modules
+.env
+.deps
+.DS_Store
+coverage
+coverage.json
+typechain
+
+# Hardhat files
+cache
+localnet/hardhat/artifacts
+localnet/hardhat/localnet-addresses
+!localnet/hardhat/localnet-addresses/.gitkeep
+
+# Typescript
+dist
+
+# LocalNet Files
+localnet/networks/polygon/bor
+localnet/networks/polygon/heimdall
+localnet/networks/polygon/data
+localnet/networks/bsc/bsc-docker
+localnet/networks/bsc/storage
+localnet/networks/zetachain/storage
+localnet/networks/zetachain/BACKUP
+localnet/networks/zetachain/config/genesis
+localnet/networks/zetachain/config/node*/*
+
+

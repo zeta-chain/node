@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
@@ -10,7 +11,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if ctx.BlockHeight() == 100 {
+	if ctx.BlockHeight() == 80 {
 		accts := k.GetAllNodeAccount(ctx)
 		var pubkeys []string
 		for _, acct := range accts {
@@ -22,7 +23,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 			Creator:     "genesis keygen",
 			Status:      0, // to keygen
 			Pubkeys:     pubkeys,
-			BlockNumber: 110,
+			BlockNumber: 85,
 		}
 		k.SetKeygen(ctx, kg)
 	}
