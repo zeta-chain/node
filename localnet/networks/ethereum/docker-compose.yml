@@ -1,0 +1,77 @@
+version: '3.7'
+
+services:
+  geth-bootnode: 
+  # Bootstrap node that is used for peer discovery purpose. 
+  # It listens on port 30303, the other nodes joining the network connect to this bootnode first.
+    hostname: geth-bootnode
+    env_file:
+      - .env
+    image: geth-client
+    build:
+      context: .
+      args:
+        - ACCOUNT_PASSWORD=${ACCOUNT_PASSWORD}
+    command:
+      --nodekeyhex="b0ac22adcad37213c7c565810a50f1772291e7b0ce53fb73e7ec2a3c75bc13b5"
+      --nodiscover
+      --ipcdisable
+      --networkid=${NETWORK_ID}
+    networks:
+      - localnet
+
+  geth-rpc-endpoint:
+  #this node exposes JSON-RPC API over HTTP endpoint on port 8545.
+    hostname: geth-rpc-endpoint
+    env_file:
+      - .env
+    image: geth-client
+    depends_on:
+      - geth-bootnode    
+    command:
+      --bootnodes="enode://af22c29c316ad069cf48a09a4ad5cf04a251b411e45098888d114c6dd7f489a13786620d5953738762afa13711d4ffb3b19aa5de772d8af72f851f7e9c5b164a@geth-bootnode:30303"
+      --allow-insecure-unlock
+      --http
+      --http.addr="0.0.0.0"
+      --rpcvhosts=*
+      --http.api="eth,web3,net,admin,personal"
+      --http.corsdomain="*"
+      --networkid=${NETWORK_ID}
+      --dev
+      --unlock 0
+      --password="/tmp/password"
+      --nodiscover
+      --dev.period=12
+
+    ports:
+      - "${RPC_PORT}:8545"
+    networks:
+      - localnet
+      # priv-eth-net:
+
+  # geth-miner:
+  #   hostname: geth-miner
+  #   env_file:
+  #     - .env
+  #   image: geth-client
+  #   depends_on:
+  #     - geth-bootnode
+  #   command:
+  #     --bootnodes="enode://af22c29c316dad069cf48a09a4ad5cf04a251b411e45098888d114c6dd7f489a13786620d5953738762afa13711d4ffb3b19aa5de772d8af72f851f7e9c5b164a@geth-bootnode:30303"
+  #     --mine
+  #     --miner.threads=1
+  #     --networkid=${NETWORK_ID}
+  #     --netrestrict="172.16.254.0/28"
+  #     # -- miner.etherbase=${MINER_REWARD_ACCOUNT}
+  #   networks:
+  #     priv-eth-net:
+
+networks:
+  localnet: 
+    external: true
+    name: localnet
+  # priv-eth-net:
+  #   driver: bridge
+  #   ipam:
+  #     config:
+  #     - subnet: 172.16.254.0/28

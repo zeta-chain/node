@@ -1,0 +1,88 @@
+# Do not use this for production.
+version: "3"
+
+services:
+  zetacore0:
+    container_name: zetacore0
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=0
+    volumes:
+      - ./storage/node0/zetaclient:/root/.zetaclient
+      - ./storage/node0/zetacore:/root/.zetacore
+      - ./storage/node0/tss:/root/.tss/
+      - ./storage/node0/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+
+    ports:
+        - "${REST_ENDPOINT}:1317" # REST_ENDPOINT
+        - "${gRPC_PORT}:9090" # gRPC_PORT
+        - "${RPC_PORT}:26657" # RPC_PORT
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.200
+    command: -c "/scripts/zetacored-build-config.sh 0 1"
+    
+  zetacore1:
+    container_name: zetacore1
+    env_file:
+      - .env
+    image: zetacore:latest
+    environment:
+      - NODE_NUMBER=1
+    volumes:
+      - ./storage/node1/zetaclient:/root/.zetaclient
+      - ./storage/node1/zetacore:/root/.zetacore
+      - ./storage/node1/tss:/root/.tss/
+      - ./storage/node1/tssnew/:/root/.tssnew/
+      - ../../../build:/scripts
+      - ./config/:/zetashared/
+    networks:
+      localnet:
+        ipv4_address: 172.24.0.201
+    command: -c "/scripts/zetacored-build-config.sh 1 1"
+
+#   zetacore2:
+#     container_name: zetacore2
+#     env_file:
+#       - .env
+#     image: zetacore:latest
+#     environment:
+#       - NODE_NUMBER=2
+#     volumes:
+#       - ./storage/node2/zetaclient:/root/.zetaclient
+#       - ./storage/node2/zetacore:/root/.zetacore
+#       - ./storage/node2/tss:/root/.tss/
+#       - ./storage/node2/tssnew/:/root/.tssnew/
+#       - ../../../build:/scripts
+#       - ./config/:/zetashared/
+#     networks:
+#       localnet:
+#         ipv4_address: 172.24.0.202
+#     command: -c "/scripts/zetacored-build-config.sh 2 3"
+#   zetacore3:
+#     container_name: zetacore3
+#     env_file:
+#       - .env
+#     image: zetacore:latest
+#     environment:
+#       - NODE_NUMBER=3
+#     volumes:
+#       - ./storage/node3/zetaclient:/root/.zetaclient
+#       - ./storage/node3/zetacore:/root/.zetacore
+#       - ./storage/node3/tss:/root/.tss/
+#       - ./storage/node3/tssnew/:/root/.tssnew/
+#       - ../../../build:/scripts
+#       - ./config/:/zetashared/
+#     networks:
+#       localnet:
+#         ipv4_address: 172.24.0.203
+#     command: -c "/scripts/zetacored-build-config.sh 3 3"
+
+networks:
+  localnet: 
+    external: true
+    name: localnet

@@ -1,41 +1,39 @@
 #!/bin/bash
 
-echo "Starting ZetaClient"
-echo $1 $2 $3
+echo $1 $2
 
 NODE_NUMBER=$1
-NODE_0_DNS=$2
+SEED_NODE=$2
 
-echo "This is Node $NODE_NUMBER"
- 
+echo "Starting ZetaClient Node $NODE_NUMBER"
+source /etc/environment
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
-export MYIP=$(hostname -i)
-export IDX=$NODE_NUMBER 
-export TSSPATH=/root/.tssnew 
+export IDX=$NODE_NUMBER
+export TSSPATH=/root/.tssnew
 
-NODE_0_ID=$(cat /zetashared/node0/config/NODE_VALIDATOR_ID)
-mkdir -p /root/.tssnew/
+if [ -z ${MYIP} ]; then
+    # If MYIP is not set, use the private IP of the host
+    echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
+    export MYIP=$(hostname -i)
+fi
+echo "MYIP: $MYIP"
 
-sleep 5 # Waiting for Zetacored to boot
-
-if  (( $NODE_NUMBER == 0 )); then
+if (($NODE_NUMBER == 0)); then
+    sleep 5 # Wait for Zetacored to start
     yes | zetaclientd -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
 else
-    export SEED=172.24.0.220
-        until [ -f NODE_0_TSS_ID ]
-        do
-            echo "Waiting for Node 0 Validator ID"
-            sleep 5
-            curl ${SEED}:8123/p2p -o NODE_0_TSS_ID
-        done
-    NODE_0_TSS_ID=$(cat NODE_0_TSS_ID)
-    echo "NODE_0_TSS_ID=${NODE_0_TSS_ID}"
+    until [ -f SEED_NODE_ID ]; do
+        echo "Waiting for Seed Node Validator ID"
+        sleep 10
+        curl -s ${SEED_NODE}:8123/p2p -o SEED_NODE_ID
+
+    done
+    SEED_NODE_ID=$(cat SEED_NODE_ID)
+    echo "SEED_NODE_ID=${SEED_NODE_ID}"
+
     yes | zetaclientd -val val \
-        --peer /dns/${NODE_0_DNS}/tcp/6668/p2p/${NODE_0_TSS_ID} \
+        --peer /dns/${SEED_NODE}/tcp/6668/p2p/${SEED_NODE_ID} \
         2>&1 | tee ~/.zetaclient/zetaclient.log
 
 fi
-
-
-
