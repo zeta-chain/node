@@ -9,7 +9,7 @@ import (
 // SetTxList set txList in the store
 func (k Keeper) SetTxList(ctx sdk.Context, txList types.TxList) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TxListKey))
-	b := k.cdc.MustMarshalBinaryBare(&txList)
+	b := k.cdc.MustMarshal(&txList)
 	store.Set([]byte{0}, b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetTxList(ctx sdk.Context) (val types.TxList, found bool) {
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 

@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"path"
 	"path/filepath"
@@ -106,7 +106,7 @@ func (tss *TSS) Address() ethcommon.Address {
 func (tss *TSS) SetPubKey(pk string) error {
 	tss.PubkeyInBech32 = pk
 	log.Info().Msg("Computing TSS addresses from TSS pubkey...")
-	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
+	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tss.PubkeyInBech32)
 	if err != nil {
 		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", tss.PubkeyInBech32)
 		return fmt.Errorf("GetPubKeyFromBech32: %w", err)
@@ -126,7 +126,7 @@ func (tss *TSS) SetPubKey(pk string) error {
 
 func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
-	pubk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)
 		return keyAddr, err
@@ -283,7 +283,7 @@ func verify_signature(tssPubkey string, signature []keysign.Signature, H []byte)
 		log.Warn().Msg("verify_signature: empty signature array")
 		return false
 	}
-	pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Error().Msg("get pubkey from bech32 fail")
 	}
