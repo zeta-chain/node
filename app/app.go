@@ -1,6 +1,8 @@
 package app
 
 import (
+	ibccoreclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 	"io"
 	"net/http"
 	"os"
@@ -89,7 +91,7 @@ import (
 	metacoremodulekeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	metacoremoduletypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
-	"github.com/tendermint/spm/cosmoscmd"
+	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 )
 
 const (
@@ -117,6 +119,9 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
+	//DefaultNodeHome = func() string {
+	//	return os.ExpandEnv("$HOME/.zetacore")
+	//}
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
@@ -136,7 +141,7 @@ var (
 		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
-		//transfer.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 		metacoremodule.AppModuleBasic{},
@@ -626,7 +631,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	pkt := ibctransfertypes.ParamKeyTable().RegisterParamSet(&ibccoreclienttypes.Params{}).RegisterParamSet(&ibcconnectiontypes.Params{})
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(pkt)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(metacoremoduletypes.ModuleName)
