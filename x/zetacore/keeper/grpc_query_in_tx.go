@@ -24,7 +24,7 @@ func (k Keeper) InTxAll(c context.Context, req *types.QueryAllInTxRequest) (*typ
 
 	pageRes, err := query.Paginate(inTxStore, req.Pagination, func(key []byte, value []byte) error {
 		var inTx types.InTx
-		if err := k.cdc.UnmarshalBinaryBare(value, &inTx); err != nil {
+		if err := k.cdc.Unmarshal(value, &inTx); err != nil {
 			return err
 		}
 

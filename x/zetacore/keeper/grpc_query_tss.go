@@ -24,7 +24,7 @@ func (k Keeper) TSSAll(c context.Context, req *types.QueryAllTSSRequest) (*types
 
 	pageRes, err := query.Paginate(tSSStore, req.Pagination, func(key []byte, value []byte) error {
 		var tSS types.TSS
-		if err := k.cdc.UnmarshalBinaryBare(value, &tSS); err != nil {
+		if err := k.cdc.Unmarshal(value, &tSS); err != nil {
 			return err
 		}
 

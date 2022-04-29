@@ -9,7 +9,7 @@ import (
 // SetSend set a specific send in the store from its index
 func (k Keeper) SetSend(ctx sdk.Context, send types.Send) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
-	b := k.cdc.MustMarshalBinaryBare(&send)
+	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetSend(ctx sdk.Context, index string) (val types.Send, found bo
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllSend(ctx sdk.Context) (list []types.Send) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Send
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

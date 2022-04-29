@@ -24,7 +24,7 @@ func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNonces
 
 	pageRes, err := query.Paginate(chainNoncesStore, req.Pagination, func(key []byte, value []byte) error {
 		var chainNonces types.ChainNonces
-		if err := k.cdc.UnmarshalBinaryBare(value, &chainNonces); err != nil {
+		if err := k.cdc.Unmarshal(value, &chainNonces); err != nil {
 			return err
 		}
 
