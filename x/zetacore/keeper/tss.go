@@ -9,7 +9,7 @@ import (
 // SetTSS set a specific tSS in the store from its index
 func (k Keeper) SetTSS(ctx sdk.Context, tSS types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
-	b := k.cdc.MustMarshalBinaryBare(&tSS)
+	b := k.cdc.MustMarshal(&tSS)
 	store.Set(types.KeyPrefix(tSS.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetTSS(ctx sdk.Context, index string) (val types.TSS, found bool
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TSS
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

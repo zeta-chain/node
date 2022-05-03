@@ -9,7 +9,7 @@ import (
 // SetChainNonces set a specific chainNonces in the store from its index
 func (k Keeper) SetChainNonces(ctx sdk.Context, chainNonces types.ChainNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
-	b := k.cdc.MustMarshalBinaryBare(&chainNonces)
+	b := k.cdc.MustMarshal(&chainNonces)
 	store.Set(types.KeyPrefix(chainNonces.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetChainNonces(ctx sdk.Context, index string) (val types.ChainNo
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllChainNonces(ctx sdk.Context) (list []types.ChainNonces) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.ChainNonces
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

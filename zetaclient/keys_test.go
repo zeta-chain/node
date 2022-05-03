@@ -27,6 +27,10 @@ func (*KeysSuite) SetUpSuite(c *C) {
 	SetupConfigForTest()
 }
 
+var (
+	password = "password"
+)
+
 func SetupConfigForTest() {
 	config := cosmos.GetConfig()
 	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
@@ -55,7 +59,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	buf.WriteByte('\n')
 	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf)
 	c.Assert(err, IsNil)
-	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.ZetaChainHDPath, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }

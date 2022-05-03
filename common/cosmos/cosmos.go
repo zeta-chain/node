@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" // nolint
 	se "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/hashicorp/go-multierror"
@@ -55,10 +56,10 @@ var (
 	StoreTypeTransient      = sdk.StoreTypeTransient
 	StoreTypeIAVL           = sdk.StoreTypeIAVL
 	NewContext              = sdk.NewContext
-	GetPubKeyFromBech32     = sdk.GetPubKeyFromBech32
-	Bech32ifyPubKey         = sdk.Bech32ifyPubKey
-	Bech32PubKeyTypeConsPub = sdk.Bech32PubKeyTypeConsPub
-	Bech32PubKeyTypeAccPub  = sdk.Bech32PubKeyTypeAccPub
+	GetPubKeyFromBech32     = legacybech32.UnmarshalPubKey
+	Bech32ifyPubKey         = legacybech32.MarshalPubKey
+	Bech32PubKeyTypeConsPub = legacybech32.ConsPK
+	Bech32PubKeyTypeAccPub  = legacybech32.AccPK
 	Wrapf                   = se.Wrapf
 	MustSortJSON            = sdk.MustSortJSON
 	CodeUnauthorized        = uint32(4)

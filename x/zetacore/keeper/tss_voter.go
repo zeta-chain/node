@@ -9,7 +9,7 @@ import (
 // SetTSSVoter set a specific tSSVoter in the store from its index
 func (k Keeper) SetTSSVoter(ctx sdk.Context, tSSVoter types.TSSVoter) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSVoterKey))
-	b := k.cdc.MustMarshalBinaryBare(&tSSVoter)
+	b := k.cdc.MustMarshal(&tSSVoter)
 	store.Set(types.KeyPrefix(tSSVoter.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetTSSVoter(ctx sdk.Context, index string) (val types.TSSVoter, 
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllTSSVoter(ctx sdk.Context) (list []types.TSSVoter) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TSSVoter
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 
