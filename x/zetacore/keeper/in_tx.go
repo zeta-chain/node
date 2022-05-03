@@ -9,7 +9,7 @@ import (
 // SetInTx set a specific inTx in the store from its index
 func (k Keeper) SetInTx(ctx sdk.Context, inTx types.InTx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxKey))
-	b := k.cdc.MustMarshalBinaryBare(&inTx)
+	b := k.cdc.MustMarshal(&inTx)
 	store.Set(types.KeyPrefix(inTx.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetInTx(ctx sdk.Context, index string) (val types.InTx, found bo
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllInTx(ctx sdk.Context) (list []types.InTx) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.InTx
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

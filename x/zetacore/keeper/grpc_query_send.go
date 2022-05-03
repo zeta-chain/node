@@ -25,7 +25,7 @@ func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*typ
 
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
 		var send types.Send
-		if err := k.cdc.UnmarshalBinaryBare(value, &send); err != nil {
+		if err := k.cdc.Unmarshal(value, &send); err != nil {
 			return err
 		}
 
@@ -69,7 +69,7 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Send
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		// if the status of send is pending, which means Finalized/Revert
 		if val.Status == types.SendStatus_Finalized || val.Status == types.SendStatus_Revert {
 			sends = append(sends, &val)
