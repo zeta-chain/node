@@ -41,7 +41,7 @@ func (k Keeper) GetAllGasBalance(ctx sdk.Context) (list []types.GasBalance) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.GasBalance
-		k.cdc.MustUnmarshalJSON(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 
