@@ -56,13 +56,14 @@ var topics = make([][]ethcommon.Hash, 1)
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain      common.Chain
-	mpiAddress string
-	endpoint   string
-	ticker     *time.Ticker
-	abiString  string
-	abi        *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
-	//zetaAbi     *abi.ABI // only useful for ethereum; the token contract
+	chain        common.Chain
+	mpiAddress   string
+	endpoint     string
+	ticker       *time.Ticker
+	connectorAbi *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	uniswapV3Abi *abi.ABI
+	uniswapV2Abi *abi.ABI
+	//zetaAbi     *connectorAbi.ABI // only useful for ethereum; the token contract
 	Client      *ethclient.Client
 	bridge      *MetachainBridge
 	Tss         TSSSigner
@@ -91,7 +92,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.mpiAddress = config.Chains["POLYGON"].MPIContractAddress
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 
 	case common.ETHChain:
@@ -99,7 +99,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.mpiAddress = config.Chains["ETH"].MPIContractAddress
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 
 	case common.BSCChain:
@@ -107,16 +106,20 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.mpiAddress = config.Chains["BSC"].MPIContractAddress
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
-		chainOb.abiString = config.MPI_ABI_STRING
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 	}
-	contractABI, err := abi.JSON(strings.NewReader(chainOb.abiString))
+	contractABI, err := abi.JSON(strings.NewReader(config.MPI_ABI_STRING))
 	if err != nil {
 		return nil, err
 	}
-	chainOb.abi = &contractABI
+	chainOb.connectorAbi = &contractABI
+	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
+	if err != nil {
+		return nil, err
+	}
+	chainOb.uniswapV3Abi = &uniswapV3ABI
 	//if chain == common.ETHChain {
-	//	tokenABI, err := abi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
+	//	tokenABI, err := connectorAbi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
 	//	if err != nil {
 	//		return nil, err
 	//	}
@@ -231,7 +234,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	var supply string // lockedAmount on ETH, totalSupply on other chains
 	supply = "100"
 	//if chainOb.chain == common.ETHChain {
-	//	input, err := chainOb.abi.Pack("getLockedAmount")
+	//	input, err := chainOb.connectorAbi.Pack("getLockedAmount")
 	//	if err != nil {
 	//		return fmt.Errorf("fail to getLockedAmount")
 	//	}
@@ -251,17 +254,17 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 	//		return err
 	//	}
-	//	output, err := chainOb.abi.Unpack("getLockedAmount", res)
+	//	output, err := chainOb.connectorAbi.Unpack("getLockedAmount", res)
 	//	if err != nil {
 	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 	//		return err
 	//	}
-	//	lockedAmount := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	lockedAmount := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 	//	//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
 	//	supply = lockedAmount.String()
 	//
 	//} else if chainOb.chain == common.BSCChain {
-	//	input, err := chainOb.abi.Pack("totalSupply")
+	//	input, err := chainOb.connectorAbi.Pack("totalSupply")
 	//	if err != nil {
 	//		return fmt.Errorf("fail to totalSupply")
 	//	}
@@ -281,16 +284,16 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 	//		return err
 	//	}
-	//	output, err := chainOb.abi.Unpack("totalSupply", res)
+	//	output, err := chainOb.connectorAbi.Unpack("totalSupply", res)
 	//	if err != nil {
 	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 	//		return err
 	//	}
-	//	totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	totalSupply := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
 	//	supply = totalSupply.String()
 	//} else if chainOb.chain == common.POLYGONChain {
-	//	input, err := chainOb.abi.Pack("totalSupply")
+	//	input, err := chainOb.connectorAbi.Pack("totalSupply")
 	//	if err != nil {
 	//		return fmt.Errorf("fail to totalSupply")
 	//	}
@@ -310,12 +313,12 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
 	//		return err
 	//	}
-	//	output, err := chainOb.abi.Unpack("totalSupply", res)
+	//	output, err := chainOb.connectorAbi.Unpack("totalSupply", res)
 	//	if err != nil {
 	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
 	//		return err
 	//	}
-	//	totalSupply := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	//	totalSupply := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
 	//	supply = totalSupply.String()
 	//} else {
@@ -376,7 +379,7 @@ func (chainOb *ChainObserver) observeChain() error {
 	}
 
 	// Read in ABI
-	contractAbi := chainOb.abi
+	contractAbi := chainOb.connectorAbi
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
@@ -480,7 +483,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 		switch vLog.Topics[0].Hex() {
 		case logZetaReceivedSignatureHash.Hex():
 			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-			retval, err := chainOb.abi.Unpack("ZetaReceived", vLog.Data)
+			retval, err := chainOb.connectorAbi.Unpack("ZetaReceived", vLog.Data)
 			if err != nil {
 				fmt.Println("error unpacking Unlock")
 				continue
@@ -518,4 +521,35 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	}
 
 	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
+}
+
+// return the ratio ZETA/GAS(ETH, BNB, MATIC, etc)
+func (ob *ChainObserver) GetZetaExchangeRate() (float64, error) {
+	input, err := ob.uniswapV3Abi.Pack("observe", []int32{0, 60})
+	if err != nil {
+		return 0, fmt.Errorf("fail to pack observe")
+	}
+	bn, err := ob.Client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
+		return 0, err
+	}
+	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
+	res, err := ob.Client.CallContract(context.TODO(), ethereum.CallMsg{
+		From: fromAddr,
+		To:   &toAddr,
+		Data: input,
+	}, big.NewInt(0).SetUint64(bn))
+	if err != nil {
+		log.Err(err).Msgf("%s CallContract error", ob.chain)
+		return 0, err
+	}
+	output, err := ob.connectorAbi.Unpack("observe", res)
+	if err != nil {
+		log.Err(err).Msgf("%s Unpack error", ob.chain)
+		return 0, err
+	}
+	_ = output
+	return 0, nil
 }
