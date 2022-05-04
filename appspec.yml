@@ -1,10 +1,8 @@
 version: 0.0
 os: linux
 # files:
-#   - source: Config/config.txt
-#     destination: /webapps/Config
-#   - source: source
-#     destination: /webapps/myApp
+#   - source: /
+#     destination: /root/codedeploy/
 hooks:
   ApplicationStop:
     - location: aws-scripts/stop.sh
