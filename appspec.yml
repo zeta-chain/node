@@ -1,0 +1,21 @@
+version: 0.0
+os: linux
+# files:
+#   - source: Config/config.txt
+#     destination: /webapps/Config
+#   - source: source
+#     destination: /webapps/myApp
+hooks:
+  ApplicationStop:
+    - location: aws-scripts/stop.sh
+  # BeforeInstall:
+  #   - location: aws-scripts/
+  AfterInstall:
+    - location: aws-scripts/build.sh
+  ApplicationStart:
+    - location: aws-scripts/start.sh
+      timeout: 3600
+  # ValidateService:
+  #   - location: aws-scripts/test.sh
+  #     timeout: 3600
+  #     runas: codedeployuser
