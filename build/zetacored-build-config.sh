@@ -50,6 +50,7 @@ if (( $NODE_NUMBER == 0 )); then
         i=$[$i+1]
     done
 
+    # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
     
     i=1
@@ -71,6 +72,10 @@ if (( $NODE_NUMBER == 0 )); then
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/seed_mode = false/seed_mode = true/' /root/.zetacore/config/config.toml
+
+    sed -i '/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/' /root/.zetacore/config/app.toml
+    sed -i -e "s/minimum-gas-prices = \"\"/minimum-gas-prices = \"0rune\"/g" /root/.zetacore/config/app.toml
+
 
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
