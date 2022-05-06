@@ -236,7 +236,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
 			continue
 		}
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", price)
+		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price)
 	}
 }
 
