@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 	"sync"
@@ -523,9 +524,10 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
 }
 
-// return the ratio ZETA/GAS(ETH, BNB, MATIC, etc)
+// return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA
 func (ob *ChainObserver) GetZetaExchangeRate() (float64, error) {
-	input, err := ob.uniswapV3Abi.Pack("observe", []int32{0, 60})
+	TIME_WINDOW := 600 // time weighted average price over last 10min (600s) period
+	input, err := ob.uniswapV3Abi.Pack("observe", []uint32{0, uint32(TIME_WINDOW)})
 	if err != nil {
 		return 0, fmt.Errorf("fail to pack observe")
 	}
@@ -545,11 +547,12 @@ func (ob *ChainObserver) GetZetaExchangeRate() (float64, error) {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
 		return 0, err
 	}
-	output, err := ob.connectorAbi.Unpack("observe", res)
-	if err != nil {
-		log.Err(err).Msgf("%s Unpack error", ob.chain)
+	output, err := ob.uniswapV3Abi.Unpack("observe", res)
+	if err != nil || len(output) != 2 {
+		log.Err(err).Msgf("%s Unpack error or len(output) (%d) != 2", ob.chain, len(output))
 		return 0, err
 	}
-	_ = output
-	return 0, nil
+	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
+	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[0], cumTicks[1]), big.NewInt(int64(TIME_WINDOW)))
+	return math.Pow(1.0001, float64(tickDiff.Int64())), nil
 }

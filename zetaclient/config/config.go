@@ -24,9 +24,12 @@ const (
 var (
 	// API Endpoints
 	//ETH_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
-	ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
+	//ETH_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
+	ETH_ENDPOINT  = "https://eth-goerli-sh285ns91n5975.athens.zetachain.com"
 	POLY_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
-	BSC_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
+	//POLY_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
+	BSC_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
+	//BSC_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
 )
 
 const (
@@ -75,9 +78,10 @@ var Chains = map[string]*types.ChainETHish{
 		ChainID:             big.NewInt(97),
 	},
 	"POLYGON": {
-		Name:               common.POLYGONChain,
-		MPIContractAddress: "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
-		ChainID:            big.NewInt(80001),
+		Name:                common.POLYGONChain,
+		MPIContractAddress:  "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
+		PoolContractAddress: "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
+		ChainID:             big.NewInt(80001),
 	},
 }
 
