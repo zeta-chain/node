@@ -86,7 +86,22 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 	chainOb.Tss = tss
 
-	// Initialize constants
+	// initialize the pool ABI
+	mpiABI, err := abi.JSON(strings.NewReader(config.MPI_ABI_STRING))
+	if err != nil {
+		return nil, err
+	}
+	chainOb.connectorAbi = &mpiABI
+	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
+	if err != nil {
+		return nil, err
+	}
+	uniswapV2ABI, err := abi.JSON(strings.NewReader(config.PANCAKEPOOL))
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize chain specific setup
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
@@ -94,6 +109,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
+		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.ETHChain:
 		chainOb.chain = chain
@@ -101,6 +117,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
+		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.BSCChain:
 		chainOb.chain = chain
@@ -108,24 +125,9 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
+		chainOb.uniswapV3Abi = &uniswapV2ABI
+
 	}
-	contractABI, err := abi.JSON(strings.NewReader(config.MPI_ABI_STRING))
-	if err != nil {
-		return nil, err
-	}
-	chainOb.connectorAbi = &contractABI
-	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
-	if err != nil {
-		return nil, err
-	}
-	chainOb.uniswapV3Abi = &uniswapV3ABI
-	//if chain == common.ETHChain {
-	//	tokenABI, err := connectorAbi.JSON(strings.NewReader(config.ETH_ZETA_ABI))
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	chainOb.zetaAbi = &tokenABI
-	//}
 
 	// Dial the mpiAddress
 	log.Info().Msgf("Chain %s endpoint %s", chainOb.chain, chainOb.endpoint)
@@ -525,7 +527,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 }
 
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA
-func (ob *ChainObserver) GetZetaExchangeRate() (float64, error) {
+func (ob *ChainObserver) GetZetaExchangeRateUniswapV3() (float64, error) {
 	TIME_WINDOW := 600 // time weighted average price over last 10min (600s) period
 	input, err := ob.uniswapV3Abi.Pack("observe", []uint32{0, uint32(TIME_WINDOW)})
 	if err != nil {
@@ -555,4 +557,44 @@ func (ob *ChainObserver) GetZetaExchangeRate() (float64, error) {
 	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
 	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[0], cumTicks[1]), big.NewInt(int64(TIME_WINDOW)))
 	return math.Pow(1.0001, float64(tickDiff.Int64())), nil
+}
+
+// return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA
+func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (float64, error) {
+	input, err := ob.uniswapV2Abi.Pack("getReserves")
+	if err != nil {
+		return 0, fmt.Errorf("fail to pack getReserves")
+	}
+	bn, err := ob.Client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
+		return 0, err
+	}
+	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
+	res, err := ob.Client.CallContract(context.TODO(), ethereum.CallMsg{
+		From: fromAddr,
+		To:   &toAddr,
+		Data: input,
+	}, big.NewInt(0).SetUint64(bn))
+	if err != nil {
+		log.Err(err).Msgf("%s CallContract error", ob.chain)
+		return 0, err
+	}
+	output, err := ob.uniswapV2Abi.Unpack("getReserves", res)
+	if err != nil || len(output) != 3 {
+		log.Err(err).Msgf("%s Unpack error or len(output) (%d) != 3", ob.chain, len(output))
+		return 0, err
+	}
+	reserve0 := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
+	reserve1 := *abi.ConvertType(output[1], new(*big.Int)).(**big.Int)
+	r0, acc0 := big.NewFloat(0).SetInt(reserve0).Float64()
+	r1, acc1 := big.NewFloat(0).SetInt(reserve1).Float64()
+
+	if acc0 != big.Exact || acc1 != big.Exact {
+		log.Err(err).Msgf("%s inexact conversion acc0=%s acc1=%s r0=%d r1=%d", ob.chain, acc0, acc1, reserve0, reserve1)
+		return 0, err
+	}
+
+	return r0 / r1, nil
 }
