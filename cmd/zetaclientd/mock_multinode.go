@@ -68,8 +68,9 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.ETHChain] = eth1
-	go eth1.WatchRouter()
-	go eth1.WatchGasPrice()
+	//go eth1.WatchRouter()
+	//go eth1.WatchGasPrice()
+	eth1.Start()
 
 	log.Info().Msg("starting bsc observer...")
 	bsc1, err := mc.NewChainObserver(common.BSCChain, bridge, tss, dbpath)
@@ -78,8 +79,9 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.BSCChain] = bsc1
-	go bsc1.WatchRouter()
-	go bsc1.WatchGasPrice()
+	//go bsc1.WatchRouter()
+	//go bsc1.WatchGasPrice()
+	bsc1.Start()
 
 	log.Info().Msg("starting polygon observer...")
 	poly1, err := mc.NewChainObserver(common.POLYGONChain, bridge, tss, dbpath)
@@ -88,8 +90,9 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.POLYGONChain] = poly1
-	go poly1.WatchRouter()
-	go poly1.WatchGasPrice()
+	//go poly1.WatchRouter()
+	//go poly1.WatchGasPrice()
+	poly1.Start()
 
 	return &clientMap, nil
 }

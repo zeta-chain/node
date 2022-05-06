@@ -176,6 +176,12 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	return &chainOb, nil
 }
 
+func (chainOb *ChainObserver) Start() {
+	go chainOb.WatchRouter()
+	go chainOb.WatchGasPrice()
+	go chainOb.WatchExchangeRate()
+}
+
 func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
 	bridge := chainOb.bridge
 	client := chainOb.Client
