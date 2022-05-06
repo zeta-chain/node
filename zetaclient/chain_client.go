@@ -127,7 +127,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
-		chainOb.uniswapV3Abi = &uniswapV2ABI
+		chainOb.uniswapV2Abi = &uniswapV2ABI
 
 	}
 
