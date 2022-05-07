@@ -47,10 +47,13 @@ func (msg *MsgZetaConversionRateVoter) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	rate, err := strconv.ParseFloat(msg.ZetaConversionRate, 64)
-	if err != nil || math.IsNaN(rate) || math.IsInf(rate, 0) {
-		return sdkerrors.Wrapf(ErrFloatParseError, "invalid floating point number [%s] (%s) {%f}", msg.ZetaConversionRate, err, rate)
+	if len(msg.ZetaConversionRate) > 15 {
+		return sdkerrors.Wrapf(ErrFloatParseError, "invalid float (%s)", msg.ZetaConversionRate)
 	}
 
+	v, err := strconv.ParseFloat(msg.ZetaConversionRate, 64)
+	if err != nil || math.IsNaN(v) || math.IsInf(v, 0) {
+		return sdkerrors.Wrapf(ErrFloatParseError, "invalid float (%s)", msg.ZetaConversionRate)
+	}
 	return nil
 }

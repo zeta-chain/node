@@ -233,16 +233,23 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 	for range gasTicker.C {
 		var price float64
 		var err error
+		var bn uint64
 		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain {
-			price, err = chainOb.GetZetaExchangeRateUniswapV3()
+			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
 		} else if chainOb.chain == common.BSCChain {
-			price, err = chainOb.GetZetaExchangeRateUniswapV2()
+			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()
 		}
 		if err != nil {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
 			continue
 		}
 		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price)
+		priceStr := fmt.Sprintf("%.6e", price)
+
+		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceStr, bn)
+		if err != nil {
+			log.Err(err).Msg("PostZetaConversionRate error on " + chainOb.chain.String())
+		}
 	}
 }
 
@@ -553,16 +560,17 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 }
 
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA from Uniswap v3
-func (ob *ChainObserver) GetZetaExchangeRateUniswapV3() (float64, error) {
+// return price (gasasset/zeta), blockNum, error
+func (ob *ChainObserver) GetZetaExchangeRateUniswapV3() (float64, uint64, error) {
 	TIME_WINDOW := 600 // time weighted average price over last 10min (600s) period
 	input, err := ob.uniswapV3Abi.Pack("observe", []uint32{0, uint32(TIME_WINDOW)})
 	if err != nil {
-		return 0, fmt.Errorf("fail to pack observe")
+		return 0, 0, fmt.Errorf("fail to pack observe")
 	}
 	bn, err := ob.Client.BlockNumber(context.TODO())
 	if err != nil {
 		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
-		return 0, err
+		return 0, 0, err
 	}
 	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
@@ -573,28 +581,29 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV3() (float64, error) {
 	}, big.NewInt(0).SetUint64(bn))
 	if err != nil {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
-		return 0, err
+		return 0, 0, err
 	}
 	output, err := ob.uniswapV3Abi.Unpack("observe", res)
 	if err != nil || len(output) != 2 {
 		log.Err(err).Msgf("%s Unpack error or len(output) (%d) != 2", ob.chain, len(output))
-		return 0, err
+		return 0, 0, err
 	}
 	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
 	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[0], cumTicks[1]), big.NewInt(int64(TIME_WINDOW)))
-	return math.Pow(1.0001, float64(tickDiff.Int64())), nil
+	return math.Pow(1.0001, float64(tickDiff.Int64())), (bn), nil
 }
 
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA from Uniswap v2 and its clone
-func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (float64, error) {
+// return price (gasasset/zeta), blockNum, error
+func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (float64, uint64, error) {
 	input, err := ob.uniswapV2Abi.Pack("getReserves")
 	if err != nil {
-		return 0, fmt.Errorf("fail to pack getReserves")
+		return 0, 0, fmt.Errorf("fail to pack getReserves")
 	}
 	bn, err := ob.Client.BlockNumber(context.TODO())
 	if err != nil {
 		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
-		return 0, err
+		return 0, 0, err
 	}
 	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
@@ -605,12 +614,12 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (float64, error) {
 	}, big.NewInt(0).SetUint64(bn))
 	if err != nil {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
-		return 0, err
+		return 0, 0, err
 	}
 	output, err := ob.uniswapV2Abi.Unpack("getReserves", res)
 	if err != nil || len(output) != 3 {
 		log.Err(err).Msgf("%s Unpack error or len(output) (%d) != 3", ob.chain, len(output))
-		return 0, err
+		return 0, 0, err
 	}
 	reserve0 := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 	reserve1 := *abi.ConvertType(output[1], new(*big.Int)).(**big.Int)
@@ -619,8 +628,8 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (float64, error) {
 
 	if r0 <= 0 || r1 <= 0 || acc0 != big.Exact || acc1 != big.Exact {
 		log.Err(err).Msgf("%s inexact conversion acc0=%s acc1=%s r0=%d r1=%d", ob.chain, acc0, acc1, reserve0, reserve1)
-		return 0, err
+		return 0, 0, err
 	}
 
-	return r0 / r1, nil
+	return r0 / r1, (bn), nil
 }

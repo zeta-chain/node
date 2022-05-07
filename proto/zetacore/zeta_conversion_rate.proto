@@ -8,7 +8,7 @@ message ZetaConversionRate {
   string chain = 2; 
   repeated string signers = 3;
   repeated uint64 blockNums = 4;
-  repeated string zetaConversionRates = 5; // string of decimal float, e.g. 0.1432. Must be able to convert to float64 EXACTLY
+  repeated string zetaConversionRates = 5; // uint64 is in fact bits representation of float64
   string nativeTokenSymbol = 6; 
   uint64 medianIndex = 7;
 }
