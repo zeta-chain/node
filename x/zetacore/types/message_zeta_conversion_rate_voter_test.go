@@ -23,7 +23,8 @@ func TestMsgZetaConversionRateVoter_ValidateBasic(t *testing.T) {
 		}, {
 			name: "valid address",
 			msg: MsgZetaConversionRateVoter{
-				Creator: sample.AccAddress(),
+				Creator:            sample.AccAddress(),
+				ZetaConversionRate: "0.0",
 			},
 		},
 	}
