@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+message ZetaConversionRate {
+  string index = 1; 
+  string chain = 2; 
+  repeated string signers = 3;
+  repeated uint64 blockNums = 4;
+  repeated string zetaConversionRates = 5; // string of decimal float, e.g. 0.1432. Must be able to convert to float64 EXACTLY
+  string nativeTokenSymbol = 6; 
+  uint64 medianIndex = 7;
+}
+
