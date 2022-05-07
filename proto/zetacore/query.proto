@@ -25,12 +25,12 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 service Query {
     // Queries a ZetaConversionRate by index.
 	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zeta_conversion_rate/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaConversionRate/{index}";
 	}
 
 	// Queries a list of ZetaConversionRate items.
 	rpc ZetaConversionRateAll(QueryAllZetaConversionRateRequest) returns (QueryAllZetaConversionRateResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zeta_conversion_rate";
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaConversionRate";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -43,23 +43,23 @@ service Query {
 
 	// Queries a tSSVoter by index.
 	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/tSSVoter/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/TSSVoter/{index}";
 	}
 
 	// Queries a list of tSSVoter items.
 	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/tSSVoter";
+		option (google.api.http).get = "/zeta-chain/zetacore/TSSVoter";
 	}
 
 
 	// Queries a tSS by index.
 	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/tSS/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/TSS/{index}";
 	}
 
 	// Queries a list of tSS items.
 	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/tSS";
+		option (google.api.http).get = "/zeta-chain/zetacore/TSS";
 	}
 
 
