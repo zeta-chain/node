@@ -3,7 +3,9 @@ package zetachain.zetacore.zetacore;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "zetacore/zeta_conversion_rate.proto";
 // this line is used by starport scaffolding # 1
+import "gogoproto/gogo.proto";
 import "zetacore/keygen.proto";
 import "zetacore/tss_voter.proto";
 import "zetacore/tss.proto";
@@ -21,7 +23,17 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // Query defines the gRPC querier service.
 service Query {
-    // this line is used by starport scaffolding # 2
+    // Queries a ZetaConversionRate by index.
+	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/zeta_conversion_rate/{index}";
+	}
+
+	// Queries a list of ZetaConversionRate items.
+	rpc ZetaConversionRateAll(QueryAllZetaConversionRateRequest) returns (QueryAllZetaConversionRateResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/zeta_conversion_rate";
+	}
+
+// this line is used by starport scaffolding # 2
 
 	// Queries a keygen by index.
 	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
@@ -173,6 +185,24 @@ service Query {
 
 
 
+}
+
+message QueryGetZetaConversionRateRequest {
+	  string index = 1;
+
+}
+
+message QueryGetZetaConversionRateResponse {
+	ZetaConversionRate zetaConversionRate = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllZetaConversionRateRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllZetaConversionRateResponse {
+	repeated ZetaConversionRate zetaConversionRate = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3

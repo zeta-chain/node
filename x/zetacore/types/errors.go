@@ -10,4 +10,6 @@ import (
 var (
 	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
 	// this line is used by starport scaffolding # ibc/errors
+
+	ErrFloatParseError = sdkerrors.Register(ModuleName, 1101, "float parse error")
 )
