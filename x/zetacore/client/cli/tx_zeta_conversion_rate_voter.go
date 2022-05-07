@@ -19,7 +19,8 @@ func CmdZetaConversionRateVoter() *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argChain := args[0]
-			argZetaConversionRate := args[1]
+			argRate := args[1]
+
 			argBlockNumber, err := strconv.ParseInt(args[2], 10, 64)
 			if err != nil {
 				return err
@@ -33,7 +34,7 @@ func CmdZetaConversionRateVoter() *cobra.Command {
 			msg := types.NewMsgZetaConversionRateVoter(
 				clientCtx.GetFromAddress().String(),
 				argChain,
-				argZetaConversionRate,
+				argRate,
 				uint64(argBlockNumber),
 			)
 			if err := msg.ValidateBasic(); err != nil {
