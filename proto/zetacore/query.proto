@@ -25,162 +25,162 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 service Query {
     // Queries a ZetaConversionRate by index.
 	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/zeta_conversion_rate/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/zeta_conversion_rate/{index}";
 	}
 
 	// Queries a list of ZetaConversionRate items.
 	rpc ZetaConversionRateAll(QueryAllZetaConversionRateRequest) returns (QueryAllZetaConversionRateResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/zeta_conversion_rate";
+		option (google.api.http).get = "/zeta-chain/zetacore/zeta_conversion_rate";
 	}
 
 // this line is used by starport scaffolding # 2
 
 	// Queries a keygen by index.
 	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/keygen";
+		option (google.api.http).get = "/zeta-chain/zetacore/keygen";
 	}
 
 
 	// Queries a tSSVoter by index.
 	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSSVoter/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/tSSVoter/{index}";
 	}
 
 	// Queries a list of tSSVoter items.
 	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSSVoter";
+		option (google.api.http).get = "/zeta-chain/zetacore/tSSVoter";
 	}
 
 
 	// Queries a tSS by index.
 	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSS/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/tSS/{index}";
 	}
 
 	// Queries a list of tSS items.
 	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/tSS";
+		option (google.api.http).get = "/zeta-chain/zetacore/tSS";
 	}
 
 
 	// Queries a list of txListRich items.
 	rpc TxListRich(QueryTxListRichRequest) returns (QueryTxListRichResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/txListRich";
+		option (google.api.http).get = "/zeta-chain/zetacore/txListRich";
 	}
 
 
 	// Queries a inTx by index.
 	rpc InTx(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/inTx/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/inTx/{index}";
 	}
 
 	// Queries a inTx by index.
 	rpc InTxNS(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/inTxNS/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/inTxNS/{index}";
 	}
 
 	// Queries a inTx by index.
 	rpc InTxRich(QueryGetInTxRichRequest) returns (QueryGetInTxRichResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/inTxRich/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/inTxRich/{index}";
 	}
 
 	// Queries a list of inTx items.
 	rpc InTxAll(QueryAllInTxRequest) returns (QueryAllInTxResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/inTx";
+		option (google.api.http).get = "/zeta-chain/zetacore/inTx";
 	}
 
 
 	// Queries a txList by index.
 	rpc TxList(QueryGetTxRequest) returns (QueryGetTxResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/txList";
+		option (google.api.http).get = "/zeta-chain/zetacore/txList";
 	}
 
 
 	// Queries a gasBalance by index.
 	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/gasBalance/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/gasBalance/{index}";
 	}
 
 	// Queries a list of gasBalance items.
 	rpc GasBalanceAll(QueryAllGasBalanceRequest) returns (QueryAllGasBalanceResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/gasBalance";
+		option (google.api.http).get = "/zeta-chain/zetacore/gasBalance";
 	}
 
 
 	// Queries a gasPrice by index.
 	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/gasPrice/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/gasPrice/{index}";
 	}
 
 	// Queries a list of gasPrice items.
 	rpc GasPriceAll(QueryAllGasPriceRequest) returns (QueryAllGasPriceResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/gasPrice";
+		option (google.api.http).get = "/zeta-chain/zetacore/gasPrice";
 	}
 
 
 	// Queries a chainNonces by index.
 	rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/chainNonces/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/chainNonces/{index}";
 	}
 
 	// Queries a list of chainNonces items.
 	rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/chainNonces";
+		option (google.api.http).get = "/zeta-chain/zetacore/chainNonces";
 	}
 
 
 	// Queries a lastBlockHeight by index.
 	rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/lastBlockHeight/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight/{index}";
 	}
 
 	// Queries a list of lastBlockHeight items.
 	rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest) returns (QueryAllLastBlockHeightResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/lastBlockHeight";
+		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight";
 	}
 
 
 	// Queries a receive by index.
 	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/receive/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/receive/{index}";
 	}
 
 	// Queries a list of receive items.
 	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/receive";
+		option (google.api.http).get = "/zeta-chain/zetacore/receive";
 	}
 
 
 	// Queries a send by index.
 	rpc Send(QueryGetSendRequest) returns (QueryGetSendResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/send/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/send/{index}";
 	}
 
 	// Queries a list of send items.
 	rpc SendAll(QueryAllSendRequest) returns (QueryAllSendResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/send";
+		option (google.api.http).get = "/zeta-chain/zetacore/send";
 	}
 
 	// Queries a list of send items.
 	rpc SendAllPending(QueryAllSendPendingRequest) returns (QueryAllSendPendingResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/sendPending";
+		option (google.api.http).get = "/zeta-chain/zetacore/sendPending";
 	}
 
 
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/nodeAccount/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount/{index}";
 	}
 
 	// Queries a list of nodeAccount items.
 	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/nodeAccount";
+		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount";
 	}
 
 
 	// Queries a list of lastMetaHeight items.
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
-		option (google.api.http).get = "/Meta-Protocol/zetacore/zetacore/lastMetaHeight";
+		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
 	}
 
 
