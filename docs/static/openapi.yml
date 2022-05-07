@@ -27627,7 +27627,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/chainNonces:
+  /zeta-chain/zetacore/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
       operationId: ZetachainZetacoreZetacoreChainNoncesAll
@@ -27762,7 +27762,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/chainNonces/{index}':
+  '/zeta-chain/zetacore/chainNonces/{index}':
     get:
       summary: Queries a chainNonces by index.
       operationId: ZetachainZetacoreZetacoreChainNonces
@@ -27816,7 +27816,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/gasBalance:
+  /zeta-chain/zetacore/gasBalance:
     get:
       summary: Queries a list of gasBalance items.
       operationId: ZetachainZetacoreZetacoreGasBalanceAll
@@ -27957,7 +27957,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/gasBalance/{index}':
+  '/zeta-chain/zetacore/gasBalance/{index}':
     get:
       summary: Queries a gasBalance by index.
       operationId: ZetachainZetacoreZetacoreGasBalance
@@ -28017,7 +28017,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/gasPrice:
+  /zeta-chain/zetacore/gasPrice:
     get:
       summary: Queries a list of gasPrice items.
       operationId: ZetachainZetacoreZetacoreGasPriceAll
@@ -28159,7 +28159,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/gasPrice/{index}':
+  '/zeta-chain/zetacore/gasPrice/{index}':
     get:
       summary: Queries a gasPrice by index.
       operationId: ZetachainZetacoreZetacoreGasPrice
@@ -28220,7 +28220,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/inTx:
+  /zeta-chain/zetacore/inTx:
     get:
       summary: Queries a list of inTx items.
       operationId: ZetachainZetacoreZetacoreInTxAll
@@ -28350,7 +28350,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTx/{index}':
+  '/zeta-chain/zetacore/inTx/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTx
@@ -28399,7 +28399,7 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTxNS/{index}':
+  '/zeta-chain/zetacore/inTxNS/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTxNS
@@ -28448,7 +28448,7 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTxRich/{index}':
+  '/zeta-chain/zetacore/inTxRich/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTxRich
@@ -28547,7 +28547,52 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/lastBlockHeight:
+  /zeta-chain/zetacore/keygen:
+    get:
+      summary: Queries a keygen by index.
+      operationId: ZetachainZetacoreZetacoreKeygen
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Keygen:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  status:
+                    type: string
+                    format: uint64
+                  pubkeys:
+                    type: array
+                    items:
+                      type: string
+                  blockNumber:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /zeta-chain/zetacore/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
       operationId: ZetachainZetacoreZetacoreLastBlockHeightAll
@@ -28678,7 +28723,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/lastBlockHeight/{index}':
+  '/zeta-chain/zetacore/lastBlockHeight/{index}':
     get:
       summary: Queries a lastBlockHeight by index.
       operationId: ZetachainZetacoreZetacoreLastBlockHeight
@@ -28728,7 +28773,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/lastMetaHeight:
+  /zeta-chain/zetacore/lastMetaHeight:
     get:
       summary: Queries a list of lastMetaHeight items.
       operationId: ZetachainZetacoreZetacoreLastMetaHeight
@@ -28761,7 +28806,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/nodeAccount:
+  /zeta-chain/zetacore/nodeAccount:
     get:
       summary: Queries a list of nodeAccount items.
       operationId: ZetachainZetacoreZetacoreNodeAccountAll
@@ -28905,7 +28950,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/nodeAccount/{index}':
+  '/zeta-chain/zetacore/nodeAccount/{index}':
     get:
       summary: Queries a nodeAccount by index.
       operationId: ZetachainZetacoreZetacoreNodeAccount
@@ -28968,7 +29013,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/receive:
+  /zeta-chain/zetacore/receive:
     get:
       summary: Queries a list of receive items.
       operationId: ZetachainZetacoreZetacoreReceiveAll
@@ -29114,7 +29159,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/receive/{index}':
+  '/zeta-chain/zetacore/receive/{index}':
     get:
       summary: Queries a receive by index.
       operationId: ZetachainZetacoreZetacoreReceive
@@ -29179,7 +29224,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/send:
+  /zeta-chain/zetacore/send:
     get:
       summary: Queries a list of send items.
       operationId: ZetachainZetacoreZetacoreSendAll
@@ -29359,7 +29404,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/send/{index}':
+  '/zeta-chain/zetacore/send/{index}':
     get:
       summary: Queries a send by index.
       operationId: ZetachainZetacoreZetacoreSend
@@ -29458,7 +29503,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/sendPending:
+  /zeta-chain/zetacore/sendPending:
     get:
       summary: Queries a list of send items.
       operationId: ZetachainZetacoreZetacoreSendAllPending
@@ -29554,223 +29599,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/txList:
-    get:
-      summary: Queries a txList by index.
-      operationId: ZetachainZetacoreZetacoreTxList
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              tx:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    sendHash:
-                      type: string
-                    recvHash:
-                      type: string
-                    inTxHash:
-                      type: string
-                    inTxChain:
-                      type: string
-                    outTxHash:
-                      type: string
-                    outTxChain:
-                      type: string
-              length:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: from
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: to
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: last
-          in: query
-          required: false
-          type: string
-          format: int64
-      tags:
-        - Query
-  /Meta-Protocol/zetacore/zetacore/txListRich:
-    get:
-      summary: Queries a list of txListRich items.
-      operationId: ZetachainZetacoreZetacoreTxListRich
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              tx:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    sender:
-                      type: string
-                    senderChain:
-                      type: string
-                    receiver:
-                      type: string
-                    receiverChain:
-                      type: string
-                    mBurnt:
-                      type: string
-                    mMint:
-                      type: string
-                    message:
-                      type: string
-                    inTxHash:
-                      type: string
-                    inBlockHeight:
-                      type: string
-                      format: uint64
-                    finalizedMetaHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    status:
-                      type: string
-                      enum:
-                        - Created
-                        - Finalized
-                        - Mined
-                        - Confirmed
-                        - Revert
-                        - Reverted
-                        - Aborted
-                      default: Created
-                    broadcaster:
-                      type: string
-                      format: uint64
-                    nonce:
-                      type: string
-                      format: uint64
-                    gasPrice:
-                      type: string
-                    statusMessage:
-                      type: string
-                    recvHash:
-                      type: string
-                    indexTxList:
-                      type: string
-                      format: int64
-                    outTxHash:
-                      type: string
-                    lastUpdateTimestamp:
-                      type: string
-                      format: int64
-              length:
-                type: string
-                format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: last
-          in: query
-          required: false
-          type: string
-          format: uint64
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/keygen:
-    get:
-      summary: Queries a keygen by index.
-      operationId: ZetachainZetacoreZetacoreKeygen
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Keygen:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  status:
-                    type: string
-                    format: uint64
-                  pubkeys:
-                    type: array
-                    items:
-                      type: string
-                  blockNumber:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/tSS:
+  /zeta-chain/zetacore/tSS:
     get:
       summary: Queries a list of tSS items.
       operationId: ZetachainZetacoreZetacoreTSSAll
@@ -29906,7 +29735,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/zetacore/tSS/{index}':
+  '/zeta-chain/zetacore/tSS/{index}':
     get:
       summary: Queries a tSS by index.
       operationId: ZetachainZetacoreZetacoreTSS
@@ -29961,7 +29790,7 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/zetacore/zetacore/tSSVoter:
+  /zeta-chain/zetacore/tSSVoter:
     get:
       summary: Queries a list of tSSVoter items.
       operationId: ZetachainZetacoreZetacoreTSSVoterAll
@@ -30097,7 +29926,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/zetacore/tSSVoter/{index}':
+  '/zeta-chain/zetacore/tSSVoter/{index}':
     get:
       summary: Queries a tSSVoter by index.
       operationId: ZetachainZetacoreZetacoreTSSVoter
@@ -30152,7 +29981,178 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/zetacore/zetacore/zeta_conversion_rate:
+  /zeta-chain/zetacore/txList:
+    get:
+      summary: Queries a txList by index.
+      operationId: ZetachainZetacoreZetacoreTxList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sendHash:
+                      type: string
+                    recvHash:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inTxChain:
+                      type: string
+                    outTxHash:
+                      type: string
+                    outTxChain:
+                      type: string
+              length:
+                type: string
+                format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: from
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: to
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: last
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/zetacore/txListRich:
+    get:
+      summary: Queries a list of txListRich items.
+      operationId: ZetachainZetacoreZetacoreTxListRich
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    sender:
+                      type: string
+                    senderChain:
+                      type: string
+                    receiver:
+                      type: string
+                    receiverChain:
+                      type: string
+                    mBurnt:
+                      type: string
+                    mMint:
+                      type: string
+                    message:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inBlockHeight:
+                      type: string
+                      format: uint64
+                    finalizedMetaHeight:
+                      type: string
+                      format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    status:
+                      type: string
+                      enum:
+                        - Created
+                        - Finalized
+                        - Mined
+                        - Confirmed
+                        - Revert
+                        - Reverted
+                        - Aborted
+                      default: Created
+                    broadcaster:
+                      type: string
+                      format: uint64
+                    nonce:
+                      type: string
+                      format: uint64
+                    gasPrice:
+                      type: string
+                    statusMessage:
+                      type: string
+                    recvHash:
+                      type: string
+                    indexTxList:
+                      type: string
+                      format: int64
+                    outTxHash:
+                      type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
+              length:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: last
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /zeta-chain/zetacore/zeta_conversion_rate:
     get:
       summary: Queries a list of ZetaConversionRate items.
       operationId: ZetachainZetacoreZetacoreZetaConversionRateAll
@@ -30293,7 +30293,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/zetacore/zeta_conversion_rate/{index}':
+  '/zeta-chain/zetacore/zeta_conversion_rate/{index}':
     get:
       summary: Queries a ZetaConversionRate by index.
       operationId: ZetachainZetacoreZetacoreZetaConversionRate
