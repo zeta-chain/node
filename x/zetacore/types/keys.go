@@ -89,3 +89,11 @@ const (
 const (
 	KeygenKey = "Keygen-value-"
 )
+
+// events follow here
+const (
+	SendEventKey         = "NewSendCreated" // Indicates what key to listen to
+	StoredGameEventIndex = "Index"          // What game is relevant
+	StoredGameEventRed   = "Red"            // Is it relevant to me?
+	StoredGameEventBlack = "Black"          // Is it relevant to me?
+)
