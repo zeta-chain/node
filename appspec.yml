@@ -7,15 +7,15 @@ files:
     destination: /root/go/bin/zetacored
 hooks:
   ApplicationStop:
-    - location: aws-scripts/stop.sh
+    - location: ./stop.sh
   # BeforeInstall:
-  #   - location: aws-scripts/
+  #   - location: ./
   # AfterInstall:
-  #   - location: aws-scripts/build.sh
+  #   - location: ./build.sh
   ApplicationStart:
-    - location: aws-scripts/start.sh
+    - location: ./start.sh
       timeout: 3600
   # ValidateService:
-  #   - location: aws-scripts/test.sh
+  #   - location: ./test.sh
   #     timeout: 3600
   #     runas: codedeployuser
