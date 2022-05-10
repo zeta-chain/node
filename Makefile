@@ -1,4 +1,3 @@
-# SHELL := /bin/bash # this is for sourcing env.sh
 .PHONY: build
 
 
