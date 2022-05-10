@@ -2,20 +2,22 @@ version: 0.0
 os: linux
 files:
   - source: zetaclientd
-    destination: /root/go/bin/zetaclientd
+    destination: /root/go/bin/
   - source: zetacored
-    destination: /root/go/bin/zetacored
+    destination: /root/go/bin/
+file_exists_behavior: OVERWRITE
+
 hooks:
   ApplicationStop:
     - location: ./stop.sh
   # BeforeInstall:
-  #   - location: ./
+  #   - location: ./delete.sh
   # AfterInstall:
   #   - location: ./build.sh
   ApplicationStart:
     - location: ./start.sh
       timeout: 3600
-  # ValidateService:
-  #   - location: ./test.sh
-  #     timeout: 3600
-  #     runas: codedeployuser
+  ValidateService:
+    - location: ./validate.sh
+      timeout: 3600
+      runas: codedeployuser
