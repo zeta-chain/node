@@ -1,23 +1,44 @@
 version: 0.2
 
+env:
+  shell: "/bin/bash"
+  # variables:
+  #   GOPATH: "/root/go"
+  # exported-variables:
+  #   - GOPATH
+
+
 phases:
   install:
     commands:
+      # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
-      - pwd
-      - ls
+      - yum install -y make gcc jq
+      - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
+      - export GOPATH="/root/go"
+      - wget https://golang.org/dl/go1.17.3.linux-arm64.tar.gz
+      - tar -C /usr/local -xzf go1.17.3.linux-arm64.tar.gz
+
+  pre_build:
+    commands:
+      - echo "Pre-Build Phase"
 
   build:
     commands:
       - echo "Build Phase"
+      - make install
 
   post_build:
     commands:
       - echo "Post Build Phase"
+      - ls /root/go/bin
 
 artifacts:
+  discard-paths: yes
   files:
-      - '**/*'
+      - /root/go/bin/zetaclientd
+      - /root/go/bin/zetacored
+      - appspec.yml
 
 
 
@@ -39,3 +60,5 @@ artifacts:
 # artifacts:
 #   files:
 #       - imagedefinitions.json
+      # - '**/*'
+

@@ -1,15 +1,17 @@
 version: 0.0
 os: linux
-# files:
-#   - source: /
-#     destination: /root/codedeploy/
+files:
+  - source: zetaclientd
+    destination: /root/go/bin/zetaclientd
+  - source: zetacored
+    destination: /root/go/bin/zetacored
 hooks:
   ApplicationStop:
     - location: aws-scripts/stop.sh
   # BeforeInstall:
   #   - location: aws-scripts/
-  AfterInstall:
-    - location: aws-scripts/build.sh
+  # AfterInstall:
+  #   - location: aws-scripts/build.sh
   ApplicationStart:
     - location: aws-scripts/start.sh
       timeout: 3600
