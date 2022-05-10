@@ -11,13 +11,12 @@ hooks:
   ApplicationStop:
     - location: ./stop.sh
   # BeforeInstall:
-  #   - location: ./delete.sh
+  #   - location:
   # AfterInstall:
-  #   - location: ./build.sh
+  #   - location: 
   ApplicationStart:
     - location: ./start.sh
       timeout: 3600
   ValidateService:
     - location: ./validate.sh
       timeout: 3600
-      runas: codedeployuser
