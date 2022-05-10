@@ -27627,7 +27627,389 @@ paths:
           format: uint64
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/chainNonces:
+  /zeta-chain/zetacore/TSS:
+    get:
+      summary: Queries a list of tSS items.
+      operationId: ZetachainZetacoreZetacoreTSSAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TSS:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    chain:
+                      type: string
+                    address:
+                      type: string
+                    pubkey:
+                      type: string
+                    signer:
+                      type: array
+                      items:
+                        type: string
+                    finalizedZetaHeight:
+                      type: string
+                      format: uint64
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/zeta-chain/zetacore/TSS/{index}':
+    get:
+      summary: Queries a tSS by index.
+      operationId: ZetachainZetacoreZetacoreTSS
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TSS:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  chain:
+                    type: string
+                  address:
+                    type: string
+                  pubkey:
+                    type: string
+                  signer:
+                    type: array
+                    items:
+                      type: string
+                  finalizedZetaHeight:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/zetacore/TSSVoter:
+    get:
+      summary: Queries a list of tSSVoter items.
+      operationId: ZetachainZetacoreZetacoreTSSVoterAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TSSVoter:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    chain:
+                      type: string
+                    address:
+                      type: string
+                    pubkey:
+                      type: string
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    finalizedHeight:
+                      type: string
+                      format: uint64
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/zeta-chain/zetacore/TSSVoter/{index}':
+    get:
+      summary: Queries a tSSVoter by index.
+      operationId: ZetachainZetacoreZetacoreTSSVoter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              TSSVoter:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  chain:
+                    type: string
+                  address:
+                    type: string
+                  pubkey:
+                    type: string
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  finalizedHeight:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/zetacore/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
       operationId: ZetachainZetacoreZetacoreChainNoncesAll
@@ -27762,7 +28144,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/chainNonces/{index}':
+  '/zeta-chain/zetacore/chainNonces/{index}':
     get:
       summary: Queries a chainNonces by index.
       operationId: ZetachainZetacoreZetacoreChainNonces
@@ -27816,7 +28198,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/gasBalance:
+  /zeta-chain/zetacore/gasBalance:
     get:
       summary: Queries a list of gasBalance items.
       operationId: ZetachainZetacoreZetacoreGasBalanceAll
@@ -27957,7 +28339,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/gasBalance/{index}':
+  '/zeta-chain/zetacore/gasBalance/{index}':
     get:
       summary: Queries a gasBalance by index.
       operationId: ZetachainZetacoreZetacoreGasBalance
@@ -28017,7 +28399,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/gasPrice:
+  /zeta-chain/zetacore/gasPrice:
     get:
       summary: Queries a list of gasPrice items.
       operationId: ZetachainZetacoreZetacoreGasPriceAll
@@ -28159,7 +28541,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/gasPrice/{index}':
+  '/zeta-chain/zetacore/gasPrice/{index}':
     get:
       summary: Queries a gasPrice by index.
       operationId: ZetachainZetacoreZetacoreGasPrice
@@ -28220,7 +28602,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/inTx:
+  /zeta-chain/zetacore/inTx:
     get:
       summary: Queries a list of inTx items.
       operationId: ZetachainZetacoreZetacoreInTxAll
@@ -28350,7 +28732,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTx/{index}':
+  '/zeta-chain/zetacore/inTx/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTx
@@ -28399,7 +28781,7 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTxNS/{index}':
+  '/zeta-chain/zetacore/inTxNS/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTxNS
@@ -28448,7 +28830,7 @@ paths:
           type: string
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/inTxRich/{index}':
+  '/zeta-chain/zetacore/inTxRich/{index}':
     get:
       summary: Queries a inTx by index.
       operationId: ZetachainZetacoreZetacoreInTxRich
@@ -28547,7 +28929,52 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/lastBlockHeight:
+  /zeta-chain/zetacore/keygen:
+    get:
+      summary: Queries a keygen by index.
+      operationId: ZetachainZetacoreZetacoreKeygen
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Keygen:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  status:
+                    type: string
+                    format: uint64
+                  pubkeys:
+                    type: array
+                    items:
+                      type: string
+                  blockNumber:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /zeta-chain/zetacore/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
       operationId: ZetachainZetacoreZetacoreLastBlockHeightAll
@@ -28678,7 +29105,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/lastBlockHeight/{index}':
+  '/zeta-chain/zetacore/lastBlockHeight/{index}':
     get:
       summary: Queries a lastBlockHeight by index.
       operationId: ZetachainZetacoreZetacoreLastBlockHeight
@@ -28728,7 +29155,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/lastMetaHeight:
+  /zeta-chain/zetacore/lastMetaHeight:
     get:
       summary: Queries a list of lastMetaHeight items.
       operationId: ZetachainZetacoreZetacoreLastMetaHeight
@@ -28761,7 +29188,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/nodeAccount:
+  /zeta-chain/zetacore/nodeAccount:
     get:
       summary: Queries a list of nodeAccount items.
       operationId: ZetachainZetacoreZetacoreNodeAccountAll
@@ -28905,7 +29332,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/nodeAccount/{index}':
+  '/zeta-chain/zetacore/nodeAccount/{index}':
     get:
       summary: Queries a nodeAccount by index.
       operationId: ZetachainZetacoreZetacoreNodeAccount
@@ -28968,7 +29395,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/receive:
+  /zeta-chain/zetacore/receive:
     get:
       summary: Queries a list of receive items.
       operationId: ZetachainZetacoreZetacoreReceiveAll
@@ -29114,7 +29541,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/receive/{index}':
+  '/zeta-chain/zetacore/receive/{index}':
     get:
       summary: Queries a receive by index.
       operationId: ZetachainZetacoreZetacoreReceive
@@ -29179,7 +29606,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/send:
+  /zeta-chain/zetacore/send:
     get:
       summary: Queries a list of send items.
       operationId: ZetachainZetacoreZetacoreSendAll
@@ -29359,7 +29786,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/Meta-Protocol/zetacore/zetacore/send/{index}':
+  '/zeta-chain/zetacore/send/{index}':
     get:
       summary: Queries a send by index.
       operationId: ZetachainZetacoreZetacoreSend
@@ -29458,7 +29885,7 @@ paths:
           type: string
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/sendPending:
+  /zeta-chain/zetacore/sendPending:
     get:
       summary: Queries a list of send items.
       operationId: ZetachainZetacoreZetacoreSendAllPending
@@ -29554,7 +29981,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/txList:
+  /zeta-chain/zetacore/txList:
     get:
       summary: Queries a txList by index.
       operationId: ZetachainZetacoreZetacoreTxList
@@ -29620,7 +30047,7 @@ paths:
           format: int64
       tags:
         - Query
-  /Meta-Protocol/zetacore/zetacore/txListRich:
+  /zeta-chain/zetacore/txListRich:
     get:
       summary: Queries a list of txListRich items.
       operationId: ZetachainZetacoreZetacoreTxListRich
@@ -29725,434 +30152,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /zeta-chain/zetacore/zetacore/keygen:
-    get:
-      summary: Queries a keygen by index.
-      operationId: ZetachainZetacoreZetacoreKeygen
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Keygen:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  status:
-                    type: string
-                    format: uint64
-                  pubkeys:
-                    type: array
-                    items:
-                      type: string
-                  blockNumber:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/tSS:
-    get:
-      summary: Queries a list of tSS items.
-      operationId: ZetachainZetacoreZetacoreTSSAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TSS:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    chain:
-                      type: string
-                    address:
-                      type: string
-                    pubkey:
-                      type: string
-                    signer:
-                      type: array
-                      items:
-                        type: string
-                    finalizedZetaHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/zeta-chain/zetacore/zetacore/tSS/{index}':
-    get:
-      summary: Queries a tSS by index.
-      operationId: ZetachainZetacoreZetacoreTSS
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TSS:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  chain:
-                    type: string
-                  address:
-                    type: string
-                  pubkey:
-                    type: string
-                  signer:
-                    type: array
-                    items:
-                      type: string
-                  finalizedZetaHeight:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/tSSVoter:
-    get:
-      summary: Queries a list of tSSVoter items.
-      operationId: ZetachainZetacoreZetacoreTSSVoterAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TSSVoter:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    chain:
-                      type: string
-                    address:
-                      type: string
-                    pubkey:
-                      type: string
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    finalizedHeight:
-                      type: string
-                      format: uint64
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/zeta-chain/zetacore/zetacore/tSSVoter/{index}':
-    get:
-      summary: Queries a tSSVoter by index.
-      operationId: ZetachainZetacoreZetacoreTSSVoter
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              TSSVoter:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  chain:
-                    type: string
-                  address:
-                    type: string
-                  pubkey:
-                    type: string
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  finalizedHeight:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/zeta_conversion_rate:
+  /zeta-chain/zetacore/zetaConversionRate:
     get:
       summary: Queries a list of ZetaConversionRate items.
       operationId: ZetachainZetacoreZetacoreZetaConversionRateAll
@@ -30293,7 +30293,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/zetacore/zeta_conversion_rate/{index}':
+  '/zeta-chain/zetacore/zetaConversionRate/{index}':
     get:
       summary: Queries a ZetaConversionRate by index.
       operationId: ZetachainZetacoreZetacoreZetaConversionRate
