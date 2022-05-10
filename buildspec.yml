@@ -19,20 +19,18 @@ phases:
       - wget https://golang.org/dl/go1.17.3.linux-arm64.tar.gz
       - tar -C /usr/local -xzf go1.17.3.linux-arm64.tar.gz
 
-  pre_build:
-    commands:
-      - echo "Pre-Build Phase"
+  # pre_build:
+  #   commands:
+  #     - echo "Pre-Build Phase"
 
   build:
     commands:
       - echo "Build Phase"
       - make install
 
-  post_build:
-    commands:
-      - echo "Post Build Phase"
-      - ls /root/go/bin
-      - ls
+  # post_build:
+  #   commands:
+  #     - echo "Post Build Phase"
 
 artifacts:
   discard-paths: yes
