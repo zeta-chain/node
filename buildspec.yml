@@ -32,6 +32,7 @@ phases:
     commands:
       - echo "Post Build Phase"
       - ls /root/go/bin
+      - ls
 
 artifacts:
   discard-paths: yes
@@ -39,6 +40,7 @@ artifacts:
       - /root/go/bin/zetaclientd
       - /root/go/bin/zetacored
       - appspec.yml
+      - aws-scripts/*
 
 
 
