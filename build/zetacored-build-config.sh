@@ -26,7 +26,7 @@ mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zeta
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
 
-    zetacored init testnet --chain-id zetacore
+    zetacored init testnet --chain-id athens-1
     zetacored config keyring-backend test
     zetacored keys add val
     cd ~/.zetacore/config
@@ -65,7 +65,7 @@ if (( $NODE_NUMBER == 0 )); then
         i=$[$i+1]
     done
 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
+    zetacored gentx val 100000000stake --chain-id athens-1 --ip $MYIP --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
@@ -103,7 +103,7 @@ if (( $NODE_NUMBER > 0 )); then
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
+    zetacored gentx val 100000000stake --chain-id athens-1 --ip $MYIP --moniker "node$NODE_NUMBER" 
 
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
