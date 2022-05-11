@@ -3,8 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"math"
-	"strconv"
+	"math/big"
 )
 
 const TypeMsgZetaConversionRateVoter = "zeta_conversion_rate_voter"
@@ -47,13 +46,14 @@ func (msg *MsgZetaConversionRateVoter) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if len(msg.ZetaConversionRate) > 15 {
+	// 256 bit fixed point number; in hex cannot exceed 64+2(0x) characters
+	if len(msg.ZetaConversionRate) > 66 {
+		return sdkerrors.Wrapf(ErrFloatParseError, "invalid float (%s)", msg.ZetaConversionRate)
+	}
+	rate, ok := big.NewInt(0).SetString(msg.ZetaConversionRate, 0)
+	if !ok || rate.BitLen() > 256 || rate.Sign() <= 0 {
 		return sdkerrors.Wrapf(ErrFloatParseError, "invalid float (%s)", msg.ZetaConversionRate)
 	}
 
-	v, err := strconv.ParseFloat(msg.ZetaConversionRate, 64)
-	if err != nil || math.IsNaN(v) || math.IsInf(v, 0) {
-		return sdkerrors.Wrapf(ErrFloatParseError, "invalid float (%s)", msg.ZetaConversionRate)
-	}
 	return nil
 }
