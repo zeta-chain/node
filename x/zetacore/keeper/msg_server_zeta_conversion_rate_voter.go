@@ -5,10 +5,11 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"math/big"
 	"sort"
-	"strconv"
 )
 
 func (k msgServer) ZetaConversionRateVoter(goCtx context.Context, msg *types.MsgZetaConversionRateVoter) (*types.MsgZetaConversionRateVoterResponse, error) {
@@ -61,17 +62,21 @@ func (k msgServer) ZetaConversionRateVoter(goCtx context.Context, msg *types.Msg
 
 type indexFloatValue struct {
 	Index int
-	Value float64
+	Value *big.Int
 }
 
 func medianOfArrayFloat(values []string) int {
 	var array []indexFloatValue
 	for i, v := range values {
-		f, _ := strconv.ParseFloat(v, 64)
-		array = append(array, indexFloatValue{Index: i, Value: f})
+		f, ok := big.NewInt(0).SetString(v, 0) // should be less than 256bit
+		if ok {
+			array = append(array, indexFloatValue{Index: i, Value: f})
+		} else {
+			log.Error().Msgf("parse big.Int error")
+		}
 	}
 	sort.SliceStable(array, func(i, j int) bool {
-		return array[i].Value < array[j].Value
+		return array[i].Value.Cmp(array[j].Value) < 0
 	})
 	l := len(array)
 	return array[l/2].Index
