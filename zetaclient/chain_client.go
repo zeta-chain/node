@@ -244,7 +244,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 			continue
 		}
 		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price)
-		priceInHex := fmt.Sprintf("0x%d", price)
+		priceInHex := fmt.Sprintf("0x%x", price)
 
 		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceInHex, bn)
 		if err != nil {
@@ -632,6 +632,6 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 		log.Err(err).Msgf("%s inexact conversion acc0=%s acc1=%s r0=%d r1=%d", ob.chain, acc0, acc1, reserve0, reserve1)
 		return nil, 0, err
 	}
-	v, _ := big.NewFloat(r0 / r1).Int(nil)
+	v, _ := big.NewFloat(r0 / r1 * 1.0e18).Int(nil)
 	return v, bn, nil
 }
