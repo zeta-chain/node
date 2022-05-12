@@ -9,7 +9,7 @@ import (
 // SetNodeAccount set a specific nodeAccount in the store from its index
 func (k Keeper) SetNodeAccount(ctx sdk.Context, nodeAccount types.NodeAccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeAccountKey))
-	b := k.cdc.MustMarshalBinaryBare(&nodeAccount)
+	b := k.cdc.MustMarshal(&nodeAccount)
 	store.Set(types.KeyPrefix(nodeAccount.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetNodeAccount(ctx sdk.Context, index string) (val types.NodeAcc
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllNodeAccount(ctx sdk.Context) (list []types.NodeAccount) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.NodeAccount
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

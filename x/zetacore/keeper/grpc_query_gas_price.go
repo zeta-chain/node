@@ -24,7 +24,7 @@ func (k Keeper) GasPriceAll(c context.Context, req *types.QueryAllGasPriceReques
 
 	pageRes, err := query.Paginate(gasPriceStore, req.Pagination, func(key []byte, value []byte) error {
 		var gasPrice types.GasPrice
-		if err := k.cdc.UnmarshalBinaryBare(value, &gasPrice); err != nil {
+		if err := k.cdc.Unmarshal(value, &gasPrice); err != nil {
 			return err
 		}
 

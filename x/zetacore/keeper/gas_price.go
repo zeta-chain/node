@@ -9,7 +9,7 @@ import (
 // SetGasPrice set a specific gasPrice in the store from its index
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := k.cdc.MustMarshalBinaryBare(&gasPrice)
+	b := k.cdc.MustMarshal(&gasPrice)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, index string) (val types.GasPrice, 
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllGasPrice(ctx sdk.Context) (list []types.GasPrice) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.GasPrice
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

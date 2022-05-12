@@ -9,7 +9,7 @@ import (
 // SetLastBlockHeight set a specific lastBlockHeight in the store from its index
 func (k Keeper) SetLastBlockHeight(ctx sdk.Context, lastBlockHeight types.LastBlockHeight) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockHeightKey))
-	b := k.cdc.MustMarshalBinaryBare(&lastBlockHeight)
+	b := k.cdc.MustMarshal(&lastBlockHeight)
 	store.Set(types.KeyPrefix(lastBlockHeight.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetLastBlockHeight(ctx sdk.Context, index string) (val types.Las
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllLastBlockHeight(ctx sdk.Context) (list []types.LastBlockHe
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.LastBlockHeight
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

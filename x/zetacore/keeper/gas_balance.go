@@ -9,7 +9,7 @@ import (
 // SetGasBalance set a specific gasBalance in the store from its index
 func (k Keeper) SetGasBalance(ctx sdk.Context, gasBalance types.GasBalance) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasBalanceKey))
-	b := k.cdc.MustMarshalBinaryBare(&gasBalance)
+	b := k.cdc.MustMarshal(&gasBalance)
 	store.Set(types.KeyPrefix(gasBalance.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetGasBalance(ctx sdk.Context, index string) (val types.GasBalan
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllGasBalance(ctx sdk.Context) (list []types.GasBalance) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.GasBalance
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 

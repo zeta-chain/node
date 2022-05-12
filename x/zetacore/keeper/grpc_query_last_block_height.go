@@ -24,7 +24,7 @@ func (k Keeper) LastBlockHeightAll(c context.Context, req *types.QueryAllLastBlo
 
 	pageRes, err := query.Paginate(lastBlockHeightStore, req.Pagination, func(key []byte, value []byte) error {
 		var lastBlockHeight types.LastBlockHeight
-		if err := k.cdc.UnmarshalBinaryBare(value, &lastBlockHeight); err != nil {
+		if err := k.cdc.Unmarshal(value, &lastBlockHeight); err != nil {
 			return err
 		}
 
