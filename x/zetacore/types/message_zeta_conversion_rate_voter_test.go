@@ -17,14 +17,15 @@ func TestMsgZetaConversionRateVoter_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgZetaConversionRateVoter{
-				Creator: "invalid_address",
+				Creator:            "invalid_address",
+				ZetaConversionRate: "0x1234567890abcde",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgZetaConversionRateVoter{
 				Creator:            sample.AccAddress(),
-				ZetaConversionRate: "0.0",
+				ZetaConversionRate: "0x1234567890abcde",
 			},
 		},
 	}
