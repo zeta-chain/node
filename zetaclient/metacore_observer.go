@@ -179,7 +179,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		co.sendDone <- send
 	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
-	amount, ok := new(big.Int).SetString(send.MMint, 10)
+	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
 	if !ok {
 		log.Error().Msg("error converting MBurnt to big.Int")
 		return

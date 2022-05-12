@@ -28855,9 +28855,9 @@ paths:
                     type: string
                   receiverChain:
                     type: string
-                  mBurnt:
+                  zetaBurnt:
                     type: string
-                  mMint:
+                  zetaMint:
                     type: string
                   message:
                     type: string
@@ -28904,6 +28904,9 @@ paths:
                   lastUpdateTimestamp:
                     type: string
                     format: int64
+                  gasLimit:
+                    type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -29633,9 +29636,9 @@ paths:
                       type: string
                     receiverChain:
                       type: string
-                    mBurnt:
+                    zetaBurnt:
                       type: string
-                    mMint:
+                    zetaMint:
                       type: string
                     message:
                       type: string
@@ -29682,6 +29685,9 @@ paths:
                     lastUpdateTimestamp:
                       type: string
                       format: int64
+                    gasLimit:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -29811,9 +29817,9 @@ paths:
                     type: string
                   receiverChain:
                     type: string
-                  mBurnt:
+                  zetaBurnt:
                     type: string
-                  mMint:
+                  zetaMint:
                     type: string
                   message:
                     type: string
@@ -29860,6 +29866,9 @@ paths:
                   lastUpdateTimestamp:
                     type: string
                     format: int64
+                  gasLimit:
+                    type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -29912,9 +29921,9 @@ paths:
                       type: string
                     receiverChain:
                       type: string
-                    mBurnt:
+                    zetaBurnt:
                       type: string
-                    mMint:
+                    zetaMint:
                       type: string
                     message:
                       type: string
@@ -29961,6 +29970,9 @@ paths:
                     lastUpdateTimestamp:
                       type: string
                       format: int64
+                    gasLimit:
+                      type: string
+                      format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30074,9 +30086,9 @@ paths:
                       type: string
                     receiverChain:
                       type: string
-                    mBurnt:
+                    zetaBurnt:
                       type: string
-                    mMint:
+                    zetaMint:
                       type: string
                     message:
                       type: string
@@ -30123,6 +30135,9 @@ paths:
                     lastUpdateTimestamp:
                       type: string
                       format: int64
+                    gasLimit:
+                      type: string
+                      format: uint64
               length:
                 type: string
                 format: uint64
@@ -50645,9 +50660,9 @@ definitions:
               type: string
             receiverChain:
               type: string
-            mBurnt:
+            zetaBurnt:
               type: string
-            mMint:
+            zetaMint:
               type: string
             message:
               type: string
@@ -50694,6 +50709,9 @@ definitions:
             lastUpdateTimestamp:
               type: string
               format: int64
+            gasLimit:
+              type: string
+              format: uint64
   zetachain.zetacore.zetacore.QueryAllSendResponse:
     type: object
     properties:
@@ -50714,9 +50732,9 @@ definitions:
               type: string
             receiverChain:
               type: string
-            mBurnt:
+            zetaBurnt:
               type: string
-            mMint:
+            zetaMint:
               type: string
             message:
               type: string
@@ -50763,6 +50781,9 @@ definitions:
             lastUpdateTimestamp:
               type: string
               format: int64
+            gasLimit:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -51057,9 +51078,9 @@ definitions:
             type: string
           receiverChain:
             type: string
-          mBurnt:
+          zetaBurnt:
             type: string
-          mMint:
+          zetaMint:
             type: string
           message:
             type: string
@@ -51106,6 +51127,9 @@ definitions:
           lastUpdateTimestamp:
             type: string
             format: int64
+          gasLimit:
+            type: string
+            format: uint64
   zetachain.zetacore.zetacore.QueryGetKeygenResponse:
     type: object
     properties:
@@ -51224,9 +51248,9 @@ definitions:
             type: string
           receiverChain:
             type: string
-          mBurnt:
+          zetaBurnt:
             type: string
-          mMint:
+          zetaMint:
             type: string
           message:
             type: string
@@ -51273,6 +51297,9 @@ definitions:
           lastUpdateTimestamp:
             type: string
             format: int64
+          gasLimit:
+            type: string
+            format: uint64
   zetachain.zetacore.zetacore.QueryGetTSSResponse:
     type: object
     properties:
@@ -51396,9 +51423,9 @@ definitions:
               type: string
             receiverChain:
               type: string
-            mBurnt:
+            zetaBurnt:
               type: string
-            mMint:
+            zetaMint:
               type: string
             message:
               type: string
@@ -51445,6 +51472,9 @@ definitions:
             lastUpdateTimestamp:
               type: string
               format: int64
+            gasLimit:
+              type: string
+              format: uint64
       length:
         type: string
         format: uint64
@@ -51493,9 +51523,9 @@ definitions:
         type: string
       receiverChain:
         type: string
-      mBurnt:
+      zetaBurnt:
         type: string
-      mMint:
+      zetaMint:
         type: string
       message:
         type: string
@@ -51542,6 +51572,9 @@ definitions:
       lastUpdateTimestamp:
         type: string
         format: int64
+      gasLimit:
+        type: string
+        format: uint64
   zetachain.zetacore.zetacore.SendStatus:
     type: string
     enum:

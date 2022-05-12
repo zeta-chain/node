@@ -95,6 +95,7 @@ message MsgSendVoter {
   string message = 8;
   string inTxHash = 9;
   uint64 inBlockHeight = 10;
+  uint64 gasLimit = 11;
 }
 
 message MsgSendVoterResponse {

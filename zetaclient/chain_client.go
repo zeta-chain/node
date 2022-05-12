@@ -243,7 +243,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
 			continue
 		}
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price)
+		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, float64(price.Int64())/1.0e18)
 		priceInHex := fmt.Sprintf("0x%x", price)
 
 		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceInHex, bn)
@@ -435,7 +435,6 @@ func (chainOb *ChainObserver) observeChain() error {
 			message := vals[4].([]byte)
 			zetaParams := vals[5].([]byte)
 
-			_ = gasLimit
 			_ = zetaParams
 
 			metaHash, err := chainOb.bridge.PostSend(
@@ -448,6 +447,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				base64.StdEncoding.EncodeToString(message),
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
+				gasLimit.Uint64(),
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting to meta core")
