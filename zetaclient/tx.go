@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+func (b *MetachainBridge) PostZetaConversionRate(chain common.Chain, rate string, blockNum uint64) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.String(), rate, blockNum)
+	metaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("PostZetaConversionRate broadcast fail")
+		return "", err
+	}
+	return metaTxHash, nil
+}
+
 func (b *MetachainBridge) PostGasBalance(chain common.Chain, gasBalance string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgGasBalanceVoter(signerAddress, chain.String(), gasBalance, blockNum)
@@ -30,6 +41,7 @@ func (b *MetachainBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supp
 	}
 	return metaTxHash, nil
 }
+
 func (b *MetachainBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
