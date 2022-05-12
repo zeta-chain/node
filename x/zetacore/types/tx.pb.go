@@ -28,6 +28,110 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type MsgZetaConversionRateVoter struct {
+	Creator            string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Chain              string `protobuf:"bytes,2,opt,name=chain,proto3" json:"chain,omitempty"`
+	ZetaConversionRate string `protobuf:"bytes,3,opt,name=zetaConversionRate,proto3" json:"zetaConversionRate,omitempty"`
+	BlockNumber        uint64 `protobuf:"varint,4,opt,name=blockNumber,proto3" json:"blockNumber,omitempty"`
+}
+
+func (m *MsgZetaConversionRateVoter) Reset()         { *m = MsgZetaConversionRateVoter{} }
+func (m *MsgZetaConversionRateVoter) String() string { return proto.CompactTextString(m) }
+func (*MsgZetaConversionRateVoter) ProtoMessage()    {}
+func (*MsgZetaConversionRateVoter) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4b502766e6a14552, []int{0}
+}
+func (m *MsgZetaConversionRateVoter) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgZetaConversionRateVoter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgZetaConversionRateVoter.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgZetaConversionRateVoter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgZetaConversionRateVoter.Merge(m, src)
+}
+func (m *MsgZetaConversionRateVoter) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgZetaConversionRateVoter) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgZetaConversionRateVoter.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgZetaConversionRateVoter proto.InternalMessageInfo
+
+func (m *MsgZetaConversionRateVoter) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgZetaConversionRateVoter) GetChain() string {
+	if m != nil {
+		return m.Chain
+	}
+	return ""
+}
+
+func (m *MsgZetaConversionRateVoter) GetZetaConversionRate() string {
+	if m != nil {
+		return m.ZetaConversionRate
+	}
+	return ""
+}
+
+func (m *MsgZetaConversionRateVoter) GetBlockNumber() uint64 {
+	if m != nil {
+		return m.BlockNumber
+	}
+	return 0
+}
+
+type MsgZetaConversionRateVoterResponse struct {
+}
+
+func (m *MsgZetaConversionRateVoterResponse) Reset()         { *m = MsgZetaConversionRateVoterResponse{} }
+func (m *MsgZetaConversionRateVoterResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgZetaConversionRateVoterResponse) ProtoMessage()    {}
+func (*MsgZetaConversionRateVoterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4b502766e6a14552, []int{1}
+}
+func (m *MsgZetaConversionRateVoterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgZetaConversionRateVoterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgZetaConversionRateVoterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgZetaConversionRateVoterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgZetaConversionRateVoterResponse.Merge(m, src)
+}
+func (m *MsgZetaConversionRateVoterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgZetaConversionRateVoterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgZetaConversionRateVoterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgZetaConversionRateVoterResponse proto.InternalMessageInfo
+
 // this line is used by starport scaffolding # proto/tx/message
 type MsgCreateTSSVoter struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -40,7 +144,7 @@ func (m *MsgCreateTSSVoter) Reset()         { *m = MsgCreateTSSVoter{} }
 func (m *MsgCreateTSSVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateTSSVoter) ProtoMessage()    {}
 func (*MsgCreateTSSVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{0}
+	return fileDescriptor_4b502766e6a14552, []int{2}
 }
 func (m *MsgCreateTSSVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -104,7 +208,7 @@ func (m *MsgCreateTSSVoterResponse) Reset()         { *m = MsgCreateTSSVoterResp
 func (m *MsgCreateTSSVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCreateTSSVoterResponse) ProtoMessage()    {}
 func (*MsgCreateTSSVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{1}
+	return fileDescriptor_4b502766e6a14552, []int{3}
 }
 func (m *MsgCreateTSSVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -144,7 +248,7 @@ func (m *MsgGasBalanceVoter) Reset()         { *m = MsgGasBalanceVoter{} }
 func (m *MsgGasBalanceVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgGasBalanceVoter) ProtoMessage()    {}
 func (*MsgGasBalanceVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{2}
+	return fileDescriptor_4b502766e6a14552, []int{4}
 }
 func (m *MsgGasBalanceVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -208,7 +312,7 @@ func (m *MsgGasBalanceVoterResponse) Reset()         { *m = MsgGasBalanceVoterRe
 func (m *MsgGasBalanceVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGasBalanceVoterResponse) ProtoMessage()    {}
 func (*MsgGasBalanceVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{3}
+	return fileDescriptor_4b502766e6a14552, []int{5}
 }
 func (m *MsgGasBalanceVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -249,7 +353,7 @@ func (m *MsgGasPriceVoter) Reset()         { *m = MsgGasPriceVoter{} }
 func (m *MsgGasPriceVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgGasPriceVoter) ProtoMessage()    {}
 func (*MsgGasPriceVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{4}
+	return fileDescriptor_4b502766e6a14552, []int{6}
 }
 func (m *MsgGasPriceVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -320,7 +424,7 @@ func (m *MsgGasPriceVoterResponse) Reset()         { *m = MsgGasPriceVoterRespon
 func (m *MsgGasPriceVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGasPriceVoterResponse) ProtoMessage()    {}
 func (*MsgGasPriceVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{5}
+	return fileDescriptor_4b502766e6a14552, []int{7}
 }
 func (m *MsgGasPriceVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -359,7 +463,7 @@ func (m *MsgNonceVoter) Reset()         { *m = MsgNonceVoter{} }
 func (m *MsgNonceVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgNonceVoter) ProtoMessage()    {}
 func (*MsgNonceVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{6}
+	return fileDescriptor_4b502766e6a14552, []int{8}
 }
 func (m *MsgNonceVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -416,7 +520,7 @@ func (m *MsgNonceVoterResponse) Reset()         { *m = MsgNonceVoterResponse{} }
 func (m *MsgNonceVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgNonceVoterResponse) ProtoMessage()    {}
 func (*MsgNonceVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{7}
+	return fileDescriptor_4b502766e6a14552, []int{9}
 }
 func (m *MsgNonceVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -459,7 +563,7 @@ func (m *MsgReceiveConfirmation) Reset()         { *m = MsgReceiveConfirmation{}
 func (m *MsgReceiveConfirmation) String() string { return proto.CompactTextString(m) }
 func (*MsgReceiveConfirmation) ProtoMessage()    {}
 func (*MsgReceiveConfirmation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{8}
+	return fileDescriptor_4b502766e6a14552, []int{10}
 }
 func (m *MsgReceiveConfirmation) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -544,7 +648,7 @@ func (m *MsgReceiveConfirmationResponse) Reset()         { *m = MsgReceiveConfir
 func (m *MsgReceiveConfirmationResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgReceiveConfirmationResponse) ProtoMessage()    {}
 func (*MsgReceiveConfirmationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{9}
+	return fileDescriptor_4b502766e6a14552, []int{11}
 }
 func (m *MsgReceiveConfirmationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -590,7 +694,7 @@ func (m *MsgSendVoter) Reset()         { *m = MsgSendVoter{} }
 func (m *MsgSendVoter) String() string { return proto.CompactTextString(m) }
 func (*MsgSendVoter) ProtoMessage()    {}
 func (*MsgSendVoter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{10}
+	return fileDescriptor_4b502766e6a14552, []int{12}
 }
 func (m *MsgSendVoter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -696,7 +800,7 @@ func (m *MsgSendVoterResponse) Reset()         { *m = MsgSendVoterResponse{} }
 func (m *MsgSendVoterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSendVoterResponse) ProtoMessage()    {}
 func (*MsgSendVoterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{11}
+	return fileDescriptor_4b502766e6a14552, []int{13}
 }
 func (m *MsgSendVoterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -735,7 +839,7 @@ func (m *MsgSetNodeKeys) Reset()         { *m = MsgSetNodeKeys{} }
 func (m *MsgSetNodeKeys) String() string { return proto.CompactTextString(m) }
 func (*MsgSetNodeKeys) ProtoMessage()    {}
 func (*MsgSetNodeKeys) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{12}
+	return fileDescriptor_4b502766e6a14552, []int{14}
 }
 func (m *MsgSetNodeKeys) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -792,7 +896,7 @@ func (m *MsgSetNodeKeysResponse) Reset()         { *m = MsgSetNodeKeysResponse{}
 func (m *MsgSetNodeKeysResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetNodeKeysResponse) ProtoMessage()    {}
 func (*MsgSetNodeKeysResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b502766e6a14552, []int{13}
+	return fileDescriptor_4b502766e6a14552, []int{15}
 }
 func (m *MsgSetNodeKeysResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -822,6 +926,8 @@ func (m *MsgSetNodeKeysResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSetNodeKeysResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgZetaConversionRateVoter)(nil), "zetachain.zetacore.zetacore.MsgZetaConversionRateVoter")
+	proto.RegisterType((*MsgZetaConversionRateVoterResponse)(nil), "zetachain.zetacore.zetacore.MsgZetaConversionRateVoterResponse")
 	proto.RegisterType((*MsgCreateTSSVoter)(nil), "zetachain.zetacore.zetacore.MsgCreateTSSVoter")
 	proto.RegisterType((*MsgCreateTSSVoterResponse)(nil), "zetachain.zetacore.zetacore.MsgCreateTSSVoterResponse")
 	proto.RegisterType((*MsgGasBalanceVoter)(nil), "zetachain.zetacore.zetacore.MsgGasBalanceVoter")
@@ -841,57 +947,61 @@ func init() {
 func init() { proto.RegisterFile("zetacore/tx.proto", fileDescriptor_4b502766e6a14552) }
 
 var fileDescriptor_4b502766e6a14552 = []byte{
-	// 789 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xcd, 0x6e, 0xd3, 0x4c,
-	0x14, 0xad, 0xfb, 0x93, 0x34, 0xb7, 0x5f, 0xf3, 0x51, 0xf7, 0x07, 0xe3, 0x56, 0x51, 0x64, 0x21,
-	0x54, 0x40, 0x4d, 0x44, 0x2a, 0x40, 0x82, 0x5d, 0xb2, 0xa0, 0xa8, 0x4a, 0x55, 0x39, 0x85, 0x05,
-	0x1b, 0xe4, 0x24, 0x83, 0x63, 0x35, 0x99, 0x89, 0x3c, 0xe3, 0x2a, 0x85, 0x0d, 0x3b, 0xb6, 0x88,
-	0x0d, 0x6f, 0xc1, 0x6b, 0xc0, 0xb2, 0x4b, 0x96, 0xa8, 0x7d, 0x00, 0x5e, 0x01, 0xcd, 0x8f, 0xc7,
-	0x4e, 0x5a, 0x9a, 0xa4, 0xac, 0xe2, 0x73, 0xef, 0xb9, 0xf7, 0x1e, 0x9f, 0xc9, 0x5c, 0x19, 0x56,
-	0xde, 0x23, 0xe6, 0xb5, 0x48, 0x88, 0xca, 0x6c, 0x50, 0xea, 0x87, 0x84, 0x11, 0x73, 0x53, 0x84,
-	0x3a, 0x5e, 0x80, 0x4b, 0x71, 0x52, 0x3f, 0xd8, 0x56, 0xc2, 0xa7, 0xf4, 0xed, 0x09, 0x61, 0x28,
-	0x94, 0x65, 0xf6, 0x6a, 0x8b, 0xf4, 0x7a, 0x04, 0x97, 0xe5, 0x8f, 0x0c, 0x3a, 0x11, 0xac, 0xd4,
-	0xa9, 0x5f, 0x0b, 0x91, 0xc7, 0xd0, 0x51, 0xa3, 0xf1, 0x9a, 0xf3, 0x4d, 0x0b, 0xb2, 0x2d, 0x1e,
-	0x21, 0xa1, 0x65, 0x14, 0x8d, 0xed, 0x9c, 0x1b, 0x43, 0x73, 0x0d, 0x16, 0xc4, 0x60, 0x6b, 0x4e,
-	0xc4, 0x25, 0xe0, 0x7c, 0xaf, 0xdd, 0x0e, 0x11, 0xa5, 0xd6, 0xbc, 0xe4, 0x2b, 0x68, 0x6e, 0x40,
-	0xa6, 0x1f, 0x35, 0x8f, 0xd1, 0xa9, 0xb5, 0x20, 0x12, 0x0a, 0x39, 0x9b, 0x70, 0xe7, 0xd2, 0x58,
-	0x17, 0xd1, 0x3e, 0xc1, 0x14, 0x39, 0x1f, 0x0d, 0x30, 0xeb, 0xd4, 0x7f, 0xe1, 0xd1, 0xaa, 0xd7,
-	0xf5, 0x70, 0x0b, 0x4d, 0xac, 0x6a, 0x76, 0x44, 0x55, 0x53, 0xd6, 0x2b, 0xb5, 0x31, 0x34, 0x8b,
-	0xb0, 0xd4, 0xec, 0x92, 0xd6, 0xf1, 0x41, 0xd4, 0x6b, 0xa2, 0x50, 0x68, 0x9e, 0x77, 0xd3, 0x21,
-	0x67, 0x0b, 0xec, 0xcb, 0x0a, 0xb4, 0xc0, 0x2f, 0x06, 0xdc, 0x92, 0xe9, 0xc3, 0x30, 0xb8, 0xa9,
-	0xbc, 0x35, 0x58, 0xe8, 0xf3, 0x6a, 0x21, 0x6e, 0xde, 0x95, 0x60, 0xbc, 0x34, 0x6e, 0x29, 0x8d,
-	0xfa, 0xfd, 0xae, 0xb6, 0x54, 0x22, 0xc7, 0x06, 0x6b, 0x54, 0x93, 0x16, 0xfc, 0x0a, 0x96, 0xeb,
-	0xd4, 0x3f, 0x20, 0xf8, 0x1f, 0xc4, 0x62, 0x82, 0x13, 0xb1, 0x02, 0x38, 0xb7, 0x61, 0x7d, 0xa8,
-	0xad, 0x9e, 0xf7, 0xdb, 0x80, 0x8d, 0x3a, 0xf5, 0x5d, 0xd4, 0x42, 0xc1, 0x09, 0xaa, 0x11, 0xfc,
-	0x2e, 0x08, 0x7b, 0x1e, 0x0b, 0x08, 0xbe, 0x66, 0xb2, 0x0d, 0x8b, 0x14, 0xe1, 0xf6, 0x9e, 0x47,
-	0x3b, 0x6a, 0xb8, 0xc6, 0xe6, 0x16, 0xe4, 0x48, 0xc4, 0x8e, 0x06, 0x22, 0x29, 0x4f, 0x33, 0x09,
-	0x98, 0xf7, 0x20, 0x4f, 0x22, 0x56, 0xe5, 0x26, 0xed, 0xa1, 0xc0, 0xef, 0x30, 0xe5, 0xdb, 0x48,
-	0x94, 0xbf, 0x45, 0xaf, 0x1e, 0x60, 0xa6, 0x9c, 0x93, 0xc0, 0xdc, 0x81, 0x0c, 0x65, 0x1e, 0x8b,
-	0xa8, 0x95, 0x29, 0x1a, 0xdb, 0xf9, 0xca, 0x7a, 0x49, 0xdd, 0x10, 0x25, 0xbf, 0x21, 0x92, 0xae,
-	0x22, 0x25, 0x06, 0x65, 0x53, 0x06, 0x39, 0x45, 0x28, 0x5c, 0xfd, 0xc2, 0xda, 0x93, 0x6f, 0xb3,
-	0xf0, 0x5f, 0x9d, 0xfa, 0x0d, 0x84, 0xdb, 0xe3, 0xce, 0x80, 0x1f, 0x31, 0xc2, 0x6d, 0x14, 0x2a,
-	0x1f, 0x14, 0xe2, 0x7f, 0x0e, 0xf9, 0x54, 0x4b, 0xdd, 0xc1, 0x74, 0x88, 0x7b, 0x18, 0x4a, 0x0d,
-	0xa1, 0xba, 0x8a, 0x1a, 0x9b, 0x77, 0x61, 0x39, 0x7e, 0x96, 0xf5, 0xd2, 0x85, 0xe1, 0x20, 0x9f,
-	0xdd, 0xab, 0x46, 0x21, 0x66, 0xc2, 0x8d, 0x9c, 0xab, 0x50, 0xe2, 0x5d, 0x36, 0xed, 0x9d, 0x05,
-	0xd9, 0x1e, 0xa2, 0xd4, 0xf3, 0x91, 0xb5, 0x28, 0xdf, 0x41, 0x41, 0xae, 0x24, 0xc0, 0xea, 0xc0,
-	0x72, 0x52, 0x49, 0x8c, 0xb9, 0x92, 0x00, 0xa7, 0x8f, 0x0b, 0xc4, 0x71, 0x0d, 0x07, 0x9d, 0x0d,
-	0x58, 0x4b, 0xfb, 0xa5, 0x8d, 0xfc, 0x6a, 0x40, 0x5e, 0x24, 0xd8, 0x01, 0x69, 0xa3, 0x7d, 0x74,
-	0x4a, 0xaf, 0xb1, 0xb2, 0x0c, 0x39, 0xb9, 0x72, 0x1a, 0x88, 0x09, 0x37, 0x97, 0x2a, 0x2b, 0xf1,
-	0xf9, 0x1e, 0x46, 0xcd, 0x7d, 0x91, 0x70, 0x13, 0x8e, 0xf9, 0x0c, 0xac, 0x13, 0xaf, 0x1b, 0xb4,
-	0x79, 0x75, 0x8d, 0xcf, 0xc3, 0x34, 0xa2, 0x87, 0x72, 0x87, 0x49, 0xc3, 0xff, 0x9a, 0x77, 0x2c,
-	0xf1, 0xaf, 0x4f, 0x09, 0x8b, 0x35, 0x57, 0xbe, 0x67, 0x60, 0xae, 0x4e, 0x7d, 0x73, 0x00, 0xf9,
-	0x91, 0x5d, 0x5b, 0x2a, 0x5d, 0xb3, 0xcd, 0x4b, 0x97, 0x96, 0xa4, 0xfd, 0x64, 0x3a, 0x7e, 0xac,
-	0xc0, 0xfc, 0x00, 0xff, 0x8f, 0x2e, 0xd4, 0xf2, 0xb8, 0x56, 0x23, 0x05, 0xf6, 0xd3, 0x29, 0x0b,
-	0xf4, 0xf0, 0x08, 0x96, 0x87, 0x97, 0xe5, 0xce, 0x04, 0x9d, 0x12, 0xba, 0xfd, 0x78, 0x2a, 0xba,
-	0x1e, 0xdb, 0x05, 0x48, 0xed, 0xbc, 0x07, 0xe3, 0x9a, 0x24, 0x5c, 0xbb, 0x32, 0x39, 0x57, 0x4f,
-	0xfb, 0x64, 0xc0, 0xea, 0x55, 0x1b, 0x6f, 0x77, 0x5c, 0xaf, 0x2b, 0x8a, 0xec, 0xe7, 0x37, 0x28,
-	0xd2, 0x4a, 0x02, 0xc8, 0x25, 0x6b, 0xe6, 0xfe, 0xb8, 0x4e, 0x9a, 0x6a, 0x3f, 0x9a, 0x98, 0xaa,
-	0x47, 0x11, 0x58, 0x4a, 0x5f, 0xc4, 0x87, 0xe3, 0x3b, 0x68, 0xb2, 0xbd, 0x3b, 0x05, 0x39, 0x1e,
-	0x58, 0x7d, 0xf9, 0xe3, 0xbc, 0x60, 0x9c, 0x9d, 0x17, 0x8c, 0x5f, 0xe7, 0x05, 0xe3, 0xf3, 0x45,
-	0x61, 0xe6, 0xec, 0xa2, 0x30, 0xf3, 0xf3, 0xa2, 0x30, 0xf3, 0xa6, 0xec, 0x07, 0xac, 0x13, 0x35,
-	0xf9, 0xed, 0x2e, 0xf3, 0x2e, 0x3b, 0xa2, 0x73, 0x59, 0x7f, 0x0f, 0x0d, 0x92, 0x47, 0x76, 0xda,
-	0x47, 0xb4, 0x99, 0x11, 0x9f, 0x40, 0xbb, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x12, 0x36, 0x06,
-	0x83, 0x63, 0x09, 0x00, 0x00,
+	// 857 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xcb, 0x6e, 0xc3, 0x44,
+	0x14, 0xad, 0xfb, 0x48, 0x9a, 0x5b, 0x1a, 0xa8, 0xfb, 0x32, 0x6e, 0x15, 0x45, 0x56, 0x85, 0x0a,
+	0xa8, 0x89, 0x48, 0x05, 0x95, 0x60, 0x81, 0x94, 0x2c, 0x28, 0xaa, 0x5c, 0x55, 0x4e, 0x61, 0xd1,
+	0x0d, 0x72, 0x92, 0xc1, 0xb1, 0x9a, 0xcc, 0x44, 0x9e, 0x71, 0x94, 0x96, 0x0d, 0x3b, 0xb6, 0x08,
+	0x16, 0xec, 0xf8, 0x04, 0xbe, 0x83, 0x65, 0x97, 0x6c, 0x90, 0x50, 0xfb, 0x01, 0xfc, 0x02, 0x9a,
+	0x19, 0x7b, 0xec, 0xa4, 0x49, 0x9d, 0x84, 0x55, 0xe6, 0xdc, 0xe7, 0xf1, 0xb9, 0xf1, 0x1d, 0xc3,
+	0xce, 0x23, 0x62, 0x6e, 0x9b, 0x04, 0xa8, 0xca, 0x46, 0x95, 0x41, 0x40, 0x18, 0xd1, 0x8f, 0x84,
+	0xa9, 0xeb, 0xfa, 0xb8, 0x12, 0x3b, 0xd5, 0xc1, 0x34, 0x92, 0x78, 0x4a, 0xbf, 0x1b, 0x12, 0x86,
+	0x02, 0x99, 0x66, 0xee, 0xb6, 0x49, 0xbf, 0x4f, 0x70, 0x55, 0xfe, 0x48, 0xa3, 0xf5, 0xbb, 0x06,
+	0xa6, 0x4d, 0xbd, 0x3b, 0xc4, 0xdc, 0x06, 0xc1, 0x43, 0x14, 0x50, 0x9f, 0x60, 0xc7, 0x65, 0xe8,
+	0x5b, 0x9e, 0xa9, 0x1b, 0x90, 0x6f, 0x07, 0xc8, 0x65, 0x24, 0x30, 0xb4, 0xb2, 0x76, 0x5a, 0x70,
+	0x62, 0xa8, 0xef, 0xc1, 0x86, 0xa0, 0x60, 0xac, 0x0a, 0xbb, 0x04, 0x7a, 0x05, 0xf4, 0xc7, 0x57,
+	0xa5, 0x8c, 0x35, 0x11, 0x32, 0xc5, 0xa3, 0x97, 0x61, 0xab, 0xd5, 0x23, 0xed, 0xfb, 0xeb, 0xb0,
+	0xdf, 0x42, 0x81, 0xb1, 0x5e, 0xd6, 0x4e, 0xd7, 0x9d, 0xb4, 0xc9, 0x3a, 0x01, 0x6b, 0x36, 0x3f,
+	0x07, 0xd1, 0x01, 0xc1, 0x14, 0x59, 0x21, 0xec, 0xd8, 0xd4, 0x6b, 0x70, 0x6e, 0xe8, 0xb6, 0xd9,
+	0x9c, 0x9b, 0xfc, 0x5a, 0x9a, 0xbc, 0x01, 0x79, 0xb7, 0xd3, 0x09, 0x10, 0xa5, 0x82, 0x48, 0xc1,
+	0x89, 0xa1, 0x7e, 0x00, 0xb9, 0x41, 0xd8, 0xba, 0x47, 0x0f, 0xc6, 0x86, 0x70, 0x44, 0xc8, 0x3a,
+	0x82, 0xf7, 0x5f, 0xb5, 0x55, 0x9c, 0x7e, 0xd4, 0x40, 0xb7, 0xa9, 0xf7, 0x95, 0x4b, 0xeb, 0x6e,
+	0xcf, 0xc5, 0xed, 0x25, 0x25, 0x35, 0x20, 0xdf, 0x92, 0xf9, 0x11, 0xdb, 0x18, 0xce, 0x21, 0xde,
+	0xb1, 0x18, 0xee, 0x04, 0x03, 0x45, 0xf0, 0x17, 0x0d, 0xde, 0x93, 0xee, 0x9b, 0xc0, 0x5f, 0x96,
+	0xde, 0x1e, 0x6c, 0x0c, 0x78, 0xb6, 0x20, 0xb7, 0xee, 0x48, 0x90, 0x4d, 0x8d, 0x4b, 0x4a, 0xc3,
+	0xc1, 0xa0, 0xa7, 0x24, 0x95, 0xc8, 0x32, 0xc1, 0x98, 0xe4, 0xa4, 0x08, 0x7f, 0x03, 0xdb, 0x36,
+	0xf5, 0xae, 0x09, 0xfe, 0x1f, 0x64, 0x31, 0xc1, 0x09, 0x59, 0x01, 0xac, 0x43, 0xd8, 0x1f, 0x2b,
+	0xab, 0xfa, 0xfd, 0xab, 0xc1, 0x81, 0x4d, 0x3d, 0x07, 0xb5, 0x91, 0x3f, 0x44, 0x0d, 0x82, 0xbf,
+	0xf7, 0x83, 0xbe, 0xcb, 0x7c, 0x82, 0xdf, 0xe8, 0x6c, 0xc2, 0x26, 0x45, 0xb8, 0x73, 0xe9, 0xd2,
+	0x6e, 0xd4, 0x5c, 0x61, 0xfd, 0x18, 0x0a, 0x24, 0x64, 0xb7, 0x23, 0xe1, 0x94, 0xd3, 0x4c, 0x0c,
+	0xfa, 0x07, 0x50, 0x24, 0x21, 0xab, 0x73, 0x91, 0x2e, 0x91, 0xef, 0x75, 0x59, 0xa4, 0xdb, 0x84,
+	0x95, 0x3f, 0x45, 0xdf, 0xf6, 0x31, 0x8b, 0x94, 0x93, 0x40, 0x3f, 0x83, 0x1c, 0x65, 0x2e, 0x0b,
+	0xa9, 0x91, 0x2b, 0x6b, 0xa7, 0xc5, 0xda, 0x7e, 0x25, 0x7a, 0xd1, 0x23, 0xfa, 0x4d, 0xe1, 0x74,
+	0xa2, 0xa0, 0x44, 0xa0, 0x7c, 0x4a, 0x20, 0xab, 0x0c, 0xa5, 0xe9, 0x0f, 0xac, 0x34, 0xf9, 0x63,
+	0x15, 0xde, 0xb1, 0xa9, 0xd7, 0x44, 0xb8, 0x93, 0x35, 0x03, 0x3e, 0x62, 0x84, 0x3b, 0x28, 0x88,
+	0x74, 0x88, 0x10, 0xff, 0x73, 0xc8, 0x53, 0x23, 0xf5, 0x0e, 0xa6, 0x4d, 0x5c, 0xc3, 0x40, 0x72,
+	0x08, 0xa2, 0x57, 0x51, 0x61, 0xfd, 0x04, 0xb6, 0xe3, 0xb3, 0xcc, 0x97, 0x2a, 0x8c, 0x1b, 0x79,
+	0xef, 0x7e, 0x3d, 0x0c, 0x30, 0x13, 0x6a, 0x14, 0x9c, 0x08, 0x25, 0xda, 0xe5, 0xd3, 0xda, 0x19,
+	0x90, 0xef, 0x23, 0x4a, 0x5d, 0x0f, 0x19, 0x9b, 0xf2, 0x19, 0x22, 0xc8, 0x99, 0xf8, 0x38, 0x1a,
+	0x58, 0x41, 0x32, 0x89, 0x31, 0x67, 0xe2, 0xe3, 0xf4, 0xb8, 0x40, 0x8c, 0x6b, 0xdc, 0x68, 0x1d,
+	0xc0, 0x5e, 0x5a, 0x2f, 0x25, 0xe4, 0x6f, 0x1a, 0x14, 0x85, 0x83, 0x5d, 0x93, 0x0e, 0xba, 0x42,
+	0x0f, 0xf4, 0x0d, 0x29, 0xab, 0x50, 0x90, 0x2b, 0xa7, 0x89, 0x98, 0x50, 0x73, 0xab, 0xb6, 0x13,
+	0xcf, 0xf7, 0x26, 0x6c, 0x5d, 0x09, 0x87, 0x93, 0xc4, 0xe8, 0x9f, 0x83, 0x31, 0x74, 0x7b, 0x7e,
+	0x87, 0x67, 0x37, 0x78, 0x3f, 0x4c, 0x43, 0x7a, 0x23, 0x77, 0x98, 0x14, 0x7c, 0xa6, 0xdf, 0x32,
+	0xc4, 0xbf, 0x3e, 0x45, 0x2c, 0xe6, 0x5c, 0xfb, 0x3b, 0x0f, 0x6b, 0x36, 0xf5, 0xf4, 0x5f, 0x35,
+	0x38, 0x9c, 0x75, 0x65, 0x5c, 0x54, 0xde, 0xb8, 0x9e, 0x2a, 0xb3, 0x77, 0xb9, 0xf9, 0xe5, 0x92,
+	0x89, 0x31, 0x3b, 0x7d, 0x04, 0xc5, 0x89, 0x1b, 0xa0, 0x92, 0x55, 0x72, 0x3c, 0xde, 0xfc, 0x6c,
+	0xb1, 0x78, 0xd5, 0xf9, 0x07, 0x78, 0x77, 0x72, 0xcd, 0x57, 0xb3, 0x4a, 0x4d, 0x24, 0x98, 0x17,
+	0x0b, 0x26, 0xa8, 0xe6, 0x21, 0x6c, 0x8f, 0xaf, 0xf0, 0xb3, 0x39, 0x2a, 0x25, 0xe1, 0xe6, 0xa7,
+	0x0b, 0x85, 0xab, 0xb6, 0x3d, 0x80, 0xd4, 0x26, 0xfe, 0x28, 0xab, 0x48, 0x12, 0x6b, 0xd6, 0xe6,
+	0x8f, 0x55, 0xdd, 0x7e, 0xd2, 0x60, 0x77, 0xda, 0x1e, 0x3e, 0xcf, 0xaa, 0x35, 0x25, 0xc9, 0xfc,
+	0x62, 0x89, 0x24, 0xc5, 0xc4, 0x87, 0x42, 0xb2, 0xfc, 0x3e, 0xcc, 0xaa, 0xa4, 0x42, 0xcd, 0x4f,
+	0xe6, 0x0e, 0x55, 0xad, 0x08, 0x6c, 0xa5, 0xd7, 0xc3, 0xc7, 0xd9, 0x15, 0x54, 0xb0, 0x79, 0xbe,
+	0x40, 0x70, 0xdc, 0xb0, 0xfe, 0xf5, 0x9f, 0xcf, 0x25, 0xed, 0xe9, 0xb9, 0xa4, 0xfd, 0xf3, 0x5c,
+	0xd2, 0x7e, 0x7e, 0x29, 0xad, 0x3c, 0xbd, 0x94, 0x56, 0xfe, 0x7a, 0x29, 0xad, 0xdc, 0x55, 0x3d,
+	0x9f, 0x75, 0xc3, 0x16, 0xdf, 0x39, 0x55, 0x5e, 0xe5, 0x4c, 0x54, 0xae, 0xaa, 0x8f, 0xcd, 0x51,
+	0x72, 0x64, 0x0f, 0x03, 0x44, 0x5b, 0x39, 0xf1, 0x7d, 0x79, 0xfe, 0x5f, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x2f, 0xc1, 0x1f, 0x0c, 0xc0, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -906,6 +1016,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	ZetaConversionRateVoter(ctx context.Context, in *MsgZetaConversionRateVoter, opts ...grpc.CallOption) (*MsgZetaConversionRateVoterResponse, error)
 	// this line is used by starport scaffolding # proto/tx/rpc
 	CreateTSSVoter(ctx context.Context, in *MsgCreateTSSVoter, opts ...grpc.CallOption) (*MsgCreateTSSVoterResponse, error)
 	GasBalanceVoter(ctx context.Context, in *MsgGasBalanceVoter, opts ...grpc.CallOption) (*MsgGasBalanceVoterResponse, error)
@@ -922,6 +1033,15 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
+}
+
+func (c *msgClient) ZetaConversionRateVoter(ctx context.Context, in *MsgZetaConversionRateVoter, opts ...grpc.CallOption) (*MsgZetaConversionRateVoterResponse, error) {
+	out := new(MsgZetaConversionRateVoterResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetacore.Msg/ZetaConversionRateVoter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *msgClient) CreateTSSVoter(ctx context.Context, in *MsgCreateTSSVoter, opts ...grpc.CallOption) (*MsgCreateTSSVoterResponse, error) {
@@ -989,6 +1109,7 @@ func (c *msgClient) SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ..
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	ZetaConversionRateVoter(context.Context, *MsgZetaConversionRateVoter) (*MsgZetaConversionRateVoterResponse, error)
 	// this line is used by starport scaffolding # proto/tx/rpc
 	CreateTSSVoter(context.Context, *MsgCreateTSSVoter) (*MsgCreateTSSVoterResponse, error)
 	GasBalanceVoter(context.Context, *MsgGasBalanceVoter) (*MsgGasBalanceVoterResponse, error)
@@ -1003,6 +1124,9 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) ZetaConversionRateVoter(ctx context.Context, req *MsgZetaConversionRateVoter) (*MsgZetaConversionRateVoterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ZetaConversionRateVoter not implemented")
+}
 func (*UnimplementedMsgServer) CreateTSSVoter(ctx context.Context, req *MsgCreateTSSVoter) (*MsgCreateTSSVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTSSVoter not implemented")
 }
@@ -1027,6 +1151,24 @@ func (*UnimplementedMsgServer) SetNodeKeys(ctx context.Context, req *MsgSetNodeK
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_ZetaConversionRateVoter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgZetaConversionRateVoter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ZetaConversionRateVoter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.zetacore.Msg/ZetaConversionRateVoter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ZetaConversionRateVoter(ctx, req.(*MsgZetaConversionRateVoter))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CreateTSSVoter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1160,6 +1302,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ZetaConversionRateVoter",
+			Handler:    _Msg_ZetaConversionRateVoter_Handler,
+		},
+		{
 			MethodName: "CreateTSSVoter",
 			Handler:    _Msg_CreateTSSVoter_Handler,
 		},
@@ -1190,6 +1336,78 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "zetacore/tx.proto",
+}
+
+func (m *MsgZetaConversionRateVoter) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgZetaConversionRateVoter) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgZetaConversionRateVoter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BlockNumber != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.BlockNumber))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.ZetaConversionRate) > 0 {
+		i -= len(m.ZetaConversionRate)
+		copy(dAtA[i:], m.ZetaConversionRate)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ZetaConversionRate)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Chain) > 0 {
+		i -= len(m.Chain)
+		copy(dAtA[i:], m.Chain)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Chain)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgZetaConversionRateVoterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgZetaConversionRateVoterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgZetaConversionRateVoterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgCreateTSSVoter) Marshal() (dAtA []byte, err error) {
@@ -1768,6 +1986,39 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgZetaConversionRateVoter) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Chain)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ZetaConversionRate)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.BlockNumber != 0 {
+		n += 1 + sovTx(uint64(m.BlockNumber))
+	}
+	return n
+}
+
+func (m *MsgZetaConversionRateVoterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgCreateTSSVoter) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2036,6 +2287,221 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgZetaConversionRateVoter) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgZetaConversionRateVoter: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgZetaConversionRateVoter: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Chain = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ZetaConversionRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ZetaConversionRate = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
+			}
+			m.BlockNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BlockNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgZetaConversionRateVoterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgZetaConversionRateVoterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgZetaConversionRateVoterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgCreateTSSVoter) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

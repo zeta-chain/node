@@ -9,7 +9,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
@@ -17,6 +18,16 @@ service Msg {
   rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
   rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
+}
+
+message MsgZetaConversionRateVoter {
+  string creator = 1;
+  string chain = 2;
+  string zetaConversionRate = 3;
+  uint64 blockNumber = 4;
+}
+
+message MsgZetaConversionRateVoterResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
