@@ -42,7 +42,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
-			Status:              types.SendStatus_Created,
+			Status:              types.SendStatus_PendingInbound,
 			Nonce:               0,
 			RecvHash:            "",
 			IndexTxList:         -1,
@@ -56,7 +56,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		k.UpdateTxList(ctx, &send)
 
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		send.Status = types.SendStatus_Finalized
+		send.Status = types.SendStatus_PendingOutbound
 		k.UpdateLastBlockHeigh(ctx, msg)
 
 		bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
@@ -67,7 +67,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		recvChain, err := parseChainAndAddress(send.ReceiverChain, send.Receiver)
 		if err != nil {
 			send.StatusMessage = err.Error()
-			send.Status = types.SendStatus_Revert
+			send.Status = types.SendStatus_PendingRevert
 			abort = true
 		}
 
@@ -79,7 +79,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				send.Status = types.SendStatus_Aborted
 				goto EPILOGUE
 			}
-			send.Status = types.SendStatus_Revert
+			send.Status = types.SendStatus_PendingRevert
 		} else {
 			chain = recvChain
 		}
