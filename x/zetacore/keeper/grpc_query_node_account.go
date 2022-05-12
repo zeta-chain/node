@@ -24,7 +24,7 @@ func (k Keeper) NodeAccountAll(c context.Context, req *types.QueryAllNodeAccount
 
 	pageRes, err := query.Paginate(nodeAccountStore, req.Pagination, func(key []byte, value []byte) error {
 		var nodeAccount types.NodeAccount
-		if err := k.cdc.UnmarshalBinaryBare(value, &nodeAccount); err != nil {
+		if err := k.cdc.Unmarshal(value, &nodeAccount); err != nil {
 			return err
 		}
 

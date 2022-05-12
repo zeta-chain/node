@@ -24,7 +24,7 @@ func (k Keeper) GasBalanceAll(c context.Context, req *types.QueryAllGasBalanceRe
 
 	pageRes, err := query.Paginate(gasBalanceStore, req.Pagination, func(key []byte, value []byte) error {
 		var gasBalance types.GasBalance
-		if err := k.cdc.UnmarshalBinaryBare(value, &gasBalance); err != nil {
+		if err := k.cdc.Unmarshal(value, &gasBalance); err != nil {
 			return err
 		}
 
