@@ -28876,14 +28876,14 @@ paths:
                   status:
                     type: string
                     enum:
-                      - Created
-                      - Finalized
-                      - Mined
+                      - PendingInbound
+                      - PendingOutbound
+                      - OutboundMined
                       - Confirmed
-                      - Revert
+                      - PendingRevert
                       - Reverted
                       - Aborted
-                    default: Created
+                    default: PendingInbound
                   broadcaster:
                     type: string
                     format: uint64
@@ -29657,14 +29657,14 @@ paths:
                     status:
                       type: string
                       enum:
-                        - Created
-                        - Finalized
-                        - Mined
+                        - PendingInbound
+                        - PendingOutbound
+                        - OutboundMined
                         - Confirmed
-                        - Revert
+                        - PendingRevert
                         - Reverted
                         - Aborted
-                      default: Created
+                      default: PendingInbound
                     broadcaster:
                       type: string
                       format: uint64
@@ -29838,14 +29838,14 @@ paths:
                   status:
                     type: string
                     enum:
-                      - Created
-                      - Finalized
-                      - Mined
+                      - PendingInbound
+                      - PendingOutbound
+                      - OutboundMined
                       - Confirmed
-                      - Revert
+                      - PendingRevert
                       - Reverted
                       - Aborted
-                    default: Created
+                    default: PendingInbound
                   broadcaster:
                     type: string
                     format: uint64
@@ -29942,14 +29942,14 @@ paths:
                     status:
                       type: string
                       enum:
-                        - Created
-                        - Finalized
-                        - Mined
+                        - PendingInbound
+                        - PendingOutbound
+                        - OutboundMined
                         - Confirmed
-                        - Revert
+                        - PendingRevert
                         - Reverted
                         - Aborted
-                      default: Created
+                      default: PendingInbound
                     broadcaster:
                       type: string
                       format: uint64
@@ -30107,14 +30107,14 @@ paths:
                     status:
                       type: string
                       enum:
-                        - Created
-                        - Finalized
-                        - Mined
+                        - PendingInbound
+                        - PendingOutbound
+                        - OutboundMined
                         - Confirmed
-                        - Revert
+                        - PendingRevert
                         - Reverted
                         - Aborted
-                      default: Created
+                      default: PendingInbound
                     broadcaster:
                       type: string
                       format: uint64
@@ -50681,14 +50681,14 @@ definitions:
             status:
               type: string
               enum:
-                - Created
-                - Finalized
-                - Mined
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
                 - Confirmed
-                - Revert
+                - PendingRevert
                 - Reverted
                 - Aborted
-              default: Created
+              default: PendingInbound
             broadcaster:
               type: string
               format: uint64
@@ -50753,14 +50753,14 @@ definitions:
             status:
               type: string
               enum:
-                - Created
-                - Finalized
-                - Mined
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
                 - Confirmed
-                - Revert
+                - PendingRevert
                 - Reverted
                 - Aborted
-              default: Created
+              default: PendingInbound
             broadcaster:
               type: string
               format: uint64
@@ -51099,14 +51099,14 @@ definitions:
           status:
             type: string
             enum:
-              - Created
-              - Finalized
-              - Mined
+              - PendingInbound
+              - PendingOutbound
+              - OutboundMined
               - Confirmed
-              - Revert
+              - PendingRevert
               - Reverted
               - Aborted
-            default: Created
+            default: PendingInbound
           broadcaster:
             type: string
             format: uint64
@@ -51269,14 +51269,14 @@ definitions:
           status:
             type: string
             enum:
-              - Created
-              - Finalized
-              - Mined
+              - PendingInbound
+              - PendingOutbound
+              - OutboundMined
               - Confirmed
-              - Revert
+              - PendingRevert
               - Reverted
               - Aborted
-            default: Created
+            default: PendingInbound
           broadcaster:
             type: string
             format: uint64
@@ -51444,14 +51444,14 @@ definitions:
             status:
               type: string
               enum:
-                - Created
-                - Finalized
-                - Mined
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
                 - Confirmed
-                - Revert
+                - PendingRevert
                 - Reverted
                 - Aborted
-              default: Created
+              default: PendingInbound
             broadcaster:
               type: string
               format: uint64
@@ -51544,14 +51544,14 @@ definitions:
       status:
         type: string
         enum:
-          - Created
-          - Finalized
-          - Mined
+          - PendingInbound
+          - PendingOutbound
+          - OutboundMined
           - Confirmed
-          - Revert
+          - PendingRevert
           - Reverted
           - Aborted
-        default: Created
+        default: PendingInbound
       broadcaster:
         type: string
         format: uint64
@@ -51578,14 +51578,14 @@ definitions:
   zetachain.zetacore.zetacore.SendStatus:
     type: string
     enum:
-      - Created
-      - Finalized
-      - Mined
+      - PendingInbound
+      - PendingOutbound
+      - OutboundMined
       - Confirmed
-      - Revert
+      - PendingRevert
       - Reverted
       - Aborted
-    default: Created
+    default: PendingInbound
   zetachain.zetacore.zetacore.TSS:
     type: object
     properties:

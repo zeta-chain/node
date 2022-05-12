@@ -71,7 +71,7 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 		var val types.Send
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		// if the status of send is pending, which means Finalized/Revert
-		if val.Status == types.SendStatus_Finalized || val.Status == types.SendStatus_Revert {
+		if val.Status == types.SendStatus_PendingOutbound || val.Status == types.SendStatus_PendingInbound {
 			sends = append(sends, &val)
 		}
 	}

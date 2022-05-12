@@ -144,7 +144,7 @@ func (co *CoreObserver) startObserve() {
 		metrics.Gauges[metrics.GAUGE_PENDING_TX].Set(float64(len(sendList)))
 		for _, send := range sendList {
 			log.Info().Msgf("#pending send: %d", len(sendList))
-			if send.Status == types.SendStatus_Finalized || send.Status == types.SendStatus_Revert {
+			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
 			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
 		}
@@ -188,7 +188,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	var to ethcommon.Address
 	var err error
 	var toChain common.Chain
-	if send.Status == types.SendStatus_Revert {
+	if send.Status == types.SendStatus_PendingRevert {
 		to = ethcommon.HexToAddress(send.Sender)
 		toChain, err = common.ParseChain(send.SenderChain)
 		log.Info().Msgf("Abort: reverting inbound")
