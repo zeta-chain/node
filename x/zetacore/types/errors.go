@@ -11,7 +11,8 @@ var (
 	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
 	// this line is used by starport scaffolding # ibc/errors
 
-	ErrFloatParseError  = sdkerrors.Register(ModuleName, 1101, "float parse error")
-	ErrUnsupportedChain = sdkerrors.Register(ModuleName, 1102, "chain parse error")
-	ErrDuplicateMsg     = sdkerrors.Register(ModuleName, 1103, "duplicate msg error")
+	ErrFloatParseError    = sdkerrors.Register(ModuleName, 1101, "float parse error")
+	ErrUnsupportedChain   = sdkerrors.Register(ModuleName, 1102, "chain parse error")
+	ErrDuplicateMsg       = sdkerrors.Register(ModuleName, 1103, "duplicate msg error")
+	ErrNotBondedValidator = sdkerrors.Register(ModuleName, 1103, "not a bonded validator error")
 )

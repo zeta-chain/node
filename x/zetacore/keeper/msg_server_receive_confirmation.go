@@ -25,8 +25,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
-		if msg.MMint != send.MMint {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send MMint %s", msg.MMint, send.MMint))
+		if msg.MMint != send.ZetaMint {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send ZetaMint %s", msg.MMint, send.ZetaMint))
 		}
 	}
 
