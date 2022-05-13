@@ -113,6 +113,35 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 	return tx, nil
 }
 
+//function onRevert(
+//address originSenderAddress,
+//uint256 originChainId,
+//bytes calldata destinationAddress,
+//uint256 destinationChainId,
+//uint256 zetaAmount,
+//bytes calldata message,
+//bytes32 internalSendHash
+//) external override whenNotPaused onlyTssAddress
+func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, toChainId *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	if len(sendHash) < 32 {
+		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
+	}
+	var data []byte
+	var err error
+
+	data, err = signer.abi.Pack("onRevert", sender, srcChainID, to, toChainId, amount, message, sendHash)
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
+}
+
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
