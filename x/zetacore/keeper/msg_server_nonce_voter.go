@@ -24,8 +24,9 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	if isDuplicateSigner(msg.Creator, chainNonce.Signers) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
 	}
-	if isFound && chainNonce.Nonce == msg.Nonce {
+	if isFound {
 		chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
+		chainNonce.Nonce = msg.Nonce
 	} else if !isFound {
 		chainNonce = types.ChainNonces{
 			Creator: msg.Creator,
