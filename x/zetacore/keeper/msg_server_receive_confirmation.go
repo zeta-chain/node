@@ -51,7 +51,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 	} else {
 		receive.Signers = append(receive.Signers, msg.Creator)
-		k.SetReceive(ctx, receive)
+		//k.SetReceive(ctx, receive)
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
@@ -61,7 +61,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		k.SetInTx(ctx, inTx)
 
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		k.SetReceive(ctx, receive)
+		//k.SetReceive(ctx, receive)
 
 		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
 		if !isFound {
@@ -94,16 +94,16 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 		k.SetSend(ctx, send)
 
-		idx := send.IndexTxList
-		txList, found := k.GetTxList(ctx)
-		if !found || int(idx) >= len(txList.Tx) || idx < 0 { // should not happen
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Receive Confirmation; but txList not found! Or wrong send.IndexTxList %d", idx))
-		}
-		tx := txList.Tx[send.IndexTxList]
-		tx.RecvHash = receive.Index
-		tx.OutTxHash = receive.OutTxHash
-		tx.OutTxChain = receive.Chain
-		k.SetTxList(ctx, txList)
+		//idx := send.IndexTxList
+		//txList, found := k.GetTxList(ctx)
+		//if !found || int(idx) >= len(txList.Tx) || idx < 0 { // should not happen
+		//	return nil, sdkerrors.Wrap(types.ErrOutOfBound, fmt.Sprintf("Receive Confirmation; but txList not found! Or wrong send.IndexTxList %d", idx))
+		//}
+		//tx := txList.Tx[idx]
+		//tx.RecvHash = receive.Index
+		//tx.OutTxHash = receive.OutTxHash
+		//tx.OutTxChain = receive.Chain
+		//k.SetTxList(ctx, txList)
 
 	}
 	k.SetReceive(ctx, receive)
