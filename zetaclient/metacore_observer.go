@@ -299,10 +299,13 @@ SIGNLOOP:
 							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
 					}
+
 					//_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-					if err != nil {
-						log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
-					}
+					//if err != nil {
+					//	log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+					//}
+					//log.Info().Msgf("tracking outbound tx with hash %s", outTxHash)
+					co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index)
 				}
 			}
 		}
