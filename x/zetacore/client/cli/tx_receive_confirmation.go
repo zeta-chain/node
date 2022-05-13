@@ -30,7 +30,7 @@ func CmdReceiveConfirmation() *cobra.Command {
 			var status common.ReceiveStatus
 			if args[4] == "0" {
 				status = common.ReceiveStatus_Success
-			} else if args[5] == "1" {
+			} else if args[4] == "1" {
 				status = common.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
