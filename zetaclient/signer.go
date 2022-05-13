@@ -122,7 +122,7 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 //bytes calldata message,
 //bytes32 internalSendHash
 //) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, toChainId *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainId *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
