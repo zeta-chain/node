@@ -278,7 +278,7 @@ SIGNLOOP:
 				if send.Status == types.SendStatus_PendingRevert {
 					log.Info().Msgf("SignRevertTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
 					toChainID := config.Chains[send.ReceiverChain].ChainID
-					tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+					tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 				} else if send.Status == types.SendStatus_PendingOutbound {
 					log.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
 					tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
