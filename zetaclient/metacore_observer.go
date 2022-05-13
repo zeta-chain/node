@@ -60,7 +60,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	go co.keygenObserve()
+	//go co.keygenObserve()
 }
 
 func (co *CoreObserver) keygenObserve() {
