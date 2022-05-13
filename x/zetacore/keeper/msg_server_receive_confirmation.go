@@ -63,19 +63,19 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		//k.SetReceive(ctx, receive)
 
-		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
-		if !isFound {
-			lastblock = types.LastBlockHeight{
-				Creator:           msg.Creator,
-				Index:             send.ReceiverChain,
-				Chain:             send.ReceiverChain,
-				LastSendHeight:    0,
-				LastReceiveHeight: msg.OutBlockHeight,
-			}
-		} else {
-			lastblock.LastSendHeight = msg.OutBlockHeight
-		}
-		k.SetLastBlockHeight(ctx, lastblock)
+		//lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
+		//if !isFound {
+		//	lastblock = types.LastBlockHeight{
+		//		Creator:           msg.Creator,
+		//		Index:             send.ReceiverChain,
+		//		Chain:             send.ReceiverChain,
+		//		LastSendHeight:    0,
+		//		LastReceiveHeight: msg.OutBlockHeight,
+		//	}
+		//} else {
+		//	lastblock.LastSendHeight = msg.OutBlockHeight
+		//}
+		//k.SetLastBlockHeight(ctx, lastblock)
 
 		if receive.Status == common.ReceiveStatus_Success {
 			if send.Status == types.SendStatus_PendingRevert {
