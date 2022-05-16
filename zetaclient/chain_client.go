@@ -241,7 +241,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 }
 
 func (chainOb *ChainObserver) WatchExchangeRate() {
-	gasTicker := time.NewTicker(24 * time.Second)
+	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
 		var price *big.Int
 		var err error
