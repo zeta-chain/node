@@ -85,6 +85,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		}
 
 		k.updateSend(ctx, chain.String(), &send)
+		k.EmitEventSendFinalized(ctx, &send)
 	}
 
 EPILOGUE:
@@ -221,17 +222,29 @@ func (k msgServer) EmitEventSendCreated(ctx sdk.Context, send *types.Send) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute(sdk.AttributeKeyAction, "SendCreated"),
+			sdk.NewAttribute("Subtype", "SendCreated"),
 			sdk.NewAttribute("Index", send.Index),
 			sdk.NewAttribute("Sender", send.Sender),
 			sdk.NewAttribute("SenderChain", send.SenderChain),
 			sdk.NewAttribute("Receiver", send.Receiver),
 			sdk.NewAttribute("ReceiverChain", send.ReceiverChain),
 			sdk.NewAttribute("ZetaBurnt", send.ZetaBurnt),
-			sdk.NewAttribute("ZetaMint", send.ZetaMint),
 			sdk.NewAttribute("Message", send.Message),
 			sdk.NewAttribute("InTxHash", send.InTxHash),
 			sdk.NewAttribute("InBlockHeight", fmt.Sprintf("%d", send.InBlockHeight)),
+		),
+	)
+}
+
+func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+			sdk.NewAttribute("Subtype", "SendFinalized"),
+			sdk.NewAttribute("Index", send.Index),
+			sdk.NewAttribute("ZetaMint", send.ZetaMint),
+			sdk.NewAttribute("Status", send.Status.String()),
+			sdk.NewAttribute("GasPrice", send.GasPrice),
 		),
 	)
 }
