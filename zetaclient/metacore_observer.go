@@ -173,10 +173,12 @@ func (co *CoreObserver) shepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
+	done2 := make(chan bool, 1)
 	defer func() {
 		log.Info().Msg("Giving back a signer slot")
 		co.signerSlots <- true
 		co.sendDone <- send
+		done2 <- true
 	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
@@ -236,19 +238,24 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	done := make(chan bool, 1)
 	go func() {
 		for {
-			included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-			if err != nil {
-				log.Err(err).Msg("IsSendOutTxProcessed error")
-			}
-			if confirmed {
-				log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
-				done <- true
+			select {
+			case <-done2:
 				return
+			default:
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+				if err != nil {
+					log.Err(err).Msg("IsSendOutTxProcessed error")
+				}
+				if confirmed {
+					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
+					done <- true
+					return
+				}
+				if included {
+					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
+				}
+				time.Sleep(8 * time.Second)
 			}
-			if included {
-				log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
-			}
-			time.Sleep(8 * time.Second)
 		}
 	}()
 
@@ -299,13 +306,10 @@ SIGNLOOP:
 							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
 					}
-
-					//_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-					//if err != nil {
-					//	log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
-					//}
-					//log.Info().Msgf("tracking outbound tx with hash %s", outTxHash)
-					co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index)
+					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
+					if success := co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index); !success {
+						return
+					}
 				}
 			}
 		}
