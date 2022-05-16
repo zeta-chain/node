@@ -89,6 +89,9 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
 				chain := send.SenderChain
 				k.updateSend(ctx, chain, &send)
+			} else if send.Status == types.SendStatus_PendingRevert {
+				send.Status = types.SendStatus_Aborted
+				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
 		}
 
