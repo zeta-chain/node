@@ -683,7 +683,9 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 	return v, bn, nil
 }
 
-func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) {
+// watch outbound tx
+// returns whether outbound tx is successful or failure
+func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) bool {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
 
@@ -691,7 +693,7 @@ func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash strin
 		select {
 		case <-ctx.Done():
 			log.Info().Msgf("TIMEOUT: watching outTx %s on chain %s", txid, chainOb.chain)
-			return
+			return false
 		default:
 			receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txid))
 			if err != nil {
@@ -699,11 +701,13 @@ func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash strin
 			} else {
 				if receipt.Status == 1 { // 1: success
 					log.Info().Msgf("SUCCESS: watching outTx %s on chain %s", txid, chainOb.chain)
+					return true
 				} else if receipt.Status == 0 { // tx mined but failed; should revert
 					log.Info().Msgf("FAILED: watching outTx %s on chain %s", txid, chainOb.chain)
 					chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					return false
 				}
-				return
+				return false
 			}
 			time.Sleep(10 * time.Second)
 		}
