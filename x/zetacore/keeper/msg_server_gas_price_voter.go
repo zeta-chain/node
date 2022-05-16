@@ -54,15 +54,15 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
 
-type IndexValue struct {
+type indexValue struct {
 	Index int
 	Value uint64
 }
 
 func medianOfArray(values []uint64) int {
-	var array []IndexValue
+	var array []indexValue
 	for i, v := range values {
-		array = append(array, IndexValue{Index: i, Value: v})
+		array = append(array, indexValue{Index: i, Value: v})
 	}
 	sort.SliceStable(array, func(i, j int) bool {
 		return array[i].Value < array[j].Value

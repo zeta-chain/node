@@ -24,6 +24,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	cmd.AddCommand(CmdListZetaConversionRate())
+	cmd.AddCommand(CmdShowZetaConversionRate())
 	// this line is used by starport scaffolding # 1
 
 	cmd.AddCommand(CmdShowKeygen())
