@@ -86,14 +86,9 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		} else if receive.Status == common.ReceiveStatus_Failed {
 			if send.Status == types.SendStatus_PendingOutbound {
 				send.Status = types.SendStatus_PendingRevert
+				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
 				chain := send.SenderChain
-				nonce, found := k.GetChainNonces(ctx, chain)
-				if !found {
-					return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("cannot find nonce on chain %s", chain))
-				}
-				send.Nonce = nonce.Nonce
-				nonce.Nonce += 1
-				k.SetChainNonces(ctx, nonce)
+				k.updateSend(ctx, chain, &send)
 			}
 		}
 
