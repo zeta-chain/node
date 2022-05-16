@@ -308,6 +308,7 @@ SIGNLOOP:
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					if success := co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index); !success {
+						time.Sleep(15 * time.Second) // wait until the receive confirm is voted on zetacore
 						return
 					}
 				}
