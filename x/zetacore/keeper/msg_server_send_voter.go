@@ -35,8 +35,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			SenderChain:         msg.SenderChain,
 			Receiver:            msg.Receiver,
 			ReceiverChain:       msg.ReceiverChain,
-			ZetaBurnt:           msg.MBurnt,
-			ZetaMint:            msg.MMint,
+			ZetaBurnt:           msg.ZetaBurnt,
 			Message:             msg.Message,
 			InTxHash:            msg.InTxHash,
 			InBlockHeight:       msg.InBlockHeight,
@@ -47,6 +46,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			RecvHash:            "",
 			IndexTxList:         -1,
 			LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
+			ZetaMint:            "",
 		}
 		k.EmitEventSendCreated(ctx, &send)
 	}
@@ -83,50 +83,58 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		} else {
 			chain = recvChain
 		}
-		gasPrice, isFound := k.GetGasPrice(ctx, chain.String())
-		if !isFound {
-			send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-		mi := gasPrice.MedianIndex
-		medianPrice := gasPrice.Prices[mi]
-		send.GasPrice = fmt.Sprintf("%d", medianPrice)
-		price := float64(medianPrice)
-		gasLimit := float64(250_000) //TODO: let user supply this
-		gasFeeInZeta, abort := k.computeFeeInZeta(ctx, price, gasLimit, chain.String(), &send)
-		if abort {
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-		zetaBurntInt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 0)
-		if !ok {
-			send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-		if gasFeeInZeta.Cmp(zetaBurntInt) > 0 {
-			send.StatusMessage = fmt.Sprintf("feeInZeta(%d) more than mBurnt (%d)", gasFeeInZeta, zetaBurntInt)
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-		send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
 
-		nonce, found := k.GetChainNonces(ctx, chain.String())
-		if !found {
-			send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-
-		send.Nonce = nonce.Nonce
-		nonce.Nonce++
-		k.SetChainNonces(ctx, nonce)
+		k.updateSend(ctx, chain.String(), &send)
 	}
 
 EPILOGUE:
 	k.SetSend(ctx, send)
 	return &types.MsgSendVoterResponse{}, nil
+}
+
+// updates gas price, gas fee, zeta to mint, and nonce
+// returns ok?
+func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) bool {
+	gasPrice, isFound := k.GetGasPrice(ctx, chain)
+	if !isFound {
+		send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	mi := gasPrice.MedianIndex
+	medianPrice := gasPrice.Prices[mi]
+	send.GasPrice = fmt.Sprintf("%d", medianPrice)
+	price := float64(medianPrice)
+	gasLimit := float64(250_000) //TODO: let user supply this
+	gasFeeInZeta, abort := k.computeFeeInZeta(ctx, price, gasLimit, chain, send)
+	if abort {
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	zetaBurntInt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 0)
+	if !ok {
+		send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	if gasFeeInZeta.Cmp(zetaBurntInt) > 0 {
+		send.StatusMessage = fmt.Sprintf("feeInZeta(%d) more than mBurnt (%d)", gasFeeInZeta, zetaBurntInt)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
+
+	nonce, found := k.GetChainNonces(ctx, chain)
+	if !found {
+		send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+
+	send.Nonce = nonce.Nonce
+	nonce.Nonce++
+	k.SetChainNonces(ctx, nonce)
+	return true
 }
 
 // returns (valid?, abort?)
