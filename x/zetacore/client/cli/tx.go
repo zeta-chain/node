@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	cmd.AddCommand(CmdZetaConversionRateVoter())
 	// this line is used by starport scaffolding # 1
 	cmd.AddCommand(CmdCreateTSSVoter())
 

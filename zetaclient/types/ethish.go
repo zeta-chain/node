@@ -11,12 +11,13 @@ import (
 
 type ChainETHish struct {
 	//TSSSigner          zetaclient.TSSSigner
-	MPIABI             abi.ABI
-	ChainID            *big.Int
-	MPIContractAddress string
-	Client             *ethclient.Client
-	Name               common.Chain
-	Topics             [][]ethcommon.Hash
+	MPIABI              abi.ABI
+	ChainID             *big.Int
+	MPIContractAddress  string
+	PoolContractAddress string
+	Client              *ethclient.Client
+	Name                common.Chain
+	Topics              [][]ethcommon.Hash
 }
 
 func BytesToEthHex(b []byte) string {
