@@ -15,4 +15,5 @@ var (
 	ErrUnsupportedChain   = sdkerrors.Register(ModuleName, 1102, "chain parse error")
 	ErrDuplicateMsg       = sdkerrors.Register(ModuleName, 1103, "duplicate msg error")
 	ErrNotBondedValidator = sdkerrors.Register(ModuleName, 1104, "not a bonded validator error")
+	ErrOutOfBound         = sdkerrors.Register(ModuleName, 1105, "out of bound of array")
 )
