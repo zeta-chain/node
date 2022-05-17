@@ -51,31 +51,31 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 	} else {
 		receive.Signers = append(receive.Signers, msg.Creator)
-		k.SetReceive(ctx, receive)
+		//k.SetReceive(ctx, receive)
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
-		inTx, _ := k.GetInTx(ctx, send.InTxHash)
-		inTx.RecvHash = receive.Index
-		inTx.OutTxHash = receive.OutTxHash
-		k.SetInTx(ctx, inTx)
+		//inTx, _ := k.GetInTx(ctx, send.InTxHash)
+		//inTx.RecvHash = receive.Index
+		//inTx.OutTxHash = receive.OutTxHash
+		//k.SetInTx(ctx, inTx)
 
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		k.SetReceive(ctx, receive)
+		//k.SetReceive(ctx, receive)
 
-		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
-		if !isFound {
-			lastblock = types.LastBlockHeight{
-				Creator:           msg.Creator,
-				Index:             send.ReceiverChain,
-				Chain:             send.ReceiverChain,
-				LastSendHeight:    0,
-				LastReceiveHeight: msg.OutBlockHeight,
-			}
-		} else {
-			lastblock.LastSendHeight = msg.OutBlockHeight
-		}
-		k.SetLastBlockHeight(ctx, lastblock)
+		//lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
+		//if !isFound {
+		//	lastblock = types.LastBlockHeight{
+		//		Creator:           msg.Creator,
+		//		Index:             send.ReceiverChain,
+		//		Chain:             send.ReceiverChain,
+		//		LastSendHeight:    0,
+		//		LastReceiveHeight: msg.OutBlockHeight,
+		//	}
+		//} else {
+		//	lastblock.LastSendHeight = msg.OutBlockHeight
+		//}
+		//k.SetLastBlockHeight(ctx, lastblock)
 
 		if receive.Status == common.ReceiveStatus_Success {
 			if send.Status == types.SendStatus_PendingRevert {
@@ -86,6 +86,12 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		} else if receive.Status == common.ReceiveStatus_Failed {
 			if send.Status == types.SendStatus_PendingOutbound {
 				send.Status = types.SendStatus_PendingRevert
+				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
+				chain := send.SenderChain
+				k.updateSend(ctx, chain, &send)
+			} else if send.Status == types.SendStatus_PendingRevert {
+				send.Status = types.SendStatus_Aborted
+				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
 		}
 
@@ -94,16 +100,16 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 		k.SetSend(ctx, send)
 
-		idx := send.IndexTxList
-		txList, found := k.GetTxList(ctx)
-		if !found || int(idx) >= len(txList.Tx) || idx < 0 { // should not happen
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Receive Confirmation; but txList not found! Or wrong send.IndexTxList %d", idx))
-		}
-		tx := txList.Tx[send.IndexTxList]
-		tx.RecvHash = receive.Index
-		tx.OutTxHash = receive.OutTxHash
-		tx.OutTxChain = receive.Chain
-		k.SetTxList(ctx, txList)
+		//idx := send.IndexTxList
+		//txList, found := k.GetTxList(ctx)
+		//if !found || int(idx) >= len(txList.Tx) || idx < 0 { // should not happen
+		//	return nil, sdkerrors.Wrap(types.ErrOutOfBound, fmt.Sprintf("Receive Confirmation; but txList not found! Or wrong send.IndexTxList %d", idx))
+		//}
+		//tx := txList.Tx[idx]
+		//tx.RecvHash = receive.Index
+		//tx.OutTxHash = receive.OutTxHash
+		//tx.OutTxChain = receive.Chain
+		//k.SetTxList(ctx, txList)
 
 	}
 	k.SetReceive(ctx, receive)

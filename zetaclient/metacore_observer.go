@@ -60,7 +60,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	go co.keygenObserve()
+	//go co.keygenObserve()
 }
 
 func (co *CoreObserver) keygenObserve() {
@@ -173,10 +173,12 @@ func (co *CoreObserver) shepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
+	done2 := make(chan bool, 1)
 	defer func() {
 		log.Info().Msg("Giving back a signer slot")
 		co.signerSlots <- true
 		co.sendDone <- send
+		done2 <- true
 	}()
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
@@ -192,7 +194,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		to = ethcommon.HexToAddress(send.Sender)
 		toChain, err = common.ParseChain(send.SenderChain)
 		log.Info().Msgf("Abort: reverting inbound")
-	} else {
+	} else if send.Status == types.SendStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.Receiver)
 		toChain, err = common.ParseChain(send.ReceiverChain)
 	}
@@ -236,19 +238,24 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	done := make(chan bool, 1)
 	go func() {
 		for {
-			included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-			if err != nil {
-				log.Err(err).Msg("IsSendOutTxProcessed error")
-			}
-			if confirmed {
-				log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
-				done <- true
+			select {
+			case <-done2:
 				return
+			default:
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+				if err != nil {
+					log.Err(err).Msg("IsSendOutTxProcessed error")
+				}
+				if confirmed {
+					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
+					done <- true
+					return
+				}
+				if included {
+					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
+				}
+				time.Sleep(8 * time.Second)
 			}
-			if included {
-				log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
-			}
-			time.Sleep(8 * time.Second)
 		}
 	}()
 
@@ -275,8 +282,14 @@ SIGNLOOP:
 					break SIGNLOOP
 				}
 				srcChainID := config.Chains[send.SenderChain].ChainID
-				log.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
-				tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+				if send.Status == types.SendStatus_PendingRevert {
+					log.Info().Msgf("SignRevertTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
+					toChainID := config.Chains[send.ReceiverChain].ChainID
+					tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+				} else if send.Status == types.SendStatus_PendingOutbound {
+					log.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
+					tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+				}
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				}
@@ -293,9 +306,10 @@ SIGNLOOP:
 							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
 					}
-					//_, err = co.bridge.PostReceiveConfirmation(send.Index, outTxHash, 0, amount.String(), common.ReceiveStatus_Created, send.ReceiverChain)
-					if err != nil {
-						log.Err(err).Msgf("PostReceiveConfirmation of just created receive")
+					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
+					if success := co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index); !success {
+						time.Sleep(15 * time.Second) // wait until the receive confirm is voted on zetacore
+						return
 					}
 				}
 			}
