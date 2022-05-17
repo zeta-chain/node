@@ -26,7 +26,7 @@ mkdir -p /zetashared/genesis/ /zetashared/node${NODE_NUMBER}/config/gentx/ /zeta
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
 
-    zetacored init testnet --chain-id zetacore
+    zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
     zetacored keys add val
     cd ~/.zetacore/config
@@ -64,14 +64,14 @@ if (( $NODE_NUMBER == 0 )); then
         cp /zetashared/node$i/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
         i=$[$i+1]
     done
-
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
+    zetacored gentx val 100000000stake --chain-id athens-1 --ip $MYIP --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
-    
+
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
-    jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
+    # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/seed_mode = false/seed_mode = true/' /root/.zetacore/config/config.toml
+
 
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
@@ -104,15 +104,16 @@ if (( $NODE_NUMBER > 0 )); then
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
-    zetacored gentx val 100000000stake --chain-id zetacore --ip $MYIP --moniker "node$NODE_NUMBER" 
+    zetacored gentx val 100000000stake --chain-id athens-1 --ip $MYIP --moniker "node$NODE_NUMBER" 
 
-    jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
+    # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
+
 
     until [ -f /zetashared/genesis/genesis.json ]
         do
