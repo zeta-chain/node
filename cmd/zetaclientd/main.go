@@ -183,7 +183,6 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	mo1.MonitorCore()
 
 	// report node key
-
 	// convert key.PubKey() [cosmos-sdk/crypto/PubKey] to bech32?
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, key.PubKey())
 	if err != nil {
@@ -204,6 +203,20 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeyset.Secp256k1.String(), conskey, ztx)
 	if err != nil {
 		log.Error().Err(err).Msgf("SetNodeKey error")
+	}
+
+	// report TSS address nonce on ETHish chains
+	err = (*chainClientMap1)[common.ETHChain].PostNonceIfNotRecorded()
+	if err != nil {
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ETHChain)
+	}
+	err = (*chainClientMap1)[common.BSCChain].PostNonceIfNotRecorded()
+	if err != nil {
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCChain)
+	}
+	err = (*chainClientMap1)[common.POLYGONChain].PostNonceIfNotRecorded()
+	if err != nil {
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
 	}
 
 	// printout debug info from SIGUSR1

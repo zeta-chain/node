@@ -9,7 +9,7 @@ import (
 // SetKeygen set keygen in the store
 func (k Keeper) SetKeygen(ctx sdk.Context, keygen types.Keygen) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.KeygenKey))
-	b := k.cdc.MustMarshalBinaryBare(&keygen)
+	b := k.cdc.MustMarshal(&keygen)
 	store.Set([]byte{0}, b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetKeygen(ctx sdk.Context) (val types.Keygen, found bool) {
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 

@@ -9,7 +9,7 @@ import (
 // SetReceive set a specific receive in the store from its index
 func (k Keeper) SetReceive(ctx sdk.Context, receive types.Receive) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReceiveKey))
-	b := k.cdc.MustMarshalBinaryBare(&receive)
+	b := k.cdc.MustMarshal(&receive)
 	store.Set(types.KeyPrefix(receive.Index), b)
 }
 
@@ -22,7 +22,7 @@ func (k Keeper) GetReceive(ctx sdk.Context, index string) (val types.Receive, fo
 		return val, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(b, &val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 
@@ -41,7 +41,7 @@ func (k Keeper) GetAllReceive(ctx sdk.Context) (list []types.Receive) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Receive
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
 
