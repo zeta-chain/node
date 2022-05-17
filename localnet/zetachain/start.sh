@@ -18,8 +18,8 @@ echo "POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS" >> .env
 
 if [ $USE_GANACHE == true ]; then
     echo "ETH_ENDPOINT=http://ganache-eth:8545" >> .env
-    echo "BSC_MPI_ADDRESS=http://ganache-bsc:8545" >> .env
-    echo "POLYGON_MPI_ADDRESS=http://ganache-polygon:8545" >> .env
+    echo "BSC_ENDPOINT=http://ganache-bsc:8545" >> .env
+    echo "POLYGON_ENDPOINT=http://ganache-polygon:8545" >> .env
 else 
     echo "ETH_ENDPOINT=http://ethereum-geth-rpc-endpoint-1.localnet:8545" >> .env
     echo "BSC_ENDPOINT=http://bsc-rpc:8545" >> .env
