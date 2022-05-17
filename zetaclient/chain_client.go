@@ -704,7 +704,10 @@ func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash strin
 					return true
 				} else if receipt.Status == 0 { // tx mined but failed; should revert
 					log.Info().Msgf("FAILED: watching outTx %s on chain %s", txid, chainOb.chain)
-					chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					zetaTxHash, err := chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					if err != nil {
+						log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+					}
 					return false
 				}
 				return false
