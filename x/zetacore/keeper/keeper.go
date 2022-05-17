@@ -27,7 +27,7 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
 	memKey sdk.StoreKey,
-	stakingKeeper types.StakingKeeper,
+	stakingKeeper types.StakingKeeper, // custom
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 
 ) *Keeper {

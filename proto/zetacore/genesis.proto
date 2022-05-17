@@ -1,7 +1,9 @@
 syntax = "proto3";
 package zetachain.zetacore.zetacore;
 
+import "zetacore/zeta_conversion_rate.proto";
 // this line is used by starport scaffolding # genesis/proto/import
+import "gogoproto/gogo.proto";
 import "zetacore/keygen.proto";
 import "zetacore/tss_voter.proto";
 import "zetacore/tss.proto";
@@ -19,7 +21,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-    // this line is used by starport scaffolding # genesis/proto/state
+    repeated ZetaConversionRate zetaConversionRateList = 13 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
 		Keygen keygen = 12; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated TSSVoter tSSVoterList = 11; // this line is used by starport scaffolding # genesis/proto/stateField
 		repeated TSS tSSList = 10; // this line is used by starport scaffolding # genesis/proto/stateField
