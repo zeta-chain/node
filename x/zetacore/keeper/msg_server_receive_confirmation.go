@@ -90,7 +90,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 					sdk.NewAttribute("Subtype", subtype),
-					sdk.NewAttribute("Index", receive.Index),
+					sdk.NewAttribute("ReceiveIndex", receive.Index),
 					sdk.NewAttribute("SendHash", receive.SendHash),
 					sdk.NewAttribute("Chain", receive.Chain),
 					sdk.NewAttribute("OutTxHash", receive.OutTxHash),
@@ -113,6 +113,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 					sdk.NewAttribute("Subtype", subtype),
+					sdk.NewAttribute("SendHash", send.Index),
+					sdk.NewAttribute("OutTxHash", msg.OutTxHash),
 				),
 			)
 		}

@@ -242,9 +242,14 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 			sdk.NewAttribute("Subtype", "SendFinalized"),
 			sdk.NewAttribute("Index", send.Index),
-			sdk.NewAttribute("ZetaMint", send.ZetaMint),
-			sdk.NewAttribute("Status", send.Status.String()),
-			sdk.NewAttribute("GasPrice", send.GasPrice),
+			sdk.NewAttribute("Sender", send.Sender),
+			sdk.NewAttribute("SenderChain", send.SenderChain),
+			sdk.NewAttribute("Receiver", send.Receiver),
+			sdk.NewAttribute("ReceiverChain", send.ReceiverChain),
+			sdk.NewAttribute("ZetaBurnt", send.ZetaBurnt),
+			sdk.NewAttribute("Message", send.Message),
+			sdk.NewAttribute("InTxHash", send.InTxHash),
+			sdk.NewAttribute("InBlockHeight", fmt.Sprintf("%d", send.InBlockHeight)),
 		),
 	)
 }
