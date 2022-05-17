@@ -63,6 +63,19 @@ func ParseChain(chainID string) (Chain, error) {
 	}
 }
 
+func (chain Chain) GetNativeTokenSymbol() string {
+	switch chain {
+	case ETHChain:
+		return "ETH"
+	case BSCChain:
+		return "BNB"
+	case POLYGONChain:
+		return "MATIC"
+	default:
+		return "" // should not happen
+	}
+}
+
 // Equals compare two chain to see whether they represent the same chain
 func (c Chain) Equals(c2 Chain) bool {
 	return strings.EqualFold(c.String(), c2.String())
