@@ -24,7 +24,7 @@ func (k Keeper) TSSVoterAll(c context.Context, req *types.QueryAllTSSVoterReques
 
 	pageRes, err := query.Paginate(tSSVoterStore, req.Pagination, func(key []byte, value []byte) error {
 		var tSSVoter types.TSSVoter
-		if err := k.cdc.UnmarshalBinaryBare(value, &tSSVoter); err != nil {
+		if err := k.cdc.Unmarshal(value, &tSSVoter); err != nil {
 			return err
 		}
 
