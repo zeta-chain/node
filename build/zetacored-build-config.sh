@@ -67,6 +67,7 @@ if (( $NODE_NUMBER == 0 )); then
     zetacored gentx val 100000000stake --chain-id athens-1 --ip $MYIP --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
 
+    # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
@@ -109,6 +110,7 @@ if (( $NODE_NUMBER > 0 )); then
     # jq '.chain_id = "athens-1"' ~/.zetacore/config/genesis.json > temp.json && mv temp.json ~/.zetacore/config/genesis.json
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
+
 
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
