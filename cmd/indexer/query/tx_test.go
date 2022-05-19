@@ -1,4 +1,4 @@
-package indexer
+package query
 
 import (
 	"fmt"
@@ -25,6 +25,7 @@ func (ts *TxSuite) Test1(c *C) {
 	cnt := 0
 	total, err := ts.zq.VisitAllTxEvents("SendFinalized", 0, func(res *sdk.TxResponse) error {
 		cnt += 1
+		fmt.Printf("txhash: %s\n", res.TxHash)
 		return nil
 	})
 
