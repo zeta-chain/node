@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 type IndexDB struct {
@@ -22,55 +23,56 @@ func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier) (*IndexDB, error) {
 
 func (idb *IndexDB) Rebuild() error {
 	// 1. create tables
-	query := `
-    CREATE TABLE IF NOT EXISTS finalized(
-        sendHash TEXT PRIMARY KEY,
-        inTxHash TEXT NOT NULL
+	query := fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s(
+        %s TEXT PRIMARY KEY,
+        %s TEXT NOT NULL
     );
-    `
+    `, types.InboundFinalized, types.SendHash, types.InTxHash)
 
 	_, err := idb.db.Exec(query)
 	if err != nil {
 		return err
 	}
 
-	query = `
-    CREATE TABLE IF NOT EXISTS mined(
-        sendHash TEXT PRIMARY KEY,
-        outTxHash TEXT NOT NULL
+	query = fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s(
+        %s TEXT PRIMARY KEY,
+        %s TEXT NOT NULL
     );
-    `
+    `, types.OutboundTxSuccessful, types.SendHash, types.OutTxHash)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
 		return err
 	}
 
-	idb.querier.VisitAllTxEvents("SendFinalized", 0, func(res *sdk.TxResponse) error {
-		//fmt.Println(res.Logs)
+	_, err = idb.querier.VisitAllTxEvents(types.InboundFinalized, 0, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
-				var sendHash, inTxHash string
-				for _, attr := range vv.Attributes {
-					//fmt.Println(attr.Key, attr.Value)
-					if attr.Key == "Index" {
-						fmt.Println(attr.Key, attr.Value)
-						sendHash = attr.Value
-					} else if attr.Key == "InTxHash" {
-						fmt.Println(attr.Key, attr.Value)
-						inTxHash = attr.Value
-					}
-				}
-				_, err := idb.db.Exec("INSERT INTO finalized(sendHash, inTxHash) values(?,?)", sendHash, inTxHash)
+				kv := AttributeToMap(vv.Attributes)
+				_, err := idb.db.Exec("INSERT INTO ?(?, ?) values(?,?)",
+					types.InboundFinalized, types.SendHash, types.InTxHash,
+					kv[types.SendHash], kv[types.InTxHash])
 				if err != nil {
 					fmt.Println(err)
 					return nil
 				}
 			}
-			fmt.Println("####")
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func AttributeToMap(attr []sdk.Attribute) map[string]string {
+	kv := make(map[string]string, len(attr))
+	for _, v := range attr {
+		kv[v.Key] = kv[v.Value]
+	}
+	return kv
 }
