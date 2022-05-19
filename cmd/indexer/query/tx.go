@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -28,14 +29,17 @@ func NewZetaQuerier(chainIP string) (*ZetaQuerier, error) {
 }
 
 // query events of subtype at block blockNum
-// if blockNum <0, then query from
+// if blockNum <0, then query from block 0
 // each tx_response will be processed by the function processTxResponses
 func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTxResponses func(txRes *sdk.TxResponse) error) (uint64, error) {
 	const PAGE_LIMIT = 2
 	client := txtypes.NewServiceClient(q.grpcConn)
 	var offset, processed uint64
 
-	events := []string{fmt.Sprintf("message.Subtype='%s'", subtype)}
+	events := []string{fmt.Sprintf("message.%s='%s'", types.SubTypeKey, subtype)}
+	if blockNum >= 0 {
+		events = append(events, fmt.Sprintf("tx.height=%d", blockNum))
+	}
 
 	// first call
 	// NOTE: OrderBy 0 appears to be ASC block height
