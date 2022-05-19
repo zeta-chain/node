@@ -138,56 +138,6 @@ func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) b
 	return true
 }
 
-// returns (valid?, abort?)
-// valid?: whether mBurnt minus fee is enough for asked mMint
-// if abort, then revert the zeta-tx
-//func (k msgServer) validateFee(ctx sdk.Context, recvChain common.Chain, send *types.Send, abort bool) {
-//	price, ok := k.findGasPrice(ctx, recvChain, send)
-//	if !ok {
-//		abort = true
-//	}
-//	send.GasPrice = fmt.Sprintf("%.0f", price)
-//	gasLimit := float64(250_000) //TODO: let user supply this
-//	var gasFeeInZeta float64     // unit uuzeta
-//	gasFeeInZeta, abort = k.computeFeeInZeta(ctx, price, gasLimit, send.ReceiverChain, send)
-//
-//	zetaBurnt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
-//	if !ok {
-//		send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
-//		send.Status = types.SendStatus_Aborted
-//		return
-//	}
-//
-//	gasFee := big.NewInt(int64(gasFeeInZeta))
-//	toMint := big.NewInt(0).Sub(zetaBurnt, gasFee)
-//	if toMint.Sign() < 0 {
-//		send.StatusMessage = fmt.Sprintf("zetaburnt (%d) is less than gasFee (%d)", zetaBurnt, gasFee)
-//		send.Status = types.SendStatus_Aborted
-//		return
-//	}
-//
-//	send.ZetaMint = toMint.String()
-//	return
-//}
-
-func (k msgServer) processSend(ctx sdk.Context, abort bool, send *types.Send, recvChain common.Chain) {
-
-}
-
-// returns (gas price in wei per unit gas, and ok?
-//func (k msgServer) findGasPrice(ctx sdk.Context, recvChain common.Chain, send *types.Send) (float64, bool) {
-//	gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
-//	if !isFound {
-//		send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
-//		send.Status = types.SendStatus_Aborted
-//		return 0, false
-//	}
-//	mi := gasPrice.MedianIndex
-//	medianPrice := gasPrice.Prices[mi]
-//	price := float64(medianPrice)
-//	return price, true
-//}
-
 // returns (chain,error)
 // chain: the receiverChain if ok
 func parseChainAndAddress(chain string, addr string) (common.Chain, error) {
@@ -222,16 +172,17 @@ func (k msgServer) EmitEventSendCreated(ctx sdk.Context, send *types.Send) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute("Subtype", "SendCreated"),
-			sdk.NewAttribute("Index", send.Index),
-			sdk.NewAttribute("Sender", send.Sender),
-			sdk.NewAttribute("SenderChain", send.SenderChain),
-			sdk.NewAttribute("Receiver", send.Receiver),
-			sdk.NewAttribute("ReceiverChain", send.ReceiverChain),
-			sdk.NewAttribute("ZetaBurnt", send.ZetaBurnt),
-			sdk.NewAttribute("Message", send.Message),
-			sdk.NewAttribute("InTxHash", send.InTxHash),
-			sdk.NewAttribute("InBlockHeight", fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.SubType, types.InboundCreated),
+			sdk.NewAttribute(types.SendHash, send.Index),
+			//sdk.NewAttribute(types.Sender, send.Sender),
+			//sdk.NewAttribute(types.SenderChain, send.SenderChain),
+			//sdk.NewAttribute(types.Receiver, send.Receiver),
+			//sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
+			//sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
+			//sdk.NewAttribute(types.Message, send.Message),
+			//sdk.NewAttribute(types.InTxHash, send.InTxHash),
+			//sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.NewStatus, send.Status.String()),
 		),
 	)
 }
@@ -240,16 +191,17 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute("Subtype", "SendFinalized"),
-			sdk.NewAttribute("Index", send.Index),
-			sdk.NewAttribute("Sender", send.Sender),
-			sdk.NewAttribute("SenderChain", send.SenderChain),
-			sdk.NewAttribute("Receiver", send.Receiver),
-			sdk.NewAttribute("ReceiverChain", send.ReceiverChain),
-			sdk.NewAttribute("ZetaBurnt", send.ZetaBurnt),
-			sdk.NewAttribute("Message", send.Message),
-			sdk.NewAttribute("InTxHash", send.InTxHash),
-			sdk.NewAttribute("InBlockHeight", fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.SubType, types.InboundFinalized),
+			sdk.NewAttribute(types.SendHash, send.Index),
+			sdk.NewAttribute(types.Sender, send.Sender),
+			sdk.NewAttribute(types.SenderChain, send.SenderChain),
+			sdk.NewAttribute(types.Receiver, send.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
+			sdk.NewAttribute(types.Message, send.Message),
+			sdk.NewAttribute(types.InTxHash, send.InTxHash),
+			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.NewStatus, send.Status.String()),
 		),
 	)
 }
