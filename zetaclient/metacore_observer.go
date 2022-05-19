@@ -3,14 +3,15 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
+	"time"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
-	"math/big"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -60,7 +61,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	//go co.keygenObserve()
+	go co.keygenObserve()
 }
 
 func (co *CoreObserver) keygenObserve() {
