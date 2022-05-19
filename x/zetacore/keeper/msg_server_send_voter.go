@@ -3,12 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
-	"strconv"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"math/big"
 )
 
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {
@@ -16,14 +15,14 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
 	if !isBondedValidator(msg.Creator, validators) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
 	index := msg.Digest()
 	send, isFound := k.GetSend(ctx, index)
 
 	if isDuplicateSigner(msg.Creator, send.Signers) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+		return nil, sdkerrors.Wrap(types.ErrDuplicateMsg, fmt.Sprintf("signer %s double signing!!", msg.Creator))
 	}
 
 	if isFound { // send exists; add creator to signers
@@ -36,111 +35,40 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			SenderChain:         msg.SenderChain,
 			Receiver:            msg.Receiver,
 			ReceiverChain:       msg.ReceiverChain,
-			MBurnt:              msg.MBurnt,
-			MMint:               msg.MMint,
+			ZetaBurnt:           msg.ZetaBurnt,
 			Message:             msg.Message,
 			InTxHash:            msg.InTxHash,
 			InBlockHeight:       msg.InBlockHeight,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
-			Status:              types.SendStatus_Created,
+			Status:              types.SendStatus_PendingInbound,
 			Nonce:               0,
 			RecvHash:            "",
 			IndexTxList:         -1,
 			LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
+			ZetaMint:            "",
 		}
+		k.EmitEventSendCreated(ctx, &send)
 	}
 
 	if hasSuperMajorityValidators(len(send.Signers), validators) {
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-
-		inTx, _ := k.GetInTx(ctx, send.InTxHash)
-		inTx.Index = send.InTxHash
-		inTx.SendHash = send.Index
-		k.SetInTx(ctx, inTx)
-
-		tx := &types.Tx{
-			SendHash:   send.Index,
-			RecvHash:   "",
-			InTxHash:   send.InTxHash,
-			InTxChain:  send.SenderChain,
-			OutTxHash:  "",
-			OutTxChain: "",
-		}
-		txList, found := k.GetTxList(ctx)
-		if !found {
-			txList = types.TxList{
-				Creator: "",
-				Tx:      []*types.Tx{tx},
-			}
-		} else {
-			txList.Tx = append(txList.Tx, tx)
-			send.IndexTxList = int64(len(txList.Tx) - 1)
-		}
-		k.SetTxList(ctx, txList)
+		k.UpdateTxList(ctx, &send)
 
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		send.Status = types.SendStatus_Finalized
-		lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
-		if !isFound {
-			lastblock = types.LastBlockHeight{
-				Creator:           msg.Creator,
-				Index:             msg.SenderChain,
-				Chain:             msg.SenderChain,
-				LastSendHeight:    msg.InBlockHeight,
-				LastReceiveHeight: 0,
-			}
-		} else {
-			lastblock.LastSendHeight = msg.InBlockHeight
-		}
-		k.SetLastBlockHeight(ctx, lastblock)
+		send.Status = types.SendStatus_PendingOutbound
+		k.UpdateLastBlockHeigh(ctx, msg)
+
 		bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 		send.Broadcaster = uint64(bftTime.Nanosecond() % len(send.Signers))
 
-		// validate; abort if  failed
 		abort := false
-		recvChain, err := common.ParseChain(send.ReceiverChain)
+		// validate receiver address & chain; abort if failed
+		recvChain, err := parseChainAndAddress(send.ReceiverChain, send.Receiver)
 		if err != nil {
+			send.StatusMessage = err.Error()
+			send.Status = types.SendStatus_PendingRevert
 			abort = true
-			send.StatusMessage = fmt.Sprintf("cannot parse receiver chain")
-		}
-		_, err = common.NewAddress(send.Receiver, recvChain)
-		if err != nil {
-			abort = true
-			send.StatusMessage = fmt.Sprintf("cannot parse receiver address")
-		}
-		{
-			//gasPrice, isFound := k.GetGasPrice(ctx, recvChain.String())
-			//if !isFound {
-			//	send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
-			//	send.Status = types.SendStatus_Aborted
-			//	goto END
-			//}
-			//mi := gasPrice.MedianIndex
-			//medianPrice := gasPrice.Prices[mi]
-			//price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
-			//send.GasPrice = fmt.Sprintf("%.0f", price)
-			//gasLimit := float64(90_000) //TODO: let user supply this
-			//exchangeRate := 1.0         // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
-			//gasFeeInZeta := price * gasLimit * exchangeRate
-			//mBurnt, ok := big.NewInt(0).SetString(send.MBurnt, 10)
-			//if !ok {
-			//	send.StatusMessage = fmt.Sprintf("MBurnt cannot parse")
-			//	send.Status = types.SendStatus_Aborted
-			//	goto END
-			//}
-			//mMint, ok := big.NewInt(0).SetString(send.MMint, 10)
-			//if !ok {
-			//	send.StatusMessage = fmt.Sprintf("MMint cannot parse")
-			//	send.Status = types.SendStatus_Aborted
-			//	goto END
-			//}
-			//gasFee := big.NewInt(int64(gasFeeInZeta))
-			//toMint := big.NewInt(0).Sub(mBurnt, gasFee)
-			//if toMint.Cmp(mMint) < 0 { // not enough burnt
-			//	abort = true
-			//	send.StatusMessage = fmt.Sprintf("wanted %d, but can only mint %d", mMint, toMint)
-			//}
 		}
 
 		var chain common.Chain // the chain for outbound
@@ -149,54 +77,180 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			if err != nil {
 				send.StatusMessage = fmt.Sprintf("cannot parse sender chain: %s", send.SenderChain)
 				send.Status = types.SendStatus_Aborted
-				goto END
+				goto EPILOGUE
 			}
-			send.Status = types.SendStatus_Revert
+			send.Status = types.SendStatus_PendingRevert
 		} else {
 			chain = recvChain
 		}
-		gasPrice, isFound := k.GetGasPrice(ctx, chain.String())
-		if !isFound {
-			send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
-			send.Status = types.SendStatus_Aborted
-			goto END
-		}
-		mi := gasPrice.MedianIndex
-		medianPrice := gasPrice.Prices[mi]
-		price := float64(medianPrice) * 1.5 // 1.5x Median gas; in wei
-		send.GasPrice = fmt.Sprintf("%.0f", price)
-		gasLimit := float64(250_000) //TODO: let user supply this
-		exchangeRate := 1.0          // Zeta/ETH ratio; TODO: this information should come from oracle or onchain pool.
-		gasFeeInZeta := price * gasLimit * exchangeRate
-		mBurnt, err := strconv.ParseFloat(send.MBurnt, 64)
-		if err != nil {
-			send.StatusMessage = fmt.Sprintf("MBurnt cannot parse")
-			send.Status = types.SendStatus_Aborted
-			goto END
-		}
-		if gasFeeInZeta > mBurnt {
-			send.StatusMessage = fmt.Sprintf("feeInZeta(%f) more than mBurnt (%f)", gasFeeInZeta, mBurnt)
-			send.Status = types.SendStatus_Aborted
-			goto END
-		}
-		if abort {
-			send.MMint = fmt.Sprintf("%.0f", mBurnt-gasFeeInZeta)
-		} // if not abort, then MMint is small enough that we can mint.
 
-		nonce, found := k.GetChainNonces(ctx, chain.String())
-		if !found {
-			send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
-			send.Status = types.SendStatus_Aborted
-			goto END
-		}
-
-		send.Nonce = nonce.Nonce
-		nonce.Nonce++
-		k.SetChainNonces(ctx, nonce)
-
+		k.updateSend(ctx, chain.String(), &send)
+		k.EmitEventSendFinalized(ctx, &send)
 	}
 
-END:
+EPILOGUE:
 	k.SetSend(ctx, send)
 	return &types.MsgSendVoterResponse{}, nil
+}
+
+// updates gas price, gas fee, zeta to mint, and nonce
+// returns ok?
+func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) bool {
+	gasPrice, isFound := k.GetGasPrice(ctx, chain)
+	if !isFound {
+		send.StatusMessage = fmt.Sprintf("no gas price found: chain %s", send.ReceiverChain)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	mi := gasPrice.MedianIndex
+	medianPrice := gasPrice.Prices[mi]
+	send.GasPrice = fmt.Sprintf("%d", medianPrice)
+	price := float64(medianPrice)
+	gasLimit := float64(250_000) //TODO: let user supply this
+	gasFeeInZeta, abort := k.computeFeeInZeta(ctx, price, gasLimit, chain, send)
+	if abort {
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	zetaBurntInt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 0)
+	if !ok {
+		send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	if gasFeeInZeta.Cmp(zetaBurntInt) > 0 {
+		send.StatusMessage = fmt.Sprintf("feeInZeta(%d) more than mBurnt (%d)", gasFeeInZeta, zetaBurntInt)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
+
+	nonce, found := k.GetChainNonces(ctx, chain)
+	if !found {
+		send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+
+	send.Nonce = nonce.Nonce
+	nonce.Nonce++
+	k.SetChainNonces(ctx, nonce)
+	return true
+}
+
+// returns (chain,error)
+// chain: the receiverChain if ok
+func parseChainAndAddress(chain string, addr string) (common.Chain, error) {
+	recvChain, err := common.ParseChain(chain)
+	if err != nil {
+		return recvChain, fmt.Errorf("cannot parse receiver chain %s", chain)
+	}
+	_, err = common.NewAddress(addr, recvChain)
+	if err != nil {
+		return recvChain, fmt.Errorf("cannot parse receiver addr %s", addr)
+	}
+	return recvChain, nil
+}
+
+func (k msgServer) UpdateLastBlockHeigh(ctx sdk.Context, msg *types.MsgSendVoter) {
+	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
+	if !isFound {
+		lastblock = types.LastBlockHeight{
+			Creator:           msg.Creator,
+			Index:             msg.SenderChain,
+			Chain:             msg.SenderChain,
+			LastSendHeight:    msg.InBlockHeight,
+			LastReceiveHeight: 0,
+		}
+	} else {
+		lastblock.LastSendHeight = msg.InBlockHeight
+	}
+	k.SetLastBlockHeight(ctx, lastblock)
+}
+
+func (k msgServer) EmitEventSendCreated(ctx sdk.Context, send *types.Send) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+			sdk.NewAttribute(types.SubTypeKey, types.InboundCreated),
+			sdk.NewAttribute(types.SendHash, send.Index),
+			//sdk.NewAttribute(types.Sender, send.Sender),
+			//sdk.NewAttribute(types.SenderChain, send.SenderChain),
+			//sdk.NewAttribute(types.Receiver, send.Receiver),
+			//sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
+			//sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
+			//sdk.NewAttribute(types.Message, send.Message),
+			//sdk.NewAttribute(types.InTxHash, send.InTxHash),
+			//sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.NewStatus, send.Status.String()),
+		),
+	)
+}
+
+func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+			sdk.NewAttribute(types.SubTypeKey, types.InboundFinalized),
+			sdk.NewAttribute(types.SendHash, send.Index),
+			sdk.NewAttribute(types.Sender, send.Sender),
+			sdk.NewAttribute(types.SenderChain, send.SenderChain),
+			sdk.NewAttribute(types.Receiver, send.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
+			sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
+			sdk.NewAttribute(types.Message, send.Message),
+			sdk.NewAttribute(types.InTxHash, send.InTxHash),
+			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
+			sdk.NewAttribute(types.NewStatus, send.Status.String()),
+		),
+	)
+}
+
+func (k msgServer) UpdateTxList(ctx sdk.Context, send *types.Send) {
+	inTx, _ := k.GetInTx(ctx, send.InTxHash)
+	inTx.Index = send.InTxHash
+	inTx.SendHash = send.Index
+	k.SetInTx(ctx, inTx)
+
+	tx := &types.Tx{
+		SendHash:   send.Index,
+		RecvHash:   "",
+		InTxHash:   send.InTxHash,
+		InTxChain:  send.SenderChain,
+		OutTxHash:  "",
+		OutTxChain: "",
+	}
+	txList, found := k.GetTxList(ctx)
+	if !found {
+		txList = types.TxList{
+			Creator: "",
+			Tx:      []*types.Tx{tx},
+		}
+	} else {
+		txList.Tx = append(txList.Tx, tx)
+		send.IndexTxList = int64(len(txList.Tx) - 1)
+	}
+	k.SetTxList(ctx, txList)
+}
+
+// returns feeInZeta (uint uuzeta), and whether to abort zeta-tx
+func (k msgServer) computeFeeInZeta(ctx sdk.Context, price float64, gasLimit float64, chain string, send *types.Send) (*big.Int, bool) {
+	abort := false
+	rate, isFound := k.GetZetaConversionRate(ctx, chain)
+	if !isFound {
+		send.StatusMessage = fmt.Sprintf("Zeta conversion rate not found")
+		abort = true
+	}
+	exchangeRateInt, ok := big.NewInt(0).SetString(rate.ZetaConversionRates[rate.MedianIndex], 0)
+	if !ok {
+		send.StatusMessage = fmt.Sprintf("median exchange rate %s cannot parse into float", rate.ZetaConversionRates[rate.MedianIndex])
+		abort = true
+	}
+	exchangeRateFloat, _ := big.NewFloat(0).SetInt(exchangeRateInt).Float64()
+	exchangeRateFloat = exchangeRateFloat / 1.0e18 // 18 decimals
+
+	gasFeeInZeta := price * gasLimit * exchangeRateFloat
+	gasFeeInZetaInt, _ := big.NewFloat(0).SetFloat64(gasFeeInZeta).Int(nil)
+	return gasFeeInZetaInt, abort
 }
