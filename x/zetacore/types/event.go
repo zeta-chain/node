@@ -19,11 +19,9 @@ const (
 	InBlockHeight = "InBlockHeight"
 )
 
-type SubType string
-
 const (
-	OutboundTxSuccessful SubType = "OutboundTxSuccessful"
-	OutboundTxFailed             = "OutboundTxFailed"
-	InboundCreated               = "InboundCreated"
-	InboundFinalized             = "InboundFinalized"
+	OutboundTxSuccessful = "OutboundTxSuccessful"
+	OutboundTxFailed     = "OutboundTxFailed"
+	InboundCreated       = "InboundCreated"
+	InboundFinalized     = "InboundFinalized"
 )

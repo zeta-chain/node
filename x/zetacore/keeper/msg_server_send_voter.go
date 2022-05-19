@@ -198,6 +198,7 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 			sdk.NewAttribute(types.Receiver, send.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
 			sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
+			sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
 			sdk.NewAttribute(types.Message, send.Message),
 			sdk.NewAttribute(types.InTxHash, send.InTxHash),
 			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
