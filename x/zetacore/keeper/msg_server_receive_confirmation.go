@@ -77,22 +77,46 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		//}
 		//k.SetLastBlockHeight(ctx, lastblock)
 
+		var subtype string
 		if receive.Status == common.ReceiveStatus_Success {
 			if send.Status == types.SendStatus_PendingRevert {
 				send.Status = types.SendStatus_Reverted
+				subtype = "Reverted"
 			} else {
 				send.Status = types.SendStatus_OutboundMined
+				subtype = "Mined"
 			}
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+					sdk.NewAttribute("Subtype", subtype),
+					sdk.NewAttribute("ReceiveIndex", receive.Index),
+					sdk.NewAttribute("SendHash", receive.SendHash),
+					sdk.NewAttribute("Chain", receive.Chain),
+					sdk.NewAttribute("OutTxHash", receive.OutTxHash),
+					sdk.NewAttribute("ZetaMint", msg.MMint),
+				),
+			)
 		} else if receive.Status == common.ReceiveStatus_Failed {
 			if send.Status == types.SendStatus_PendingOutbound {
 				send.Status = types.SendStatus_PendingRevert
 				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
 				chain := send.SenderChain
 				k.updateSend(ctx, chain, &send)
+				subtype = "Revert"
 			} else if send.Status == types.SendStatus_PendingRevert {
 				send.Status = types.SendStatus_Aborted
 				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
+				subtype = "Aborted"
 			}
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+					sdk.NewAttribute("Subtype", subtype),
+					sdk.NewAttribute("SendHash", send.Index),
+					sdk.NewAttribute("OutTxHash", msg.OutTxHash),
+				),
+			)
 		}
 
 		send.RecvHash = receive.Index
