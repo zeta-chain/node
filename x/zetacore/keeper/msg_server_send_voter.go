@@ -172,7 +172,7 @@ func (k msgServer) EmitEventSendCreated(ctx sdk.Context, send *types.Send) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute(types.SubType, types.InboundCreated),
+			sdk.NewAttribute(types.SubTypeKey, types.InboundCreated),
 			sdk.NewAttribute(types.SendHash, send.Index),
 			//sdk.NewAttribute(types.Sender, send.Sender),
 			//sdk.NewAttribute(types.SenderChain, send.SenderChain),
@@ -191,7 +191,7 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute(types.SubType, types.InboundFinalized),
+			sdk.NewAttribute(types.SubTypeKey, types.InboundFinalized),
 			sdk.NewAttribute(types.SendHash, send.Index),
 			sdk.NewAttribute(types.Sender, send.Sender),
 			sdk.NewAttribute(types.SenderChain, send.SenderChain),

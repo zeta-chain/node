@@ -87,7 +87,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			newstatus := send.Status.String()
 			event := sdk.NewEvent(sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-				sdk.NewAttribute(types.SubType, types.OutboundTxSuccessful),
+				sdk.NewAttribute(types.SubTypeKey, string(types.OutboundTxSuccessful)),
 				sdk.NewAttribute(types.SendHash, receive.SendHash),
 				sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 				sdk.NewAttribute(types.ZetaMint, msg.MMint),
@@ -112,7 +112,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-					sdk.NewAttribute(types.SubType, types.OutboundTxFailed),
+					sdk.NewAttribute(types.SubTypeKey, types.OutboundTxFailed),
 					sdk.NewAttribute(types.SendHash, receive.SendHash),
 					sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 					sdk.NewAttribute(types.ZetaMint, msg.MMint),
