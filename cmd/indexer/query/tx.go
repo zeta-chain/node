@@ -85,7 +85,7 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 			for _, v := range res.TxResponses {
 				err = processTxResponses(v)
 				if err != nil {
-					return processed, err
+					fmt.Printf("processTxResponses error: %s", err)
 				}
 				processed += 1
 			}

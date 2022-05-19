@@ -115,7 +115,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 					sdk.NewAttribute(types.SubTypeKey, types.OutboundTxFailed),
 					sdk.NewAttribute(types.SendHash, receive.SendHash),
 					sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
-					sdk.NewAttribute(types.ZetaMint, msg.MMint),
+					sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
 					sdk.NewAttribute(types.Chain, msg.Chain),
 					sdk.NewAttribute(types.OldStatus, oldstatus),
 					sdk.NewAttribute(types.NewStatus, newstatus),
