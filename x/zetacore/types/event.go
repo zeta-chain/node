@@ -1,14 +1,8 @@
 package types
 
 const (
-	// event value
-	OutboundTxSuccessful string = "OutboundTxSuccessful"
-	OutboundTxFailed            = "OutboundTxFailed"
-	InboundCreated              = "InboundCreated"
-	InboundFinalized            = "InboundFinalized"
-
 	// event key
-	SubType       = "SubType"
+	SubTypeKey    = "SubTypeKey"
 	SendHash      = "SendHash"
 	OutTxHash     = "OutTxHash"
 	ZetaMint      = "ZetaMint"
@@ -23,4 +17,13 @@ const (
 	Message       = "Message"
 	InTxHash      = "InTxHash"
 	InBlockHeight = "InBlockHeight"
+)
+
+type SubType string
+
+const (
+	OutboundTxSuccessful SubType = "OutboundTxSuccessful"
+	OutboundTxFailed             = "OutboundTxFailed"
+	InboundCreated               = "InboundCreated"
+	InboundFinalized             = "InboundFinalized"
 )
