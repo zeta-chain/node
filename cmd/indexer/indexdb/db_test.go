@@ -30,9 +30,9 @@ func (ts *DBSuite) SetUpSuite(c *C) {
 
 func (ts *DBSuite) TestRebuid(c *C) {
 	idb := ts.idb
-	err := idb.Rebuild()
+	err := idb.db.Ping()
 	c.Assert(err, IsNil)
-	err = idb.db.Ping()
+	err = idb.Rebuild()
 	c.Assert(err, IsNil)
 
 }

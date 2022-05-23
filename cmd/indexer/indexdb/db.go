@@ -33,7 +33,9 @@ func (idb *IndexDB) Rebuild() error {
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
-		%s TEXT NOT NULL
+		%s TEXT NOT NULL,
+		timestamp DATETIME NOT NULL,
+		blocknumber INTEGER NOT NULL
     );
     `, types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain,
 		types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint)
@@ -45,22 +47,37 @@ func (idb *IndexDB) Rebuild() error {
 
 	query = fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS %s(
-        %s TEXT PRIMARY KEY,
-        %s TEXT NOT NULL
-    );
-    `, types.OutboundTxSuccessful, types.SendHash, types.OutTxHash)
-
-	query = fmt.Sprintf(`
-    CREATE TABLE IF NOT EXISTS %s(
         %s TEXT Not NULL,
         %s TEXT PRIMARY KEY,
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
-        %s TEXT NOT NULL
+        %s TEXT NOT NULL,
+		timestamp DATETIME NOT NULL,
+		blocknumber INTEGER NOT NULL
+    );
+    `, types.OutboundTxSuccessful, types.SendHash, types.OutTxHash, types.ZetaMint,
+		types.Chain, types.OldStatus, types.NewStatus)
+
+	_, err = idb.db.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	query = fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s(
+        %s TEXT Not NULL,
+        %s TEXT NOT NULL,
+        %s TEXT NOT NULL,
+        %s TEXT NOT NULL,
+        %s TEXT NOT NULL,
+        %s TEXT NOT NULL,
+		timestamp DATETIME NOT NULL,
+		blocknumber INTEGER NOT NULL,
+		PRIMARY KEY ( %s, %s)
     );
     `, types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint,
-		types.Chain, types.OldStatus, types.NewStatus)
+		types.Chain, types.OldStatus, types.NewStatus, types.SendHash, types.OutTxHash)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -72,9 +89,9 @@ func (idb *IndexDB) Rebuild() error {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
 				//fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.InTxHash])
-				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s) values(?,?,?,?,?,?,?,?,?)",
+				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s, timestamp,blocknumber) values(?,?,?,?,?,?,?,?,?, ?,?)",
 					types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint),
-					kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint])
+					kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height)
 				if err != nil {
 					fmt.Println(err)
 					return nil
@@ -92,9 +109,17 @@ func (idb *IndexDB) Rebuild() error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
-				fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.InTxHash])
-				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s) values(?,?)", types.OutboundTxSuccessful, types.SendHash, types.OutTxHash),
-					kv[types.SendHash], kv[types.OutTxHash])
+				fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
+				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values(?,?,?,?,?,?,?,?)", types.OutboundTxSuccessful, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
+					kv[types.SendHash],
+					kv[types.OutTxHash],
+					kv[types.ZetaMint],
+					kv[types.Chain],
+					kv[types.OldStatus],
+					kv[types.NewStatus],
+					res.Timestamp,
+					res.Height,
+				)
 				if err != nil {
 					fmt.Println(err)
 					return nil
@@ -113,13 +138,15 @@ func (idb *IndexDB) Rebuild() error {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
 				fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
-				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s) values(?,?,?,?,?,?)", types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
+				_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values(?,?,?,?,?,?, ?,?)", types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
 					kv[types.SendHash],
 					kv[types.OutTxHash],
 					kv[types.ZetaMint],
 					kv[types.Chain],
 					kv[types.OldStatus],
 					kv[types.NewStatus],
+					res.Timestamp,
+					res.Height,
 				)
 				if err != nil {
 					fmt.Println(err)
