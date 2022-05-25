@@ -9,7 +9,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"google.golang.org/grpc"
 
+	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type ZetaQuerier struct {
@@ -28,11 +30,33 @@ func NewZetaQuerier(chainIP string) (*ZetaQuerier, error) {
 	return &ZetaQuerier{grpcConn: grpcConn}, nil
 }
 
+func (q *ZetaQuerier) LatestBlock() (*tmtypes.Block, error) {
+	client := tmservice.NewServiceClient(q.grpcConn)
+	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+	if err != nil {
+		fmt.Printf("GetLatestBlock grpc err: %s\n", err)
+		return nil, err
+	}
+	return res.Block, nil
+}
+
+func (q *ZetaQuerier) BlockByHeight(bn int64) (*tmtypes.Block, error) {
+	client := tmservice.NewServiceClient(q.grpcConn)
+	res, err := client.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{
+		Height: bn,
+	})
+	if err != nil {
+		fmt.Printf("GetLatestBlock grpc err: %s\n", err)
+		return nil, err
+	}
+	return res.Block, nil
+}
+
 // query events of subtype at block blockNum
 // if blockNum <0, then query from block 0
 // each tx_response will be processed by the function processTxResponses
 func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTxResponses func(txRes *sdk.TxResponse) error) (uint64, error) {
-	const PAGE_LIMIT = 2
+	const PAGE_LIMIT = 50
 	client := txtypes.NewServiceClient(q.grpcConn)
 	var offset, processed uint64
 
