@@ -25,14 +25,19 @@ func (ts *DBSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	ts.idb, err = NewIndexDB(db, querier)
 	c.Assert(err, IsNil)
-
+	ts.Rebuid(c)
 }
 
-func (ts *DBSuite) TestRebuid(c *C) {
+func (ts *DBSuite) Rebuid(c *C) {
 	idb := ts.idb
 	err := idb.db.Ping()
 	c.Assert(err, IsNil)
 	err = idb.Rebuild()
 	c.Assert(err, IsNil)
 
+}
+
+func (ts *DBSuite) TestProcessEvent(c *C) {
+	err := ts.idb.processBlock(123)
+	c.Assert(err, IsNil)
 }
