@@ -110,6 +110,7 @@ if (( $NODE_NUMBER > 0 )); then
     sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
     # sed -i '/\[api\]/,+3 s/addr_book_strict = true/addr_book_strict = false/' /root/.zetacore/config/app.toml
 
+
     cp -r /root/.zetacore/config/* /zetashared/node$NODE_NUMBER/config/
     cp -r /root/.zetacore/keyring-test/* /zetashared/node$NODE_NUMBER/keyring-test/
     cp -r /root/.zetacore/data/* /zetashared/node$NODE_NUMBER/data/
