@@ -37,7 +37,7 @@ func (ts *DBSuite) Rebuid(c *C) {
 
 }
 
-func (ts *DBSuite) TestProcessEvent(c *C) {
+func (ts *DBSuite) TestWatchEvent(c *C) {
 	err := ts.idb.processBlock(123)
 	c.Assert(err, IsNil)
 }
