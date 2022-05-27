@@ -52,18 +52,22 @@ func main() {
 
 	querier, err := query.NewZetaQuerier("3.20.194.40")
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("NewZetaQuerier error")
 		return
 	}
 
 	idb, err := indexdb.NewIndexDB(db, querier)
+	if err != nil {
+		log.Error().Err(err).Msg("NewIndexDB error")
+		return
+	}
 
 	if *rebuild {
 		log.Info().Msgf("Rebuilding database...")
 		start := time.Now()
-		idb.Rebuild()
+		err = idb.Rebuild()
 		duration := time.Since(start)
-		log.Info().Msgf("Rebuilding database takes %s", duration)
+		log.Info().Err(err).Msgf("Rebuilding database takes %s", duration)
 	}
 
 	log.Info().Msgf("Start watching events...")

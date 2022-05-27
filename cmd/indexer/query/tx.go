@@ -67,7 +67,6 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 
 	// first call
 	// NOTE: OrderBy 0 appears to be ASC block height
-	offset = 0
 	processed = 0
 	res, err := client.GetTxsEvent(context.Background(), &txtypes.GetTxsEventRequest{
 		Events: events,
@@ -106,6 +105,9 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 				},
 				OrderBy: 0,
 			})
+			if err != nil {
+				log.Error().Err(err).Msgf("GetTxsEvent error of %v", events)
+			}
 			for _, v := range res.TxResponses {
 				err = processTxResponses(v)
 				if err != nil {
