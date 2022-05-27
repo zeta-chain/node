@@ -4,54 +4,67 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3" // this registers a sql driver
+	_ "github.com/lib/pq" // this registers a sql driver
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/indexdb"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
 	"os"
 	"os/signal"
+	"os/user"
 	"syscall"
 	"time"
 )
 
 func main() {
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot get current username")
+		return
+	}
+
 	node := flag.String("node-ip", "127.0.0.1", "The IP address of the ZetaCore node")
 	dbpath := flag.String("dbpath", "db.sqlite", "File path to the database")
 	rebuild := flag.Bool("rebuild", false, "Rebuild the database from scratch (will erase and rebuild dbfile)")
+	dbhost := flag.String("dbhost", "localhost", "host URL of the PostgreSQL database")
+	dbport := flag.Int64("dbport", 5432, "port of the PostgresSQL database")
+	dbuser := flag.String("dbuser", user.Username, "username of PostgresSQL database")
+	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
+	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
 	flag.Parse()
 
 	_ = rebuild
 	_ = node
+	_ = dbpath
 
-	db, err := sql.Open("sqlite3", *dbpath)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", *dbhost, *dbport, *dbuser, *dbpasswd, *dbname)
+	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer db.Close()
 	err = db.Ping()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	log.Info().Msgf("connected to psql server %s", psqlInfo)
 
 	querier, err := query.NewZetaQuerier("3.20.194.40")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	os.Remove("test.db")
-	db, err = sql.Open("sqlite3", "test.db")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
 	idb, err := indexdb.NewIndexDB(db, querier)
 
-	log.Info().Msgf("Rebuilding database...")
-	start := time.Now()
-	idb.Rebuild()
-	duration := time.Since(start)
-	log.Info().Msgf("Rebuilding database takes %s", duration)
+	if *rebuild {
+		log.Info().Msgf("Rebuilding database...")
+		start := time.Now()
+		idb.Rebuild()
+		duration := time.Since(start)
+		log.Info().Msgf("Rebuilding database takes %s", duration)
+	}
 
 	log.Info().Msgf("Start watching events...")
 	idb.Start()
