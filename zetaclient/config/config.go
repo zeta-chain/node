@@ -83,6 +83,12 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress: "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
 		ChainID:             big.NewInt(80001),
 	},
+	"": {
+		Name:                common.EmptyChain,
+		MPIContractAddress:  "",
+		PoolContractAddress: "",
+		ChainID:             big.NewInt(0),
+	},
 }
 
 func FindChainByID(id *big.Int) string {
