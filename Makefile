@@ -31,6 +31,8 @@ coverage-report: test-coverage
 test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
+gosec:
+	gosec  -exclude-dir=localnet ./...
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"

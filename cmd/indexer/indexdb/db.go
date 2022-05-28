@@ -125,6 +125,7 @@ func (idb *IndexDB) processBlock(bn int64) error {
 	return nil
 }
 
+// #nosec -- supress G201 warning: formating SQL query; arguments not from user inputs.
 func (idb *IndexDB) Rebuild() error {
 	// 0. clear existing tables
 	drop := fmt.Sprintf("DROP TABLE IF EXISTS txs")
@@ -154,6 +155,7 @@ func (idb *IndexDB) Rebuild() error {
 	}
 
 	// 1. create tables
+	//#nosec G201
 	query := fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS txs (
 		%s TEXT PRIMARY KEY,
@@ -197,6 +199,7 @@ func (idb *IndexDB) Rebuild() error {
 		return err
 	}
 
+	// #nosec G201
 	query = fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS %s(
         %s TEXT Not NULL,
@@ -216,6 +219,7 @@ func (idb *IndexDB) Rebuild() error {
 		return err
 	}
 
+	// #nosec G201
 	query = fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS %s(
         %s TEXT Not NULL,
