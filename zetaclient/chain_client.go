@@ -52,6 +52,18 @@ var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
 var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
 var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
 
+//event ZetaReverted(
+//address originSenderAddress,
+//uint256 originChainId,
+//uint256 indexed destinationChainId,
+//bytes indexed destinationAddress,
+//uint256 zetaAmount,
+//bytes message,
+//bytes32 indexed internalSendHash
+//);
+var logZetaRevertedSignature = []byte("ZetaReverted(address,uint256,uint256,bytes,uint256,bytes,bytes32)")
+var logZetaRevertedSignatureHash = crypto.Keccak256Hash(logZetaRevertedSignature)
+
 var topics = make([][]ethcommon.Hash, 1)
 
 // Chain configuration struct
@@ -229,7 +241,7 @@ func (chainOb *ChainObserver) WatchGasPrice() {
 }
 
 func (chainOb *ChainObserver) WatchExchangeRate() {
-	gasTicker := time.NewTicker(24 * time.Second)
+	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
 		var price *big.Int
 		var err error
@@ -243,7 +255,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
 			continue
 		}
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price)
+		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, float64(price.Int64())/1.0e18)
 		priceInHex := fmt.Sprintf("0x%x", price)
 
 		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceInHex, bn)
@@ -435,7 +447,6 @@ func (chainOb *ChainObserver) observeChain() error {
 			message := vals[4].([]byte)
 			zetaParams := vals[5].([]byte)
 
-			_ = gasLimit
 			_ = zetaParams
 
 			metaHash, err := chainOb.bridge.PostSend(
@@ -448,6 +459,7 @@ func (chainOb *ChainObserver) observeChain() error {
 				base64.StdEncoding.EncodeToString(message),
 				vLog.TxHash.Hex(),
 				vLog.BlockNumber,
+				gasLimit.Uint64(),
 			)
 			if err != nil {
 				log.Err(err).Msg("error posting to meta core")
@@ -497,7 +509,7 @@ func (chainOb *ChainObserver) Stop() error {
 func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool, error) {
 	recvTopics := make([][]ethcommon.Hash, 4)
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
-	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash}
+	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].MPIContractAddress)},
 		FromBlock: big.NewInt(0), // LastBlock has been processed;
@@ -521,7 +533,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
 			retval, err := chainOb.connectorAbi.Unpack("ZetaReceived", vLog.Data)
 			if err != nil {
-				fmt.Println("error unpacking Unlock")
+				fmt.Println("error unpacking ZetaReceived")
 				continue
 			}
 			fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
@@ -535,6 +547,41 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 				sendhash := vLog.Topics[3].Hex()
 				//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 				var mMint string = retval[1].(*big.Int).String()
+				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
+					sendhash,
+					vLog.TxHash.Hex(),
+					vLog.BlockNumber,
+					mMint,
+					common.ReceiveStatus_Success,
+					chainOb.chain.String(),
+				)
+				if err != nil {
+					log.Err(err).Msg("error posting confirmation to meta core")
+					continue
+				}
+				fmt.Printf("Zeta tx hash: %s\n", metaHash)
+				return true, true, nil
+			} else {
+				fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
+				return true, false, nil
+			}
+		case logZetaRevertedSignatureHash.Hex():
+			fmt.Printf("Found (revert tx) sendHash %s on chain %s\n", sendHash, chainOb.chain)
+			retval, err := chainOb.connectorAbi.Unpack("ZetaReverted", vLog.Data)
+			if err != nil {
+				fmt.Println("error unpacking ZetaReverted")
+				continue
+			}
+			fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
+			fmt.Printf("Topic 1 (dest chain id): %d\n", vLog.Topics[1])
+			fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
+			fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
+			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
+
+			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
+				fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+				sendhash := vLog.Topics[3].Hex()
+				var mMint string = retval[2].(*big.Int).String()
 				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
 					sendhash,
 					vLog.TxHash.Hex(),
@@ -634,4 +681,38 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 	}
 	v, _ := big.NewFloat(r0 / r1 * 1.0e18).Int(nil)
 	return v, bn, nil
+}
+
+// watch outbound tx
+// returns whether outbound tx is successful or failure
+func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) bool {
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Info().Msgf("TIMEOUT: watching outTx %s on chain %s", txid, chainOb.chain)
+			return false
+		default:
+			receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txid))
+			if err != nil {
+				log.Error().Err(err).Msgf("error watching outTx %s on chain %s", txid, chainOb.chain)
+			} else {
+				if receipt.Status == 1 { // 1: success
+					log.Info().Msgf("SUCCESS: watching outTx %s on chain %s", txid, chainOb.chain)
+					return true
+				} else if receipt.Status == 0 { // tx mined but failed; should revert
+					log.Info().Msgf("FAILED: watching outTx %s on chain %s", txid, chainOb.chain)
+					zetaTxHash, err := chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					if err != nil {
+						log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+					}
+					return false
+				}
+				return false
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
 }
