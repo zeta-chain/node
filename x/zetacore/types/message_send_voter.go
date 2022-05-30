@@ -17,8 +17,7 @@ func NewMsgSendVoter(creator string, sender string, senderChain string, receiver
 		SenderChain:   senderChain,
 		Receiver:      receiver,
 		ReceiverChain: receiverChain,
-		MBurnt:        mBurnt,
-		MMint:         mMint,
+		ZetaBurnt:     mBurnt,
 		Message:       message,
 		InTxHash:      inTxHash,
 		InBlockHeight: inBlockHeight,
@@ -70,8 +69,8 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid receiver address (%s): %s", err, msg.Receiver)
 	//}
 
-	if _, ok := big.NewInt(0).SetString(msg.MBurnt, 10); !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s", err, msg.MBurnt)
+	if _, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10); !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s", err, msg.ZetaBurnt)
 	}
 
 	// TODO: should parameterize the hardcoded max len

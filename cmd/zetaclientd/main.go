@@ -156,6 +156,19 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		return
 	}
 
+	_, err = bridge1.SetTSS(common.ETHChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+	}
+	_, err = bridge1.SetTSS(common.BSCChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+	}
+	_, err = bridge1.SetTSS(common.POLYGONChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+	}
+
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
 		log.Err(err).Msg("CreateSignerMap")
