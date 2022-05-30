@@ -17,22 +17,20 @@ typechain
 
 # Hardhat files
 cache
-localnet/hardhat/artifacts
-localnet/hardhat/localnet-addresses
-!localnet/hardhat/localnet-addresses/.gitkeep
+localnet/artifacts
 
 # Typescript
 dist
 
 # LocalNet Files
-localnet/networks/polygon/bor
-localnet/networks/polygon/heimdall
-localnet/networks/polygon/data
-localnet/networks/bsc/bsc-docker
-localnet/networks/bsc/storage
-localnet/networks/zetachain/storage
-localnet/networks/zetachain/BACKUP
-localnet/networks/zetachain/config/genesis
-localnet/networks/zetachain/config/node*/*
+localnet/polygon/bor
+localnet/polygon/heimdall
+localnet/polygon/data
+localnet/bsc/bsc-docker
+localnet/bsc/storage
+localnet/ganache/storage
+localnet/zetachain/storage
+localnet/zetachain/config/genesis
+localnet/zetachain/config/node*/*
 
 
