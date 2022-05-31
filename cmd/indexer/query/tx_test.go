@@ -7,6 +7,10 @@ import (
 	"testing"
 )
 
+const (
+	zetaNodeIP = "3.20.194.40"
+)
+
 type TxSuite struct {
 	zq *ZetaQuerier
 }
@@ -16,7 +20,7 @@ func Test(t *testing.T) { TestingT(t) }
 var _ = Suite(&TxSuite{})
 
 func (ts *TxSuite) SetUpSuite(c *C) {
-	zq, err := NewZetaQuerier("3.20.194.40")
+	zq, err := NewZetaQuerier(zetaNodeIP)
 	c.Assert(err, IsNil)
 	ts.zq = zq
 }

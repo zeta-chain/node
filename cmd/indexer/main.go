@@ -50,7 +50,7 @@ func main() {
 	}
 	log.Info().Msgf("connected to psql server %s", psqlInfo)
 
-	querier, err := query.NewZetaQuerier("3.20.194.40")
+	querier, err := query.NewZetaQuerier(*node)
 	if err != nil {
 		log.Error().Err(err).Msg("NewZetaQuerier error")
 		return
