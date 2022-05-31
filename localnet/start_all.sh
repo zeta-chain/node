@@ -3,7 +3,7 @@
 LOCALNET_DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $LOCALNET_DIR
 
-VARS_CONFIG_FILE=vars.config
+VARS_CONFIG_FILE=.env
 echo "Sourcing Environment Variables from $VARS_CONFIG_FILE"
 source $VARS_CONFIG_FILE
 
@@ -18,7 +18,7 @@ if [ $USE_GANACHE == true ]; then
         sleep 10
 else
     for d in $(ls -d */); do 
-        if  [ $d != "zetachain/" ] || [ $d != "ganache/"  ] || [ $d != "node_modules/" ]; then
+        if  [ $d != "zetachain/" ] && [ $d != "ganache/"  ] && [ $d != "node_modules/" ]; then
             echo "Starting $d"
             cd $d
             ./start.sh
