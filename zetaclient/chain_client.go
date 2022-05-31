@@ -147,7 +147,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
-		chainOb.uniswapV2Abi = &uniswapV3ABI
+		chainOb.uniswapV3Abi = &uniswapV3ABI
 	}
 
 	// Dial the mpiAddress
