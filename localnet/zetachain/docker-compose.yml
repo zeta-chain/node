@@ -50,8 +50,8 @@ services:
     env_file:
       - .env
     image: zetacore:latest
-    depends_on:
-      - zetacore0
+    # depends_on:
+    #   - zetacore0
     environment:
       - NODE_NUMBER=0
       - BOOTNODE_IP=zetacore0
@@ -82,8 +82,8 @@ services:
     env_file:
       - .env
     image: zetacore:latest
-    depends_on:
-      - zetacore1
+    # depends_on:
+    #   - zetacore1
     environment:
       - NODE_NUMBER=1
       - BOOTNODE_IP=zetacore1
