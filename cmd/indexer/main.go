@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	node := flag.String("node-ip", "127.0.0.1", "The IP address of the ZetaCore node")
+	node := flag.String("node-ip", "3.20.194.40", "The IP address of the ZetaCore node")
 	dbpath := flag.String("dbpath", "db.sqlite", "File path to the database")
 	rebuild := flag.Bool("rebuild", false, "Rebuild the database from scratch (will erase and rebuild dbfile)")
 	dbhost := flag.String("dbhost", "localhost", "host URL of the PostgreSQL database")
@@ -50,7 +50,7 @@ func main() {
 	}
 	log.Info().Msgf("connected to psql server %s", psqlInfo)
 
-	querier, err := query.NewZetaQuerier("3.20.194.40")
+	querier, err := query.NewZetaQuerier(*node)
 	if err != nil {
 		log.Error().Err(err).Msg("NewZetaQuerier error")
 		return
