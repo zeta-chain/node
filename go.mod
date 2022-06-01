@@ -7,7 +7,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/ibc-go/v2 v2.2.0
-	github.com/ethereum/go-ethereum v1.10.16
+	github.com/ethereum/go-ethereum v1.10.17
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
