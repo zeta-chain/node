@@ -7,7 +7,7 @@ It Supports:
 - Polygon
 - Binance Smart Chain (BSC)
 - Ethereum
-- ZetaChain (4 zetacore + 4 zetaclient containers)
+- ZetaChain (2 zetacore + 2 zetaclient containers)
 
 ## PreReqs
 
@@ -19,7 +19,12 @@ You must have the following installed
 
 ## How to use LocalNet
 
-Open a terminal and the first time you run localnet you must install the dependencies, build the docker images, then start the different network nodes.  
+Update the `vars.config` file with the path to your local Zeta-Contracts repo
+
+If `USE_GANACHE=true` ganache will be used to replicat the external networks. This results in a much faster development environments but may not be identical to the real responses you'd receive from real external chain nodes.
+If `USE_GANACHE=false` a seperate set of nodes will be deployed for each external chain. This includes geth, bsc-geth, and bor. 
+
+The first time you run localnet you must install the dependencies, build the docker images, then start the different network nodes.  
 ```
 yarn install
 yarn build
