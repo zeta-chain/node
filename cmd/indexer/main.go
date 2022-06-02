@@ -23,7 +23,6 @@ func main() {
 	}
 
 	node := flag.String("node-ip", "127.0.0.1", "The IP address of the ZetaCore node")
-	dbpath := flag.String("dbpath", "db.sqlite", "File path to the database")
 	rebuild := flag.Bool("rebuild", false, "Rebuild the database from scratch (will erase and rebuild dbfile)")
 	dbhost := flag.String("dbhost", "localhost", "host URL of the PostgreSQL database")
 	dbport := flag.Int64("dbport", 5432, "port of the PostgresSQL database")
@@ -31,10 +30,6 @@ func main() {
 	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
 	flag.Parse()
-
-	_ = rebuild
-	_ = node
-	_ = dbpath
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", *dbhost, *dbport, *dbuser, *dbpasswd, *dbname)
 	db, err := sql.Open("postgres", psqlInfo)
