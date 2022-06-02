@@ -326,8 +326,11 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 	var txhashes []string
 	for _, v := range txResponses {
 		txhashes = append(txhashes, v.TxHash)
-		tx, _ := idb.querier.TxByHash(v.TxHash)
-		fmt.Printf("%s\n%T\n", tx.Body.Messages[0].TypeUrl, tx.Body.Messages[0].GetCachedValue())
+		//tx, _ := idb.querier.TxByHash(v.TxHash)
+		//msgs := tx.GetMsgs()
+		//for _, m := range msgs {
+		//	fmt.Printf("msg", m.)
+		//}
 	}
 	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs, txhashes) values($1,$2,$3,$4,$5)",
 		block.Header.Height, block.Header.Time, time.Now().UTC(), len(txResponses), pq.Array(txhashes))
