@@ -70,6 +70,21 @@ func (q *ZetaQuerier) TxResponsesByBlock(bn int64) ([]*sdk.TxResponse, error) {
 	return res.TxResponses, nil
 }
 
+// queries native txs that belong to a block height
+func (q *ZetaQuerier) TxByHash(hash string) (*txtypes.Tx, error) {
+	client := txtypes.NewServiceClient(q.grpcConn)
+
+	res, err := client.GetTx(context.Background(), &txtypes.GetTxRequest{
+		Hash: hash,
+	})
+
+	if err != nil {
+		fmt.Printf("GetTxsEvent grpc err: %s\n", err)
+		return nil, err
+	}
+	return res.Tx, nil
+}
+
 // query events of subtype at block blockNum
 // if blockNum <0, then query from block 0
 // each tx_response will be processed by the function processTxResponses
