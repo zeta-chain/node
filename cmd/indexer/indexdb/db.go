@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
@@ -326,8 +327,7 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 	var txhashes []string
 	for _, v := range txResponses {
 		txhashes = append(txhashes, v.TxHash)
-		j, _ := v.Tx.MarshalJSON()
-		fmt.Printf("%s\n%s\n", v.Tx.GetTypeUrl(), j)
+		fmt.Printf("%s\n%s\n", v.Tx.GetTypeUrl(), v.Tx.GetCachedValue().(*txtypes.Tx).String())
 	}
 	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs, txhashes) values($1,$2,$3,$4,$5)",
 		block.Header.Height, block.Header.Time, time.Now().UTC(), len(txResponses), pq.Array(txhashes))
