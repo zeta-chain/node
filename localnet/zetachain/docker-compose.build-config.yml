@@ -24,7 +24,7 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.200
-    command: -c "/scripts/zetacored-build-config.sh 0 1"
+    command: -c "/scripts/create-genesis-files.sh 0 1"
     
   zetacore1:
     container_name: zetacore1
@@ -43,7 +43,7 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.201
-    command: -c "/scripts/zetacored-build-config.sh 1 1"
+    command: -c "/scripts/create-genesis-files.sh 1 1"
 
 
 networks:
