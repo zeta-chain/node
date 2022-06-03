@@ -34,7 +34,11 @@ require (
 
 require github.com/tendermint/spm v0.1.9
 
-require github.com/binance-chain/tss-lib v1.3.2 // indirect
+require (
+	github.com/binance-chain/tss-lib v1.3.2 // indirect
+	github.com/lib/pq v1.10.6 // indirect
+	github.com/mattn/go-sqlite3 v1.14.9 // indirect
+)
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
