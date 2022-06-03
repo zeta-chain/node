@@ -30,10 +30,9 @@ import (
 const ()
 
 func main() {
-	var validatorName = flag.String("val", "alice", "validator name")
+	var valKeyName = flag.String("val", "alice", "validator name")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	flag.Parse()
-	//BOOTSTRAP_PEER := "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"
 
 	var peers addr.AddrList
 	fmt.Println("peer", *peer)
@@ -47,7 +46,7 @@ func main() {
 	}
 
 	fmt.Println("multi-node client")
-	integration_test(*validatorName, peers)
+	start(*valKeyName, peers)
 }
 
 func SetupConfigForTest() {
@@ -65,7 +64,7 @@ func SetupConfigForTest() {
 
 }
 
-func integration_test(validatorName string, peers addr.AddrList) {
+func start(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
@@ -89,21 +88,31 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		config.POLY_ENDPOINT = polygonEndPoint
 		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
 	}
+	ropstenEndPoint := os.Getenv("ROPSTEN_ENDPOINT")
+	if ropstenEndPoint != "" {
+		config.ROPSTEN_ENDPOINT = ropstenEndPoint
+		log.Info().Msgf("ROPSTEN_ENDPOINT: %s", ropstenEndPoint)
+	}
 
 	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
 	if ethMpiAddress != "" {
-		config.Chains["ETH"].MPIContractAddress = ethMpiAddress
+		config.Chains["ETH"].ConnectorContractAddress = ethMpiAddress
 		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
 	}
 	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
 	if bscMpiAddress != "" {
-		config.Chains["BSC"].MPIContractAddress = bscMpiAddress
+		config.Chains["BSC"].ConnectorContractAddress = bscMpiAddress
 		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
 	}
 	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
 	if polygonMpiAddress != "" {
-		config.Chains["POLYGON"].MPIContractAddress = polygonMpiAddress
+		config.Chains["POLYGON"].ConnectorContractAddress = polygonMpiAddress
 		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
+	}
+	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
+	if ropstenMpiAddress != "" {
+		config.Chains["ROPSTEN"].ConnectorContractAddress = ropstenMpiAddress
+		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
 	}
 
 	// wait until zetacore is up
@@ -165,6 +174,10 @@ func integration_test(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
 	}
 	_, err = bridge1.SetTSS(common.POLYGONChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	if err != nil {
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+	}
+	_, err = bridge1.SetTSS(common.ROPSTENChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
 		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
 	}
@@ -231,6 +244,10 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	if err != nil {
 		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
 	}
+	err = (*chainClientMap1)[common.ROPSTENChain].PostNonceIfNotRecorded()
+	if err != nil {
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ROPSTENChain)
+	}
 
 	// printout debug info from SIGUSR1
 	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
@@ -243,6 +260,8 @@ func integration_test(validatorName string, peers addr.AddrList) {
 			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
 			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
 			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
+			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.ROPSTENChain].LastBlock)
+
 		}
 	}()
 
@@ -255,4 +274,5 @@ func integration_test(validatorName string, peers addr.AddrList) {
 	_ = (*chainClientMap1)[common.ETHChain].Stop()
 	_ = (*chainClientMap1)[common.BSCChain].Stop()
 	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
+	_ = (*chainClientMap1)[common.ROPSTENChain].Stop()
 }
