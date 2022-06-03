@@ -19,6 +19,7 @@ const (
 	ETH_CONFIRMATION_COUNT     = 3
 	BSC_CONFIRMATION_COUNT     = 5
 	POLYGON_CONFIRMATION_COUNT = 5
+	ROPSTEN_CONFIRMATION_COUNT = 3
 )
 
 var (
@@ -30,6 +31,7 @@ var (
 	//POLY_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
 	BSC_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
 	//BSC_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
+	ROPSTEN_ENDPOINT = "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com"
 )
 
 const (
@@ -43,16 +45,17 @@ const (
 const (
 
 	// Ticker timers
-	ETH_BLOCK_TIME  = 12
-	POLY_BLOCK_TIME = 10
-	BSC_BLOCK_TIME  = 10
+	ETH_BLOCK_TIME     = 12
+	POLY_BLOCK_TIME    = 10
+	BSC_BLOCK_TIME     = 10
+	ROPSTEN_BLOCK_TIME = 12
 
 	// to catch up:
 	MAX_BLOCKS_PER_PERIOD = 2000
 )
 
 const (
-	MPI_ABI_STRING = `
+	CONNECTOR_ABI_STRING = `
 [{"inputs":[{"internalType":"address","name":"_zetaTokenAddress","type":"address"},{"internalType":"address","name":"_tssAddress","type":"address"},{"internalType":"address","name":"_tssAddressUpdater","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"originSenderAddress","type":"bytes"},{"indexed":true,"internalType":"uint256","name":"originChainId","type":"uint256"},{"indexed":true,"internalType":"address","name":"destinationAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":true,"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"ZetaReceived","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"originSenderAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"originChainId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"indexed":true,"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":true,"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"ZetaReverted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"originSenderAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes","name":"zetaParams","type":"bytes"}],"name":"ZetaSent","type":"event"},{"inputs":[],"name":"getLockedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"originSenderAddress","type":"bytes"},{"internalType":"uint256","name":"originChainId","type":"uint256"},{"internalType":"address","name":"destinationAddress","type":"address"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"onReceive","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"originSenderAddress","type":"address"},{"internalType":"uint256","name":"originChainId","type":"uint256"},{"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"onRevert","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceTssAddressUpdater","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"zetaParams","type":"bytes"}],"internalType":"struct ZetaInterfaces.SendInput","name":"input","type":"tuple"}],"name":"send","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"tssAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"tssAddressUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"unpause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_tssAddress","type":"address"}],"name":"updateTssAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"zetaToken","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`
 
 	UNISWAPV3POOL = `
@@ -66,28 +69,34 @@ const (
 
 var Chains = map[string]*types.ChainETHish{
 	"ETH": {
-		Name:                common.ETHChain,
-		MPIContractAddress:  "0x851b2446f225266C4EC3cd665f6801D624626c4D",
-		PoolContractAddress: "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",
-		ChainID:             big.NewInt(5),
+		Name:                     common.ETHChain,
+		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
+		PoolContractAddress:      "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",
+		ChainID:                  big.NewInt(5),
 	},
 	"BSC": {
-		Name:                common.BSCChain,
-		MPIContractAddress:  "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
-		PoolContractAddress: "0xE5C9b19BB3820c69680b5cA1A00249261B5c5797",
-		ChainID:             big.NewInt(97),
+		Name:                     common.BSCChain,
+		ConnectorContractAddress: "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
+		PoolContractAddress:      "0xE5C9b19BB3820c69680b5cA1A00249261B5c5797",
+		ChainID:                  big.NewInt(97),
 	},
 	"POLYGON": {
-		Name:                common.POLYGONChain,
-		MPIContractAddress:  "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
-		PoolContractAddress: "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
-		ChainID:             big.NewInt(80001),
+		Name:                     common.POLYGONChain,
+		ConnectorContractAddress: "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
+		PoolContractAddress:      "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
+		ChainID:                  big.NewInt(80001),
+	},
+	"ROPSTEN": {
+		Name:                     common.ROPSTENChain,
+		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
+		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
+		ChainID:                  big.NewInt(3),
 	},
 	"": {
-		Name:                common.EmptyChain,
-		MPIContractAddress:  "",
-		PoolContractAddress: "",
-		ChainID:             big.NewInt(0),
+		Name:                     common.EmptyChain,
+		ConnectorContractAddress: "",
+		PoolContractAddress:      "",
+		ChainID:                  big.NewInt(0),
 	},
 }
 

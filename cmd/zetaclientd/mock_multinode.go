@@ -32,28 +32,35 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["ETH"].MPIContractAddress)
-	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, ethMPIAddress)
+	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["ETH"].ConnectorContractAddress)
+	ethSigner, err := mc.NewSigner(common.ETHChain, mcconfig.ETH_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
-	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["BSC"].MPIContractAddress)
-	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, bscMPIAddress)
+	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["BSC"].ConnectorContractAddress)
+	bscSigner, err := mc.NewSigner(common.BSCChain, mcconfig.BSC_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, bscMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
-	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["POLYGON"].MPIContractAddress)
-	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss, mcconfig.MPI_ABI_STRING, polygonMPIAddress)
+	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["POLYGON"].ConnectorContractAddress)
+	polygonSigner, err := mc.NewSigner(common.POLYGONChain, mcconfig.POLY_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, polygonMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
+		return nil, err
+	}
+	ropstenMPIAddress := ethcommon.HexToAddress(mcconfig.Chains["ROPSTEN"].ConnectorContractAddress)
+	ropstenSigner, err := mc.NewSigner(common.ROPSTENChain, mcconfig.ROPSTEN_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ropstenMPIAddress)
+	if err != nil {
+		log.Fatal().Err(err).Msg("NewSigner ROPSTEN error")
 		return nil, err
 	}
 	signerMap := map[common.Chain]*mc.Signer{
 		common.ETHChain:     ethSigner,
 		common.BSCChain:     bscSigner,
 		common.POLYGONChain: polygonSigner,
+		common.ROPSTENChain: ropstenSigner,
 	}
 
 	return signerMap, nil
@@ -68,8 +75,6 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.ETHChain] = eth1
-	//go eth1.WatchRouter()
-	//go eth1.WatchGasPrice()
 	eth1.Start()
 
 	log.Info().Msg("starting bsc observer...")
@@ -79,8 +84,6 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.BSCChain] = bsc1
-	//go bsc1.WatchRouter()
-	//go bsc1.WatchGasPrice()
 	bsc1.Start()
 
 	log.Info().Msg("starting polygon observer...")
@@ -90,9 +93,16 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 		return nil, err
 	}
 	clientMap[common.POLYGONChain] = poly1
-	//go poly1.WatchRouter()
-	//go poly1.WatchGasPrice()
 	poly1.Start()
+
+	log.Info().Msg("starting ropsten observer...")
+	ropsten1, err := mc.NewChainObserver(common.ROPSTENChain, bridge, tss, dbpath)
+	if err != nil {
+		log.Err(err).Msg("ROPSTEN NewChainObserver")
+		return nil, err
+	}
+	clientMap[common.ROPSTENChain] = ropsten1
+	ropsten1.Start()
 
 	return &clientMap, nil
 }
