@@ -4,8 +4,7 @@
   "description": "Zeta Node - LocalNet Development Environment",
   "private": true,
   "workspaces": {
-    "packages": [
-    ]
+    "packages": []
   },
   "keywords": [],
   "homepage": "https://github.com/zeta-chain/zeta-node#readme",
@@ -29,9 +28,6 @@
     "url": "git+https://github.com/zeta-chain/zeta-node.git"
   },
   "author": "",
-  "dependencies": {
-  },
-  "devDependencies": {
-
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
