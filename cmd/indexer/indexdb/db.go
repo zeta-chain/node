@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -109,18 +110,11 @@ func (idb *IndexDB) processBlock(bn int64) error {
 	}
 	log.Info().Msgf("block %d: %s events processed : %d", bn, types.OutboundTxFailed, cnt)
 
-	block, err := idb.querier.BlockByHeight(bn)
-	if err != nil {
-		fmt.Printf("cannot query latest block from zetacore node: %s\n", err)
-		return err
-	}
-	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs) values($1,$2,$3,$4);",
-		block.Header.Height, block.Header.Time, time.Now().UTC(), len(block.Data.Txs))
-	if err != nil {
-		fmt.Printf("cannot insert lastblock into database: %s\n", err)
-		return err
-	}
+	err = idb.insertBlockTable(bn)
 	log.Info().Msgf("block %d: logging block info", bn)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -245,7 +239,8 @@ func (idb *IndexDB) Rebuild() error {
 		blocknum INTEGER PRIMARY KEY,
 		blocktimestamp TIMESTAMP,
 		querytimestamp TIMESTAMP,
-		numtxs INTEGER
+		numtxs INTEGER,
+		txhashes TEXT[]
     );
     `)
 	_, err = idb.db.Exec(query)
@@ -257,10 +252,9 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		fmt.Printf("cannot query latest block from zetacore node: %s\n", err)
 	}
-	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs) values($1,$2,$3,$4)",
-		block.Header.Height, block.Header.Time, time.Now().UTC(), len(block.Data.Txs))
+	err = idb.insertBlockTable(block.Header.Height)
 	if err != nil {
-		fmt.Printf("cannot insert lastblock into database: %s\n", err)
+		fmt.Printf("cannot insert latest block from zetacore node: %s\n", err)
 	}
 	idb.lastBlockProcessed = block.Header.Height
 
@@ -315,6 +309,35 @@ func (idb *IndexDB) Rebuild() error {
 	}
 	fmt.Printf("%s events processed : %d\n", types.OutboundTxFailed, cnt)
 
+	return nil
+}
+
+func (idb *IndexDB) insertBlockTable(bn int64) error {
+	block, err := idb.querier.BlockByHeight(bn)
+	if err != nil {
+		fmt.Printf("cannot query TxResponsesByBlock from zetacore node: %s\n", err)
+		return err
+	}
+	txResponses, err := idb.querier.TxResponsesByBlock(bn)
+	if err != nil {
+		fmt.Printf("cannot query TxResponsesByBlock from zetacore node: %s\n", err)
+		return err
+	}
+	var txhashes []string
+	for _, v := range txResponses {
+		txhashes = append(txhashes, v.TxHash)
+		//tx, _ := idb.querier.TxByHash(v.TxHash)
+		//msgs := tx.GetMsgs()
+		//for _, m := range msgs {
+		//	fmt.Printf("msg", m.)
+		//}
+	}
+	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs, txhashes) values($1,$2,$3,$4,$5)",
+		block.Header.Height, block.Header.Time, time.Now().UTC(), len(txResponses), pq.Array(txhashes))
+	if err != nil {
+		fmt.Printf("cannot insert lastblock into database: %s\n", err)
+		return err
+	}
 	return nil
 }
 
