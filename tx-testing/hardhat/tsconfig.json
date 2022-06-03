@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "es2018",
+    "module": "commonjs",
+    "strict": false,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "declaration": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@zetachain/addresses/*": ["../../../zeta-contracts/packages/addresses/src/*"],
+      "@zetachain/addresses": ["../../../zeta-contracts/packages/addresses/src/index.ts"]
+    }
+  },
+  "include": ["./scripts", "./lib", "./test", "./tests", "./typechain", "./*.json"],
+  "exclude": ["node_modules"],
+  "files": ["./hardhat.config.ts"]
+}
