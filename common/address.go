@@ -18,7 +18,7 @@ const ETHAddressLen = 42
 func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
-	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain {
+	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain || chain == ROPSTENChain {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
