@@ -101,7 +101,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	chainOb.Tss = tss
 
 	// initialize the pool ABI
-	mpiABI, err := abi.JSON(strings.NewReader(config.MPI_ABI_STRING))
+	mpiABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	switch chain {
 	case common.POLYGONChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["POLYGON"].MPIContractAddress
+		chainOb.mpiAddress = config.Chains["POLYGON"].ConnectorContractAddress
 		chainOb.endpoint = config.POLY_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
@@ -127,7 +127,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	case common.ETHChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ETH"].MPIContractAddress
+		chainOb.mpiAddress = config.Chains["ETH"].ConnectorContractAddress
 		chainOb.endpoint = config.ETH_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
@@ -135,12 +135,19 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	case common.BSCChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["BSC"].MPIContractAddress
+		chainOb.mpiAddress = config.Chains["BSC"].ConnectorContractAddress
 		chainOb.endpoint = config.BSC_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
+	case common.ROPSTENChain:
+		chainOb.chain = chain
+		chainOb.mpiAddress = config.Chains["ROPSTEN"].ConnectorContractAddress
+		chainOb.endpoint = config.ROPSTEN_ENDPOINT
+		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
+		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
+		chainOb.uniswapV3Abi = &uniswapV3ABI
 	}
 
 	// Dial the mpiAddress
@@ -246,7 +253,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 		var price *big.Int
 		var err error
 		var bn uint64
-		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain {
+		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain || chainOb.chain == common.ROPSTENChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
 		} else if chainOb.chain == common.BSCChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()
@@ -255,7 +262,8 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
 			continue
 		}
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, float64(price.Int64())/1.0e18)
+		price_f, _ := big.NewFloat(0).SetInt(price).Float64()
+		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price_f/1e18)
 		priceInHex := fmt.Sprintf("0x%x", price)
 
 		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceInHex, bn)
@@ -511,7 +519,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
 	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].MPIContractAddress)},
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
 		FromBlock: big.NewInt(0), // LastBlock has been processed;
 		ToBlock:   nil,
 		Topics:    recvTopics,
@@ -704,7 +712,10 @@ func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash strin
 					return true
 				} else if receipt.Status == 0 { // tx mined but failed; should revert
 					log.Info().Msgf("FAILED: watching outTx %s on chain %s", txid, chainOb.chain)
-					chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					zetaTxHash, err := chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
+					if err != nil {
+						log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+					}
 					return false
 				}
 				return false
