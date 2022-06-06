@@ -68,7 +68,7 @@ const (
 )
 
 var Chains = map[string]*types.ChainETHish{
-	common.GoerlieChain.String(): {
+	common.GoerliChain.String(): {
 		Name:                     "GOERLI",
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
 		PoolContractAddress:      "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",

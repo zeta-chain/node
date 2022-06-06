@@ -32,8 +32,8 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.GoerlieChain.String()].ConnectorContractAddress)
-	ethSigner, err := mc.NewSigner(common.GoerlieChain, mcconfig.GOERLI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
+	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.GoerliChain.String()].ConnectorContractAddress)
+	ethSigner, err := mc.NewSigner(common.GoerliChain, mcconfig.GOERLI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
@@ -57,7 +57,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 		return nil, err
 	}
 	signerMap := map[common.Chain]*mc.Signer{
-		common.GoerlieChain:    ethSigner,
+		common.GoerliChain:     ethSigner,
 		common.BSCTestnetChain: bscSigner,
 		common.MumbaiChain:     polygonSigner,
 		common.RopstenChain:    ropstenSigner,
@@ -69,12 +69,12 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string) (*map[common.Chain]*mc.ChainObserver, error) {
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
-	eth1, err := mc.NewChainObserver(common.GoerlieChain, bridge, tss, dbpath)
+	eth1, err := mc.NewChainObserver(common.GoerliChain, bridge, tss, dbpath)
 	if err != nil {
 		log.Err(err).Msg("ETH NewChainObserver")
 		return nil, err
 	}
-	clientMap[common.GoerlieChain] = eth1
+	clientMap[common.GoerliChain] = eth1
 	eth1.Start()
 
 	log.Info().Msg("starting bsc observer...")

@@ -117,25 +117,25 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	// Initialize chain specific setup
 	switch chain {
-	case common.POLYGONChain:
+	case common.MumbaiChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["POLYGON"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.MUMBAI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.ETHChain:
+	case common.GoerliChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ETH"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.GOERLI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.BSCChain:
+	case common.BSCTestnetChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["BSC"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
@@ -143,7 +143,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	case common.RopstenChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ROPSTEN"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT

@@ -19,7 +19,7 @@ var (
 
 	// testnets
 	BSCTestnetChain = Chain("BSCTestnet")
-	GoerlieChain    = Chain("Goerli")
+	GoerliChain     = Chain("Goerli")
 	RopstenChain    = Chain("ROPSTEN")
 	MumbaiChain     = Chain("Mumbai")
 )
@@ -72,7 +72,7 @@ func ParseChain(chainName string) (Chain, error) {
 	case "BSCTESTNET":
 		return BSCTestnetChain, nil
 	case "GOERLI":
-		return GoerlieChain, nil
+		return GoerliChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("Unsupported chain %s", chainName)
 	}
@@ -88,7 +88,7 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "MATIC"
 	case RopstenChain:
 		return "rETH"
-	case GoerlieChain:
+	case GoerliChain:
 		return "gETH"
 	case MumbaiChain:
 		return "tMATIC"
