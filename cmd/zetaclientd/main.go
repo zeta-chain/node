@@ -111,7 +111,7 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
 	if ropstenMpiAddress != "" {
-		config.Chains[common.ROPSTENChain.String()].ConnectorContractAddress = ropstenMpiAddress
+		config.Chains[common.RopstenChain.String()].ConnectorContractAddress = ropstenMpiAddress
 		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
 	}
 
@@ -165,21 +165,21 @@ func start(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	_, err = bridge1.SetTSS(common.ETHChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.GoerlieChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerlieChain)
 	}
-	_, err = bridge1.SetTSS(common.BSCChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.BSCTestnetChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
 	}
-	_, err = bridge1.SetTSS(common.POLYGONChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.MumbaiChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
 	}
-	_, err = bridge1.SetTSS(common.ROPSTENChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.RopstenChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
@@ -232,21 +232,21 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// report TSS address nonce on ETHish chains
-	err = (*chainClientMap1)[common.ETHChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.GoerlieChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerlieChain)
 	}
-	err = (*chainClientMap1)[common.BSCChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.BSCTestnetChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
 	}
-	err = (*chainClientMap1)[common.POLYGONChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.MumbaiChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
 	}
-	err = (*chainClientMap1)[common.ROPSTENChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.RopstenChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ROPSTENChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
 	}
 
 	// printout debug info from SIGUSR1
@@ -257,10 +257,10 @@ func start(validatorName string, peers addr.AddrList) {
 		for {
 			<-usr
 			fmt.Printf("Last blocks:\n")
-			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
-			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
-			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
-			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.ROPSTENChain].LastBlock)
+			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.GoerlieChain].LastBlock)
+			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCTestnetChain].LastBlock)
+			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.MumbaiChain].LastBlock)
+			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.RopstenChain].LastBlock)
 
 		}
 	}()
@@ -274,5 +274,5 @@ func start(validatorName string, peers addr.AddrList) {
 	_ = (*chainClientMap1)[common.ETHChain].Stop()
 	_ = (*chainClientMap1)[common.BSCChain].Stop()
 	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
-	_ = (*chainClientMap1)[common.ROPSTENChain].Stop()
+	_ = (*chainClientMap1)[common.RopstenChain].Stop()
 }
