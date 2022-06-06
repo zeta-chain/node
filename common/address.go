@@ -19,7 +19,7 @@ func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
 	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
-		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain {
+		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain || chain == GoerliChain {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
