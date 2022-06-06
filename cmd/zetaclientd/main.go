@@ -73,20 +73,20 @@ func start(validatorName string, peers addr.AddrList) {
 		chainIP = "127.0.0.1"
 	}
 
-	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
 	if ethEndPoint != "" {
-		config.ETH_ENDPOINT = ethEndPoint
-		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+		config.GOERLI_ENDPOINT = ethEndPoint
+		log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
 	}
-	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
 	if bscEndPoint != "" {
-		config.BSC_ENDPOINT = bscEndPoint
-		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+		config.BSCTESTNET_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
 	}
-	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
 	if polygonEndPoint != "" {
-		config.POLY_ENDPOINT = polygonEndPoint
-		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+		config.MUMBAI_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
 	}
 	ropstenEndPoint := os.Getenv("ROPSTEN_ENDPOINT")
 	if ropstenEndPoint != "" {
@@ -96,22 +96,22 @@ func start(validatorName string, peers addr.AddrList) {
 
 	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
 	if ethMpiAddress != "" {
-		config.Chains["ETH"].ConnectorContractAddress = ethMpiAddress
+		config.Chains[common.GoerlieChain.String()].ConnectorContractAddress = ethMpiAddress
 		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
 	}
 	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
 	if bscMpiAddress != "" {
-		config.Chains["BSC"].ConnectorContractAddress = bscMpiAddress
+		config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress = bscMpiAddress
 		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
 	}
 	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
 	if polygonMpiAddress != "" {
-		config.Chains["POLYGON"].ConnectorContractAddress = polygonMpiAddress
+		config.Chains[common.MumbaiChain.String()].ConnectorContractAddress = polygonMpiAddress
 		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
 	}
 	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
 	if ropstenMpiAddress != "" {
-		config.Chains["ROPSTEN"].ConnectorContractAddress = ropstenMpiAddress
+		config.Chains[common.ROPSTENChain.String()].ConnectorContractAddress = ropstenMpiAddress
 		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
 	}
 
