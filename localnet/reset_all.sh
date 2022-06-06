@@ -2,8 +2,8 @@
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $DIR
 
-echo "Sourcing Environment Variables from vars.config"
-source vars.config
+echo "Sourcing Environment Variables from .env"
+source .env
 
 rm -rf polygon/data/*
 rm -rf zetachain/storage/*
