@@ -120,7 +120,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	case common.POLYGONChain:
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains["POLYGON"].ConnectorContractAddress
-		chainOb.endpoint = config.POLY_ENDPOINT
+		chainOb.endpoint = config.MUMBAI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
@@ -128,7 +128,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	case common.ETHChain:
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains["ETH"].ConnectorContractAddress
-		chainOb.endpoint = config.ETH_ENDPOINT
+		chainOb.endpoint = config.GOERLI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
@@ -136,7 +136,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	case common.BSCChain:
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains["BSC"].ConnectorContractAddress
-		chainOb.endpoint = config.BSC_ENDPOINT
+		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
