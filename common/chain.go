@@ -11,7 +11,9 @@ var (
 	BSCChain     = Chain("BSC")
 	ETHChain     = Chain("ETH")
 	POLYGONChain = Chain("POLYGON")
-	ZETAChain    = Chain("ZETA")
+	ROPSTENChain = Chain("ROPSTEN")
+
+	ZETAChain = Chain("ZETA")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
@@ -58,6 +60,8 @@ func ParseChain(chainID string) (Chain, error) {
 		return BSCChain, nil
 	case "POLYGON":
 		return POLYGONChain, nil
+	case "ROPSTEN":
+		return ROPSTENChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("Unsupported chain %s", chainID)
 	}
@@ -71,6 +75,8 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "BNB"
 	case POLYGONChain:
 		return "MATIC"
+	case ROPSTENChain:
+		return "rETH"
 	default:
 		return "" // should not happen
 	}
@@ -99,7 +105,7 @@ func (c Chain) String() string {
 // GetSigningAlgo get the signing algorithm for the given chain
 func (c Chain) GetSigningAlgo() SigninAlgo {
 	switch c {
-	case ETHChain, POLYGONChain, BSCChain:
+	case ETHChain, POLYGONChain, BSCChain, ROPSTENChain:
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1
