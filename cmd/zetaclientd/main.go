@@ -94,17 +94,17 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Info().Msgf("ROPSTEN_ENDPOINT: %s", ropstenEndPoint)
 	}
 
-	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	ethMpiAddress := os.Getenv("GOERLI_MPI_ADDRESS")
 	if ethMpiAddress != "" {
 		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = ethMpiAddress
 		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
 	}
-	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	bscMpiAddress := os.Getenv("BSCTESTNET_MPI_ADDRESS")
 	if bscMpiAddress != "" {
 		config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress = bscMpiAddress
 		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
 	}
-	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	polygonMpiAddress := os.Getenv("MUMBAI_MPI_ADDRESS")
 	if polygonMpiAddress != "" {
 		config.Chains[common.MumbaiChain.String()].ConnectorContractAddress = polygonMpiAddress
 		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
