@@ -24,13 +24,9 @@ const (
 
 var (
 	// API Endpoints
-	//GOERLI_ENDPOINT  = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/eth/goerli/archive"
-	//GOERLI_ENDPOINT  = "https://eth-goerli.alchemyapi.io/v2/J-W7M8JtqtQI3ckka76fz9kxX-Sa_CSK"
 	GOERLI_ENDPOINT = "https://eth-goerli-sh285ns91n5975.athens.zetachain.com"
-	MUMBAI_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/polygon/mumbai/archive"
-	//MUMBAI_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
-	BSCTESTNET_ENDPOINT = "https://speedy-nodes-nyc.moralis.io/eb13a7dfda3e4b15212356f9/bsc/testnet/archive"
-	//BSCTESTNET_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
+	MUMBAI_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
+	BSCTESTNET_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
 	ROPSTEN_ENDPOINT = "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com"
 )
 
