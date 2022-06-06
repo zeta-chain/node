@@ -96,7 +96,7 @@ func start(validatorName string, peers addr.AddrList) {
 
 	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
 	if ethMpiAddress != "" {
-		config.Chains[common.GoerlieChain.String()].ConnectorContractAddress = ethMpiAddress
+		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = ethMpiAddress
 		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
 	}
 	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
@@ -165,9 +165,9 @@ func start(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	_, err = bridge1.SetTSS(common.GoerlieChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.GoerliChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerlieChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
 	}
 	_, err = bridge1.SetTSS(common.BSCTestnetChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
@@ -232,9 +232,9 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// report TSS address nonce on ETHish chains
-	err = (*chainClientMap1)[common.GoerlieChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.GoerliChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerlieChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
 	}
 	err = (*chainClientMap1)[common.BSCTestnetChain].PostNonceIfNotRecorded()
 	if err != nil {
@@ -257,7 +257,7 @@ func start(validatorName string, peers addr.AddrList) {
 		for {
 			<-usr
 			fmt.Printf("Last blocks:\n")
-			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.GoerlieChain].LastBlock)
+			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.GoerliChain].LastBlock)
 			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCTestnetChain].LastBlock)
 			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.MumbaiChain].LastBlock)
 			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.RopstenChain].LastBlock)
