@@ -105,9 +105,9 @@ func (co *CoreObserver) keygenObserve() {
 				if err != nil {
 					log.Error().Err(err).Msgf("SetTSS fail %s", common.POLYGONChain)
 				}
-				_, err = co.bridge.SetTSS(common.ROPSTENChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.RopstenChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.ROPSTENChain)
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
 				}
 
 				// Keysign test: sanity test
@@ -127,9 +127,9 @@ func (co *CoreObserver) keygenObserve() {
 				if err != nil {
 					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
 				}
-				err = co.clientMap[common.ROPSTENChain].PostNonceIfNotRecorded()
+				err = co.clientMap[common.RopstenChain].PostNonceIfNotRecorded()
 				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ROPSTENChain)
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
 				}
 				return
 			}

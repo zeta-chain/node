@@ -141,7 +141,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
-	case common.ROPSTENChain:
+	case common.RopstenChain:
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains["ROPSTEN"].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
@@ -253,7 +253,7 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 		var price *big.Int
 		var err error
 		var bn uint64
-		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain || chainOb.chain == common.ROPSTENChain {
+		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain || chainOb.chain == common.RopstenChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
 		} else if chainOb.chain == common.BSCChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()

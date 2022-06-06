@@ -86,7 +86,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress:      "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
 		ChainID:                  big.NewInt(80001),
 	},
-	common.ROPSTENChain.String(): {
+	common.RopstenChain.String(): {
 		Name:                     "ROPSTEN",
 		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
 		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",

@@ -20,7 +20,7 @@ var (
 	// testnets
 	BSCTestnetChain = Chain("BSCTestnet")
 	GoerlieChain    = Chain("Goerli")
-	ROPSTENChain    = Chain("ROPSTEN")
+	RopstenChain    = Chain("ROPSTEN")
 	MumbaiChain     = Chain("Mumbai")
 )
 
@@ -66,7 +66,7 @@ func ParseChain(chainName string) (Chain, error) {
 	case "POLYGON":
 		return POLYGONChain, nil
 	case "ROPSTEN":
-		return ROPSTENChain, nil
+		return RopstenChain, nil
 	case "MUMBAI":
 		return MumbaiChain, nil
 	case "BSCTESTNET":
@@ -86,7 +86,7 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "BNB"
 	case POLYGONChain:
 		return "MATIC"
-	case ROPSTENChain:
+	case RopstenChain:
 		return "rETH"
 	case GoerlieChain:
 		return "gETH"
@@ -122,7 +122,7 @@ func (c Chain) String() string {
 // GetSigningAlgo get the signing algorithm for the given chain
 func (c Chain) GetSigningAlgo() SigninAlgo {
 	switch c {
-	case ETHChain, POLYGONChain, BSCChain, ROPSTENChain:
+	case ETHChain, POLYGONChain, BSCChain, RopstenChain:
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1
