@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "$0" )" && pwd )"
-cd $DIR
+cd "$DIR" || exit
 
 git clone https://github.com/bnb-chain/bsc-docker
 cp env_vars .env
