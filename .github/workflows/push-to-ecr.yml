@@ -2,7 +2,7 @@ name: Push Image To ECR
 
 on:
   push:
-    branches: [ main, development, staging, athens-aws, charlie/update-genesis-script]
+    branches: [ athens-aws]
 
 jobs:
   build-zetaclient:
