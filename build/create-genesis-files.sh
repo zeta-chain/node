@@ -5,7 +5,7 @@ MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX
 
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
-GENERATE_STAKER_ACCOUNT=true
+GENERATE_STAKER_ACCOUNT="true"
 
 if [ -z "${MYIP}" ]; then 
     echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
@@ -35,7 +35,7 @@ if (( $NODE_NUMBER == 0 )); then
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
     zetacored add-genesis-account "$NODE_0_VALIDATOR" 100000000000stake
 
-    if (( $GENERATE_STAKER_ACCOUNT )); then
+    if (( $GENERATE_STAKER_ACCOUNT == "true" )); then
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
         MEMONIC="hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower"
         echo "$MEMONIC" | zetacored keys add staker --recover 
