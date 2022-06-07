@@ -7,16 +7,21 @@ import (
 )
 
 var (
+	// mainnets
 	EmptyChain   = Chain("")
 	BSCChain     = Chain("BSC")
 	ETHChain     = Chain("ETH")
 	POLYGONChain = Chain("POLYGON")
-	ROPSTENChain = Chain("ROPSTEN")
-
-	ZETAChain = Chain("ZETA")
+	ZETAChain    = Chain("ZETA")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
+
+	// testnets
+	BSCTestnetChain = Chain("BSCTestnet")
+	GoerliChain     = Chain("Goerli")
+	RopstenChain    = Chain("ROPSTEN")
+	MumbaiChain     = Chain("Mumbai")
 )
 
 type SigninAlgo string
@@ -52,8 +57,8 @@ func NewChain(chainID string) (Chain, error) {
 	return chain, nil
 }
 
-func ParseChain(chainID string) (Chain, error) {
-	switch chainID {
+func ParseChain(chainName string) (Chain, error) {
+	switch chainName {
 	case "ETH":
 		return ETHChain, nil
 	case "BSC":
@@ -61,9 +66,15 @@ func ParseChain(chainID string) (Chain, error) {
 	case "POLYGON":
 		return POLYGONChain, nil
 	case "ROPSTEN":
-		return ROPSTENChain, nil
+		return RopstenChain, nil
+	case "MUMBAI":
+		return MumbaiChain, nil
+	case "BSCTESTNET":
+		return BSCTestnetChain, nil
+	case "GOERLI":
+		return GoerliChain, nil
 	default:
-		return EmptyChain, fmt.Errorf("Unsupported chain %s", chainID)
+		return EmptyChain, fmt.Errorf("Unsupported chain %s", chainName)
 	}
 }
 
@@ -75,8 +86,14 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "BNB"
 	case POLYGONChain:
 		return "MATIC"
-	case ROPSTENChain:
+	case RopstenChain:
 		return "rETH"
+	case GoerliChain:
+		return "gETH"
+	case MumbaiChain:
+		return "tMATIC"
+	case BSCTestnetChain:
+		return "tBNB"
 	default:
 		return "" // should not happen
 	}
@@ -105,7 +122,7 @@ func (c Chain) String() string {
 // GetSigningAlgo get the signing algorithm for the given chain
 func (c Chain) GetSigningAlgo() SigninAlgo {
 	switch c {
-	case ETHChain, POLYGONChain, BSCChain, ROPSTENChain:
+	case ETHChain, POLYGONChain, BSCChain, RopstenChain:
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1
