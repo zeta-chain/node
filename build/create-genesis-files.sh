@@ -2,7 +2,6 @@
 
 NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
-STAKER_ACCOUNT_MEMONIC=$3
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
@@ -19,6 +18,7 @@ rm -rf ~/.zetacore/
 rm -rf ~/.tssnew/
 rm -rf ~/.tss/
 rm -rf ~/.zetaclient/
+rm -rf ~/.keyring*/
 rm -rf /zetashared/node"${NODE_NUMBER}"/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
@@ -33,10 +33,12 @@ if (( $NODE_NUMBER == 0 )); then
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
     zetacored add-genesis-account "$NODE_0_VALIDATOR" 100000000000stake
+    echo "$STAKER_ACCOUNT_MEMONIC"
 
-    if [ -z "$GENERATE_STAKER_ACCOUNT" ]; then
+    if [ "$STAKER_ACCOUNT_MEMONIC" != "" ]; then
+        echo "$STAKER_ACCOUNT_MEMONIC"
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
-        echo "$STAKER_ACCOUNT_MEMONIC" | zetacored keys add staker --recover 
+        echo "hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower" | zetacored keys add staker --recover
         STAKER_ADDR=$(zetacored keys show staker -a)
         zetacored add-genesis-account "$STAKER_ADDR" 1000000000000000000000000stake
     fi
