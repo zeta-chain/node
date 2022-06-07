@@ -18,13 +18,23 @@ const ETHAddressLen = 42
 func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
-	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain || chain == ROPSTENChain {
+	if IsETHChain(chain) {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
+}
+
+func IsETHChain(chain Chain) bool {
+	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
+		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain ||
+		chain == GoerliChain {
+		return true
+	}
+
+	return false
 }
 
 //func (addr Address) IsChain(chain Chain) bool {

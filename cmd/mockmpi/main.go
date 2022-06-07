@@ -42,23 +42,23 @@ func startAllChainListeners() {
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
 	if ethEndPoint != "" {
-		config.ETH_ENDPOINT = ethEndPoint
+		config.GOERLI_ENDPOINT = ethEndPoint
 	}
-	log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+	log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
 
-	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
 	if bscEndPoint != "" {
-		config.BSC_ENDPOINT = bscEndPoint
+		config.BSCTESTNET_ENDPOINT = bscEndPoint
 	}
-	log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+	log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
 
-	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
 	if polygonEndPoint != "" {
-		config.POLY_ENDPOINT = polygonEndPoint
+		config.MUMBAI_ENDPOINT = polygonEndPoint
 	}
-	log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+	log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
 
 	var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
 	logZetaSentSignatureHash := crypto.Keccak256Hash(logZetaSentSignature)
