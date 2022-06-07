@@ -34,7 +34,7 @@ if (( $NODE_NUMBER == 0 )); then
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
     zetacored add-genesis-account "$NODE_0_VALIDATOR" 100000000000stake
 
-    if [[ $GENERATE_STAKER_ACCOUNT != "" ]]; then
+    if [ -z "$GENERATE_STAKER_ACCOUNT" ]; then
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
         echo "$STAKER_ACCOUNT_MEMONIC" | zetacored keys add staker --recover 
         STAKER_ADDR=$(zetacored keys show staker -a)
