@@ -46,8 +46,8 @@ const (
 
 	// Ticker timers
 	ETH_BLOCK_TIME     = 12
-	POLY_BLOCK_TIME    = 10
-	BSC_BLOCK_TIME     = 10
+	POLY_BLOCK_TIME    = 2
+	BSC_BLOCK_TIME     = 5
 	ROPSTEN_BLOCK_TIME = 12
 
 	// to catch up:
@@ -73,24 +73,28 @@ var Chains = map[string]*types.ChainETHish{
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
 		PoolContractAddress:      "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",
 		ChainID:                  big.NewInt(5),
+		BlockTime:                ETH_BLOCK_TIME,
 	},
 	"BSC": {
 		Name:                     common.BSCChain,
 		ConnectorContractAddress: "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
 		PoolContractAddress:      "0xE5C9b19BB3820c69680b5cA1A00249261B5c5797",
 		ChainID:                  big.NewInt(97),
+		BlockTime:                BSC_BLOCK_TIME,
 	},
 	"POLYGON": {
 		Name:                     common.POLYGONChain,
 		ConnectorContractAddress: "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
 		PoolContractAddress:      "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
 		ChainID:                  big.NewInt(80001),
+		BlockTime:                POLY_BLOCK_TIME,
 	},
 	"ROPSTEN": {
 		Name:                     common.ROPSTENChain,
 		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
 		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
 		ChainID:                  big.NewInt(3),
+		BlockTime:                ETH_BLOCK_TIME,
 	},
 	"": {
 		Name:                     common.EmptyChain,

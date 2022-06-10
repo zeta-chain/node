@@ -27,6 +27,8 @@ import (
 
 const (
 	PosKey = "PosKey"
+
+	SecondsPerDay = 86400
 )
 
 //    event ZetaSent(
@@ -520,7 +522,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
-		FromBlock: big.NewInt(0), // LastBlock has been processed;
+		FromBlock: big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime)), // LastBlock from 3 days ago
 		ToBlock:   nil,
 		Topics:    recvTopics,
 	}
