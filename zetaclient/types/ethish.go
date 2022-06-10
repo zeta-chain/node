@@ -18,6 +18,7 @@ type ChainETHish struct {
 	Client                   *ethclient.Client
 	Name                     common.Chain
 	Topics                   [][]ethcommon.Hash
+	BlockTime                uint64
 }
 
 func BytesToEthHex(b []byte) string {
