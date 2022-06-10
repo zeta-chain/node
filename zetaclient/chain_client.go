@@ -660,20 +660,21 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 	if err != nil {
 		return nil, 0, fmt.Errorf("fail to pack getReserves")
 	}
-	bn, err := ob.Client.BlockNumber(context.TODO())
-	if err != nil {
-		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
-		return nil, 0, err
-	}
+
 	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
 	res, err := ob.Client.CallContract(context.TODO(), ethereum.CallMsg{
 		From: fromAddr,
 		To:   &toAddr,
 		Data: input,
-	}, big.NewInt(0).SetUint64(bn))
+	}, nil)
 	if err != nil {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
+		return nil, 0, err
+	}
+	bn, err := ob.Client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
 		return nil, 0, err
 	}
 	output, err := ob.uniswapV2Abi.Unpack("getReserves", res)
