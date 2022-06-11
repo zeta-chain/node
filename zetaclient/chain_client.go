@@ -523,8 +523,8 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	fromBlock := big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime))
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
-		FromBlock: fromBlock, // LastBlock from 3 days ago
-		ToBlock:   big.NewInt(int64(chainOb.LastBlock)),
+		FromBlock: big.NewInt(0), // LastBlock from 3 days ago
+		ToBlock:   nil,
 		Topics:    recvTopics,
 	}
 	log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
