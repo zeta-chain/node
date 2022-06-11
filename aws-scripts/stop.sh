@@ -1,4 +1,4 @@
 #!/bin/bash
 systemctl stop zetaclientd
 systemctl stop zetacored
-stop 2
+sleep 2
