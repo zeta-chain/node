@@ -524,7 +524,7 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
 		FromBlock: fromBlock, // LastBlock from 3 days ago
-		ToBlock:   nil,
+		ToBlock:   big.NewInt(int64(chainOb.LastBlock)),
 		Topics:    recvTopics,
 	}
 	log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
