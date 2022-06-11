@@ -3,14 +3,15 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
+	"time"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
-	"math/big"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -60,7 +61,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	//go co.keygenObserve()
+	go co.keygenObserve()
 }
 
 func (co *CoreObserver) keygenObserve() {
@@ -93,21 +94,21 @@ func (co *CoreObserver) keygenObserve() {
 					continue
 				}
 
-				_, err = co.bridge.SetTSS(common.ETHChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.GoerliChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
 				}
-				_, err = co.bridge.SetTSS(common.BSCChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.BSCTestnetChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCChain)
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
 				}
-				_, err = co.bridge.SetTSS(common.POLYGONChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.MumbaiChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.POLYGONChain)
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
 				}
-				_, err = co.bridge.SetTSS(common.ROPSTENChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+				_, err = co.bridge.SetTSS(common.RopstenChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.ROPSTENChain)
+					log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
 				}
 
 				// Keysign test: sanity test
@@ -115,21 +116,21 @@ func (co *CoreObserver) keygenObserve() {
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
 				log.Info().Msg("test keysign finished. exit keygen loop. ")
 
-				err = co.clientMap[common.ETHChain].PostNonceIfNotRecorded()
+				err = co.clientMap[common.GoerliChain].PostNonceIfNotRecorded()
 				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ETHChain)
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
 				}
-				err = co.clientMap[common.BSCChain].PostNonceIfNotRecorded()
+				err = co.clientMap[common.BSCTestnetChain].PostNonceIfNotRecorded()
 				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCChain)
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
 				}
-				err = co.clientMap[common.POLYGONChain].PostNonceIfNotRecorded()
+				err = co.clientMap[common.MumbaiChain].PostNonceIfNotRecorded()
 				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
 				}
-				err = co.clientMap[common.ROPSTENChain].PostNonceIfNotRecorded()
+				err = co.clientMap[common.RopstenChain].PostNonceIfNotRecorded()
 				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ROPSTENChain)
+					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
 				}
 				return
 			}
