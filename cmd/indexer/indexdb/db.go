@@ -14,7 +14,7 @@ import (
 type IndexDB struct {
 	db                 *sql.DB
 	querier            *query.ZetaQuerier
-	lastBlockProcessed int64
+	LastBlockProcessed int64
 }
 
 func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier) (*IndexDB, error) {
@@ -26,12 +26,14 @@ func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier) (*IndexDB, error) {
 }
 
 func (idb *IndexDB) Start() {
-	err := idb.db.QueryRow("select max(blocknum) from block").Scan(&idb.lastBlockProcessed)
-	if err != nil {
-		log.Error().Err(err).Msg(" error querying max(blocknum) from block; please rebuild")
-		return
-	} else {
-		log.Info().Msgf("latest indexed blocknum %d", idb.lastBlockProcessed)
+	if idb.LastBlockProcessed == 0 {
+		err := idb.db.QueryRow("select max(blocknum) from block").Scan(&idb.LastBlockProcessed)
+		if err != nil {
+			log.Error().Err(err).Msg(" error querying max(blocknum) from block; please rebuild")
+			return
+		} else {
+			log.Info().Msgf("latest indexed blocknum %d", idb.LastBlockProcessed)
+		}
 	}
 
 	go func() {
@@ -42,13 +44,13 @@ func (idb *IndexDB) Start() {
 				log.Error().Err(err).Msg("LatestBlock error")
 				continue
 			}
-			if block.Header.Height > idb.lastBlockProcessed {
-				for i := idb.lastBlockProcessed + 1; i <= block.Header.Height; i++ {
+			if block.Header.Height > idb.LastBlockProcessed {
+				for i := idb.LastBlockProcessed + 1; i <= block.Header.Height; i++ {
 					err = idb.processBlock(i)
 					if err != nil {
 						log.Error().Err(err).Msgf("processBlock on block %d error", i)
 					}
-					idb.lastBlockProcessed = i
+					idb.LastBlockProcessed = i
 					log.Info().Msgf("processed block %d; catching up to %d", i, block.Header.Height)
 				}
 
@@ -256,7 +258,7 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		fmt.Printf("cannot insert latest block from zetacore node: %s\n", err)
 	}
-	idb.lastBlockProcessed = block.Header.Height
+	idb.LastBlockProcessed = block.Header.Height
 
 	cnt, err := idb.querier.VisitAllTxEvents(types.InboundFinalized, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {

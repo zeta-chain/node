@@ -29,6 +29,7 @@ func main() {
 	dbuser := flag.String("dbuser", user.Username, "username of PostgresSQL database")
 	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
+	startblock := flag.Int64("startblock", 0, "rescan from this block")
 	flag.Parse()
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", *dbhost, *dbport, *dbuser, *dbpasswd, *dbname)
@@ -65,6 +66,7 @@ func main() {
 		log.Info().Err(err).Msgf("Rebuilding database takes %s", duration)
 	}
 
+	idb.LastBlockProcessed = *startblock
 	log.Info().Msgf("Start watching events...")
 	idb.Start()
 
