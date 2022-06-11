@@ -119,33 +119,33 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	// Initialize chain specific setup
 	switch chain {
-	case common.POLYGONChain:
+	case common.MumbaiChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["POLYGON"].ConnectorContractAddress
-		chainOb.endpoint = config.POLY_ENDPOINT
+		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.MUMBAI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.ETHChain:
+	case common.GoerliChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ETH"].ConnectorContractAddress
-		chainOb.endpoint = config.ETH_ENDPOINT
+		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.GOERLI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.BSCChain:
+	case common.BSCTestnetChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["BSC"].ConnectorContractAddress
-		chainOb.endpoint = config.BSC_ENDPOINT
+		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
-	case common.ROPSTENChain:
+	case common.RopstenChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ROPSTEN"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
 		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
@@ -255,9 +255,9 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 		var price *big.Int
 		var err error
 		var bn uint64
-		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain || chainOb.chain == common.ROPSTENChain {
+		if chainOb.chain == common.GoerliChain || chainOb.chain == common.MumbaiChain || chainOb.chain == common.RopstenChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
-		} else if chainOb.chain == common.BSCChain {
+		} else if chainOb.chain == common.BSCTestnetChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()
 		}
 		if err != nil {
