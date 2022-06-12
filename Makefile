@@ -5,12 +5,16 @@ PACKAGES=$(shell go list ./... | grep -v '/simulation')
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
+BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=metachain \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=metacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=metaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
+	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
+	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
 TEST_DIR?="./..."
