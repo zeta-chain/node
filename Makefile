@@ -2,9 +2,8 @@
 
 
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
-
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
-COMMIT := $(shell git log -1 --format='%H')
+COMMIT := $(shell [ -z "${COMMIT}" ] && git log -1 --format='%H' || echo ${COMMIT} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=metachain \
