@@ -25,4 +25,5 @@ const (
 	OutboundTxFailed     = "OutboundTxFailed"
 	InboundCreated       = "InboundCreated"
 	InboundFinalized     = "InboundFinalized"
+	SendScrubbed         = "SendScrubbed"
 )
