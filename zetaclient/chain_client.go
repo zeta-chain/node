@@ -123,7 +123,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.MUMBAI_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
@@ -131,7 +131,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.GOERLI_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
@@ -139,7 +139,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
@@ -147,7 +147,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 	}
@@ -239,7 +239,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	gasTicker := time.NewTicker(24 * time.Second)
+	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {

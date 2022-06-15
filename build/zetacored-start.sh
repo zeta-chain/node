@@ -24,6 +24,7 @@ zetacored start \
     --rpc.laddr "tcp://0.0.0.0:26657" \
     --rpc.pprof_laddr "0.0.0.0:6060"  \
     --address "tcp://$MYIP:26658" \
+    --log_format json \
     --moniker "node$NODE_NUMBER" 2>&1 | tee /root/.zetacore/zetacored.log
 
     # --proxy_app "tcp://0.0.0.0:26658" \
