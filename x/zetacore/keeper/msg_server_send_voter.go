@@ -57,7 +57,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		send.Status = types.SendStatus_PendingOutbound
-		k.UpdateLastBlockHeigh(ctx, msg)
+		k.UpdateLastBlockHigh(ctx, msg)
 
 		bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 		send.Broadcaster = uint64(bftTime.Nanosecond() % len(send.Signers))
@@ -152,7 +152,7 @@ func parseChainAndAddress(chain string, addr string) (common.Chain, error) {
 	return recvChain, nil
 }
 
-func (k msgServer) UpdateLastBlockHeigh(ctx sdk.Context, msg *types.MsgSendVoter) {
+func (k msgServer) UpdateLastBlockHigh(ctx sdk.Context, msg *types.MsgSendVoter) {
 	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.SenderChain)
 	if !isFound {
 		lastblock = types.LastBlockHeight{
@@ -174,14 +174,6 @@ func (k msgServer) EmitEventSendCreated(ctx sdk.Context, send *types.Send) {
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 			sdk.NewAttribute(types.SubTypeKey, types.InboundCreated),
 			sdk.NewAttribute(types.SendHash, send.Index),
-			//sdk.NewAttribute(types.Sender, send.Sender),
-			//sdk.NewAttribute(types.SenderChain, send.SenderChain),
-			//sdk.NewAttribute(types.Receiver, send.Receiver),
-			//sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
-			//sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
-			//sdk.NewAttribute(types.Message, send.Message),
-			//sdk.NewAttribute(types.InTxHash, send.InTxHash),
-			//sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
 			sdk.NewAttribute(types.NewStatus, send.Status.String()),
 		),
 	)
@@ -203,6 +195,7 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 			sdk.NewAttribute(types.InTxHash, send.InTxHash),
 			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
 			sdk.NewAttribute(types.NewStatus, send.Status.String()),
+			sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
 		),
 	)
 }
