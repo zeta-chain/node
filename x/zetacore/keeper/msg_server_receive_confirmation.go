@@ -119,6 +119,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 					sdk.NewAttribute(types.Chain, msg.Chain),
 					sdk.NewAttribute(types.OldStatus, oldstatus),
 					sdk.NewAttribute(types.NewStatus, newstatus),
+					sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
 				),
 			)
 		}
