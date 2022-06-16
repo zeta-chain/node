@@ -520,17 +520,17 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	recvTopics := make([][]ethcommon.Hash, 4)
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
 	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
-	fromBlock := big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime))
+	//fromBlock := big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime))
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
 		FromBlock: big.NewInt(0), // LastBlock from 3 days ago
 		ToBlock:   nil,
 		Topics:    recvTopics,
 	}
-	log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
+	//log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
 	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 	if err != nil {
-		return false, false, fmt.Errorf("[%s] IsSendOutTxProcessed: Client FilterLog fail %w", chainOb.chain, err)
+		return false, false, fmt.Errorf("[%s] IsSendOutTxProcessed(sendHash %s): Client FilterLog fail %w", chainOb.chain, sendHash, err)
 	}
 	if len(logs) == 0 {
 		return false, false, nil

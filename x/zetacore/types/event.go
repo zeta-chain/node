@@ -17,6 +17,7 @@ const (
 	Message       = "Message"
 	InTxHash      = "InTxHash"
 	InBlockHeight = "InBlockHeight"
+	StatusMessage = "StatusMessage"
 )
 
 const (
