@@ -2,6 +2,7 @@
 
 NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
+REUSE_EXISTING_KEYS=$3
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
@@ -9,23 +10,36 @@ if [ -z "${MYIP}" ]; then
     echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
     export MYIP=$(hostname -i)
 fi
-
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
+# if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
+#     echo "Generating new keys"
+#     rm -rf ~/.zetacore/
+#     rm -rf ~/.tssnew/
+#     rm -rf ~/.tss/
+#     rm -rf ~/.zetaclient/
+# elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
+#     echo "Reusing existing keys"
+
+# fi
+
 # Remove old files and make sure folders exist
-# rm -rf ~/.zetacore/
-rm -rf ~/.zetacore/data/
-rm -rf ~/.zetacore/config/
-# rm -rf ~/.tssnew/
-# rm -rf ~/.tss/
 rm -rf ~/.zetaclient/
-# rm -rf ~/.keyring*/
-# rm -rf /zetashared/node"${NODE_NUMBER}"/*
+rm -rf ~/.zetacore/data
+rm -rf ~/.zetacore/config
+
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
+cp /zetashared/.zetacore/keyring-test/ ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
 cp /zetashared/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
+cp /backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
+
+ls /
+ls /zetashared/
+
+echo "testing"
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
