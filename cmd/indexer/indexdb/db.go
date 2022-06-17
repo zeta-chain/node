@@ -231,7 +231,7 @@ func (idb *IndexDB) Rebuild() error {
 		PRIMARY KEY ( %s, %s)
     );
     `, types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint,
-		types.Chain, types.OldStatus, types.NewStatus, types.SendHash, types.OutTxHash, types.StatusMessage)
+		types.Chain, types.OldStatus, types.NewStatus, types.StatusMessage, types.SendHash, types.OutTxHash)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
