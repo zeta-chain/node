@@ -31,11 +31,27 @@ else
     exit 1
 fi
 
+## Let Node 0 setup the folder structure
+if (( $NODE_NUMBER == 0 )); then 
+rm -r /zetashared/*
+i=0
+    while [ "$i" -le "$MAX_NODE_NUMBER" ]
+    do
+        mkdir -p /zetashared/genesis/ /zetashared/node"${i}"/config/gentx/ /zetashared/node"${i}"/data/ /zetashared/node"${i}"/keyring-test/
 
+        echo "VALIDATOR_ID for node$i found"
+        VALIDATOR_ID=$(cat /zetashared/node"$i"/config/NODE_VALIDATOR_ID)
+        echo "Node $i VALIDATOR_ID: $VALIDATOR_ID"
+        zetacored add-genesis-account "$VALIDATOR_ID" 100000000000stake
+        i=$[$i+1]
+    done
+fi
 
-echo "testing"
-echo "ls ~/"
-ls ~/
+mkdir -p ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/ ~/.zetacore/data/ ~/.zetaclient/ ~/.tssnew/
+
+# echo "testing"
+# echo "ls ~/"
+# ls ~/
 # echo "ls ~/.zetacore/keyring-test/"
 # ls ~/.zetacore/keyring-test/
 # echo "ls ~/.zetacore/*"
@@ -43,11 +59,11 @@ ls ~/
 # echo "ls /zetashared/"
 # ls /zetashared/
 
+
+
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-    rm -r /zetashared/*
     mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
-
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
     # zetacored keys add val
