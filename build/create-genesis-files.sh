@@ -65,6 +65,7 @@ cp ~/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temp
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
+    rm zetashared/genesis/init-genesis.json
     mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
     sleep 5
     zetacored init --chain-id athens-1 zetachain
@@ -86,6 +87,7 @@ if (( $NODE_NUMBER == 0 )); then
     fi
 
     i=1
+    sleep 10
     while [ $i -le "$MAX_NODE_NUMBER" ]
     do
         until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
@@ -136,7 +138,7 @@ fi
 if (( $NODE_NUMBER > 0 )); then
     echo "This is Node $NODE_NUMBER"
     mkdir -p /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
-    sleep 20
+    sleep 15
 
     echo "Generating new keys"
     zetacored config keyring-backend test
@@ -154,7 +156,7 @@ if (( $NODE_NUMBER > 0 )); then
         done
     echo "init-genesis.json found"
 
-    sleep 5 # Wait to make sure node0 has finished configuring the genesis file
+    sleep 10 # Wait to make sure node0 has finished configuring the genesis file
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
