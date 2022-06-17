@@ -184,11 +184,12 @@ func (idb *IndexDB) Rebuild() error {
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
+		%s TEXT,
 		timestamp TIMESTAMP NOT NULL,
 		blocknumber INTEGER NOT NULL
     );
     `, types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain,
-		types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint)
+		types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint, types.StatusMessage)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -224,12 +225,13 @@ func (idb *IndexDB) Rebuild() error {
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
+		%s TEXT, 
 		timestamp TIMESTAMP NOT NULL,
 		blocknumber INTEGER NOT NULL,
 		PRIMARY KEY ( %s, %s)
     );
     `, types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint,
-		types.Chain, types.OldStatus, types.NewStatus, types.SendHash, types.OutTxHash)
+		types.Chain, types.OldStatus, types.NewStatus, types.SendHash, types.OutTxHash, types.StatusMessage)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -392,9 +394,9 @@ func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string
 }
 
 func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) error {
-	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8, $9, $10, $11)",
-		types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint),
-		kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height)
+	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9, $10, $11,$12)",
+		types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint, types.StatusMessage),
+		kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height, kv[types.StatusMessage])
 	if err != nil {
 		fmt.Println(err)
 		return err
