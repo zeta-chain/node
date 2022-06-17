@@ -25,7 +25,7 @@ rm -rf ~/.zetaclient/
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
-cp /zetashared/.zetacore/config/keyring-test/* ~/.zetacore/keyring-test/
+cp /zetashared/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
