@@ -32,14 +32,21 @@ rm -rf ~/.zetacore/config
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
-cp /zetashared/.zetacore/keyring-test/ ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-cp /zetashared/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-cp /backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-
-ls /
-ls /zetashared/
+# cp /zetashared/.zetacore/keyring-test/ ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
+# cp /zetashared/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
+# cp /backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
 
 echo "testing"
+echo "ls ~/.zeta*"
+ls ~/.zeta*
+echo "ls ~/.zetacore/keyring-test/"
+ls ~/.zetacore/keyring-test/
+echo "ls ~/.zetacore/*"
+ls ~/.zetacore/*
+echo "ls /zetashared/"
+ls /zetashared/
+echo "ls /zetashared/node*/config/gentx/"
+ls /zetashared/node*/config/gentx/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -51,12 +58,11 @@ if (( $NODE_NUMBER == 0 )); then
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
     zetacored add-genesis-account "$NODE_0_VALIDATOR" 100000000000stake
-    echo "$STAKER_ACCOUNT_MEMONIC"
 
     if [ "$STAKER_ACCOUNT_MEMONIC" != "" ]; then
         echo "$STAKER_ACCOUNT_MEMONIC"
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
-        echo "hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower" | zetacored keys add staker --recover
+        # echo "hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower" | zetacored keys add staker --recover
         STAKER_ADDR=$(zetacored keys show staker -a)
         zetacored add-genesis-account "$STAKER_ADDR" 1000000000000000000000000stake
     fi
