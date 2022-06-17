@@ -124,27 +124,27 @@ func (idb *IndexDB) processBlock(bn int64) error {
 // #nosec -- suppress G201 warning: formating SQL query; arguments not from user inputs.
 func (idb *IndexDB) Rebuild() error {
 	// 0. clear existing tables
-	drop := fmt.Sprintf("DROP TABLE IF EXISTS txs")
+	drop := fmt.Sprintf("DROP TABLE IF EXISTS txs CASCADE")
 	_, err := idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS block")
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS block CASCADE")
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.InboundFinalized)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.InboundFinalized)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.OutboundTxFailed)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.OutboundTxFailed)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.OutboundTxSuccessful)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.OutboundTxSuccessful)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
