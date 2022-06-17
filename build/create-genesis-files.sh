@@ -14,12 +14,14 @@ echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
 # Remove old files and make sure folders exist
-rm -rf ~/.zetacore/
-rm -rf ~/.tssnew/
-rm -rf ~/.tss/
+# rm -rf ~/.zetacore/
+rm -rf ~/.zetacore/data/
+rm -rf ~/.zetacore/config/
+# rm -rf ~/.tssnew/
+# rm -rf ~/.tss/
 rm -rf ~/.zetaclient/
-rm -rf ~/.keyring*/
-rm -rf /zetashared/node"${NODE_NUMBER}"/*
+# rm -rf ~/.keyring*/
+# rm -rf /zetashared/node"${NODE_NUMBER}"/*
 mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
 mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
@@ -28,7 +30,7 @@ if (( $NODE_NUMBER == 0 )); then
 
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
-    zetacored keys add val
+    # zetacored keys add val
     cd ~/.zetacore/config || exit
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
