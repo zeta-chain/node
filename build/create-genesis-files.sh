@@ -13,32 +13,36 @@ fi
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
-# if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
-#     echo "Generating new keys"
-#     rm -rf ~/.zetacore/
-#     rm -rf ~/.tssnew/
-#     rm -rf ~/.tss/
-#     rm -rf ~/.zetaclient/
-# elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
-#     echo "Reusing existing keys"
+REUSE_EXISTING_KEYS="true"
+if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
+    echo "Generating new keys"
+    rm -rf ~/.zetacore/
+    rm -rf ~/.tssnew/
+    rm -rf ~/.tss/
+    rm -rf ~/.zetaclient/
+elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
+    echo "Reusing existing keys"
+    rm -rf ~/.zetaclient/
+    rm -rf ~/.zetacore/data
+    rm -rf ~/.zetacore/config
+else
+    echo "Unknown Input -- REUSE_EXISTING_KEYS=$REUSE_EXISTING_KEYS"
+    exit 1
+fi
 
-# fi
+if (( $NODE_NUMBER == 0 )); then rm -r /zetashared/*; fi
 
 # Remove old files and make sure folders exist
 rm -rf ~/.zetaclient/
 rm -rf ~/.zetacore/data
 rm -rf ~/.zetacore/config
 
-mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
-mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
-# cp /zetashared/.zetacore/keyring-test/ ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-# cp /zetashared/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-# cp /backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
+cp ~/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
 
 echo "testing"
-echo "ls ~/.zeta*"
-ls ~/.zeta*
+echo "ls ~/"
+ls ~/
 echo "ls ~/.zetacore/keyring-test/"
 ls ~/.zetacore/keyring-test/
 echo "ls ~/.zetacore/*"
@@ -50,7 +54,9 @@ ls /zetashared/node*/config/gentx/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-    rm /zetashared/genesis/init-genesis.json
+    sleep 10
+    mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
+
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
     # zetacored keys add val
@@ -116,8 +122,9 @@ if (( $NODE_NUMBER == 0 )); then
 fi
 
 if (( $NODE_NUMBER > 0 )); then
-    sleep 5
     echo "This is Node $NODE_NUMBER"
+    mkdir -p /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
+
     echo "Generating new keys"
     zetacored config keyring-backend test
     # zetacored keys add val
