@@ -99,7 +99,7 @@ if (( $NODE_NUMBER > 0 )); then
     echo "This is Node $NODE_NUMBER"
     echo "Generating new keys"
     zetacored config keyring-backend test
-    zetacored keys add val
+    # zetacored keys add val
     NODE_VALIDATOR=$(zetacored keys show val -a)
     echo "$NODE_VALIDATOR"
     echo "$NODE_VALIDATOR" > NODE_VALIDATOR_ID
