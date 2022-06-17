@@ -347,7 +347,8 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 
 func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
-	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8)", types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
+	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9)",
+		types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus, types.StatusMessage),
 		kv[types.SendHash],
 		kv[types.OutTxHash],
 		kv[types.ZetaMint],
@@ -356,6 +357,7 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 		kv[types.NewStatus],
 		res.Timestamp,
 		res.Height,
+		kv[types.StatusMessage],
 	)
 	if err != nil {
 		fmt.Println(err)
