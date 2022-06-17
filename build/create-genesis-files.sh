@@ -138,7 +138,7 @@ fi
 if (( $NODE_NUMBER > 0 )); then
     echo "This is Node $NODE_NUMBER"
     mkdir -p /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
-    sleep 15
+    sleep 10
 
     echo "Generating new keys"
     zetacored config keyring-backend test
