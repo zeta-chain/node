@@ -54,7 +54,6 @@ ls /zetashared/node*/config/gentx/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-    sleep 10
     mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
     zetacored init --chain-id athens-1 zetachain
@@ -123,6 +122,7 @@ fi
 
 if (( $NODE_NUMBER > 0 )); then
     echo "This is Node $NODE_NUMBER"
+    sleep 15
     mkdir -p /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
 
     echo "Generating new keys"
