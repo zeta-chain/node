@@ -50,7 +50,7 @@ ls /zetashared/node*/config/gentx/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-
+    rm /zetashared/genesis/init-genesis.json
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
     # zetacored keys add val
@@ -116,6 +116,7 @@ if (( $NODE_NUMBER == 0 )); then
 fi
 
 if (( $NODE_NUMBER > 0 )); then
+    sleep 5
     echo "This is Node $NODE_NUMBER"
     echo "Generating new keys"
     zetacored config keyring-backend test
