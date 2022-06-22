@@ -13,7 +13,6 @@ fi
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
-REUSE_EXISTING_KEYS="true"
 rm -rf /zetashared/node"${NODE_NUMBER}"/
 if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
     echo "Generating new keys"
@@ -32,36 +31,6 @@ else
 fi
 
 mkdir -p ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/ ~/.zetacore/data/ ~/.zetaclient/ ~/.tssnew/
-cp ~/backup-2022-06-17/zetacore/keyring-test/* ~/.zetacore/keyring-test/ ## Temporary to restore exisiting keys from athens
-
-
-# ## Let Node 0 setup the folder structure
-# if (( $NODE_NUMBER == 0 )); then 
-# rm -r /zetashared/*
-# i=0
-#     while [ "$i" -le "$MAX_NODE_NUMBER" ]
-#     do
-#         mkdir -p /zetashared/genesis/ /zetashared/node"${i}"/config/gentx/ /zetashared/node"${i}"/data/ /zetashared/node"${i}"/keyring-test/
-
-#         echo "VALIDATOR_ID for node$i found"
-#         VALIDATOR_ID=$(cat /zetashared/node"$i"/config/NODE_VALIDATOR_ID)
-#         echo "Node $i VALIDATOR_ID: $VALIDATOR_ID"
-#         zetacored add-genesis-account "$VALIDATOR_ID" 100000000000stake
-#         i=$[$i+1]
-#     done
-# fi
-
-
-# echo "testing"
-# echo "ls ~/"
-# ls ~/
-# echo "ls ~/.zetacore/keyring-test/"
-# ls ~/.zetacore/keyring-test/
-# echo "ls ~/.zetacore/*"
-# ls ~/.zetacore/*
-# echo "ls /zetashared/"
-# ls /zetashared/
-
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -70,7 +39,7 @@ if (( $NODE_NUMBER == 0 )); then
     sleep 5
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
-    # if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
     cd ~/.zetacore/config || exit
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "NODE_0_VALIDATOR: $NODE_0_VALIDATOR"
@@ -80,7 +49,7 @@ if (( $NODE_NUMBER == 0 )); then
     if [ "$STAKER_ACCOUNT_MEMONIC" != "" ]; then
         echo "$STAKER_ACCOUNT_MEMONIC"
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
-        # echo "hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower" | zetacored keys add staker --recover
+        if [ -z "${REUSE_EXISTING_KEYS}" ]; then echo "$STAKER_ACCOUNT_MEMONIC" | zetacored keys add staker --recover ; fi
         STAKER_ADDR=$(zetacored keys show staker -a)
         echo "STAKER ADDR: $STAKER_ADDR"
         zetacored add-genesis-account "$STAKER_ADDR" 1000000000000000000000000stake
@@ -142,7 +111,7 @@ if (( $NODE_NUMBER > 0 )); then
 
     echo "Generating new keys"
     zetacored config keyring-backend test
-    # if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
     NODE_VALIDATOR=$(zetacored keys show val -a)
     echo "NODE_VALIDATOR: $NODE_VALIDATOR"
     echo "$NODE_VALIDATOR" > NODE_VALIDATOR_ID

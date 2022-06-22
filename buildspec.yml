@@ -2,6 +2,7 @@ version: 0.2
 
 env:
   shell: "/bin/bash"
+
   # variables:
   #   GOPATH: "/root/go"
   # exported-variables:
@@ -39,3 +40,5 @@ artifacts:
       - /root/go/bin/zetacored
       - appspec.yml
       - aws-scripts/*
+      - build/zetaclient-start.sh
+      - build/zetacored-start.sh
