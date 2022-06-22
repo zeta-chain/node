@@ -17,8 +17,8 @@ phases:
       - yum install -y make gcc jq
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
       - export GOPATH="/root/go"
-      - wget https://golang.org/dl/go1.17.3.linux-arm64.tar.gz
-      - tar -C /usr/local -xzf go1.17.3.linux-arm64.tar.gz
+      - wget https://golang.org/dl/go1.17.3.linux-amd64.tar.gz
+      - tar -C /usr/local -xzf go1.17.3.linux-amd64.tar.gz
 
   # pre_build:
   #   commands:
