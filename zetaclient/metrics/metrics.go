@@ -52,6 +52,7 @@ func NewMetrics() (*Metrics, error) {
 		Addr:        fmt.Sprintf(":8080"),
 		Handler:     server,
 		ReadTimeout: 5 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	return &Metrics{
