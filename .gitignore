@@ -32,5 +32,4 @@ localnet/ganache/storage
 localnet/zetachain/storage
 localnet/zetachain/config/genesis
 localnet/zetachain/config/node*/*
-
-
+localnet/networks
