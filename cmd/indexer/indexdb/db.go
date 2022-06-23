@@ -1,9 +1,13 @@
 package indexdb
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
@@ -11,17 +15,26 @@ import (
 	"time"
 )
 
+type TxHash struct {
+	Chain  string
+	TxHash string
+}
+
 type IndexDB struct {
 	db                 *sql.DB
 	querier            *query.ZetaQuerier
 	LastBlockProcessed int64
+	ClientMap          map[string]*ethclient.Client
+	TxHashQueue        chan TxHash
 }
 
-func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier) (*IndexDB, error) {
+func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier, clientMap map[string]*ethclient.Client) (*IndexDB, error) {
 
 	return &IndexDB{
-		querier: querier,
-		db:      sqldb,
+		querier:     querier,
+		db:          sqldb,
+		ClientMap:   clientMap,
+		TxHashQueue: make(chan TxHash, 1_000_000),
 	}, nil
 }
 
@@ -57,6 +70,44 @@ func (idb *IndexDB) Start() {
 			}
 		}
 	}()
+
+	// process external Tx
+	go func() {
+		log.Info().Msg("Start watching TxHashQueue")
+		for tx := range idb.TxHashQueue {
+			log.Info().Msgf("TxHashQueue length %d", len(idb.TxHashQueue))
+			if client, found := idb.ClientMap[tx.Chain]; found && client != nil {
+				transaction, _, err := client.TransactionByHash(context.TODO(), ethcommon.HexToHash(tx.TxHash))
+				if err != nil {
+					log.Error().Err(err)
+				}
+				receipt, err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(tx.TxHash))
+				if err != nil {
+					log.Error().Err(err)
+				}
+				sender, err := client.TransactionSender(context.TODO(), transaction, receipt.BlockHash, receipt.TransactionIndex)
+				if err != nil {
+					log.Error().Err(err)
+				}
+				block, err := client.BlockByHash(context.TODO(), receipt.BlockHash)
+				log.Info().Msgf("TX %s %s", tx.Chain, tx.TxHash)
+				log.Info().Msgf("sender: %s => %s", sender, transaction.To().Hex())
+				logs, err := json.Marshal(receipt.Logs)
+				if err != nil {
+					log.Error().Err(err)
+				}
+				_, err = idb.db.Exec(
+					fmt.Sprintf("INSERT INTO  externaltxs (chain, txhash, blocknum, from, to, status, gasUsed, gasPrice, timestamp, logs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)"),
+					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender, transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice(), time.Unix(int64(block.Time()), 0).UTC(), logs,
+				)
+				if err != nil {
+					log.Error().Err(err)
+				}
+			}
+			time.Sleep(200 * time.Millisecond) // no more than 20 RPC calls per second
+		}
+	}()
+
 }
 
 func (idb *IndexDB) processBlock(bn int64) error {
@@ -252,6 +303,25 @@ func (idb *IndexDB) Rebuild() error {
 		return err
 	}
 
+	query = fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS externaltxs (
+		chain TEXT, 
+		txhash TEXT PRIMARY KEY,
+		blocknum INTEGER, 
+		from TEXT,
+		to TEXT,
+		status INTEGER,
+		gasUsed BIGINT, 
+		gasPrice BIGINT,
+		timestamp TIMESTAMP,
+		logs JSONB
+    );
+    `)
+	_, err = idb.db.Exec(query)
+	if err != nil {
+		return err
+	}
+
 	block, err := idb.querier.LatestBlock()
 	if err != nil {
 		fmt.Printf("cannot query latest block from zetacore node: %s\n", err)
@@ -369,6 +439,13 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 		fmt.Println(err)
 		return err
 	}
+
+	if kv[types.OutTxHash] != "" && kv[types.Chain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.Chain],
+			TxHash: kv[types.OutTxHash],
+		}
+	}
 	return nil
 }
 
@@ -392,6 +469,12 @@ func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string
 	if err != nil {
 		return err
 	}
+	if kv[types.OutTxHash] != "" && kv[types.Chain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.Chain],
+			TxHash: kv[types.OutTxHash],
+		}
+	}
 	return nil
 }
 
@@ -410,6 +493,12 @@ func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) 
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+	if kv[types.InTxHash] != "" && kv[types.SenderChain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.SenderChain],
+			TxHash: kv[types.InTxHash],
+		}
 	}
 	return nil
 }
