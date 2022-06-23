@@ -98,14 +98,15 @@ func (idb *IndexDB) Start() {
 				}
 				_ = logs
 				_ = block
-				//_, err = idb.db.Exec(
-				//	"INSERT INTO  externaltxs(\"chain\", txhash, blocknum, fromAddress, toAddress, status, gasUsed, gasPrice, blockTimestamp) values($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-				//	tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice(), time.Unix(int64(block.Time()), 0).UTC(),
-				//)
 				_, err = idb.db.Exec(
-					"INSERT INTO  externaltxs(txhash, blocknum) values($1,$2)",
-					tx.TxHash, receipt.BlockNumber.Uint64(),
+					"INSERT INTO  externaltxs(chain, txhash, blocknum, fromAddress, toAddress, status, gasUsed, gasPrice, blockTimestamp, eventlogs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice(),
+					time.Unix(int64(block.Time()), 0).UTC(), string(logs),
 				)
+				//_, err = idb.db.Exec(
+				//	"INSERT INTO  externaltxs(txhash, blocknum) values($1,$2)",
+				//	tx.TxHash, receipt.BlockNumber.Uint64(),
+				//)
 				if err != nil {
 					log.Error().Err(err)
 				}
@@ -353,7 +354,8 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.InboundFinalized, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.InboundFinalized, cnt)
+	_ = cnt
 
 	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxSuccessful, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
@@ -370,7 +372,7 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.OutboundTxSuccessful, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.OutboundTxSuccessful, cnt)
 
 	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxFailed, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
@@ -387,7 +389,7 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.OutboundTxFailed, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.OutboundTxFailed, cnt)
 
 	return nil
 }
