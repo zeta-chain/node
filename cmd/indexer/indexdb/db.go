@@ -100,7 +100,7 @@ func (idb *IndexDB) Start() {
 				_ = block
 				_, err = idb.db.Exec(
 					"INSERT INTO  externaltxs(chain, txhash, blocknum, fromAddress, toAddress, status, gasUsed, gasPrice, blockTimestamp, eventlogs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
-					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice(),
+					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice().Uint64(),
 					time.Unix(int64(block.Time()), 0).UTC(), string(logs),
 				)
 				//_, err = idb.db.Exec(
