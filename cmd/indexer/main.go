@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	_ "github.com/lib/pq" // this registers a sql driver
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/indexdb"
@@ -13,6 +14,10 @@ import (
 	"os/user"
 	"syscall"
 	"time"
+)
+
+var (
+	EXTERNAL_CHAINS = []string{"GOERLI", "BSCTESTNET", "MUMBAI", "ROPSTEN"}
 )
 
 func main() {
@@ -52,7 +57,22 @@ func main() {
 		return
 	}
 
-	idb, err := indexdb.NewIndexDB(db, querier)
+	clientMap := make(map[string]*ethclient.Client)
+	for _, chain := range EXTERNAL_CHAINS {
+		envvar := chain + "_ENDPOINT"
+		endpoint := os.Getenv(envvar)
+		log.Info().Msgf("%s=%s, connecting...", envvar, endpoint)
+		if len(endpoint) != 0 {
+			client, err := ethclient.Dial(endpoint)
+			if err != nil {
+				log.Error().Err(err)
+				continue
+			}
+			clientMap[chain] = client
+		}
+	}
+
+	idb, err := indexdb.NewIndexDB(db, querier, clientMap)
 	if err != nil {
 		log.Error().Err(err).Msg("NewIndexDB error")
 		return
