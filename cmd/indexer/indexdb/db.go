@@ -97,7 +97,7 @@ func (idb *IndexDB) Start() {
 					log.Error().Err(err)
 				}
 				_, err = idb.db.Exec(
-					fmt.Sprintf("INSERT INTO  externaltxs (chain, txhash, blocknum, from, to, status, gasUsed, gasPrice, timestamp, logs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)"),
+					"INSERT INTO  externaltxs (chain, txhash, blocknum, fromAddress, toAddress, status, gasUsed, gasPrice, blockTimestamp, logs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
 					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender, transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice(), time.Unix(int64(block.Time()), 0).UTC(), logs,
 				)
 				if err != nil {
@@ -308,13 +308,13 @@ func (idb *IndexDB) Rebuild() error {
 		chain TEXT, 
 		txhash TEXT PRIMARY KEY,
 		blocknum INTEGER, 
-		from TEXT,
-		to TEXT,
+		fromAddress TEXT,
+		toAddress TEXT,
 		status INTEGER,
 		gasUsed BIGINT, 
 		gasPrice BIGINT,
-		timestamp TIMESTAMP,
-		logs JSONB
+		blockTimestamp TIMESTAMP,
+		eventLogs JSONB
     );
     `)
 	_, err = idb.db.Exec(query)
