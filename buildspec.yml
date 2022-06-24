@@ -4,14 +4,16 @@ env:
   shell: "/bin/bash"
   git-credential-helper: yes
   
-  # variables:
-  #   GOPATH: "/root/go"
+  variables:
+    GOPATH: "/root/go"
   # exported-variables:
   #   - GOPATH
 
 
 phases:
   install:
+    runtime-versions:
+      golang: 1.17
     commands:
       # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
