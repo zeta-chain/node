@@ -5,10 +5,10 @@ env:
   git-credential-helper: yes
   
   variables:
-    GOPATH: "/usr/local/go"
+
+  exported-variables:
     GOVERSION: "go1.17.8"
-  # exported-variables:
-  #   - GOPATH
+    GOPATH: "/usr/local/go"
 
 
 phases:
@@ -23,6 +23,7 @@ phases:
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
       - export GOPATH="/usr/local/go"
       - go version
+      - which go
 
   # pre_build:
   #   commands:
