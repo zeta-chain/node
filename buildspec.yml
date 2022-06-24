@@ -6,6 +6,7 @@ env:
   
   variables:
     GOPATH: "/root/go"
+    GOVERSION: "go1.17.8"
   # exported-variables:
   #   - GOPATH
 
@@ -18,6 +19,7 @@ phases:
       # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
       - yum install -y make gcc jq
+      - export GOVERSION=go1.17.8
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
       - export GOPATH="/root/go"
       - wget https://golang.org/dl/go1.17.8.linux-amd64.tar.gz
@@ -28,6 +30,8 @@ phases:
   #     - echo "Pre-Build Phase"
 
   build:
+    runtime-versions:
+      golang: 1.17
     commands:
       - echo "Build Phase"
       - make install
