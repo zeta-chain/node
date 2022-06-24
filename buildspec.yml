@@ -4,7 +4,7 @@ env:
   shell: "/bin/bash"
   git-credential-helper: yes
   
-  variables:
+  # variables:
 
   exported-variables:
     GOVERSION: "go1.17.8"
@@ -17,11 +17,15 @@ phases:
       # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
       - yum install -y make gcc jq
-      - wget https://golang.org/dl/go1.17.8.linux-amd64.tar.gz
-      - tar -C /usr/local -xzf go1.17.8.linux-amd64.tar.gz
-      - export GOVERSION=go1.17.8
-      - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
-      - export GOPATH="/usr/local/go"
+      # - wget https://golang.org/dl/go1.17.8.linux-amd64.tar.gz
+      # - tar -C /usr/local -xzf go1.17.8.linux-amd64.tar.gz
+      # - export GOVERSION=go1.17.8
+      # - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
+      # - export GOPATH="/usr/local/go"
+      - go install golang.org/dl/go1.17@latest
+      - go1.17 download
+      - export GOROOT=$(go1.18 env GOROOT)
+      - export PATH=${GOROOT}/bin;${PATH}
       - go version
       - which go
 
