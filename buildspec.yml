@@ -17,11 +17,12 @@ phases:
       # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
       - yum install -y make gcc jq
+      - wget https://golang.org/dl/go1.17.8.linux-amd64.tar.gz
+      - tar -C /usr/local -xzf go1.17.8.linux-amd64.tar.gz
       - export GOVERSION=go1.17.8
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
       - export GOPATH="/root/go"
-      - wget https://golang.org/dl/go1.17.8.linux-amd64.tar.gz
-      - tar -C /usr/local -xzf go1.17.8.linux-amd64.tar.gz
+      - go version
 
   # pre_build:
   #   commands:
@@ -29,6 +30,9 @@ phases:
 
   build:
     commands:
+      - export GOVERSION=go1.17.8
+      - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
+      - export GOPATH="/root/go"
       - echo "Build Phase"
       - make install
 
