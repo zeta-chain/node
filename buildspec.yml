@@ -13,8 +13,6 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      golang: 1.17
     commands:
       # Install ZetaCore PreReqs - Amazon Linux
       - echo "Install Phase"
@@ -30,8 +28,6 @@ phases:
   #     - echo "Pre-Build Phase"
 
   build:
-    runtime-versions:
-      golang: 1.17
     commands:
       - echo "Build Phase"
       - make install
