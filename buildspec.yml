@@ -5,7 +5,7 @@ env:
   git-credential-helper: yes
   
   variables:
-    GOPATH: "/root/go"
+    GOPATH: "/usr/local/go"
     GOVERSION: "go1.17.8"
   # exported-variables:
   #   - GOPATH
@@ -21,7 +21,7 @@ phases:
       - tar -C /usr/local -xzf go1.17.8.linux-amd64.tar.gz
       - export GOVERSION=go1.17.8
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
-      - export GOPATH="/root/go"
+      - export GOPATH="/usr/local/go"
       - go version
 
   # pre_build:
@@ -32,7 +32,7 @@ phases:
     commands:
       - export GOVERSION=go1.17.8
       - export PATH="$PATH:/usr/local/go/bin:/root/go/bin"
-      - export GOPATH="/root/go"
+      - export GOPATH="/usr/local/go"
       - echo "Build Phase"
       - make install
 
