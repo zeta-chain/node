@@ -2,6 +2,7 @@
 
 NODE_NUMBER=$1
 MAX_NODE_NUMBER=$2 #Whats the highest node number? If you have nodes 0,1,2,3 MAX_NODE_NUMBER=3
+REUSE_EXISTING_KEYS=$3
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:/root/go/bin
 
@@ -9,41 +10,53 @@ if [ -z "${MYIP}" ]; then
     echo "MYIP ENV Variable Not Set -- Setting it automatically using host IP"
     export MYIP=$(hostname -i)
 fi
-
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
-# Remove old files and make sure folders exist
-rm -rf ~/.zetacore/
-rm -rf ~/.tssnew/
-rm -rf ~/.tss/
-rm -rf ~/.zetaclient/
-rm -rf ~/.keyring*/
-rm -rf /zetashared/node"${NODE_NUMBER}"/*
-mkdir -p ~/.zetacore/data/ ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/  ~/.zetaclient/  ~/.tssnew/ ~/.tss/
-mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
+rm -rf /zetashared/node"${NODE_NUMBER}"/
+if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
+    echo "Generating new keys"
+    rm -rf ~/.zetacore/
+    rm -rf ~/.tssnew/
+    rm -rf ~/.tss/
+    rm -rf ~/.zetaclient/
+elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
+    echo "Reusing existing keys"
+    rm -rf ~/.zetaclient/
+    rm -rf ~/.zetacore/data
+    rm -rf ~/.zetacore/config
+else
+    echo "Unknown Input -- REUSE_EXISTING_KEYS=$REUSE_EXISTING_KEYS"
+    exit 1
+fi
+
+mkdir -p ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/ ~/.zetacore/data/ ~/.zetaclient/ ~/.tssnew/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-
+    rm zetashared/genesis/init-genesis.json
+    mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
+    sleep 5
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
-    zetacored keys add val
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
     cd ~/.zetacore/config || exit
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
+    echo "NODE_0_VALIDATOR: $NODE_0_VALIDATOR"
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
     zetacored add-genesis-account "$NODE_0_VALIDATOR" 100000000000stake
-    echo "$STAKER_ACCOUNT_MEMONIC"
 
     if [ "$STAKER_ACCOUNT_MEMONIC" != "" ]; then
         echo "$STAKER_ACCOUNT_MEMONIC"
         echo "CREATING STAKE ACCOUNT WITH 1000000000000000000000000stake"
-        echo "hip stick bless tank flame raw basket solution deposit share must rookie harbor warfare method joke cram umbrella clump they wasp notice blind empower" | zetacored keys add staker --recover
+        if [ -z "${REUSE_EXISTING_KEYS}" ]; then echo "$STAKER_ACCOUNT_MEMONIC" | zetacored keys add staker --recover ; fi
         STAKER_ADDR=$(zetacored keys show staker -a)
+        echo "STAKER ADDR: $STAKER_ADDR"
         zetacored add-genesis-account "$STAKER_ADDR" 1000000000000000000000000stake
     fi
 
     i=1
+    sleep 10
     while [ $i -le "$MAX_NODE_NUMBER" ]
     do
         until [ -f /zetashared/node$i/config/NODE_VALIDATOR_ID ]
@@ -93,11 +106,14 @@ fi
 
 if (( $NODE_NUMBER > 0 )); then
     echo "This is Node $NODE_NUMBER"
+    mkdir -p /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
+    sleep 10
+
     echo "Generating new keys"
     zetacored config keyring-backend test
-    zetacored keys add val
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
     NODE_VALIDATOR=$(zetacored keys show val -a)
-    echo "$NODE_VALIDATOR"
+    echo "NODE_VALIDATOR: $NODE_VALIDATOR"
     echo "$NODE_VALIDATOR" > NODE_VALIDATOR_ID
     cp NODE_VALIDATOR_ID /zetashared/node"$NODE_NUMBER"/config/
 
@@ -109,7 +125,7 @@ if (( $NODE_NUMBER > 0 )); then
         done
     echo "init-genesis.json found"
 
-    sleep 5 # Wait to make sure node0 has finished configuring the genesis file
+    sleep 10 # Wait to make sure node0 has finished configuring the genesis file
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
     cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 

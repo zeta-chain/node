@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
+	
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -28,8 +28,10 @@ func NewHTTPServer() *HTTPServer {
 		logger: log.With().Str("module", "http").Logger(),
 	}
 	s := &http.Server{
-		Addr:    ":8123",
-		Handler: hs.Handlers(),
+		Addr:			":8123",
+		Handler:		hs.Handlers(),
+		ReadTimeout:	5 * time.Second,
+		ReadHeaderTimeout:	5 * time.Second,
 	}
 	hs.s = s
 	return hs
@@ -54,7 +56,7 @@ func (t *HTTPServer) Start() error {
 			return fmt.Errorf("fail to start http server: %w", err)
 		}
 	}
-
+	
 	return nil
 }
 
@@ -62,11 +64,11 @@ func logMiddleware() mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Debug().
-				Str("route", r.URL.Path).
-				Str("port", r.URL.Port()).
-				Str("method", r.Method).
-				Msg("HTTP request received")
-
+			Str("route", r.URL.Path).
+			Str("port", r.URL.Port()).
+			Str("method", r.Method).
+			Msg("HTTP request received")
+			
 			handler.ServeHTTP(w, r)
 		})
 	}
