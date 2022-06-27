@@ -30,6 +30,8 @@ import (
 const ()
 
 func main() {
+	fmt.Printf("zetacore commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
+
 	var valKeyName = flag.String("val", "alice", "validator name")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	flag.Parse()
@@ -73,20 +75,20 @@ func start(validatorName string, peers addr.AddrList) {
 		chainIP = "127.0.0.1"
 	}
 
-	ethEndPoint := os.Getenv("ETH_ENDPOINT")
+	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
 	if ethEndPoint != "" {
-		config.ETH_ENDPOINT = ethEndPoint
-		log.Info().Msgf("ETH_ENDPOINT: %s", ethEndPoint)
+		config.GOERLI_ENDPOINT = ethEndPoint
+		log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
 	}
-	bscEndPoint := os.Getenv("BSC_ENDPOINT")
+	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
 	if bscEndPoint != "" {
-		config.BSC_ENDPOINT = bscEndPoint
-		log.Info().Msgf("BSC_ENDPOINT: %s", bscEndPoint)
+		config.BSCTESTNET_ENDPOINT = bscEndPoint
+		log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
 	}
-	polygonEndPoint := os.Getenv("POLYGON_ENDPOINT")
+	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
 	if polygonEndPoint != "" {
-		config.POLY_ENDPOINT = polygonEndPoint
-		log.Info().Msgf("POLYGON_ENDPOINT: %s", polygonEndPoint)
+		config.MUMBAI_ENDPOINT = polygonEndPoint
+		log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
 	}
 	ropstenEndPoint := os.Getenv("ROPSTEN_ENDPOINT")
 	if ropstenEndPoint != "" {
@@ -94,24 +96,24 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Info().Msgf("ROPSTEN_ENDPOINT: %s", ropstenEndPoint)
 	}
 
-	ethMpiAddress := os.Getenv("ETH_MPI_ADDRESS")
+	ethMpiAddress := os.Getenv("GOERLI_MPI_ADDRESS")
 	if ethMpiAddress != "" {
-		config.Chains["ETH"].ConnectorContractAddress = ethMpiAddress
+		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = ethMpiAddress
 		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
 	}
-	bscMpiAddress := os.Getenv("BSC_MPI_ADDRESS")
+	bscMpiAddress := os.Getenv("BSCTESTNET_MPI_ADDRESS")
 	if bscMpiAddress != "" {
-		config.Chains["BSC"].ConnectorContractAddress = bscMpiAddress
+		config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress = bscMpiAddress
 		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
 	}
-	polygonMpiAddress := os.Getenv("POLYGON_MPI_ADDRESS")
+	polygonMpiAddress := os.Getenv("MUMBAI_MPI_ADDRESS")
 	if polygonMpiAddress != "" {
-		config.Chains["POLYGON"].ConnectorContractAddress = polygonMpiAddress
+		config.Chains[common.MumbaiChain.String()].ConnectorContractAddress = polygonMpiAddress
 		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
 	}
 	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
 	if ropstenMpiAddress != "" {
-		config.Chains["ROPSTEN"].ConnectorContractAddress = ropstenMpiAddress
+		config.Chains[common.RopstenChain.String()].ConnectorContractAddress = ropstenMpiAddress
 		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
 	}
 
@@ -165,21 +167,21 @@ func start(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	_, err = bridge1.SetTSS(common.ETHChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.GoerliChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
 	}
-	_, err = bridge1.SetTSS(common.BSCChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.BSCTestnetChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
 	}
-	_, err = bridge1.SetTSS(common.POLYGONChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.MumbaiChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
 	}
-	_, err = bridge1.SetTSS(common.ROPSTENChain, tss.Address().Hex(), tss.PubkeyInBech32)
+	_, err = bridge1.SetTSS(common.RopstenChain, tss.Address().Hex(), tss.PubkeyInBech32)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
@@ -232,21 +234,21 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// report TSS address nonce on ETHish chains
-	err = (*chainClientMap1)[common.ETHChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.GoerliChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ETHChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
 	}
-	err = (*chainClientMap1)[common.BSCChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.BSCTestnetChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
 	}
-	err = (*chainClientMap1)[common.POLYGONChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.MumbaiChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.POLYGONChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
 	}
-	err = (*chainClientMap1)[common.ROPSTENChain].PostNonceIfNotRecorded()
+	err = (*chainClientMap1)[common.RopstenChain].PostNonceIfNotRecorded()
 	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.ROPSTENChain)
+		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
 	}
 
 	// printout debug info from SIGUSR1
@@ -257,10 +259,10 @@ func start(validatorName string, peers addr.AddrList) {
 		for {
 			<-usr
 			fmt.Printf("Last blocks:\n")
-			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.ETHChain].LastBlock)
-			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCChain].LastBlock)
-			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.POLYGONChain].LastBlock)
-			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.ROPSTENChain].LastBlock)
+			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.GoerliChain].LastBlock)
+			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCTestnetChain].LastBlock)
+			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.MumbaiChain].LastBlock)
+			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.RopstenChain].LastBlock)
 
 		}
 	}()
@@ -274,5 +276,5 @@ func start(validatorName string, peers addr.AddrList) {
 	_ = (*chainClientMap1)[common.ETHChain].Stop()
 	_ = (*chainClientMap1)[common.BSCChain].Stop()
 	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
-	_ = (*chainClientMap1)[common.ROPSTENChain].Stop()
+	_ = (*chainClientMap1)[common.RopstenChain].Stop()
 }

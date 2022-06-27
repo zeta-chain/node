@@ -27,6 +27,8 @@ import (
 
 const (
 	PosKey = "PosKey"
+
+	SecondsPerDay = 86400
 )
 
 //    event ZetaSent(
@@ -117,35 +119,35 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 	// Initialize chain specific setup
 	switch chain {
-	case common.POLYGONChain:
+	case common.MumbaiChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["POLYGON"].ConnectorContractAddress
-		chainOb.endpoint = config.POLY_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.POLY_BLOCK_TIME) * time.Second)
+		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.MUMBAI_ENDPOINT
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.ETHChain:
+	case common.GoerliChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ETH"].ConnectorContractAddress
-		chainOb.endpoint = config.ETH_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.ETH_BLOCK_TIME) * time.Second)
+		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.GOERLI_ENDPOINT
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
-	case common.BSCChain:
+	case common.BSCTestnetChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["BSC"].ConnectorContractAddress
-		chainOb.endpoint = config.BSC_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.BSC_BLOCK_TIME) * time.Second)
+		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
+		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
-	case common.ROPSTENChain:
+	case common.RopstenChain:
 		chainOb.chain = chain
-		chainOb.mpiAddress = config.Chains["ROPSTEN"].ConnectorContractAddress
+		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(config.ROPSTEN_BLOCK_TIME) * time.Second)
+		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
 		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 	}
@@ -237,7 +239,7 @@ func (chainOb *ChainObserver) WatchRouter() {
 }
 
 func (chainOb *ChainObserver) WatchGasPrice() {
-	gasTicker := time.NewTicker(24 * time.Second)
+	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
 		err := chainOb.PostGasPrice()
 		if err != nil {
@@ -253,9 +255,9 @@ func (chainOb *ChainObserver) WatchExchangeRate() {
 		var price *big.Int
 		var err error
 		var bn uint64
-		if chainOb.chain == common.ETHChain || chainOb.chain == common.POLYGONChain || chainOb.chain == common.ROPSTENChain {
+		if chainOb.chain == common.GoerliChain || chainOb.chain == common.MumbaiChain || chainOb.chain == common.RopstenChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
-		} else if chainOb.chain == common.BSCChain {
+		} else if chainOb.chain == common.BSCTestnetChain {
 			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()
 		}
 		if err != nil {
@@ -518,15 +520,17 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	recvTopics := make([][]ethcommon.Hash, 4)
 	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
 	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
+	//fromBlock := big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime))
 	query := ethereum.FilterQuery{
 		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
-		FromBlock: big.NewInt(0), // LastBlock has been processed;
+		FromBlock: big.NewInt(0), // LastBlock from 3 days ago
 		ToBlock:   nil,
 		Topics:    recvTopics,
 	}
+	//log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
 	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
 	if err != nil {
-		return false, false, fmt.Errorf("IsSendOutTxProcessed: Client FilterLog fail %w", err)
+		return false, false, fmt.Errorf("[%s] IsSendOutTxProcessed(sendHash %s): Client FilterLog fail %w", chainOb.chain, sendHash, err)
 	}
 	if len(logs) == 0 {
 		return false, false, nil
@@ -622,20 +626,21 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV3() (*big.Int, uint64, error
 	if err != nil {
 		return nil, 0, fmt.Errorf("fail to pack observe")
 	}
-	bn, err := ob.Client.BlockNumber(context.TODO())
-	if err != nil {
-		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
-		return nil, 0, err
-	}
+
 	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
 	res, err := ob.Client.CallContract(context.TODO(), ethereum.CallMsg{
 		From: fromAddr,
 		To:   &toAddr,
 		Data: input,
-	}, big.NewInt(0).SetUint64(bn))
+	}, nil)
 	if err != nil {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
+		return nil, 0, err
+	}
+	bn, err := ob.Client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
 		return nil, 0, err
 	}
 	output, err := ob.uniswapV3Abi.Unpack("observe", res)
@@ -657,20 +662,21 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 	if err != nil {
 		return nil, 0, fmt.Errorf("fail to pack getReserves")
 	}
-	bn, err := ob.Client.BlockNumber(context.TODO())
-	if err != nil {
-		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
-		return nil, 0, err
-	}
+
 	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
 	toAddr := ethcommon.HexToAddress(config.Chains[ob.chain.String()].PoolContractAddress)
 	res, err := ob.Client.CallContract(context.TODO(), ethereum.CallMsg{
 		From: fromAddr,
 		To:   &toAddr,
 		Data: input,
-	}, big.NewInt(0).SetUint64(bn))
+	}, nil)
 	if err != nil {
 		log.Err(err).Msgf("%s CallContract error", ob.chain)
+		return nil, 0, err
+	}
+	bn, err := ob.Client.BlockNumber(context.TODO())
+	if err != nil {
+		log.Err(err).Msgf("%s BlockNumber error", ob.chain)
 		return nil, 0, err
 	}
 	output, err := ob.uniswapV2Abi.Unpack("getReserves", res)
