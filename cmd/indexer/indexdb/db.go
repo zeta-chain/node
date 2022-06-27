@@ -90,6 +90,9 @@ func (idb *IndexDB) Start() {
 					log.Error().Err(err)
 				}
 				block, err := client.BlockByHash(context.TODO(), receipt.BlockHash)
+				if err != nil {
+					log.Error().Err(err)
+				}
 				log.Info().Msgf("TX %s %s", tx.Chain, tx.TxHash)
 				log.Info().Msgf("sender: %s => %s", sender, transaction.To().Hex())
 				logs, err := json.Marshal(receipt.Logs)
@@ -339,7 +342,7 @@ func (idb *IndexDB) Rebuild() error {
 	}
 	idb.LastBlockProcessed = block.Header.Height
 
-	cnt, err := idb.querier.VisitAllTxEvents(types.InboundFinalized, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.InboundFinalized, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
@@ -355,9 +358,8 @@ func (idb *IndexDB) Rebuild() error {
 		return err
 	}
 	//fmt.Printf("%s events processed : %d\n", types.InboundFinalized, cnt)
-	_ = cnt
 
-	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxSuccessful, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.OutboundTxSuccessful, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
@@ -374,7 +376,7 @@ func (idb *IndexDB) Rebuild() error {
 	}
 	//fmt.Printf("%s events processed : %d\n", types.OutboundTxSuccessful, cnt)
 
-	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxFailed, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.OutboundTxFailed, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
