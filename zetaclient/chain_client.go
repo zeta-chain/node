@@ -206,7 +206,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 }
 
 func (chainOb *ChainObserver) GetPromCounter(name string) (prometheus.Counter, error) {
-	if cnt, found := metrics.Counters[chainOb.chain.String()+name]; found {
+	if cnt, found := metrics.Counters[chainOb.chain.String()+"_"+name]; found {
 		return cnt, nil
 	} else {
 		return nil, errors.New("counter not found")
@@ -214,7 +214,7 @@ func (chainOb *ChainObserver) GetPromCounter(name string) (prometheus.Counter, e
 }
 
 func (chainOb *ChainObserver) RegisterPromCounter(name string, help string) error {
-	cntName := chainOb.chain.String() + name
+	cntName := chainOb.chain.String() + "_" + name
 	return chainOb.metrics.RegisterCounter(cntName, help)
 }
 
