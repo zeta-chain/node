@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"time"
 
@@ -13,10 +14,16 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
+	prom "github.com/prometheus/client_golang/prometheus"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+)
+
+const (
+	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
 )
 
 type CoreObserver struct {
@@ -44,9 +51,11 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.clientMap = clientMap
 	co.metrics = metrics
 
+	metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 32
+	MAX_SIGNERS := 100 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
@@ -54,6 +63,14 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.shepherds = make(map[string]bool)
 
 	return &co
+}
+
+func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
+	if cnt, found := metrics.Counters[name]; found {
+		return cnt, nil
+	} else {
+		return nil, errors.New("counter not found")
+	}
 }
 
 func (co *CoreObserver) MonitorCore() {
@@ -301,6 +318,13 @@ SIGNLOOP:
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				}
+				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
+				if err != nil {
+					log.Error().Err(err).Msgf("GetPromCounter error")
+				} else {
+					cnt.Inc()
+				}
+
 				// if tx is nil, maybe I'm not an active signer?
 				if tx != nil {
 					outTxHash := tx.Hash().Hex()

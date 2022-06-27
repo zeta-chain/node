@@ -742,7 +742,7 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 // watch outbound tx
 // returns whether outbound tx is successful or failure
 func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) bool {
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 
 	for {
