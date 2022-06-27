@@ -84,6 +84,7 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 func (msg *MsgSendVoter) Digest() string {
 	m := *msg
 	m.Creator = ""
+	m.InBlockHeight = 0
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }
