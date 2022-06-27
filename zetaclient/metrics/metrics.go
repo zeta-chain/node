@@ -29,23 +29,6 @@ var (
 )
 
 func NewMetrics() (*Metrics, error) {
-	//var pendingSendGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-	//	Name: "num_pending_send",
-	//	Help: "current number of Sends from the ZetaCore pendingSend API",
-	//})
-	//Gauges[GAUGE_PENDING_TX] = pendingSendGauge
-	//
-	//prometheus.MustRegister(pendingSendGauge)
-	//
-	//pendingSendGauge.Set(234)
-
-	//rpcCounters := prometheus.NewCounter(prometheus.CounterOpts{
-	//	Name: "num_rpcs",
-	//	Help: "Number of eth RPC requests",
-	//})
-	//
-	//prometheus.MustRegister(rpcCounters)
-
 	server := http.NewServeMux()
 
 	server.Handle("/metrics",
