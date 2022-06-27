@@ -113,6 +113,10 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	if err != nil {
 		return nil, err
 	}
+	err = chainOb.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
+	if err != nil {
+		return nil, err
+	}
 
 	// initialize the pool ABI
 	mpiABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
@@ -429,6 +433,12 @@ func (chainOb *ChainObserver) observeChain() error {
 	if err != nil {
 		return err
 	}
+	counter, err := chainOb.GetPromCounter("rpc_getBlockByNumber_count")
+	if err != nil {
+		log.Error().Err(err).Msg("GetPromCounter:")
+	}
+	counter.Inc()
+
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
