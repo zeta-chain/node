@@ -70,6 +70,9 @@ func NewMetrics() (*Metrics, error) {
 }
 
 func (m *Metrics) RegisterCounter(name string, help string) error {
+	if _, found := Counters[name]; found {
+		return fmt.Errorf("counter %s already registered", name)
+	}
 	counter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: name,
 		Help: help,
