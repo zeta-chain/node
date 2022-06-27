@@ -186,24 +186,24 @@ func start(validatorName string, peers addr.AddrList) {
 
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-
-	userDir, _ := os.UserHomeDir()
-	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
+		log.Error().Err(err).Msg("CreateSignerMap")
 		return
 	}
 
 	metrics, err := metrics2.NewMetrics()
 	if err != nil {
-		log.Error().Err(err).Msg("NewMetric")
+		log.Error().Err(err).Msg("NewMetrics")
 		return
 	}
 	metrics.Start()
+
+	userDir, _ := os.UserHomeDir()
+	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics)
+	if err != nil {
+		log.Err(err).Msg("CreateSignerMap")
+		return
+	}
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)

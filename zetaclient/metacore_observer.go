@@ -150,7 +150,6 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
-		metrics.Gauges[metrics.GAUGE_PENDING_TX].Set(float64(len(sendList)))
 		for _, send := range sendList {
 			log.Info().Msgf("#pending send: %d", len(sendList))
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {

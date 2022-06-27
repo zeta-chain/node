@@ -17,25 +17,34 @@ type Metrics struct {
 type MetricName int
 
 const (
-	GAUGE_PENDING_TX MetricName = iota
+//GAUGE_PENDING_TX MetricName = iota
+//
+//COUNTER_NUM_RPCS
 )
 
 var (
-	Counters = map[MetricName]prometheus.Counter{}
+	Counters = map[string]prometheus.Counter{}
 
-	Gauges = map[MetricName]prometheus.Gauge{}
+	Gauges = map[string]prometheus.Gauge{}
 )
 
 func NewMetrics() (*Metrics, error) {
-	var pendingSendGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "num_pending_send",
-		Help: "current number of Sends from the ZetaCore pendingSend API",
-	})
-	Gauges[GAUGE_PENDING_TX] = pendingSendGauge
+	//var pendingSendGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	//	Name: "num_pending_send",
+	//	Help: "current number of Sends from the ZetaCore pendingSend API",
+	//})
+	//Gauges[GAUGE_PENDING_TX] = pendingSendGauge
+	//
+	//prometheus.MustRegister(pendingSendGauge)
+	//
+	//pendingSendGauge.Set(234)
 
-	prometheus.MustRegister(pendingSendGauge)
-
-	pendingSendGauge.Set(234)
+	//rpcCounters := prometheus.NewCounter(prometheus.CounterOpts{
+	//	Name: "num_rpcs",
+	//	Help: "Number of eth RPC requests",
+	//})
+	//
+	//prometheus.MustRegister(rpcCounters)
 
 	server := http.NewServeMux()
 
@@ -49,9 +58,9 @@ func NewMetrics() (*Metrics, error) {
 	)
 
 	s := &http.Server{
-		Addr:        fmt.Sprintf(":8080"),
-		Handler:     server,
-		ReadTimeout: 5 * time.Second,
+		Addr:              fmt.Sprintf(":8886"),
+		Handler:           server,
+		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -60,11 +69,21 @@ func NewMetrics() (*Metrics, error) {
 	}, nil
 }
 
+func (m *Metrics) RegisterCounter(name string, help string) error {
+	counter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: name,
+		Help: help,
+	})
+	prometheus.MustRegister(counter)
+	Counters[name] = counter
+	return nil
+}
+
 func (m *Metrics) Start() {
 	log.Info().Msg("Metrics server starting...")
 	go func() {
 		if err := m.s.ListenAndServe(); err != nil {
-			log.Error().Err(err).Msg("fail to stop metric server")
+			log.Error().Err(err).Msg("fail to start metric server")
 		}
 	}()
 }
