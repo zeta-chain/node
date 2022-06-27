@@ -99,6 +99,7 @@ type ChainObserver struct {
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
+	chainOb.chain = chain
 	chainOb.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 	chainOb.sampleLoger = &sampled
@@ -131,7 +132,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	// Initialize chain specific setup
 	switch chain {
 	case common.MumbaiChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.MUMBAI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
@@ -139,7 +139,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.GoerliChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.GOERLI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
@@ -147,7 +146,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.BSCTestnetChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
@@ -155,7 +153,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
 	case common.RopstenChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
