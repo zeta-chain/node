@@ -65,6 +65,20 @@ func (m *Metrics) RegisterCounter(name string, help string) error {
 	return nil
 }
 
+func (m *Metrics) RegisterGauge(name string, help string) error {
+	if _, found := Gauges[name]; found {
+		return fmt.Errorf("gauge %s already registered", name)
+	}
+
+	var gauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: name,
+		Help: help,
+	})
+	prometheus.MustRegister(gauge)
+	Gauges[name] = gauge
+	return nil
+}
+
 func (m *Metrics) Start() {
 	log.Info().Msg("Metrics server starting...")
 	go func() {
