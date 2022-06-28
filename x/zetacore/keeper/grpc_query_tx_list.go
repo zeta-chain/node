@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	MAX_TX_QUERY = 100
-)
+// const (
+// 	MAX_TX_QUERY = 100
+// )
 
 func (k Keeper) TxList(c context.Context, req *types.QueryGetTxRequest) (*types.QueryGetTxResponse, error) {
 	if req == nil {
