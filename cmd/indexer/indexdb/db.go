@@ -79,25 +79,28 @@ func (idb *IndexDB) Start() {
 			if client, found := idb.ClientMap[tx.Chain]; found && client != nil {
 				transaction, _, err := client.TransactionByHash(context.TODO(), ethcommon.HexToHash(tx.TxHash))
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("TransactionByHash")
+
 				}
 				receipt, err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(tx.TxHash))
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("TransactionReceipt")
+
 				}
 				sender, err := client.TransactionSender(context.TODO(), transaction, receipt.BlockHash, receipt.TransactionIndex)
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("TransactionSender")
+
 				}
 				block, err := client.BlockByHash(context.TODO(), receipt.BlockHash)
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("BlockByHash")
 				}
 				log.Info().Msgf("TX %s %s", tx.Chain, tx.TxHash)
 				log.Info().Msgf("sender: %s => %s", sender, transaction.To().Hex())
 				logs, err := json.Marshal(receipt.Logs)
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("json.Marshal")
 				}
 				_ = logs
 				_ = block
@@ -106,12 +109,9 @@ func (idb *IndexDB) Start() {
 					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice().Uint64(),
 					time.Unix(int64(block.Time()), 0).UTC(), string(logs),
 				)
-				//_, err = idb.db.Exec(
-				//	"INSERT INTO  externaltxs(txhash, blocknum) values($1,$2)",
-				//	tx.TxHash, receipt.BlockNumber.Uint64(),
-				//)
+
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Msg("Exec() insert into externaltxs error")
 				}
 			}
 			time.Sleep(200 * time.Millisecond) // no more than 20 RPC calls per second
