@@ -24,7 +24,7 @@ import (
 
 const (
 	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
-	NUM_PENDING_SEND       = "num_pending_send"
+	NUM_PENDING_SEND       = "zetaclient_num_pending_send"
 )
 
 type CoreObserver struct {
