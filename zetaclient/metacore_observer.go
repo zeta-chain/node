@@ -3,7 +3,7 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"math/big"
 	"time"
 
@@ -24,7 +24,6 @@ import (
 
 const (
 	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
-	NUM_PENDING_SEND       = "zetaclient_num_pending_send"
 )
 
 type CoreObserver struct {
@@ -53,11 +52,10 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.metrics = metrics
 
 	metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
-	metrics.RegisterGauge(NUM_PENDING_SEND, "number of pending sends")
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 100 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
+	MAX_SIGNERS := 12 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
@@ -71,15 +69,7 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 	if cnt, found := metrics.Counters[name]; found {
 		return cnt, nil
 	} else {
-		return nil, fmt.Errorf("counter %s not found", name)
-	}
-}
-
-func (co *CoreObserver) GetPromGauge(name string) (prom.Gauge, error) {
-	if cnt, found := metrics.Gauges[name]; found {
-		return cnt, nil
-	} else {
-		return nil, fmt.Errorf("gauge %s not found", name)
+		return nil, errors.New("counter not found")
 	}
 }
 
@@ -177,12 +167,7 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
-		numPendGauge, err := co.GetPromGauge(NUM_PENDING_SEND)
-		if err != nil {
-			log.Error().Err(err).Msg("error getting num pending gauge")
-		} else {
-			numPendGauge.Set(float64(len(sendList)))
-		}
+
 		for _, send := range sendList {
 			log.Info().Msgf("#pending send: %d", len(sendList))
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
@@ -295,7 +280,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
 				}
-				time.Sleep(8 * time.Second)
+				time.Sleep(24 * time.Second)
 			}
 		}
 	}()
