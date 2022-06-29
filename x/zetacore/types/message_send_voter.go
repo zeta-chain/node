@@ -74,7 +74,8 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 	}
 
 	// TODO: should parameterize the hardcoded max len
-	if len(msg.Message) > 1024 {
+	// FIXME: should allow this observation and handle errors in the state machine
+	if len(msg.Message) > 10240 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
 	}
 
