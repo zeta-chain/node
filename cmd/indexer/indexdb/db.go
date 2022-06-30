@@ -1,9 +1,13 @@
 package indexdb
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/indexer/query"
@@ -11,27 +15,38 @@ import (
 	"time"
 )
 
+type TxHash struct {
+	Chain  string
+	TxHash string
+}
+
 type IndexDB struct {
 	db                 *sql.DB
 	querier            *query.ZetaQuerier
-	lastBlockProcessed int64
+	LastBlockProcessed int64
+	ClientMap          map[string]*ethclient.Client
+	TxHashQueue        chan TxHash
 }
 
-func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier) (*IndexDB, error) {
+func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier, clientMap map[string]*ethclient.Client) (*IndexDB, error) {
 
 	return &IndexDB{
-		querier: querier,
-		db:      sqldb,
+		querier:     querier,
+		db:          sqldb,
+		ClientMap:   clientMap,
+		TxHashQueue: make(chan TxHash, 1_000_000),
 	}, nil
 }
 
 func (idb *IndexDB) Start() {
-	err := idb.db.QueryRow("select max(blocknum) from block").Scan(&idb.lastBlockProcessed)
-	if err != nil {
-		log.Error().Err(err).Msg(" error querying max(blocknum) from block; please rebuild")
-		return
-	} else {
-		log.Info().Msgf("latest indexed blocknum %d", idb.lastBlockProcessed)
+	if idb.LastBlockProcessed == 0 {
+		err := idb.db.QueryRow("select max(blocknum) from block").Scan(&idb.LastBlockProcessed)
+		if err != nil {
+			log.Error().Err(err).Msg(" error querying max(blocknum) from block; please rebuild")
+			return
+		} else {
+			log.Info().Msgf("latest indexed blocknum %d", idb.LastBlockProcessed)
+		}
 	}
 
 	go func() {
@@ -42,19 +57,67 @@ func (idb *IndexDB) Start() {
 				log.Error().Err(err).Msg("LatestBlock error")
 				continue
 			}
-			if block.Header.Height > idb.lastBlockProcessed {
-				for i := idb.lastBlockProcessed + 1; i <= block.Header.Height; i++ {
+			if block.Header.Height > idb.LastBlockProcessed {
+				for i := idb.LastBlockProcessed + 1; i <= block.Header.Height; i++ {
 					err = idb.processBlock(i)
 					if err != nil {
 						log.Error().Err(err).Msgf("processBlock on block %d error", i)
 					}
-					idb.lastBlockProcessed = i
+					idb.LastBlockProcessed = i
 					log.Info().Msgf("processed block %d; catching up to %d", i, block.Header.Height)
 				}
 
 			}
 		}
 	}()
+
+	// process external Tx
+	go func() {
+		log.Info().Msg("Start watching TxHashQueue")
+		for tx := range idb.TxHashQueue {
+			log.Info().Msgf("TxHashQueue length %d", len(idb.TxHashQueue))
+			if client, found := idb.ClientMap[tx.Chain]; found && client != nil {
+				transaction, _, err := client.TransactionByHash(context.TODO(), ethcommon.HexToHash(tx.TxHash))
+				if err != nil {
+					log.Error().Err(err).Msg("TransactionByHash")
+
+				}
+				receipt, err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(tx.TxHash))
+				if err != nil {
+					log.Error().Err(err).Msg("TransactionReceipt")
+
+				}
+				sender, err := client.TransactionSender(context.TODO(), transaction, receipt.BlockHash, receipt.TransactionIndex)
+				if err != nil {
+					log.Error().Err(err).Msg("TransactionSender")
+
+				}
+				block, err := client.BlockByHash(context.TODO(), receipt.BlockHash)
+				if err != nil {
+					log.Error().Err(err).Msg("BlockByHash")
+				}
+				log.Info().Msgf("TX %s %s", tx.Chain, tx.TxHash)
+				log.Info().Msgf("sender: %s => %s", sender, transaction.To().Hex())
+				logs, err := json.Marshal(receipt.Logs)
+				if err != nil {
+					log.Error().Err(err).Msg("json.Marshal")
+				}
+				_ = logs
+				_ = block
+				_, err = idb.db.Exec(
+					"INSERT INTO  externaltxs(chain, txhash, blocknum, fromAddress, toAddress, status, gasUsed, gasPrice, blockTimestamp, eventlogs) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice().Uint64(),
+					time.Unix(int64(block.Time()), 0).UTC(), string(logs),
+				)
+
+				if err != nil {
+					log.Error().Err(err).Msg("Exec() insert into externaltxs error")
+				}
+			}
+			time.Sleep(200 * time.Millisecond) // no more than 20 RPC calls per second
+		}
+	}()
+
 }
 
 func (idb *IndexDB) processBlock(bn int64) error {
@@ -122,27 +185,27 @@ func (idb *IndexDB) processBlock(bn int64) error {
 // #nosec -- suppress G201 warning: formating SQL query; arguments not from user inputs.
 func (idb *IndexDB) Rebuild() error {
 	// 0. clear existing tables
-	drop := fmt.Sprintf("DROP TABLE IF EXISTS txs")
+	drop := fmt.Sprintf("DROP TABLE IF EXISTS txs CASCADE")
 	_, err := idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS block")
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS block CASCADE")
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.InboundFinalized)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.InboundFinalized)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.OutboundTxFailed)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.OutboundTxFailed)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
 	}
-	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s", types.OutboundTxSuccessful)
+	drop = fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", types.OutboundTxSuccessful)
 	_, err = idb.db.Exec(drop)
 	if err != nil {
 		return err
@@ -182,11 +245,12 @@ func (idb *IndexDB) Rebuild() error {
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
 		%s TEXT NOT NULL,
+		%s TEXT,
 		timestamp TIMESTAMP NOT NULL,
 		blocknumber INTEGER NOT NULL
     );
     `, types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain,
-		types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint)
+		types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint, types.StatusMessage)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -222,12 +286,13 @@ func (idb *IndexDB) Rebuild() error {
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
         %s TEXT NOT NULL,
+		%s TEXT, 
 		timestamp TIMESTAMP NOT NULL,
 		blocknumber INTEGER NOT NULL,
 		PRIMARY KEY ( %s, %s)
     );
     `, types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint,
-		types.Chain, types.OldStatus, types.NewStatus, types.SendHash, types.OutTxHash)
+		types.Chain, types.OldStatus, types.NewStatus, types.StatusMessage, types.SendHash, types.OutTxHash)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -248,6 +313,25 @@ func (idb *IndexDB) Rebuild() error {
 		return err
 	}
 
+	query = fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS externaltxs (
+		chain TEXT, 
+		txhash TEXT PRIMARY KEY,
+		blocknum INTEGER, 
+		fromAddress TEXT,
+		toAddress TEXT,
+		status INTEGER,
+		gasUsed BIGINT, 
+		gasPrice BIGINT,
+		blockTimestamp TIMESTAMP,
+		eventLogs JSONB
+    );
+    `)
+	_, err = idb.db.Exec(query)
+	if err != nil {
+		return err
+	}
+
 	block, err := idb.querier.LatestBlock()
 	if err != nil {
 		fmt.Printf("cannot query latest block from zetacore node: %s\n", err)
@@ -256,9 +340,9 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		fmt.Printf("cannot insert latest block from zetacore node: %s\n", err)
 	}
-	idb.lastBlockProcessed = block.Header.Height
+	idb.LastBlockProcessed = block.Header.Height
 
-	cnt, err := idb.querier.VisitAllTxEvents(types.InboundFinalized, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.InboundFinalized, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
@@ -273,9 +357,9 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.InboundFinalized, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.InboundFinalized, cnt)
 
-	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxSuccessful, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.OutboundTxSuccessful, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
@@ -290,9 +374,9 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.OutboundTxSuccessful, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.OutboundTxSuccessful, cnt)
 
-	cnt, err = idb.querier.VisitAllTxEvents(types.OutboundTxFailed, -1, func(res *sdk.TxResponse) error {
+	_, err = idb.querier.VisitAllTxEvents(types.OutboundTxFailed, -1, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
@@ -307,7 +391,7 @@ func (idb *IndexDB) Rebuild() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s events processed : %d\n", types.OutboundTxFailed, cnt)
+	//fmt.Printf("%s events processed : %d\n", types.OutboundTxFailed, cnt)
 
 	return nil
 }
@@ -343,7 +427,8 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 
 func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
-	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8)", types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
+	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9)",
+		types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus, types.StatusMessage),
 		kv[types.SendHash],
 		kv[types.OutTxHash],
 		kv[types.ZetaMint],
@@ -352,6 +437,7 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 		kv[types.NewStatus],
 		res.Timestamp,
 		res.Height,
+		kv[types.StatusMessage],
 	)
 	if err != nil {
 		fmt.Println(err)
@@ -362,6 +448,13 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+
+	if kv[types.OutTxHash] != "" && kv[types.Chain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.Chain],
+			TxHash: kv[types.OutTxHash],
+		}
 	}
 	return nil
 }
@@ -386,13 +479,19 @@ func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string
 	if err != nil {
 		return err
 	}
+	if kv[types.OutTxHash] != "" && kv[types.Chain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.Chain],
+			TxHash: kv[types.OutTxHash],
+		}
+	}
 	return nil
 }
 
 func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) error {
-	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8, $9, $10, $11)",
-		types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint),
-		kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height)
+	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9, $10, $11,$12)",
+		types.InboundFinalized, types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.NewStatus, types.ZetaBurnt, types.ZetaMint, types.StatusMessage),
+		kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height, kv[types.StatusMessage])
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -404,6 +503,12 @@ func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) 
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+	if kv[types.InTxHash] != "" && kv[types.SenderChain] != "" {
+		idb.TxHashQueue <- TxHash{
+			Chain:  kv[types.SenderChain],
+			TxHash: kv[types.InTxHash],
+		}
 	}
 	return nil
 }
