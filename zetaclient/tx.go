@@ -54,7 +54,7 @@ func (b *MetachainBridge) PostNonce(chain common.Chain, nonce uint64) (string, e
 }
 func (b *MetachainBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit)
 	var metaTxHash string
 	for i := 0; i < 2; i++ {
 		metaTxHash, err := b.Broadcast(msg)
