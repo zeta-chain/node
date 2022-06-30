@@ -227,7 +227,8 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	if err != nil {
 		log.Err(err).Msgf("decode send.Message %s error", send.Message)
 	}
-	var gasLimit uint64 = 250_000
+
+	gasLimit := send.GasLimit
 
 	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
