@@ -229,8 +229,8 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 
 	gasLimit := send.GasLimit
-	if gasLimit < 250_000 {
-		gasLimit = 1_000_000
+	if gasLimit < 50_000 {
+		gasLimit = 50_000
 	}
 
 	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
