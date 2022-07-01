@@ -51,7 +51,10 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.clientMap = clientMap
 	co.metrics = metrics
 
-	metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	if err != nil {
+		log.Error().Err(err).Msg("error registering counter")
+	}
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
