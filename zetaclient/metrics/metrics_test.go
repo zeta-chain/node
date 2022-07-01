@@ -25,7 +25,8 @@ func (ms *MetricsSuite) SetUpSuite(c *C) {
 }
 
 func (ms *MetricsSuite) TestMetrics(c *C) {
-	ms.m.RegisterCounter("cnt1", "help to cnt1")
+	err := ms.m.RegisterCounter("cnt1", "help to cnt1")
+	c.Assert(err, IsNil)
 	Counters["cnt1"].Inc()
 	time.Sleep(1 * time.Second)
 	res, err := http.Get("http://127.0.0.1:8886/metrics")
