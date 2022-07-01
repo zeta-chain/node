@@ -10,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgSendVoter{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64) *MsgSendVoter {
+func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) *MsgSendVoter {
 	return &MsgSendVoter{
 		Creator:       creator,
 		Sender:        sender,
@@ -21,6 +21,7 @@ func NewMsgSendVoter(creator string, sender string, senderChain string, receiver
 		Message:       message,
 		InTxHash:      inTxHash,
 		InBlockHeight: inBlockHeight,
+		GasLimit:      gasLimit,
 	}
 }
 
@@ -74,7 +75,8 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 	}
 
 	// TODO: should parameterize the hardcoded max len
-	if len(msg.Message) > 1024 {
+	// FIXME: should allow this observation and handle errors in the state machine
+	if len(msg.Message) > 10240 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
 	}
 

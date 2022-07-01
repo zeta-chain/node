@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math"
 	"math/big"
 	"strings"
@@ -88,19 +91,32 @@ type ChainObserver struct {
 	mu          *sync.Mutex
 	db          *leveldb.DB
 	sampleLoger *zerolog.Logger
+	metrics     *metrics.Metrics
 
 	getZetaExchangeRate func() (float64, error)
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
 	chainOb := ChainObserver{}
+	chainOb.chain = chain
 	chainOb.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 	chainOb.sampleLoger = &sampled
 	chainOb.bridge = bridge
 	chainOb.txWatchList = make(map[ethcommon.Hash]string)
 	chainOb.Tss = tss
+	chainOb.metrics = metrics
+
+	// create metric counters
+	err := chainOb.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
+	if err != nil {
+		return nil, err
+	}
+	err = chainOb.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
+	if err != nil {
+		return nil, err
+	}
 
 	// initialize the pool ABI
 	mpiABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
@@ -120,7 +136,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	// Initialize chain specific setup
 	switch chain {
 	case common.MumbaiChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.MUMBAI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
@@ -128,7 +143,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.GoerliChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.GOERLI_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
@@ -136,7 +150,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV3Abi = &uniswapV3ABI
 
 	case common.BSCTestnetChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
@@ -144,7 +157,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		chainOb.uniswapV2Abi = &uniswapV2ABI
 
 	case common.RopstenChain:
-		chainOb.chain = chain
 		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
 		chainOb.endpoint = config.ROPSTEN_ENDPOINT
 		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
@@ -195,6 +207,19 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", chainOb.chain, logZetaReceivedSignatureHash.Hex())
 
 	return &chainOb, nil
+}
+
+func (chainOb *ChainObserver) GetPromCounter(name string) (prometheus.Counter, error) {
+	if cnt, found := metrics.Counters[chainOb.chain.String()+"_"+name]; found {
+		return cnt, nil
+	} else {
+		return nil, errors.New("counter not found")
+	}
+}
+
+func (chainOb *ChainObserver) RegisterPromCounter(name string, help string) error {
+	cntName := chainOb.chain.String() + "_" + name
+	return chainOb.metrics.RegisterCounter(cntName, help)
 }
 
 func (chainOb *ChainObserver) Start() {
@@ -408,6 +433,12 @@ func (chainOb *ChainObserver) observeChain() error {
 	if err != nil {
 		return err
 	}
+	counter, err := chainOb.GetPromCounter("rpc_getBlockByNumber_count")
+	if err != nil {
+		log.Error().Err(err).Msg("GetPromCounter:")
+	}
+	counter.Inc()
+
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
 	// skip if no new block is produced.
@@ -435,6 +466,11 @@ func (chainOb *ChainObserver) observeChain() error {
 	if err != nil {
 		return err
 	}
+	cnt, err := chainOb.GetPromCounter("rpc_getLogs_count")
+	if err != nil {
+		return err
+	}
+	cnt.Inc()
 
 	// Read in ABI
 	contractAbi := chainOb.connectorAbi
@@ -532,6 +568,12 @@ func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool,
 	if err != nil {
 		return false, false, fmt.Errorf("[%s] IsSendOutTxProcessed(sendHash %s): Client FilterLog fail %w", chainOb.chain, sendHash, err)
 	}
+	cnt, err := chainOb.GetPromCounter("rpc_getLogs_count")
+	if err != nil {
+		log.Error().Err(err).Msg("prometheus counter error")
+	}
+	cnt.Inc()
+
 	if len(logs) == 0 {
 		return false, false, nil
 	}
@@ -700,7 +742,7 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 // watch outbound tx
 // returns whether outbound tx is successful or failure
 func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) bool {
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 
 	for {

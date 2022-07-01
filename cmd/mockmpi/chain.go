@@ -49,7 +49,7 @@ func (cl *ChainETHish) Init() {
 
 	cl.context = context.TODO()
 
-	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "")
+	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "", nil)
 	if err != nil {
 		log.Error().Err(err).Msg("NewChainObserver")
 	}

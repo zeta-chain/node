@@ -6,6 +6,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"os"
 )
 
@@ -66,10 +67,10 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string) (*map[common.Chain]*mc.ChainObserver, error) {
+func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
-	eth1, err := mc.NewChainObserver(common.GoerliChain, bridge, tss, dbpath)
+	eth1, err := mc.NewChainObserver(common.GoerliChain, bridge, tss, dbpath, metrics)
 	if err != nil {
 		log.Err(err).Msg("ETH NewChainObserver")
 		return nil, err
@@ -78,7 +79,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 	eth1.Start()
 
 	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCTestnetChain, bridge, tss, dbpath)
+	bsc1, err := mc.NewChainObserver(common.BSCTestnetChain, bridge, tss, dbpath, metrics)
 	if err != nil {
 		log.Err(err).Msg("BSC NewChainObserver")
 		return nil, err
@@ -87,7 +88,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 	bsc1.Start()
 
 	log.Info().Msg("starting polygon observer...")
-	poly1, err := mc.NewChainObserver(common.MumbaiChain, bridge, tss, dbpath)
+	poly1, err := mc.NewChainObserver(common.MumbaiChain, bridge, tss, dbpath, metrics)
 	if err != nil {
 		log.Err(err).Msg("POLYGON NewChainObserver")
 		return nil, err
@@ -96,7 +97,7 @@ func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath s
 	poly1.Start()
 
 	log.Info().Msg("starting ropsten observer...")
-	ropsten1, err := mc.NewChainObserver(common.RopstenChain, bridge, tss, dbpath)
+	ropsten1, err := mc.NewChainObserver(common.RopstenChain, bridge, tss, dbpath, metrics)
 	if err != nil {
 		log.Err(err).Msg("ROPSTEN NewChainObserver")
 		return nil, err
