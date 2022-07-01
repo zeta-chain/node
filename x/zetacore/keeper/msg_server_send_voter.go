@@ -39,6 +39,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			Message:             msg.Message,
 			InTxHash:            msg.InTxHash,
 			InBlockHeight:       msg.InBlockHeight,
+			GasLimit:            msg.GasLimit,
 			FinalizedMetaHeight: 0,
 			Signers:             []string{msg.Creator},
 			Status:              types.SendStatus_PendingInbound,
@@ -106,7 +107,7 @@ func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) b
 	medianPrice := gasPrice.Prices[mi]
 	send.GasPrice = fmt.Sprintf("%d", medianPrice)
 	price := float64(medianPrice)
-	gasLimit := float64(250_000) //TODO: let user supply this
+	gasLimit := float64(send.GasLimit) //TODO: let user supply this
 	gasFeeInZeta, abort := k.computeFeeInZeta(ctx, price, gasLimit, chain, send)
 	if abort {
 		send.Status = types.SendStatus_Aborted

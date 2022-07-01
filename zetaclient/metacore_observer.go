@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"time"
 
@@ -13,10 +14,16 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
+	prom "github.com/prometheus/client_golang/prometheus"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+)
+
+const (
+	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
 )
 
 type CoreObserver struct {
@@ -44,9 +51,14 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.clientMap = clientMap
 	co.metrics = metrics
 
+	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	if err != nil {
+		log.Error().Err(err).Msg("error registering counter")
+	}
+
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 32
+	MAX_SIGNERS := 12 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
@@ -54,6 +66,14 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 	co.shepherds = make(map[string]bool)
 
 	return &co
+}
+
+func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
+	if cnt, found := metrics.Counters[name]; found {
+		return cnt, nil
+	} else {
+		return nil, errors.New("counter not found")
+	}
 }
 
 func (co *CoreObserver) MonitorCore() {
@@ -150,7 +170,7 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
-		metrics.Gauges[metrics.GAUGE_PENDING_TX].Set(float64(len(sendList)))
+
 		for _, send := range sendList {
 			log.Info().Msgf("#pending send: %d", len(sendList))
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
@@ -227,7 +247,11 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	if err != nil {
 		log.Err(err).Msgf("decode send.Message %s error", send.Message)
 	}
-	var gasLimit uint64 = 250_000
+
+	gasLimit := send.GasLimit
+	if gasLimit < 50_000 {
+		gasLimit = 50_000
+	}
 
 	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
@@ -263,7 +287,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
 				}
-				time.Sleep(8 * time.Second)
+				time.Sleep(24 * time.Second)
 			}
 		}
 	}()
@@ -302,6 +326,13 @@ SIGNLOOP:
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				}
+				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
+				if err != nil {
+					log.Error().Err(err).Msgf("GetPromCounter error")
+				} else {
+					cnt.Inc()
+				}
+
 				// if tx is nil, maybe I'm not an active signer?
 				if tx != nil {
 					outTxHash := tx.Hash().Hex()
