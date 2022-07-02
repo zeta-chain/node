@@ -66,6 +66,6 @@ npx hardhat run scripts/send-tss-gas.ts --network bsc-localnet
 npx hardhat run scripts/send-tss-gas.ts --network polygon-localnet
 
 # Approve Connector contract to spend Tokens - Commented out until an update to zeta-contracts is completed
-# npx hardhat run scripts/token-approval.ts --network eth-localnet
-# npx hardhat run scripts/token-approval.ts --network bsc-localnet
-# npx hardhat run scripts/token-approval.ts --network polygon-localnet
+npx hardhat run scripts/token-approval.ts --network eth-localnet
+npx hardhat run scripts/token-approval.ts --network bsc-localnet
+npx hardhat run scripts/token-approval.ts --network polygon-localnet
