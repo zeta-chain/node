@@ -76,7 +76,7 @@ I used these for troubleshooting when setting up this nodes but I don't think an
 ## Problems and Additional Notes
 
 ### Localnet Goerli/Ropsten are using the same geth client 
-The protocol expects four networks and Goerli/Ropsten are hardcoded into it. To give the protocol what it expects two geth clients are used even though they are operating almost exactly the same way. Only the ChainID is different between them.
+The protocol expects four networks and Goerli/Ropsten are hardcoded into it. To give the protocol what it expects the same geth client/endpoint is being used for the GOERLI_ENDPOINT and ROPSTEN_ENDPOINT environmental variables. 
 
 ### Contract Deployments Fail (ZetaChain Repo)
 1st, check your .env file is set correctly. If it is correct, then the problem is most likely caused by the ZetaChain repo. Contract deployments and completed using this hardhat script `zetachain/packages/protocol-contracts/scripts/deploy.ts`
