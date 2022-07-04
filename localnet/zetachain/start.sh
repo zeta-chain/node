@@ -12,9 +12,9 @@ POLYGON_CONNECTOR_ADDRESS=$(jq -r .'"polygon-localnet"'.connector "$CONTRACT_ADD
 
 echo "Adding Contract Addresses & Endpoints to $(pwd)/.env file"
 cp env_vars .env
-echo "ETH_MPI_ADDRESS=$ETH_CONNECTOR_ADDRESS" >> .env
-echo "BSC_MPI_ADDRESS=$BSC_CONNECTOR_ADDRESS" >> .env
-echo "POLYGON_MPI_ADDRESS=$POLYGON_CONNECTOR_ADDRESS" >> .env
+echo "ETH_CONNECTOR_ADDRESS=$ETH_CONNECTOR_ADDRESS" >> .env
+echo "BSC_CONNECTOR_ADDRESS=$BSC_CONNECTOR_ADDRESS" >> .env
+echo "POLYGON_CONNECTOR_ADDRESS=$POLYGON_CONNECTOR_ADDRESS" >> .env
 
 if [ "$USE_GANACHE" == true ]; then
     echo "ETH_ENDPOINT=http://ganache-eth:8545" >> .env
@@ -39,6 +39,7 @@ do
     if [ "$CHARACTER_COUNT" = 43 ] && [ "$RESPONSE" != "0x0000000000000000000000000000000000000000" ]; then 
         TSS_ADDR=$RESPONSE
         echo "TSS Address Is: ${TSS_ADDR}"
+        echo "Ending Loop"
         break
     fi
     echo "Waiting for TSS Address..."
