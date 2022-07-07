@@ -34,8 +34,6 @@ import (
 
 const (
 	PosKey = "PosKey"
-
-	SecondsPerDay = 86400
 )
 
 //    event ZetaSent(
@@ -108,7 +106,7 @@ type ChainObserver struct {
 	sampleLoger      *zerolog.Logger
 	metrics          *metrics.Metrics
 	nonceTxHashesMap map[int][]string
-	nonceTx          map[int]ethtypes.Receipt
+	nonceTx          map[int]*ethtypes.Receipt
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 
 	getZetaExchangeRate func() (float64, error)
@@ -126,6 +124,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	ob.Tss = tss
 	ob.metrics = metrics
 	ob.nonceTxHashesMap = make(map[int][]string)
+	ob.nonceTx = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 
 	// create metric counters
@@ -838,10 +837,10 @@ func (ob *ChainObserver) observeOutTx() {
 				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txhashes))
 				for _, txhash := range txhashes {
 					receipt, err := ob.queryTxByHash(txhash, nonce)
-					if err == nil { // confirmed
+					if err == nil && receipt != nil { // confirmed
 						log.Info().Msgf("observeOutTx: %s nonce %d, txhash %s confirmed", ob.chain, nonce, txhash)
 						delete(ob.nonceTxHashesMap, nonce)
-						ob.nonceTx[nonce] = *receipt
+						ob.nonceTx[nonce] = receipt
 						break
 					}
 					time.Sleep(1 * time.Second)
