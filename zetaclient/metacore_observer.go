@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"math/big"
+	"os"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -81,7 +82,11 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	go co.keygenObserve()
+
+	noKeygen := os.Getenv("NO_KEYGEN")
+	if noKeygen == "" {
+		go co.keygenObserve()
+	}
 }
 
 func (co *CoreObserver) keygenObserve() {
