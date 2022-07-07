@@ -199,6 +199,13 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	ob.Client = client
 
 	if dbpath != "" {
+		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
+		db, err := leveldb.OpenFile(path, nil)
+		if err != nil {
+			return nil, err
+		}
+		ob.db = db
+
 		envvar := ob.chain.String() + "_SCAN_CURRENT"
 		if os.Getenv(envvar) != "" {
 			log.Info().Msgf("envvar %s is set; scan from current block", envvar)
@@ -208,12 +215,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 			}
 			ob.LastBlock = header.Number.Uint64()
 		} else { // last observed block
-			path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
-			db, err := leveldb.OpenFile(path, nil)
-			if err != nil {
-				return nil, err
-			}
-			ob.db = db
 			buf, err := db.Get([]byte(PosKey), nil)
 			if err != nil {
 				log.Info().Msg("db PosKey does not exist; read from ZetaCore")
