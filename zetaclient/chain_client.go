@@ -355,8 +355,8 @@ func (ob *ChainObserver) WatchExchangeRate() {
 			log.Err(err).Msg("GetZetaExchangeRate error on " + ob.chain.String())
 			continue
 		}
-		price_f, _ := big.NewFloat(0).SetInt(price).Float64()
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", ob.chain, price_f/1e18)
+		//price_f, _ := big.NewFloat(0).SetInt(price).Float64()
+		//log.Info().Msgf("%s: gasAsset/zeta rate %f", ob.chain, price_f/1e18)
 		priceInHex := fmt.Sprintf("0x%x", price)
 
 		_, err = ob.bridge.PostZetaConversionRate(ob.chain, priceInHex, bn)
