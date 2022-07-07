@@ -199,32 +199,40 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	ob.Client = client
 
 	if dbpath != "" {
-		// last observed block
-		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
-		db, err := leveldb.OpenFile(path, nil)
-
-		if err != nil {
-			return nil, err
-		}
-		ob.db = db
-		buf, err := db.Get([]byte(PosKey), nil)
-		if err != nil {
-			log.Info().Msg("db PosKey does not exist; read from ZetaCore")
-			ob.LastBlock = ob.getLastHeight()
-			// if ZetaCore does not have last heard block height, then use current
-			if ob.LastBlock == 0 {
-				header, err := ob.Client.HeaderByNumber(context.Background(), nil)
-				if err != nil {
-					return nil, err
-				}
-				ob.LastBlock = header.Number.Uint64()
+		envvar := ob.chain.String() + "_SCAN_CURRENT"
+		if os.Getenv(envvar) != "" {
+			log.Info().Msgf("envvar %s is set; scan from current block", envvar)
+			header, err := ob.Client.HeaderByNumber(context.Background(), nil)
+			if err != nil {
+				return nil, err
 			}
-			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, ob.LastBlock)
-			err := db.Put([]byte(PosKey), buf2[:n], nil)
-			log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
-		} else {
-			ob.LastBlock, _ = binary.Uvarint(buf)
+			ob.LastBlock = header.Number.Uint64()
+		} else { // last observed block
+			path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
+			db, err := leveldb.OpenFile(path, nil)
+			if err != nil {
+				return nil, err
+			}
+			ob.db = db
+			buf, err := db.Get([]byte(PosKey), nil)
+			if err != nil {
+				log.Info().Msg("db PosKey does not exist; read from ZetaCore")
+				ob.LastBlock = ob.getLastHeight()
+				// if ZetaCore does not have last heard block height, then use current
+				if ob.LastBlock == 0 {
+					header, err := ob.Client.HeaderByNumber(context.Background(), nil)
+					if err != nil {
+						return nil, err
+					}
+					ob.LastBlock = header.Number.Uint64()
+				}
+				buf2 := make([]byte, binary.MaxVarintLen64)
+				n := binary.PutUvarint(buf2, ob.LastBlock)
+				err := db.Put([]byte(PosKey), buf2[:n], nil)
+				log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
+			} else {
+				ob.LastBlock, _ = binary.Uvarint(buf)
+			}
 		}
 
 		{
