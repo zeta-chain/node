@@ -614,6 +614,7 @@ func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *ChainObserver) Stop() {
+	log.Info().Msgf("ob %s is stopping", ob.chain)
 	err := ob.db.Close()
 	if err != nil {
 		log.Error().Err(err).Msg("error closing db")

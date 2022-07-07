@@ -267,7 +267,7 @@ func start(validatorName string, peers addr.AddrList) {
 
 	// wait....
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt)
 	<-ch
 	log.Info().Msg("stop signal received")
 
