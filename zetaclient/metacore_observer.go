@@ -90,6 +90,7 @@ func (co *CoreObserver) MonitorCore() {
 }
 
 func (co *CoreObserver) keygenObserve() {
+	log.Info().Msgf("keygen observe started")
 	observeTicker := time.NewTicker(2 * time.Second)
 	for range observeTicker.C {
 		kg, err := co.bridge.GetKeyGen()
