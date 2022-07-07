@@ -233,7 +233,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 
 	// Early return if the send is already processed
-	_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+	_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 	if err != nil {
 		log.Error().Err(err).Msg("IsSendOutTxProcessed error")
 	}
@@ -275,7 +275,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-done2:
 				return
 			default:
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					log.Err(err).Msg("IsSendOutTxProcessed error")
 				}
@@ -287,13 +287,14 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
 				}
-				time.Sleep(24 * time.Second)
+				time.Sleep(12 * time.Second)
 			}
 		}
 	}()
 
-	// The following signing loop tries to sign outbound tx every 32 seconds.
+	// The following signing loop tries to sign outbound tx until it is confirmed.
 	signTicker := time.NewTicker(time.Second)
+	RetryInterval := 5 * time.Minute
 SIGNLOOP:
 	for range signTicker.C {
 		select {
@@ -301,8 +302,8 @@ SIGNLOOP:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
-			if time.Now().Second()%32 == int(sendhash[0])%32 {
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+			if time.Now().Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					log.Error().Err(err).Msg("IsSendOutTxProcessed error")
 				}
@@ -347,11 +348,9 @@ SIGNLOOP:
 						}
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
-					if success := co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index); !success {
-						time.Sleep(15 * time.Second) // wait until the receive confirm is voted on zetacore
-						return
-					}
+					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 				}
+				time.Sleep(RetryInterval)
 			}
 		}
 	}
