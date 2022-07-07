@@ -301,8 +301,8 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 
 	// The following signing loop tries to sign outbound tx until it is confirmed.
 	signTicker := time.NewTicker(time.Second)
-	RetryInterval := 5 * time.Minute
 	timeout := time.NewTimer(12 * time.Minute)
+	// TODO: remove this loop; outside loop can supercede it
 SIGNLOOP:
 	for range signTicker.C {
 		select {
@@ -361,7 +361,14 @@ SIGNLOOP:
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 				}
-				time.Sleep(RetryInterval)
+				select {
+				case <-time.After(3 * time.Minute):
+					log.Info().Msgf("killing this shepherd due to timeout")
+					return
+				case <-done:
+					log.Info().Msg("killing this shepherd due to outbound confirmation")
+					return
+				}
 			}
 		}
 	}
