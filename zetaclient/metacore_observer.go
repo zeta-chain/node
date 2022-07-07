@@ -293,6 +293,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
 				}
+
 				time.Sleep(12 * time.Second)
 			}
 		}
@@ -301,11 +302,15 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// The following signing loop tries to sign outbound tx until it is confirmed.
 	signTicker := time.NewTicker(time.Second)
 	RetryInterval := 5 * time.Minute
+	timeout := time.NewTimer(12 * time.Minute)
 SIGNLOOP:
 	for range signTicker.C {
 		select {
 		case <-done:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
+			break SIGNLOOP
+		case <-timeout.C:
+			log.Info().Msg("breaking SignOutBoundTx loop: timeout")
 			break SIGNLOOP
 		default:
 			if time.Now().Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
