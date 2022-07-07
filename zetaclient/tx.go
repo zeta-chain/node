@@ -96,6 +96,16 @@ func (b *MetachainBridge) GetAllSend() ([]*types.Send, error) {
 	return resp.Send, nil
 }
 
+func (b *MetachainBridge) GetSendByHash(sendHash string) (*types.Send, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{sendHash})
+	if err != nil {
+		log.Error().Err(err).Msg("query Send error")
+		return nil, err
+	}
+	return resp.Send, nil
+}
+
 func (b *MetachainBridge) GetAllPendingSend() ([]*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
