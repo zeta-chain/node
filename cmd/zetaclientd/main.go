@@ -23,7 +23,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 )
 
@@ -248,22 +247,6 @@ func start(validatorName string, peers addr.AddrList) {
 	if err != nil {
 		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
 	}
-
-	// printout debug info from SIGUSR1
-	// trigger by $ kill -SIGUSR1 <PID of zetaclient>
-	usr := make(chan os.Signal, 1)
-	signal.Notify(usr, syscall.SIGUSR1)
-	go func() {
-		for {
-			<-usr
-			fmt.Printf("Last blocks:\n")
-			fmt.Printf("ETH     %d:\n", (*chainClientMap1)[common.GoerliChain].LastBlock)
-			fmt.Printf("BSC     %d:\n", (*chainClientMap1)[common.BSCTestnetChain].LastBlock)
-			fmt.Printf("POLYGON %d:\n", (*chainClientMap1)[common.MumbaiChain].LastBlock)
-			fmt.Printf("ROPSTEN %d:\n", (*chainClientMap1)[common.RopstenChain].LastBlock)
-
-		}
-	}()
 
 	// wait....
 	ch := make(chan os.Signal, 1)
