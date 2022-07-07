@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math"
 	"math/big"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -71,49 +75,65 @@ var logZetaRevertedSignatureHash = crypto.Keccak256Hash(logZetaRevertedSignature
 
 var topics = make([][]ethcommon.Hash, 1)
 
+type TxHashEnvelope struct {
+	TxHash string
+	Done   chan struct{}
+}
+
+type OutTx struct {
+	SendHash string
+	TxHash   string
+	Nonce    int
+}
+
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain        common.Chain
-	mpiAddress   string
-	endpoint     string
-	ticker       *time.Ticker
-	connectorAbi *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
-	uniswapV3Abi *abi.ABI
-	uniswapV2Abi *abi.ABI
-	//zetaAbi     *connectorAbi.ABI // only useful for ethereum; the token contract
-	Client      *ethclient.Client
-	bridge      *MetachainBridge
-	Tss         TSSSigner
-	LastBlock   uint64
-	confCount   uint64 // must wait this many blocks to be considered "confirmed"
-	txWatchList map[ethcommon.Hash]string
-	mu          *sync.Mutex
-	db          *leveldb.DB
-	sampleLoger *zerolog.Logger
-	metrics     *metrics.Metrics
+	chain            common.Chain
+	mpiAddress       string
+	endpoint         string
+	ticker           *time.Ticker
+	connectorAbi     *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	uniswapV3Abi     *abi.ABI
+	uniswapV2Abi     *abi.ABI
+	Client           *ethclient.Client
+	bridge           *MetachainBridge
+	Tss              TSSSigner
+	LastBlock        uint64
+	confCount        uint64 // must wait this many blocks to be considered "confirmed"
+	BlockTime        uint64 // block time in seconds
+	txWatchList      map[ethcommon.Hash]string
+	mu               *sync.Mutex
+	db               *leveldb.DB
+	sampleLoger      *zerolog.Logger
+	metrics          *metrics.Metrics
+	nonceTxHashesMap map[int][]string
+	nonceTx          map[int]ethtypes.Receipt
+	OutTxChan        chan OutTx // send to this channel if you want something back!
 
 	getZetaExchangeRate func() (float64, error)
 }
 
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
-	chainOb := ChainObserver{}
-	chainOb.chain = chain
-	chainOb.mu = &sync.Mutex{}
+	ob := ChainObserver{}
+	ob.chain = chain
+	ob.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
-	chainOb.sampleLoger = &sampled
-	chainOb.bridge = bridge
-	chainOb.txWatchList = make(map[ethcommon.Hash]string)
-	chainOb.Tss = tss
-	chainOb.metrics = metrics
+	ob.sampleLoger = &sampled
+	ob.bridge = bridge
+	ob.txWatchList = make(map[ethcommon.Hash]string)
+	ob.Tss = tss
+	ob.metrics = metrics
+	ob.nonceTxHashesMap = make(map[int][]string)
+	ob.OutTxChan = make(chan OutTx, 100)
 
 	// create metric counters
-	err := chainOb.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
+	err := ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
 	if err != nil {
 		return nil, err
 	}
-	err = chainOb.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
+	err = ob.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +143,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	if err != nil {
 		return nil, err
 	}
-	chainOb.connectorAbi = &mpiABI
+	ob.connectorAbi = &mpiABI
 	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
 	if err != nil {
 		return nil, err
@@ -136,103 +156,141 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	// Initialize chain specific setup
 	switch chain {
 	case common.MumbaiChain:
-		chainOb.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
-		chainOb.endpoint = config.MUMBAI_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
-		chainOb.confCount = config.POLYGON_CONFIRMATION_COUNT
-		chainOb.uniswapV3Abi = &uniswapV3ABI
+		ob.mpiAddress = config.Chains[common.MumbaiChain.String()].ConnectorContractAddress
+		ob.endpoint = config.MUMBAI_ENDPOINT
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
+		ob.confCount = config.POLYGON_CONFIRMATION_COUNT
+		ob.uniswapV3Abi = &uniswapV3ABI
+		ob.BlockTime = config.POLY_BLOCK_TIME
 
 	case common.GoerliChain:
-		chainOb.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
-		chainOb.endpoint = config.GOERLI_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
-		chainOb.confCount = config.ETH_CONFIRMATION_COUNT
-		chainOb.uniswapV3Abi = &uniswapV3ABI
+		ob.mpiAddress = config.Chains[common.GoerliChain.String()].ConnectorContractAddress
+		ob.endpoint = config.GOERLI_ENDPOINT
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
+		ob.confCount = config.ETH_CONFIRMATION_COUNT
+		ob.uniswapV3Abi = &uniswapV3ABI
+		ob.BlockTime = config.ETH_BLOCK_TIME
 
 	case common.BSCTestnetChain:
-		chainOb.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
-		chainOb.endpoint = config.BSCTESTNET_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
-		chainOb.confCount = config.BSC_CONFIRMATION_COUNT
-		chainOb.uniswapV2Abi = &uniswapV2ABI
+		ob.mpiAddress = config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress
+		ob.endpoint = config.BSCTESTNET_ENDPOINT
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
+		ob.confCount = config.BSC_CONFIRMATION_COUNT
+		ob.uniswapV2Abi = &uniswapV2ABI
+		ob.BlockTime = config.BSC_BLOCK_TIME
 
 	case common.RopstenChain:
-		chainOb.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
-		chainOb.endpoint = config.ROPSTEN_ENDPOINT
-		chainOb.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
-		chainOb.confCount = config.ROPSTEN_CONFIRMATION_COUNT
-		chainOb.uniswapV3Abi = &uniswapV3ABI
+		ob.mpiAddress = config.Chains[common.RopstenChain.String()].ConnectorContractAddress
+		ob.endpoint = config.ROPSTEN_ENDPOINT
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
+		ob.confCount = config.ROPSTEN_CONFIRMATION_COUNT
+		ob.uniswapV3Abi = &uniswapV3ABI
+		ob.BlockTime = config.ROPSTEN_BLOCK_TIME
+
 	}
 
 	// Dial the mpiAddress
-	log.Info().Msgf("Chain %s endpoint %s", chainOb.chain, chainOb.endpoint)
-	client, err := ethclient.Dial(chainOb.endpoint)
+	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	client, err := ethclient.Dial(ob.endpoint)
 	if err != nil {
 		log.Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
-	chainOb.Client = client
+	ob.Client = client
 
 	if dbpath != "" {
+		// last observed block
 		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
 		db, err := leveldb.OpenFile(path, nil)
 
 		if err != nil {
 			return nil, err
 		}
-		chainOb.db = db
+		ob.db = db
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
 			log.Info().Msg("db PosKey does not exist; read from ZetaCore")
-			chainOb.LastBlock = chainOb.getLastHeight()
+			ob.LastBlock = ob.getLastHeight()
 			// if ZetaCore does not have last heard block height, then use current
-			if chainOb.LastBlock == 0 {
-				header, err := chainOb.Client.HeaderByNumber(context.Background(), nil)
+			if ob.LastBlock == 0 {
+				header, err := ob.Client.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return nil, err
 				}
-				chainOb.LastBlock = header.Number.Uint64()
+				ob.LastBlock = header.Number.Uint64()
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, chainOb.LastBlock)
+			n := binary.PutUvarint(buf2, ob.LastBlock)
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
-			log.Error().Err(err).Msg("error writing chainOb.LastBlock to db: ")
+			log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 		} else {
-			chainOb.LastBlock, _ = binary.Uvarint(buf)
+			ob.LastBlock, _ = binary.Uvarint(buf)
 		}
+
+		{
+			path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, chain.String())
+			jsonFile, err := os.Open(path)
+			defer jsonFile.Close()
+			if err != nil {
+				log.Error().Err(err).Msgf("error opening %s", path)
+			} else {
+				dec := json.NewDecoder(jsonFile)
+				err = dec.Decode(&ob.nonceTxHashesMap)
+				if err != nil {
+					log.Error().Err(err).Msgf("error opening %s", path)
+				}
+			}
+		}
+
+		{
+			path := fmt.Sprintf("%s/%s.nonceTx", dbpath, chain.String())
+			jsonFile, err := os.Open(path)
+			defer jsonFile.Close()
+			if err != nil {
+				log.Error().Err(err).Msgf("error opening %s", path)
+			} else {
+				dec := json.NewDecoder(jsonFile)
+				err = dec.Decode(&ob.nonceTx)
+				if err != nil {
+					log.Error().Err(err).Msgf("error opening %s", path)
+				}
+			}
+		}
+
 	}
-	log.Info().Msgf("%s: start scanning from block %d", chain, chainOb.LastBlock)
+	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
 
 	// this is shared structure to query logs by sendHash
-	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", chainOb.chain, logZetaReceivedSignatureHash.Hex())
+	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", ob.chain, logZetaReceivedSignatureHash.Hex())
 
-	return &chainOb, nil
+	return &ob, nil
 }
 
-func (chainOb *ChainObserver) GetPromCounter(name string) (prometheus.Counter, error) {
-	if cnt, found := metrics.Counters[chainOb.chain.String()+"_"+name]; found {
+func (ob *ChainObserver) GetPromCounter(name string) (prometheus.Counter, error) {
+	if cnt, found := metrics.Counters[ob.chain.String()+"_"+name]; found {
 		return cnt, nil
 	} else {
 		return nil, errors.New("counter not found")
 	}
 }
 
-func (chainOb *ChainObserver) RegisterPromCounter(name string, help string) error {
-	cntName := chainOb.chain.String() + "_" + name
-	return chainOb.metrics.RegisterCounter(cntName, help)
+func (ob *ChainObserver) RegisterPromCounter(name string, help string) error {
+	cntName := ob.chain.String() + "_" + name
+	return ob.metrics.RegisterCounter(cntName, help)
 }
 
-func (chainOb *ChainObserver) Start() {
-	go chainOb.WatchRouter()
-	go chainOb.WatchGasPrice()
-	go chainOb.WatchExchangeRate()
+func (ob *ChainObserver) Start() {
+	go ob.WatchRouter()
+	go ob.WatchGasPrice()
+	go ob.WatchExchangeRate()
+	go ob.observeOutTx()
 }
 
-func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
-	bridge := chainOb.bridge
-	client := chainOb.Client
-	tss := chainOb.Tss
-	chain := chainOb.chain
+func (ob *ChainObserver) PostNonceIfNotRecorded() error {
+	bridge := ob.bridge
+	client := ob.Client
+	tss := ob.Tss
+	chain := ob.chain
 
 	_, err := bridge.GetNonceByChain(chain)
 	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
@@ -252,62 +310,62 @@ func (chainOb *ChainObserver) PostNonceIfNotRecorded() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) WatchRouter() {
+func (ob *ChainObserver) WatchRouter() {
 	// At each tick, query the mpiAddress
-	for range chainOb.ticker.C {
-		err := chainOb.observeChain()
+	for range ob.ticker.C {
+		err := ob.observeChain()
 		if err != nil {
-			log.Err(err).Msg("observeChain error on " + chainOb.chain.String())
+			log.Err(err).Msg("observeChain error on " + ob.chain.String())
 			continue
 		}
 	}
 }
 
-func (chainOb *ChainObserver) WatchGasPrice() {
+func (ob *ChainObserver) WatchGasPrice() {
 	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
-		err := chainOb.PostGasPrice()
+		err := ob.PostGasPrice()
 		if err != nil {
-			log.Err(err).Msg("PostGasPrice error on " + chainOb.chain.String())
+			log.Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 			continue
 		}
 	}
 }
 
-func (chainOb *ChainObserver) WatchExchangeRate() {
+func (ob *ChainObserver) WatchExchangeRate() {
 	gasTicker := time.NewTicker(60 * time.Second)
 	for range gasTicker.C {
 		var price *big.Int
 		var err error
 		var bn uint64
-		if chainOb.chain == common.GoerliChain || chainOb.chain == common.MumbaiChain || chainOb.chain == common.RopstenChain {
-			price, bn, err = chainOb.GetZetaExchangeRateUniswapV3()
-		} else if chainOb.chain == common.BSCTestnetChain {
-			price, bn, err = chainOb.GetZetaExchangeRateUniswapV2()
+		if ob.chain == common.GoerliChain || ob.chain == common.MumbaiChain || ob.chain == common.RopstenChain {
+			price, bn, err = ob.GetZetaExchangeRateUniswapV3()
+		} else if ob.chain == common.BSCTestnetChain {
+			price, bn, err = ob.GetZetaExchangeRateUniswapV2()
 		}
 		if err != nil {
-			log.Err(err).Msg("GetZetaExchangeRate error on " + chainOb.chain.String())
+			log.Err(err).Msg("GetZetaExchangeRate error on " + ob.chain.String())
 			continue
 		}
 		price_f, _ := big.NewFloat(0).SetInt(price).Float64()
-		log.Info().Msgf("%s: gasAsset/zeta rate %f", chainOb.chain, price_f/1e18)
+		log.Info().Msgf("%s: gasAsset/zeta rate %f", ob.chain, price_f/1e18)
 		priceInHex := fmt.Sprintf("0x%x", price)
 
-		_, err = chainOb.bridge.PostZetaConversionRate(chainOb.chain, priceInHex, bn)
+		_, err = ob.bridge.PostZetaConversionRate(ob.chain, priceInHex, bn)
 		if err != nil {
-			log.Err(err).Msg("PostZetaConversionRate error on " + chainOb.chain.String())
+			log.Err(err).Msg("PostZetaConversionRate error on " + ob.chain.String())
 		}
 	}
 }
 
-func (chainOb *ChainObserver) PostGasPrice() error {
+func (ob *ChainObserver) PostGasPrice() error {
 	// GAS PRICE
-	gasPrice, err := chainOb.Client.SuggestGasPrice(context.TODO())
+	gasPrice, err := ob.Client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	blockNum, err := chainOb.Client.BlockNumber(context.TODO())
+	blockNum, err := ob.Client.BlockNumber(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
@@ -409,7 +467,7 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	//	return fmt.Errorf("unsupported chain %s", chainOb.chain)
 	//}
 
-	_, err = chainOb.bridge.PostGasPrice(chainOb.chain, gasPrice.Uint64(), supply, blockNum)
+	_, err = ob.bridge.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		log.Err(err).Msg("PostGasPrice:")
 		return err
@@ -428,24 +486,24 @@ func (chainOb *ChainObserver) PostGasPrice() error {
 	return nil
 }
 
-func (chainOb *ChainObserver) observeChain() error {
-	header, err := chainOb.Client.HeaderByNumber(context.Background(), nil)
+func (ob *ChainObserver) observeChain() error {
+	header, err := ob.Client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
 	}
-	counter, err := chainOb.GetPromCounter("rpc_getBlockByNumber_count")
+	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
 	if err != nil {
 		log.Error().Err(err).Msg("GetPromCounter:")
 	}
 	counter.Inc()
 
 	// "confirmed" current block number
-	confirmedBlockNum := header.Number.Uint64() - chainOb.confCount
+	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= chainOb.LastBlock {
+	if confirmedBlockNum <= ob.LastBlock {
 		return nil
 	}
-	toBlock := chainOb.LastBlock + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
+	toBlock := ob.LastBlock + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
@@ -453,27 +511,27 @@ func (chainOb *ChainObserver) observeChain() error {
 	topics[0] = []ethcommon.Hash{logZetaSentSignatureHash}
 
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(chainOb.mpiAddress)},
-		FromBlock: big.NewInt(0).SetUint64(chainOb.LastBlock + 1), // LastBlock has been processed;
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(ob.mpiAddress)},
+		FromBlock: big.NewInt(0).SetUint64(ob.LastBlock + 1), // LastBlock has been processed;
 		ToBlock:   big.NewInt(0).SetUint64(toBlock),
 		Topics:    topics,
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
-	chainOb.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", chainOb.chain, header.Number.Uint64(), chainOb.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(chainOb.mpiAddress))
+	ob.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(ob.mpiAddress))
 
 	// Finally query the for the logs
-	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
+	logs, err := ob.Client.FilterLogs(context.Background(), query)
 	if err != nil {
 		return err
 	}
-	cnt, err := chainOb.GetPromCounter("rpc_getLogs_count")
+	cnt, err := ob.GetPromCounter("rpc_getLogs_count")
 	if err != nil {
 		return err
 	}
 	cnt.Inc()
 
 	// Read in ABI
-	contractAbi := chainOb.connectorAbi
+	contractAbi := ob.connectorAbi
 
 	// Pull out arguments from logs
 	for _, vLog := range logs {
@@ -495,9 +553,9 @@ func (chainOb *ChainObserver) observeChain() error {
 
 			_ = zetaParams
 
-			metaHash, err := chainOb.bridge.PostSend(
+			metaHash, err := ob.bridge.PostSend(
 				ethcommon.HexToAddress(sender.Hex()).Hex(),
-				chainOb.chain.String(),
+				ob.chain.String(),
 				types.BytesToEthHex(destContract),
 				config.FindChainByID(destChainID),
 				zetaAmount.String(),
@@ -515,10 +573,10 @@ func (chainOb *ChainObserver) observeChain() error {
 		}
 	}
 
-	chainOb.LastBlock = toBlock
+	ob.LastBlock = toBlock
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
-	err = chainOb.db.Put([]byte(PosKey), buf[:n], nil)
+	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
 	if err != nil {
 		log.Error().Err(err).Msg("error writing toBlock to db")
 	}
@@ -527,8 +585,8 @@ func (chainOb *ChainObserver) observeChain() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (chainOb *ChainObserver) getLastHeight() uint64 {
-	lastheight, err := chainOb.bridge.GetLastBlockHeightByChain(chainOb.chain)
+func (ob *ChainObserver) getLastHeight() uint64 {
+	lastheight, err := ob.bridge.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
 		log.Warn().Err(err).Msgf("getLastHeight")
 		return 0
@@ -537,8 +595,8 @@ func (chainOb *ChainObserver) getLastHeight() uint64 {
 }
 
 // query the base gas price for the block number bn.
-func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
-	gasPrice, err := chainOb.Client.SuggestGasPrice(context.TODO())
+func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
+	gasPrice, err := ob.Client.SuggestGasPrice(context.TODO())
 	if err != nil {
 		log.Err(err).Msg("GetBaseGasPrice")
 		return nil
@@ -546,118 +604,137 @@ func (chainOb *ChainObserver) GetBaseGasPrice() *big.Int {
 	return gasPrice
 }
 
-func (chainOb *ChainObserver) Stop() error {
-	return chainOb.db.Close()
+func (ob *ChainObserver) Stop() {
+	err := ob.db.Close()
+	if err != nil {
+		log.Error().Err(err).Msg("error closing db")
+	}
+
+	userDir, _ := os.UserHomeDir()
+	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+	{
+		path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, ob.chain.String())
+		log.Info().Msgf("writing to %s", path)
+		jsonFile, err := os.Open(path)
+		defer jsonFile.Close()
+		if err != nil {
+			log.Error().Err(err).Msgf("error opening %s", path)
+		} else {
+			enc := json.NewEncoder(jsonFile)
+			err = enc.Encode(ob.nonceTxHashesMap)
+			if err != nil {
+				log.Error().Err(err).Msgf("error opening %s", path)
+			}
+		}
+	}
+	{
+		path := fmt.Sprintf("%s/%s.nonceTx", dbpath, ob.chain.String())
+		log.Info().Msgf("writing to %s", path)
+		jsonFile, err := os.Open(path)
+		defer jsonFile.Close()
+		if err != nil {
+			log.Error().Err(err).Msgf("error opening %s", path)
+		} else {
+			enc := json.NewEncoder(jsonFile)
+			err = enc.Encode(ob.nonceTx)
+			if err != nil {
+				log.Error().Err(err).Msgf("error opening %s", path)
+			}
+		}
+	}
 }
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (chainOb *ChainObserver) IsSendOutTxProcessed(sendHash string) (bool, bool, error) {
-	recvTopics := make([][]ethcommon.Hash, 4)
-	recvTopics[3] = []ethcommon.Hash{ethcommon.HexToHash(sendHash)}
-	recvTopics[0] = []ethcommon.Hash{logZetaReceivedSignatureHash, logZetaRevertedSignatureHash}
-	//fromBlock := big.NewInt(int64(chainOb.LastBlock - 3*SecondsPerDay/config.Chains[chainOb.chain.String()].BlockTime))
-	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(config.Chains[chainOb.chain.String()].ConnectorContractAddress)},
-		FromBlock: big.NewInt(0), // LastBlock from 3 days ago
-		ToBlock:   nil,
-		Topics:    recvTopics,
-	}
-	//log.Info().Msgf("%s getLogs: from %d to %d", chainOb.chain, fromBlock, chainOb.LastBlock)
-	logs, err := chainOb.Client.FilterLogs(context.Background(), query)
-	if err != nil {
-		return false, false, fmt.Errorf("[%s] IsSendOutTxProcessed(sendHash %s): Client FilterLog fail %w", chainOb.chain, sendHash, err)
-	}
-	cnt, err := chainOb.GetPromCounter("rpc_getLogs_count")
-	if err != nil {
-		log.Error().Err(err).Msg("prometheus counter error")
-	}
-	cnt.Inc()
-
-	if len(logs) == 0 {
-		return false, false, nil
-	}
-	if len(logs) > 1 {
-		log.Fatal().Msgf("More than two logs with send hash %s", sendHash)
-		log.Fatal().Msgf("First one: %+v\nSecond one:%+v\n", logs[0], logs[1])
-	}
-	for _, vLog := range logs {
-		switch vLog.Topics[0].Hex() {
-		case logZetaReceivedSignatureHash.Hex():
-			fmt.Printf("Found sendHash %s on chain %s\n", sendHash, chainOb.chain)
-			retval, err := chainOb.connectorAbi.Unpack("ZetaReceived", vLog.Data)
-			if err != nil {
-				fmt.Println("error unpacking ZetaReceived")
-				continue
-			}
-			fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
-			fmt.Printf("Topic 1 (origin chain id): %d\n", vLog.Topics[1])
-			fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
-			fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
-			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
-
-			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
-				fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
-				sendhash := vLog.Topics[3].Hex()
-				//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-				var mMint string = retval[1].(*big.Int).String()
-				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-					sendhash,
-					vLog.TxHash.Hex(),
-					vLog.BlockNumber,
-					mMint,
-					common.ReceiveStatus_Success,
-					chainOb.chain.String(),
-				)
+func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+	receipt, found := ob.nonceTx[nonce]
+	if found && receipt.Status == 1 {
+		logs := receipt.Logs
+		for _, vLog := range logs {
+			switch vLog.Topics[0].Hex() {
+			case logZetaReceivedSignatureHash.Hex():
+				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, ob.chain)
+				retval, err := ob.connectorAbi.Unpack("ZetaReceived", vLog.Data)
 				if err != nil {
-					log.Err(err).Msg("error posting confirmation to meta core")
+					fmt.Println("error unpacking ZetaReceived")
 					continue
 				}
-				fmt.Printf("Zeta tx hash: %s\n", metaHash)
-				return true, true, nil
-			} else {
-				fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-				return true, false, nil
-			}
-		case logZetaRevertedSignatureHash.Hex():
-			fmt.Printf("Found (revert tx) sendHash %s on chain %s\n", sendHash, chainOb.chain)
-			retval, err := chainOb.connectorAbi.Unpack("ZetaReverted", vLog.Data)
-			if err != nil {
-				fmt.Println("error unpacking ZetaReverted")
-				continue
-			}
-			fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
-			fmt.Printf("Topic 1 (dest chain id): %d\n", vLog.Topics[1])
-			fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
-			fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
-			fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
+				fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
+				fmt.Printf("Topic 1 (origin chain id): %d\n", vLog.Topics[1])
+				fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
+				fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
+				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
-			if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < chainOb.LastBlock {
-				fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
-				sendhash := vLog.Topics[3].Hex()
-				var mMint string = retval[2].(*big.Int).String()
-				metaHash, err := chainOb.bridge.PostReceiveConfirmation(
-					sendhash,
-					vLog.TxHash.Hex(),
-					vLog.BlockNumber,
-					mMint,
-					common.ReceiveStatus_Success,
-					chainOb.chain.String(),
-				)
+				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
+					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+					sendhash := vLog.Topics[3].Hex()
+					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
+					var mMint string = retval[1].(*big.Int).String()
+					metaHash, err := ob.bridge.PostReceiveConfirmation(
+						sendhash,
+						vLog.TxHash.Hex(),
+						vLog.BlockNumber,
+						mMint,
+						common.ReceiveStatus_Success,
+						ob.chain.String(),
+					)
+					if err != nil {
+						log.Err(err).Msg("error posting confirmation to meta core")
+						continue
+					}
+					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					return true, true, nil
+				} else {
+					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
+					return true, false, nil
+				}
+			case logZetaRevertedSignatureHash.Hex():
+				fmt.Printf("Found (revert tx) sendHash %s on chain %s\n", sendHash, ob.chain)
+				retval, err := ob.connectorAbi.Unpack("ZetaReverted", vLog.Data)
 				if err != nil {
-					log.Err(err).Msg("error posting confirmation to meta core")
+					fmt.Println("error unpacking ZetaReverted")
 					continue
 				}
-				fmt.Printf("Zeta tx hash: %s\n", metaHash)
-				return true, true, nil
-			} else {
-				fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, chainOb.LastBlock)
-				return true, false, nil
+				fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
+				fmt.Printf("Topic 1 (dest chain id): %d\n", vLog.Topics[1])
+				fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
+				fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
+				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
+
+				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
+					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+					sendhash := vLog.Topics[3].Hex()
+					var mMint string = retval[2].(*big.Int).String()
+					metaHash, err := ob.bridge.PostReceiveConfirmation(
+						sendhash,
+						vLog.TxHash.Hex(),
+						vLog.BlockNumber,
+						mMint,
+						common.ReceiveStatus_Success,
+						ob.chain.String(),
+					)
+					if err != nil {
+						log.Err(err).Msg("error posting confirmation to meta core")
+						continue
+					}
+					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					return true, true, nil
+				} else {
+					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
+					return true, false, nil
+				}
 			}
 		}
+	} else if found && receipt.Status == 0 {
+		//FIXME: check nonce here by getTransaction RPC
+		zetaTxHash, err := ob.bridge.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String())
+		if err != nil {
+			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+		}
+		return true, true, nil
 	}
 
-	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", chainOb.chain)
+	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", ob.chain)
 }
 
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA from Uniswap v3
@@ -739,36 +816,57 @@ func (ob *ChainObserver) GetZetaExchangeRateUniswapV2() (*big.Int, uint64, error
 	return v, bn, nil
 }
 
-// watch outbound tx
-// returns whether outbound tx is successful or failure
-func (chainOb *ChainObserver) WatchTxHashWithTimeout(txid string, sendHash string) bool {
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
-	defer cancel()
-
-	for {
+// this function periodically checks all the txhash in potential outbound txs
+func (ob *ChainObserver) observeOutTx() {
+	ticker := time.NewTicker(10 * time.Second)
+	for range ticker.C {
 		select {
-		case <-ctx.Done():
-			log.Info().Msgf("TIMEOUT: watching outTx %s on chain %s", txid, chainOb.chain)
-			return false
+		case outTx := <-ob.OutTxChan:
+			ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
 		default:
-			receipt, err := chainOb.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txid))
-			if err != nil {
-				log.Error().Err(err).Msgf("error watching outTx %s on chain %s", txid, chainOb.chain)
-			} else {
-				if receipt.Status == 1 { // 1: success
-					log.Info().Msgf("SUCCESS: watching outTx %s on chain %s", txid, chainOb.chain)
-					return true
-				} else if receipt.Status == 0 { // tx mined but failed; should revert
-					log.Info().Msgf("FAILED: watching outTx %s on chain %s", txid, chainOb.chain)
-					zetaTxHash, err := chainOb.bridge.PostReceiveConfirmation(sendHash, txid, receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, chainOb.chain.String())
-					if err != nil {
-						log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+			for nonce, txhashes := range ob.nonceTxHashesMap {
+				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txhashes))
+				for _, txhash := range txhashes {
+					receipt, err := ob.queryTxByHash(txhash, nonce)
+					if err == nil { // confirmed
+						log.Info().Msgf("observeOutTx: %s nonce %d, txhash %s confirmed", ob.chain, nonce, txhash)
+						delete(ob.nonceTxHashesMap, nonce)
+						ob.nonceTx[nonce] = *receipt
+						break
 					}
-					return false
+					time.Sleep(1 * time.Second)
 				}
-				return false
 			}
-			time.Sleep(10 * time.Second)
 		}
+	}
+}
+
+// return the status of txHash
+// receipt nil, err non-nil: txHash not found
+// receipt non-nil, err non-nil: txHash found but not confirmed
+// receipt non-nil, err nil: txHash confirmed
+func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
+	receipt, err := ob.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txHash))
+	if err != nil {
+		log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
+		return nil, err
+	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.LastBlock {
+		log.Info().Msgf("%s TransactionReceipt %s mined in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.LastBlock)
+		return receipt, err
+	} else { // confirmed outbound tx
+		if receipt.Status == 0 { // failed (reverted tx)
+			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, but it's reverted!", ob.chain, txHash, nonce)
+		} else if receipt.Status == 1 { // success
+			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, and it's successful", ob.chain, txHash, nonce)
+		}
+		return receipt, nil
+	}
+}
+
+func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash string) {
+	ob.OutTxChan <- OutTx{
+		TxHash:   txHash,
+		Nonce:    nonce,
+		SendHash: sendHash,
 	}
 }

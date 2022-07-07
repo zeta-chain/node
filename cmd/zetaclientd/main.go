@@ -27,8 +27,6 @@ import (
 	"time"
 )
 
-const ()
-
 func main() {
 	fmt.Printf("zetacore commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
 
@@ -273,8 +271,8 @@ func start(validatorName string, peers addr.AddrList) {
 	<-ch
 	log.Info().Msg("stop signal received")
 
-	_ = (*chainClientMap1)[common.ETHChain].Stop()
-	_ = (*chainClientMap1)[common.BSCChain].Stop()
-	_ = (*chainClientMap1)[common.POLYGONChain].Stop()
-	_ = (*chainClientMap1)[common.RopstenChain].Stop()
+	(*chainClientMap1)[common.ETHChain].Stop()
+	(*chainClientMap1)[common.BSCChain].Stop()
+	(*chainClientMap1)[common.POLYGONChain].Stop()
+	(*chainClientMap1)[common.RopstenChain].Stop()
 }
