@@ -671,20 +671,15 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 		for _, vLog := range logs {
 			switch vLog.Topics[0].Hex() {
 			case logZetaReceivedSignatureHash.Hex():
-				fmt.Printf("Found sendHash %s on chain %s\n", sendHash, ob.chain)
+				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				retval, err := ob.connectorAbi.Unpack("ZetaReceived", vLog.Data)
 				if err != nil {
-					fmt.Println("error unpacking ZetaReceived")
+					log.Error().Err(err).Msg("error unpacking ZetaReceived")
 					continue
 				}
-				fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1 (origin chain id): %d\n", vLog.Topics[1])
-				fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
-				fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
-				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
-					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 					var mMint string = retval[1].(*big.Int).String()
@@ -697,30 +692,25 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						ob.chain.String(),
 					)
 					if err != nil {
-						log.Err(err).Msg("error posting confirmation to meta core")
+						log.Error().Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					log.Info().Msgf("Zeta tx hash: %s\n", metaHash)
 					return true, true, nil
 				} else {
-					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
+					log.Info().Msgf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
 					return true, false, nil
 				}
 			case logZetaRevertedSignatureHash.Hex():
-				fmt.Printf("Found (revert tx) sendHash %s on chain %s\n", sendHash, ob.chain)
+				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				retval, err := ob.connectorAbi.Unpack("ZetaReverted", vLog.Data)
 				if err != nil {
-					fmt.Println("error unpacking ZetaReverted")
+					log.Error().Err(err).Msg("error unpacking ZetaReverted")
 					continue
 				}
-				fmt.Printf("Topic 0 (event hash): %s\n", vLog.Topics[0])
-				fmt.Printf("Topic 1 (dest chain id): %d\n", vLog.Topics[1])
-				fmt.Printf("Topic 2 (dest address): %s\n", vLog.Topics[2])
-				fmt.Printf("Topic 3 (sendHash): %s\n", vLog.Topics[3])
-				fmt.Printf("txhash: %s, blocknum %d\n", vLog.TxHash, vLog.BlockNumber)
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
-					fmt.Printf("Confirmed! Sending PostConfirmation to zetacore...\n")
+					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					var mMint string = retval[2].(*big.Int).String()
 					metaHash, err := ob.bridge.PostReceiveConfirmation(
@@ -735,24 +725,26 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						log.Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					fmt.Printf("Zeta tx hash: %s\n", metaHash)
+					log.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
 				} else {
-					fmt.Printf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
+					log.Info().Msgf("Included in block but not yet confirmed! included in block %d, current block %d", vLog.BlockNumber, ob.LastBlock)
 					return true, false, nil
 				}
 			}
 		}
 	} else if found && receipt.Status == 0 {
 		//FIXME: check nonce here by getTransaction RPC
+		log.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
 		zetaTxHash, err := ob.bridge.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String())
 		if err != nil {
 			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 		}
+		log.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 		return true, true, nil
 	}
 
-	return false, false, fmt.Errorf("IsSendOutTxProcessed: unknown chain %s", ob.chain)
+	return false, false, fmt.Errorf("IsSendOutTxProcessed: error on chain %s", ob.chain)
 }
 
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA from Uniswap v3
