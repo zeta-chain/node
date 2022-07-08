@@ -19,6 +19,7 @@ type ChainETHish struct {
 	Name                     common.Chain
 	Topics                   [][]ethcommon.Hash
 	BlockTime                uint64
+	Endpoint                 string
 }
 
 func BytesToEthHex(b []byte) string {

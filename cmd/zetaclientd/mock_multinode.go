@@ -34,25 +34,25 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.GoerliChain.String()].ConnectorContractAddress)
-	ethSigner, err := mc.NewSigner(common.GoerliChain, mcconfig.GOERLI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
+	ethSigner, err := mc.NewSigner(common.GoerliChain, mcconfig.Chains[common.GoerliChain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 		return nil, err
 	}
 	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress)
-	bscSigner, err := mc.NewSigner(common.BSCTestnetChain, mcconfig.BSCTESTNET_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, bscMPIAddress)
+	bscSigner, err := mc.NewSigner(common.BSCTestnetChain, mcconfig.Chains[common.BSCTestnetChain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, bscMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner BSC error")
 		return nil, err
 	}
 	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.MumbaiChain.String()].ConnectorContractAddress)
-	polygonSigner, err := mc.NewSigner(common.MumbaiChain, mcconfig.MUMBAI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, polygonMPIAddress)
+	polygonSigner, err := mc.NewSigner(common.MumbaiChain, mcconfig.Chains[common.MumbaiChain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, polygonMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
 		return nil, err
 	}
 	ropstenMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.RopstenChain.String()].ConnectorContractAddress)
-	ropstenSigner, err := mc.NewSigner(common.RopstenChain, mcconfig.ROPSTEN_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ropstenMPIAddress)
+	ropstenSigner, err := mc.NewSigner(common.RopstenChain, mcconfig.Chains[common.RopstenChain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, ropstenMPIAddress)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewSigner ROPSTEN error")
 		return nil, err
