@@ -80,27 +80,29 @@ func (idb *IndexDB) Start() {
 				transaction, _, err := client.TransactionByHash(context.TODO(), ethcommon.HexToHash(tx.TxHash))
 				if err != nil {
 					log.Error().Err(err).Msg("TransactionByHash")
-
+					continue
 				}
 				receipt, err := client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(tx.TxHash))
 				if err != nil {
 					log.Error().Err(err).Msg("TransactionReceipt")
-
+					continue
 				}
 				sender, err := client.TransactionSender(context.TODO(), transaction, receipt.BlockHash, receipt.TransactionIndex)
 				if err != nil {
 					log.Error().Err(err).Msg("TransactionSender")
-
+					continue
 				}
 				block, err := client.BlockByHash(context.TODO(), receipt.BlockHash)
 				if err != nil {
 					log.Error().Err(err).Msg("BlockByHash")
+					continue
 				}
 				log.Info().Msgf("TX %s %s", tx.Chain, tx.TxHash)
 				log.Info().Msgf("sender: %s => %s", sender, transaction.To().Hex())
 				logs, err := json.Marshal(receipt.Logs)
 				if err != nil {
 					log.Error().Err(err).Msg("json.Marshal")
+					continue
 				}
 				_ = logs
 				_ = block
@@ -109,7 +111,6 @@ func (idb *IndexDB) Start() {
 					tx.Chain, tx.TxHash, receipt.BlockNumber.Uint64(), sender.Hex(), transaction.To().Hex(), receipt.Status, receipt.GasUsed, transaction.GasPrice().Uint64(),
 					time.Unix(int64(block.Time()), 0).UTC(), string(logs),
 				)
-
 				if err != nil {
 					log.Error().Err(err).Msg("Exec() insert into externaltxs error")
 				}
