@@ -237,8 +237,8 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 
 		{
 			path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, chain.String())
+			// #nosec G304
 			jsonFile, err := os.Open(path)
-			defer jsonFile.Close()
 			if err != nil {
 				log.Error().Err(err).Msgf("error opening %s", path)
 			} else {
@@ -247,13 +247,15 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 				if err != nil {
 					log.Error().Err(err).Msgf("error opening %s", path)
 				}
+				// #nosec G104
+				jsonFile.Close()
 			}
 		}
 
 		{
 			path := fmt.Sprintf("%s/%s.nonceTx", dbpath, chain.String())
+			// #nosec G304
 			jsonFile, err := os.Open(path)
-			defer jsonFile.Close()
 			if err != nil {
 				log.Error().Err(err).Msgf("error opening %s", path)
 			} else {
@@ -262,6 +264,8 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 				if err != nil {
 					log.Error().Err(err).Msgf("error opening %s", path)
 				}
+				// #nosec G104
+				jsonFile.Close()
 			}
 		}
 
@@ -624,8 +628,8 @@ func (ob *ChainObserver) Stop() {
 	{
 		path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, ob.chain.String())
 		log.Info().Msgf("writing to %s", path)
+		// #nosec G304 - this is a file that is written to, not read from
 		jsonFile, err := os.Open(path)
-		defer jsonFile.Close()
 		if err != nil {
 			log.Error().Err(err).Msgf("error opening %s", path)
 		} else {
@@ -634,13 +638,16 @@ func (ob *ChainObserver) Stop() {
 			if err != nil {
 				log.Error().Err(err).Msgf("error opening %s", path)
 			}
+			// #nosec G104
+			jsonFile.Close()
 		}
+
 	}
 	{
 		path := fmt.Sprintf("%s/%s.nonceTx", dbpath, ob.chain.String())
 		log.Info().Msgf("writing to %s", path)
+		// #nosec G304 - this is a file that is written to, not read from
 		jsonFile, err := os.Open(path)
-		defer jsonFile.Close()
 		if err != nil {
 			log.Error().Err(err).Msgf("error opening %s", path)
 		} else {
@@ -649,6 +656,8 @@ func (ob *ChainObserver) Stop() {
 			if err != nil {
 				log.Error().Err(err).Msgf("error opening %s", path)
 			}
+			// #nosec G104
+			jsonFile.Close()
 		}
 	}
 }
