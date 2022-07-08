@@ -23,11 +23,11 @@ const (
 )
 
 var (
-	// API Endpoints
-	GOERLI_ENDPOINT = "https://eth-goerli-sh285ns91n5975.athens.zetachain.com"
-	MUMBAI_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
-	BSCTESTNET_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
-	ROPSTEN_ENDPOINT = "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com"
+// API Endpoints
+//GOERLI_ENDPOINT     = "https://eth-goerli-sh285ns91n5975.athens.zetachain.com"
+//MUMBAI_ENDPOINT     = "https://polygon-sh285ns91n5975.athens.zetachain.com"
+//BSCTESTNET_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
+//ROPSTEN_ENDPOINT    = "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com"
 )
 
 const (
@@ -70,6 +70,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress:      "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",
 		ChainID:                  big.NewInt(5),
 		BlockTime:                ETH_BLOCK_TIME,
+		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.BSCTestnetChain.String(): {
 		Name:                     "BSCTESTNET",
@@ -77,6 +78,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress:      "0xE5C9b19BB3820c69680b5cA1A00249261B5c5797",
 		ChainID:                  big.NewInt(97),
 		BlockTime:                BSC_BLOCK_TIME,
+		Endpoint:                 "https://bsc-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.MumbaiChain.String(): {
 		Name:                     "MUMBAI",
@@ -84,6 +86,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress:      "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
 		ChainID:                  big.NewInt(80001),
 		BlockTime:                POLY_BLOCK_TIME,
+		Endpoint:                 "https://mumbai-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.RopstenChain.String(): {
 		Name:                     "ROPSTEN",
@@ -91,6 +94,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
 		ChainID:                  big.NewInt(3),
 		BlockTime:                ETH_BLOCK_TIME,
+		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.EmptyChain.String(): {
 		Name:                     "",
