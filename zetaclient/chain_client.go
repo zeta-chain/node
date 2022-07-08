@@ -123,6 +123,7 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	ob.nonceTx = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 	ob.mpiAddress = config.Chains[chain.String()].ConnectorContractAddress
+	ob.endpoint = config.Chains[chain.String()].Endpoint
 
 	// initialize the Client
 	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
@@ -179,28 +180,24 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	// Initialize chain specific setup
 	switch chain {
 	case common.MumbaiChain:
-		ob.endpoint = config.MUMBAI_ENDPOINT
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, 12)) * time.Second)
 		ob.confCount = config.POLYGON_CONFIRMATION_COUNT
 		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.POLY_BLOCK_TIME
 
 	case common.GoerliChain:
-		ob.endpoint = config.GOERLI_ENDPOINT
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, 12)) * time.Second)
 		ob.confCount = config.ETH_CONFIRMATION_COUNT
 		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.ETH_BLOCK_TIME
 
 	case common.BSCTestnetChain:
-		ob.endpoint = config.BSCTESTNET_ENDPOINT
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, 12)) * time.Second)
 		ob.confCount = config.BSC_CONFIRMATION_COUNT
 		ob.ZetaPriceQuerier = uniswapv2querier
 		ob.BlockTime = config.BSC_BLOCK_TIME
 
 	case common.RopstenChain:
-		ob.endpoint = config.ROPSTEN_ENDPOINT
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, 12)) * time.Second)
 		ob.confCount = config.ROPSTEN_CONFIRMATION_COUNT
 		ob.ZetaPriceQuerier = uniswapv3querier
