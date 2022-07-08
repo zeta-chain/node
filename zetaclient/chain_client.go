@@ -124,8 +124,17 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 	ob.OutTxChan = make(chan OutTx, 100)
 	ob.mpiAddress = config.Chains[chain.String()].ConnectorContractAddress
 
+	// initialize the Client
+	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	client, err := ethclient.Dial(ob.endpoint)
+	if err != nil {
+		log.Err(err).Msg("eth Client Dial")
+		return nil, err
+	}
+	ob.Client = client
+
 	// create metric counters
-	err := ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
+	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
 	if err != nil {
 		return nil, err
 	}
@@ -202,15 +211,6 @@ func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner
 		log.Info().Msg("Using dummy price of 1:1")
 		ob.ZetaPriceQuerier = dummyQuerier
 	}
-
-	// Dial the mpiAddress
-	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
-	client, err := ethclient.Dial(ob.endpoint)
-	if err != nil {
-		log.Err(err).Msg("eth Client Dial")
-		return nil, err
-	}
-	ob.Client = client
 
 	if dbpath != "" {
 		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
