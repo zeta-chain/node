@@ -92,7 +92,7 @@ type ChainObserver struct {
 	ticker           *time.Ticker
 	connectorAbi     *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
 	Client           *ethclient.Client
-	bridge           *MetachainBridge
+	bridge           *ZetaCoreBridge
 	Tss              TSSSigner
 	LastBlock        uint64
 	confCount        uint64 // must wait this many blocks to be considered "confirmed"
@@ -109,7 +109,7 @@ type ChainObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *MetachainBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}

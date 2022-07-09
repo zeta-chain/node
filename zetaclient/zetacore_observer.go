@@ -29,7 +29,7 @@ const (
 
 type CoreObserver struct {
 	sendQueue []*types.Send
-	bridge    *MetachainBridge
+	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]*Signer
 	clientMap map[common.Chain]*ChainObserver
 	metrics   *metrics.Metrics
@@ -42,7 +42,7 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.tss = tss
 	co.bridge = bridge
@@ -97,7 +97,7 @@ func (co *CoreObserver) keygenObserve() {
 		if err != nil {
 			continue
 		}
-		bn, _ := co.bridge.GetMetaBlockHeight()
+		bn, _ := co.bridge.GetZetaBlockHeight()
 		if bn != kg.BlockNumber {
 			continue
 		}

@@ -141,7 +141,7 @@ func start(validatorName string, peers addr.AddrList) {
 	// first signer & bridge
 	signerName := validatorName
 	signerPass := "password"
-	bridge1, done := CreateMetaBridge(chainHomeFoler, signerName, signerPass)
+	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass)
 	if done {
 		return
 	}

@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.MetachainBridge, bool) {
+func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
@@ -24,9 +24,9 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 		chainIP = "127.0.0.1"
 	}
 
-	bridge, err := mc.NewMetachainBridge(k, chainIP, signerName)
+	bridge, err := mc.NewZetaCoreBridge(k, chainIP, signerName)
 	if err != nil {
-		log.Fatal().Err(err).Msg("NewMetachainBridge")
+		log.Fatal().Err(err).Msg("NewZetaCoreBridge")
 		return nil, true
 	}
 	return bridge, false
@@ -67,7 +67,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
 	log.Info().Msg("starting eth observer...")
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
 	eth1, err := mc.NewChainObserver(common.GoerliChain, bridge, tss, dbpath, metrics)
