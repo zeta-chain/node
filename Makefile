@@ -6,9 +6,9 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=metachain \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=metacored \
-	-X github.com/cosmos/cosmos-sdk/version.ClientName=metaclientd \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetachain \
+	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
+	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \

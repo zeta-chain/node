@@ -18,11 +18,11 @@ import (
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
+func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
-	blockHeight, err := b.GetMetaBlockHeight()
+	blockHeight, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return "", err
 	}
@@ -117,7 +117,7 @@ func (b *MetachainBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 }
 
 // GetContext return a valid context with all relevant values set
-func (b *MetachainBridge) GetContext() client.Context {
+func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx := client.Context{}
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(cmd.CHAINID)

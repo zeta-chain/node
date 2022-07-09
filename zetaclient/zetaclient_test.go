@@ -14,7 +14,7 @@ import (
 )
 
 type MySuite struct {
-	bridge *MetachainBridge
+	bridge *ZetaCoreBridge
 }
 
 var _ = Suite(&MySuite{})
@@ -43,7 +43,7 @@ func (s *MySuite) SetUpTest(c *C) {
 	if chainIP == "" {
 		chainIP = "127.0.0.1"
 	}
-	bridge, err := NewMetachainBridge(k, chainIP, "alice")
+	bridge, err := NewZetaCoreBridge(k, chainIP, "alice")
 	if err != nil {
 		c.Fail()
 	}
