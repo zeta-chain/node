@@ -8,7 +8,7 @@ import (
 )
 
 // GetBlockHeight returns the current height for metachain blocks
-func (b *MetachainBridge) GetBlockHeight() (uint64, error) {
+func (b *ZetaCoreBridge) GetBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	height, err := client.LastMetaHeight(
 		context.Background(),
@@ -22,7 +22,7 @@ func (b *MetachainBridge) GetBlockHeight() (uint64, error) {
 	return height.Height, nil
 }
 
-//func (b *MetachainBridge) GetLastBlockObserved(chain common.Chain) (uint64, error) {
+//func (b *ZetaCoreBridge) GetLastBlockObserved(chain common.Chain) (uint64, error) {
 //	Client := types.NewQueryClient(b.grpcConn)
 //	last_obs, err := Client.LastBlockObserved(
 //		context.Background(),
