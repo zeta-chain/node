@@ -11,6 +11,8 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"syscall"
+
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
@@ -249,10 +251,11 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// wait....
+	log.Info().Msgf("capturing the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
-	<-ch
-	log.Info().Msg("stop signal received")
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	signal := <-ch
+	log.Info().Msgf("stop signal received: %s", signal)
 
 	(*chainClientMap1)[common.ETHChain].Stop()
 	(*chainClientMap1)[common.BSCChain].Stop()
