@@ -261,6 +261,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				}
 				// #nosec G104
 				jsonFile.Close()
+				log.Info().Msgf("read %d nonceTxHashesMap entries", len(ob.nonceTxHashesMap))
 			}
 		}
 
@@ -278,6 +279,8 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				}
 				// #nosec G104
 				jsonFile.Close()
+				log.Info().Msgf("read %d nonceTx entries", len(ob.nonceTx))
+
 			}
 		}
 
