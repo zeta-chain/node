@@ -187,6 +187,7 @@ func (co *CoreObserver) startObserve() {
 }
 
 func (co *CoreObserver) shepherdManager() {
+	numShepherds := 0
 	for {
 		select {
 		case send := <-co.sendNew:
@@ -197,9 +198,13 @@ func (co *CoreObserver) shepherdManager() {
 				<-co.signerSlots
 				log.Info().Msg("got back a signer slot! spawn shepherd")
 				go co.shepherdSend(send)
+				numShepherds++
+				log.Info().Msgf("new shepherd: %d shepherds in total", numShepherds)
 			}
 		case send := <-co.sendDone:
 			delete(co.shepherds, send.Index)
+			numShepherds--
+			log.Info().Msgf("remove shepherd: %d shepherds left", numShepherds)
 		}
 	}
 }
