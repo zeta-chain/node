@@ -44,19 +44,19 @@ func main() {
 
 	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
 	if ethEndPoint != "" {
-		config.GOERLI_ENDPOINT = ethEndPoint
+		config.Chains[common.GoerliChain.String()].Endpoint = ethEndPoint
 	}
 	log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
 
 	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
 	if bscEndPoint != "" {
-		config.BSCTESTNET_ENDPOINT = bscEndPoint
+		config.Chains[common.BSCTestnetChain.String()].Endpoint = bscEndPoint
 	}
 	log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
 
 	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
 	if polygonEndPoint != "" {
-		config.MUMBAI_ENDPOINT = polygonEndPoint
+		config.Chains[common.MumbaiChain.String()].Endpoint = polygonEndPoint
 	}
 	log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
 
