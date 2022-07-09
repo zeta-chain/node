@@ -251,14 +251,14 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// wait....
-	log.Info().Msgf("capturing the os.Interrupt, syscall.SIGTERM signals...")
+	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	signal := <-ch
-	log.Info().Msgf("stop signal received: %s", signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-ch
+	log.Info().Msgf("stop signal received: %s", sig)
 
-	(*chainClientMap1)[common.ETHChain].Stop()
-	(*chainClientMap1)[common.BSCChain].Stop()
-	(*chainClientMap1)[common.POLYGONChain].Stop()
+	(*chainClientMap1)[common.GoerliChain].Stop()
+	(*chainClientMap1)[common.BSCTestnetChain].Stop()
+	(*chainClientMap1)[common.MumbaiChain].Stop()
 	(*chainClientMap1)[common.RopstenChain].Stop()
 }
