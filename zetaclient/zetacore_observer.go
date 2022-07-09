@@ -59,7 +59,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 12 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
+	MAX_SIGNERS := 64 // assuming each signer takes 200s to finish, then throughput is bounded by 64/200 = 0.3 tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
