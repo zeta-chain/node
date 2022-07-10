@@ -347,9 +347,6 @@ SIGNLOOP:
 			}
 			if tnow.Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
-				if err != nil {
-					log.Error().Err(err).Msg("IsSendOutTxProcessed error")
-				}
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
 					continue
