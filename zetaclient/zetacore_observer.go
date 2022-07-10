@@ -213,13 +213,18 @@ func (co *CoreObserver) shepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
+	startTime := time.Now()
 	done2 := make(chan bool, 1)
+	numQueries := 0
+
 	defer func() {
-		log.Info().Msg("Giving back a signer slot")
+		elapsedTime := time.Since(startTime)
+		log.Info().Msgf("Giving back a signer slot; numQueries %d; elapsed time %s", numQueries, elapsedTime)
 		co.signerSlots <- true
 		co.sendDone <- send
 		done2 <- true
 	}()
+
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
 	if !ok {
@@ -288,7 +293,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			default:
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
-					log.Err(err).Msg("IsSendOutTxProcessed error")
+					numQueries++
 				}
 				if confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
