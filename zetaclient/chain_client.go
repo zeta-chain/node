@@ -766,8 +766,8 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		default:
 			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
+			log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
 			if err == nil {
-				log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
 				for nonce, txHashes := range ob.nonceTxHashesMap {
 					for _, txHash := range txHashes {
 						receipt, err := ob.queryTxByHash(txHash, nonce)
