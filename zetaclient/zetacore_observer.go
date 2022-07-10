@@ -293,7 +293,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-confirmDone:
 				return
 			default:
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					numQueries++
 				}
@@ -302,10 +302,6 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 					signloopDone <- true
 					return
 				}
-				if included {
-					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
-				}
-
 				time.Sleep(12 * time.Second)
 			}
 		}
