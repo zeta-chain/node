@@ -816,7 +816,7 @@ func (ob *ChainObserver) PurgeTxHashWatchList() {
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
 	receipt, err := ob.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txHash))
 	if err != nil {
-		log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
+		//log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
 		return nil, err
 	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.LastBlock {
 		log.Info().Msgf("%s TransactionReceipt %s mined in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.LastBlock)
