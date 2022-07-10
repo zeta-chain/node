@@ -767,17 +767,25 @@ func (ob *ChainObserver) observeOutTx() {
 		default:
 			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
 			log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
+			timeout := time.After(12 * time.Second)
 			if err == nil {
+			QUERYLOOP:
 				for nonce, txHashes := range ob.nonceTxHashesMap {
 					for _, txHash := range txHashes {
-						receipt, err := ob.queryTxByHash(txHash, nonce)
-						if err == nil && receipt != nil { // confirmed
-							log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
-							delete(ob.nonceTxHashesMap, nonce)
-							ob.nonceTx[nonce] = receipt
-							break
+						select {
+						case <-timeout:
+							log.Info().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
+							break QUERYLOOP
+						default:
+							receipt, err := ob.queryTxByHash(txHash, nonce)
+							if err == nil && receipt != nil { // confirmed
+								log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
+								delete(ob.nonceTxHashesMap, nonce)
+								ob.nonceTx[nonce] = receipt
+								break
+							}
+							time.Sleep(300 * time.Millisecond)
 						}
-						time.Sleep(200 * time.Millisecond)
 					}
 				}
 			} else {
@@ -831,6 +839,8 @@ var errNotFound = errors.New("not found")
 // receipt non-nil, err non-nil: txHash found but not confirmed
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
+	timeStart := time.Now()
+	defer log.Info().Msgf("queryTxByHash elapsed: %s", time.Since(timeStart))
 	receipt, err := ob.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txHash))
 	if err != nil && err != errNotFound {
 		log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
