@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math/big"
 	"os"
+	"sort"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -177,7 +178,9 @@ func (co *CoreObserver) startObserve() {
 			continue
 		}
 		log.Info().Msgf("#pending send: %d", len(sendList))
-
+		sort.Slice(sendList, func(i, j int) bool {
+			return sendList[i].Nonce < sendList[j].Nonce
+		})
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
@@ -332,7 +335,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := time.Duration(3) * time.Minute // minimum gap between two keysigns
+	signInterval := time.Duration(5) * time.Minute // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
