@@ -706,7 +706,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s\n", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed!", int(vLog.BlockNumber)-int(ob.LastBlock))
+					log.Info().Msgf("Included; %d blocks before confirmed!", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock))
 					return true, false, nil
 				}
 			case logZetaRevertedSignatureHash.Hex():
