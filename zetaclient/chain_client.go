@@ -685,7 +685,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					continue
 				}
 
-				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
+				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
 					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
@@ -716,8 +716,8 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					continue
 				}
 
-				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
-					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
+				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
+					log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					var mMint string = retval[2].(*big.Int).String()
@@ -736,7 +736,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed!", int(vLog.BlockNumber)-int(ob.LastBlock))
+					log.Info().Msgf("Included; %d blocks before confirmed!", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock))
 					return true, false, nil
 				}
 			}
