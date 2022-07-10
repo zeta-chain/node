@@ -677,7 +677,6 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 		for _, vLog := range logs {
 			switch vLog.Topics[0].Hex() {
 			case logZetaReceivedSignatureHash.Hex():
-				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				retval, err := ob.connectorAbi.Unpack("ZetaReceived", vLog.Data)
 				if err != nil {
 					log.Error().Err(err).Msg("error unpacking ZetaReceived")
@@ -685,6 +684,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 				}
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
+					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
@@ -704,11 +704,10 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s\n", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included in block but not yet confirmed! included in block %d, current block %d\n", vLog.BlockNumber, ob.LastBlock)
+					log.Info().Msgf("Included; %d blocks before confirmed!", vLog.BlockNumber-ob.LastBlock)
 					return true, false, nil
 				}
 			case logZetaRevertedSignatureHash.Hex():
-				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				retval, err := ob.connectorAbi.Unpack("ZetaReverted", vLog.Data)
 				if err != nil {
 					log.Error().Err(err).Msg("error unpacking ZetaReverted")
@@ -716,6 +715,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 				}
 
 				if vLog.BlockNumber+config.ETH_CONFIRMATION_COUNT < ob.LastBlock {
+					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					var mMint string = retval[2].(*big.Int).String()
@@ -734,7 +734,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included in block but not yet confirmed! included in block %d, current block %d", vLog.BlockNumber, ob.LastBlock)
+					log.Info().Msgf("Included; %d blocks before confirmed!", vLog.BlockNumber-ob.LastBlock)
 					return true, false, nil
 				}
 			}
