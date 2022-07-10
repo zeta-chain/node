@@ -214,7 +214,8 @@ func (co *CoreObserver) shepherdManager() {
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
 	startTime := time.Now()
-	done2 := make(chan bool, 1)
+	confirmDone := make(chan bool, 1)
+	coreSendDone := make(chan bool, 1)
 	numQueries := 0
 
 	defer func() {
@@ -222,7 +223,8 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		log.Info().Msgf("Giving back a signer slot; numQueries %d; elapsed time %s", numQueries, elapsedTime)
 		co.signerSlots <- true
 		co.sendDone <- send
-		done2 <- true
+		confirmDone <- true
+		coreSendDone <- true
 	}()
 
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
@@ -284,11 +286,11 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 	var tx *ethtypes.Transaction
 
-	done := make(chan bool, 1)
+	signloopDone := make(chan bool, 1)
 	go func() {
 		for {
 			select {
-			case <-done2:
+			case <-confirmDone:
 				return
 			default:
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
@@ -297,7 +299,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 				}
 				if confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
-					done <- true
+					signloopDone <- true
 					return
 				}
 				if included {
@@ -309,21 +311,46 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		}
 	}()
 
-	// The following signing loop tries to sign outbound tx until it is confirmed.
+	// watch ZetaCore /zeta-chain/send/<sendHash> endpoint; send coreSendDone when the state of the send is updated;
+	// e.g. pendingOutbound->outboundMined; or pendingOutbound->pendingRevert
+	go func() {
+		for {
+			select {
+			case <-coreSendDone:
+				return
+			default:
+				send1, err := co.bridge.GetSendByHash(send.Index)
+				if err != nil || send == nil {
+					log.Info().Msgf("sendHash %s cannot be found in ZetaCore; kill the shepherd", send.Index)
+					signloopDone <- true
+				}
+				if send1.Status != send.Status {
+					log.Info().Msgf("sendHash %s status changed to %s from %s; kill the shepherd", send.Index, send1.Status, send.Status)
+					signloopDone <- true
+				}
+				time.Sleep(12 * time.Second)
+			}
+		}
+	}()
+
+	// The following keysign loop tries to sign outbound tx until the following conditions are met:
+	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
+	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	timeout := time.NewTimer(12 * time.Minute)
-	// TODO: remove this loop; outside loop can supercede it
+	signInterval := time.Duration(3) * time.Minute // minimum gap between two keysigns
+	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
 		select {
-		case <-done:
+		case <-signloopDone:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
-		case <-timeout.C:
-			log.Info().Msg("breaking SignOutBoundTx loop: timeout")
-			break SIGNLOOP
 		default:
-			if time.Now().Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
+			tnow := time.Now()
+			if tnow.Before(lastSignTime.Add(signInterval)) {
+				continue
+			}
+			if tnow.Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					log.Error().Err(err).Msg("IsSendOutTxProcessed error")
@@ -348,6 +375,7 @@ SIGNLOOP:
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				}
+				lastSignTime = time.Now()
 				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
 				if err != nil {
 					log.Error().Err(err).Msgf("GetPromCounter error")
@@ -370,14 +398,6 @@ SIGNLOOP:
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
-				}
-				select {
-				case <-time.After(3 * time.Minute):
-					log.Info().Msgf("killing this shepherd due to timeout")
-					return
-				case <-done:
-					log.Info().Msg("killing this shepherd due to outbound confirmation")
-					return
 				}
 			}
 		}
