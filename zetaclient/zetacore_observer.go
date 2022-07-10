@@ -176,9 +176,9 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
+		log.Info().Msgf("#pending send: %d", len(sendList))
 
 		for _, send := range sendList {
-			log.Info().Msgf("#pending send: %d", len(sendList))
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
 			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
@@ -217,7 +217,6 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	confirmDone := make(chan bool, 1)
 	coreSendDone := make(chan bool, 1)
 	numQueries := 0
-
 	defer func() {
 		elapsedTime := time.Since(startTime)
 		log.Info().Msgf("Giving back a signer slot; numQueries %d; elapsed time %s", numQueries, elapsedTime)
