@@ -762,7 +762,7 @@ func (ob *ChainObserver) observeOutTx() {
 		case outTx := <-ob.OutTxChan:
 			if outTx.TxHash != "" { // TODO: this seems unnecessary
 				ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
-				log.Info().Msgf("%s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
+				log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
 			}
 		default:
 			ob.PurgeTxHashWatchList()
