@@ -766,8 +766,9 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		default:
 			ob.PurgeTxHashWatchList()
+			log.Info().Msgf("outstanding nonce: %d", len(ob.nonceTxHashesMap))
 			for nonce, txHashes := range ob.nonceTxHashesMap {
-				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
+				//log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
 				for _, txHash := range txHashes {
 					receipt, err := ob.queryTxByHash(txHash, nonce)
 					if err == nil && receipt != nil { // confirmed
