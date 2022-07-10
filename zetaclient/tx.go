@@ -98,9 +98,9 @@ func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {
 
 func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{sendHash})
+	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{Index: sendHash})
 	if err != nil {
-		log.Error().Err(err).Msg("query Send error")
+		log.Error().Err(err).Msg("GetSendByHash error")
 		return nil, err
 	}
 	return resp.Send, nil
