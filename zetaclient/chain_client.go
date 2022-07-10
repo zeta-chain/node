@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -766,18 +767,30 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		default:
 			ob.PurgeTxHashWatchList()
-			//log.Info().Msgf("PurgeTxHashWatchList: %d txhashs removed; err: %s", num, err)
-			for nonce, txhashes := range ob.nonceTxHashesMap {
-				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txhashes))
-				for _, txhash := range txhashes {
-					receipt, err := ob.queryTxByHash(txhash, nonce)
+			keys := make([]int, 0, len(ob.nonceTxHashesMap))
+			for k := range ob.nonceTxHashesMap {
+				keys = append(keys, k)
+			}
+			sort.Ints(keys) // no need to query higher nonce if lower nonce is not confirmed
+			cont := false
+			for _, nonce := range keys {
+				txHashes := ob.nonceTxHashesMap[nonce]
+				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
+				for _, txHash := range txHashes {
+					receipt, err := ob.queryTxByHash(txHash, nonce)
 					if err == nil && receipt != nil { // confirmed
-						log.Info().Msgf("observeOutTx: %s nonce %d, txhash %s confirmed", ob.chain, nonce, txhash)
+						log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
 						delete(ob.nonceTxHashesMap, nonce)
 						ob.nonceTx[nonce] = receipt
+						cont = true
 						break
+					} else {
+						cont = false
 					}
 					time.Sleep(200 * time.Millisecond)
+				}
+				if !cont {
+					break
 				}
 			}
 		}
