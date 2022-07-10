@@ -29,6 +29,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	zetatypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 const (
@@ -755,12 +756,17 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 
 // this function periodically checks all the txhash in potential outbound txs
 func (ob *ChainObserver) observeOutTx() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(12 * time.Second)
 	for range ticker.C {
 		select {
 		case outTx := <-ob.OutTxChan:
-			ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
+			if outTx.TxHash != "" { // TODO: this seems unnecessary
+				ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
+				log.Info().Msgf("%s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
+			}
 		default:
+			num, err := ob.PurgeTxHashWatchList()
+			log.Info().Msgf("PurgeTxHashWatchList: %d txhashs removed; err: %s", num, err)
 			for nonce, txhashes := range ob.nonceTxHashesMap {
 				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txhashes))
 				for _, txhash := range txhashes {
@@ -771,11 +777,36 @@ func (ob *ChainObserver) observeOutTx() {
 						ob.nonceTx[nonce] = receipt
 						break
 					}
-					time.Sleep(1 * time.Second)
+					time.Sleep(200 * time.Millisecond)
 				}
 			}
 		}
 	}
+}
+
+// remove txhash from watch list which have no corresponding sendPending in zetacore.
+func (ob *ChainObserver) PurgeTxHashWatchList() (int, error) {
+	purgedTxHashCount := 0
+	sends, err := ob.bridge.GetAllPendingSend()
+	if err != nil {
+		return purgedTxHashCount, err
+	}
+	pendingNonces := make(map[int]bool)
+	for _, send := range sends {
+		if send.Status == zetatypes.SendStatus_PendingRevert && send.SenderChain == ob.chain.String() {
+			pendingNonces[int(send.Nonce)] = true
+		} else if send.Status == zetatypes.SendStatus_PendingOutbound && send.ReceiverChain == ob.chain.String() {
+			pendingNonces[int(send.Nonce)] = true
+		}
+	}
+	for nonce, _ := range ob.nonceTxHashesMap {
+		if _, found := pendingNonces[nonce]; !found {
+			delete(ob.nonceTxHashesMap, nonce)
+			purgedTxHashCount++
+		}
+	}
+
+	return purgedTxHashCount, nil
 }
 
 // return the status of txHash
