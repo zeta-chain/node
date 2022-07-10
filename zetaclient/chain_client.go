@@ -765,32 +765,35 @@ func (ob *ChainObserver) observeOutTx() {
 				log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
 			}
 		default:
-			ob.PurgeTxHashWatchList()
-			log.Info().Msgf("outstanding nonce: %d", len(ob.nonceTxHashesMap))
-			for nonce, txHashes := range ob.nonceTxHashesMap {
-				//log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
-				for _, txHash := range txHashes {
-					receipt, err := ob.queryTxByHash(txHash, nonce)
-					if err == nil && receipt != nil { // confirmed
-						log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
-						delete(ob.nonceTxHashesMap, nonce)
-						ob.nonceTx[nonce] = receipt
-						break
+			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
+			if err == nil {
+				log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
+				for nonce, txHashes := range ob.nonceTxHashesMap {
+					for _, txHash := range txHashes {
+						receipt, err := ob.queryTxByHash(txHash, nonce)
+						if err == nil && receipt != nil { // confirmed
+							log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
+							delete(ob.nonceTxHashesMap, nonce)
+							ob.nonceTx[nonce] = receipt
+							break
+						}
+						time.Sleep(200 * time.Millisecond)
 					}
-					time.Sleep(200 * time.Millisecond)
 				}
+			} else {
+				log.Warn().Err(err).Msg("PurgeTxHashWatchList error")
 			}
 		}
 	}
 }
 
 // remove txhash from watch list which have no corresponding sendPending in zetacore.
-func (ob *ChainObserver) PurgeTxHashWatchList() {
+// returns the min/max nonce after purge
+func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	purgedTxHashCount := 0
 	sends, err := ob.bridge.GetAllPendingSend()
 	if err != nil {
-		log.Error().Err(err).Msg("error getting pending sends")
-		return
+		return 0, 0, err
 	}
 	pendingNonces := make(map[int]bool)
 	for _, send := range sends {
@@ -807,7 +810,18 @@ func (ob *ChainObserver) PurgeTxHashWatchList() {
 			log.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed", ob.chain, nonce)
 		}
 	}
-
+	minNonce, maxNonce := 0, 0
+	if len(pendingNonces) > 0 {
+		for nonce, _ := range pendingNonces {
+			if nonce < minNonce {
+				minNonce = nonce
+			}
+			if nonce > maxNonce {
+				maxNonce = nonce
+			}
+		}
+	}
+	return minNonce, maxNonce, nil
 }
 
 // return the status of txHash
