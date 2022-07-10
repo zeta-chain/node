@@ -201,7 +201,7 @@ func (co *CoreObserver) shepherdManager() {
 				co.shepherds[send.Index] = true
 				log.Info().Msg("waiting on a signer slot...")
 				<-co.signerSlots
-				log.Info().Msg("got back a signer slot! spawn shepherd")
+				log.Info().Msg("got a signer slot! spawn shepherd")
 				go co.shepherdSend(send)
 				numShepherds++
 				log.Info().Msgf("new shepherd: %d shepherds in total", numShepherds)
@@ -337,7 +337,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := time.Duration(3) * time.Minute // minimum gap between two keysigns
+	signInterval := time.Minute // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -354,6 +354,7 @@ SIGNLOOP:
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
+					signInterval = 5 * time.Minute // increase the gap between two keysigns because the outbound is already included thus very likely to be confirmed soon
 					continue
 				}
 				if confirmed {
