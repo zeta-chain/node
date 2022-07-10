@@ -765,8 +765,8 @@ func (ob *ChainObserver) observeOutTx() {
 				log.Info().Msgf("%s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
 			}
 		default:
-			num, err := ob.PurgeTxHashWatchList()
-			log.Info().Msgf("PurgeTxHashWatchList: %d txhashs removed; err: %s", num, err)
+			ob.PurgeTxHashWatchList()
+			//log.Info().Msgf("PurgeTxHashWatchList: %d txhashs removed; err: %s", num, err)
 			for nonce, txhashes := range ob.nonceTxHashesMap {
 				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txhashes))
 				for _, txhash := range txhashes {
@@ -785,11 +785,12 @@ func (ob *ChainObserver) observeOutTx() {
 }
 
 // remove txhash from watch list which have no corresponding sendPending in zetacore.
-func (ob *ChainObserver) PurgeTxHashWatchList() (int, error) {
+func (ob *ChainObserver) PurgeTxHashWatchList() {
 	purgedTxHashCount := 0
 	sends, err := ob.bridge.GetAllPendingSend()
 	if err != nil {
-		return purgedTxHashCount, err
+		log.Error().Err(err).Msg("error getting pending sends")
+		return
 	}
 	pendingNonces := make(map[int]bool)
 	for _, send := range sends {
@@ -803,10 +804,10 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, error) {
 		if _, found := pendingNonces[nonce]; !found {
 			delete(ob.nonceTxHashesMap, nonce)
 			purgedTxHashCount++
+			log.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed", ob.chain, nonce)
 		}
 	}
 
-	return purgedTxHashCount, nil
 }
 
 // return the status of txHash
