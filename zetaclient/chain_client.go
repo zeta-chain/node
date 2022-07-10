@@ -772,8 +772,10 @@ func (ob *ChainObserver) observeOutTx() {
 				keys = append(keys, k)
 			}
 			sort.Ints(keys) // no need to query higher nonce if lower nonce is not confirmed
-			cont := false
-			for _, nonce := range keys {
+			for i, nonce := range keys {
+				if i > 3 {
+					break
+				}
 				txHashes := ob.nonceTxHashesMap[nonce]
 				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
 				for _, txHash := range txHashes {
@@ -782,15 +784,9 @@ func (ob *ChainObserver) observeOutTx() {
 						log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
 						delete(ob.nonceTxHashesMap, nonce)
 						ob.nonceTx[nonce] = receipt
-						cont = true
 						break
-					} else {
-						cont = false
 					}
 					time.Sleep(200 * time.Millisecond)
-				}
-				if !cont {
-					break
 				}
 			}
 		}
