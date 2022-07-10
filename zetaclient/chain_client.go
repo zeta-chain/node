@@ -824,14 +824,16 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	return minNonce, maxNonce, nil
 }
 
+var errNotFound = errors.New("not found")
+
 // return the status of txHash
 // receipt nil, err non-nil: txHash not found
 // receipt non-nil, err non-nil: txHash found but not confirmed
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
 	receipt, err := ob.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txHash))
-	if err != nil {
-		//log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
+	if err != nil && err != errNotFound {
+		log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
 		return nil, err
 	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.LastBlock {
 		log.Info().Msgf("%s TransactionReceipt %s mined in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.LastBlock)
