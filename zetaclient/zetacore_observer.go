@@ -350,7 +350,7 @@ SIGNLOOP:
 			if tnow.Before(lastSignTime.Add(signInterval)) {
 				continue
 			}
-			if tnow.Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
+			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
@@ -371,6 +371,7 @@ SIGNLOOP:
 				}
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+					continue
 				}
 				lastSignTime = time.Now()
 				signInterval *= 2 // exponential backoff
