@@ -256,9 +256,6 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 
 	// Early return if the send is already processed
 	_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
-	if err != nil {
-		log.Error().Err(err).Msg("IsSendOutTxProcessed error")
-	}
 	if confirmed {
 		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
 		return
