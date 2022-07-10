@@ -337,7 +337,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := time.Duration(5) * time.Minute // minimum gap between two keysigns
+	signInterval := time.Duration(3) * time.Minute // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -373,6 +373,7 @@ SIGNLOOP:
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 				}
 				lastSignTime = time.Now()
+				signInterval *= 2 // exponential backoff
 				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
 				if err != nil {
 					log.Error().Err(err).Msgf("GetPromCounter error")
