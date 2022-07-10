@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -767,16 +766,7 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		default:
 			ob.PurgeTxHashWatchList()
-			keys := make([]int, 0, len(ob.nonceTxHashesMap))
-			for k := range ob.nonceTxHashesMap {
-				keys = append(keys, k)
-			}
-			sort.Ints(keys) // no need to query higher nonce if lower nonce is not confirmed
-			for i, nonce := range keys {
-				if i > 3 {
-					break
-				}
-				txHashes := ob.nonceTxHashesMap[nonce]
+			for nonce, txHashes := range ob.nonceTxHashesMap {
 				log.Info().Msgf("observeOutTx: %s nonce %d, len %d", ob.chain, nonce, len(txHashes))
 				for _, txHash := range txHashes {
 					receipt, err := ob.queryTxByHash(txHash, nonce)
