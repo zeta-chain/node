@@ -177,7 +177,9 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
-		log.Info().Msgf("#pending send: %d", len(sendList))
+		if len(sendList) > 0 {
+			log.Info().Msgf("#pending send: %d", len(sendList))
+		}
 		sort.Slice(sendList, func(i, j int) bool {
 			return sendList[i].Nonce < sendList[j].Nonce
 		})
