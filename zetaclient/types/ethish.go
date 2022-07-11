@@ -10,11 +10,11 @@ import (
 )
 
 type ChainETHish struct {
-	//TSSSigner          zetaclient.TSSSigner
-	MPIABI                   abi.ABI
+	ConnectorABI             abi.ABI
 	ChainID                  *big.Int
 	ConnectorContractAddress string
 	PoolContractAddress      string
+	ZETATokenContractAddress string
 	Client                   *ethclient.Client
 	Name                     common.Chain
 	Topics                   [][]ethcommon.Hash
