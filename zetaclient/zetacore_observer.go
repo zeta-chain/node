@@ -402,6 +402,7 @@ SIGNLOOP:
 						backOff := 1000 * time.Millisecond
 						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
 							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
+							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 							err = signer.Broadcast(tx)
 							// TODO: the following error handling is robust?
 							if err == nil {
@@ -419,7 +420,7 @@ SIGNLOOP:
 							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
 								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
-								time.Sleep(backOff + time.Duration(rand.Intn(1000))*time.Millisecond)
+								time.Sleep(backOff)
 							}
 							backOff *= 2
 						}
