@@ -129,7 +129,8 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.OutTxChan = make(chan OutTx, 100)
 	ob.mpiAddress = config.Chains[chain.String()].ConnectorContractAddress
 	ob.endpoint = config.Chains[chain.String()].Endpoint
-	logFile, err := os.Create(ob.chain.String() + "_debug.log." + time.Now().Format("2006-01-02_15-04-05"))
+	logFile, err := os.OpenFile(ob.chain.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+
 	if err != nil {
 		// Can we log an error before we have our logger? :)
 		log.Error().Err(err).Msgf("there was an error creating a logFile chain %s", ob.chain.String())
@@ -856,9 +857,12 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 			log.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed", ob.chain, nonce)
 		}
 	}
-	minNonce, maxNonce := 0, 0
+	minNonce, maxNonce := -1, 0
 	if len(pendingNonces) > 0 {
 		for nonce, _ := range pendingNonces {
+			if minNonce == -1 {
+				minNonce = nonce
+			}
 			if nonce < minNonce {
 				minNonce = nonce
 			}
