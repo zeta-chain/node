@@ -101,12 +101,14 @@ type ChainObserver struct {
 	txWatchList      map[ethcommon.Hash]string
 	mu               *sync.Mutex
 	db               *leveldb.DB
-	sampleLoger      *zerolog.Logger
+	sampleLogger     *zerolog.Logger
 	metrics          *metrics.Metrics
 	nonceTxHashesMap map[int][]string
 	nonceTx          map[int]*ethtypes.Receipt
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
+
+	fileLogger *zerolog.Logger // for critical info
 }
 
 // Return configuration based on supplied target chain
@@ -115,7 +117,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
-	ob.sampleLoger = &sampled
+	ob.sampleLogger = &sampled
 	ob.bridge = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
@@ -125,6 +127,13 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.OutTxChan = make(chan OutTx, 100)
 	ob.mpiAddress = config.Chains[chain.String()].ConnectorContractAddress
 	ob.endpoint = config.Chains[chain.String()].Endpoint
+	logFile, err := os.Create(ob.chain.String() + "_debug.log." + time.Now().Format("2006-01-02_15-04-05"))
+	if err != nil {
+		// Can we log an error before we have our logger? :)
+		log.Error().Err(err).Msgf("there was an error creating a logFile chain %s", ob.chain.String())
+	}
+	fileLogger := zerolog.New(logFile).With().Logger()
+	ob.fileLogger = &fileLogger
 
 	// initialize the Client
 	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
@@ -536,7 +545,7 @@ func (ob *ChainObserver) observeChain() error {
 		Topics:    topics,
 	}
 	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
-	ob.sampleLoger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(ob.mpiAddress))
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(ob.mpiAddress))
 
 	// Finally query the for the logs
 	logs, err := ob.Client.FilterLogs(context.Background(), query)
