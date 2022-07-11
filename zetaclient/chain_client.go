@@ -805,6 +805,7 @@ func (ob *ChainObserver) observeOutTx() {
 			if err == nil {
 			QUERYLOOP:
 				for nonce, txHashes := range ob.nonceTxHashesMap {
+				TXHASHLOOP:
 					for _, txHash := range txHashes {
 						inTimeout := time.After(1000 * time.Millisecond)
 						select {
@@ -817,7 +818,7 @@ func (ob *ChainObserver) observeOutTx() {
 								log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
 								delete(ob.nonceTxHashesMap, nonce)
 								ob.nonceTx[nonce] = receipt
-								break
+								break TXHASHLOOP
 							}
 							<-inTimeout
 						}
@@ -852,9 +853,11 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	}
 	for nonce, _ := range ob.nonceTxHashesMap {
 		if _, found := pendingNonces[nonce]; !found {
+			txHashes := ob.nonceTxHashesMap[nonce]
 			delete(ob.nonceTxHashesMap, nonce)
 			purgedTxHashCount++
 			log.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed", ob.chain, nonce)
+			ob.fileLogger.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed txhashes %v", ob.chain, nonce, txHashes)
 		}
 	}
 	minNonce, maxNonce := -1, 0
