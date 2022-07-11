@@ -775,7 +775,9 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		case <-ticker.C:
 			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
-			log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
+			if len(ob.nonceTxHashesMap) > 0 {
+				log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
+			}
 			timeout := time.After(12 * time.Second)
 			if err == nil {
 			QUERYLOOP:
@@ -783,7 +785,7 @@ func (ob *ChainObserver) observeOutTx() {
 					for _, txHash := range txHashes {
 						select {
 						case <-timeout:
-							log.Info().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
+							log.Warn().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
 							break QUERYLOOP
 						default:
 							receipt, err := ob.queryTxByHash(txHash, nonce)
@@ -793,7 +795,7 @@ func (ob *ChainObserver) observeOutTx() {
 								ob.nonceTx[nonce] = receipt
 								break
 							}
-							time.Sleep(300 * time.Millisecond)
+							time.Sleep(500 * time.Millisecond)
 						}
 					}
 				}
