@@ -347,7 +347,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := time.Minute // minimum gap between two keysigns
+	signInterval := 2 * time.Minute // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -364,7 +364,7 @@ SIGNLOOP:
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included {
 					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
-					signInterval = 5 * time.Minute // increase the gap between two keysigns because the outbound is already included thus very likely to be confirmed soon
+					signInterval = 10 * time.Minute // increase the gap between two keysigns because the outbound is already included thus very likely to be confirmed soon
 					continue
 				}
 				if confirmed {
