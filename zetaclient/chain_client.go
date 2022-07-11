@@ -806,7 +806,7 @@ func (ob *ChainObserver) observeOutTx() {
 			QUERYLOOP:
 				for nonce, txHashes := range ob.nonceTxHashesMap {
 					for _, txHash := range txHashes {
-						inTimeout := time.After(500 * time.Millisecond)
+						inTimeout := time.After(1000 * time.Millisecond)
 						select {
 						case <-outTimeout:
 							log.Warn().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
