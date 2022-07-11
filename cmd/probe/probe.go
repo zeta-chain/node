@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"math/big"
 	"strings"
+	"time"
 )
 
 const (
@@ -51,7 +52,9 @@ func (probe *Probe) SendTransaction() error {
 
 // no decimals
 func (probe *Probe) GetBalance() (*big.Int, error) {
-	bal, err := probe.Client.BalanceAt(context.Background(), probe.Address, nil)
+	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	bal, err := probe.Client.BalanceAt(ctxt, probe.Address, nil)
 	if err != nil {
 		return nil, err
 	} else {
@@ -60,11 +63,13 @@ func (probe *Probe) GetBalance() (*big.Int, error) {
 }
 
 func (probe *Probe) GetZetaBalance() (*big.Int, error) {
+	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	input, err := probe.ERC20ABI.Pack("balanceOf", probe.Address)
 	if err != nil {
 		return nil, err
 	}
-	res, err := probe.Client.CallContract(context.Background(), ethereum.CallMsg{
+	res, err := probe.Client.CallContract(ctxt, ethereum.CallMsg{
 		From: probe.Address,
 		To:   &probe.TokenAddress,
 		Data: input,
