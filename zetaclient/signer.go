@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"strings"
+	"time"
 )
 
 type TSSSigner interface {
@@ -82,7 +83,9 @@ func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, g
 
 // takes in signed tx, broadcast to external chain node
 func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
-	return signer.client.SendTransaction(context.TODO(), tx)
+	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	return signer.client.SendTransaction(ctxt, tx)
 }
 
 //    function onReceive(
