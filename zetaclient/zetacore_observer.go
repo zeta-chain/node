@@ -402,6 +402,7 @@ SIGNLOOP:
 						backOff := 1000 * time.Millisecond
 						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
 							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
+							// #nosec G404 randomness is not a security issue here
 							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 							err = signer.Broadcast(tx)
 							// TODO: the following error handling is robust?
