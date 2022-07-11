@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("zetacore commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
+	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
 
 	var valKeyName = flag.String("val", "alice", "validator name")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
