@@ -841,7 +841,8 @@ var errNotFound = errors.New("not found")
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
 	timeStart := time.Now()
 	defer log.Info().Msgf("queryTxByHash elapsed: %s", time.Since(timeStart))
-	receipt, err := ob.Client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(txHash))
+	ctxt, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	receipt, err := ob.Client.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil && err != errNotFound {
 		log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
 		return nil, err
