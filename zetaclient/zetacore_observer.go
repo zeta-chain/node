@@ -401,7 +401,7 @@ SIGNLOOP:
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						backOff := 1000 * time.Millisecond
 						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
-							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, amount, send.Nonce, i)
+							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
 							err = signer.Broadcast(tx)
 							// TODO: the following error handling is robust?
 							if err == nil {
