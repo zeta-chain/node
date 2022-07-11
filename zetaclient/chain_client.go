@@ -658,6 +658,7 @@ func (ob *ChainObserver) Stop() {
 	log.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 	ob.wg.Wait()
+	log.Info().Msgf("all goroutines stopped; ob %s begins persisting watch list", ob.chain)
 
 	err := ob.db.Close()
 	if err != nil {
@@ -792,7 +793,10 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 func (ob *ChainObserver) observeOutTx() {
 	ob.wg.Add(1)
-	defer func() { ob.wg.Done() }()
+	defer func() {
+		log.Info().Msgf("observeOutTx: stopped")
+		ob.wg.Done()
+	}()
 	ticker := time.NewTicker(12 * time.Second)
 	for {
 		select {
