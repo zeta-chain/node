@@ -70,7 +70,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	}
 	co.shepherds = make(map[string]bool)
 
-	logFile, err := os.Create("zetacore_debug.log." + time.Now().Format("2006-01-02_15-04-05"))
+	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		// Can we log an error before we have our logger? :)
 		log.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
