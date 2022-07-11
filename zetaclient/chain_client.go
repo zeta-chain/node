@@ -108,6 +108,7 @@ type ChainObserver struct {
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
 	stop             chan struct{}
+	wg               sync.WaitGroup
 
 	fileLogger *zerolog.Logger // for critical info
 }
@@ -656,6 +657,7 @@ func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
 func (ob *ChainObserver) Stop() {
 	log.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
+	ob.wg.Wait()
 
 	err := ob.db.Close()
 	if err != nil {
@@ -787,7 +789,10 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 }
 
 // this function periodically checks all the txhash in potential outbound txs
+// FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 func (ob *ChainObserver) observeOutTx() {
+	ob.wg.Add(1)
+	defer func() { ob.wg.Done() }()
 	ticker := time.NewTicker(12 * time.Second)
 	for {
 		select {
@@ -830,7 +835,6 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 		case <-ob.stop:
 			log.Info().Msg("observeOutTx: stopped")
-
 			return
 		}
 	}
