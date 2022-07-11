@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"github.com/rs/zerolog"
 	"math/big"
 	"os"
 	"sort"
@@ -41,6 +42,8 @@ type CoreObserver struct {
 	sendDone    chan *types.Send
 	signerSlots chan bool
 	shepherds   map[string]bool
+
+	fileLogger *zerolog.Logger
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
@@ -66,6 +69,14 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 		co.signerSlots <- true
 	}
 	co.shepherds = make(map[string]bool)
+
+	logFile, err := os.Create("zetacore_debug.log." + time.Now().Format("2006-01-02_15-04-05"))
+	if err != nil {
+		// Can we log an error before we have our logger? :)
+		log.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
+	}
+	fileLogger := zerolog.New(logFile).With().Logger()
+	co.fileLogger = &fileLogger
 
 	return &co
 }
@@ -389,12 +400,15 @@ SIGNLOOP:
 						err = signer.Broadcast(tx)
 						if err != nil {
 							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						} else {
 							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
+					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s", send.SenderChain, toChain, send.Nonce, outTxHash)
 				}
 			}
 		}
