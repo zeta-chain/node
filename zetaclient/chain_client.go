@@ -795,6 +795,7 @@ func (ob *ChainObserver) observeOutTx() {
 			if outTx.TxHash != "" { // TODO: this seems unnecessary
 				ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
 				log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
+				ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
 			}
 		case <-ticker.C:
 			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
