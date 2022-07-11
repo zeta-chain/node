@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/rs/zerolog"
 	"math/big"
+	"math/rand"
 	"os"
 	"sort"
 	"time"
@@ -329,13 +330,13 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-coreSendDone:
 				return
 			default:
-				send1, err := co.bridge.GetSendByHash(send.Index)
+				newSend, err := co.bridge.GetSendByHash(send.Index)
 				if err != nil || send == nil {
 					log.Info().Msgf("sendHash %s cannot be found in ZetaCore; kill the shepherd", send.Index)
 					signloopDone <- true
 				}
-				if send1.Status != send.Status {
-					log.Info().Msgf("sendHash %s status changed to %s from %s; kill the shepherd", send.Index, send1.Status, send.Status)
+				if newSend.Status != send.Status {
+					log.Info().Msgf("sendHash %s status changed to %s from %s; kill the shepherd", send.Index, newSend.Status, send.Status)
 					signloopDone <- true
 				}
 				time.Sleep(12 * time.Second)
@@ -398,23 +399,29 @@ SIGNLOOP:
 					outTxHash := tx.Hash().Hex()
 					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
-						log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
-						err = signer.Broadcast(tx)
-						// FIXME: the following error handling is ridiculous
-						if err == nil {
-							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-						} else if err.Error() == "nonce too low" {
-							log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
-							co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
-							signInterval = 30 * time.Minute
-						} else if err.Error() == "replacement transaction underpriced" {
-							log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							signInterval = 30 * time.Minute
-						} else {
-							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+						backOff := 1000 * time.Millisecond
+						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
+							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, amount, send.Nonce, i)
+							err = signer.Broadcast(tx)
+							// TODO: the following error handling is robust?
+							if err == nil {
+								log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								break // break the retry loop
+							} else if err.Error() == "nonce too low" {
+								log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
+								signInterval = 30 * time.Minute
+							} else if err.Error() == "replacement transaction underpriced" {
+								log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								signInterval = 30 * time.Minute
+							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
+								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
+								time.Sleep(backOff + time.Duration(rand.Intn(1000))*time.Millisecond)
+							}
+							backOff *= 2
 						}
 
 					}
