@@ -401,9 +401,9 @@ SIGNLOOP:
 						log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
 						err = signer.Broadcast(tx)
 						// FIXME: the following error handling is ridiculous
-						if err != nil && err.Error() != "nonce too low" && err.Error() != "replacement transaction underpriced" {
-							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+						if err == nil {
+							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						} else if err.Error() == "nonce too low" {
 							log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
 							co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
@@ -413,9 +413,10 @@ SIGNLOOP:
 							co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 							signInterval = 30 * time.Minute
 						} else {
-							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-							co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
+
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
