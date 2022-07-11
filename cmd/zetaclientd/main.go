@@ -68,6 +68,7 @@ func SetupConfigForTest() {
 func start(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	chainIP := os.Getenv("CHAIN_IP")
 	if chainIP == "" {
