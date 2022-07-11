@@ -233,9 +233,11 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	confirmDone := make(chan bool, 1)
 	coreSendDone := make(chan bool, 1)
 	numQueries := 0
+	keysignCount := 0
+
 	defer func() {
 		elapsedTime := time.Since(startTime)
-		log.Info().Msgf("Giving back a signer slot; numQueries %d; elapsed time %s", numQueries, elapsedTime)
+		log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
 		co.signerSlots <- true
 		co.sendDone <- send
 		confirmDone <- true
@@ -409,6 +411,7 @@ SIGNLOOP:
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s", send.SenderChain, toChain, send.Nonce, outTxHash)
+					keysignCount++
 				}
 			}
 		}
