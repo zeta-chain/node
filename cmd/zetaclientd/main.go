@@ -33,7 +33,12 @@ func main() {
 
 	var valKeyName = flag.String("val", "alice", "validator name")
 	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
+	var logConsole = flag.Bool("log-console", false, "log to console (pretty print)")
 	flag.Parse()
+
+	if *logConsole {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
 
 	var peers addr.AddrList
 	fmt.Println("peer", *peer)
@@ -68,7 +73,6 @@ func SetupConfigForTest() {
 func start(validatorName string, peers addr.AddrList) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	chainIP := os.Getenv("CHAIN_IP")
 	if chainIP == "" {
