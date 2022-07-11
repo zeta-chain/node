@@ -107,6 +107,7 @@ type ChainObserver struct {
 	nonceTx          map[int]*ethtypes.Receipt
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
+	stop             chan struct{}
 
 	fileLogger *zerolog.Logger // for critical info
 }
@@ -114,6 +115,7 @@ type ChainObserver struct {
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
+	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
@@ -349,39 +351,57 @@ func (ob *ChainObserver) PostNonceIfNotRecorded() error {
 
 func (ob *ChainObserver) WatchRouter() {
 	// At each tick, query the mpiAddress
-	for range ob.ticker.C {
-		err := ob.observeChain()
-		if err != nil {
-			log.Err(err).Msg("observeChain error on " + ob.chain.String())
-			continue
+	for {
+		select {
+		case <-ob.ticker.C:
+			err := ob.observeChain()
+			if err != nil {
+				log.Err(err).Msg("observeChain error on " + ob.chain.String())
+				continue
+			}
+		case <-ob.stop:
+			log.Info().Msg("WatchRouter stopped")
+			return
 		}
 	}
 }
 
 func (ob *ChainObserver) WatchGasPrice() {
 	gasTicker := time.NewTicker(60 * time.Second)
-	for range gasTicker.C {
-		err := ob.PostGasPrice()
-		if err != nil {
-			log.Err(err).Msg("PostGasPrice error on " + ob.chain.String())
-			continue
+	for {
+		select {
+		case <-gasTicker.C:
+			err := ob.PostGasPrice()
+			if err != nil {
+				log.Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+				continue
+			}
+		case <-ob.stop:
+			log.Info().Msg("WatchGasPrice stopped")
+			return
 		}
 	}
 }
 
 func (ob *ChainObserver) WatchExchangeRate() {
 	ticker := time.NewTicker(60 * time.Second)
-	for range ticker.C {
-		price, bn, err := ob.ZetaPriceQuerier.GetZetaPrice()
-		if err != nil {
-			log.Err(err).Msg("GetZetaExchangeRate error on " + ob.chain.String())
-			continue
-		}
-		priceInHex := fmt.Sprintf("0x%x", price)
+	for {
+		select {
+		case <-ticker.C:
+			price, bn, err := ob.ZetaPriceQuerier.GetZetaPrice()
+			if err != nil {
+				log.Err(err).Msg("GetZetaExchangeRate error on " + ob.chain.String())
+				continue
+			}
+			priceInHex := fmt.Sprintf("0x%x", price)
 
-		_, err = ob.bridge.PostZetaConversionRate(ob.chain, priceInHex, bn)
-		if err != nil {
-			log.Err(err).Msg("PostZetaConversionRate error on " + ob.chain.String())
+			_, err = ob.bridge.PostZetaConversionRate(ob.chain, priceInHex, bn)
+			if err != nil {
+				log.Err(err).Msg("PostZetaConversionRate error on " + ob.chain.String())
+			}
+		case <-ob.stop:
+			log.Info().Msg("WatchExchangeRate stopped")
+			return
 		}
 	}
 }
@@ -634,6 +654,8 @@ func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
 
 func (ob *ChainObserver) Stop() {
 	log.Info().Msgf("ob %s is stopping", ob.chain)
+	close(ob.stop) // this notifies all goroutines to stop
+
 	err := ob.db.Close()
 	if err != nil {
 		log.Error().Err(err).Msg("error closing db")
@@ -778,13 +800,14 @@ func (ob *ChainObserver) observeOutTx() {
 			if len(ob.nonceTxHashesMap) > 0 {
 				log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.nonceTxHashesMap), minNonce, maxNonce)
 			}
-			timeout := time.After(12 * time.Second)
+			outTimeout := time.After(12 * time.Second)
 			if err == nil {
 			QUERYLOOP:
 				for nonce, txHashes := range ob.nonceTxHashesMap {
 					for _, txHash := range txHashes {
+						inTimeout := time.After(500 * time.Millisecond)
 						select {
-						case <-timeout:
+						case <-outTimeout:
 							log.Warn().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
 							break QUERYLOOP
 						default:
@@ -795,13 +818,17 @@ func (ob *ChainObserver) observeOutTx() {
 								ob.nonceTx[nonce] = receipt
 								break
 							}
-							time.Sleep(500 * time.Millisecond)
+							<-inTimeout
 						}
 					}
 				}
 			} else {
 				log.Warn().Err(err).Msg("PurgeTxHashWatchList error")
 			}
+		case <-ob.stop:
+			log.Info().Msg("observeOutTx: stopped")
+
+			return
 		}
 	}
 }
