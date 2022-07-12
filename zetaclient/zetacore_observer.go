@@ -405,7 +405,7 @@ SIGNLOOP:
 							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
 								log.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								signInterval = 30 * time.Minute
+								//signInterval = 30 * time.Minute
 								break
 							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
 								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
