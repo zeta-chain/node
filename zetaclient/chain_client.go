@@ -882,7 +882,9 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 		}
 	}
 	ob.mu.Unlock()
-	log.Info().Msgf("PurgeTxHashWatchList: chain %s purged %d txhashes in %v", ob.chain, purgedTxHashCount, time.Since(tNow))
+	if purgedTxHashCount > 0 {
+		log.Info().Msgf("PurgeTxHashWatchList: chain %s purged %d txhashes in %v", ob.chain, purgedTxHashCount, time.Since(tNow))
+	}
 	minNonce, maxNonce := -1, 0
 	if len(pendingNonces) > 0 {
 		for nonce, _ := range pendingNonces {
