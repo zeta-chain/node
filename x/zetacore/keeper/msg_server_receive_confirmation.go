@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,30 +13,30 @@ import (
 
 func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgReceiveConfirmation) (*types.MsgReceiveConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	log.Info().Msgf("ReceiveConfirmation: %s", msg.String())
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
 	if !isBondedValidator(msg.Creator, validators) {
+		log.Error().Msgf("signer %s is not a bonded validator", msg.Creator)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
 	index := msg.SendHash
 	send, isFound := k.GetSend(ctx, index)
 	if !isFound {
+		log.Error().Msgf("send not found: %v", index)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("sendHash %s does not exist", index))
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
 		if msg.MMint != send.ZetaMint {
+			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.MMint, send.ZetaMint)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send ZetaMint %s", msg.MMint, send.ZetaMint))
 		}
 	}
 
 	receiveIndex := msg.Digest()
 	receive, isFound := k.GetReceive(ctx, receiveIndex)
-
-	if isDuplicateSigner(msg.Creator, receive.Signers) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
-	}
 
 	if !isFound {
 		receive = types.Receive{
@@ -50,8 +51,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			Chain:               msg.Chain,
 		}
 	} else {
+		if isDuplicateSigner(msg.Creator, receive.Signers) {
+			log.Error().Msgf("ReceiveConfirmation: duplicate signer: %s", msg.Creator)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+		}
 		receive.Signers = append(receive.Signers, msg.Creator)
-		//k.SetReceive(ctx, receive)
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
@@ -63,19 +67,20 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 		//k.SetReceive(ctx, receive)
 
-		lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
-		if !isFound {
-			lastblock = types.LastBlockHeight{
-				Creator:           msg.Creator,
-				Index:             send.ReceiverChain,
-				Chain:             send.ReceiverChain,
-				LastSendHeight:    0,
-				LastReceiveHeight: msg.OutBlockHeight,
-			}
-		} else {
-			lastblock.LastSendHeight = msg.OutBlockHeight
-		}
-		k.SetLastBlockHeight(ctx, lastblock)
+		// TODO: send.ReceiverChain could be empty
+		//lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
+		//if !isFound {
+		//	lastblock = types.LastBlockHeight{
+		//		Creator:           msg.Creator,
+		//		Index:             send.ReceiverChain,
+		//		Chain:             send.ReceiverChain,
+		//		LastSendHeight:    0,
+		//		LastReceiveHeight: msg.OutBlockHeight,
+		//	}
+		//} else {
+		//	lastblock.LastSendHeight = msg.OutBlockHeight
+		//}
+		//k.SetLastBlockHeight(ctx, lastblock)
 
 		if receive.Status == common.ReceiveStatus_Success {
 			oldstatus := send.Status.String()
