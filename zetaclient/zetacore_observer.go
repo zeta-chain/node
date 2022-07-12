@@ -133,21 +133,11 @@ func (co *CoreObserver) keygenObserve() {
 					continue
 				}
 
-				_, err = co.bridge.SetTSS(common.GoerliChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
-				}
-				_, err = co.bridge.SetTSS(common.BSCTestnetChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
-				}
-				_, err = co.bridge.SetTSS(common.MumbaiChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
-				}
-				_, err = co.bridge.SetTSS(common.RopstenChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
+				for _, chain := range config.ChainsEnabled {
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					if err != nil {
+						log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+					}
 				}
 
 				// Keysign test: sanity test
@@ -155,22 +145,13 @@ func (co *CoreObserver) keygenObserve() {
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
 				log.Info().Msg("test keysign finished. exit keygen loop. ")
 
-				err = co.clientMap[common.GoerliChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
+				for _, chain := range config.ChainsEnabled {
+					err = co.clientMap[chain].PostNonceIfNotRecorded()
+					if err != nil {
+						log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+					}
 				}
-				err = co.clientMap[common.BSCTestnetChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
-				}
-				err = co.clientMap[common.MumbaiChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
-				}
-				err = co.clientMap[common.RopstenChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
-				}
+
 				return
 			}
 		}()
