@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/cmd/probe/contracts"
 	"math/big"
 	"strings"
 	"time"
@@ -25,9 +27,10 @@ type Probe struct {
 	Address          ethcommon.Address
 	ChainID          *big.Int
 	ChainName        string
+	Auth             *bind.TransactOpts
 }
 
-func NewProbe(client *ethclient.Client, connectorABI *abi.ABI, address string, chainID *big.Int, connectorAddress string, tokenAddress string) *Probe {
+func NewProbe(client *ethclient.Client, connectorABI *abi.ABI, address string, chainID *big.Int, connectorAddress string, tokenAddress string, auth *bind.TransactOpts) *Probe {
 	ERC20ABI, err := abi.JSON(strings.NewReader(ERC20_ABI_STRING))
 	if err != nil {
 		log.Fatal().Err(err).Msg("parse erc20 abi error")
@@ -42,11 +45,34 @@ func NewProbe(client *ethclient.Client, connectorABI *abi.ABI, address string, c
 		ChainID:          chainID,
 		ConnectorAddress: ethcommon.HexToAddress(connectorAddress),
 		TokenAddress:     ethcommon.HexToAddress(tokenAddress),
+		Auth:             auth,
 	}
 }
 
 func (probe *Probe) SendTransaction() error {
-
+	Connector, err := contracts.NewConnector(probe.ConnectorAddress, probe.Client)
+	if err != nil {
+		return err
+	}
+	tssAddress, err := Connector.TssAddress(nil)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("tss address: %s", tssAddress.Hex())
+	ZetaInterfacesSendInput := contracts.ZetaInterfacesSendInput{
+		DestinationChainId: big.NewInt(97),
+		DestinationAddress: probe.Address.Bytes(),
+		GasLimit:           big.NewInt(90_000),
+		Message:            nil,
+		ZetaAmount:         big.NewInt(1e17),
+		ZetaParams:         nil,
+	}
+	tx, err := Connector.Send(probe.Auth, ZetaInterfacesSendInput)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("send tx: %s", tx.Hash().Hex())
+	//tx, err := probe.ConnectorABI.Pack("sendTransaction", probe.Address, probe.TokenAddress, big.NewInt(1e18))
 	return nil
 }
 

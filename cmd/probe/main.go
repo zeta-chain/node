@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
@@ -54,16 +55,24 @@ func main() {
 			log.Fatal().Err(err).Msgf("connect to chain error %s", name)
 			continue
 		}
-		probe := NewProbe(client, &connABI, address, chain.ChainID, chain.ConnectorContractAddress, chain.ZETATokenContractAddress)
+		auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chain.ChainID)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("bind keyed transactor error %s", name)
+			continue
+		}
+
+		probe := NewProbe(client, &connABI, address, chain.ChainID, chain.ConnectorContractAddress, chain.ZETATokenContractAddress, auth)
 		probeMap[name] = probe
 
 	}
 
 	log.Info().Msg("start REPL loop...")
 	scanner := bufio.NewScanner(os.Stdin)
+	probe := probeMap[common.GoerliChain.String()]
+	name := common.GoerliChain.String()
 REPL_LOOP:
 	for {
-		fmt.Printf("> ")
+		fmt.Printf("[%s] > ", name)
 		scanner.Scan()
 		cmd := scanner.Text()
 		cmdList := strings.Fields(cmd)
@@ -90,6 +99,9 @@ REPL_LOOP:
 					log.Info().Msgf("chain %s zeta  balance %s ZETA", name, bal)
 				}
 			}
+
+		case "SEND":
+			probe.SendTransaction()
 		}
 
 	}
