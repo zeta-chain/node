@@ -270,7 +270,9 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				log.Error().Err(err).Msgf("error opening %s", path)
 			} else {
 				dec := json.NewDecoder(jsonFile)
+				ob.mu.Lock()
 				err = dec.Decode(&ob.nonceTxHashesMap)
+				ob.mu.Unlock()
 				if err != nil {
 					log.Error().Err(err).Msgf("error opening %s", path)
 				}
@@ -677,7 +679,9 @@ func (ob *ChainObserver) Stop() {
 			log.Error().Err(err).Msgf("error opening %s", path)
 		} else {
 			enc := json.NewEncoder(jsonFile)
+			ob.mu.Lock()
 			err = enc.Encode(ob.nonceTxHashesMap)
+			ob.mu.Unlock()
 			if err != nil {
 				log.Error().Err(err).Msgf("error opening %s", path)
 			}
@@ -801,12 +805,6 @@ func (ob *ChainObserver) observeOutTx() {
 	ticker := time.NewTicker(12 * time.Second)
 	for {
 		select {
-		case outTx := <-ob.OutTxChan:
-			if outTx.TxHash != "" { // TODO: this seems unnecessary
-				ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
-				log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
-				ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
-			}
 		case <-ticker.C:
 			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
 			if len(ob.nonceTxHashesMap) > 0 {
@@ -818,12 +816,15 @@ func (ob *ChainObserver) observeOutTx() {
 			QUERYLOOP:
 				//for nonce, txHashes := range ob.nonceTxHashesMap {
 				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
+					ob.mu.Lock()
 					txHashes, found := ob.nonceTxHashesMap[nonce]
+					txHashesCopy := txHashes
+					ob.mu.Unlock()
 					if !found {
 						continue
 					}
 				TXHASHLOOP:
-					for _, txHash := range txHashes {
+					for _, txHash := range txHashesCopy {
 						inTimeout := time.After(1000 * time.Millisecond)
 						select {
 						case <-outTimeout:
@@ -833,8 +834,10 @@ func (ob *ChainObserver) observeOutTx() {
 							receipt, err := ob.queryTxByHash(txHash, nonce)
 							if err == nil && receipt != nil { // confirmed
 								log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
+								ob.mu.Lock()
 								delete(ob.nonceTxHashesMap, nonce)
 								ob.nonceTx[nonce] = receipt
+								ob.mu.Unlock()
 								break TXHASHLOOP
 							}
 							<-inTimeout
@@ -867,6 +870,8 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 			pendingNonces[int(send.Nonce)] = true
 		}
 	}
+	tNow := time.Now()
+	ob.mu.Lock()
 	for nonce, _ := range ob.nonceTxHashesMap {
 		if _, found := pendingNonces[nonce]; !found {
 			txHashes := ob.nonceTxHashesMap[nonce]
@@ -876,6 +881,8 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 			ob.fileLogger.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed txhashes %v", ob.chain, nonce, txHashes)
 		}
 	}
+	ob.mu.Unlock()
+	log.Info().Msgf("PurgeTxHashWatchList: chain %s purged %d txhashes in %v", ob.chain, purgedTxHashCount, time.Since(tNow))
 	minNonce, maxNonce := -1, 0
 	if len(pendingNonces) > 0 {
 		for nonce, _ := range pendingNonces {
@@ -922,9 +929,18 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Rece
 }
 
 func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash string) {
-	ob.OutTxChan <- OutTx{
+	outTx := OutTx{
 		TxHash:   txHash,
 		Nonce:    nonce,
 		SendHash: sendHash,
+	}
+
+	if outTx.TxHash != "" { // TODO: this seems unnecessary
+		ob.mu.Lock()
+		ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
+		ob.mu.Unlock()
+		log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
+		ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
+
 	}
 }
