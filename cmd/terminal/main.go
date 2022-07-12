@@ -144,7 +144,7 @@ REPL_LOOP:
 				log.Info().Msgf("available chains: %v", config.ChainsEnabled)
 				continue
 			}
-			probe.CurrentChain = chain
+			probe = probeMap[chain.String()]
 		case "SEND":
 			probe.evalSend(cmdList)
 		case "REPEAT-SEND":
