@@ -8,7 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/cmd/probe/contracts"
+	"github.com/zeta-chain/zetacore/cmd/terminal/contracts"
 	"math/big"
 	"strings"
 	"time"
@@ -49,7 +49,7 @@ func NewProbe(client *ethclient.Client, connectorABI *abi.ABI, address string, c
 	}
 }
 
-func (probe *Probe) SendTransaction() error {
+func (probe *Probe) SendTransaction(sendInput *SendInput) error {
 	Connector, err := contracts.NewConnector(probe.ConnectorAddress, probe.Client)
 	if err != nil {
 		return err
@@ -60,9 +60,9 @@ func (probe *Probe) SendTransaction() error {
 	}
 	log.Info().Msgf("tss address: %s", tssAddress.Hex())
 	ZetaInterfacesSendInput := contracts.ZetaInterfacesSendInput{
-		DestinationChainId: big.NewInt(97),
-		DestinationAddress: probe.Address.Bytes(),
-		GasLimit:           big.NewInt(90_000),
+		DestinationChainId: sendInput.DestChainID,
+		DestinationAddress: sendInput.To.Bytes(),
+		GasLimit:           sendInput.GasLimit,
 		Message:            nil,
 		ZetaAmount:         big.NewInt(1e17),
 		ZetaParams:         nil,
