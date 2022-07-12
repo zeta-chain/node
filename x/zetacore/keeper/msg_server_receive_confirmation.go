@@ -33,10 +33,6 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	receiveIndex := msg.Digest()
 	receive, isFound := k.GetReceive(ctx, receiveIndex)
 
-	if isDuplicateSigner(msg.Creator, receive.Signers) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
-	}
-
 	if !isFound {
 		receive = types.Receive{
 			Creator:             "",
@@ -50,8 +46,10 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			Chain:               msg.Chain,
 		}
 	} else {
+		if isDuplicateSigner(msg.Creator, receive.Signers) {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+		}
 		receive.Signers = append(receive.Signers, msg.Creator)
-		//k.SetReceive(ctx, receive)
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
