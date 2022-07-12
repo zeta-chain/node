@@ -172,6 +172,7 @@ REPL_LOOP:
 			ticker := time.NewTicker(time.Duration(intervalSeconds) * time.Second)
 		REPEAT:
 			for i := 0; i < int(repeat); i++ {
+				log.Info().Msgf("iteration %d/%d", i, repeat)
 				select {
 				case <-ch:
 					break REPEAT
