@@ -330,7 +330,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := 1 * time.Minute // minimum gap between two keysigns
+	signInterval := 64 * time.Second // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -368,7 +368,6 @@ SIGNLOOP:
 					continue
 				}
 				lastSignTime = time.Now()
-				signInterval *= 2 // exponential backoff
 				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
 				if err != nil {
 					log.Error().Err(err).Msgf("GetPromCounter error")
@@ -395,17 +394,14 @@ SIGNLOOP:
 							} else if strings.Contains(err.Error(), "nonce too low") {
 								log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
 								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
-								signInterval = 30 * time.Minute
 								break
 							} else if strings.Contains(err.Error(), "replacement transaction underpriced") {
 								log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								signInterval = 30 * time.Minute
 								break
 							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
 								log.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								//signInterval = 30 * time.Minute
 								break
 							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
 								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
@@ -418,8 +414,9 @@ SIGNLOOP:
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
-					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s", send.SenderChain, toChain, send.Nonce, outTxHash)
+					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
 					keysignCount++
+					signInterval *= 2 // exponential backoff
 				}
 			}
 		}
