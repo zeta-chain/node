@@ -392,12 +392,12 @@ SIGNLOOP:
 								log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								break // break the retry loop
-							} else if err.Error() == "nonce too low" {
+							} else if strings.Contains(err.Error(), "nonce too low") {
 								log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
 								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
 								signInterval = 30 * time.Minute
 								break
-							} else if err.Error() == "replacement transaction underpriced" {
+							} else if strings.Contains(err.Error(), "replacement transaction underpriced") {
 								log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								signInterval = 30 * time.Minute
