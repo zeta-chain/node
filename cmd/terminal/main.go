@@ -16,7 +16,11 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
+	"os/signal"
+	"strconv"
 	"strings"
+	"syscall"
+	"time"
 )
 
 type SendInput struct {
@@ -87,13 +91,18 @@ func main() {
 
 	}
 
+	// setup signal handler Ctrl-C: cancel REPEAT command rather than terminate program
+	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
 	log.Info().Msg("start REPL loop...")
 	scanner := bufio.NewScanner(os.Stdin)
 	probe := probeMap[common.GoerliChain.String()]
-	currentChain := common.GoerliChain
+	probe.CurrentChain = common.GoerliChain
 REPL_LOOP:
 	for {
-		fmt.Printf("[%s] > ", currentChain)
+		fmt.Printf("[%s] > ", probe.CurrentChain)
 		scanner.Scan()
 		cmd := scanner.Text()
 		cmdList := strings.Fields(cmd)
@@ -129,24 +138,90 @@ REPL_LOOP:
 				log.Info().Msgf("available chains: %v", config.ChainsEnabled)
 				continue
 			}
-			currentChain, err = common.ParseChain(cmdList[1])
+			chain, err := common.ParseChain(cmdList[1])
 			if err != nil {
 				log.Error().Msg("SET-CHAIN <chain>")
 				log.Info().Msgf("available chains: %v", config.ChainsEnabled)
 				continue
 			}
+			probe.CurrentChain = chain
 		case "SEND":
-
-			sendInput := &SendInput{
-				GasLimit:    big.NewInt(90_000),
-				DestChainID: config.Chains[currentChain.String()].ChainID,
-				To:          probe.Address,
+			probe.evalSend(cmdList)
+		case "REPEAT-SEND":
+			if len(cmdList) < 4 {
+				log.Error().Msg("REPEAT-SEND <repeat times> <duration> SEND-CMD")
+				continue
 			}
-
-			log.Info().Msgf("send %s to %s", probe.ChainID, sendInput.DestChainID)
-			log.Info().Msgf("sendInput %+v", sendInput)
-			probe.SendTransaction(sendInput)
+			repeat, err := strconv.ParseInt(cmdList[1], 10, 64)
+			if err != nil {
+				log.Error().Err(err).Msgf("wrong repeat number %s", cmdList[1])
+				continue
+			}
+			duration, err := time.ParseDuration(cmdList[2])
+			if err != nil {
+				log.Error().Err(err).Msgf("wrong duration %s", cmdList[2])
+				continue
+			}
+			interval := duration.Seconds() / float64(repeat)
+			if interval < 1 {
+				interval = 1
+				log.Warn().Msgf("interval %f <1s; set to 1s", interval)
+			}
+			intervalSeconds := int64(interval)
+			log.Info().Msgf("interval %d seconds; begin", intervalSeconds)
+			ticker := time.NewTicker(time.Duration(intervalSeconds) * time.Second)
+		REPEAT:
+			for i := 0; i < int(repeat); i++ {
+				select {
+				case <-ch:
+					break REPEAT
+				case <-ticker.C:
+					probe.evalSend(cmdList[3:])
+				}
+			}
+		default:
+			log.Error().Msg("wrong command")
 		}
 
 	}
+}
+
+func (probe *Probe) evalSend(cmdList []string) {
+	sendInput := &SendInput{
+		GasLimit:    big.NewInt(90_000),
+		DestChainID: config.Chains[probe.CurrentChain.String()].ChainID,
+		To:          probe.Address,
+	}
+	for _, kv := range cmdList[1:] {
+		err := SetSendInput(sendInput, kv)
+		if err != nil {
+			log.Error().Err(err).Msgf("incorrect SEND parameter %s; should be key=value", kv)
+		}
+	}
+
+	log.Info().Msgf("send %s to %s", probe.ChainID, sendInput.DestChainID)
+	log.Info().Msgf("sendInput %+v", sendInput)
+	probe.SendTransaction(sendInput)
+}
+
+func SetSendInput(sendInput *SendInput, kv string) error {
+	kvList := strings.Split(kv, "=")
+	if len(kvList) != 2 {
+		return fmt.Errorf("wrong format")
+	}
+	switch kvList[0] {
+	case "GasLimit":
+		if gasLimit, ok := big.NewInt(0).SetString(kvList[1], 10); !ok {
+			return fmt.Errorf("wrong GasLimit %s", kvList)
+		} else {
+			sendInput.GasLimit = gasLimit
+		}
+	case "DestChainID":
+		if chainID, ok := big.NewInt(0).SetString(kvList[1], 10); !ok {
+			return fmt.Errorf("wrong GasLimit %s", kvList)
+		} else {
+			sendInput.DestChainID = chainID
+		}
+	}
+	return nil
 }
