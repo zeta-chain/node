@@ -813,8 +813,14 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
+
 			QUERYLOOP:
-				for nonce, txHashes := range ob.nonceTxHashesMap {
+				//for nonce, txHashes := range ob.nonceTxHashesMap {
+				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
+					txHashes, found := ob.nonceTxHashesMap[nonce]
+					if !found {
+						continue
+					}
 				TXHASHLOOP:
 					for _, txHash := range txHashes {
 						inTimeout := time.After(1000 * time.Millisecond)
