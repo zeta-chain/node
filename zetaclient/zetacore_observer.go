@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -381,7 +382,7 @@ SIGNLOOP:
 					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						backOff := 1000 * time.Millisecond
-						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
+						for i := 0; i < 3; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
 							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
 							// #nosec G404 randomness is not a security issue here
 							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
@@ -395,10 +396,17 @@ SIGNLOOP:
 								log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
 								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
 								signInterval = 30 * time.Minute
+								break
 							} else if err.Error() == "replacement transaction underpriced" {
 								log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								signInterval = 30 * time.Minute
+								break
+							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
+								log.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								signInterval = 30 * time.Minute
+								break
 							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
 								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
