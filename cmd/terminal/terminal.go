@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd/terminal/contracts"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ type Probe struct {
 	ChainID          *big.Int
 	ChainName        string
 	Auth             *bind.TransactOpts
+	CurrentChain     common.Chain
 }
 
 func NewProbe(client *ethclient.Client, connectorABI *abi.ABI, address string, chainID *big.Int, connectorAddress string, tokenAddress string, auth *bind.TransactOpts) *Probe {
