@@ -202,7 +202,10 @@ func (probe *Probe) evalSend(cmdList []string) {
 
 	log.Info().Msgf("send %s to %s", probe.ChainID, sendInput.DestChainID)
 	log.Info().Msgf("sendInput %+v", sendInput)
-	probe.SendTransaction(sendInput)
+	err := probe.SendTransaction(sendInput)
+	if err != nil {
+		log.Error().Err(err).Msgf("SendTransaction error")
+	}
 }
 
 func SetSendInput(sendInput *SendInput, kv string) error {
