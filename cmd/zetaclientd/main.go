@@ -11,6 +11,7 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"strings"
 	"syscall"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
@@ -30,11 +31,22 @@ import (
 
 func main() {
 	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
+	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN", "enable chains, comma separated list")
+	valKeyName := flag.String("val", "alice", "validator name")
+	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
+	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
 
-	var valKeyName = flag.String("val", "alice", "validator name")
-	var peer = flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
-	var logConsole = flag.Bool("log-console", false, "log to console (pretty print)")
 	flag.Parse()
+	chains := strings.Split(*enabledChains, ",")
+	for _, chain := range chains {
+		if c, err := common.ParseChain(chain); err == nil {
+			config.ChainsEnabled = append(config.ChainsEnabled, c)
+		} else {
+			log.Error().Err(err).Msgf("invalid chain %s", chain)
+			return
+		}
+	}
+	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
 
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -171,21 +183,11 @@ func start(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	_, err = bridge1.SetTSS(common.GoerliChain, tss.Address().Hex(), tss.PubkeyInBech32)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
-	}
-	_, err = bridge1.SetTSS(common.BSCTestnetChain, tss.Address().Hex(), tss.PubkeyInBech32)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
-	}
-	_, err = bridge1.SetTSS(common.MumbaiChain, tss.Address().Hex(), tss.PubkeyInBech32)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
-	}
-	_, err = bridge1.SetTSS(common.RopstenChain, tss.Address().Hex(), tss.PubkeyInBech32)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
+	for _, chain := range config.ChainsEnabled {
+		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)
+		if err != nil {
+			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+		}
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
@@ -238,21 +240,11 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	// report TSS address nonce on ETHish chains
-	err = (*chainClientMap1)[common.GoerliChain].PostNonceIfNotRecorded()
-	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
-	}
-	err = (*chainClientMap1)[common.BSCTestnetChain].PostNonceIfNotRecorded()
-	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
-	}
-	err = (*chainClientMap1)[common.MumbaiChain].PostNonceIfNotRecorded()
-	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
-	}
-	err = (*chainClientMap1)[common.RopstenChain].PostNonceIfNotRecorded()
-	if err != nil {
-		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
+	for _, chain := range config.ChainsEnabled {
+		err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
+		if err != nil {
+			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+		}
 	}
 
 	// wait....
@@ -262,8 +254,9 @@ func start(validatorName string, peers addr.AddrList) {
 	sig := <-ch
 	log.Info().Msgf("stop signal received: %s", sig)
 
-	(*chainClientMap1)[common.GoerliChain].Stop()
-	(*chainClientMap1)[common.BSCTestnetChain].Stop()
-	(*chainClientMap1)[common.MumbaiChain].Stop()
-	(*chainClientMap1)[common.RopstenChain].Stop()
+	// stop zetacore observer
+	for _, chain := range config.ChainsEnabled {
+		(*chainClientMap1)[chain].Stop()
+	}
+
 }
