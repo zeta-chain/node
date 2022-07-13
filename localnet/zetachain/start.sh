@@ -6,15 +6,15 @@ VARS_CONFIG_FILE=../.env
 echo "Sourcing Environment Variables from $VARS_CONFIG_FILE"
 source $VARS_CONFIG_FILE
 
-ETH_MPI_ADDRESS=$(jq -r .'"eth-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
-BSC_MPI_ADDRESS=$(jq -r .'"bsc-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
-POLYGON_MPI_ADDRESS=$(jq -r .'"polygon-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
+ETH_CONNECTOR_ADDRESS=$(jq -r .'"eth-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
+BSC_CONNECTOR_ADDRESS=$(jq -r .'"bsc-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
+POLYGON_CONNECTOR_ADDRESS=$(jq -r .'"polygon-localnet"'.connector "$CONTRACT_ADDRESS_FILE")
 
 echo "Adding Contract Addresses & Endpoints to $(pwd)/.env file"
 cp env_vars .env
-echo "ETH_MPI_ADDRESS=$ETH_MPI_ADDRESS" >> .env
-echo "BSC_MPI_ADDRESS=$BSC_MPI_ADDRESS" >> .env
-echo "POLYGON_MPI_ADDRESS=$POLYGON_MPI_ADDRESS" >> .env
+echo "ETH_CONNECTOR_ADDRESS=$ETH_CONNECTOR_ADDRESS" >> .env
+echo "BSC_CONNECTOR_ADDRESS=$BSC_CONNECTOR_ADDRESS" >> .env
+echo "POLYGON_CONNECTOR_ADDRESS=$POLYGON_CONNECTOR_ADDRESS" >> .env
 
 if [ "$USE_GANACHE" == true ]; then
     echo "ETH_ENDPOINT=http://ganache-eth:8545" >> .env
@@ -32,12 +32,14 @@ docker compose up -d
 echo "Waiting for TSS Address... This may take a few minutes"
 until  [ ! -z "$TSS_ADDR" ]
 do
-    RESPONSE=$(curl -s http://localhost:1317/zeta-chain/zetacore/TSS/ETH | jq -r .TSS.address)
-    CHARACTER_COUNT=$(echo "$RESPONSE" | wc -m)
+    RESPONSE=$(curl -s http://localhost:1317/zeta-chain/zetacore/TSS | jq -r '.TSS[0]'.address)
+    CHARACTER_COUNT=$(echo "${RESPONSE}" | wc -m | xargs)
+    # echo "$RESPONSE"
     # Uses Character Count to determine if returned value is an address or not
-    if [ "$CHARACTER_COUNT" = 43  ]; then 
+    if [ "$CHARACTER_COUNT" = 43 ] && [ "$RESPONSE" != "0x0000000000000000000000000000000000000000" ]; then 
         TSS_ADDR=$RESPONSE
         echo "TSS Address Is: ${TSS_ADDR}"
+        echo "Ending Loop"
         break
     fi
     echo "Waiting for TSS Address..."

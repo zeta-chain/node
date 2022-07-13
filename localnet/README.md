@@ -75,20 +75,43 @@ I used these for troubleshooting when setting up this nodes but I don't think an
 
 ## Problems and Additional Notes
 
-### BSC gets out of sync or may not be working
-Sometimes the BSC containers get out of sync and you can no longer deploy contracts. If you think this has happened check http://localhost:3010/ and make sure the block counts are the same. 
+### Localnet Goerli/Ropsten are using the same geth client 
+The protocol expects four networks and Goerli/Ropsten are hardcoded into it. To give the protocol what it expects the same geth client/endpoint is being used for the GOERLI_ENDPOINT and ROPSTEN_ENDPOINT environmental variables. 
 
-If this happens stop all the BSC containers and then start them again. That usually fixes it but if it doesn't you'll need to stop the containers, delete the `bsc/storage` folder, then run `build.sh` again followed by `start.sh`
+### Contract Deployments Fail (ZetaChain Repo)
+1st, check your .env file is set correctly. If it is correct, then the problem is most likely caused by the ZetaChain repo. Contract deployments and completed using this hardhat script `zetachain/packages/protocol-contracts/scripts/deploy.ts`
+
+If you make any signficant changes or switch between very different branches in the ZetaChain repo you'll probably need to regenerate your types and reinstall the modules using the following comands
+```
+cd <zetachain-mono-repo-local-directory>
+# Delete old files
+rm -rf node_modules
+rm -rf packages/*/node_modules/
+rm -rf node_modules
+rm -rf packages/*/typechain-types/
+
+yarn
+yarn compile 
+
+cd packages/protocol-contracts/
+yarn clean 
+yarn compile
+```
+
+You can test if deployments are working but going into the ZetaChain mono repo and trying to deploy the contract directly 
+```
+cd <zetachain-mono-repo-local-directory>
+cd packages/protocol-contracts
+yarn 
+yarn compile 
+npx hardhat run scripts/deploy.ts --network eth-localnet
+npx hardhat run scripts/deploy.ts --network bsc-localnet
+npx hardhat run scripts/deploy.ts --network polygon-localnet
+```
 
 
 ## ToDo
 
-- Remove Contract code from this repo and pull from `zeta-contracts` as needed (git submodule add git@github.com:zeta-chain/zeta-contracts.git localnet/zeta-contracts )
 - Optimization! There's a lot of room for optimzation in the build process and the docker compose configurations. 
 - Better solution for .env than copying it
-- Move contract values to JSON or another better storage solution that a bunch of text files
-    - Use Lucas's solution in the other repo for this
 - Test which images can work as ARM and then removing the platform flags. I ran into issues with some of them earlier on so to be save I started forcing them all to run at amd64
-- Long term - Rewrite contract deployments and test as a more full featured and flexible node script
-- Improve the testing scripts so the same one can be used for all networks and just pass in different network values. 
-- Use 
