@@ -331,7 +331,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := 64 * time.Second // minimum gap between two keysigns
+	signInterval := 128 * time.Second // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -340,6 +340,10 @@ SIGNLOOP:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
+			if co.clientMap[toChain].MinNonce == int(send.Nonce) {
+				log.Info().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
+				signInterval = 32 * time.Second
+			}
 			tnow := time.Now()
 			if tnow.Before(lastSignTime.Add(signInterval)) {
 				continue

@@ -105,6 +105,7 @@ type ChainObserver struct {
 	metrics          *metrics.Metrics
 	nonceTxHashesMap map[int][]string
 	nonceTx          map[int]*ethtypes.Receipt
+	MinNonce         int
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
 	stop             chan struct{}
@@ -806,7 +807,8 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
-
+				ob.MinNonce = minNonce
+				log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
 			QUERYLOOP:
 				//for nonce, txHashes := range ob.nonceTxHashesMap {
 				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
