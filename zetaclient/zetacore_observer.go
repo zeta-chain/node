@@ -252,9 +252,9 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 
 	// Early return if the send is already processed
-	_, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
-	if confirmed {
-		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
+	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+	if included || confirmed {
+		log.Info().Msgf("sendHash %s already processed; exit signer", send.Index)
 		return
 	}
 
@@ -291,12 +291,12 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-confirmDone:
 				return
 			default:
-				_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					numQueries++
 				}
-				if confirmed {
-					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
+				if included || confirmed {
+					log.Info().Msgf("sendHash %s included; kill this shepherd", send.Index)
 					signloopDone <- true
 					return
 				}
@@ -349,13 +349,8 @@ SIGNLOOP:
 				continue
 			}
 			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
-				if included {
-					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
-					signInterval = 10 * time.Minute // increase the gap between two keysigns because the outbound is already included thus very likely to be confirmed soon
-					continue
-				}
-				if confirmed {
+				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				if included || confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
 					break SIGNLOOP
 				}
