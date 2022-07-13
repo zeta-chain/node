@@ -382,7 +382,7 @@ SIGNLOOP:
 					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						backOff := 1000 * time.Millisecond
-						for i := 0; i < 3; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
+						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
 							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
 							// #nosec G404 randomness is not a security issue here
 							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
