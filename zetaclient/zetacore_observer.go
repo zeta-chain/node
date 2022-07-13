@@ -291,12 +291,12 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-confirmDone:
 				return
 			default:
-				_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
 					numQueries++
 				}
-				if confirmed {
-					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
+				if included || confirmed {
+					log.Info().Msgf("sendHash %s included; kill this shepherd", send.Index)
 					signloopDone <- true
 					return
 				}
