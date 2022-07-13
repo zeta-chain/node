@@ -341,7 +341,7 @@ SIGNLOOP:
 			break SIGNLOOP
 		default:
 			if co.clientMap[toChain].MinNonce == int(send.Nonce) {
-				log.Info().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
+				log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
 				signInterval = 32 * time.Second
 			}
 			tnow := time.Now()
