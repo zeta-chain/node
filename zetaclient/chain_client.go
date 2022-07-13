@@ -808,7 +808,7 @@ func (ob *ChainObserver) observeOutTx() {
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
 				ob.MinNonce = minNonce
-				log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
+				//log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
 			QUERYLOOP:
 				//for nonce, txHashes := range ob.nonceTxHashesMap {
 				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
