@@ -220,8 +220,10 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 
 	defer func() {
 		elapsedTime := time.Since(startTime)
-		log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
-		co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+		if keysignCount > 0 {
+			log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+			co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+		}
 		co.signerSlots <- true
 		co.sendDone <- send
 		confirmDone <- true
