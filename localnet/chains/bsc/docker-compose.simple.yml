@@ -14,8 +14,6 @@ services:
       - ./config:/config
     networks:
       - localnet
-    # command : sleep 10000 
-    # --config ~/config.toml
     command: > 
       geth --config /config/config.toml
       --datadir /root/.ethereum

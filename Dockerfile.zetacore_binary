@@ -1,0 +1,14 @@
+FROM ubuntu:22.04
+
+RUN apt-get update -y && apt-get upgrade -y \
+    && apt install build-essential  make gcc jq curl -y
+
+WORKDIR /go/delivery
+COPY ./zetaclientd /usr/bin/
+COPY ./zetacored /usr/bin/
+
+
+ENV SHELL /bin/bash
+EXPOSE 8400
+
+ENTRYPOINT ["bash"]

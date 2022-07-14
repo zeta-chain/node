@@ -58,7 +58,7 @@ You can safely delete this data anytime using `yarn reset-zeta` to clear out all
 
 Semi permanent storage of the zeta config files, includes the genesis files. You can generate this files once and reuse them over and over again even if your reset the blockchain by removing the `./storage` directory. 
 
-## Port Mapping
+# Port Mapping
 
 The HTTP/JSON RPC node for each chain is mapped to a different port on your local host.
 
@@ -67,16 +67,35 @@ The HTTP/JSON RPC node for each chain is mapped to a different port on your loca
 - polygon: localhost:8140
 - zeta: localhost:1317
 
-## RPC Commands
+## Changing Settings
+### zetanode/zetachain start options
+
+```
+zeta-node/build/zetacored-start.sh
+zeta-node/build/zetaclient-start.sh
+```
+
+### Environment Variables 
+You can modify the environmental variables names being passed to the zetachain containers in the `localnet/chains/zetachain/docker-compose.yml` file
+Values are loaded from `localnet/chains/zetachain/.env`
+
+
+## ToDo
+
+- Optimization! There's a lot of room for optimzation in the build process and the docker compose configurations. 
+- Better solution for .env than copying it
+- Test which images can work as ARM and then removing the platform flags. I ran into issues with some of them earlier on so to be save I started forcing them all to run at amd64
+
+## Troubleshooting Additional Notes
+
+### Localnet Goerli/Ropsten are using the same geth client 
+The protocol expects four networks and Goerli/Ropsten are hardcoded into it. To give the protocol what it expects the same geth client/endpoint is being used for the GOERLI_ENDPOINT and ROPSTEN_ENDPOINT environmental variables. 
+
+### RPC Commands
 
 Some bash commands for interacting the chains have been added to the `rpc_commands` file. To temporarily add them to your terminal run `source rpc_commands`. Check out the file for more details. 
 
 I used these for troubleshooting when setting up this nodes but I don't think anyone will need them for normal operations.
-
-## Problems and Additional Notes
-
-### Localnet Goerli/Ropsten are using the same geth client 
-The protocol expects four networks and Goerli/Ropsten are hardcoded into it. To give the protocol what it expects the same geth client/endpoint is being used for the GOERLI_ENDPOINT and ROPSTEN_ENDPOINT environmental variables. 
 
 ### Contract Deployments Fail (ZetaChain Repo)
 1st, check your .env file is set correctly. If it is correct, then the problem is most likely caused by the ZetaChain repo. Contract deployments and completed using this hardhat script `zetachain/packages/protocol-contracts/scripts/deploy.ts`
@@ -108,10 +127,3 @@ npx hardhat run scripts/deploy.ts --network eth-localnet
 npx hardhat run scripts/deploy.ts --network bsc-localnet
 npx hardhat run scripts/deploy.ts --network polygon-localnet
 ```
-
-
-## ToDo
-
-- Optimization! There's a lot of room for optimzation in the build process and the docker compose configurations. 
-- Better solution for .env than copying it
-- Test which images can work as ARM and then removing the platform flags. I ran into issues with some of them earlier on so to be save I started forcing them all to run at amd64

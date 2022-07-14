@@ -8,8 +8,16 @@ cp .env bsc-docker/.env
 
 cd bsc-docker && git pull
 
+# If using a Mac, force docker to use amd64 images
+OS=$(uname -s)
+if [ "$OS" = "Darwin" ]; then
+    sed -i '' -e '1 s:^FROM golang:FROM --platform=linux/amd64 golang:' Dockerfile.bsc
+    sed -i '' -e '1 s:^FROM ethereum/solc:FROM --platform=linux/amd64 ethereum/solc:' Dockerfile.bootstrap
+fi
+
 docker-compose -f docker-compose.bsc.yml build
 
+## Not Currently Used
 # docker-compose -f docker-compose.simple.bootstrap.yml build
 # docker-compose -f docker-compose.simple.yml build
 

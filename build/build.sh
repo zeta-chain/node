@@ -7,6 +7,9 @@ echo "You Entered $INPUT"
 if  [ "$INPUT" == "" ]; then
     echo "Building zetacore Only"
     docker build -f ../Dockerfile.zetacore ../  -t zetacore
+elif  [ "$INPUT" == "cp-local-binary" ]; then
+    echo "Building zetacore Only"
+    docker build -f ../Dockerfile.zetacore_binary ../  -t zetacore
 elif [ "$INPUT" == "mockmpi" ]; then
     echo "Building $INPUT Only"
     docker build -f ../Dockerfile.mockmpi ../ -t zeta-mockmpi

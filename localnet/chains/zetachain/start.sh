@@ -2,7 +2,10 @@
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd "$DIR" || exit
 
-VARS_CONFIG_FILE=../.env
+ZETA_MONOREPO_PATH="$DIR/../../zetachain-monorepo/"
+CONTRACT_ADDRESS_FILE=$ZETA_MONOREPO_PATH/packages/addresses/src/addresses/addresses.troy.json
+
+VARS_CONFIG_FILE=../../.env
 echo "Sourcing Environment Variables from $VARS_CONFIG_FILE"
 source $VARS_CONFIG_FILE
 
@@ -57,17 +60,17 @@ mv tmp3.json "$CONTRACT_ADDRESS_FILE"
 rm tmp*.json
 
 # Update TSS Address On Contracts
-cd "$ZETA_CONTRACTS_PATH"/packages/protocol-contracts/ || exit
+cd "$ZETA_MONOREPO_PATH"/packages/protocol-contracts/ || exit
 npx hardhat run scripts/set-zeta-token-addresses.ts --network eth-localnet
 npx hardhat run scripts/set-zeta-token-addresses.ts --network bsc-localnet
-npx hardhat run scripts/set-zeta-token-addresses.ts --network polygon-localnet
+#npx hardhat run scripts/set-zeta-token-addresses.ts --network polygon-localnet
 
 # Send Gas
 npx hardhat run scripts/send-tss-gas.ts --network eth-localnet
 npx hardhat run scripts/send-tss-gas.ts --network bsc-localnet
 npx hardhat run scripts/send-tss-gas.ts --network polygon-localnet
 
-# Approve Connector contract to spend Tokens - Commented out until an update to zeta-contracts is completed
+# Approve Connector contract to spend Tokens
 npx hardhat run scripts/token-approval.ts --network eth-localnet
 npx hardhat run scripts/token-approval.ts --network bsc-localnet
 npx hardhat run scripts/token-approval.ts --network polygon-localnet
