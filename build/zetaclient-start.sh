@@ -19,9 +19,11 @@ if [ -z "${MYIP}" ]; then
 fi
 echo "MYIP: $MYIP"
 
+rm -f ~/.tssnew/address_book.seed
+
 if (($NODE_NUMBER == 0)); then
     sleep 5 # Wait for Zetacored to start
-    yes | zetaclientd -val val 2>&1 | tee ~/.zetaclient/zetaclient.log
+    yes | zetaclientd -val val -log-console -enable-chains GOERLI,BSCTESTNET
 else
     until [ -f SEED_NODE_ID ]; do
         echo "Waiting for Seed Node Validator ID"
@@ -34,6 +36,6 @@ else
 
     yes | zetaclientd -val val \
         --peer /dns/"${SEED_NODE}"/tcp/6668/p2p/"${SEED_NODE_ID}" \
-        2>&1 | tee ~/.zetaclient/zetaclient.log
+        -log-console -enable-chains GOERLI,BSCTESTNET
 
 fi

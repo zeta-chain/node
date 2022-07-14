@@ -135,7 +135,8 @@ func (co *CoreObserver) keygenObserve() {
 				}
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					zetaTxHash, err := co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					log.Info().Msgf("SetTSS %s on chain %s, zeta tx %s", chain, co.tss.Address().Hex(), zetaTxHash)
 					if err != nil {
 						log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}

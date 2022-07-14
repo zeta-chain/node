@@ -233,7 +233,8 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey) (*tss.TssServe
 			PreParamTimeout: 5 * time.Minute,
 		},
 		nil, // don't set to precomputed values
-		IP,  // for docker test
+		//IP,  // for docker test
+		"",
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")

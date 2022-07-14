@@ -60,14 +60,14 @@ rm tmp*.json
 cd "$ZETA_CONTRACTS_PATH"/packages/protocol-contracts/ || exit
 npx hardhat run scripts/set-zeta-token-addresses.ts --network eth-localnet
 npx hardhat run scripts/set-zeta-token-addresses.ts --network bsc-localnet
-npx hardhat run scripts/set-zeta-token-addresses.ts --network polygon-localnet
+#npx hardhat run scripts/set-zeta-token-addresses.ts --network polygon-localnet
 
 # Send Gas
 npx hardhat run scripts/send-tss-gas.ts --network eth-localnet
 npx hardhat run scripts/send-tss-gas.ts --network bsc-localnet
-npx hardhat run scripts/send-tss-gas.ts --network polygon-localnet
+#npx hardhat run scripts/send-tss-gas.ts --network polygon-localnet
 
 # Approve Connector contract to spend Tokens - Commented out until an update to zeta-contracts is completed
 npx hardhat run scripts/token-approval.ts --network eth-localnet
 npx hardhat run scripts/token-approval.ts --network bsc-localnet
-npx hardhat run scripts/token-approval.ts --network polygon-localnet
+#npx hardhat run scripts/token-approval.ts --network polygon-localnet

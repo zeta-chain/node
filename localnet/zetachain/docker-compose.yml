@@ -64,7 +64,8 @@ services:
       - ROPSTEN_ENDPOINT=$ETH_ENDPOINT
       - BSCTESTNET_ENDPOINT=$BSC_ENDPOINT
       - MUMBAI_ENDPOINT=$POLYGON_ENDPOINT
-      
+      - DUMMY_PRICE=YES
+
     volumes:
       - ./storage/node0/zetaclient:/root/.zetaclient
       - ./storage/node0/zetacore:/root/.zetacore
@@ -99,6 +100,8 @@ services:
       - ROPSTEN_ENDPOINT=$ETH_ENDPOINT
       - BSCTESTNET_ENDPOINT=$BSC_ENDPOINT
       - MUMBAI_ENDPOINT=$POLYGON_ENDPOINT
+      - DUMMY_PRICE=YES
+
     volumes:
       - ./storage/node1/zetaclient:/root/.zetaclient
       - ./storage/node1/zetacore:/root/.zetacore

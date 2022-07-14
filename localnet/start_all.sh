@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ENABLED_CHAINS=("bsc" "ethereum")
+
 LOCALNET_DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd "$LOCALNET_DIR" || exit
 
@@ -17,13 +19,11 @@ if [ "$USE_GANACHE" == true ]; then
         cd ..
         sleep 10
 else
-    for d in $(ls -d */); do 
-        if  [ "$d" != "zetachain/" ] && [ "$d" != "ganache/"  ] && [ "$d" != "node_modules/" ]; then
-            echo "Starting $d"
-            cd "$d" || exit
-            ./start.sh
-            cd ..
-        fi
+    for d in "${ENABLED_CHAINS[@]}"; do
+          echo "Starting $d"
+          cd "$d" || exit
+          ./start.sh
+          cd ..
     done
     echo "Pausing for LocalNet Nodes to start -- Please Wait... (20s)"
     sleep 20
@@ -36,7 +36,7 @@ if [ "$DEPLOY_CONTRACTS" == true ]; then
     cd "$ZETA_CONTRACTS_PATH"/packages/protocol-contracts/ || exit
     npx hardhat run scripts/deploy.ts --network eth-localnet
     npx hardhat run scripts/deploy.ts --network bsc-localnet
-    npx hardhat run scripts/deploy.ts --network polygon-localnet
+#    npx hardhat run scripts/deploy.ts --network polygon-localnet
 fi
 
 # Deploy ZetaChain Nodes
@@ -48,7 +48,7 @@ echo "Launching Zetachain Nodes"
 cd ..
 
 ## Output Results
-for d in $(ls -d */); do 
+for d in "${ENABLED_CHAINS[@]}"; do
     cd "$d" || exit
     source .env
     echo ""

@@ -36,6 +36,11 @@ test:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
+build: go.sum
+		@echo "--> Building zetacored & zetaclientd"
+		@go build -o zetacored ${BUILD_FLAGS} ./cmd/zetacored
+		@go build -o zetaclientd ${BUILD_FLAGS} ./cmd/zetaclientd
+
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored

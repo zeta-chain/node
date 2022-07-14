@@ -6,7 +6,7 @@ services:
     container_name: bor
     env_file:
       - .env
-    image: bor:latest
+    image: bor
     # build: ./bor
     # restart: unless-stopped
     ports:
@@ -16,8 +16,10 @@ services:
     networks:
       - localnet
     command:
+        - server
         - --datadir=/datadir
-        - --networkid=${NETWORK_ID}
+#        - --networkid=${NETWORK_ID}
+        - --chain=
         - --http
         - --http.addr=0.0.0.0
         - --http.port=8545
