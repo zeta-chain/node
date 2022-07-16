@@ -40,10 +40,11 @@ func main() {
 	// last block number
 	buf, err := db.Get([]byte(PosKey), nil)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to get pos")
+		log.Error().Err(err).Msg("failed to get pos")
+	} else {
+		lastBlock, _ := binary.Uvarint(buf)
+		log.Info().Msgf("lastBlock: %d", lastBlock)
 	}
-	lastBlock, _ := binary.Uvarint(buf)
-	log.Info().Msgf("lastBlock: %d", lastBlock)
 
 	// nonceTxHashesMap
 	iter := db.NewIterator(util.BytesPrefix([]byte(NonceTxHashesKeyPrefix)), nil)
