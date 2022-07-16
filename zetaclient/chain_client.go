@@ -290,7 +290,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 			iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
 			for iter.Next() {
 				key := string(iter.Key())
-				nonce, err := strconv.ParseInt(key[len(NonceTxHashesKeyPrefix):], 10, 64)
+				nonce, err := strconv.ParseInt(key[len(NonceTxKeyPrefix):], 10, 64)
 				if err != nil {
 					log.Error().Err(err).Msgf("error parsing nonce: %s", key)
 					continue
