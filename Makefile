@@ -2,7 +2,7 @@
 
 
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
-VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
+VERSION := $(shell cat version)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 
