@@ -210,6 +210,9 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
+	for _, v := range *chainClientMap1 {
+		v.Start()
+	}
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
