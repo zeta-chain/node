@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math/big"
 	"os"
-	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -33,7 +33,9 @@ import (
 )
 
 const (
-	PosKey = "PosKey"
+	PosKey                 = "PosKey"
+	NonceTxHashesKeyPrefix = "NonceTxHashes-"
+	NonceTxKeyPrefix       = "NonceTx-"
 )
 
 //    event ZetaSent(
@@ -257,48 +259,54 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				buf2 := make([]byte, binary.MaxVarintLen64)
 				n := binary.PutUvarint(buf2, ob.LastBlock)
 				err := db.Put([]byte(PosKey), buf2[:n], nil)
-				log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
+				if err != nil {
+					log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
+				}
 			} else {
 				ob.LastBlock, _ = binary.Uvarint(buf)
 			}
 		}
 
 		{
-			path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, chain.String())
-			// #nosec G304
-			jsonFile, err := os.Open(path)
-			if err != nil {
-				log.Error().Err(err).Msgf("error opening %s", path)
-			} else {
-				dec := json.NewDecoder(jsonFile)
-				ob.mu.Lock()
-				err = dec.Decode(&ob.nonceTxHashesMap)
-				ob.mu.Unlock()
+			iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxHashesKeyPrefix)), nil)
+			for iter.Next() {
+				key := string(iter.Key())
+				nonce, err := strconv.ParseInt(key[len(NonceTxHashesKeyPrefix):], 10, 64)
 				if err != nil {
-					log.Error().Err(err).Msgf("error opening %s", path)
+					log.Error().Err(err).Msgf("error parsing nonce: %s", key)
+					continue
 				}
-				// #nosec G104
-				jsonFile.Close()
-				log.Info().Msgf("read %d nonceTxHashesMap entries", len(ob.nonceTxHashesMap))
+				txHashes := strings.Split(string(iter.Value()), ",")
+				ob.nonceTxHashesMap[int(nonce)] = txHashes
+				log.Info().Msgf("reading nonce %d with %d tx hashes", nonce, len(txHashes))
+			}
+			iter.Release()
+			if err = iter.Error(); err != nil {
+				log.Error().Err(err).Msg("error iterating over db")
 			}
 		}
 
 		{
-			path := fmt.Sprintf("%s/%s.nonceTx", dbpath, chain.String())
-			// #nosec G304
-			jsonFile, err := os.Open(path)
-			if err != nil {
-				log.Error().Err(err).Msgf("error opening %s", path)
-			} else {
-				dec := json.NewDecoder(jsonFile)
-				err = dec.Decode(&ob.nonceTx)
+			iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
+			for iter.Next() {
+				key := string(iter.Key())
+				nonce, err := strconv.ParseInt(key[len(NonceTxHashesKeyPrefix):], 10, 64)
 				if err != nil {
-					log.Error().Err(err).Msgf("error opening %s", path)
+					log.Error().Err(err).Msgf("error parsing nonce: %s", key)
+					continue
 				}
-				// #nosec G104
-				jsonFile.Close()
-				log.Info().Msgf("read %d nonceTx entries", len(ob.nonceTx))
-
+				var receipt ethtypes.Receipt
+				err = receipt.UnmarshalBinary(iter.Value())
+				if err != nil {
+					log.Error().Err(err).Msgf("error unmarshalling receipt: %s", key)
+					continue
+				}
+				ob.nonceTx[int(nonce)] = &receipt
+				log.Info().Msgf("reading nonce %d with %d receipt of tx %s", nonce, receipt.TxHash.Hex())
+			}
+			iter.Release()
+			if err = iter.Error(); err != nil {
+				log.Error().Err(err).Msg("error iterating over db")
 			}
 		}
 
@@ -662,50 +670,13 @@ func (ob *ChainObserver) Stop() {
 	log.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
+	log.Info().Msg("closing ob.db")
 	err := ob.db.Close()
 	if err != nil {
 		log.Error().Err(err).Msg("error closing db")
 	}
 
-	userDir, _ := os.UserHomeDir()
-	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	{
-		path := fmt.Sprintf("%s/%s.nonceTxHashesMap", dbpath, ob.chain.String())
-		log.Info().Msgf("writing to %s", path)
-		// #nosec G304 - this is a file that is written to, not read from
-		jsonFile, err := os.Create(path)
-		if err != nil {
-			log.Error().Err(err).Msgf("error opening %s", path)
-		} else {
-			enc := json.NewEncoder(jsonFile)
-			ob.mu.Lock()
-			err = enc.Encode(ob.nonceTxHashesMap)
-			ob.mu.Unlock()
-			if err != nil {
-				log.Error().Err(err).Msgf("error opening %s", path)
-			}
-			// #nosec G104
-			jsonFile.Close()
-		}
-
-	}
-	{
-		path := fmt.Sprintf("%s/%s.nonceTx", dbpath, ob.chain.String())
-		log.Info().Msgf("writing to %s", path)
-		// #nosec G304 - this is a file that is written to, not read from
-		jsonFile, err := os.Create(path)
-		if err != nil {
-			log.Error().Err(err).Msgf("error opening %s", path)
-		} else {
-			enc := json.NewEncoder(jsonFile)
-			err = enc.Encode(ob.nonceTx)
-			if err != nil {
-				log.Error().Err(err).Msgf("error opening %s", path)
-			}
-			// #nosec G104
-			jsonFile.Close()
-		}
-	}
+	log.Info().Msgf("%s observer stopped", ob.chain)
 }
 
 // returns: isIncluded, isConfirmed, Error
@@ -832,8 +803,21 @@ func (ob *ChainObserver) observeOutTx() {
 								log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
 								ob.mu.Lock()
 								delete(ob.nonceTxHashesMap, nonce)
+								if err = ob.db.Delete([]byte(NonceTxHashesKeyPrefix+fmt.Sprintf("%d", nonce)), nil); err != nil {
+									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
+								}
 								ob.nonceTx[nonce] = receipt
+								value, err := receipt.MarshalBinary()
+								if err != nil {
+									log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
+								}
+
 								ob.mu.Unlock()
+								err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonce)), value, nil)
+								if err != nil {
+									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonce, receipt.TxHash.Hex())
+								}
+
 								break TXHASHLOOP
 							}
 							<-inTimeout
@@ -872,6 +856,9 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 		if _, found := pendingNonces[nonce]; !found {
 			txHashes := ob.nonceTxHashesMap[nonce]
 			delete(ob.nonceTxHashesMap, nonce)
+			if err = ob.db.Delete([]byte(NonceTxHashesKeyPrefix+fmt.Sprintf("%d", nonce)), nil); err != nil {
+				log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
+			}
 			purgedTxHashCount++
 			log.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed", ob.chain, nonce)
 			ob.fileLogger.Info().Msgf("PurgeTxHashWatchList: chain %s nonce %d removed txhashes %v", ob.chain, nonce, txHashes)
@@ -937,8 +924,13 @@ func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash
 		ob.mu.Lock()
 		ob.nonceTxHashesMap[outTx.Nonce] = append(ob.nonceTxHashesMap[outTx.Nonce], outTx.TxHash)
 		ob.mu.Unlock()
+		key := []byte(NonceTxHashesKeyPrefix + fmt.Sprintf("%d", outTx.Nonce))
+		value := []byte(strings.Join(ob.nonceTxHashesMap[outTx.Nonce], ","))
+		if err := ob.db.Put(key, value, nil); err != nil {
+			log.Error().Err(err).Msgf("AddTxHashToWatchList: error adding nonce %d tx hashes to db", outTx.Nonce)
+		}
+
 		log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
 		ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.nonceTxHashesMap[outTx.Nonce]))
-
 	}
 }
