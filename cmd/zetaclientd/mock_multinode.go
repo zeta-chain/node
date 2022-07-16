@@ -59,7 +59,6 @@ func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath st
 			return nil, err
 		}
 		clientMap[chain] = co
-		co.Start()
 	}
 
 	return &clientMap, nil
