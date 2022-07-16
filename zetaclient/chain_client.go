@@ -302,7 +302,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 					continue
 				}
 				ob.nonceTx[int(nonce)] = &receipt
-				log.Info().Msgf("reading nonce %d with %d receipt of tx %s", nonce, receipt.TxHash.Hex())
+				log.Info().Msgf("reading nonce %d with receipt of tx %s", nonce, receipt.TxHash.Hex())
 			}
 			iter.Release()
 			if err = iter.Error(); err != nil {
