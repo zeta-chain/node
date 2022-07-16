@@ -342,7 +342,7 @@ SIGNLOOP:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
-			if co.clientMap[toChain].MinNonce == int(send.Nonce) {
+			if co.clientMap[toChain].MinNonce == int(send.Nonce) && co.clientMap[toChain].MaxNonce > int(send.Nonce)+5 {
 				log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
 				signInterval = 32 * time.Second
 			}
