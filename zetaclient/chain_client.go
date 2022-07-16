@@ -108,6 +108,7 @@ type ChainObserver struct {
 	nonceTxHashesMap map[int][]string
 	nonceTx          map[int]*ethtypes.Receipt
 	MinNonce         int
+	MaxNonce         int
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
 	stop             chan struct{}
@@ -296,13 +297,13 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 					continue
 				}
 				var receipt ethtypes.Receipt
-				err = receipt.UnmarshalBinary(iter.Value())
+				err = receipt.UnmarshalJSON(iter.Value())
 				if err != nil {
 					log.Error().Err(err).Msgf("error unmarshalling receipt: %s", key)
 					continue
 				}
 				ob.nonceTx[int(nonce)] = &receipt
-				log.Info().Msgf("reading nonce %d with receipt of tx %s", nonce, receipt.TxHash.Hex())
+				log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
 			}
 			iter.Release()
 			if err = iter.Error(); err != nil {
@@ -779,6 +780,7 @@ func (ob *ChainObserver) observeOutTx() {
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
 				ob.MinNonce = minNonce
+				ob.MaxNonce = maxNonce
 				//log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
 			QUERYLOOP:
 				//for nonce, txHashes := range ob.nonceTxHashesMap {
@@ -807,7 +809,7 @@ func (ob *ChainObserver) observeOutTx() {
 									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
 								}
 								ob.nonceTx[nonce] = receipt
-								value, err := receipt.MarshalBinary()
+								value, err := receipt.MarshalJSON()
 								if err != nil {
 									log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 								}
