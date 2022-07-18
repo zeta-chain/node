@@ -34,8 +34,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-// MetachainBridge will be used to send tx to MetaChain.
-type MetachainBridge struct {
+// ZetaCoreBridge will be used to send tx to ZetaCore.
+type ZetaCoreBridge struct {
 	logger        zerolog.Logger
 	blockHeight   int64
 	accountNumber uint64
@@ -48,10 +48,10 @@ type MetachainBridge struct {
 	ChainNonces   map[string]uint64
 }
 
-// NewMetachainBridge create a new instance of MetachainBridge
-func NewMetachainBridge(k *Keys, chainIP string, signerName string) (*MetachainBridge, error) {
+// NewZetaCoreBridge create a new instance of ZetaCoreBridge
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
 	// main module logger
-	logger := log.With().Str("module", "metachain_client").Logger()
+	logger := log.With().Str("module", "zetacore_client").Logger()
 
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
@@ -72,7 +72,7 @@ func NewMetachainBridge(k *Keys, chainIP string, signerName string) (*MetachainB
 		return nil, err
 	}
 
-	return &MetachainBridge{
+	return &ZetaCoreBridge{
 		logger:        logger,
 		grpcConn:      grpcConn,
 		httpClient:    httpClient,
@@ -93,8 +93,8 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
-// getMetachainURL with the given path
-func (b *MetachainBridge) getMetachainURL(path string) string {
+// getZetaCoreURL with the given path
+func (b *ZetaCoreBridge) getZetaCoreURL(path string) string {
 	uri := url.URL{
 		Scheme: "http",
 		Host:   b.cfg.ChainHost,
@@ -103,11 +103,11 @@ func (b *MetachainBridge) getMetachainURL(path string) string {
 	return uri.String()
 }
 
-func (b *MetachainBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
+func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
 	ctx := b.GetContext()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetSignerInfo().GetAddress())
 }
 
-func (b *MetachainBridge) GetKeys() *Keys {
+func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
 }

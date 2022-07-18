@@ -22,14 +22,6 @@ const (
 	ROPSTEN_CONFIRMATION_COUNT = 3
 )
 
-var (
-	// API Endpoints
-	GOERLI_ENDPOINT = "https://eth-goerli-sh285ns91n5975.athens.zetachain.com"
-	MUMBAI_ENDPOINT = "https://polygon-sh285ns91n5975.athens.zetachain.com"
-	BSCTESTNET_ENDPOINT = "https://bsc-sh285ns91n5975.athens.zetachain.com"
-	ROPSTEN_ENDPOINT = "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com"
-)
-
 const (
 	TSS_TEST_PRIVKEY = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
 	TSS_TEST_ADDRESS = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
@@ -63,34 +55,44 @@ const (
 `
 )
 
+var ChainsEnabled = []common.Chain{}
+
 var Chains = map[string]*types.ChainETHish{
 	common.GoerliChain.String(): {
 		Name:                     "GOERLI",
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
 		PoolContractAddress:      "0x6deb02FC57FE04F2532b327D674f21Dfd87df98E",
+		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
 		ChainID:                  big.NewInt(5),
 		BlockTime:                ETH_BLOCK_TIME,
+		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.BSCTestnetChain.String(): {
 		Name:                     "BSCTESTNET",
 		ConnectorContractAddress: "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
 		PoolContractAddress:      "0xE5C9b19BB3820c69680b5cA1A00249261B5c5797",
+		ZETATokenContractAddress: "0x33580e10212342d0aA66C9de3F6F6a4AfefA144C",
 		ChainID:                  big.NewInt(97),
 		BlockTime:                BSC_BLOCK_TIME,
+		Endpoint:                 "https://bsc-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.MumbaiChain.String(): {
 		Name:                     "MUMBAI",
 		ConnectorContractAddress: "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
 		PoolContractAddress:      "0x5e090C53e1bD02d569bE561F8e2c597533cDc634",
+		ZETATokenContractAddress: "0xBaEF590c5Aef9881b0a5C86e18D35432218C64D5",
 		ChainID:                  big.NewInt(80001),
 		BlockTime:                POLY_BLOCK_TIME,
+		Endpoint:                 "https://mumbai-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.RopstenChain.String(): {
 		Name:                     "ROPSTEN",
 		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
 		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
+		ZETATokenContractAddress: "0x251685b8A1bC0ed343a016FcF1aB1B1f444E3bf4",
 		ChainID:                  big.NewInt(3),
 		BlockTime:                ETH_BLOCK_TIME,
+		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.EmptyChain.String(): {
 		Name:                     "",
