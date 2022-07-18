@@ -394,19 +394,19 @@ SIGNLOOP:
 								co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								break // break the retry loop
 							} else if strings.Contains(err.Error(), "nonce too low") {
-								log.Info().Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+								log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
 								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
 								break
 							} else if strings.Contains(err.Error(), "replacement transaction underpriced") {
-								log.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								log.Warn().Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								break
 							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
-								log.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								break
 							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
-								log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
+								log.Error().Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
 								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
 								time.Sleep(backOff)
 							}
