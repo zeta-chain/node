@@ -1,11 +1,10 @@
 name: Gosec
 on:
   push:
-    branches:
-      - main
+    branches: [main, develop]
+
   pull_request:
-    branches:
-      - main
+    branches: [main, develop]
 jobs:
   gosec:
     runs-on: ubuntu-latest
