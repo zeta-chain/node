@@ -4,6 +4,7 @@ vue/dist
 release/
 .idea/
 .DS_Store
+.secrets
 
 coverage.out
 
