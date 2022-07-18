@@ -4,7 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"github.com/rs/zerolog"
 	"math/big"
+	"math/rand"
+	"os"
+	"sort"
+	"strings"
 	"time"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -28,7 +33,7 @@ const (
 
 type CoreObserver struct {
 	sendQueue []*types.Send
-	bridge    *MetachainBridge
+	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]*Signer
 	clientMap map[common.Chain]*ChainObserver
 	metrics   *metrics.Metrics
@@ -39,9 +44,11 @@ type CoreObserver struct {
 	sendDone    chan *types.Send
 	signerSlots chan bool
 	shepherds   map[string]bool
+
+	fileLogger *zerolog.Logger
 }
 
-func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.tss = tss
 	co.bridge = bridge
@@ -58,12 +65,20 @@ func NewCoreObserver(bridge *MetachainBridge, signerMap map[common.Chain]*Signer
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 12 // assuming each signer takes 100s to finish, then throughput is bounded by 100tx/100s = 1tx/s
+	MAX_SIGNERS := 100 // assuming each signer takes 100s to finish (have outTx included), then throughput is bounded by 100/100 = 1 tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
 	}
 	co.shepherds = make(map[string]bool)
+
+	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		// Can we log an error before we have our logger? :)
+		log.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
+	}
+	fileLogger := zerolog.New(logFile).With().Logger()
+	co.fileLogger = &fileLogger
 
 	return &co
 }
@@ -81,17 +96,22 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startObserve()
 	go co.shepherdManager()
-	go co.keygenObserve()
+
+	noKeygen := os.Getenv("NO_KEYGEN")
+	if noKeygen == "" {
+		go co.keygenObserve()
+	}
 }
 
 func (co *CoreObserver) keygenObserve() {
+	log.Info().Msgf("keygen observe started")
 	observeTicker := time.NewTicker(2 * time.Second)
 	for range observeTicker.C {
 		kg, err := co.bridge.GetKeyGen()
 		if err != nil {
 			continue
 		}
-		bn, _ := co.bridge.GetMetaBlockHeight()
+		bn, _ := co.bridge.GetZetaBlockHeight()
 		if bn != kg.BlockNumber {
 			continue
 		}
@@ -114,21 +134,11 @@ func (co *CoreObserver) keygenObserve() {
 					continue
 				}
 
-				_, err = co.bridge.SetTSS(common.GoerliChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.GoerliChain)
-				}
-				_, err = co.bridge.SetTSS(common.BSCTestnetChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.BSCTestnetChain)
-				}
-				_, err = co.bridge.SetTSS(common.MumbaiChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.MumbaiChain)
-				}
-				_, err = co.bridge.SetTSS(common.RopstenChain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
-				if err != nil {
-					log.Error().Err(err).Msgf("SetTSS fail %s", common.RopstenChain)
+				for _, chain := range config.ChainsEnabled {
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					if err != nil {
+						log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+					}
 				}
 
 				// Keysign test: sanity test
@@ -136,22 +146,13 @@ func (co *CoreObserver) keygenObserve() {
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
 				log.Info().Msg("test keysign finished. exit keygen loop. ")
 
-				err = co.clientMap[common.GoerliChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.GoerliChain)
+				for _, chain := range config.ChainsEnabled {
+					err = co.clientMap[chain].PostNonceIfNotRecorded()
+					if err != nil {
+						log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+					}
 				}
-				err = co.clientMap[common.BSCTestnetChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.BSCTestnetChain)
-				}
-				err = co.clientMap[common.MumbaiChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.MumbaiChain)
-				}
-				err = co.clientMap[common.RopstenChain].PostNonceIfNotRecorded()
-				if err != nil {
-					log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", common.RopstenChain)
-				}
+
 				return
 			}
 		}()
@@ -170,9 +171,13 @@ func (co *CoreObserver) startObserve() {
 			log.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
-
-		for _, send := range sendList {
+		if len(sendList) > 0 {
 			log.Info().Msgf("#pending send: %d", len(sendList))
+		}
+		sort.Slice(sendList, func(i, j int) bool {
+			return sendList[i].Nonce < sendList[j].Nonce
+		})
+		for _, send := range sendList {
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
 			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
@@ -181,6 +186,7 @@ func (co *CoreObserver) startObserve() {
 }
 
 func (co *CoreObserver) shepherdManager() {
+	numShepherds := 0
 	for {
 		select {
 		case send := <-co.sendNew:
@@ -189,11 +195,15 @@ func (co *CoreObserver) shepherdManager() {
 				co.shepherds[send.Index] = true
 				log.Info().Msg("waiting on a signer slot...")
 				<-co.signerSlots
-				log.Info().Msg("got back a signer slot! spawn shepherd")
+				log.Info().Msg("got a signer slot! spawn shepherd")
 				go co.shepherdSend(send)
+				numShepherds++
+				log.Info().Msgf("new shepherd: %d shepherds in total", numShepherds)
 			}
 		case send := <-co.sendDone:
 			delete(co.shepherds, send.Index)
+			numShepherds--
+			log.Info().Msgf("remove shepherd: %d shepherds left", numShepherds)
 		}
 	}
 }
@@ -202,13 +212,24 @@ func (co *CoreObserver) shepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
-	done2 := make(chan bool, 1)
+	startTime := time.Now()
+	confirmDone := make(chan bool, 1)
+	coreSendDone := make(chan bool, 1)
+	numQueries := 0
+	keysignCount := 0
+
 	defer func() {
-		log.Info().Msg("Giving back a signer slot")
+		elapsedTime := time.Since(startTime)
+		if keysignCount > 0 {
+			log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+			co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+		}
 		co.signerSlots <- true
 		co.sendDone <- send
-		done2 <- true
+		confirmDone <- true
+		coreSendDone <- true
 	}()
+
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
 	if !ok {
@@ -233,12 +254,9 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 
 	// Early return if the send is already processed
-	_, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-	if err != nil {
-		log.Error().Err(err).Msg("IsSendOutTxProcessed error")
-	}
-	if confirmed {
-		log.Info().Msgf("sendHash %s already processed; skip it", send.Index)
+	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+	if included || confirmed {
+		log.Info().Msgf("sendHash %s already processed; exit signer", send.Index)
 		return
 	}
 
@@ -268,49 +286,73 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 	var tx *ethtypes.Transaction
 
-	done := make(chan bool, 1)
+	signloopDone := make(chan bool, 1)
 	go func() {
 		for {
 			select {
-			case <-done2:
+			case <-confirmDone:
 				return
 			default:
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
-					log.Err(err).Msg("IsSendOutTxProcessed error")
+					numQueries++
 				}
-				if confirmed {
-					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
-					done <- true
+				if included || confirmed {
+					log.Info().Msgf("sendHash %s included; kill this shepherd", send.Index)
+					signloopDone <- true
 					return
 				}
-				if included {
-					log.Info().Msgf("sendHash %s already included but not yet confirmed. Keep monitoring", send.Index)
-				}
-				time.Sleep(24 * time.Second)
+				time.Sleep(12 * time.Second)
 			}
 		}
 	}()
 
-	// The following signing loop tries to sign outbound tx every 32 seconds.
+	// watch ZetaCore /zeta-chain/send/<sendHash> endpoint; send coreSendDone when the state of the send is updated;
+	// e.g. pendingOutbound->outboundMined; or pendingOutbound->pendingRevert
+	go func() {
+		for {
+			select {
+			case <-coreSendDone:
+				return
+			default:
+				newSend, err := co.bridge.GetSendByHash(send.Index)
+				if err != nil || send == nil {
+					log.Info().Msgf("sendHash %s cannot be found in ZetaCore; kill the shepherd", send.Index)
+					signloopDone <- true
+				}
+				if newSend.Status != send.Status {
+					log.Info().Msgf("sendHash %s status changed to %s from %s; kill the shepherd", send.Index, newSend.Status, send.Status)
+					signloopDone <- true
+				}
+				time.Sleep(12 * time.Second)
+			}
+		}
+	}()
+
+	// The following keysign loop tries to sign outbound tx until the following conditions are met:
+	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
+	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
+	signInterval := 128 * time.Second // minimum gap between two keysigns
+	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
 		select {
-		case <-done:
+		case <-signloopDone:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
-			if time.Now().Second()%32 == int(sendhash[0])%32 {
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index)
-				if err != nil {
-					log.Error().Err(err).Msg("IsSendOutTxProcessed error")
-				}
-				if included {
-					log.Info().Msgf("sendHash %s already included but not yet confirmed. will revisit", send.Index)
-					continue
-				}
-				if confirmed {
+			if co.clientMap[toChain].MinNonce == int(send.Nonce) && co.clientMap[toChain].MaxNonce > int(send.Nonce)+5 {
+				log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
+				signInterval = 32 * time.Second
+			}
+			tnow := time.Now()
+			if tnow.Before(lastSignTime.Add(signInterval)) {
+				continue
+			}
+			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
+				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				if included || confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
 					break SIGNLOOP
 				}
@@ -325,7 +367,9 @@ SIGNLOOP:
 				}
 				if err != nil {
 					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+					continue
 				}
+				lastSignTime = time.Now()
 				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
 				if err != nil {
 					log.Error().Err(err).Msgf("GetPromCounter error")
@@ -338,19 +382,43 @@ SIGNLOOP:
 					outTxHash := tx.Hash().Hex()
 					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
-						log.Info().Msgf("broadcasting tx %s to chain %s: mint amount %d, nonce %d", outTxHash, toChain, amount, send.Nonce)
-						err = signer.Broadcast(tx)
-						if err != nil {
-							log.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-						} else {
-							log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+						backOff := 1000 * time.Millisecond
+						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
+							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
+							// #nosec G404 randomness is not a security issue here
+							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+							err = signer.Broadcast(tx)
+							// TODO: the following error handling is robust?
+							if err == nil {
+								log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								break // break the retry loop
+							} else if strings.Contains(err.Error(), "nonce too low") {
+								log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
+								break
+							} else if strings.Contains(err.Error(), "replacement transaction underpriced") {
+								log.Warn().Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								break
+							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
+								log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								break
+							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
+								log.Error().Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
+								time.Sleep(backOff)
+							}
+							backOff *= 2
 						}
+
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
-					if success := co.clientMap[toChain].WatchTxHashWithTimeout(outTxHash, send.Index); !success {
-						time.Sleep(15 * time.Second) // wait until the receive confirm is voted on zetacore
-						return
-					}
+					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
+					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
+					keysignCount++
+					signInterval *= 2 // exponential backoff
 				}
 			}
 		}

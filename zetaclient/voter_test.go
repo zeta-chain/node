@@ -15,8 +15,8 @@ import (
 )
 
 type VoterSuite struct {
-	bridge1 *MetachainBridge
-	bridge2 *MetachainBridge
+	bridge1 *ZetaCoreBridge
+	bridge2 *ZetaCoreBridge
 }
 
 var _ = Suite(&VoterSuite{})
@@ -50,7 +50,7 @@ func (s *VoterSuite) SetUpTest(c *C) {
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewMetachainBridge(k, chainIP, "alice")
+		bridge, err := NewZetaCoreBridge(k, chainIP, "alice")
 		if err != nil {
 			c.Fail()
 		}
@@ -73,7 +73,7 @@ func (s *VoterSuite) SetUpTest(c *C) {
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewMetachainBridge(k, chainIP, "bob")
+		bridge, err := NewZetaCoreBridge(k, chainIP, "bob")
 		if err != nil {
 			c.Fail()
 		}

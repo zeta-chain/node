@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.MetachainBridge, bool) {
+func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
@@ -24,86 +24,42 @@ func CreateMetaBridge(chainHomeFoler string, signerName string, signerPass strin
 		chainIP = "127.0.0.1"
 	}
 
-	bridge, err := mc.NewMetachainBridge(k, chainIP, signerName)
+	bridge, err := mc.NewZetaCoreBridge(k, chainIP, signerName)
 	if err != nil {
-		log.Fatal().Err(err).Msg("NewMetachainBridge")
+		log.Fatal().Err(err).Msg("NewZetaCoreBridge")
 		return nil, true
 	}
 	return bridge, false
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	ethMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.GoerliChain.String()].ConnectorContractAddress)
-	ethSigner, err := mc.NewSigner(common.GoerliChain, mcconfig.GOERLI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ethMPIAddress)
-	if err != nil {
-		log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
-		return nil, err
-	}
-	bscMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress)
-	bscSigner, err := mc.NewSigner(common.BSCTestnetChain, mcconfig.BSCTESTNET_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, bscMPIAddress)
-	if err != nil {
-		log.Fatal().Err(err).Msg("NewSigner BSC error")
-		return nil, err
-	}
-	polygonMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.MumbaiChain.String()].ConnectorContractAddress)
-	polygonSigner, err := mc.NewSigner(common.MumbaiChain, mcconfig.MUMBAI_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, polygonMPIAddress)
-	if err != nil {
-		log.Fatal().Err(err).Msg("NewSigner POLYGON error")
-		return nil, err
-	}
-	ropstenMPIAddress := ethcommon.HexToAddress(mcconfig.Chains[common.RopstenChain.String()].ConnectorContractAddress)
-	ropstenSigner, err := mc.NewSigner(common.RopstenChain, mcconfig.ROPSTEN_ENDPOINT, tss, mcconfig.CONNECTOR_ABI_STRING, ropstenMPIAddress)
-	if err != nil {
-		log.Fatal().Err(err).Msg("NewSigner ROPSTEN error")
-		return nil, err
-	}
-	signerMap := map[common.Chain]*mc.Signer{
-		common.GoerliChain:     ethSigner,
-		common.BSCTestnetChain: bscSigner,
-		common.MumbaiChain:     polygonSigner,
-		common.RopstenChain:    ropstenSigner,
+	signerMap := make(map[common.Chain]*mc.Signer)
+
+	for _, chain := range mcconfig.ChainsEnabled {
+		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
+		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, mpiAddress)
+		if err != nil {
+			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
+			return nil, err
+		}
+		signerMap[chain] = signer
 	}
 
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.MetachainBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	log.Info().Msg("starting eth observer...")
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
 	clientMap := make(map[common.Chain]*mc.ChainObserver)
-	eth1, err := mc.NewChainObserver(common.GoerliChain, bridge, tss, dbpath, metrics)
-	if err != nil {
-		log.Err(err).Msg("ETH NewChainObserver")
-		return nil, err
-	}
-	clientMap[common.GoerliChain] = eth1
-	eth1.Start()
 
-	log.Info().Msg("starting bsc observer...")
-	bsc1, err := mc.NewChainObserver(common.BSCTestnetChain, bridge, tss, dbpath, metrics)
-	if err != nil {
-		log.Err(err).Msg("BSC NewChainObserver")
-		return nil, err
+	for _, chain := range mcconfig.ChainsEnabled {
+		log.Info().Msgf("starting %s observer...", chain)
+		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		if err != nil {
+			log.Err(err).Msgf("%s NewChainObserver", chain)
+			return nil, err
+		}
+		clientMap[chain] = co
 	}
-	clientMap[common.BSCTestnetChain] = bsc1
-	bsc1.Start()
-
-	log.Info().Msg("starting polygon observer...")
-	poly1, err := mc.NewChainObserver(common.MumbaiChain, bridge, tss, dbpath, metrics)
-	if err != nil {
-		log.Err(err).Msg("POLYGON NewChainObserver")
-		return nil, err
-	}
-	clientMap[common.MumbaiChain] = poly1
-	poly1.Start()
-
-	log.Info().Msg("starting ropsten observer...")
-	ropsten1, err := mc.NewChainObserver(common.RopstenChain, bridge, tss, dbpath, metrics)
-	if err != nil {
-		log.Err(err).Msg("ROPSTEN NewChainObserver")
-		return nil, err
-	}
-	clientMap[common.RopstenChain] = ropsten1
-	ropsten1.Start()
 
 	return &clientMap, nil
 }
