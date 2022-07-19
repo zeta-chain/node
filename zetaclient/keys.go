@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
 	"os"
 	"os/user"
@@ -109,4 +112,26 @@ func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
 // GetKeybase return the keybase
 func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
+}
+
+func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
+	pubkeySet := common.PubKeySet{
+		Secp256k1: "",
+		Ed25519:   "",
+	}
+	pK, err := k.GetPrivateKey()
+	if err != nil {
+		return pubkeySet, err
+	}
+
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pK.PubKey())
+	if err != nil {
+		return pubkeySet, ErrBech32ifyPubKey
+	}
+	pubkey, err := common.NewPubKey(s)
+	if err != nil {
+		return pubkeySet, errors.Wrap(ErrNewPubKey, fmt.Sprintf("Pubkey %s", pK.PubKey().String()))
+	}
+	pubkeySet.Secp256k1 = pubkey
+	return pubkeySet, nil
 }

@@ -165,18 +165,18 @@ func start(validatorName string, peers addr.AddrList) {
 		return
 	}
 
-	key, err := bridge1.GetKeys().GetPrivateKey()
+	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
 	if err != nil {
 		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
-	if len(key.Bytes()) != 32 {
-		log.Error().Msgf("key bytes len %d != 32", len(key.Bytes()))
+	if len(bridgePk.Bytes()) != 32 {
+		log.Error().Msgf("key bytes len %d != 32", len(bridgePk.Bytes()))
 		return
 	}
 	var priKey secp256k1.PrivKey
-	priKey = key.Bytes()[:32]
+	priKey = bridgePk.Bytes()[:32]
 
-	log.Info().Msgf("NewTSS: with peer pubkey %s", key.PubKey())
+	log.Info().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
 	tss, err := mc.NewTSS(peers, priKey)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
@@ -219,25 +219,13 @@ func start(validatorName string, peers addr.AddrList) {
 
 	mo1.MonitorCore()
 
-	// report node key
-	// convert key.PubKey() [cosmos-sdk/crypto/PubKey] to bech32?
-	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, key.PubKey())
+	consKey := ""
+	pubkeySet, err := bridge1.GetKeys().GetPubKeySet()
 	if err != nil {
-		log.Error().Err(err).Msgf("Bech32ifyPubKey fail in main")
+		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
-	log.Info().Msgf("GetPrivateKey for pubkey bech32 %s", s)
-
-	pubkey, err := common.NewPubKey(s)
-	if err != nil {
-		log.Error().Err(err).Msgf("NewPubKey error from string %s:", key.PubKey().String())
-	}
-	pubkeyset := common.PubKeySet{
-		Secp256k1: pubkey,
-		Ed25519:   "",
-	}
-	conskey := ""
-	ztx, err := bridge1.SetNodeKey(pubkeyset, conskey)
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeyset.Secp256k1.String(), conskey, ztx)
+	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	if err != nil {
 		log.Error().Err(err).Msgf("SetNodeKey error")
 	}

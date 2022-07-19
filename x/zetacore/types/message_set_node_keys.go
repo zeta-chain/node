@@ -1,9 +1,12 @@
 package types
 
 import (
+	"bytes"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 var _ sdk.Msg = &MsgSetNodeKeys{}
@@ -38,9 +41,17 @@ func (msg *MsgSetNodeKeys) GetSignBytes() []byte {
 }
 
 func (msg *MsgSetNodeKeys) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	accAddressCreator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, msg.PubkeySet.Secp256k1.String())
+	if err != nil {
+		return sdkerrors.Wrapf(ErrInvalidPubKeySet, err.Error())
+	}
+	if bytes.Compare(accAddressCreator.Bytes(), pubkey.Address().Bytes()) != 0 {
+		return sdkerrors.Wrapf(ErrInvalidPubKeySet, fmt.Sprintf("Creator : %s , PubkeySet %s", accAddressCreator.String(), pubkey.Address().String()))
 	}
 	return nil
 }
