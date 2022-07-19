@@ -9,6 +9,7 @@ RUN apt-get update -y && apt-get upgrade -y \
 COPY ./bor .
 RUN make bor-all
 COPY genesis.json /datadir/
+RUN cp ./build/bin/bor /usr/local/bin/bor
 
 RUN bor init /datadir/genesis.json \
     && rm -f ~/.ethereum/bor/nodekey \
@@ -19,3 +20,4 @@ ENV SHELL /bin/bash
 EXPOSE 8545 8546 8547 30303 30303/udp
 
 ENTRYPOINT ["bor"]
+

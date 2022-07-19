@@ -2,7 +2,7 @@
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $DIR
 
-rm -rf ./config/genesis/*  ./config/*/data/* ./config/*/config/* ./config/*/keyring-test/*
+rm -rf ./config/genesis/*  ./config/*/data/* ./config/*/config/* ./config/*/keyring-test/* || true
 
 mkdir -p ./config/genesis
 mkdir -p ./config/node{0,1,2,3}/{data,keyring-test}

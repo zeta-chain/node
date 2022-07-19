@@ -14,7 +14,7 @@ services:
       - ./storage/node0/zetacore:/root/.zetacore
       - ./storage/node0/tss:/root/.tss/
       - ./storage/node0/tssnew/:/root/.tssnew/
-      - ../../build:/scripts
+      - ../../../build:/scripts
       - ./config/:/zetashared/
 
     ports:
@@ -37,7 +37,7 @@ services:
       - ./storage/node1/zetacore:/root/.zetacore
       - ./storage/node1/tss:/root/.tss/
       - ./storage/node1/tssnew/:/root/.tssnew/
-      - ../../build:/scripts
+      - ../../../build:/scripts
       - ./config/:/zetashared/
     networks:
       localnet:
@@ -64,13 +64,14 @@ services:
       - ROPSTEN_ENDPOINT=$ETH_ENDPOINT
       - BSCTESTNET_ENDPOINT=$BSC_ENDPOINT
       - MUMBAI_ENDPOINT=$POLYGON_ENDPOINT
-      
+      - DUMMY_PRICE=YES
+
     volumes:
       - ./storage/node0/zetaclient:/root/.zetaclient
       - ./storage/node0/zetacore:/root/.zetacore
       - ./storage/node0/tss:/root/.tss
       - ./storage/node0/tssnew/:/root/.tssnew/
-      - ../../build:/scripts
+      - ../../../build:/scripts
       - ./config/:/zetashared/
     ports:
       - 8123:8123
@@ -99,12 +100,14 @@ services:
       - ROPSTEN_ENDPOINT=$ETH_ENDPOINT
       - BSCTESTNET_ENDPOINT=$BSC_ENDPOINT
       - MUMBAI_ENDPOINT=$POLYGON_ENDPOINT
+      - DUMMY_PRICE=YES
+
     volumes:
       - ./storage/node1/zetaclient:/root/.zetaclient
       - ./storage/node1/zetacore:/root/.zetacore
       - ./storage/node1/tss:/root/.tss
       - ./storage/node1/tssnew/:/root/.tssnew/
-      - ../../build:/scripts
+      - ../../../build:/scripts
       - ./config/:/zetashared/
     networks:
       localnet:

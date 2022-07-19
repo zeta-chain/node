@@ -2,7 +2,34 @@
 # Makes it easy to interact with RPC nodes by adding the port number. 
 # Example: `$ get_account 8140`
 
-# 
+#
+get_nonce () {
+curl --location --request POST "http://localhost:$1" \
+--header 'Content-type: application/json' \
+--data-raw "{
+    \"jsonrpc\": \"2.0\",
+    \"id\": 6,
+    \"method\": \"eth_getTransactionCount\",
+    \"params\": [
+        \"$2\",
+        \"latest\"
+    ]
+}"
+}
+
+get_balance () {
+curl --location --request POST "http://localhost:$1" \
+--header 'Content-type: application/json' \
+--data-raw "{
+    \"jsonrpc\": \"2.0\",
+    \"id\": 6,
+    \"method\": \"eth_getBalance\",
+    \"params\": [
+        \"$2\",
+        \"latest\"
+    ]
+}"
+}
 
 get_account () {
 curl --location --request POST "localhost:$1" \

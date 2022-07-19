@@ -13,18 +13,18 @@ fi
 echo "MYIP: $MYIP"
 echo "MyLocalIP: $(hostname -i)"
 
-rm -rf /zetashared/node"${NODE_NUMBER}"/
+rm -rf /zetashared/node"${NODE_NUMBER}"/ || true 
 if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
     echo "Generating new keys"
-    rm -rf ~/.zetacore/
-    rm -rf ~/.tssnew/
-    rm -rf ~/.tss/
-    rm -rf ~/.zetaclient/
+    rm -rf ~/.zetacore/* || true 
+    rm -rf ~/.tssnew/* || true
+    rm -rf ~/.tss/* || true
+    rm -rf ~/.zetaclient/* || true
 elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
     echo "Reusing existing keys"
-    rm -rf ~/.zetaclient/
-    rm -rf ~/.zetacore/data
-    rm -rf ~/.zetacore/config
+    rm -rf ~/.zetaclient/* || true
+    rm -rf ~/.zetacore/data/* || true
+    rm -rf ~/.zetacore/config/* || true
 else
     echo "Unknown Input -- REUSE_EXISTING_KEYS=$REUSE_EXISTING_KEYS"
     exit 1
@@ -34,7 +34,7 @@ mkdir -p ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/ ~/.zetacore/data/ ~
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
-    rm zetashared/genesis/init-genesis.json
+    rm /zetashared/genesis/init-genesis.json >> /dev/null 2>&1
     mkdir -p /zetashared/genesis/ /zetashared/node"${NODE_NUMBER}"/config/gentx/ /zetashared/node"${NODE_NUMBER}"/data/ /zetashared/node"${NODE_NUMBER}"/keyring-test/
     sleep 5
     zetacored init --chain-id athens-1 zetachain

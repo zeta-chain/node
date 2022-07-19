@@ -1,19 +1,18 @@
-vue/
-vue/node_modules
-vue/dist
-release/
-.idea/
-.DS_Store
-
-coverage.out
-
-node_modules
-.env
 .deps
 .DS_Store
+.DS_Store
+.env
+.idea/
 coverage
 coverage.json
+coverage.out
+node_modules
+release/
 typechain
+vue/
+vue/dist
+vue/node_modules
+yarn-error.log
 
 # Hardhat files
 cache
@@ -23,13 +22,13 @@ localnet/artifacts
 dist
 
 # LocalNet Files
-localnet/polygon/bor
-localnet/polygon/heimdall
-localnet/polygon/data
-localnet/bsc/bsc-docker
-localnet/bsc/storage
+localnet/chains/bsc/bsc-docker
+localnet/chains/bsc/storage
+localnet/chains/polygon/bor
+localnet/chains/polygon/data
+localnet/chains/polygon/heimdall
+localnet/chains/zetachain/config/genesis
+localnet/chains/zetachain/config/node*/*
+localnet/chains/zetachain/storage
 localnet/ganache/storage
-localnet/zetachain/storage
-localnet/zetachain/config/genesis
-localnet/zetachain/config/node*/*
-localnet/networks
+localnet/zetachain-monorepo
