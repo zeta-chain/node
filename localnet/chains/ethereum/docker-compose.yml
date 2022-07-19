@@ -47,31 +47,9 @@ services:
       - "${RPC_PORT}:8545"
     networks:
       - localnet
-      # priv-eth-net:
 
-  # geth-miner:
-  #   hostname: geth-miner
-  #   env_file:
-  #     - .env
-  #   image: geth-client
-  #   depends_on:
-  #     - geth-bootnode
-  #   command:
-  #     --bootnodes="enode://af22c29c316dad069cf48a09a4ad5cf04a251b411e45098888d114c6dd7f489a13786620d5953738762afa13711d4ffb3b19aa5de772d8af72f851f7e9c5b164a@geth-bootnode:30303"
-  #     --mine
-  #     --miner.threads=1
-  #     --networkid=${NETWORK_ID}
-  #     --netrestrict="172.16.254.0/28"
-  #     # -- miner.etherbase=${MINER_REWARD_ACCOUNT}
-  #   networks:
-  #     priv-eth-net:
 
 networks:
   localnet: 
     external: true
     name: localnet
-  # priv-eth-net:
-  #   driver: bridge
-  #   ipam:
-  #     config:
-  #     - subnet: 172.16.254.0/28
