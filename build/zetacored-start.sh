@@ -19,12 +19,9 @@ if  [[ ! -f "$FILE" ]]; then
     cp -rf /zetashared/node"$NODE_NUMBER"/* /root/.zetacore/
 fi
 
-
 zetacored start \
     --rpc.laddr "tcp://0.0.0.0:26657" \
     --rpc.pprof_laddr "0.0.0.0:6060"  \
     --address "tcp://$MYIP:26658" \
     --log_format json \
-    --moniker "node$NODE_NUMBER" 2>&1 | tee /root/.zetacore/zetacored.log
-
-
+    --moniker "node$NODE_NUMBER"
