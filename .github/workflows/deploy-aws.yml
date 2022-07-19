@@ -75,8 +75,8 @@ jobs:
       - name: Build Binaries
         run: make install
 
-      # - name: Test
-      #   run: go test -v -coverprofile coverage.out  ./...
+      - name: Test
+        run: go test -v -coverprofile coverage.out  ./...
 
       - name: Create Package
         run: |
