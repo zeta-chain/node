@@ -2,7 +2,6 @@
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $DIR
 
-
 if [ ! -f ".env" ]; then
     cp env_vars .env
 fi
@@ -15,6 +14,6 @@ mkdir -p config/node2/data config/node2/config config/node2/keyring-test/
 mkdir -p config/node3/data config/node3/config config/node3/keyring-test/
 
 # Create Docker Image
-../../build/build.sh
+../../../build/build.sh
 
 

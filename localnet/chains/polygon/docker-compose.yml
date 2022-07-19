@@ -6,7 +6,7 @@ services:
     container_name: bor
     env_file:
       - .env
-    image: bor:latest
+    image: bor
     # build: ./bor
     # restart: unless-stopped
     ports:
@@ -41,7 +41,6 @@ services:
         - --miner.noverify  
         - --fakepow   
         - --bor.withoutheimdall  ## Must replace this with bor.heimdall=http://heimdalld:1317 if you enable the other containers
-        # - --bor.heimdall=http://heimdalld:1317
 
 ## Remaining Containers are not needed at this time
 ## They deploy the full chain connecting a preexisting ETH > to Heimdall > then to Bor 
@@ -140,9 +139,6 @@ services:
   #     - --eth_rpc_url=
   #     - --bor_rpc_url=
 
-
-
-        
 networks:
   localnet: 
     external: true

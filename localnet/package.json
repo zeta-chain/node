@@ -12,14 +12,13 @@
     "url": "https://github.com/zeta-chain/zeta-node/issues"
   },
   "scripts": {
-    "build": "./build_all.sh",
-    "build-zeta": "./zetachain/build.sh ",
-    "start": "./start_all.sh ",
-    "start-zeta": "./zetachain/start.sh ",
-    "stop": "./stop_all.sh",
-    "reset": "./stop_all.sh  && ./reset_all.sh",
-    "reset-zeta": "./zetachain/stop.sh  && ./zetachain/reset.sh && ./zetachain/generate_new_genesis_files.sh",
-    "test": "cd hardhat/ && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --timeout 200000 -r ts-node/register 'test/localnet-MPI-testing.ts'",
+    "build": "./scripts/build_all.sh",
+    "build-zeta": "./chains/zetachain/build.sh ",
+    "start": "./scripts/start_all.sh ",
+    "start-zeta": "./chains/zetachain/start.sh ",
+    "stop": "./scripts/stop_all.sh",
+    "reset": "./scripts/stop_all.sh  && ./scripts/reset_all.sh",
+    "reset-zeta": "./chains/zetachain/stop.sh  && ./chains/zetachain/reset.sh && ./chains/zetachain/create-genesis-files.sh",
     "lint:js:fix": "eslint --ext .js,.ts . --fix",
     "lint:js": "eslint --ext .js,.ts ."
   },
