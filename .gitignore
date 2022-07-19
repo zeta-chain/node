@@ -1,8 +1,8 @@
 .deps
 .DS_Store
-.DS_Store
 .env
 .idea/
+.secrets
 coverage
 coverage.json
 coverage.out
@@ -11,6 +11,7 @@ release/
 typechain
 vue/
 vue/dist
+vue/node_modules
 vue/node_modules
 yarn-error.log
 
