@@ -3,8 +3,9 @@ name: Build & Deploy To EC2 (aws/staging)
 on:
   push:
     branches:
-      - aws/development
-
+      - develop
+    tags:
+      - athens-v*
 env:
   S3_BUCKET: s3://source-files-821351686724/deployment-files
   # AWS_REGION: us-east-1
@@ -87,9 +88,17 @@ jobs:
           export DEPLOYMENT_ID=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
           echo "::set-env name=DEPLOYMENT_ID::$DEPLOYMENT_ID"
 
-      # - name: Snapshot Instances
-      #   run: |
-      #     aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain"
+      - name: Snapshot Instances
+        run: |
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" | jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
+          while IFS= read -r INSTANCE_ID; do
+              echo "$INSTANCE_ID"
+              aws ec2 create-snapshots \
+                --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
+                --description "Snapshot Prior To Deployment ID: $DEPLOYMENT_ID" \
+                --copy-tags-from-source "volume" > jq
+          done <<< "$INSTANCE_IDS"
+          sleep 2
 
       - name: Copy Package Files
         run: |
@@ -119,55 +128,44 @@ jobs:
           COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
 
+## TODO 
+  # Testing
+  # Rollback 
 
-  test:
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+  # test:
+  #   needs: deploy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Install AWS CLI 
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+  #     - name: Install AWS CLI 
+  #       run: |
+  #         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #         unzip awscliv2.zip
+  #         sudo ./aws/install
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
-          aws-region: us-east-1
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
+  #         aws-region: us-east-1
 
-      - name: Get Deployment ID
-        run: |
-          export DEPLOYMENT_ID=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
-          echo "::set-env name=DEPLOYMENT_ID::$DEPLOYMENT_ID"
+  #     - name: Get Deployment ID
+  #       run: |
+  #         export DEPLOYMENT_ID=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
+  #         echo "::set-env name=DEPLOYMENT_ID::$DEPLOYMENT_ID"
 
-      # TODO - TESTS HERE
+  #     # TODO - Put Tests Here
 
-      - name: Update Last Successful Deployment ID - /deployments/latest-successful-deployment-id
-        run: |
-          aws ssm put-parameter --overwrite --name '/deployments/latest-successful-deployment-id' --value $DEPLOYMENT_ID > /dev/null 2>&1
+  #     - name: Update Last Successful Deployment ID - /deployments/latest-successful-deployment-id
+  #       run: |
+  #         aws ssm put-parameter --overwrite --name '/deployments/latest-successful-deployment-id' --value $DEPLOYMENT_ID > /dev/null 2>&1
 
-  rollback: # Setup RollBack actions in case of failure
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+  # rollback: # Setup RollBack actions in case of failure
+  #   needs: deploy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      
-
-# COMMAND_ID=$(aws ssm send-command \
-#   --targets Key=tag:Chain,Values=zetachain \
-#   --document-name "AWS-RunShellScript" \
-#   --parameters "commands=[\"aws s3 cp $S3_BUCKET/$DEPLOYMENT_ID.tar.gz /tmp/\"]" | jq .Command.CommandId -r)
-
-## Testing
-
-## Fail/Rollback
-# Get last working Binary name from SSM
-# SSM Commands - Download File, Unzip, Stop ZetaChain, MV files, Start ZetaChain ( Check each command is successful before moving onto the nex)
-
-## EXTRA
-# Snapshot disks before deployment
+  
