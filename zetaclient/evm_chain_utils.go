@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
-	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -13,7 +13,7 @@ import (
 )
 
 func (ob *ChainObserver) ExternalChainWatcher() {
-	// At each tick, query the mpiAddress
+	// At each tick, query the Connector contract
 	for {
 		select {
 		case <-ob.ticker.C:
@@ -50,70 +50,42 @@ func (ob *ChainObserver) observeInTX() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-
-	topics[0] = []ethcommon.Hash{logZetaSentSignatureHash}
-
-	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(ob.mpiAddress)},
-		FromBlock: big.NewInt(0).SetUint64(ob.LastBlock + 1), // LastBlock has been processed;
-		ToBlock:   big.NewInt(0).SetUint64(toBlock),
-		Topics:    topics,
-	}
-	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.zetaClient.GetKeys().signerName, query.FromBlock, query.ToBlock)
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(ob.mpiAddress))
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
-	logs, err := ob.EvmClient.FilterLogs(context.Background(), query)
-	if err != nil {
-		return err
-	}
+	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
+		Start:   ob.LastBlock + 1,
+		End:     &toBlock,
+		Context: context.TODO(),
+	}, []ethcommon.Address{})
 	cnt, err := ob.GetPromCounter("rpc_getLogs_count")
 	if err != nil {
 		return err
 	}
 	cnt.Inc()
 
-	// Read in ABI
-	contractAbi := ob.connectorAbi
-
 	// Pull out arguments from logs
-	for _, vLog := range logs {
-		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
-		switch vLog.Topics[0].Hex() {
-		case logZetaSentSignatureHash.Hex():
-			vals, err := contractAbi.Unpack("ZetaSent", vLog.Data)
-			if err != nil {
-				log.Err(err).Msg("error unpacking ZetaMessageSendEvent")
-				continue
-			}
-			sender := vLog.Topics[1]
-			destChainID := vals[0].(*big.Int)
-			destContract := vals[1].([]byte)
-			zetaAmount := vals[2].(*big.Int)
-			gasLimit := vals[3].(*big.Int)
-			message := vals[4].([]byte)
-			zetaParams := vals[5].([]byte)
+	for logs.Next() {
+		event := logs.Event
+		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s\n", event.Raw.BlockNumber, event.Raw.TxHash)
 
-			_ = zetaParams
-
-			metaHash, err := ob.zetaClient.PostSend(
-				ethcommon.HexToAddress(sender.Hex()).Hex(),
-				ob.chain.String(),
-				types.BytesToEthHex(destContract),
-				config.FindChainByID(destChainID),
-				zetaAmount.String(),
-				zetaAmount.String(),
-				base64.StdEncoding.EncodeToString(message),
-				vLog.TxHash.Hex(),
-				vLog.BlockNumber,
-				gasLimit.Uint64(),
-			)
-			if err != nil {
-				log.Err(err).Msg("error posting to meta core")
-				continue
-			}
-			log.Debug().Msgf("LockSend detected: PostSend metahash: %s", metaHash)
+		zetaHash, err := ob.zetaClient.PostSend(
+			event.OriginSenderAddress.Hex(),
+			ob.chain.String(),
+			types.BytesToEthHex(event.DestinationAddress),
+			config.FindChainByID(event.DestinationChainId),
+			event.ZetaAmount.String(),
+			event.ZetaAmount.String(),
+			base64.StdEncoding.EncodeToString(event.Message),
+			event.Raw.TxHash.Hex(),
+			event.Raw.BlockNumber,
+			event.GasLimit.Uint64(),
+		)
+		if err != nil {
+			log.Err(err).Msg("error posting to zeta core")
+			continue
 		}
+		log.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
 
 	ob.LastBlock = toBlock
