@@ -6,9 +6,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math/big"
 	"os"
@@ -27,7 +29,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	zetatypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 )
@@ -37,43 +38,6 @@ const (
 	NonceTxHashesKeyPrefix = "NonceTxHashes-"
 	NonceTxKeyPrefix       = "NonceTx-"
 )
-
-//    event ZetaSent(
-//        address indexed originSenderAddress,
-//        uint256 destinationChainId,
-//        bytes destinationAddress,
-//        uint256 zetaAmount,
-//        uint256 gasLimit,
-//        bytes message,
-//        bytes zetaParams
-//    );
-var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
-var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
-
-//    event ZetaReceived(
-//        bytes originSenderAddress,
-//        uint256 indexed originChainId,
-//        address indexed destinationAddress,
-//        uint256 zetaAmount,
-//        bytes message,
-//        bytes32 indexed internalSendHash
-//    );
-var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
-var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
-
-//event ZetaReverted(
-//address originSenderAddress,
-//uint256 originChainId,
-//uint256 indexed destinationChainId,
-//bytes indexed destinationAddress,
-//uint256 zetaAmount,
-//bytes message,
-//bytes32 indexed internalSendHash
-//);
-var logZetaRevertedSignature = []byte("ZetaReverted(address,uint256,uint256,bytes,uint256,bytes,bytes32)")
-var logZetaRevertedSignatureHash = crypto.Keccak256Hash(logZetaRevertedSignature)
-
-var topics = make([][]ethcommon.Hash, 1)
 
 type TxHashEnvelope struct {
 	TxHash string
@@ -93,7 +57,7 @@ type ChainObserver struct {
 	mpiAddress       string
 	endpoint         string
 	ticker           *time.Ticker
-	connectorAbi     *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	Connector        *evm.Connector
 	Client           *ethclient.Client
 	bridge           *ZetaCoreBridge
 	Tss              TSSSigner
@@ -120,6 +84,7 @@ type ChainObserver struct {
 // Return configuration based on supplied target chain
 func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
+
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
@@ -163,11 +128,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	}
 
 	// initialize the pool ABI
-	mpiABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
-	if err != nil {
-		return nil, err
-	}
-	ob.connectorAbi = &mpiABI
+
 	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
 	if err != nil {
 		return nil, err
@@ -222,6 +183,16 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.ROPSTEN_BLOCK_TIME
 	}
+
+	connectorAddress := ethcommon.HexToAddress(ob.mpiAddress)
+	if connectorAddress == ethcommon.HexToAddress("0x0") {
+		return nil, errors.New("connector address is not set")
+	}
+	connector, err := evm.NewConnector(connectorAddress, ob.Client)
+	if err != nil {
+		return nil, err
+	}
+	ob.Connector = connector
 
 	if os.Getenv("DUMMY_PRICE") != "" {
 		log.Info().Msg("Using dummy price of 1:1")
@@ -313,9 +284,6 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
-
-	// this is shared structure to query logs by sendHash
-	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", ob.chain, logZetaReceivedSignatureHash.Hex())
 
 	return &ob, nil
 }
@@ -571,19 +539,14 @@ func (ob *ChainObserver) observeChain() error {
 		toBlock = confirmedBlockNum
 	}
 
-	topics[0] = []ethcommon.Hash{logZetaSentSignatureHash}
-
-	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(ob.mpiAddress)},
-		FromBlock: big.NewInt(0).SetUint64(ob.LastBlock + 1), // LastBlock has been processed;
-		ToBlock:   big.NewInt(0).SetUint64(toBlock),
-		Topics:    topics,
-	}
-	//log.Debug().Msgf("signer %s block from %d to %d", chainOb.bridge.GetKeys().signerName, query.FromBlock, query.ToBlock)
 	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ethcommon.HexToAddress(ob.mpiAddress))
 
 	// Finally query the for the logs
-	logs, err := ob.Client.FilterLogs(context.Background(), query)
+	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
+		Start:   ob.LastBlock + 1,
+		End:     &toBlock,
+		Context: context.TODO(),
+	}, []ethcommon.Address{})
 	if err != nil {
 		return err
 	}
@@ -593,47 +556,27 @@ func (ob *ChainObserver) observeChain() error {
 	}
 	cnt.Inc()
 
-	// Read in ABI
-	contractAbi := ob.connectorAbi
-
 	// Pull out arguments from logs
-	for _, vLog := range logs {
-		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s topic %s\n", vLog.BlockNumber, vLog.TxHash.Hex()[:6], vLog.Topics[0].Hex()[:6])
-		switch vLog.Topics[0].Hex() {
-		case logZetaSentSignatureHash.Hex():
-			vals, err := contractAbi.Unpack("ZetaSent", vLog.Data)
-			if err != nil {
-				log.Err(err).Msg("error unpacking ZetaMessageSendEvent")
-				continue
-			}
-			sender := vLog.Topics[1]
-			destChainID := vals[0].(*big.Int)
-			destContract := vals[1].([]byte)
-			zetaAmount := vals[2].(*big.Int)
-			gasLimit := vals[3].(*big.Int)
-			message := vals[4].([]byte)
-			zetaParams := vals[5].([]byte)
+	for logs.Next() {
+		event := logs.Event
 
-			_ = zetaParams
-
-			metaHash, err := ob.bridge.PostSend(
-				ethcommon.HexToAddress(sender.Hex()).Hex(),
-				ob.chain.String(),
-				types.BytesToEthHex(destContract),
-				config.FindChainByID(destChainID),
-				zetaAmount.String(),
-				zetaAmount.String(),
-				base64.StdEncoding.EncodeToString(message),
-				vLog.TxHash.Hex(),
-				vLog.BlockNumber,
-				gasLimit.Uint64(),
-			)
-			if err != nil {
-				log.Err(err).Msg("error posting to meta core")
-				continue
-			}
-			log.Debug().Msgf("LockSend detected: PostSend metahash: %s", metaHash)
+		zetaHash, err := ob.bridge.PostSend(
+			event.OriginSenderAddress.Hex(),
+			ob.chain.String(),
+			types.BytesToEthHex(event.DestinationAddress),
+			config.FindChainByID(event.DestinationChainId),
+			event.ZetaAmount.String(),
+			event.ZetaAmount.String(),
+			base64.StdEncoding.EncodeToString(event.Message),
+			event.Raw.TxHash.Hex(),
+			event.Raw.BlockNumber,
+			event.GasLimit.Uint64(),
+		)
+		if err != nil {
+			log.Err(err).Msg("error posting to zeta core")
+			continue
 		}
+		log.Debug().Msgf("LockSend detected: PostSend zetahash: %s", zetaHash)
 	}
 
 	ob.LastBlock = toBlock
@@ -687,21 +630,15 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
-			switch vLog.Topics[0].Hex() {
-			case logZetaReceivedSignatureHash.Hex():
-				retval, err := ob.connectorAbi.Unpack("ZetaReceived", vLog.Data)
-				if err != nil {
-					log.Error().Err(err).Msg("error unpacking ZetaReceived")
-					continue
-				}
-
+			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
+			if err == nil {
+				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					var mMint string = retval[1].(*big.Int).String()
-					metaHash, err := ob.bridge.PostReceiveConfirmation(
+					mMint := receivedLog.ZetaAmount.String()
+					zetaHash, err := ob.bridge.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
 						vLog.BlockNumber,
@@ -713,24 +650,20 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						log.Error().Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					log.Info().Msgf("Zeta tx hash: %s\n", metaHash)
+					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 					return true, true, nil
 				} else {
 					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
 					return true, false, nil
 				}
-			case logZetaRevertedSignatureHash.Hex():
-				retval, err := ob.connectorAbi.Unpack("ZetaReverted", vLog.Data)
-				if err != nil {
-					log.Error().Err(err).Msg("error unpacking ZetaReverted")
-					continue
-				}
-
+			}
+			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
+			if err == nil {
+				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-					log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
-					var mMint string = retval[2].(*big.Int).String()
+					mMint := revertedLog.ZetaAmount.String()
 					metaHash, err := ob.bridge.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
