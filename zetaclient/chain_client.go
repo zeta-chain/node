@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,43 +30,6 @@ const (
 	NonceTxHashesKeyPrefix = "NonceTxHashes-"
 	NonceTxKeyPrefix       = "NonceTx-"
 )
-
-//    event ZetaSent(
-//        address indexed originSenderAddress,
-//        uint256 destinationChainId,
-//        bytes destinationAddress,
-//        uint256 zetaAmount,
-//        uint256 gasLimit,
-//        bytes message,
-//        bytes zetaParams
-//    );
-var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
-var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
-
-//    event ZetaReceived(
-//        bytes originSenderAddress,
-//        uint256 indexed originChainId,
-//        address indexed destinationAddress,
-//        uint256 zetaAmount,
-//        bytes message,
-//        bytes32 indexed internalSendHash
-//    );
-var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
-var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
-
-//event ZetaReverted(
-//address originSenderAddress,
-//uint256 originChainId,
-//uint256 indexed destinationChainId,
-//bytes indexed destinationAddress,
-//uint256 zetaAmount,
-//bytes message,
-//bytes32 indexed internalSendHash
-//);
-var logZetaRevertedSignature = []byte("ZetaReverted(address,uint256,uint256,bytes,uint256,bytes,bytes32)")
-var logZetaRevertedSignatureHash = crypto.Keccak256Hash(logZetaRevertedSignature)
-
-var topics = make([][]ethcommon.Hash, 1)
 
 type TxHashEnvelope struct {
 	TxHash string
@@ -313,9 +275,6 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
-
-	// this is shared structure to query logs by sendHash
-	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", ob.chain, logZetaReceivedSignatureHash.Hex())
 
 	return &ob, nil
 }

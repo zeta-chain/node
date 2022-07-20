@@ -58,6 +58,9 @@ func (ob *ChainObserver) observeInTX() error {
 		End:     &toBlock,
 		Context: context.TODO(),
 	}, []ethcommon.Address{})
+	if err != nil {
+		return err
+	}
 	cnt, err := ob.GetPromCounter("rpc_getLogs_count")
 	if err != nil {
 		return err
