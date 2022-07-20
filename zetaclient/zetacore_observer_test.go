@@ -43,7 +43,7 @@ func (s *COSuite) SetUpTest(c *C) {
 	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
 	c.Logf("chain home dir: %s", chainHomeFoler)
 
-	// first signer & bridge
+	// first signer & zetaClient
 	// alice is the default user created by Starport chain serve
 	{
 		signerName := "alice"
@@ -66,7 +66,7 @@ func (s *COSuite) SetUpTest(c *C) {
 		s.bridge1 = bridge
 	}
 
-	// second signer & bridge
+	// second signer & zetaClient
 	// alice is the default user created by Starport chain serve
 	{
 		signerName := "bob"
