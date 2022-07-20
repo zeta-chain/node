@@ -787,7 +787,7 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	}
 	tNow := time.Now()
 	ob.mu.Lock()
-	for nonce, _ := range ob.nonceTxHashesMap {
+	for nonce := range ob.nonceTxHashesMap {
 		if _, found := pendingNonces[nonce]; !found {
 			txHashes := ob.nonceTxHashesMap[nonce]
 			delete(ob.nonceTxHashesMap, nonce)
@@ -805,7 +805,7 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	}
 	minNonce, maxNonce := -1, 0
 	if len(pendingNonces) > 0 {
-		for nonce, _ := range pendingNonces {
+		for nonce := range pendingNonces {
 			if minNonce == -1 {
 				minNonce = nonce
 			}
