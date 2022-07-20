@@ -53,7 +53,7 @@ func (cl *ChainETHish) Init() {
 	if err != nil {
 		log.Error().Err(err).Msg("NewChainObserver")
 	}
-	cl.client = chain.Client
+	cl.client = chain.EvmClient
 
 	_id, _ := cl.client.ChainID(cl.context)
 	log.Debug().Msg(fmt.Sprintf("%s chain id %d", cl.name, _id))
