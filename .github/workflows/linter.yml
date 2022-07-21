@@ -13,8 +13,15 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v2.5.2
-      with:
-        version: v1.45
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: v1.45
