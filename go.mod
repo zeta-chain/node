@@ -35,13 +35,16 @@ require (
 require github.com/tendermint/spm v0.1.9
 
 require (
-	github.com/binance-chain/tss-lib v1.3.2 // indirect
-	github.com/lib/pq v1.10.6 // indirect
-	github.com/mattn/go-sqlite3 v1.14.9 // indirect
+	github.com/lib/pq v1.10.6
+	github.com/mattn/go-sqlite3 v1.14.9
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+replace github.com/binance-chain/tss-lib => github.com/zeta-chain/tss-lib v0.1.3-0.20220721001754-9d2fe9efc794
+
+replace gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v1.5.2-0.20220721002045-193e8d648547
+
+replace github.com/agl/ed25519 => github.com/binance-chain/edwards25519 v0.0.0-20200305024217-f36fc4b53d43
