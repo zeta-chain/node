@@ -2264,10 +2264,10 @@ github.com/yuin/goldmark-emoji v1.0.1/go.mod h1:2w1E6FEWLcDQkoTE+7HU6QF1F6SLlNGj
 github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
-github.com/zeta-chain/go-tss v1.5.2-0.20220721002045-193e8d648547 h1:y4SJlZlaWXkw+NlnxuhieNxoDUoaRtVJob8Rzo38EfY=
-github.com/zeta-chain/go-tss v1.5.2-0.20220721002045-193e8d648547/go.mod h1:9VZW2bFhag55gvGrUrW/KXNAuSicJJXhYpNSVUaN0TM=
-github.com/zeta-chain/tss-lib v0.1.3-0.20220721001754-9d2fe9efc794 h1:Ys4eLpFV33Cd17ja/ENorRuxbjnhi5PdkstmzEJzdxs=
-github.com/zeta-chain/tss-lib v0.1.3-0.20220721001754-9d2fe9efc794/go.mod h1:ym/z4e72Sfb1a+9YMv3v98hdKWHZDJMAWFI6Y6FFFGc=
+github.com/zeta-chain/go-tss v1.5.2-0.20220721223537-74acdb1e3abf h1:7nWPRPBvdRgLROMFqy+KLSbGzDoJe/ZhHze8KP/Qetk=
+github.com/zeta-chain/go-tss v1.5.2-0.20220721223537-74acdb1e3abf/go.mod h1:lTWLaiE1YTe0O5B68HRMn6DZ02yu8d/hwIi9f6hrlu8=
+github.com/zeta-chain/tss-lib v0.1.3-0.20220721223335-682db65bafd1 h1:fvShvmkiHdbh/fY+tBIuY5gxdbY8XmwcvSUlx/bV4pk=
+github.com/zeta-chain/tss-lib v0.1.3-0.20220721223335-682db65bafd1/go.mod h1:pEM3W/1inIzmdQn9IY9pA0MkG1bTGKhsSivxizeyyt4=
 github.com/zondax/hid v0.9.0 h1:eiT3P6vNxAEVxXMw66eZUAAnU2zD33JBkfG/EnfAKl8=
 github.com/zondax/hid v0.9.0/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 github.com/zondax/ledger-go v0.12.1/go.mod h1:KatxXrVDzgWwbssUWsF5+cOJHXPvzQ09YSlzGNuhOEo=
