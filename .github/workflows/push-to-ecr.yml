@@ -2,7 +2,7 @@ name: Push Image To ECR
 
 on:
   push:
-    branches: ["main"]
+    branches: ["develop"]
     # branches: [ athens-aws]
 
 jobs:
@@ -12,6 +12,12 @@ jobs:
     steps:
     - name: Check Out Code
       uses: actions/checkout@v2
+
+    - name: setup-git-credentials
+      uses: de-vri-es/setup-git-credentials@v2.0.8
+      with:
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
