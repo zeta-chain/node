@@ -1,10 +1,14 @@
 name: Gosec
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, dependency-build-auth-fix]
 
   pull_request:
     branches: [main, develop]
+
+env: 
+  GOPRIVATE: "github.com/zeta-chain/*"
+  
 
 jobs:
   gosec:
@@ -20,8 +24,39 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+      - name: Set up Go
+        uses: actions/setup-go@v2
         with:
-          args: ./...
+          go-version: 1.17
+
+      # - name: Build
+      #   run: make install
+
+      # - name: Go Get Modules
+      #   run:  |
+      #     go get ./cmd/zetaclientd
+      #     go get ./cmd/zetacored
+      #     go get ./cmd/indexer
+
+      # - name: Go Get Dependecies 
+      #   run:  go mod download
+
+      # - name: Go Get Modules
+      #   run:  |
+      #     echo $PATH
+      #     go env
+      #     echo $GOPATH
+      #     echo $
+
+      # - name: Run Gosec Security Scanner
+      #   uses: securego/gosec@master
+      #   with:
+      #     args: ./...
+
+      - name: Run Gosec Security Scanner
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get github.com/securego/gosec/cmd/gosec
+          gosec ./...
+          
 
