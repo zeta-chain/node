@@ -395,14 +395,22 @@ func New(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 
 	app.mm.SetOrderBeginBlockers(
-		banktypes.ModuleName, authtypes.ModuleName,
-		upgradetypes.ModuleName, capabilitytypes.ModuleName,
-		minttypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, evidencetypes.ModuleName,
-		stakingtypes.ModuleName, ibchost.ModuleName,
-		vestingtypes.ModuleName, govtypes.ModuleName,
-		paramstypes.ModuleName, genutiltypes.ModuleName,
-		crisistypes.ModuleName, ibctransfertypes.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
 		metacoremoduletypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
