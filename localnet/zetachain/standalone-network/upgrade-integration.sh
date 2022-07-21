@@ -32,6 +32,7 @@ export DAEMON_HOME=$HOME/.zetacore
 export DAEMON_NAME=zetacored
 export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
 export DAEMON_RESTART_AFTER_UPGRADE=true
+export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 
 make clean
 rm -rf ~/.zetacore
@@ -42,9 +43,11 @@ rm -rf $GOPATH/bin/old/zetacored
 rm -rf $GOPATH/bin/new/zetacored
 
 # Setup old binary and start chain
+mkdir -p mkdir $GOPATH/bin/old
+mkdir -p mkdir $GOPATH/bin/new
 
 git checkout $CurrentBinary
-make install
+make install-zetacore
 cp $GOPATH/bin/zetacored $GOPATH/bin/old/
 zetacored init test --chain-id=localnet -o
 
@@ -90,7 +93,7 @@ echo "${contents}" > $DAEMON_HOME/config/genesis.json
 
 # Add state data here if required
 
-cosmovisor start --home ~/.zetacore/ --p2p.laddr 0.0.0.0:27655  --grpc.address 0.0.0.0:9096 --grpc-web.address 0.0.0.0:9093 --address tcp://0.0.0.0:27659 --rpc.laddr tcp://127.0.0.1:26657 >> zetanode.log 2>&1  &
+cosmovisor run start --home ~/.zetacore/ --p2p.laddr 0.0.0.0:27655  --grpc.address 0.0.0.0:9096 --grpc-web.address 0.0.0.0:9093 --address tcp://0.0.0.0:27659 --rpc.laddr tcp://127.0.0.1:26657 >> zetanode.log 2>&1  &
 
 sleep 7
 zetacored tx gov submit-proposal software-upgrade $UpgradeName --from zeta --deposit 100000000stake --upgrade-height 10 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id localnet --yes
@@ -101,3 +104,4 @@ sleep 7
 zetacored query gov proposal 1
 
 tail -f zetanode.log
+
