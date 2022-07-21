@@ -19,7 +19,13 @@ BUILD_FLAGS := -ldflags '$(ldflags)'
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS :=  -tags mocknet
 
+clean: clean-binaries clean-dir
 
+clean-binaries:
+	@rm -rf ${GOBIN}/zeta*
+
+clean-dir:
+	@rm -rf ~/.zetacore
 
 all: install
 
