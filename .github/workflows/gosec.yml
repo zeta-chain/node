@@ -29,7 +29,8 @@ jobs:
           go-version: 1.17
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: ./...
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get github.com/securego/gosec/cmd/gosec@v2.12.0
+          gosec ./...
           
