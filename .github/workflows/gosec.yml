@@ -1,7 +1,7 @@
 name: Gosec
 on:
   push:
-    branches: [main, develop, dependency-build-auth-fix]
+    branches: [main, develop]
 
   pull_request:
     branches: [main, develop]
