@@ -66,8 +66,9 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	// 32B msg hash, 32B R, 32B S, 1B RC
 	log.Info().Msgf("signature of digest is... %v", signature)
 
-	if len(signature) == 0 {
-		log.Warn().Err(err).Msgf("signature has length 0")
+	if len(signature) == 0 || ks_res.Status != thorcommon.Success {
+		log.Warn().Err(err).Msgf("signature has length 0 or status (%s) is not success", ks_res.Status)
+		log.Warn().Msgf("blame: %v", ks_res.Blame)
 		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
 	if !verify_signature(tssPubkey, signature, H) {
@@ -228,8 +229,8 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey) (*tss.TssServe
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
 			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    10 * time.Second,
+			KeySignTimeout:  45 * time.Second, // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    15 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
 		nil, // don't set to precomputed values
