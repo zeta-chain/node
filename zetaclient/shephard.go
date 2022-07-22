@@ -180,7 +180,7 @@ SIGNLOOP:
 			if tnow.Before(lastSignTime.Add(signInterval)) {
 				continue
 			}
-			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
+			if tnow.Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers; FIXME: is this necessary?
 				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included || confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
