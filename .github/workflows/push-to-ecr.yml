@@ -21,8 +21,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
         aws-region: us-east-1
 
     - name: Login to Amazon ECR
@@ -42,8 +42,6 @@ jobs:
       run: |
         docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        # docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.extract_branch.outputs.branch }}
-        # docker build -f Dockerfile.zetacore -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.extract_branch.outputs.branch }} .
 
     
     
