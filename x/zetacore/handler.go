@@ -20,6 +20,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgZetaConversionRateVoter:
 			res, err := msgServer.ZetaConversionRateVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddToWatchList:
+			res, err := msgServer.AddToWatchList(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 			// this line is used by starport scaffolding # 1
 		case *types.MsgCreateTSSVoter:
 			res, err := msgServer.CreateTSSVoter(sdk.WrapSDKContext(ctx), msg)

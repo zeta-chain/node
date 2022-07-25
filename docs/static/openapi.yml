@@ -50551,6 +50551,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  zetachain.zetacore.zetacore.MsgAddToWatchListResponse:
+    type: object
   zetachain.zetacore.zetacore.MsgCreateTSSVoterResponse:
     type: object
   zetachain.zetacore.zetacore.MsgGasBalanceVoterResponse:
