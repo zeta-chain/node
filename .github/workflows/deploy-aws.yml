@@ -78,7 +78,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Build Binaries
-        run: make install
+        run: | 
+          make install
+          make install-indexer
 
       - name: Test
         run: go test -v -coverprofile coverage.out  ./...
@@ -90,6 +92,7 @@ jobs:
           mkdir deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
+          mv $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
           mv build/zetaclient-start.sh deployment-${PACKAGE_TIMESTAMP}
           mv build/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
           tar -czvf deployment-${PACKAGE_TIMESTAMP}.tar.gz deployment-${PACKAGE_TIMESTAMP}/*
@@ -180,7 +183,7 @@ jobs:
           COMMAND_ID=$(run_ssm_commands "systemctl stop zetaclientd, systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
 
-      - name: Update Binaries
+      - name: Update ZetaNode Binaries
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_commands "\
@@ -195,4 +198,5 @@ jobs:
           source build/bash_functions
           COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
+
 
