@@ -1,8 +1,11 @@
 name: Build and Unit Test
 
 on:
+  push:
+    branches:
+    - increment-go-version
   pull_request:
-    branches: [ main, develop, increment-go-version]
+    branches: [ main, develop]
 
 jobs:
 
