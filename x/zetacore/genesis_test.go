@@ -12,8 +12,6 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
-
 		OutTxTrackerList: []types.OutTxTracker{
 			{
 				Index: "0",
