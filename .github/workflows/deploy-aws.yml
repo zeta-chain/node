@@ -24,6 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
       - name: Set Environment Variables"
         run: |
           GITHUB_REF_NAME=${{ github.ref_name }}  
@@ -48,7 +53,7 @@ jobs:
       - name: Set Up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.18
 
       - name: Install AWS CLI
         run: |
@@ -73,7 +78,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Build Binaries
-        run: make install
+        run: | 
+          make install
+          make install-indexer
 
       - name: Test
         run: go test -v -coverprofile coverage.out  ./...
@@ -85,6 +92,7 @@ jobs:
           mkdir deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
+          mv $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
           mv build/zetaclient-start.sh deployment-${PACKAGE_TIMESTAMP}
           mv build/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
           tar -czvf deployment-${PACKAGE_TIMESTAMP}.tar.gz deployment-${PACKAGE_TIMESTAMP}/*
@@ -96,6 +104,22 @@ jobs:
 
       - name: Update Latest Deployment ID SSM Parameter
         run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value deployment-${PACKAGE_TIMESTAMP}  > /dev/null 2>&1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: zetachain
+          IMAGE_TAG: latest
+        run: |
+          cp deployment-${PACKAGE_TIMESTAMP}/zetacored ./
+          cp deployment-${PACKAGE_TIMESTAMP}/zetaclientd ./
+          cp deployment-${PACKAGE_TIMESTAMP}/indexer ./
+          docker build -f Dockerfile.zetacore_binary -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
   deploy:
     needs: build
@@ -175,7 +199,7 @@ jobs:
           COMMAND_ID=$(run_ssm_commands "systemctl stop zetaclientd, systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
 
-      - name: Update Binaries
+      - name: Update ZetaNode Binaries
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_commands "\
@@ -190,4 +214,5 @@ jobs:
           source build/bash_functions
           COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
+
 

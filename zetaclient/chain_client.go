@@ -6,8 +6,8 @@ import (
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,43 +30,6 @@ const (
 	NonceTxHashesKeyPrefix = "NonceTxHashes-"
 	NonceTxKeyPrefix       = "NonceTx-"
 )
-
-//    event ZetaSent(
-//        address indexed originSenderAddress,
-//        uint256 destinationChainId,
-//        bytes destinationAddress,
-//        uint256 zetaAmount,
-//        uint256 gasLimit,
-//        bytes message,
-//        bytes zetaParams
-//    );
-var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
-var logZetaSentSignatureHash = crypto.Keccak256Hash(logZetaSentSignature)
-
-//    event ZetaReceived(
-//        bytes originSenderAddress,
-//        uint256 indexed originChainId,
-//        address indexed destinationAddress,
-//        uint256 zetaAmount,
-//        bytes message,
-//        bytes32 indexed internalSendHash
-//    );
-var logZetaReceivedSignature = []byte("ZetaReceived(bytes,uint256,address,uint256,bytes,bytes32)")
-var logZetaReceivedSignatureHash = crypto.Keccak256Hash(logZetaReceivedSignature)
-
-//event ZetaReverted(
-//address originSenderAddress,
-//uint256 originChainId,
-//uint256 indexed destinationChainId,
-//bytes indexed destinationAddress,
-//uint256 zetaAmount,
-//bytes message,
-//bytes32 indexed internalSendHash
-//);
-var logZetaRevertedSignature = []byte("ZetaReverted(address,uint256,uint256,bytes,uint256,bytes,bytes32)")
-var logZetaRevertedSignatureHash = crypto.Keccak256Hash(logZetaRevertedSignature)
-
-var topics = make([][]ethcommon.Hash, 1)
 
 type TxHashEnvelope struct {
 	TxHash string
@@ -84,10 +46,10 @@ type OutTx struct {
 // Filled with above constants depending on chain
 type ChainObserver struct {
 	chain            common.Chain
-	mpiAddress       string
 	endpoint         string
 	ticker           *time.Ticker
-	connectorAbi     *abi.ABI // token contract ABI on non-ethereum chain; zetalocker on ethereum
+	Connector        *evm.Connector
+	ConnectorAddress ethcommon.Address
 	EvmClient        *ethclient.Client
 	zetaClient       *ZetaCoreBridge
 	Tss              TSSSigner
@@ -126,7 +88,11 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.outTXPending = make(map[int][]string)
 	ob.outTXConfirmed = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
-	ob.mpiAddress = config.Chains[chain.String()].ConnectorContractAddress
+	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
+	if addr == ethcommon.HexToAddress("0x0") {
+		return nil, fmt.Errorf("Connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
+	}
+	ob.ConnectorAddress = addr
 	ob.endpoint = config.Chains[chain.String()].Endpoint
 	logFile, err := os.OpenFile(ob.chain.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 
@@ -141,10 +107,18 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
 	client, err := ethclient.Dial(ob.endpoint)
 	if err != nil {
-		log.Err(err).Msg("eth Client Dial")
+		log.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
 	ob.EvmClient = client
+
+	// initialize the connector
+	connector, err := evm.NewConnector(addr, ob.EvmClient)
+	if err != nil {
+		log.Error().Err(err).Msg("Connector")
+		return nil, err
+	}
+	ob.Connector = connector
 
 	// create metric counters
 	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
@@ -156,12 +130,6 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 
-	// initialize the pool ABI
-	mpiABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
-	if err != nil {
-		return nil, err
-	}
-	ob.connectorAbi = &mpiABI
 	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
 	if err != nil {
 		return nil, err
@@ -308,9 +276,6 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
 
-	// this is shared structure to query logs by sendHash
-	log.Info().Msgf("Chain %s logZetaReceivedSignatureHash %s", ob.chain, logZetaReceivedSignatureHash.Hex())
-
 	return &ob, nil
 }
 
@@ -341,21 +306,15 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
-			switch vLog.Topics[0].Hex() {
-			case logZetaReceivedSignatureHash.Hex():
-				retval, err := ob.connectorAbi.Unpack("ZetaReceived", vLog.Data)
-				if err != nil {
-					log.Error().Err(err).Msg("error unpacking ZetaReceived")
-					continue
-				}
-
+			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
+			if err == nil {
+				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-					log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					var mMint string = retval[1].(*big.Int).String()
-					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
+					mMint := receivedLog.ZetaAmount.String()
+					zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
 						vLog.BlockNumber,
@@ -367,24 +326,20 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						log.Error().Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					log.Info().Msgf("Zeta tx hash: %s\n", metaHash)
+					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 					return true, true, nil
 				} else {
 					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
 					return true, false, nil
 				}
-			case logZetaRevertedSignatureHash.Hex():
-				retval, err := ob.connectorAbi.Unpack("ZetaReverted", vLog.Data)
-				if err != nil {
-					log.Error().Err(err).Msg("error unpacking ZetaReverted")
-					continue
-				}
-
+			}
+			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
+			if err == nil {
+				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-					log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
-					var mMint string = retval[2].(*big.Int).String()
+					mMint := revertedLog.ZetaAmount.String()
 					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),

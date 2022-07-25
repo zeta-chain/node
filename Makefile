@@ -55,6 +55,10 @@ install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
+install-indexer: go.sum
+		@echo "--> Installing indexer"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
+
 install-mockmpi:
 	@echo "--> Installing MockMPI"
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/mockmpi
