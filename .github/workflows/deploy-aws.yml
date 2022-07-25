@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - develop
+      - charliemc/add-indexer-to-build
     tags:
       - athens-v*
 env:
@@ -78,7 +79,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Build Binaries
-        run: make install
+        run: | 
+          make install
+          make install-indexer
 
       - name: Test
         run: go test -v -coverprofile coverage.out  ./...
@@ -90,6 +93,7 @@ jobs:
           mkdir deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
+          mv $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
           mv build/zetaclient-start.sh deployment-${PACKAGE_TIMESTAMP}
           mv build/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
           tar -czvf deployment-${PACKAGE_TIMESTAMP}.tar.gz deployment-${PACKAGE_TIMESTAMP}/*
@@ -102,97 +106,98 @@ jobs:
       - name: Update Latest Deployment ID SSM Parameter
         run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value deployment-${PACKAGE_TIMESTAMP}  > /dev/null 2>&1
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Set Environment Variables"
-        run: |
-          GITHUB_REF_NAME=${{ github.ref_name }}  
-          echo $GITHUB_REF_NAME
+  #     - name: Set Environment Variables"
+  #       run: |
+  #         GITHUB_REF_NAME=${{ github.ref_name }}  
+  #         echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
-            export ENVIRONMENT_NAME=STAGING
-            export S3_BUCKET=s3://source-files-821351686724/deployment-files
-          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]]; then 
-            export ENVIRONMENT_NAME=ATHENS  
-            export S3_BUCKET=s3://source-files-070014318019/deployment-files
-          else 
-            echo "ERROR: Unknown value for 'github.ref_name' $GITHUB_REF_NAME"
-            echo "Exiting"
-            exit 1   
-          fi
+  #         if [[ $GITHUB_REF_NAME == "develop" ]]; then 
+  #           export ENVIRONMENT_NAME=STAGING
+  #           export S3_BUCKET=s3://source-files-821351686724/deployment-files
+  #         elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]]; then 
+  #           export ENVIRONMENT_NAME=ATHENS  
+  #           export S3_BUCKET=s3://source-files-070014318019/deployment-files
+  #         else 
+  #           echo "ERROR: Unknown value for 'github.ref_name' $GITHUB_REF_NAME"
+  #           echo "Exiting"
+  #           exit 1   
+  #         fi
 
-          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
-          echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME" >> $GITHUB_ENV
-          echo "Environment Name:$ENVIRONMENT_NAME"
+  #         echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+  #         echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME" >> $GITHUB_ENV
+  #         echo "Environment Name:$ENVIRONMENT_NAME"
 
-      - name: Install AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install --update 
+  #     - name: Install AWS CLI
+  #       run: |
+  #         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #         unzip awscliv2.zip
+  #         sudo ./aws/install --update 
 
-      - name: Configure AWS Staging credentials
-        if: ${{ env.ENVIRONMENT_NAME == 'STAGING' }}
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}          
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}          
-          aws-region: ${{ env.AWS_REGION }}
+  #     - name: Configure AWS Staging credentials
+  #       if: ${{ env.ENVIRONMENT_NAME == 'STAGING' }}
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}          
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}          
+  #         aws-region: ${{ env.AWS_REGION }}
 
-      - name: Configure AWS Athens credentials
-        if: ${{ env.ENVIRONMENT_NAME == 'ATHENS' }}
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}          
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}          
-          aws-region: ${{ env.AWS_REGION }}
+  #     - name: Configure AWS Athens credentials
+  #       if: ${{ env.ENVIRONMENT_NAME == 'ATHENS' }}
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}          
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}          
+  #         aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get Deployment ID
-        run: |
-          export DEPLOYMENT_ID=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
-          echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+  #     - name: Get Deployment ID
+  #       run: |
+  #         export DEPLOYMENT_ID=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
+  #         echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
 
-      - name: Snapshot Instances
-        run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" | jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
-          while IFS= read -r INSTANCE_ID; do
-              echo "$INSTANCE_ID"
-              aws ec2 create-snapshots \
-                --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
-                --description "Snapshot Prior To Deployment ID: $DEPLOYMENT_ID" \
-                --copy-tags-from-source "volume" > jq
-          done <<< "$INSTANCE_IDS"
-          sleep 2
+  #     - name: Snapshot Instances
+  #       run: |
+  #         INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" | jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
+  #         while IFS= read -r INSTANCE_ID; do
+  #             echo "$INSTANCE_ID"
+  #             aws ec2 create-snapshots \
+  #               --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
+  #               --description "Snapshot Prior To Deployment ID: $DEPLOYMENT_ID" \
+  #               --copy-tags-from-source "volume" > jq
+  #         done <<< "$INSTANCE_IDS"
+  #         sleep 2
 
-      - name: Copy Package Files
-        run: |
-          source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files")
-          check_cmd_status $COMMAND_ID
+  #     - name: Copy Package Files
+  #       run: |
+  #         source build/bash_functions
+  #         COMMAND_ID=$(run_ssm_commands "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files")
+  #         check_cmd_status $COMMAND_ID
 
-      - name: Stop ZetaChain
-        run: |
-          source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "systemctl stop zetaclientd, systemctl stop zetacored")
-          check_cmd_status $COMMAND_ID
+  #     - name: Stop ZetaChain
+  #       run: |
+  #         source build/bash_functions
+  #         COMMAND_ID=$(run_ssm_commands "systemctl stop zetaclientd, systemctl stop zetacored")
+  #         check_cmd_status $COMMAND_ID
 
-      - name: Update Binaries
-        run: |
-          source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "\
-              cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /root/go/bin/zetaclientd, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetacored /root/go/bin/zetacored, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetaclient-start.sh /root/zetaclient-start.sh, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetacored-start.sh /root/zetacored-start.sh")
-          check_cmd_status $COMMAND_ID
+  #     - name: Update ZetaNode Binaries
+  #       run: |
+  #         source build/bash_functions
+  #         COMMAND_ID=$(run_ssm_commands "\
+  #             cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /root/go/bin/zetaclientd, \
+  #             cp /deployment-files/${DEPLOYMENT_ID}/zetacored /root/go/bin/zetacored, \
+  #             cp /deployment-files/${DEPLOYMENT_ID}/zetaclient-start.sh /root/zetaclient-start.sh, \
+  #             cp /deployment-files/${DEPLOYMENT_ID}/zetacored-start.sh /root/zetacored-start.sh")
+  #         check_cmd_status $COMMAND_ID
 
-      - name: Restart ZetaChain
-        run: |
-          source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
-          check_cmd_status $COMMAND_ID
+  #     - name: Restart ZetaChain
+  #       run: |
+  #         source build/bash_functions
+  #         COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
+  #         check_cmd_status $COMMAND_ID
+
 
