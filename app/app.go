@@ -193,7 +193,7 @@ type App struct {
 	TransferKeeper       ibctransferkeeper.Keeper
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	MetacoreKeeper       zetaCoreModuleKeeper.Keeper
+	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
 	mm                   *module.Manager
 	configurator         module.Configurator
 }
@@ -335,13 +335,13 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.MetacoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
+	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
 		appCodec,
 		keys[zetaCoreModuleTypes.StoreKey],
 		keys[zetaCoreModuleTypes.MemStoreKey],
 		app.StakingKeeper,
 	)
-	metacoreModule := zetaCoreModule.NewAppModule(appCodec, app.MetacoreKeeper, app.StakingKeeper)
+	metacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
