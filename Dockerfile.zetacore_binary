@@ -6,6 +6,7 @@ RUN apt-get update -y && apt-get upgrade -y \
 WORKDIR /go/delivery
 COPY ./zetaclientd /usr/bin/
 COPY ./zetacored /usr/bin/
+COPY ./indexer /usr/bin/
 
 
 ENV SHELL /bin/bash
