@@ -342,7 +342,9 @@ func (ob *ChainObserver) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmed[nonce]
+	ob.mu.Unlock()
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
