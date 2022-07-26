@@ -7,11 +7,10 @@ SEED_NODE=$2
 
 echo "Starting ZetaClient Node $NODE_NUMBER"
 # source /etc/environment
-HOME=/root
 export PATH=$PATH:/usr/local/go/bin
-export PATH=$PATH:$HOME/go/bin
+export PATH=$PATH:~/go/bin
 export IDX=$NODE_NUMBER
-export TSSPATH=$HOME/.tssnew
+export TSSPATH=~/.tssnew
 
 if [ -z "${MYIP}" ]; then
     # If MYIP is not set, use the private IP of the host
