@@ -83,8 +83,9 @@ jobs:
           make install
           make install-indexer
 
-      # - name: Test
-      #   run: go test -v -coverprofile coverage.out  ./...
+      - name: Test
+        if: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+        run: go test -v -coverprofile coverage.out  ./...
 
       - name: Create Package
         run: |
@@ -94,7 +95,7 @@ jobs:
           mv $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
           mv $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
-          mv deploy/zetaclient-start.sh deployment-${PACKAGE_TIMESTAMP}
+          mv deploy/zetaclientd-start.sh deployment-${PACKAGE_TIMESTAMP}
           mv deploy/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
 
           if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
@@ -185,7 +186,7 @@ jobs:
 
       - name: Snapshot Instances
         run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" | jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" "Name=instance-state-name,Values=running"| jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
           while IFS= read -r INSTANCE_ID; do
               echo "$INSTANCE_ID"
               aws ec2 create-snapshots \
@@ -213,7 +214,7 @@ jobs:
           COMMAND_ID=$(run_ssm_commands "\
               cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
               cp /deployment-files/${DEPLOYMENT_ID}/zetacored /home/zetachain/go/bin/zetacored, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetaclient-start.sh /home/zetachain/zetaclient-start.sh, \
+              cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
               cp /deployment-files/${DEPLOYMENT_ID}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
               cp /deployment-files/${DEPLOYMENT_ID}/network_values /etc/zetachain/network_values")
           check_cmd_status $COMMAND_ID
