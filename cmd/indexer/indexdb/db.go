@@ -442,7 +442,6 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 	)
 	if err != nil {
 		fmt.Println(err)
-		return err
 	}
 
 	_, err = idb.db.Exec(fmt.Sprintf("UPDATE  txs set Status = $1, lastupdate = $2, %s = $4  where SendHash = $3", types.ZetaMint), kv[types.NewStatus], res.Height, kv[types.SendHash], kv[types.ZetaMint])
@@ -473,7 +472,7 @@ func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string
 		res.Height,
 	)
 	if err != nil {
-		return err
+		fmt.Println(err)
 	}
 
 	_, err = idb.db.Exec(fmt.Sprintf("UPDATE  txs set Status = $1, lastupdate=$2, %s = $4 where SendHash = $3", types.ZetaMint), kv[types.NewStatus], res.Height, kv[types.SendHash], kv[types.ZetaMint])
@@ -495,7 +494,6 @@ func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) 
 		kv[types.SendHash], kv[types.InTxHash], kv[types.Sender], kv[types.SenderChain], kv[types.Receiver], kv[types.ReceiverChain], kv[types.NewStatus], kv[types.ZetaBurnt], kv[types.ZetaMint], res.Timestamp, res.Height, kv[types.StatusMessage])
 	if err != nil {
 		fmt.Println(err)
-		return err
 	}
 	_, err = idb.db.Exec(fmt.Sprintf("INSERT INTO  txs (%s, %s, %s, %s, %s, %s, %s, %s, %s, Status, lastupdate) values($1,$2,$3,$4,$5,$6,$7,$10, $11, $8, $9)",
 		types.SendHash, types.InTxHash, types.Sender, types.SenderChain, types.Receiver, types.ReceiverChain, types.ZetaBurnt, types.ZetaMint, types.Message),
@@ -503,7 +501,6 @@ func (idb *IndexDB) processFinalized(res *sdk.TxResponse, kv map[string]string) 
 		res.Height, kv[types.ZetaMint], kv[types.Message])
 	if err != nil {
 		fmt.Println(err)
-		return err
 	}
 	if kv[types.InTxHash] != "" && kv[types.SenderChain] != "" {
 		idb.TxHashQueue <- TxHash{
