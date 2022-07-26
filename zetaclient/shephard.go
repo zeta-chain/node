@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"math/rand"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -45,14 +46,16 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	startTime := time.Now()
 	confirmDone := make(chan bool, 1)
 	coreSendDone := make(chan bool, 1)
-	numQueries := 0
-	keysignCount := 0
+	var numQueries int32 = 0
+	var keysignCount int32 = 0
 
 	defer func() {
 		elapsedTime := time.Since(startTime)
-		if keysignCount > 0 {
-			log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
-			co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", numQueries, elapsedTime, keysignCount)
+		kc := atomic.LoadInt32(&keysignCount)
+		nq := atomic.LoadInt32(&numQueries)
+		if kc > 0 {
+			log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", nq, elapsedTime, kc)
+			co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", nq, elapsedTime, kc)
 		}
 		co.signerSlots <- true
 		co.sendDone <- send
@@ -125,7 +128,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			default:
 				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if err != nil {
-					numQueries++
+					atomic.AddInt32(&numQueries, 1)
 				}
 				if included || confirmed {
 					log.Info().Msgf("sendHash %s included; kill this shepherd", send.Index)
@@ -247,7 +250,7 @@ SIGNLOOP:
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
 					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
-					keysignCount++
+					atomic.AddInt32(&keysignCount, 1)
 					signInterval *= 2 // exponential backoff
 				}
 			}
