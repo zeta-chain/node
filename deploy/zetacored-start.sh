@@ -1,9 +1,10 @@
 #!/bin/bash
 
 NODE_NUMBER=$1
-source /etc/environment
+# source /etc/environment
+HOME=/root
 export PATH=$PATH:/usr/local/go/bin
-export PATH=$PATH:/root/go/bin
+export PATH=$PATH:$HOME/go/bin
 
 if [ -z "${MYIP}" ]; then 
     # If MYIP is not set, use the private IP of the host
@@ -13,10 +14,10 @@ fi
 
 echo "Starting Zetacore Node $NODE_NUMBER"
 
-FILE="/root/.zetacore/config/app.toml"
+FILE="$HOME/.zetacore/config/app.toml"
 if  [[ ! -f "$FILE" ]]; then
     echo "Copying Config From /zetashared/node$NODE_NUMBER/"
-    cp -rf /zetashared/node"$NODE_NUMBER"/* /root/.zetacore/
+    cp -rf /zetashared/node"$NODE_NUMBER"/* $HOME/.zetacore/
 fi
 
 zetacored start \
