@@ -254,7 +254,8 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				log.Info().Msgf("reading tx watchlist: %s", txlist)
 			}
 			// the format of txlist is "chain-nonce-txhash;chain-nonce-txhash"
-			for _, tx := range strings.Split(txlist, ";") {
+			for i, tx := range strings.Split(txlist, ";") {
+				log.Info().Msgf("looking #%d tx: %s", i, tx)
 				if tx == "" {
 					continue
 				}
@@ -263,12 +264,13 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 					log.Error().Msgf("invalid tx watchlist format: %s", tx)
 					continue
 				}
-				chain, err := common.NewChain(parts[0])
+				chain, err := common.ParseChain(parts[0])
 				if err != nil {
 					log.Error().Err(err).Msgf("invalid tx watchlist format: %s", tx)
 					continue
 				}
 				if chain != ob.chain {
+					log.Warn().Msgf("tx watchlist chain %s does not match ob chain %s", chain, ob.chain)
 					continue
 				}
 
