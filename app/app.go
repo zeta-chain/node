@@ -87,9 +87,9 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/zeta-chain/zetacore/docs"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	metacoremodule "github.com/zeta-chain/zetacore/x/zetacore"
-	metacoremodulekeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
-	metacoremoduletypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaCoreModule "github.com/zeta-chain/zetacore/x/zetacore"
+	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
+	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 )
@@ -103,30 +103,18 @@ const (
 
 func getGovProposalHandlers() []govclient.ProposalHandler {
 	var govProposalHandlers []govclient.ProposalHandler
-	// this line is used by starport scaffolding # stargate/app/govProposalHandlers
-
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
 		distrclient.ProposalHandler,
 		upgradeclient.ProposalHandler,
 		upgradeclient.CancelProposalHandler,
-		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
-
 	return govProposalHandlers
 }
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-	//DefaultNodeHome = func() string {
-	//	return os.ExpandEnv("$HOME/.zetacore")
-	//}
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
+	ModuleBasics    = module.NewBasicManager(
 		auth.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
@@ -143,8 +131,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		// this line is used by starport scaffolding # stargate/app/moduleBasic
-		metacoremodule.AppModuleBasic{},
+		zetaCoreModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -156,7 +143,6 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
 
@@ -183,8 +169,7 @@ type App struct {
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
-
-	invCheckPeriod uint
+	invCheckPeriod    uint
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -192,37 +177,28 @@ type App struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	EvidenceKeeper   evidencekeeper.Keeper
-	TransferKeeper   ibctransferkeeper.Keeper
-
-	// make scoped keepers public for test purposes
+	AccountKeeper        authkeeper.AccountKeeper
+	BankKeeper           bankkeeper.Keeper
+	CapabilityKeeper     *capabilitykeeper.Keeper
+	StakingKeeper        stakingkeeper.Keeper
+	SlashingKeeper       slashingkeeper.Keeper
+	MintKeeper           mintkeeper.Keeper
+	DistrKeeper          distrkeeper.Keeper
+	GovKeeper            govkeeper.Keeper
+	CrisisKeeper         crisiskeeper.Keeper
+	UpgradeKeeper        upgradekeeper.Keeper
+	ParamsKeeper         paramskeeper.Keeper
+	IBCKeeper            *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	EvidenceKeeper       evidencekeeper.Keeper
+	TransferKeeper       ibctransferkeeper.Keeper
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-
-	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
-
-	MetacoreKeeper metacoremodulekeeper.Keeper
-
-	// the module manager
-	mm *module.Manager
-
-	// the configurator
-	configurator module.Configurator
+	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
+	mm                   *module.Manager
+	configurator         module.Configurator
 }
 
-// New returns a reference to an initialized Gaia.
+// New returns a reference to an initialized ZetaApp.
 func New(
 	logger log.Logger,
 	db dbm.DB,
@@ -254,8 +230,7 @@ func New(
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
-		// this line is used by starport scaffolding # stargate/app/storeKey
-		metacoremoduletypes.StoreKey,
+		zetaCoreModuleTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -270,9 +245,10 @@ func New(
 		tkeys:             tkeys,
 		memKeys:           memKeys,
 	}
-
+	if homePath == "" {
+		homePath = DefaultNodeHome
+	}
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
-
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
 
@@ -282,7 +258,6 @@ func New(
 	// grant capabilities for the ibc and ibc-transfer modules
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	// this line is used by starport scaffolding # stargate/app/scopedKeeper
 
 	app.CapabilityKeeper.Seal()
 
@@ -318,8 +293,6 @@ func New(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	// ... other modules keepers
-
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		//appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
@@ -333,7 +306,20 @@ func New(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
-
+	govKeeper := govkeeper.NewKeeper(
+		appCodec,
+		keys[govtypes.StoreKey],
+		app.GetSubspace(govtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		govRouter,
+	)
+	app.GovKeeper = *govKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+		// register governance hooks
+		),
+	)
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
@@ -349,20 +335,13 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.GovKeeper = govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter,
-	)
-
-	app.MetacoreKeeper = *metacoremodulekeeper.NewKeeper(
+	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
 		appCodec,
-		keys[metacoremoduletypes.StoreKey],
-		keys[metacoremoduletypes.MemStoreKey],
+		keys[zetaCoreModuleTypes.StoreKey],
+		keys[zetaCoreModuleTypes.MemStoreKey],
 		app.StakingKeeper,
 	)
-	metacoreModule := metacoremodule.NewAppModule(appCodec, app.MetacoreKeeper, app.StakingKeeper)
-
-	// this line is used by starport scaffolding # stargate/app/keeperDefinition
+	metacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -399,7 +378,6 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		// this line is used by starport scaffolding # stargate/app/appModule
 		metacoreModule,
 	)
 
@@ -408,25 +386,25 @@ func New(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 
-	//app.mm.SetOrderBeginBlockers(
-	//	upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-	//	evidencetypes.ModuleName, stakingtypes.ModuleName,
-	//	ibchost.ModuleName,
-	//	metacoremoduletypes.ModuleName,
-	//)
 	app.mm.SetOrderBeginBlockers(
-		banktypes.ModuleName, authtypes.ModuleName,
-		upgradetypes.ModuleName, capabilitytypes.ModuleName,
-		minttypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, evidencetypes.ModuleName,
-		stakingtypes.ModuleName, ibchost.ModuleName,
-		vestingtypes.ModuleName, govtypes.ModuleName,
-		paramstypes.ModuleName, genutiltypes.ModuleName,
-		crisistypes.ModuleName, ibctransfertypes.ModuleName,
-		metacoremoduletypes.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		zetaCoreModuleTypes.ModuleName,
 	)
-
-	//app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, metacoremoduletypes.ModuleName)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
 		upgradetypes.ModuleName, capabilitytypes.ModuleName,
@@ -436,7 +414,7 @@ func New(
 		vestingtypes.ModuleName, govtypes.ModuleName,
 		paramstypes.ModuleName, genutiltypes.ModuleName,
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
-		metacoremoduletypes.ModuleName,
+		zetaCoreModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -462,7 +440,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		vestingtypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
-		metacoremoduletypes.ModuleName,
+		zetaCoreModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -481,7 +459,7 @@ func New(
 	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
 		AccountKeeper: app.AccountKeeper,
 		BankKeeper:    app.BankKeeper,
-		//FeegrantKeeper:  app.Keeper,
+		//FeegrantKeeper: ,
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 	})
@@ -490,7 +468,7 @@ func New(
 	}
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-
+	SetupHandlers(app)
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
@@ -509,7 +487,6 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
-	// this line is used by starport scaffolding # stargate/app/beforeInitReturn
 
 	return app
 }
@@ -657,7 +634,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(pkt)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
-	paramsKeeper.Subspace(metacoremoduletypes.ModuleName)
+	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -19,7 +19,13 @@ BUILD_FLAGS := -ldflags '$(ldflags)'
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS :=  -tags mocknet
 
+clean: clean-binaries clean-dir
 
+clean-binaries:
+	@rm -rf ${GOBIN}/zeta*
+
+clean-dir:
+	@rm -rf ~/.zetacore
 
 all: install
 
@@ -48,6 +54,10 @@ install-zetaclient: go.sum
 install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+
+install-indexer: go.sum
+		@echo "--> Installing indexer"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
 
 install-mockmpi:
 	@echo "--> Installing MockMPI"
