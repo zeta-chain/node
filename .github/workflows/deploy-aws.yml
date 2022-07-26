@@ -98,9 +98,9 @@ jobs:
           mv deploy/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
 
           if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
-            cp deploy/env_variables.staging deployment-${PACKAGE_TIMESTAMP}
+            cp deploy/env_variables.staging deployment-${PACKAGE_TIMESTAMP}/network_values
           elif [[ $ENVIRONMENT_NAME == "ATHENS" ]]; then 
-            cp deploy/env_variables.athens deployment-${PACKAGE_TIMESTAMP}
+            cp deploy/env_variables.athens deployment-${PACKAGE_TIMESTAMP}/network_values
           fi
 
           tar -czvf deployment-${PACKAGE_TIMESTAMP}.tar.gz deployment-${PACKAGE_TIMESTAMP}/*
@@ -140,7 +140,7 @@ jobs:
           GITHUB_REF_NAME=${{ github.ref_name }}  
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
+          if [[ $GITHUB_REF_NAME == "control-some-env-vars-from-repo" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]]; then 
@@ -211,10 +211,11 @@ jobs:
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_commands "\
-              cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /root/go/bin/zetaclientd, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetacored /root/go/bin/zetacored, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetaclient-start.sh /root/zetaclient-start.sh, \
-              cp /deployment-files/${DEPLOYMENT_ID}/zetacored-start.sh /root/zetacored-start.sh")
+              cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
+              cp /deployment-files/${DEPLOYMENT_ID}/zetacored /home/zetachain/go/bin/zetacored, \
+              cp /deployment-files/${DEPLOYMENT_ID}/zetaclient-start.sh /home/zetachain/zetaclient-start.sh, \
+              cp /deployment-files/${DEPLOYMENT_ID}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
+              cp /deployment-files/${DEPLOYMENT_ID}/network_values /etc/zetachain/network_values")
           check_cmd_status $COMMAND_ID
 
       - name: Restart ZetaChain

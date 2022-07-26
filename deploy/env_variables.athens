@@ -1,12 +1,11 @@
 # This file is copied to /etc/zetachain/network_values during deployment 
+# This is not a good place to store the endpoint URLs long term but can be helpful during initial development 
+# They must be removed before we open source the repo. 
+
 SEED_NODE_DNS=zetanode0.athens.zetachain.com
 GOERLI_MPI_ADDRESS=0x0B16Fc7e2D627d82255ba21e53Cf6c11B5186046
 ROPSTEN_MPI_ADDRESS=0x91Ea4f79D39DA890B03E965111953d0494936072
 BSCTESTNET_MPI_ADDRESS=0x202aed942eb71203741eced2913a29C695a7c7F6
 MUMBAI_MPI_ADDRESS=0xa5467B39Ad9f51DEb6b30Abfa9828531dCBA99A9
-GOERLI_ENDPOINT='https://summer-solitary-log.ethereum-goerli.quiknode.pro/3acb6c4aa740d689cf0b9ba3945d40eeef48de90/'
-ROPSTEN_ENDPOINT='https://green-blue-dream.ropsten.quiknode.pro/1fc27bcfb49c7e72caefb3be082f475dd582def7'
-BSCTESTNET_ENDPOINT='https://cool-hidden-fog.bsc-testnet.quiknode.pro/2965db1da7f65057665876547cda3c01971ba75f'
-MUMBAI_ENDPOINT='https://billowing-still-sunset.matic-testnet.quiknode.pro/11ee3ee78de53c24dc4a99950328a2edb84832a7'
 #TX_WATCHLIST=''
 
