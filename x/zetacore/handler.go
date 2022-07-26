@@ -2,7 +2,6 @@ package zetacore
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
@@ -19,6 +18,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case *types.MsgZetaConversionRateVoter:
 			res, err := msgServer.ZetaConversionRateVoter(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgAddToWatchList:
+			res, err := msgServer.AddToWatchList(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 			// this line is used by starport scaffolding # 1
 		case *types.MsgCreateTSSVoter:

@@ -30,6 +30,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						Index: "1",
 					},
 				},
+				OutTxTrackerList: []types.OutTxTracker{
+					{
+						Index: "0",
+					},
+					{
+						Index: "1",
+					},
+				},
 				// this line is used by starport scaffolding # types/genesis/validField
 			},
 			valid: true,
@@ -38,6 +46,20 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "duplicated zetaConversionRate",
 			genState: &types.GenesisState{
 				ZetaConversionRateList: []types.ZetaConversionRate{
+					{
+						Index: "0",
+					},
+					{
+						Index: "0",
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "duplicated outTxTracker",
+			genState: &types.GenesisState{
+				OutTxTrackerList: []types.OutTxTracker{
 					{
 						Index: "0",
 					},
