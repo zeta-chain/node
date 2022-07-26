@@ -247,6 +247,44 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 			if err = iter.Error(); err != nil {
 				log.Error().Err(err).Msg("error iterating over db")
 			}
+
+			// FIXME: remove this when txhash watchlist is maintained in zetacore
+			txlist := os.Getenv("TX_WATCHLIST")
+			if txlist != "" {
+				log.Info().Msgf("reading tx watchlist: %s", txlist)
+			}
+			// the format of txlist is "chain-nonce-txhash;chain-nonce-txhash"
+			for _, tx := range strings.Split(txlist, ";") {
+				if tx == "" {
+					continue
+				}
+				parts := strings.Split(tx, "-")
+				if len(parts) != 3 {
+					log.Error().Msgf("invalid tx watchlist format: %s", tx)
+					continue
+				}
+				chain, err := common.NewChain(parts[0])
+				if err != nil {
+					log.Error().Err(err).Msgf("invalid tx watchlist format: %s", tx)
+					continue
+				}
+				if chain != ob.chain {
+					continue
+				}
+
+				nonce, err := strconv.ParseInt(parts[1], 10, 64)
+				if err != nil {
+					log.Error().Err(err).Msgf("invalid tx watchlist format: %s", tx)
+					continue
+				}
+				txhash := parts[2]
+				txHash := ethcommon.HexToHash(txhash)
+				if _, ok := ob.outTXPending[int(nonce)]; !ok {
+					ob.outTXPending[int(nonce)] = make([]string, 0)
+				}
+				ob.outTXPending[int(nonce)] = append(ob.outTXPending[int(nonce)], txHash.Hex())
+				log.Info().Msgf("adding tx hash %s to nonce %d", txhash, nonce)
+			}
 		}
 
 		{
