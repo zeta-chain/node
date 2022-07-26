@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdZetaConversionRateVoter())
+	cmd.AddCommand(CmdAddToWatchList())
 	// this line is used by starport scaffolding # 1
 	cmd.AddCommand(CmdCreateTSSVoter())
 

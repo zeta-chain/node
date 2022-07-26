@@ -4,6 +4,7 @@ package zetachain.zetacore.zetacore;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "zetacore/zeta_conversion_rate.proto";
+import "zetacore/out_tx_tracker.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "zetacore/keygen.proto";
@@ -31,6 +32,20 @@ service Query {
 	// Queries a list of ZetaConversionRate items.
 	rpc ZetaConversionRateAll(QueryAllZetaConversionRateRequest) returns (QueryAllZetaConversionRateResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/zetaConversionRate";
+	}
+
+// Queries a OutTxTracker by index.
+	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTracker/{index}";
+	}
+
+	// Queries a list of OutTxTracker items.
+	rpc OutTxTrackerAll(QueryAllOutTxTrackerRequest) returns (QueryAllOutTxTrackerResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTracker";
+	}
+
+	rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTrackerByChain";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -202,6 +217,34 @@ message QueryAllZetaConversionRateRequest {
 
 message QueryAllZetaConversionRateResponse {
 	repeated ZetaConversionRate zetaConversionRate = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetOutTxTrackerRequest {
+	  string index = 1;
+
+}
+
+message QueryGetOutTxTrackerResponse {
+	OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllOutTxTrackerRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllOutTxTrackerResponse {
+	repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllOutTxTrackerByChainRequest {
+	string chain = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllOutTxTrackerByChainResponse {
+	repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

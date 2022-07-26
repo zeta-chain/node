@@ -15,80 +15,59 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
-
-	// this line is used by starport scaffolding # ibc/keys/name
 )
-
-// this line is used by starport scaffolding # ibc/keys/port
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
 
 const (
-	TxinKey = "Txin-value-"
+	TxinKey                     = "Txin-value-"
+	TxinVoterKey                = "TxinVoter-value-"
+	NodeAccountKey              = "NodeAccount-value-"
+	TxoutKey                    = "Txout-value-"
+	TxoutCountKey               = "Txout-count-"
+	TxoutConfirmationKey        = "TxoutConfirmation-value-"
+	SendKey                     = "Send-value-"
+	ReceiveKey                  = "Receive-value-"
+	LastBlockHeightKey          = "LastBlockHeight-value-"
+	ChainNoncesKey              = "ChainNonces-value-"
+	GasPriceKey                 = "GasPrice-value-"
+	GasBalanceKey               = "GasBalance-value-"
+	TxListKey                   = "TxList-value-"
+	InTxKey                     = "InTx-value-"
+	TSSKey                      = "TSS-value-"
+	TSSVoterKey                 = "TSSVoter-value-"
+	KeygenKey                   = "Keygen-value-"
+	OutTxTrackerKeyPrefix       = "OutTxTracker/value/"
+	ZetaConversionRateKeyPrefix = "ZetaConversionRate/value/"
 )
 
-const (
-	TxinVoterKey = "TxinVoter-value-"
-)
+// OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
+func OutTxTrackerKey(
+	index string,
+) []byte {
+	var key []byte
 
-const (
-	NodeAccountKey = "NodeAccount-value-"
-)
+	indexBytes := []byte(index)
+	key = append(key, indexBytes...)
+	key = append(key, []byte("/")...)
 
-const (
-	TxoutKey      = "Txout-value-"
-	TxoutCountKey = "Txout-count-"
-)
+	return key
+}
 
-const (
-	TxoutConfirmationKey = "TxoutConfirmation-value-"
-)
+// ZetaConversionRateKey returns the store key to retrieve a ZetaConversionRate from the index fields
+func ZetaConversionRateKey(
+	index string,
+) []byte {
+	var key []byte
 
-const (
-	SendKey = "Send-value-"
-)
+	indexBytes := []byte(index)
+	key = append(key, indexBytes...)
+	key = append(key, []byte("/")...)
 
-const (
-	ReceiveKey = "Receive-value-"
-)
-
-const (
-	LastBlockHeightKey = "LastBlockHeight-value-"
-)
-
-const (
-	ChainNoncesKey = "ChainNonces-value-"
-)
-
-const (
-	GasPriceKey = "GasPrice-value-"
-)
-
-const (
-	GasBalanceKey = "GasBalance-value-"
-)
-
-const (
-	TxListKey = "TxList-value-"
-)
-
-const (
-	InTxKey = "InTx-value-"
-)
-
-const (
-	TSSKey = "TSS-value-"
-)
-
-const (
-	TSSVoterKey = "TSSVoter-value-"
-)
-
-const (
-	KeygenKey = "Keygen-value-"
-)
+	return key
+}
 
 // events follow here
 const (

@@ -197,3 +197,25 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 	}
 	return zetaTxHash, nil
 }
+
+func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
+		Index: fmt.Sprintf("%s:%d", chain.String(), nonce),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &resp.OutTxTracker, nil
+}
+
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
+		Chain: chain.String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.OutTxTracker, nil
+}
