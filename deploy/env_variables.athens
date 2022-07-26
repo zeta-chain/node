@@ -1,6 +1,4 @@
 # This file is copied to /etc/zetachain/network_values during deployment 
-# This is not a good place to store the endpoint URLs long term but can be helpful during initial development 
-# They must be removed before we open source the repo. 
 
 SEED_NODE_DNS=zetanode0.athens.zetachain.com
 GOERLI_MPI_ADDRESS=0x0B16Fc7e2D627d82255ba21e53Cf6c11B5186046

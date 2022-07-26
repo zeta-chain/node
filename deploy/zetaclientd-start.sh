@@ -6,7 +6,6 @@ NODE_NUMBER=$1
 SEED_NODE=$2
 
 echo "Starting ZetaClient Node $NODE_NUMBER"
-# source /etc/environment
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:~/go/bin
 export IDX=$NODE_NUMBER
@@ -19,7 +18,7 @@ if [ -z "${MYIP}" ]; then
 fi
 echo "MYIP: $MYIP"
 
-rm -f ~/.tssnew/address_book.seed
+rm -f ~/.tssnew/address_book.seed || true
 
 if (($NODE_NUMBER == 0)); then
     sleep 5 # Wait for Zetacored to start

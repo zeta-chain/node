@@ -1,8 +1,6 @@
 #!/bin/bash
 
 NODE_NUMBER=$1
-# source /etc/environment
-# HOME=/root
 export PATH=$PATH:/usr/local/go/bin
 export PATH=$PATH:~/go/bin
 
