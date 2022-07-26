@@ -439,7 +439,8 @@ func (ob *ChainObserver) observeOutTx() {
 				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
 					ob.mu.Lock()
 					txHashes, found := ob.outTXPending[nonce]
-					txHashesCopy := txHashes
+					txHashesCopy := make([]string, len(txHashes))
+					copy(txHashesCopy, txHashes)
 					ob.mu.Unlock()
 					if !found {
 						continue
@@ -461,12 +462,11 @@ func (ob *ChainObserver) observeOutTx() {
 									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
 								}
 								ob.outTXConfirmed[nonce] = receipt
+								ob.mu.Unlock()
 								value, err := receipt.MarshalJSON()
 								if err != nil {
 									log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 								}
-
-								ob.mu.Unlock()
 								err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonce)), value, nil)
 								if err != nil {
 									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonce, receipt.TxHash.Hex())
