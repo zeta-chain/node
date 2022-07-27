@@ -70,13 +70,13 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int64, int64, error) {
 	if len(pendingNonces) > 0 {
 		for nonce, _ := range pendingNonces {
 			if minNonce == -1 {
-				minNonce = int64(nonce)
+				minNonce = nonce
 			}
-			if int64(nonce) < minNonce {
-				minNonce = int64(nonce)
+			if nonce < minNonce {
+				minNonce = nonce
 			}
-			if int64(nonce) > maxNonce {
-				maxNonce = int64(nonce)
+			if nonce > maxNonce {
+				maxNonce = nonce
 			}
 		}
 	}
