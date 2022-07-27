@@ -9,7 +9,7 @@ import (
 )
 
 // AddTxHashToWatchList adds an outbound TX hash to the watchlist
-func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash string) {
+func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int64, sendHash string) {
 	outTx := OutTx{
 		TxHash:   txHash,
 		Nonce:    nonce,
@@ -34,18 +34,18 @@ func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash
 
 // PurgeTxHashWatchList  txhash from watch list which have no corresponding sendPending in zetacore.
 // Returns the min/max nonce after purge
-func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
+func (ob *ChainObserver) PurgeTxHashWatchList() (int64, int64, error) {
 	purgedTxHashCount := 0
 	sends, err := ob.zetaClient.GetAllPendingSend()
 	if err != nil {
 		return 0, 0, err
 	}
-	pendingNonces := make(map[int]bool)
+	pendingNonces := make(map[int64]bool)
 	for _, send := range sends {
 		if send.Status == zetatypes.SendStatus_PendingRevert && send.SenderChain == ob.chain.String() {
-			pendingNonces[int(send.Nonce)] = true
+			pendingNonces[int64((send.Nonce))] = true
 		} else if send.Status == zetatypes.SendStatus_PendingOutbound && send.ReceiverChain == ob.chain.String() {
-			pendingNonces[int(send.Nonce)] = true
+			pendingNonces[int64((send.Nonce))] = true
 		}
 	}
 	tNow := time.Now()
@@ -66,17 +66,17 @@ func (ob *ChainObserver) PurgeTxHashWatchList() (int, int, error) {
 	if purgedTxHashCount > 0 {
 		log.Info().Msgf("PurgeTxHashWatchList: chain %s purged %d txhashes in %v", ob.chain, purgedTxHashCount, time.Since(tNow))
 	}
-	minNonce, maxNonce := -1, 0
+	var minNonce, maxNonce int64 = -1, 0
 	if len(pendingNonces) > 0 {
 		for nonce, _ := range pendingNonces {
 			if minNonce == -1 {
-				minNonce = nonce
+				minNonce = int64(nonce)
 			}
-			if nonce < minNonce {
-				minNonce = nonce
+			if int64(nonce) < minNonce {
+				minNonce = int64(nonce)
 			}
-			if nonce > maxNonce {
-				maxNonce = nonce
+			if int64(nonce) > maxNonce {
+				maxNonce = int64(nonce)
 			}
 		}
 	}

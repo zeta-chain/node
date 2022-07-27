@@ -40,7 +40,7 @@ type TxHashEnvelope struct {
 type OutTx struct {
 	SendHash string
 	TxHash   string
-	Nonce    int
+	Nonce    int64
 }
 
 // Chain configuration struct
@@ -62,10 +62,10 @@ type ChainObserver struct {
 	db               *leveldb.DB
 	sampleLogger     *zerolog.Logger
 	metrics          *metrics.Metrics
-	outTXPending     map[int][]string
-	outTXConfirmed   map[int]*ethtypes.Receipt
-	MinNonce         int
-	MaxNonce         int
+	outTXPending     map[int64][]string
+	outTXConfirmed   map[int64]*ethtypes.Receipt
+	MinNonce         int64
+	MaxNonce         int64
 	OutTxChan        chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier ZetaPriceQuerier
 	stop             chan struct{}
@@ -86,8 +86,8 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.metrics = metrics
-	ob.outTXPending = make(map[int][]string)
-	ob.outTXConfirmed = make(map[int]*ethtypes.Receipt)
+	ob.outTXPending = make(map[int64][]string)
+	ob.outTXConfirmed = make(map[int64]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
@@ -242,7 +242,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 					continue
 				}
 				txHashes := strings.Split(string(iter.Value()), ",")
-				ob.outTXPending[int(nonce)] = txHashes
+				ob.outTXPending[nonce] = txHashes
 				log.Info().Msgf("reading nonce %d with %d tx hashes", nonce, len(txHashes))
 			}
 			iter.Release()
@@ -283,10 +283,10 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 				}
 				txhash := parts[2]
 				txHash := ethcommon.HexToHash(txhash)
-				if _, ok := ob.outTXPending[int(nonce)]; !ok {
-					ob.outTXPending[int(nonce)] = make([]string, 0)
+				if _, ok := ob.outTXPending[(nonce)]; !ok {
+					ob.outTXPending[(nonce)] = make([]string, 0)
 				}
-				ob.outTXPending[int(nonce)] = append(ob.outTXPending[int(nonce)], txHash.Hex())
+				ob.outTXPending[(nonce)] = append(ob.outTXPending[(nonce)], txHash.Hex())
 				log.Info().Msgf("adding tx hash %s to nonce %d", txhash, nonce)
 			}
 		}
@@ -306,7 +306,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 					log.Error().Err(err).Msgf("error unmarshalling receipt: %s", key)
 					continue
 				}
-				ob.outTXConfirmed[int(nonce)] = &receipt
+				ob.outTXConfirmed[(nonce)] = &receipt
 				log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
 			}
 			iter.Release()
@@ -343,7 +343,7 @@ func (ob *ChainObserver) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int64) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmed[nonce]
 	ob.mu.Unlock()
@@ -434,6 +434,7 @@ func (ob *ChainObserver) observeOutTx() {
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
 				ob.MinNonce = minNonce
+
 				ob.MaxNonce = maxNonce
 				//log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
 			QUERYLOOP:
@@ -494,7 +495,7 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt non-nil, err non-nil: txHash found but not confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
+func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
 	//timeStart := time.Now()
 	//defer func() { log.Info().Msgf("queryTxByHash elapsed: %s", time.Since(timeStart)) }()
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
