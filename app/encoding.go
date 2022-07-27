@@ -1,17 +1,11 @@
 package app
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
-
-	"github.com/zeta-chain/zetacore/app/params"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+	evmenc "github.com/evmos/ethermint/encoding"
 )
 
-// MakeEncodingConfig creates an EncodingConfig for testing
+// MakeEncodingConfig creates the EncodingConfig for cronos chain
 func MakeEncodingConfig() params.EncodingConfig {
-	encodingConfig := params.MakeEncodingConfig()
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	return encodingConfig
+	return evmenc.MakeConfig(ModuleBasics)
 }
