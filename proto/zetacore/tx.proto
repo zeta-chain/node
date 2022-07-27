@@ -9,9 +9,9 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // Msg defines the Msg service.
 service Msg {
-      rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
+  rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
   rpc AddToWatchList(MsgAddToWatchList) returns (MsgAddToWatchListResponse);
-// this line is used by starport scaffolding # proto/tx/rpc
+  rpc RemoveFromWatchList(MsgRemoveFromWatchList) returns (MsgRemoveFromWatchListResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
@@ -39,6 +39,15 @@ message MsgAddToWatchList {
 }
 
 message MsgAddToWatchListResponse {
+}
+
+message MsgRemoveFromWatchList {
+  string creator = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+}
+
+message MsgRemoveFromWatchListResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
@@ -90,6 +99,7 @@ message MsgReceiveConfirmation {
   string mMint = 5;
   common.ReceiveStatus status = 6;
   string chain = 7;
+  uint64 out_tx_nonce = 8;
 }
 
 message MsgReceiveConfirmationResponse {

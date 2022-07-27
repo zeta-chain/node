@@ -113,7 +113,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
 			newstatus := send.Status.String()
-
+			index := fmt.Sprintf("%s/%s", msg.Chain, msg.OutTxNonce)
+			k.RemoveOutTxTracker(ctx, index)
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),

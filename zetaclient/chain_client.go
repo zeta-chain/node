@@ -361,6 +361,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						mMint,
 						common.ReceiveStatus_Success,
 						ob.chain.String(),
+						nonce,
 					)
 					if err != nil {
 						log.Error().Err(err).Msg("error posting confirmation to meta core")
@@ -387,6 +388,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						mMint,
 						common.ReceiveStatus_Success,
 						ob.chain.String(),
+						nonce,
 					)
 					if err != nil {
 						log.Err(err).Msg("error posting confirmation to meta core")
@@ -403,7 +405,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	} else if found && receipt.Status == 0 {
 		//FIXME: check nonce here by getTransaction RPC
 		log.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
-		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String())
+		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
 		if err != nil {
 			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 		}
@@ -418,66 +420,51 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 // observeOutTx periodically checks all the txhash in potential outbound txs
 // If it is able to confirm one of txHashes in a outTXPending , it cleans it and saves information to local DB
 func (ob *ChainObserver) observeOutTx() {
-
 	ticker := time.NewTicker(12 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			minNonce, maxNonce, err := ob.PurgeTxHashWatchList()
-			if len(ob.outTXPending) > 0 {
-				log.Info().Msgf("chain %s outstanding nonce: %d; nonce range [%d,%d]", ob.chain, len(ob.outTXPending), minNonce, maxNonce)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			if err != nil {
+				return
 			}
 			outTimeout := time.After(12 * time.Second)
-			if err == nil {
-				ob.MinNonce = minNonce
-				ob.MaxNonce = maxNonce
-				//log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
-			QUERYLOOP:
-				//for nonce, txHashes := range ob.nonceTxHashesMap {
-				for nonce := minNonce; nonce <= maxNonce; nonce++ { // ensure lower nonce is queried first
-					ob.mu.Lock()
-					txHashes, found := ob.outTXPending[nonce]
-					txHashesCopy := txHashes
-					ob.mu.Unlock()
-					if !found {
-						continue
-					}
-				TXHASHLOOP:
-					for _, txHash := range txHashesCopy {
-						inTimeout := time.After(1000 * time.Millisecond)
-						select {
-						case <-outTimeout:
-							log.Warn().Msgf("QUERYLOOP timouet chain %s nonce %d", ob.chain, nonce)
-							break QUERYLOOP
-						default:
-							receipt, err := ob.queryTxByHash(txHash, nonce)
-							if err == nil && receipt != nil { // confirmed
-								log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonce, txHash)
-								ob.mu.Lock()
-								delete(ob.outTXPending, nonce)
-								if err = ob.db.Delete([]byte(NonceTxHashesKeyPrefix+fmt.Sprintf("%d", nonce)), nil); err != nil {
-									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
-								}
-								ob.outTXConfirmed[nonce] = receipt
-								value, err := receipt.MarshalJSON()
-								if err != nil {
-									log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
-								}
-
-								ob.mu.Unlock()
-								err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonce)), value, nil)
-								if err != nil {
-									log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonce, receipt.TxHash.Hex())
-								}
-
-								break TXHASHLOOP
+			for _, tracker := range trackers {
+				nonceInt, err := strconv.Atoi(tracker.Nonce)
+				if err != nil {
+					return
+				}
+				for _, txHash := range tracker.HashList {
+					inTimeout := time.After(1000 * time.Millisecond)
+					select {
+					case <-outTimeout:
+						log.Warn().Msgf("Timeout chain %s nonce %d", ob.chain, nonceInt)
+						break
+					default:
+						receipt, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
+						if err == nil && receipt != nil { // confirmed
+							log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonceInt, txHash)
+							ob.mu.Lock()
+							//delete(ob.outTXPending, nonce)
+							//if err = ob.db.Delete([]byte(NonceTxHashesKeyPrefix+fmt.Sprintf("%d", nonce)), nil); err != nil {
+							//	log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
+							//}
+							ob.outTXConfirmed[nonceInt] = receipt
+							value, err := receipt.MarshalJSON()
+							if err != nil {
+								log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 							}
-							<-inTimeout
+
+							ob.mu.Unlock()
+							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
+							if err != nil {
+								log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+							}
+							break
 						}
+						<-inTimeout
 					}
 				}
-			} else {
-				log.Warn().Err(err).Msg("PurgeTxHashWatchList error")
 			}
 		case <-ob.stop:
 			log.Info().Msg("observeOutTx: stopped")

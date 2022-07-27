@@ -220,8 +220,14 @@ SIGNLOOP:
 							err = signer.Broadcast(tx)
 							// TODO: the following error handling is robust?
 							if err == nil {
-								log.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								co.fileLogger.Err(err).Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								log.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								co.fileLogger.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), send.Nonce, outTxHash)
+								if err != nil {
+									log.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+									break
+								}
+								log.Info().Msgf("Broadcast to core successful %s", zetaHash)
 								break // break the retry loop
 							} else if strings.Contains(err.Error(), "nonce too low") {
 								log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
@@ -245,7 +251,7 @@ SIGNLOOP:
 
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
-					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
+					//co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
 					keysignCount++
 					signInterval *= 2 // exponential backoff
