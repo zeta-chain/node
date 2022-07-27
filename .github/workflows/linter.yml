@@ -5,8 +5,7 @@ on:
     tags:
       - v*
     branches:
-      - master
-      - main
+      - develop
   pull_request:
 
 env: 

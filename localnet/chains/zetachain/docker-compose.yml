@@ -78,7 +78,7 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.220
-    command: -c "/scripts/zetaclient-start.sh 0"
+    command: -c "/scripts/zetaclientd-start.sh 0"
   zetaclient1:
     container_name: zetaclient1
     restart: unless-stopped
@@ -112,7 +112,7 @@ services:
     networks:
       localnet:
         ipv4_address: 172.24.0.221
-    command: -c "/scripts/zetaclient-start.sh 1 zetaclient0"
+    command: -c "/scripts/zetaclientd-start.sh 1 zetaclient0"
     
 networks:
   localnet: 
