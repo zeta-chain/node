@@ -43,18 +43,18 @@ func (ob *ChainObserver) observeInTX() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= ob.LastBlock {
+	if confirmedBlockNum <= ob.GetLastBlock() {
 		return nil
 	}
-	toBlock := ob.LastBlock + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
+	toBlock := ob.GetLastBlock() + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.LastBlock+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlock()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   ob.LastBlock + 1,
+		Start:   ob.GetLastBlock() + 1,
 		End:     &toBlock,
 		Context: context.TODO(),
 	}, []ethcommon.Address{})
@@ -91,7 +91,8 @@ func (ob *ChainObserver) observeInTX() error {
 		log.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
 
-	ob.LastBlock = toBlock
+	//ob.LastBlock = toBlock
+	ob.setLastBlock(toBlock)
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
