@@ -87,7 +87,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	}
 
 	// Early return if the send is already processed
-	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int64(send.Nonce))
 	if included || confirmed {
 		log.Info().Msgf("sendHash %s already processed; exit signer", send.Index)
 		return
@@ -126,7 +126,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			case <-confirmDone:
 				return
 			default:
-				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				included, confirmed, err := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int64(send.Nonce))
 				if err != nil {
 					atomic.AddInt32(&numQueries, 1)
 				}
@@ -175,7 +175,7 @@ SIGNLOOP:
 			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
-			if co.clientMap[toChain].MinNonce == int(send.Nonce) && co.clientMap[toChain].MaxNonce > int(send.Nonce)+5 {
+			if co.clientMap[toChain].MinNonce == int64(send.Nonce) && co.clientMap[toChain].MaxNonce > int64(send.Nonce)+5 {
 				log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
 				signInterval = 32 * time.Second
 			}
@@ -184,7 +184,7 @@ SIGNLOOP:
 				continue
 			}
 			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
-				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int64(send.Nonce))
 				if included || confirmed {
 					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
 					break SIGNLOOP
@@ -248,7 +248,7 @@ SIGNLOOP:
 
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
-					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
+					co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int64(send.Nonce), send.Index)
 					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
 					atomic.AddInt32(&keysignCount, 1)
 					signInterval *= 2 // exponential backoff
