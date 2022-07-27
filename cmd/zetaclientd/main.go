@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/cmd"
@@ -11,6 +13,7 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"io/ioutil"
 	"strings"
 	"syscall"
 
@@ -29,12 +32,15 @@ import (
 	"time"
 )
 
+var preParams *keygen.LocalPreParams
+
 func main() {
 	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
 	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN", "enable chains, comma separated list")
 	valKeyName := flag.String("val", "alice", "validator name")
 	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
+	preParamsPath := flag.String("pre-params", "", "pre-params file path")
 
 	flag.Parse()
 	chains := strings.Split(*enabledChains, ",")
@@ -50,6 +56,25 @@ func main() {
 
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	if *preParamsPath != "" {
+		log.Info().Msgf("pre-params file path %s", *preParamsPath)
+		preParamsFile, err := os.Open(*preParamsPath)
+		if err != nil {
+			log.Error().Err(err).Msg("open pre-params file failed; skip")
+		} else {
+			bz, err := ioutil.ReadAll(preParamsFile)
+			if err != nil {
+				log.Error().Err(err).Msg("read pre-params file failed; skip")
+			} else {
+				err = json.Unmarshal(bz, &preParams)
+				if err != nil {
+					log.Error().Err(err).Msg("unmarshal pre-params file failed; skip and generate new one")
+					preParams = nil // skip reading pre-params; generate new one instead
+				}
+			}
+		}
 	}
 
 	var peers addr.AddrList
@@ -177,7 +202,7 @@ func start(validatorName string, peers addr.AddrList) {
 	priKey = bridgePk.Bytes()[:32]
 
 	log.Info().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
-	tss, err := mc.NewTSS(peers, priKey)
+	tss, err := mc.NewTSS(peers, priKey, preParams)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
 		return
