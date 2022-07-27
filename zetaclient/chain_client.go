@@ -433,9 +433,8 @@ func (ob *ChainObserver) observeOutTx() {
 			}
 			outTimeout := time.After(12 * time.Second)
 			if err == nil {
-				ob.MinNonce = minNonce
-
-				ob.MaxNonce = maxNonce
+				atomic.StoreInt64(&ob.MaxNonce, maxNonce)
+				atomic.StoreInt64(&ob.MinNonce, minNonce)
 				//log.Warn().Msgf("chain %s MinNonce: %d", ob.chain, ob.MinNonce)
 			QUERYLOOP:
 				//for nonce, txHashes := range ob.nonceTxHashesMap {
