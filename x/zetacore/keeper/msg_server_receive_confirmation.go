@@ -16,7 +16,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	log.Info().Msgf("ReceiveConfirmation: %s", msg.String())
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !isBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) {
 		log.Error().Msgf("signer %s is not a bonded validator", msg.Creator)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
