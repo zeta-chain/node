@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -113,7 +114,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
 			newstatus := send.Status.String()
-			index := fmt.Sprintf("%s/%s", msg.Chain, msg.OutTxNonce)
+			index := fmt.Sprintf("%s/%s", msg.Chain, strconv.Itoa(int(msg.OutTxNonce)))
 			k.RemoveOutTxTracker(ctx, index)
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
