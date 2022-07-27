@@ -19,6 +19,7 @@ func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash
 	if outTx.TxHash != "" { // TODO: this seems unnecessary
 		ob.mu.Lock()
 		ob.outTXPending[outTx.Nonce] = append(ob.outTXPending[outTx.Nonce], outTx.TxHash)
+		numTxPending := len(ob.outTXPending[outTx.Nonce])
 		ob.mu.Unlock()
 		key := []byte(NonceTxHashesKeyPrefix + fmt.Sprintf("%d", outTx.Nonce))
 		value := []byte(strings.Join(ob.outTXPending[outTx.Nonce], ","))
@@ -26,8 +27,8 @@ func (ob *ChainObserver) AddTxHashToWatchList(txHash string, nonce int, sendHash
 			log.Error().Err(err).Msgf("AddTxHashToWatchList: error adding nonce %d tx hashes to db", outTx.Nonce)
 		}
 
-		log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.outTXPending[outTx.Nonce]))
-		ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, len(ob.outTXPending[outTx.Nonce]))
+		log.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, numTxPending)
+		ob.fileLogger.Info().Msgf("add %s nonce %d TxHash watch list length: %d", ob.chain, outTx.Nonce, numTxPending)
 	}
 }
 
