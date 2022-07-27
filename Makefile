@@ -51,7 +51,8 @@ install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
-install-zetaclient-race: go.sum
+# running with race detector on will be slow
+install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
