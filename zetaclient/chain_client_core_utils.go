@@ -208,3 +208,75 @@ func (ob *ChainObserver) WatchExchangeRate() {
 		}
 	}
 }
+
+// TODO : Call this function from shepard send or in a Separate Goroutine
+//func (ob *ChainObserver) HandleReceipts(receipt types.Receipt,nonce int )  {
+//	if receipt.Status == 1 {
+//		logs := receipt.Logs
+//		for _, vLog := range logs {
+//			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
+//			if err == nil {
+//				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, vLog.TxHash.Hex())
+//				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
+//					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+//					sendHash := vLog.Topics[3].Hex()
+//					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
+//					mMint := receivedLog.ZetaAmount.String()
+//					zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+//						sendHash,
+//						vLog.TxHash.Hex(),
+//						vLog.BlockNumber,
+//						mMint,
+//						common.ReceiveStatus_Success,
+//						ob.chain.String(),
+//						nonce,
+//					)
+//					if err != nil {
+//						log.Error().Err(err).Msg("error posting confirmation to meta core")
+//						continue
+//					}
+//					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+//					return true, true, nil
+//				} else {
+//					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
+//					return true, false, nil
+//				}
+//			}
+//			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
+//			if err == nil {
+//				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, vLog.TxHash.Hex())
+//				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
+//					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+//					sendhash := vLog.Topics[3].Hex()
+//					mMint := revertedLog.ZetaAmount.String()
+//					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
+//						sendhash,
+//						vLog.TxHash.Hex(),
+//						vLog.BlockNumber,
+//						mMint,
+//						common.ReceiveStatus_Success,
+//						ob.chain.String(),
+//						nonce,
+//					)
+//					if err != nil {
+//						log.Err(err).Msg("error posting confirmation to meta core")
+//						continue
+//					}
+//					log.Info().Msgf("Zeta tx hash: %s", metaHash)
+//					return true, true, nil
+//				} else {
+//					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
+//					return true, false, nil
+//				}
+//			}
+//		}
+//	} else if receipt.Status == 0 {
+//		log.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, receipt.TxHash.Hex())
+//		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
+//		if err != nil {
+//			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+//		}
+//		log.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+//		return true, true, nil
+//	}
+//}

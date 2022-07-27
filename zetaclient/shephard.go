@@ -5,12 +5,14 @@ import (
 	"encoding/hex"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -206,52 +208,35 @@ SIGNLOOP:
 				} else {
 					cnt.Inc()
 				}
-
-				// if tx is nil, maybe I'm not an active signer?
 				if tx != nil {
 					outTxHash := tx.Hash().Hex()
 					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						backOff := 1000 * time.Millisecond
-						for i := 0; i < 5; i++ { // retry loop: 1s, 2s, 4s, 8s, 16s
+						// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
+						for i := 0; i < 5; i++ {
 							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
 							// #nosec G404 randomness is not a security issue here
 							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
-							err = signer.Broadcast(tx)
-							// TODO: the following error handling is robust?
-							if err == nil {
-								log.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								co.fileLogger.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), send.Nonce, outTxHash)
-								if err != nil {
-									log.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							err := signer.Broadcast(tx)
+							if err != nil {
+								retry := HandlerBroadcastError(err, co.fileLogger, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
+								if !retry {
 									break
 								}
-								log.Info().Msgf("Broadcast to core successful %s", zetaHash)
-								break // break the retry loop
-							} else if strings.Contains(err.Error(), "nonce too low") {
-								log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
-								co.fileLogger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", send.Nonce, toChain, outTxHash)
-								break
-							} else if strings.Contains(err.Error(), "replacement transaction underpriced") {
-								log.Warn().Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								co.fileLogger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								break
-							} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
-								log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								co.fileLogger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-								break
-							} else { // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
-								log.Error().Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", send.Nonce, toChain, outTxHash)
-								co.fileLogger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", send.Nonce, toChain, outTxHash)
-								time.Sleep(backOff)
+								backOff *= 2
+								continue
 							}
-							backOff *= 2
+							log.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							co.fileLogger.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+							if err != nil {
+								log.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								break
+							}
+							log.Info().Msgf("Broadcast to core successful %s", zetaHash)
 						}
-
 					}
-					// if outbound tx fails, kill this shepherd, a new one will be later spawned.
-					//co.clientMap[toChain].AddTxHashToWatchList(outTxHash, int(send.Nonce), send.Index)
 					co.fileLogger.Info().Msgf("Keysign: %s => %s, nonce %d, outTxHash %s; keysignCount %d", send.SenderChain, toChain, send.Nonce, outTxHash, keysignCount)
 					keysignCount++
 					signInterval *= 2 // exponential backoff
@@ -259,4 +244,25 @@ SIGNLOOP:
 			}
 		}
 	}
+}
+
+func HandlerBroadcastError(err error, logger *zerolog.Logger, nonce, toChain, outTxHash string) bool {
+	if strings.Contains(err.Error(), "nonce too low") {
+		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+		logger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", nonce, toChain, outTxHash)
+		return false
+	}
+	if strings.Contains(err.Error(), "replacement transaction underpriced") {
+		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		logger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false
+	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
+		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		logger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false
+	} // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
+
+	log.Error().Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
+	logger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
+	return true
 }

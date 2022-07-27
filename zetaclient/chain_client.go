@@ -2,10 +2,8 @@ package zetaclient
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"os"
@@ -45,30 +43,29 @@ type OutTx struct {
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain            common.Chain
-	endpoint         string
-	ticker           *time.Ticker
-	Connector        *evm.Connector
-	ConnectorAddress ethcommon.Address
-	EvmClient        *ethclient.Client
-	zetaClient       *ZetaCoreBridge
-	Tss              TSSSigner
-	LastBlock        uint64
-	confCount        uint64 // must wait this many blocks to be considered "confirmed"
-	BlockTime        uint64 // block time in seconds
-	txWatchList      map[ethcommon.Hash]string
-	mu               *sync.Mutex
-	db               *leveldb.DB
-	sampleLogger     *zerolog.Logger
-	metrics          *metrics.Metrics
-	outTXPending     map[int][]string
-	outTXConfirmed   map[int]*ethtypes.Receipt
-	MinNonce         int
-	MaxNonce         int
-	OutTxChan        chan OutTx // send to this channel if you want something back!
-	ZetaPriceQuerier ZetaPriceQuerier
-	stop             chan struct{}
-	wg               sync.WaitGroup
+	chain                  common.Chain
+	endpoint               string
+	ticker                 *time.Ticker
+	Connector              *evm.Connector
+	ConnectorAddress       ethcommon.Address
+	EvmClient              *ethclient.Client
+	zetaClient             *ZetaCoreBridge
+	Tss                    TSSSigner
+	LastBlock              uint64
+	confCount              uint64 // must wait this many blocks to be considered "confirmed"
+	BlockTime              uint64 // block time in seconds
+	txWatchList            map[ethcommon.Hash]string
+	mu                     *sync.Mutex
+	db                     *leveldb.DB
+	sampleLogger           *zerolog.Logger
+	metrics                *metrics.Metrics
+	outTXConfirmedReceipts map[int]*ethtypes.Receipt
+	MinNonce               int
+	MaxNonce               int
+	OutTxChan              chan OutTx // send to this channel if you want something back!
+	ZetaPriceQuerier       ZetaPriceQuerier
+	stop                   chan struct{}
+	wg                     sync.WaitGroup
 
 	fileLogger *zerolog.Logger // for critical info
 }
@@ -85,8 +82,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.metrics = metrics
-	ob.outTXPending = make(map[int][]string)
-	ob.outTXConfirmed = make(map[int]*ethtypes.Receipt)
+	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
@@ -139,179 +135,18 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 
-	// initialize zeta price queriers
-	uniswapv3querier := &UniswapV3ZetaPriceQuerier{
-		UniswapV3Abi:        &uniswapV3ABI,
-		Client:              ob.EvmClient,
-		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain.String()].PoolContractAddress),
-		Chain:               ob.chain,
-	}
-	uniswapv2querier := &UniswapV2ZetaPriceQuerier{
-		UniswapV2Abi:        &uniswapV2ABI,
-		Client:              ob.EvmClient,
-		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain.String()].PoolContractAddress),
-		Chain:               ob.chain,
-	}
-	dummyQuerier := &DummyZetaPriceQuerier{
-		Chain:  ob.chain,
-		Client: ob.EvmClient,
-	}
-
-	// Initialize chain specific setup
-	MIN_OB_INTERVAL := 24 // minimum 24s between observations
-	switch chain {
-	case common.MumbaiChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.POLYGON_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
-		ob.BlockTime = config.POLY_BLOCK_TIME
-
-	case common.GoerliChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.ETH_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
-		ob.BlockTime = config.ETH_BLOCK_TIME
-
-	case common.BSCTestnetChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.BSC_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv2querier
-		ob.BlockTime = config.BSC_BLOCK_TIME
-
-	case common.RopstenChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.ROPSTEN_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
-		ob.BlockTime = config.ROPSTEN_BLOCK_TIME
-	}
-
+	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
+	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
 	if os.Getenv("DUMMY_PRICE") != "" {
 		log.Info().Msg("Using dummy price of 1:1")
-		ob.ZetaPriceQuerier = dummyQuerier
+		ob.ZetaPriceQuerier = dummyQuerior
 	}
-
 	if dbpath != "" {
-		path := fmt.Sprintf("%s/%s", dbpath, chain.String()) // e.g. ~/.zetaclient/ETH
-		db, err := leveldb.OpenFile(path, nil)
+		err := ob.BuildBlockIndex(dbpath, chain.String())
 		if err != nil {
 			return nil, err
 		}
-		ob.db = db
-
-		envvar := ob.chain.String() + "_SCAN_CURRENT"
-		if os.Getenv(envvar) != "" {
-			log.Info().Msgf("envvar %s is set; scan from current block", envvar)
-			header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
-			if err != nil {
-				return nil, err
-			}
-			ob.LastBlock = header.Number.Uint64()
-		} else { // last observed block
-			buf, err := db.Get([]byte(PosKey), nil)
-			if err != nil {
-				log.Info().Msg("db PosKey does not exist; read from ZetaCore")
-				ob.LastBlock = ob.getLastHeight()
-				// if ZetaCore does not have last heard block height, then use current
-				if ob.LastBlock == 0 {
-					header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
-					if err != nil {
-						return nil, err
-					}
-					ob.LastBlock = header.Number.Uint64()
-				}
-				buf2 := make([]byte, binary.MaxVarintLen64)
-				n := binary.PutUvarint(buf2, ob.LastBlock)
-				err := db.Put([]byte(PosKey), buf2[:n], nil)
-				if err != nil {
-					log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
-				}
-			} else {
-				ob.LastBlock, _ = binary.Uvarint(buf)
-			}
-		}
-
-		{
-			iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxHashesKeyPrefix)), nil)
-			for iter.Next() {
-				key := string(iter.Key())
-				nonce, err := strconv.ParseInt(key[len(NonceTxHashesKeyPrefix):], 10, 64)
-				if err != nil {
-					log.Error().Err(err).Msgf("error parsing nonce: %s", key)
-					continue
-				}
-				txHashes := strings.Split(string(iter.Value()), ",")
-				ob.outTXPending[int(nonce)] = txHashes
-				log.Info().Msgf("reading nonce %d with %d tx hashes", nonce, len(txHashes))
-			}
-			iter.Release()
-			if err = iter.Error(); err != nil {
-				log.Error().Err(err).Msg("error iterating over db")
-			}
-
-			// FIXME: remove this when txhash watchlist is maintained in zetacore
-			txlist := os.Getenv("TX_WATCHLIST")
-			if txlist != "" {
-				log.Info().Msgf("reading tx watchlist: %s", txlist)
-			}
-			// the format of txlist is "chain-nonce-txhash;chain-nonce-txhash"
-			for i, tx := range strings.Split(txlist, ";") {
-				log.Info().Msgf("looking #%d tx: %s", i, tx)
-				if tx == "" {
-					continue
-				}
-				parts := strings.Split(tx, "-")
-				if len(parts) != 3 {
-					log.Error().Msgf("invalid tx watchlist format: %s", tx)
-					continue
-				}
-				chain, err := common.ParseChain(parts[0])
-				if err != nil {
-					log.Error().Err(err).Msgf("invalid tx watchlist format: %s", tx)
-					continue
-				}
-				if chain != ob.chain {
-					log.Warn().Msgf("tx watchlist chain %s does not match ob chain %s", chain, ob.chain)
-					continue
-				}
-
-				nonce, err := strconv.ParseInt(parts[1], 10, 64)
-				if err != nil {
-					log.Error().Err(err).Msgf("invalid tx watchlist format: %s", tx)
-					continue
-				}
-				txhash := parts[2]
-				txHash := ethcommon.HexToHash(txhash)
-				if _, ok := ob.outTXPending[int(nonce)]; !ok {
-					ob.outTXPending[int(nonce)] = make([]string, 0)
-				}
-				ob.outTXPending[int(nonce)] = append(ob.outTXPending[int(nonce)], txHash.Hex())
-				log.Info().Msgf("adding tx hash %s to nonce %d", txhash, nonce)
-			}
-		}
-
-		{
-			iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
-			for iter.Next() {
-				key := string(iter.Key())
-				nonce, err := strconv.ParseInt(key[len(NonceTxKeyPrefix):], 10, 64)
-				if err != nil {
-					log.Error().Err(err).Msgf("error parsing nonce: %s", key)
-					continue
-				}
-				var receipt ethtypes.Receipt
-				err = receipt.UnmarshalJSON(iter.Value())
-				if err != nil {
-					log.Error().Err(err).Msgf("error unmarshalling receipt: %s", key)
-					continue
-				}
-				ob.outTXConfirmed[int(nonce)] = &receipt
-				log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
-			}
-			iter.Release()
-			if err = iter.Error(); err != nil {
-				log.Error().Err(err).Msg("error iterating over db")
-			}
-		}
+		ob.BuildReceiptsMap()
 
 	}
 	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
@@ -342,7 +177,7 @@ func (ob *ChainObserver) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
-	receipt, found := ob.outTXConfirmed[nonce]
+	receipt, found := ob.outTXConfirmedReceipts[nonce]
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
@@ -418,7 +253,6 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
-// If it is able to confirm one of txHashes in a outTXPending , it cleans it and saves information to local DB
 func (ob *ChainObserver) observeOutTx() {
 	ticker := time.NewTicker(12 * time.Second)
 	for {
@@ -428,39 +262,42 @@ func (ob *ChainObserver) observeOutTx() {
 			if err != nil {
 				return
 			}
+			if len(trackers) > 0 {
+				err = ob.SetMinAndMaxNonce(trackers)
+				if err != nil {
+					return
+				}
+			}
 			outTimeout := time.After(12 * time.Second)
+		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt, err := strconv.Atoi(tracker.Nonce)
 				if err != nil {
 					return
 				}
+			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
 					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						log.Warn().Msgf("Timeout chain %s nonce %d", ob.chain, nonceInt)
-						break
+						break TRACKERLOOP
 					default:
 						receipt, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						if err == nil && receipt != nil { // confirmed
 							log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonceInt, txHash)
 							ob.mu.Lock()
-							//delete(ob.outTXPending, nonce)
-							//if err = ob.db.Delete([]byte(NonceTxHashesKeyPrefix+fmt.Sprintf("%d", nonce)), nil); err != nil {
-							//	log.Error().Err(err).Msgf("PurgeTxHashWatchList: error deleting nonce %d tx hashes from db", nonce)
-							//}
-							ob.outTXConfirmed[nonceInt] = receipt
+							ob.outTXConfirmedReceipts[nonceInt] = receipt
 							value, err := receipt.MarshalJSON()
 							if err != nil {
 								log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 							}
-
 							ob.mu.Unlock()
 							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
 							if err != nil {
 								log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
-							break
+							break TXHASHLOOP
 						}
 						<-inTimeout
 					}
