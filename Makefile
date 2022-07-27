@@ -29,7 +29,6 @@ clean-dir:
 
 all: install
 
-
 test-coverage:
 	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}
 
@@ -68,4 +67,10 @@ go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
 
+init: clean install-zetacore
+	./localnet/zetachain/standalone-network/init.sh
 
+run:
+	./localnet/zetachain/standalone-network/run.sh
+
+init-run: init run
