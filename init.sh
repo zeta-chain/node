@@ -1,6 +1,7 @@
 #!/bin/bash
 
-KEY="mykey"
+KEY1="alice"
+KEH2="bob"
 CHAINID="athens_9000-1"
 MONIKER="localtestnet"
 KEYRING="test"
@@ -8,7 +9,7 @@ KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
 # to trace evm
 TRACE="--trace"
-# TRACE=""
+#TRACE=""
 
 # validate dependencies are installed
 command -v jq > /dev/null 2>&1 || { echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"; exit 1; }
@@ -22,16 +23,24 @@ zetacored config keyring-backend $KEYRING
 zetacored config chain-id $CHAINID
 
 # if $KEY exists it should be deleted
-zetacored keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
+#zetacored keys add $KEY1 --keyring-backend $KEYRING --algo $KEYALGO
+echo "Generating deterministic account - alice"
+echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add alice --recover --keyring-backend $KEYRING
+
+echo "Generating deterministic account - bob"
+echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add bob --recover --keyring-backend $KEYRING
+
 
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
 zetacored init $MONIKER --chain-id $CHAINID
 
 # Change parameter token denominations to aphoton
-cat $HOME/.zetacore/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="stake"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
-cat $HOME/.zetacore/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="stake"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
-cat $HOME/.zetacore/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="stake"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
-cat $HOME/.zetacore/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="stake"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+
 
 # Set gas limit in genesis
 cat $HOME/.zetacore/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
@@ -68,10 +77,12 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Allocate genesis accounts (cosmos formatted addresses)
-zetacored add-genesis-account $KEY 100000000000000000000000000stake --keyring-backend $KEYRING
+zetacored add-genesis-account $KEY1 100000000000000000000000000azeta --keyring-backend $KEYRING
+zetacored add-genesis-account $KEY2 1000000000000000000000azeta --keyring-backend $KEYRING
+
 
 # Sign genesis transaction
-zetacored gentx $KEY 1000000000000000000000stake --keyring-backend $KEYRING --chain-id $CHAINID
+zetacored gentx $KEY1 1000000000000000000000azeta --keyring-backend $KEYRING --chain-id $CHAINID
 
 # Collect genesis tx
 zetacored collect-gentxs
@@ -84,4 +95,4 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-zetacored start --pruning=nothing --evm.tracer=json $TRACE --log_level $LOGLEVEL --minimum-gas-prices=0.0001stake --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
+zetacored start --pruning=nothing --evm.tracer=json $TRACE --log_level $LOGLEVEL --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
