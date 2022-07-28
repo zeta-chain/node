@@ -14,6 +14,7 @@ import (
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
+	"github.com/zeta-chain/zetacore/docs"
 	"io"
 	"net/http"
 	"os"
@@ -102,6 +103,7 @@ import (
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
 	"github.com/evmos/ethermint/x/evm"
+	"github.com/ignite/cli/ignite/pkg/openapiconsole"
 )
 
 const (
@@ -646,8 +648,8 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register app's OpenAPI routes.
-	//apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
-	//apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
+	apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
+	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
@@ -666,8 +668,8 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
-	statikFS, err := fs.NewWithNamespace("cronos")
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
+	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)
 	}

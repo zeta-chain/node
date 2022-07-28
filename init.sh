@@ -63,6 +63,8 @@ if [[ $1 == "pending" ]]; then
       sed -i '' 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "5s"/g' $HOME/.zetacore/config/config.toml
       sed -i '' 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $HOME/.zetacore/config/config.toml
       sed -i '' 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $HOME/.zetacore/config/config.toml
+      sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacore/config/app.toml
+
   else
       sed -i 's/create_empty_blocks_interval = "0s"/create_empty_blocks_interval = "30s"/g' $HOME/.zetacore/config/config.toml
       sed -i 's/timeout_propose = "3s"/timeout_propose = "30s"/g' $HOME/.zetacore/config/config.toml
@@ -73,6 +75,8 @@ if [[ $1 == "pending" ]]; then
       sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "5s"/g' $HOME/.zetacore/config/config.toml
       sed -i 's/timeout_commit = "5s"/timeout_commit = "150s"/g' $HOME/.zetacore/config/config.toml
       sed -i 's/timeout_broadcast_tx_commit = "10s"/timeout_broadcast_tx_commit = "150s"/g' $HOME/.zetacore/config/config.toml
+      sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacore/config/app.toml
+
   fi
 fi
 
