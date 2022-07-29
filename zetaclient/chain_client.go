@@ -285,7 +285,6 @@ func (ob *ChainObserver) observeOutTx() {
 					default:
 						receipt, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						if err == nil && receipt != nil { // confirmed
-							log.Info().Msgf("observeOutTx: %s nonce %d, txHash %s confirmed", ob.chain, nonceInt, txHash)
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[nonceInt] = receipt
 							value, err := receipt.MarshalJSON()
@@ -312,9 +311,12 @@ func (ob *ChainObserver) observeOutTx() {
 
 // return the status of txHash
 // receipt nil, err non-nil: txHash not found
-// receipt non-nil, err non-nil: txHash found but not confirmed
+// receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
+	if ob.outTXConfirmedReceipts[nonce] != nil {
+		return nil, fmt.Errorf("queryTxByHash: txHash %s recepits already recorded", txHash)
+	}
 	//timeStart := time.Now()
 	//defer func() { log.Info().Msgf("queryTxByHash elapsed: %s", time.Since(timeStart)) }()
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -325,10 +327,7 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Rece
 			log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
 		}
 		return nil, err
-	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.LastBlock {
-		log.Info().Msgf("%s TransactionReceipt %s mined in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.LastBlock)
-		return receipt, err
-	} else { // confirmed outbound tx
+	} else {
 		if receipt.Status == 0 { // failed (reverted tx)
 			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, but it's reverted!", ob.chain, txHash, nonce)
 		} else if receipt.Status == 1 { // success
