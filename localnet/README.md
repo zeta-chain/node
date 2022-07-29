@@ -71,8 +71,8 @@ The HTTP/JSON RPC node for each chain is mapped to a different port on your loca
 ### zetanode/zetachain start options
 
 ```
-zeta-node/build/zetacored-start.sh
-zeta-node/build/zetaclient-start.sh
+zeta-node/deploy/zetacored-start.sh
+zeta-node/deploy/zetaclientd-start.sh
 ```
 
 ### Environment Variables 

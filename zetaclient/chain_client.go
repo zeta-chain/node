@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -37,7 +38,7 @@ type TxHashEnvelope struct {
 type OutTx struct {
 	SendHash string
 	TxHash   string
-	Nonce    int
+	Nonce    int64
 }
 
 // Chain configuration struct
@@ -51,7 +52,7 @@ type ChainObserver struct {
 	EvmClient              *ethclient.Client
 	zetaClient             *ZetaCoreBridge
 	Tss                    TSSSigner
-	LastBlock              uint64
+	lastBlock              uint64
 	confCount              uint64 // must wait this many blocks to be considered "confirmed"
 	BlockTime              uint64 // block time in seconds
 	txWatchList            map[ethcommon.Hash]string
@@ -60,8 +61,8 @@ type ChainObserver struct {
 	sampleLogger           *zerolog.Logger
 	metrics                *metrics.Metrics
 	outTXConfirmedReceipts map[int]*ethtypes.Receipt
-	MinNonce               int
-	MaxNonce               int
+	MinNonce               int64
+	MaxNonce               int64
 	OutTxChan              chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier       ZetaPriceQuerier
 	stop                   chan struct{}
@@ -149,7 +150,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		ob.BuildReceiptsMap()
 
 	}
-	log.Info().Msgf("%s: start scanning from block %d", chain, ob.LastBlock)
+	log.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlock())
 
 	return &ob, nil
 }
@@ -177,14 +178,16 @@ func (ob *ChainObserver) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmedReceipts[nonce]
+	ob.mu.Unlock()
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
 			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 			if err == nil {
 				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
+				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
@@ -205,14 +208,14 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
+					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
 			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 			if err == nil {
 				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
+				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					mMint := revertedLog.ZetaAmount.String()
@@ -232,7 +235,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
+					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
@@ -283,7 +286,7 @@ func (ob *ChainObserver) observeOutTx() {
 						log.Warn().Msgf("Timeout chain %s nonce %d", ob.chain, nonceInt)
 						break TRACKERLOOP
 					default:
-						receipt, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
+						receipt, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[nonceInt] = receipt
@@ -313,12 +316,10 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Receipt, error) {
-	if ob.outTXConfirmedReceipts[nonce] != nil {
+func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
+	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		return nil, fmt.Errorf("queryTxByHash: txHash %s recepits already recorded", txHash)
 	}
-	//timeStart := time.Now()
-	//defer func() { log.Info().Msgf("queryTxByHash elapsed: %s", time.Since(timeStart)) }()
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
@@ -327,10 +328,10 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Rece
 			log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
 		}
 		return nil, err
-	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.LastBlock {
-		log.Info().Msgf("%s TransactionReceipt %s included in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.LastBlock)
+	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlock() {
+		log.Info().Msgf("%s TransactionReceipt %s included in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.GetLastBlock())
 		return nil, fmt.Errorf("included but not confirmed")
-	} else {
+	} else { // confirmed outbound tx
 		if receipt.Status == 0 { // failed (reverted tx)
 			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, but it's reverted!", ob.chain, txHash, nonce)
 		} else if receipt.Status == 1 { // success
@@ -338,4 +339,12 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int) (*ethtypes.Rece
 		}
 		return receipt, nil
 	}
+}
+
+func (ob *ChainObserver) setLastBlock(block uint64) {
+	atomic.StoreUint64(&ob.lastBlock, block)
+}
+
+func (ob *ChainObserver) GetLastBlock() uint64 {
+	return atomic.LoadUint64(&ob.lastBlock)
 }

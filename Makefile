@@ -2,17 +2,18 @@
 
 
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
-VERSION := $(shell cat version)
+VERSION := $(shell git describe --tags)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
 DOCKER ?= docker
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GOFLAGS:=""
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetachain \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
@@ -52,6 +53,11 @@ install: go.sum
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+
+# running with race detector on will be slow
+install-zetaclient-race-test-only-build: go.sum
+		@echo "--> Installing zetaclientd"
+		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 install-zetacore: go.sum
 		@echo "--> Installing zetacored"

@@ -32,28 +32,29 @@ func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
 		if err != nil {
 			return err
 		}
-		ob.LastBlock = header.Number.Uint64()
+		ob.setLastBlock(header.Number.Uint64())
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
 			log.Info().Msg("db PosKey does not exist; read from ZetaCore")
-			ob.LastBlock = ob.getLastHeight()
+			ob.setLastBlock(ob.getLastHeight())
 			// if ZetaCore does not have last heard block height, then use current
-			if ob.LastBlock == 0 {
+			if ob.GetLastBlock() == 0 {
 				header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return err
 				}
-				ob.LastBlock = header.Number.Uint64()
+				ob.setLastBlock(header.Number.Uint64())
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, ob.LastBlock)
+			n := binary.PutUvarint(buf2, ob.GetLastBlock())
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
 			if err != nil {
 				log.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
-			ob.LastBlock, _ = binary.Uvarint(buf)
+			lastBlock, _ := binary.Uvarint(buf)
+			ob.setLastBlock(lastBlock)
 		}
 	}
 	return nil
@@ -135,12 +136,13 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 }
 
 func (ob *ChainObserver) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
-	minNonce, maxNonce := -1, 0
+	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
-		intNonce, err := strconv.Atoi(tracker.Nonce)
+		conv, err := strconv.Atoi(tracker.Nonce)
 		if err != nil {
 			return err
 		}
+		intNonce := int64(conv)
 		if minNonce == -1 {
 			minNonce = intNonce
 		}

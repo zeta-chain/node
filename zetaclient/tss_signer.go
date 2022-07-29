@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
@@ -145,8 +146,8 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey) (*TSS, error) {
-	server, _, err := SetupTSSServer(peer, privkey)
+func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
+	server, _, err := SetupTSSServer(peer, privkey, preParams)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -200,7 +201,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey) (*TSS, error) {
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -232,8 +233,8 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey) (*tss.TssServe
 			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
-		nil, // don't set to precomputed values
-		IP,  // for docker test
+		preParams, // use pre-generated pre-params if non-nil
+		IP,        // for docker test
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
