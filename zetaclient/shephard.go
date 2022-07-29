@@ -255,20 +255,20 @@ SIGNLOOP:
 func HandlerBroadcastError(err error, logger *zerolog.Logger, nonce, toChain, outTxHash string) bool {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
-		logger.Err(err).Msgf("Broadcast nonce too low: nonce %d chain %s outTxHash %s; increase re-try interval", nonce, toChain, outTxHash)
+		logger.Err(err).Msgf("Broadcast nonce too low: nonce %s chain %s outTxHash %s; increase re-try interval", nonce, toChain, outTxHash)
 		return false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
-		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
-		logger.Err(err).Msgf("Broadcast replacement: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		logger.Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
 		return false
 	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
-		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
-		logger.Err(err).Msgf("Broadcast duplicates: nonce %d chain %s outTxHash %s", nonce, toChain, outTxHash)
+		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		logger.Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
 		return false
 	} // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
 
-	log.Error().Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
-	logger.Err(err).Msgf("Broadcast error: nonce %d chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
+	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
+	logger.Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
 	return true
 }
