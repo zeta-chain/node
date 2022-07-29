@@ -14,7 +14,7 @@ services:
       - ./storage/node0/zetacore:/root/.zetacore
       - ./storage/node0/tss:/root/.tss/
       - ./storage/node0/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
+      - ../../../deploy:/scripts
       - ./config/:/zetashared/
 
     ports:
@@ -37,7 +37,7 @@ services:
       - ./storage/node1/zetacore:/root/.zetacore
       - ./storage/node1/tss:/root/.tss/
       - ./storage/node1/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
+      - ../../../deploy:/scripts
       - ./config/:/zetashared/
     networks:
       localnet:
@@ -71,7 +71,7 @@ services:
       - ./storage/node0/zetacore:/root/.zetacore
       - ./storage/node0/tss:/root/.tss
       - ./storage/node0/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
+      - ../../../deploy:/scripts
       - ./config/:/zetashared/
     ports:
       - 8123:8123
@@ -107,7 +107,7 @@ services:
       - ./storage/node1/zetacore:/root/.zetacore
       - ./storage/node1/tss:/root/.tss
       - ./storage/node1/tssnew/:/root/.tssnew/
-      - ../../../build:/scripts
+      - ../../../deploy:/scripts
       - ./config/:/zetashared/
     networks:
       localnet:

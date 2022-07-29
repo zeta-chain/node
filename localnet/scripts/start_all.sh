@@ -1,8 +1,8 @@
 #!/bin/bash
 
-ENABLED_CHAINS=("bsc" "ethereum")
+ENABLED_CHAINS=("bsc" "ethereum" "polygon")
 
-LOCALNET_DIR="$( cd "$( dirname "$0" )" && pwd )"
+LOCALNET_DIR="$( cd "$( dirname "$0" )" && pwd )/.."
 cd "$LOCALNET_DIR" || exit
 ZETA_MONOREPO_PATH="$LOCALNET_DIR/zetachain-monorepo/"
 VARS_CONFIG_FILE=.env
