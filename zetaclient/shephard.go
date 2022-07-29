@@ -103,6 +103,9 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	if gasLimit < 50_000 {
 		gasLimit = 50_000
 	}
+	if gasLimit > 1_000_000 {
+		gasLimit = 1_000_000
+	}
 
 	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
