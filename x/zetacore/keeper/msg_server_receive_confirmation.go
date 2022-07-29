@@ -3,13 +3,12 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"strconv"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"strconv"
 )
 
 func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgReceiveConfirmation) (*types.MsgReceiveConfirmationResponse, error) {
@@ -60,28 +59,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	}
 
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
-		//inTx, _ := k.GetInTx(ctx, send.InTxHash)
-		//inTx.RecvHash = receive.Index
-		//inTx.OutTxHash = receive.OutTxHash
-		//k.SetInTx(ctx, inTx)
-
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
-		//k.SetReceive(ctx, receive)
-
-		// TODO: send.ReceiverChain could be empty
-		//lastblock, isFound := k.GetLastBlockHeight(ctx, send.ReceiverChain)
-		//if !isFound {
-		//	lastblock = types.LastBlockHeight{
-		//		Creator:           msg.Creator,
-		//		Index:             send.ReceiverChain,
-		//		Chain:             send.ReceiverChain,
-		//		LastSendHeight:    0,
-		//		LastReceiveHeight: msg.OutBlockHeight,
-		//	}
-		//} else {
-		//	lastblock.LastSendHeight = msg.OutBlockHeight
-		//}
-		//k.SetLastBlockHeight(ctx, lastblock)
 
 		if receive.Status == common.ReceiveStatus_Success {
 			oldstatus := send.Status.String()
@@ -114,8 +92,6 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
 			newstatus := send.Status.String()
-			index := fmt.Sprintf("%s/%s", msg.Chain, strconv.Itoa(int(msg.OutTxNonce)))
-			k.RemoveOutTxTracker(ctx, index)
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
@@ -129,6 +105,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 					sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
 				),
 			)
+		}
+
+		if receive.Status == common.ReceiveStatus_Success || receive.Status == common.ReceiveStatus_Failed {
+			index := fmt.Sprintf("%s/%s", msg.Chain, strconv.Itoa(int(msg.OutTxNonce)))
+			k.RemoveOutTxTracker(ctx, index)
 		}
 
 		send.RecvHash = receive.Index
