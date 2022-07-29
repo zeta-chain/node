@@ -229,7 +229,7 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey) (*tss.TssServe
 			EnableMonitor:   true,
 			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
 			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    10 * time.Second,
+			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
 		nil, // don't set to precomputed values
