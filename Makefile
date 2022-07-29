@@ -30,6 +30,8 @@ clean-dir:
 
 all: install
 
+test-coverage-exclude-core:
+	@go test {TEST_BUILD_FLAGS} -v -coverprofile coverage.out $(go list ./... | grep -v /x/zetacore/)
 
 test-coverage:
 	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}

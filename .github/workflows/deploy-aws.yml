@@ -84,7 +84,7 @@ jobs:
 
       - name: Test
         if: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
-        run: go test -v -coverprofile coverage.out  ./...
+        run: go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
       - name: Create Package
         run: |
