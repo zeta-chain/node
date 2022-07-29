@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"os"
 	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -154,10 +155,10 @@ func (ob *ChainObserver) SetMinAndMaxNonce(trackers []types.OutTxTracker) error 
 		}
 	}
 	if minNonce != -1 {
-		ob.MaxNonce = minNonce
+		atomic.StoreInt64(&ob.MinNonce, minNonce)
 	}
 	if maxNonce > 0 {
-		ob.MaxNonce = maxNonce
+		atomic.StoreInt64(&ob.MaxNonce, maxNonce)
 	}
 	return nil
 }
