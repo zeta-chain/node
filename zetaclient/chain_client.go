@@ -318,7 +318,7 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
-		return nil, fmt.Errorf("queryTxByHash: txHash %s recepits already recorded", txHash)
+		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
