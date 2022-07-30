@@ -12,6 +12,8 @@ import (
 	"os"
 	"os/signal"
 	"os/user"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -34,8 +36,24 @@ func main() {
 	dbuser := flag.String("dbuser", user.Username, "username of PostgresSQL database")
 	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
-	startblock := flag.Int64("startblock", 0, "rescan from this block")
+	scanRange := flag.String("scan-range", "0:0", "rescan from this block")
 	flag.Parse()
+
+	var startBlock, endBlock int64
+
+	if *scanRange != "" {
+		parts := strings.Split(*scanRange, ":")
+		if len(parts) != 2 {
+			fmt.Println("scan-range must be of the form <start>:<end> both inclusive")
+			return
+		}
+		startBlock, err1 := strconv.ParseInt(parts[0], 10, 64)
+		endBlock, err2 := strconv.ParseInt(parts[1], 10, 64)
+		if err1 != nil || err2 != nil || startBlock > endBlock {
+			fmt.Println("scan-range must be of the form <start>:<end> both inclusive")
+			return
+		}
+	}
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", *dbhost, *dbport, *dbuser, *dbpasswd, *dbname)
 	db, err := sql.Open("postgres", psqlInfo)
@@ -86,7 +104,8 @@ func main() {
 		log.Info().Err(err).Msgf("Rebuilding database takes %s", duration)
 	}
 
-	idb.LastBlockProcessed = *startblock
+	idb.LastBlockProcessed = startBlock
+	idb.EndBlock = endBlock
 	log.Info().Msgf("Start watching events...")
 	idb.Start()
 
