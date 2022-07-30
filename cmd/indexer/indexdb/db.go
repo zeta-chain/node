@@ -24,6 +24,7 @@ type IndexDB struct {
 	db                 *sql.DB
 	querier            *query.ZetaQuerier
 	LastBlockProcessed int64
+	EndBlock           int64
 	ClientMap          map[string]*ethclient.Client
 	TxHashQueue        chan TxHash
 }
@@ -58,7 +59,7 @@ func (idb *IndexDB) Start() {
 				continue
 			}
 			if block.Header.Height > idb.LastBlockProcessed {
-				for i := idb.LastBlockProcessed + 1; i <= block.Header.Height; i++ {
+				for i := idb.LastBlockProcessed + 1; i <= block.Header.Height && i <= idb.EndBlock; i++ {
 					err = idb.processBlock(i)
 					if err != nil {
 						log.Error().Err(err).Msgf("processBlock on block %d error", i)
@@ -66,7 +67,6 @@ func (idb *IndexDB) Start() {
 					idb.LastBlockProcessed = i
 					log.Info().Msgf("processed block %d; catching up to %d", i, block.Header.Height)
 				}
-
 			}
 		}
 	}()
