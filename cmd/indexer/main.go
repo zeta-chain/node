@@ -106,7 +106,7 @@ func main() {
 
 	idb.LastBlockProcessed = startBlock
 	idb.EndBlock = endBlock
-	log.Info().Msgf("Start watching events...")
+	log.Info().Msgf("Start watching events from block %d to block %d...", startBlock, endBlock)
 	idb.Start()
 
 	// wait....
