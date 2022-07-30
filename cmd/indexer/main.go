@@ -36,7 +36,7 @@ func main() {
 	dbuser := flag.String("dbuser", user.Username, "username of PostgresSQL database")
 	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
-	scanRange := flag.String("scan-range", "0:0", "rescan from this block")
+	scanRange := flag.String("scan-range", "0:9223372036854775807", "rescan from this block")
 	flag.Parse()
 
 	var startBlock, endBlock int64
