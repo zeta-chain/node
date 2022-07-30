@@ -21,7 +21,6 @@ func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrack
 
 	store := ctx.KVStore(k.storeKey)
 	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
-
 	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(key []byte, value []byte) error {
 		var outTxTracker types.OutTxTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
@@ -35,7 +34,6 @@ func (k Keeper) OutTxTrackerAll(c context.Context, req *types.QueryAllOutTxTrack
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
 	return &types.QueryAllOutTxTrackerResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
 }
 
@@ -48,7 +46,6 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	// FIXME: change prefix to only query certain chain; or filter the result by chain.
 	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
 
 	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(key []byte, value []byte) error {
@@ -56,8 +53,9 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-
-		outTxTrackers = append(outTxTrackers, outTxTracker)
+		if outTxTracker.Chain == req.Chain {
+			outTxTrackers = append(outTxTrackers, outTxTracker)
+		}
 		return nil
 	})
 

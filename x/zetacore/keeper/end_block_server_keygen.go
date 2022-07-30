@@ -15,7 +15,7 @@ func (k Keeper) InitializeGenesisKeygen(goCtx context.Context) {
 		accts := k.GetAllNodeAccount(ctx)
 		var pubkeys []string
 		for _, acct := range accts {
-			if isBondedValidator(acct.Creator, validators) {
+			if IsBondedValidator(acct.Creator, validators) {
 				pubkeys = append(pubkeys, acct.PubkeySet.Secp256k1.String())
 			}
 		}
