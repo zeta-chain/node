@@ -39,7 +39,7 @@ func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier, clientMap map[string]
 	}, nil
 }
 
-func (idb *IndexDB) Start() {
+func (idb *IndexDB) Start(done chan bool) {
 	if idb.LastBlockProcessed == 0 {
 		err := idb.db.QueryRow("select max(blocknum) from block").Scan(&idb.LastBlockProcessed)
 		if err != nil {
@@ -50,7 +50,6 @@ func (idb *IndexDB) Start() {
 		}
 	}
 
-	done := make(chan bool)
 	go func() {
 		ticker := time.NewTicker(3 * time.Second)
 		for range ticker.C {
@@ -70,7 +69,7 @@ func (idb *IndexDB) Start() {
 				}
 			}
 			if idb.LastBlockProcessed >= idb.EndBlock {
-				done <- true
+				close(done)
 				return
 			}
 		}
