@@ -182,8 +182,8 @@ SIGNLOOP:
 		default:
 			minNonce := atomic.LoadInt64(&co.clientMap[toChain].MinNonce)
 			maxNonce := atomic.LoadInt64(&co.clientMap[toChain].MaxNonce)
-			if minNonce == int64(send.Nonce) && maxNonce > int64(send.Nonce)+5 {
-				log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
+			if minNonce == int64(send.Nonce) && maxNonce > int64(send.Nonce)+10 {
+				//log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
 				signInterval = 32 * time.Second
 			}
 			tnow := time.Now()

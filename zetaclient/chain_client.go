@@ -329,14 +329,8 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 		}
 		return nil, err
 	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlock() {
-		log.Info().Msgf("%s TransactionReceipt %s included in block %d but not confirmed; current block num %d", ob.chain, txHash, receipt.BlockNumber.Uint64(), ob.GetLastBlock())
 		return nil, fmt.Errorf("included but not confirmed")
 	} else { // confirmed outbound tx
-		if receipt.Status == 0 { // failed (reverted tx)
-			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, but it's reverted!", ob.chain, txHash, nonce)
-		} else if receipt.Status == 1 { // success
-			log.Info().Msgf("%s TransactionReceipt %s nonce %d mined and confirmed, and it's successful", ob.chain, txHash, nonce)
-		}
 		return receipt, nil
 	}
 }
