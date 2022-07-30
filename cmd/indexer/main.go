@@ -107,11 +107,16 @@ func main() {
 	idb.LastBlockProcessed = startBlock
 	idb.EndBlock = endBlock
 	log.Info().Msgf("Start watching events from block %d to block %d...", startBlock, endBlock)
-	idb.Start()
+	done := make(chan bool)
+	idb.Start(done)
 
 	// wait....
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
+	log.Info().Msgf("awaiting signal...")
+	select {
+	case <-ch:
+	case <-done:
+	}
 	log.Info().Msg("stop signal received; exit")
 }
