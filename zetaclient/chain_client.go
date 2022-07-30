@@ -283,7 +283,7 @@ func (ob *ChainObserver) observeOutTx() {
 					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
-						log.Warn().Msgf("Timeout chain %s nonce %d", ob.chain, nonceInt)
+						log.Warn().Msgf("observeOutTx timeout on chain %s nonce %d", ob.chain, nonceInt)
 						break TRACKERLOOP
 					default:
 						receipt, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
