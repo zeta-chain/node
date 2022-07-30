@@ -16,7 +16,7 @@ var _ = strconv.Itoa(0)
 
 func CmdReceiveConfirmation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [mMint] [Status] [chain]",
+		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [mMint] [Status] [chain] [outTXNonce]",
 		Short: "Broadcast message receiveConfirmation",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,13 +36,16 @@ func CmdReceiveConfirmation() *cobra.Command {
 				return fmt.Errorf("wrong status")
 			}
 			chain := args[5]
-
+			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), status, chain)
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), status, chain, uint64(outTxNonce))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

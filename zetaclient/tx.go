@@ -42,6 +42,17 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return zetaTxHash, nil
 }
 
+func (b *ZetaCoreBridge) AddTxHashToWatchlist(chain string, nonce uint64, txHash string) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgAddToWatchList(signerAddress, chain, nonce, txHash)
+	zetaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		log.Err(err).Msg("PostGasPrice broadcast fail")
+		return "", err
+	}
+	return zetaTxHash, nil
+}
+
 func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
@@ -69,9 +80,9 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 }
 
 // FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce int) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain, uint64(nonce))
 	log.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
@@ -201,7 +212,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s:%d", chain.String(), nonce),
+		Index: fmt.Sprintf("%s/%d", chain.String(), nonce),
 	})
 	if err != nil {
 		return nil, err

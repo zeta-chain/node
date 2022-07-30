@@ -14,7 +14,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !isBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,7 +14,7 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !isBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
@@ -50,24 +49,6 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 func isDuplicateSigner(creator string, signers []string) bool {
 	for _, v := range signers {
 		if creator == v {
-			return true
-		}
-	}
-	return false
-}
-
-func isBondedValidator(creator string, validators []stakingtypes.Validator) bool {
-	creatorAddr, err := sdk.AccAddressFromBech32(creator)
-	if err != nil {
-		return false
-	}
-	for _, v := range validators {
-		valAddr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
-		if err != nil {
-			continue
-		}
-		//TODO: How about Jailed?
-		if v.IsBonded() && bytes.Compare(creatorAddr.Bytes(), valAddr.Bytes()) == 0 {
 			return true
 		}
 	}

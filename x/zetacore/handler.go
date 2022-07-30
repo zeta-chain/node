@@ -22,11 +22,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgAddToWatchList:
 			res, err := msgServer.AddToWatchList(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-			// this line is used by starport scaffolding # 1
+		case *types.MsgRemoveFromWatchList:
+			res, err := msgServer.RemoveFromWatchList(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgCreateTSSVoter:
 			res, err := msgServer.CreateTSSVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-
 		case *types.MsgGasBalanceVoter:
 			res, err := msgServer.GasBalanceVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
