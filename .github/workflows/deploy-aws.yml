@@ -153,7 +153,7 @@ jobs:
             export S3_BUCKET=s3://source-files-070014318019/deployment-files
             export UPDATE_INDEXER=FALSE
             export UPDATE_NODES=TRUE
-          elif [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]]
+          elif [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
             export S3_BUCKET=s3://source-files-070014318019/deployment-files
             export UPDATE_INDEXER=TRUE
