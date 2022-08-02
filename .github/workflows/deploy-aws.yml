@@ -147,22 +147,27 @@ jobs:
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
             export UPDATE_INDEXER=TRUE
-          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
+            export UPDATE_NODES=TRUE
+          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
             export S3_BUCKET=s3://source-files-070014318019/deployment-files
+            export UPDATE_INDEXER=FALSE
+            export UPDATE_NODES=TRUE
+          elif [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]]
+            export ENVIRONMENT_NAME=ATHENS  
+            export S3_BUCKET=s3://source-files-070014318019/deployment-files
+            export UPDATE_INDEXER=TRUE
+            export UPDATE_NODES=FALSE
           else 
             echo "ERROR: Unknown value for 'github.ref_name' $GITHUB_REF_NAME"
             echo "Exiting"
             exit 1   
           fi
 
-          if [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
-            export UPDATE_INDEXER=TRUE
-          fi
-
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
           echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME" >> $GITHUB_ENV
           echo "UPDATE_INDEXER=$UPDATE_INDEXER" >> $GITHUB_ENV
+          echo "UPDATE_NODES=$UPDATE_NODES" >> $GITHUB_ENV
           echo "Environment Name:$ENVIRONMENT_NAME"
 
       - name: Install AWS CLI
@@ -205,18 +210,21 @@ jobs:
           sleep 2
 
       - name: Copy Package Files
+        if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files")
           check_cmd_status $COMMAND_ID
 
       - name: Stop ZetaChain
+        if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_nodes "systemctl stop zetaclientd, systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
 
       - name: Update ZetaNode Binaries
+        if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_nodes "\
@@ -228,6 +236,7 @@ jobs:
           check_cmd_status $COMMAND_ID
 
       - name: Restart ZetaChain
+        if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_nodes "systemctl restart zetaclientd, systemctl restart zetacored")
