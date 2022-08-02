@@ -191,7 +191,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					mMint := receivedLog.ZetaAmount.String()
+					mMint := receivedLog.ZetaValueAndGas.String()
 					zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
@@ -218,7 +218,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					sendhash := vLog.Topics[3].Hex()
-					mMint := revertedLog.ZetaAmount.String()
+					mMint := revertedLog.ZetaValueAndGas.String()
 					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
