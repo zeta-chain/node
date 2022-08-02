@@ -12,8 +12,10 @@ on:
   push:
     branches:
       - develop
+      - charliemc/pd-644-we-need-to-improve-the-resiliency-of-the
     tags:
       - athens-v*
+      - indexer-v*
 env:
   AWS_REGION: us-east-1
 
@@ -34,10 +36,10 @@ jobs:
           GITHUB_REF_NAME=${{ github.ref_name }}  
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
+          if [[ $GITHUB_REF_NAME == "charliemc/pd-644-we-need-to-improve-the-resiliency-of-the" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
-          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]]; then 
+          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
             export S3_BUCKET=s3://source-files-070014318019/deployment-files
           else 
@@ -48,6 +50,7 @@ jobs:
 
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
           echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME" >> $GITHUB_ENV
+          echo "UPDATE_INDEXER=$UPDATE_INDEXER" >> $GITHUB_ENV
           echo "Environment Name:$ENVIRONMENT_NAME"
 
       - name: Set Up Go
@@ -140,10 +143,11 @@ jobs:
           GITHUB_REF_NAME=${{ github.ref_name }}  
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
+          if [[ $GITHUB_REF_NAME == "charliemc/pd-644-we-need-to-improve-the-resiliency-of-the" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
-          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]]; then 
+            export UPDATE_INDEXER=TRUE
+          elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
             export S3_BUCKET=s3://source-files-070014318019/deployment-files
           else 
@@ -152,8 +156,13 @@ jobs:
             exit 1   
           fi
 
+          if [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
+            export UPDATE_INDEXER=TRUE
+          fi
+
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
           echo "ENVIRONMENT_NAME=$ENVIRONMENT_NAME" >> $GITHUB_ENV
+          echo "UPDATE_INDEXER=$UPDATE_INDEXER" >> $GITHUB_ENV
           echo "Environment Name:$ENVIRONMENT_NAME"
 
       - name: Install AWS CLI
@@ -198,19 +207,19 @@ jobs:
       - name: Copy Package Files
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files")
+          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files")
           check_cmd_status $COMMAND_ID
 
       - name: Stop ZetaChain
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "systemctl stop zetaclientd, systemctl stop zetacored")
+          COMMAND_ID=$(run_ssm_cmds_nodes "systemctl stop zetaclientd, systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
 
       - name: Update ZetaNode Binaries
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "\
+          COMMAND_ID=$(run_ssm_cmds_nodes "\
               cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
               cp /deployment-files/${DEPLOYMENT_ID}/zetacored /home/zetachain/go/bin/zetacored, \
               cp /deployment-files/${DEPLOYMENT_ID}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
@@ -221,7 +230,15 @@ jobs:
       - name: Restart ZetaChain
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_commands "systemctl restart zetaclientd, systemctl restart zetacored")
+          COMMAND_ID=$(run_ssm_cmds_nodes "systemctl restart zetaclientd, systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
+
+      - name: Update Indexer
+        if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
+        run: |
+          source build/bash_functions
+          COMMAND_ID=$(run_ssm_cmds_indexer "systemctl stop indexer &&  cp /deployment-files/${DEPLOYMENT_ID}/indexer /usr/local/bin/indexer && systemctl start indexer")
+          check_cmd_status $COMMAND_ID
+
 
 
