@@ -12,7 +12,6 @@ on:
   push:
     branches:
       - develop
-      - charliemc/pd-644-we-need-to-improve-the-resiliency-of-the
     tags:
       - athens-v*
       - indexer-v*
@@ -36,7 +35,7 @@ jobs:
           GITHUB_REF_NAME=${{ github.ref_name }}  
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "charliemc/pd-644-we-need-to-improve-the-resiliency-of-the" ]]; then 
+          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
@@ -143,7 +142,7 @@ jobs:
           GITHUB_REF_NAME=${{ github.ref_name }}  
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "charliemc/pd-644-we-need-to-improve-the-resiliency-of-the" ]]; then 
+          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://source-files-821351686724/deployment-files
             export UPDATE_INDEXER=TRUE
