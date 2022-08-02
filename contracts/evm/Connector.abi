@@ -3,22 +3,92 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_zetaTokenAddress",
+        "name": "zetaTokenAddress_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_tssAddress",
+        "name": "tssAddress_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_tssAddressUpdater",
+        "name": "tssAddressUpdater_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "pauserAddress_",
         "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "CallerIsNotPauser",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "CallerIsNotTss",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "CallerIsNotTssOrUpdater",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "CallerIsNotTssUpdater",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxSupply",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExceedsMaxSupply",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZetaTransferError",
+    "type": "error"
   },
   {
     "anonymous": false,
@@ -31,6 +101,44 @@
       }
     ],
     "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "updaterAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newTssAddress",
+        "type": "address"
+      }
+    ],
+    "name": "PauserAddressUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "zetaTxSenderAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newTssAddress",
+        "type": "address"
+      }
+    ],
+    "name": "TSSAddressUpdated",
     "type": "event"
   },
   {
@@ -52,13 +160,13 @@
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "originSenderAddress",
+        "name": "zetaTxSenderAddress",
         "type": "bytes"
       },
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "originChainId",
+        "name": "sourceChainId",
         "type": "uint256"
       },
       {
@@ -70,7 +178,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "zetaAmount",
+        "name": "zetaValueAndGas",
         "type": "uint256"
       },
       {
@@ -95,13 +203,13 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "originSenderAddress",
+        "name": "zetaTxSenderAddress",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "originChainId",
+        "name": "sourceChainId",
         "type": "uint256"
       },
       {
@@ -119,7 +227,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "zetaAmount",
+        "name": "zetaValueAndGas",
         "type": "uint256"
       },
       {
@@ -142,19 +250,25 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "address",
-        "name": "originSenderAddress",
+        "name": "sourceTxOriginAddress",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "zetaTxSenderAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "destinationChainId",
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "bytes",
         "name": "destinationAddress",
         "type": "bytes"
@@ -162,13 +276,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "zetaAmount",
+        "name": "zetaValueAndGas",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "gasLimit",
+        "name": "destinationGasLimit",
         "type": "uint256"
       },
       {
@@ -201,15 +315,28 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "maxSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes",
-        "name": "originSenderAddress",
+        "name": "zetaTxSenderAddress",
         "type": "bytes"
       },
       {
         "internalType": "uint256",
-        "name": "originChainId",
+        "name": "sourceChainId",
         "type": "uint256"
       },
       {
@@ -219,7 +346,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "zetaAmount",
+        "name": "zetaValueAndGas",
         "type": "uint256"
       },
       {
@@ -242,12 +369,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "originSenderAddress",
+        "name": "zetaTxSenderAddress",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "originChainId",
+        "name": "sourceChainId",
         "type": "uint256"
       },
       {
@@ -262,7 +389,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "zetaAmount",
+        "name": "zetaValueAndGas",
         "type": "uint256"
       },
       {
@@ -303,6 +430,19 @@
   },
   {
     "inputs": [],
+    "name": "pauserAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "renounceTssAddressUpdater",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -324,7 +464,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "gasLimit",
+            "name": "destinationGasLimit",
             "type": "uint256"
           },
           {
@@ -334,7 +474,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "zetaAmount",
+            "name": "zetaValueAndGas",
             "type": "uint256"
           },
           {
@@ -349,6 +489,19 @@
       }
     ],
     "name": "send",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxSupply_",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMaxSupply",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -390,7 +543,20 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_tssAddress",
+        "name": "pauserAddress_",
+        "type": "address"
+      }
+    ],
+    "name": "updatePauserAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tssAddress_",
         "type": "address"
       }
     ],

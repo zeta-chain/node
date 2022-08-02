@@ -57,7 +57,8 @@ func (ob *ChainObserver) observeInTX() error {
 		Start:   ob.GetLastBlock() + 1,
 		End:     &toBlock,
 		Context: context.TODO(),
-	}, []ethcommon.Address{})
+	}, []ethcommon.Address{}, []*big.Int{}, [][]byte{})
+
 	if err != nil {
 		return err
 	}
@@ -73,16 +74,16 @@ func (ob *ChainObserver) observeInTX() error {
 		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s\n", event.Raw.BlockNumber, event.Raw.TxHash)
 
 		zetaHash, err := ob.zetaClient.PostSend(
-			event.OriginSenderAddress.Hex(),
+			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
-			types.BytesToEthHex(event.DestinationAddress),
+			types.BytesToEthHex(event.DestinationAddress.Bytes()),
 			config.FindChainByID(event.DestinationChainId),
-			event.ZetaAmount.String(),
-			event.ZetaAmount.String(),
+			event.ZetaValueAndGas.String(),
+			event.ZetaValueAndGas.String(),
 			base64.StdEncoding.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
-			event.GasLimit.Uint64(),
+			event.DestinationGasLimit.Uint64(),
 		)
 		if err != nil {
 			log.Err(err).Msg("error posting to zeta core")
