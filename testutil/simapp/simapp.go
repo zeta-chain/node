@@ -30,7 +30,7 @@ func New(dir string) app.App {
 		ConsensusParams: defaultConsensusParams,
 		AppStateBytes:   []byte("{}"),
 	})
-	return a
+	return *a
 }
 
 var defaultConsensusParams = &abci.ConsensusParams{
