@@ -237,7 +237,8 @@ jobs:
         if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_indexer "systemctl stop indexer &&  cp /deployment-files/${DEPLOYMENT_ID}/indexer /usr/local/bin/indexer && systemctl start indexer")
+          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/$DEPLOYMENT_ID.tar.gz /tmp, tar -xzvf /tmp/$DEPLOYMENT_ID.tar.gz -C /deployment-files, \
+          systemctl stop indexer &&  cp /deployment-files/${DEPLOYMENT_ID}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
 
 
