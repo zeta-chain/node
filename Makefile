@@ -29,7 +29,7 @@ clean-binaries:
 	@rm -rf ${GOBIN}/zeta*
 
 clean-dir:
-	@rm -rf ~/.zetacore
+	@rm -rf ~/.zetacored
 
 all: install
 

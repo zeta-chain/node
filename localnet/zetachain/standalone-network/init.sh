@@ -3,7 +3,7 @@
 ### chain init script for development purposes only ###
 
 make clean install-zetacore
-rm -rf ~/.zetacored
+kill -9 $(lsof -ti:26657)
 zetacored init test --chain-id=localnet -o
 
 echo "Generating deterministic account - zeta"
