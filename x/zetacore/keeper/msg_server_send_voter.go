@@ -10,6 +10,10 @@ import (
 	"math/big"
 )
 
+var (
+	ONE_EIGHTEEN, _ = big.NewInt(0).SetString("1000000000000000000", 10)
+)
+
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -106,8 +110,14 @@ func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) b
 	mi := gasPrice.MedianIndex
 	medianPrice := gasPrice.Prices[mi]
 	send.GasPrice = fmt.Sprintf("%d", medianPrice)
-	price := float64(medianPrice)
-	gasLimit := float64(send.GasLimit) //TODO: let user supply this
+	price, ok := big.NewInt(0).SetString(send.GasPrice, 10)
+	if !ok {
+		send.StatusMessage = fmt.Sprintf("GasPrice cannot parse")
+		send.Status = types.SendStatus_Aborted
+		return false
+	}
+	gasLimit := big.NewInt(0).SetUint64(send.GasLimit)
+
 	gasFeeInZeta, abort := k.computeFeeInZeta(ctx, price, gasLimit, chain, send)
 	if abort {
 		send.Status = types.SendStatus_Aborted
@@ -229,7 +239,7 @@ func (k msgServer) UpdateTxList(ctx sdk.Context, send *types.Send) {
 }
 
 // returns feeInZeta (uint uuzeta), and whether to abort zeta-tx
-func (k msgServer) computeFeeInZeta(ctx sdk.Context, price float64, gasLimit float64, chain string, send *types.Send) (*big.Int, bool) {
+func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *big.Int, chain string, send *types.Send) (*big.Int, bool) {
 	abort := false
 	rate, isFound := k.GetZetaConversionRate(ctx, chain)
 	if !isFound {
@@ -241,10 +251,8 @@ func (k msgServer) computeFeeInZeta(ctx sdk.Context, price float64, gasLimit flo
 		send.StatusMessage = fmt.Sprintf("median exchange rate %s cannot parse into float", rate.ZetaConversionRates[rate.MedianIndex])
 		abort = true
 	}
-	exchangeRateFloat, _ := big.NewFloat(0).SetInt(exchangeRateInt).Float64()
-	exchangeRateFloat = exchangeRateFloat / 1.0e18 // 18 decimals
 
-	gasFeeInZeta := price * gasLimit * exchangeRateFloat
-	gasFeeInZetaInt, _ := big.NewFloat(0).SetFloat64(gasFeeInZeta).Int(nil)
-	return gasFeeInZetaInt, abort
+	// price*gasLimit*exchangeRate/1e18
+	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), ONE_EIGHTEEN)
+	return gasFeeInZeta, abort
 }
