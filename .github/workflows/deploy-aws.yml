@@ -93,11 +93,11 @@ jobs:
           export PACKAGE_TIMESTAMP=$(date +"%s")
           echo "PACKAGE_TIMESTAMP=$PACKAGE_TIMESTAMP" >> $GITHUB_ENV
           mkdir deployment-${PACKAGE_TIMESTAMP}
-          mv $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
-          mv $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
-          mv $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
-          mv deploy/zetaclientd-start.sh deployment-${PACKAGE_TIMESTAMP}
-          mv deploy/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
+          cp $HOME/go/bin/zetacored deployment-${PACKAGE_TIMESTAMP}
+          cp $HOME/go/bin/zetaclientd deployment-${PACKAGE_TIMESTAMP}
+          cp $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
+          cp deploy/zetaclientd-start.sh deployment-${PACKAGE_TIMESTAMP}
+          cp deploy/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
 
           if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
             cp deploy/env_variables.staging deployment-${PACKAGE_TIMESTAMP}/network_values
@@ -146,7 +146,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           files: |
-            $HOME/go/bin/indexer
+            deployment-*/indexer
           
   deploy:
     needs: build
