@@ -1,6 +1,14 @@
-run_ssm_commands () {
+run_ssm_cmds_nodes () {
     COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:Chain,Values=zetachain \
+    --targets Key=tag:ZetaChainValidator,Values=true \
+    --document-name "AWS-RunShellScript" \
+    --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
+    echo "$COMMAND_ID"
+}
+
+run_ssm_cmds_indexer () {
+    COMMAND_ID=$(aws ssm send-command \
+    --targets Key=tag:Name,Values=zetachain-indexer \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"
@@ -20,4 +28,6 @@ check_cmd_status () {
         echo "Command ID $COMMAND_ID Failed" && exit 1
     fi
 }
+
+
 
