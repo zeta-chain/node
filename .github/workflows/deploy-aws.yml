@@ -98,7 +98,8 @@ jobs:
           cp $HOME/go/bin/indexer deployment-${PACKAGE_TIMESTAMP}
           cp deploy/zetaclientd-start.sh deployment-${PACKAGE_TIMESTAMP}
           cp deploy/zetacored-start.sh deployment-${PACKAGE_TIMESTAMP}
-
+          cp $HOME/go/bin/* ./
+          
           if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
             cp deploy/env_variables.staging deployment-${PACKAGE_TIMESTAMP}/network_values
           elif [[ $ENVIRONMENT_NAME == "ATHENS" ]]; then 
@@ -137,8 +138,8 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           files: |
-            $HOME/go/bin/zetacored
-            $HOME/go/bin/zetaclientd
+            zetacored
+            zetaclientd
 
       - name: Create GitHub Release for ZetaChain Indexer
         uses: softprops/action-gh-release@v1
@@ -146,7 +147,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           files: |
-            deployment-*/indexer
+            indexer
           
   deploy:
     needs: build
