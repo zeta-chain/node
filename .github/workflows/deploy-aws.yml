@@ -15,7 +15,6 @@ on:
     tags:
       - athens-v*
       - indexer-v*
-      - release-test*
 env:
   AWS_REGION: us-east-1
 
