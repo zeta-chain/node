@@ -257,7 +257,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *ChainObserver) observeOutTx() {
-	ticker := time.NewTicker(12 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
