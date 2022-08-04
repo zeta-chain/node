@@ -271,7 +271,7 @@ func (ob *ChainObserver) observeOutTx() {
 					return
 				}
 			}
-			outTimeout := time.After(12 * time.Second)
+			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt, err := strconv.Atoi(tracker.Nonce)
