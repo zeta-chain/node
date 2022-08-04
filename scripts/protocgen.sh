@@ -8,14 +8,15 @@ protoc_gen_gocosmos() {
     return 1
   fi
 
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@latest 2>/dev/null
+  go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+  go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
 }
 
 protoc_gen_gocosmos
 
 proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
-  buf protoc \
+  protoc \
     -I "proto" \
     -I "third_party/proto" \
     --gocosmos_out=plugins=interfacetype+grpc,\

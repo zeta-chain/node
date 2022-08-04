@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/zeta-chain/zetacore/docs"
+	"github.com/zeta-chain/zetacore/x/mirror"
 	"io"
 	"net/http"
 	"os"
@@ -104,6 +105,8 @@ import (
 
 	"github.com/evmos/ethermint/x/evm"
 	"github.com/ignite/cli/ignite/pkg/openapiconsole"
+	mirrorkeeper "github.com/zeta-chain/zetacore/x/mirror/keeper"
+	mirrortypes "github.com/zeta-chain/zetacore/x/mirror/types"
 )
 
 const (
@@ -150,6 +153,7 @@ var (
 		vesting.AppModuleBasic{},
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
+		mirror.AppModuleBasic{},
 		zetaCoreModule.AppModuleBasic{},
 	)
 
@@ -211,7 +215,6 @@ type App struct {
 	TransferKeeper       ibctransferkeeper.Keeper
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
 	mm                   *module.Manager
 	configurator         module.Configurator
 	// simulation manager
@@ -220,6 +223,10 @@ type App struct {
 	// Ethermint keepers
 	EvmKeeper       *evmkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
+
+	// ZetaCore keepers
+	ZetaCoreKeeper zetaCoreModuleKeeper.Keeper
+	MirrorKeeper   mirrorkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -256,6 +263,7 @@ func New(
 		zetaCoreModuleTypes.StoreKey,
 		// ethermint keys
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
+		mirrortypes.StoreKey,
 	)
 
 	// Add the EVM transient store key
@@ -331,6 +339,10 @@ func New(
 		app.AccountKeeper, app.BankKeeper, stakingKeeper,
 		&app.FeeMarketKeeper,
 		tracer,
+	)
+	app.MirrorKeeper = *mirrorkeeper.NewKeeper(
+		appCodec, keys[mirrortypes.StoreKey], tkeys[mirrortypes.MemStoreKey], app.GetSubspace(mirrortypes.ModuleName),
+		*app.EvmKeeper, app.AccountKeeper,
 	)
 
 	// Create IBC Keeper
@@ -426,6 +438,7 @@ func New(
 		transferModule,
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
+		mirror.NewAppModule(appCodec, app.MirrorKeeper, app.AccountKeeper, app.BankKeeper),
 		metacoreModule,
 	)
 
@@ -455,6 +468,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
+		mirrortypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -467,6 +481,7 @@ func New(
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
+		mirrortypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -495,6 +510,7 @@ func New(
 		vestingtypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 		zetaCoreModuleTypes.ModuleName,
+		mirrortypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -707,7 +723,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
-
+	paramsKeeper.Subspace(mirrortypes.ModuleName)
 	return paramsKeeper
 }
 

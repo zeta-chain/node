@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.mirror;
+
+import "gogoproto/gogo.proto";
+import "mirror/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
+
+// GenesisState defines the mirror module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}
