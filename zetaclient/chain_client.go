@@ -189,6 +189,10 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+					if len(vLog.Topics) != 4 {
+						log.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
+						return false, false, fmt.Errorf("wrong number of topics in log %d", len(vLog.Topics))
+					}
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 					mMint := receivedLog.ZetaValue.String()
@@ -217,7 +221,11 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
 					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-					sendhash := vLog.Topics[3].Hex()
+					if len(vLog.Topics) != 3 {
+						log.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
+						return false, false, fmt.Errorf("wrong number of topics in log %d", len(vLog.Topics))
+					}
+					sendhash := vLog.Topics[2].Hex()
 					mMint := revertedLog.RemainingZetaValue.String()
 					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
