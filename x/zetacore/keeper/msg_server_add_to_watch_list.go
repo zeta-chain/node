@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -22,7 +23,7 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 	tracker, found := k.GetOutTxTracker(ctx, index)
 	hash := types.TxHashList{
 		TxHash: msg.TxHash,
-		Singer: msg.Creator,
+		Signer: msg.Creator,
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
@@ -33,8 +34,16 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 		})
 		return &types.MsgAddToWatchListResponse{}, nil
 	}
-
-	tracker.HashList = append(tracker.HashList, &hash)
-	k.SetOutTxTracker(ctx, tracker)
+	var isDup = false
+	for _, hash := range tracker.HashList {
+		if strings.EqualFold(hash.TxHash, msg.TxHash) {
+			isDup = true
+			break
+		}
+	}
+	if !isDup {
+		tracker.HashList = append(tracker.HashList, &hash)
+		k.SetOutTxTracker(ctx, tracker)
+	}
 	return &types.MsgAddToWatchListResponse{}, nil
 }
