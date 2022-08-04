@@ -160,12 +160,12 @@ jobs:
           
           if [[ $GITHUB_REF_NAME == "cicd-make-files-available-for-cosmovisor" ]]; then 
             export ENVIRONMENT_NAME=STAGING
-            export S3_BUCKET=s3://zetachain-deployment-files-athens
+            export S3_BUCKET=s3://zetachain-deployment-files-staging
             export UPDATE_INDEXER=TRUE
             export UPDATE_NODES=TRUE
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
-            export S3_BUCKET=s3://zetachain-deployment-files-staging
+            export S3_BUCKET=s3://zetachain-deployment-files-athens
             export UPDATE_INDEXER=FALSE
             export UPDATE_NODES=TRUE
           elif [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
@@ -230,7 +230,7 @@ jobs:
         if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files")
+          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir /deployment-files/${{ env.GITHUB_REF_NAME }}, tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
           check_cmd_status $COMMAND_ID
 
       - name: Stop ZetaChain
@@ -245,11 +245,11 @@ jobs:
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_nodes "\
-              cp /deployment-files/${GITHUB_REF_NAME}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
-              cp /deployment-files/${GITHUB_REF_NAME}/zetacored /home/zetachain/go/bin/zetacored, \
-              cp /deployment-files/${GITHUB_REF_NAME}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
-              cp /deployment-files/${GITHUB_REF_NAME}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
-              cp /deployment-files/${GITHUB_REF_NAME}/network_values /etc/zetachain/network_values")
+              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
+              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
+              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
+              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
+              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
           check_cmd_status $COMMAND_ID
 
       - name: Restart ZetaChain
@@ -264,6 +264,6 @@ jobs:
         run: |
           source build/bash_functions
           COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files, \
-          systemctl stop indexer &&  cp /deployment-files/${GITHUB_REF_NAME}/indexer /usr/local/bin/indexer && systemctl start indexer")
+          systemctl stop indexer &&  mkdir  /deployment-files/${{ env.GITHUB_REF_NAME }} && cp /deployment-files/${{ env.GITHUB_REF_NAME }}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
 
