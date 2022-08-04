@@ -39,10 +39,10 @@ jobs:
           
           if [[ $GITHUB_REF_NAME == "cicd-make-files-available-for-cosmovisor" ]]; then 
             export ENVIRONMENT_NAME=STAGING
-            export S3_BUCKET=s3://source-files-821351686724/deployment-files
+            export S3_BUCKET=s3://zetachain-deployment-files-staging
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
-            export S3_BUCKET=s3://source-files-070014318019/deployment-files
+            export S3_BUCKET=s3://zetachain-deployment-files-athens
           else 
             echo "ERROR: Unknown value for 'github.ref_name' $GITHUB_REF_NAME"
             echo "Exiting"
@@ -94,9 +94,6 @@ jobs:
 
       - name: Create Package
         run: |
-          # export PACKAGE_TIMESTAMP=$(date +"%s")
-          # echo "PACKAGE_TIMESTAMP=$PACKAGE_TIMESTAMP" >> $GITHUB_ENV
-          # mkdir deployment-${PACKAGE_TIMESTAMP}
           
           if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
             cp deploy/env_variables.staging network_values
@@ -108,16 +105,16 @@ jobs:
 
       - name: Push Files To S3
         run: |
-          echo $GITHUB_REF_NAME
-          aws s3 cp package.tar.gz ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/
-          aws s3 cp zetacored ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/
-          aws s3 cp zetaclientd ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/
-          aws s3 cp indexer ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/
-          aws s3 cp deploy/zetaclientd-start.sh ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/zetaclientd-start.sh
-          aws s3 cp deploy/zetacored-start.sh ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/zetacored-start.sh
+          echo ${{ env.GITHUB_REF_NAME }}
+          aws s3 cp package.tar.gz ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+          aws s3 cp zetacored ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+          aws s3 cp zetaclientd ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+          aws s3 cp indexer ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+          aws s3 cp deploy/zetaclientd-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh
+          aws s3 cp deploy/zetacored-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh
 
       - name: Update Latest Deployment ID SSM Parameter
-        run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value $GITHUB_REF_NAME  > /dev/null 2>&1
+        run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value ${{ env.GITHUB_REF_NAME }}  > /dev/null 2>&1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -129,9 +126,6 @@ jobs:
           ECR_REPOSITORY: zetachain
           IMAGE_TAG: latest
         run: |
-          # cp deployment-${PACKAGE_TIMESTAMP}/zetacored ./
-          # cp deployment-${PACKAGE_TIMESTAMP}/zetaclientd ./
-          # cp deployment-${PACKAGE_TIMESTAMP}/indexer ./
           docker build -f Dockerfile.zetacore_binary -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
@@ -160,7 +154,6 @@ jobs:
 
       - name: Set Environment Variables"
         run: |
-          echo "TEST - ${{ env.GITHUB_REF_NAME }}"
           GITHUB_REF_NAME=${{ github.ref_name }}
           GITHUB_REF_NAME=$(echo $GITHUB_REF_NAME | tr '//' '-')
           echo $GITHUB_REF_NAME
@@ -191,6 +184,8 @@ jobs:
           echo "UPDATE_INDEXER=$UPDATE_INDEXER" >> $GITHUB_ENV
           echo "UPDATE_NODES=$UPDATE_NODES" >> $GITHUB_ENV
           echo "Environment Name:$ENVIRONMENT_NAME"
+          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
+
 
       - name: Install AWS CLI
         run: |
@@ -217,7 +212,7 @@ jobs:
       - name: Get Deployment ID
         run: |
           export GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
-          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
+          echo "GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
 
       - name: Snapshot Instances
         run: |
@@ -226,7 +221,7 @@ jobs:
               echo "$INSTANCE_ID"
               aws ec2 create-snapshots \
                 --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
-                --description "Snapshot Prior To Deployment ID: $GITHUB_REF_NAME" \
+                --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
                 --copy-tags-from-source "volume" > jq
           done <<< "$INSTANCE_IDS"
           sleep 2
@@ -235,7 +230,7 @@ jobs:
         if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.S3_BUCKET }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files")
+          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files")
           check_cmd_status $COMMAND_ID
 
       - name: Stop ZetaChain
@@ -268,9 +263,7 @@ jobs:
         if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files, \
+          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files, \
           systemctl stop indexer &&  cp /deployment-files/${GITHUB_REF_NAME}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
-
-
 
