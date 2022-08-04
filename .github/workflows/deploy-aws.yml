@@ -160,22 +160,24 @@ jobs:
 
       - name: Set Environment Variables"
         run: |
-          GITHUB_REF_NAME=${{ github.ref_name }}  
+          echo "TEST - ${{ env.GITHUB_REF_NAME }}"
+          GITHUB_REF_NAME=${{ github.ref_name }}
+          GITHUB_REF_NAME=$(echo $GITHUB_REF_NAME | tr '//' '-')
           echo $GITHUB_REF_NAME
           
           if [[ $GITHUB_REF_NAME == "cicd-make-files-available-for-cosmovisor" ]]; then 
             export ENVIRONMENT_NAME=STAGING
-            export S3_BUCKET=s3://source-files-821351686724/deployment-files
+            export S3_BUCKET=s3://zetachain-deployment-files-athens
             export UPDATE_INDEXER=TRUE
             export UPDATE_NODES=TRUE
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
-            export S3_BUCKET=s3://source-files-070014318019/deployment-files
+            export S3_BUCKET=s3://zetachain-deployment-files-staging
             export UPDATE_INDEXER=FALSE
             export UPDATE_NODES=TRUE
           elif [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
             export ENVIRONMENT_NAME=ATHENS  
-            export S3_BUCKET=s3://source-files-070014318019/deployment-files
+            export S3_BUCKET=s3://zetachain-deployment-files-athens
             export UPDATE_INDEXER=TRUE
             export UPDATE_NODES=FALSE
           else 
@@ -233,7 +235,7 @@ jobs:
         if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME/$GITHUB_REF_NAME.tar.gz /tmp, tar -xzvf /tmp/$GITHUB_REF_NAME.tar.gz -C /deployment-files")
+          COMMAND_ID=$(run_ssm_cmds_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.S3_BUCKET }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files")
           check_cmd_status $COMMAND_ID
 
       - name: Stop ZetaChain
@@ -266,7 +268,7 @@ jobs:
         if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/$GITHUB_REF_NAME.tar.gz /tmp, tar -xzvf /tmp/$GITHUB_REF_NAME.tar.gz -C /deployment-files, \
+          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/package.tar.gz /tmp, tar -xzvf /tmp/package.tar.gz -C /deployment-files, \
           systemctl stop indexer &&  cp /deployment-files/${GITHUB_REF_NAME}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
 
