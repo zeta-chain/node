@@ -52,7 +52,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 	} else {
 		if isDuplicateSigner(msg.Creator, receive.Signers) {
-			log.Error().Msgf("ReceiveConfirmation: duplicate signer: %s", msg.Creator)
+			log.Info().Msgf("ReceiveConfirmation: TX %s has already been signed by %s", receiveIndex, msg.Creator)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
 		}
 		receive.Signers = append(receive.Signers, msg.Creator)

@@ -90,7 +90,7 @@ func (co *CoreObserver) MonitorCore() {
 	go co.startObserve()
 	go co.ShepherdManager()
 
-	noKeygen := os.Getenv("NO_KEYGEN")
+	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
 	if noKeygen == "" {
 		go co.keygenObserve()
 	}
