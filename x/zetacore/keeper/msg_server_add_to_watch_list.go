@@ -38,6 +38,7 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 	for _, hash := range tracker.HashList {
 		if strings.EqualFold(hash.TxHash, msg.TxHash) {
 			isDup = true
+			break
 		}
 	}
 	if !isDup {
