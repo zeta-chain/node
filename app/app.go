@@ -167,6 +167,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		mirrortypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 )
 

@@ -37,3 +37,7 @@ const (
 	Erc20Key      = "Erc20-value-"
 	Erc20CountKey = "Erc20-count-"
 )
+
+const (
+	ERC20TokenPairsKey = "ERC20TokenPairs-value-"
+)

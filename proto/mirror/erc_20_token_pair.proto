@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.mirror;
+
+option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
+
+message ERC20TokenPair {
+  
+  string homeChain = 1; 
+  string homeERC20ContractAddress = 2; 
+  string name = 3; 
+  string symbol = 4; 
+  uint32 decimals = 5;
+  string mirrorERC20ContractAddress = 6; 
+}

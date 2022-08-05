@@ -22,7 +22,10 @@ func CmdDeployERC20Mirror() *cobra.Command {
 			argHomeERC20ContractAddress := args[1]
 			argName := args[2]
 			argSymbol := args[3]
-			argDecimals := args[4]
+			argDecimals, err := strconv.Atoi(args[4])
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -35,7 +38,7 @@ func CmdDeployERC20Mirror() *cobra.Command {
 				argHomeERC20ContractAddress,
 				argName,
 				argSymbol,
-				argDecimals,
+				uint32(argDecimals),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

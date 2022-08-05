@@ -9,7 +9,7 @@ const TypeMsgDeployERC20Mirror = "deploy_erc_20_mirror"
 
 var _ sdk.Msg = &MsgDeployERC20Mirror{}
 
-func NewMsgDeployERC20Mirror(creator string, homeChain string, homeERC20ContractAddress string, name string, symbol string, decimals string) *MsgDeployERC20Mirror {
+func NewMsgDeployERC20Mirror(creator string, homeChain string, homeERC20ContractAddress string, name string, symbol string, decimals uint32) *MsgDeployERC20Mirror {
 	return &MsgDeployERC20Mirror{
 		Creator:                  creator,
 		HomeChain:                homeChain,

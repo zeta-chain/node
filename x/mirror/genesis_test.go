@@ -14,6 +14,9 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
 
+		ERC20TokenPairs: &types.ERC20TokenPairs{
+			TokenPairs: "6",
+		},
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
@@ -25,5 +28,6 @@ func TestGenesis(t *testing.T) {
 	nullify.Fill(&genesisState)
 	nullify.Fill(got)
 
+	require.Equal(t, genesisState.ERC20TokenPairs, got.ERC20TokenPairs)
 	// this line is used by starport scaffolding # genesis/test/assert
 }

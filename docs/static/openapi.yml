@@ -31912,6 +31912,57 @@ paths:
           format: uint64
       tags:
         - Query
+  /zeta-chain/zetacore/mirror/erc_20_token_pairs:
+    get:
+      summary: Queries a ERC20TokenPairs by index.
+      operationId: ZetachainZetacoreMirrorERC20TokenPairs
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              ERC20TokenPairs:
+                type: object
+                properties:
+                  tokenPairs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        homeChain:
+                          type: string
+                        homeERC20ContractAddress:
+                          type: string
+                        name:
+                          type: string
+                        symbol:
+                          type: string
+                        decimals:
+                          type: integer
+                          format: int64
+                        mirrorERC20ContractAddress:
+                          type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /zetachain/zetacore/mirror/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -55717,11 +55768,72 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  zetachain.zetacore.mirror.ERC20TokenPair:
+    type: object
+    properties:
+      homeChain:
+        type: string
+      homeERC20ContractAddress:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+      decimals:
+        type: integer
+        format: int64
+      mirrorERC20ContractAddress:
+        type: string
+  zetachain.zetacore.mirror.ERC20TokenPairs:
+    type: object
+    properties:
+      tokenPairs:
+        type: array
+        items:
+          type: object
+          properties:
+            homeChain:
+              type: string
+            homeERC20ContractAddress:
+              type: string
+            name:
+              type: string
+            symbol:
+              type: string
+            decimals:
+              type: integer
+              format: int64
+            mirrorERC20ContractAddress:
+              type: string
   zetachain.zetacore.mirror.MsgDeployERC20MirrorResponse:
     type: object
   zetachain.zetacore.mirror.Params:
     type: object
     description: Params defines the parameters for the module.
+  zetachain.zetacore.mirror.QueryGetERC20TokenPairsResponse:
+    type: object
+    properties:
+      ERC20TokenPairs:
+        type: object
+        properties:
+          tokenPairs:
+            type: array
+            items:
+              type: object
+              properties:
+                homeChain:
+                  type: string
+                homeERC20ContractAddress:
+                  type: string
+                name:
+                  type: string
+                symbol:
+                  type: string
+                decimals:
+                  type: integer
+                  format: int64
+                mirrorERC20ContractAddress:
+                  type: string
   zetachain.zetacore.mirror.QueryParamsResponse:
     type: object
     properties:

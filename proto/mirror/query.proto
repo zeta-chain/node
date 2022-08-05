@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "mirror/params.proto";
+import "mirror/erc_20_token_pairs.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
@@ -15,7 +16,11 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zetachain/zetacore/mirror/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a ERC20TokenPairs by index.
+	rpc ERC20TokenPairs(QueryGetERC20TokenPairsRequest) returns (QueryGetERC20TokenPairsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/mirror/erc_20_token_pairs";
+	}
+// this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -27,4 +32,9 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+message QueryGetERC20TokenPairsRequest {}
+
+message QueryGetERC20TokenPairsResponse {
+	ERC20TokenPairs ERC20TokenPairs = 1 [(gogoproto.nullable) = false];
+}
 // this line is used by starport scaffolding # 3

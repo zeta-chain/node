@@ -17,7 +17,7 @@ message MsgDeployERC20Mirror {
   string homeERC20ContractAddress = 3;
   string name = 4;
   string symbol = 5;
-  string decimals = 6;
+  uint32 decimals = 6;
 }
 
 message MsgDeployERC20MirrorResponse {

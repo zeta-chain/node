@@ -1,0 +1,11 @@
+syntax = "proto3";
+package zetachain.zetacore.mirror;
+
+import "mirror/erc_20_token_pair.proto";
+
+
+option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
+
+message ERC20TokenPairs {
+  repeated ERC20TokenPair tokenPairs = 1;
+}
