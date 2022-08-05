@@ -16,7 +16,15 @@ func (ob *ChainObserver) PostNonceIfNotRecorded() error {
 	_, err := zetaClient.GetNonceByChain(chain)
 	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
 		nonce, err := evmClient.NonceAt(context.TODO(), tss.Address(), nil)
+		if err != nil {
+			log.Fatal().Err(err).Msg("NonceAt")
+			return err
+		}
 		pendingNonce, err := evmClient.PendingNonceAt(context.TODO(), tss.Address())
+		if err != nil {
+			log.Fatal().Err(err).Msg("PendingNonceAt")
+			return err
+		}
 		if pendingNonce != nonce {
 			log.Fatal().Msgf("fatal: pending nonce %d != nonce %d", pendingNonce, nonce)
 			return fmt.Errorf("pending nonce %d != nonce %d", pendingNonce, nonce)
