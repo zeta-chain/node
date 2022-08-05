@@ -27759,16 +27759,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/TSS/{index}':
@@ -27950,16 +27940,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/TSSVoter/{index}':
@@ -28137,16 +28117,6 @@ paths:
             when key
 
             is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -28332,16 +28302,6 @@ paths:
             when key
 
             is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -28537,16 +28497,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/gasPrice/{index}':
@@ -28725,16 +28675,6 @@ paths:
             when key
 
             is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -29104,16 +29044,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/lastBlockHeight/{index}':
@@ -29331,16 +29261,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/nodeAccount/{index}':
@@ -29537,16 +29457,6 @@ paths:
             when key
 
             is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -29785,16 +29695,6 @@ paths:
             when key
 
             is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -30304,16 +30204,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/zetaConversionRate/{index}':
@@ -30404,7 +30294,7 @@ paths:
                         properties:
                           txHash:
                             type: string
-                          singer:
+                          signer:
                             type: string
               pagination:
                 type: object
@@ -30498,16 +30388,6 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   '/zeta-chain/zetacore/zetacore/outTxTracker/{index}':
@@ -30536,7 +30416,7 @@ paths:
                       properties:
                         txHash:
                           type: string
-                        singer:
+                        signer:
                           type: string
         default:
           description: An unexpected error response.
@@ -30590,7 +30470,7 @@ paths:
                         properties:
                           txHash:
                             type: string
-                          singer:
+                          signer:
                             type: string
               pagination:
                 type: object
@@ -30688,16 +30568,45 @@ paths:
           in: query
           required: false
           type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
+      tags:
+        - Query
+  /zetachain/zetacore/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreZetacoreParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
       tags:
         - Query
 definitions:
@@ -50563,6 +50472,8 @@ definitions:
     type: object
   zetachain.zetacore.zetacore.MsgReceiveConfirmationResponse:
     type: object
+  zetachain.zetacore.zetacore.MsgRemoveFromWatchListResponse:
+    type: object
   zetachain.zetacore.zetacore.MsgSendVoterResponse:
     type: object
   zetachain.zetacore.zetacore.MsgSetNodeKeysResponse:
@@ -50623,8 +50534,14 @@ definitions:
           properties:
             txHash:
               type: string
-            singer:
+            signer:
               type: string
+  zetachain.zetacore.zetacore.Params:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+    description: Params defines the parameters for the module.
   zetachain.zetacore.zetacore.QueryAllChainNoncesResponse:
     type: object
     properties:
@@ -50953,7 +50870,7 @@ definitions:
                 properties:
                   txHash:
                     type: string
-                  singer:
+                  signer:
                     type: string
       pagination:
         type: object
@@ -51001,7 +50918,7 @@ definitions:
                 properties:
                   txHash:
                     type: string
-                  singer:
+                  signer:
                     type: string
       pagination:
         type: object
@@ -51664,7 +51581,7 @@ definitions:
               properties:
                 txHash:
                   type: string
-                singer:
+                signer:
                   type: string
   zetachain.zetacore.zetacore.QueryGetReceiveResponse:
     type: object
@@ -51872,6 +51789,16 @@ definitions:
       Height:
         type: string
         format: uint64
+  zetachain.zetacore.zetacore.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          enabled:
+            type: boolean
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetachain.zetacore.zetacore.QueryTxListRichResponse:
     type: object
     properties:
@@ -52115,7 +52042,7 @@ definitions:
     properties:
       txHash:
         type: string
-      singer:
+      signer:
         type: string
   zetachain.zetacore.zetacore.ZetaConversionRate:
     type: object
