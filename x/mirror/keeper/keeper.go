@@ -9,19 +9,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/zeta-chain/zetacore/x/mirror/types"
-
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		paramstore paramtypes.Subspace
-
-		evmKeeper     evmkeeper.Keeper
+		cdc           codec.BinaryCodec
+		storeKey      sdk.StoreKey
+		memKey        sdk.StoreKey
+		paramstore    paramtypes.Subspace
 		accountKeeper types.AccountKeeper
+		evmKeeper     types.EVMKeeper
 	}
 )
 
@@ -30,8 +27,8 @@ func NewKeeper(
 	storeKey,
 	memKey sdk.StoreKey,
 	ps paramtypes.Subspace,
-	evmKeeper evmkeeper.Keeper,
-	accountKeeper types.AccountKeeper,
+	ek types.EVMKeeper,
+	ak types.AccountKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -40,13 +37,13 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
 
-		evmKeeper:     evmKeeper,
-		accountKeeper: accountKeeper,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		paramstore:    ps,
+		accountKeeper: ak,
+		evmKeeper:     ek,
 	}
 }
 

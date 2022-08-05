@@ -14,15 +14,6 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
 
-		Erc20List: []types.Erc20{
-			{
-				Id: 0,
-			},
-			{
-				Id: 1,
-			},
-		},
-		Erc20Count: 2,
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
@@ -34,7 +25,5 @@ func TestGenesis(t *testing.T) {
 	nullify.Fill(&genesisState)
 	nullify.Fill(got)
 
-	require.ElementsMatch(t, genesisState.Erc20List, got.Erc20List)
-	require.Equal(t, genesisState.Erc20Count, got.Erc20Count)
 	// this line is used by starport scaffolding # genesis/test/assert
 }

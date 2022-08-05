@@ -31912,6 +31912,42 @@ paths:
           format: uint64
       tags:
         - Query
+  /zetachain/zetacore/mirror/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreMirrorParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /zeta-chain/zetacore/TSS:
     get:
       summary: Queries a list of tSS items.
@@ -55681,6 +55717,16 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  zetachain.zetacore.mirror.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  zetachain.zetacore.mirror.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   common.PubKeySet:
     type: object
     properties:

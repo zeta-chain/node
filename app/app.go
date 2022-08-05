@@ -342,7 +342,7 @@ func New(
 	)
 	app.MirrorKeeper = *mirrorkeeper.NewKeeper(
 		appCodec, keys[mirrortypes.StoreKey], tkeys[mirrortypes.MemStoreKey], app.GetSubspace(mirrortypes.ModuleName),
-		*app.EvmKeeper, app.AccountKeeper,
+		app.EvmKeeper, app.AccountKeeper,
 	)
 
 	// Create IBC Keeper
