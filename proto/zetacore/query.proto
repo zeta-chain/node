@@ -19,11 +19,16 @@ import "zetacore/last_block_height.proto";
 import "zetacore/receive.proto";
 import "zetacore/send.proto";
 import "zetacore/node_account.proto";
+import "zetacore/params.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // Query defines the gRPC querier service.
 service Query {
+	// Parameters queries the parameters of the module.
+	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+		option (google.api.http).get = "/zetachain/zetacore/params";
+	}
     // Queries a ZetaConversionRate by index.
 	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/zetaConversionRate/{index}";
@@ -192,14 +197,20 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount";
 	}
 
-
 	// Queries a list of lastMetaHeight items.
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
 	}
+}
 
 
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
 
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+	// params holds all the parameters of this module.
+	Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetZetaConversionRateRequest {
