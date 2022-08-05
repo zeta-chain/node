@@ -404,6 +404,7 @@ func New(
 		keys[zetaCoreModuleTypes.StoreKey],
 		keys[zetaCoreModuleTypes.MemStoreKey],
 		app.StakingKeeper,
+		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
 	)
 	metacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 

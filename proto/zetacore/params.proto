@@ -1,9 +1,8 @@
 syntax = "proto3";
-package zetachain.zetacore.mirror;
-
+package zetachain.zetacore.zetacore;
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // Params defines the parameters for the module.
 message Params {

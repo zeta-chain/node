@@ -31976,6 +31976,9 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  enabled:
+                    type: boolean
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -34932,6 +34935,45 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  /zetachain/zetacore/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreZetacoreParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
       tags:
         - Query
 definitions:
@@ -55811,6 +55853,9 @@ definitions:
     type: object
   zetachain.zetacore.mirror.Params:
     type: object
+    properties:
+      enabled:
+        type: boolean
     description: Params defines the parameters for the module.
   zetachain.zetacore.mirror.QueryGetERC20TokenPairsResponse:
     type: object
@@ -55842,6 +55887,9 @@ definitions:
       params:
         description: params holds all the parameters of this module.
         type: object
+        properties:
+          enabled:
+            type: boolean
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   common.PubKeySet:
     type: object
@@ -56048,6 +56096,12 @@ definitions:
               type: string
             singer:
               type: string
+  zetachain.zetacore.zetacore.Params:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+    description: Params defines the parameters for the module.
   zetachain.zetacore.zetacore.QueryAllChainNoncesResponse:
     type: object
     properties:
@@ -57295,6 +57349,16 @@ definitions:
       Height:
         type: string
         format: uint64
+  zetachain.zetacore.zetacore.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          enabled:
+            type: boolean
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetachain.zetacore.zetacore.QueryTxListRichResponse:
     type: object
     properties:
