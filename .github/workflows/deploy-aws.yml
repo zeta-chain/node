@@ -12,7 +12,6 @@ on:
   push:
     branches:
       - develop
-      - cicd/make-files-available-for-cosmovisor 
     tags:
       - athens-v*
       - indexer-v*
@@ -37,7 +36,7 @@ jobs:
           GITHUB_REF_NAME=$(echo $GITHUB_REF_NAME | tr '//' '-')
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "cicd-make-files-available-for-cosmovisor" ]]; then 
+          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://zetachain-deployment-files-staging
           elif [[ ${GITHUB_REF_NAME:0:8} == "athens-v" ]] || [[ ${GITHUB_REF_NAME:0:8} == "indexer-v" ]] ; then 
@@ -158,7 +157,7 @@ jobs:
           GITHUB_REF_NAME=$(echo $GITHUB_REF_NAME | tr '//' '-')
           echo $GITHUB_REF_NAME
           
-          if [[ $GITHUB_REF_NAME == "cicd-make-files-available-for-cosmovisor" ]]; then 
+          if [[ $GITHUB_REF_NAME == "develop" ]]; then 
             export ENVIRONMENT_NAME=STAGING
             export S3_BUCKET=s3://zetachain-deployment-files-staging
             export UPDATE_INDEXER=TRUE
