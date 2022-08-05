@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,6 +34,7 @@ func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		storeKey,
 		memStoreKey,
 		stakingkeeper.Keeper{}, // custom
+		types2.Subspace{},
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
