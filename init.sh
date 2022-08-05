@@ -1,7 +1,7 @@
 #!/bin/bash
 
 KEY1="alice"
-KEH2="bob"
+KEY2="bob"
 CHAINID="athens_9000-1"
 MONIKER="localtestnet"
 KEYRING="test"

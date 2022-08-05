@@ -8,6 +8,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/mirror/types";
 // Msg defines the Msg service.
 service Msg {
       rpc DeployERC20Mirror(MsgDeployERC20Mirror) returns (MsgDeployERC20MirrorResponse);
+  rpc DepoistERC20(MsgDepoistERC20) returns (MsgDepoistERC20Response);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -21,6 +22,16 @@ message MsgDeployERC20Mirror {
 }
 
 message MsgDeployERC20MirrorResponse {
+}
+
+message MsgDepoistERC20 {
+  string creator = 1;
+  string homeERC20ContractAddress = 2;
+  string recipientAddress = 3;
+  string amount = 4;
+}
+
+message MsgDepoistERC20Response {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

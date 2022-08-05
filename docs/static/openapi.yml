@@ -55807,6 +55807,8 @@ definitions:
               type: string
   zetachain.zetacore.mirror.MsgDeployERC20MirrorResponse:
     type: object
+  zetachain.zetacore.mirror.MsgDepoistERC20Response:
+    type: object
   zetachain.zetacore.mirror.Params:
     type: object
     description: Params defines the parameters for the module.

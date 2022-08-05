@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdDeployERC20Mirror())
+	cmd.AddCommand(CmdDepoistERC20())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
