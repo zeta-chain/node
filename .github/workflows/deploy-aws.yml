@@ -263,7 +263,7 @@ jobs:
         if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
         run: |
           source build/bash_functions
-          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}, \
+          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }}, tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}, \
           systemctl stop indexer &&  cp /deployment-files/${{ env.GITHUB_REF_NAME }}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
 
