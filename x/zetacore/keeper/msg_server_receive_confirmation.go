@@ -24,8 +24,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	index := msg.SendHash
 	send, isFound := k.GetSend(ctx, index)
 	if !isFound {
-		log.Error().Msgf("send not found: %v", index)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("sendHash %s does not exist", index))
+		log.Error().Msgf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain))
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
