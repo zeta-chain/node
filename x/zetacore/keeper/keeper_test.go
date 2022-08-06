@@ -1,28 +1,22 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	"testing"
+
+	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 )
-
-type fakeStakingKeeper struct {
-}
-
-func (keeper fakeStakingKeeper) GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator) {
-	return []stakingtypes.Validator{}
-}
-
-var _ types.StakingKeeper = fakeStakingKeeper{}
 
 func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -35,14 +29,23 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
 
-	keeper := NewKeeper(
+	paramsSubspace := typesparams.NewSubspace(cdc,
+		types.Amino,
+		storeKey,
+		memStoreKey,
+		"ZetacoreParams",
+	)
+
+	k := NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,
 		memStoreKey,
-		fakeStakingKeeper{},
+		stakingkeeper.Keeper{}, // custom
+		paramsSubspace,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
-	return keeper, ctx
+	return k, ctx
 }
