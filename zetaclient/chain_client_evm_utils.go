@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
+	"strings"
 )
 
 func (ob *ChainObserver) ExternalChainWatcher() {
@@ -73,6 +74,11 @@ func (ob *ChainObserver) observeInTX() error {
 		event := logs.Event
 		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s\n", event.Raw.BlockNumber, event.Raw.TxHash)
 
+		destChain := config.FindChainByID(event.DestinationChainId)
+		destAddr := types.BytesToEthHex(event.DestinationAddress)
+		if strings.EqualFold(destAddr, config.Chains[destChain].ZETATokenContractAddress) {
+			log.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+		}
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
