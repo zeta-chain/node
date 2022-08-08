@@ -133,6 +133,11 @@ func start(validatorName string, peers addr.AddrList) {
 	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
 	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
 
+	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
+	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
+	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
+	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
@@ -288,5 +293,13 @@ func updateEndpoint(chain common.Chain, envvar string) {
 	if endpoint != "" {
 		config.Chains[chain.String()].Endpoint = endpoint
 		log.Info().Msgf("ENDPOINT: %s", endpoint)
+	}
+}
+
+func updateTokenAddress(chain common.Chain, envvar string) {
+	token := os.Getenv(envvar)
+	if token != "" {
+		config.Chains[chain.String()].ZETATokenContractAddress = token
+		log.Info().Msgf("TOKEN: %s", token)
 	}
 }
