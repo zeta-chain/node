@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"os"
 	"strconv"
 	"sync/atomic"
@@ -113,26 +114,30 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 	case common.MumbaiChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
 		ob.confCount = config.POLYGON_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.POLY_BLOCK_TIME
 
 	case common.GoerliChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
 		ob.confCount = config.ETH_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.ETH_BLOCK_TIME
 
 	case common.BSCTestnetChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
 		ob.confCount = config.BSC_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv2querier
 		ob.BlockTime = config.BSC_BLOCK_TIME
 
 	case common.RopstenChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
 		ob.confCount = config.ROPSTEN_CONFIRMATION_COUNT
-		ob.ZetaPriceQuerier = uniswapv3querier
 		ob.BlockTime = config.ROPSTEN_BLOCK_TIME
+	}
+	switch config.Chains[chain.String()].PoolContract {
+	case clienttypes.UniswapV2:
+		ob.ZetaPriceQuerier = uniswapv2querier
+	case clienttypes.UniswapV3:
+		ob.ZetaPriceQuerier = uniswapv3querier
+	default:
+		log.Error().Msgf("unknown pool contract: %s", config.Chains[chain.String()].PoolContract)
 	}
 }
 

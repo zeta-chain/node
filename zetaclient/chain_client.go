@@ -142,6 +142,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		log.Info().Msg("Using dummy price of 1:1")
 		ob.ZetaPriceQuerier = dummyQuerior
 	}
+
 	if dbpath != "" {
 		err := ob.BuildBlockIndex(dbpath, chain.String())
 		if err != nil {
