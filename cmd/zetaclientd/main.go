@@ -117,47 +117,15 @@ func start(validatorName string, peers addr.AddrList) {
 		chainIP = "127.0.0.1"
 	}
 
-	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
-	if ethEndPoint != "" {
-		config.Chains[common.GoerliChain.String()].Endpoint = ethEndPoint
-		log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
-	}
-	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
-	if bscEndPoint != "" {
-		config.Chains[common.BSCTestnetChain.String()].Endpoint = bscEndPoint
-		log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
-	}
-	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
-	if polygonEndPoint != "" {
-		config.Chains[common.MumbaiChain.String()].Endpoint = polygonEndPoint
-		log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
-	}
-	ropstenEndPoint := os.Getenv("ROPSTEN_ENDPOINT")
-	if ropstenEndPoint != "" {
-		config.Chains[common.RopstenChain.String()].Endpoint = ropstenEndPoint
-		log.Info().Msgf("ROPSTEN_ENDPOINT: %s", ropstenEndPoint)
-	}
+	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
+	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
+	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
+	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
 
-	ethMpiAddress := os.Getenv("GOERLI_MPI_ADDRESS")
-	if ethMpiAddress != "" {
-		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = ethMpiAddress
-		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
-	}
-	bscMpiAddress := os.Getenv("BSCTESTNET_MPI_ADDRESS")
-	if bscMpiAddress != "" {
-		config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress = bscMpiAddress
-		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
-	}
-	polygonMpiAddress := os.Getenv("MUMBAI_MPI_ADDRESS")
-	if polygonMpiAddress != "" {
-		config.Chains[common.MumbaiChain.String()].ConnectorContractAddress = polygonMpiAddress
-		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
-	}
-	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
-	if ropstenMpiAddress != "" {
-		config.Chains[common.RopstenChain.String()].ConnectorContractAddress = ropstenMpiAddress
-		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
-	}
+	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
+	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
+	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
+	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
 
 	// pools
 	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
@@ -304,5 +272,21 @@ func updatePoolAddress(envvar string, chain common.Chain) {
 		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
 	} else {
 		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
+	}
+}
+
+func updateMPIAddress(chain common.Chain, envvar string) {
+	mpi := os.Getenv(envvar)
+	if mpi != "" {
+		config.Chains[chain.String()].ConnectorContractAddress = mpi
+		log.Info().Msgf("MPI: %s", mpi)
+	}
+}
+
+func updateEndpoint(chain common.Chain, envvar string) {
+	endpoint := os.Getenv(envvar)
+	if endpoint != "" {
+		config.Chains[chain.String()].Endpoint = endpoint
+		log.Info().Msgf("ENDPOINT: %s", endpoint)
 	}
 }
