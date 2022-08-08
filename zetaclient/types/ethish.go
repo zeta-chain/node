@@ -9,11 +9,19 @@ import (
 	"math/big"
 )
 
+type PoolContract int64
+
+const (
+	UniswapV2 PoolContract = iota
+	UniswapV3
+)
+
 type ChainETHish struct {
 	ConnectorABI             abi.ABI
 	ChainID                  *big.Int
 	ConnectorContractAddress string
 	PoolContractAddress      string
+	PoolContract             PoolContract
 	ZETATokenContractAddress string
 	Client                   *ethclient.Client
 	Name                     common.Chain
