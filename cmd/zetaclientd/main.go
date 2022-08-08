@@ -13,6 +13,7 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"io/ioutil"
 	"strings"
 	"syscall"
@@ -284,11 +285,24 @@ func start(validatorName string, peers addr.AddrList) {
 }
 
 func updatePoolAddress(envvar string, chain common.Chain) {
-	poolAddr := os.Getenv(envvar)
-	if poolAddr != "" {
-		config.Chains[chain.String()].PoolContractAddress = poolAddr
-		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, poolAddr)
+	pool := os.Getenv(envvar)
+	parts := strings.Split(pool, ":")
+	if len(parts) != 2 {
+		log.Error().Msgf("%s is not a valid type:address", pool)
+		return
+	}
+	if strings.EqualFold(parts[0], "v2") {
+		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
+	} else if strings.EqualFold(parts[0], "v3") {
+		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
 	} else {
-		log.Info().Msgf("Pool address DEFAULT: %s", poolAddr)
+		log.Error().Msgf("%s is not a valid type:address", pool)
+		return
+	}
+	if parts[1] != "" {
+		config.Chains[chain.String()].PoolContractAddress = parts[1]
+		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
+	} else {
+		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
 	}
 }
