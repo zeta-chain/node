@@ -260,7 +260,7 @@ func start(validatorName string, peers addr.AddrList) {
 func updatePoolAddress(envvar string, chain common.Chain) {
 	pool := os.Getenv(envvar)
 	parts := strings.Split(pool, ":")
-	if len(parts) != 2 {
+	if len(parts) != 3 {
 		log.Error().Msgf("%s is not a valid type:address", pool)
 		return
 	}
@@ -277,6 +277,14 @@ func updatePoolAddress(envvar string, chain common.Chain) {
 		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
 	} else {
 		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
+	}
+	if strings.EqualFold(parts[2], "ZETAETH") {
+		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
+	} else if strings.EqualFold(parts[2], "ETHZETA") {
+		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
+	} else {
+		log.Error().Msgf("%s is not a valid type:address:order", pool)
+		return
 	}
 }
 
