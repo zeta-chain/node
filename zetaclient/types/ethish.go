@@ -16,12 +16,20 @@ const (
 	UniswapV3
 )
 
+type PoolTokenOrder int64
+
+const (
+	ZETAETH PoolTokenOrder = iota
+	ETHZETA
+)
+
 type ChainETHish struct {
 	ConnectorABI             abi.ABI
 	ChainID                  *big.Int
 	ConnectorContractAddress string
 	PoolContractAddress      string
 	PoolContract             PoolContract
+	PoolTokenOrder           PoolTokenOrder
 	ZETATokenContractAddress string
 	Client                   *ethclient.Client
 	Name                     common.Chain

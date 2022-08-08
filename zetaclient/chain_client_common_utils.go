@@ -92,12 +92,14 @@ func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2A
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
+		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
 	uniswapv2querier := &UniswapV2ZetaPriceQuerier{
 		UniswapV2Abi:        &uniswapV2ABI,
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
+		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
 	dummyQuerier := &DummyZetaPriceQuerier{
 		Chain:  ob.chain,
