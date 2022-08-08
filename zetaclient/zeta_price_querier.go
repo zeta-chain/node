@@ -75,7 +75,7 @@ func (q *UniswapV3ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		return nil, 0, err
 	}
 	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
-	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[0], cumTicks[1]), big.NewInt(int64(TIME_WINDOW)))
+	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[1], cumTicks[0]), big.NewInt(int64(TIME_WINDOW)))
 	price := math.Pow(1.0001, float64(tickDiff.Int64())) * 1e18 // price is fixed point with decimal 18
 	v, _ := big.NewFloat(price).Int(nil)
 	return v, bn, nil
