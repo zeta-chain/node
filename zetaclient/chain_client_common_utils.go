@@ -77,7 +77,7 @@ func (ob *ChainObserver) BuildReceiptsMap() {
 			continue
 		}
 		ob.outTXConfirmedReceipts[int(nonce)] = &receipt
-		log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
+		//log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
 	}
 	iter.Release()
 	if err := iter.Error(); err != nil {
