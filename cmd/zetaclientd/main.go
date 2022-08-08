@@ -158,6 +158,12 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
 	}
 
+	// pools
+	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
+	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
+	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
+	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
+
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
@@ -275,4 +281,14 @@ func start(validatorName string, peers addr.AddrList) {
 		(*chainClientMap1)[chain].Stop()
 	}
 
+}
+
+func updatePoolAddress(envvar string, chain common.Chain) {
+	poolAddr := os.Getenv(envvar)
+	if poolAddr != "" {
+		config.Chains[chain.String()].PoolContractAddress = poolAddr
+		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, poolAddr)
+	} else {
+		log.Info().Msgf("Pool address DEFAULT: %s", poolAddr)
+	}
 }
