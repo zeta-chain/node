@@ -137,7 +137,7 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 	case clienttypes.UniswapV3:
 		ob.ZetaPriceQuerier = uniswapv3querier
 	default:
-		log.Error().Msgf("unknown pool contract: %s", config.Chains[chain.String()].PoolContract)
+		log.Error().Msgf("unknown pool contract type: %d", config.Chains[chain.String()].PoolContract)
 	}
 }
 
