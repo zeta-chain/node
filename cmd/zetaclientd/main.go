@@ -189,10 +189,12 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	for _, chain := range config.ChainsEnabled {
-		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)
+		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
