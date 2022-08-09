@@ -3,7 +3,6 @@ package zetaclient
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
@@ -14,7 +13,7 @@ func (b *ZetaCoreBridge) PostZetaConversionRate(chain common.Chain, rate string,
 	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.String(), rate, blockNum)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostZetaConversionRate broadcast fail")
+		b.logger.Error().Err(err).Msg("PostZetaConversionRate broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -25,7 +24,7 @@ func (b *ZetaCoreBridge) PostGasBalance(chain common.Chain, gasBalance string, b
 	msg := types.NewMsgGasBalanceVoter(signerAddress, chain.String(), gasBalance, blockNum)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice broadcast fail")
+		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -36,7 +35,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, supply, blockNum)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice broadcast fail")
+		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -47,7 +46,7 @@ func (b *ZetaCoreBridge) AddTxHashToWatchlist(chain string, nonce uint64, txHash
 	msg := types.NewMsgAddToWatchList(signerAddress, chain, nonce, txHash)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice broadcast fail")
+		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -58,7 +57,7 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("PostNonce broadcast fail")
+		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -70,7 +69,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 	for i := 0; i < 2; i++ {
 		zetaTxHash, err := b.Broadcast(msg)
 		if err != nil {
-			log.Err(err).Msg("PostSend broadcast fail; re-trying...")
+			b.logger.Error().Err(err).Msg("PostSend broadcast fail; re-trying...")
 		} else {
 			return zetaTxHash, nil
 		}
@@ -83,12 +82,12 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce int) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain, uint64(nonce))
-	log.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
+	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
 		zetaTxHash, err := b.Broadcast(msg)
 		if err != nil {
-			log.Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
+			b.logger.Error().Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
 		} else {
 			return zetaTxHash, nil
 		}
@@ -101,7 +100,7 @@ func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAll(context.Background(), &types.QueryAllSendRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("query SendAll error")
+		b.logger.Error().Err(err).Msg("query SendAll error")
 		return nil, err
 	}
 	return resp.Send, nil
@@ -111,7 +110,7 @@ func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{Index: sendHash})
 	if err != nil {
-		log.Error().Err(err).Msg("GetSendByHash error")
+		b.logger.Error().Err(err).Msg("GetSendByHash error")
 		return nil, err
 	}
 	return resp.Send, nil
@@ -121,7 +120,7 @@ func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("query SendAllPending error")
+		b.logger.Error().Err(err).Msg("query SendAllPending error")
 		return nil, err
 	}
 	return resp.Send, nil
@@ -131,7 +130,7 @@ func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ReceiveAll(context.Background(), &types.QueryAllReceiveRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("query GetAllReceive error")
+		b.logger.Error().Err(err).Msg("query GetAllReceive error")
 		return nil, err
 	}
 	return resp.Receive, nil
@@ -141,7 +140,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
 	if err != nil {
-		log.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -151,7 +150,7 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
 	if err != nil {
-		log.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
 		return 0, err
 	}
 	return resp.Height, nil
@@ -161,7 +160,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
 	if err != nil {
-		log.Error().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Error().Err(err).Msg("query GetLastBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -171,7 +170,7 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
 	if err != nil {
-		log.Error().Err(err).Msg("query GetNonceByChain error")
+		b.logger.Error().Err(err).Msg("query GetNonceByChain error")
 		return nil, err
 	}
 	return resp.ChainNonces, nil
@@ -182,7 +181,7 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("SetNodeKey broadcast fail")
+		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -203,7 +202,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.String(), address, pubkey)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		log.Err(err).Msg("SetNodeKey broadcast fail")
+		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
