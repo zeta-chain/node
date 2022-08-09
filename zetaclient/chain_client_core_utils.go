@@ -3,11 +3,11 @@ package zetaclient
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"time"
 )
 
 func (ob *ChainObserver) PostNonceIfNotRecorded() error {
+	logger := ob.logger
 	zetaClient := ob.zetaClient
 	evmClient := ob.EvmClient
 	tss := ob.Tss
@@ -17,26 +17,26 @@ func (ob *ChainObserver) PostNonceIfNotRecorded() error {
 	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
 		nonce, err := evmClient.NonceAt(context.TODO(), tss.Address(), nil)
 		if err != nil {
-			log.Fatal().Err(err).Msg("NonceAt")
+			logger.Fatal().Err(err).Msg("NonceAt")
 			return err
 		}
 		pendingNonce, err := evmClient.PendingNonceAt(context.TODO(), tss.Address())
 		if err != nil {
-			log.Fatal().Err(err).Msg("PendingNonceAt")
+			logger.Fatal().Err(err).Msg("PendingNonceAt")
 			return err
 		}
 		if pendingNonce != nonce {
-			log.Fatal().Msgf("fatal: pending nonce %d != nonce %d", pendingNonce, nonce)
+			logger.Fatal().Msgf("fatal: pending nonce %d != nonce %d", pendingNonce, nonce)
 			return fmt.Errorf("pending nonce %d != nonce %d", pendingNonce, nonce)
 		}
 		if err != nil {
-			log.Fatal().Err(err).Msg("NonceAt")
+			logger.Fatal().Err(err).Msg("NonceAt")
 			return err
 		}
-		log.Debug().Msgf("signer %s Posting Nonce of chain %s of nonce %d", zetaClient.GetKeys().signerName, chain, nonce)
+		logger.Debug().Msgf("signer %s Posting Nonce of  of nonce %d", zetaClient.GetKeys().signerName, nonce)
 		_, err = zetaClient.PostNonce(chain, nonce)
 		if err != nil {
-			log.Fatal().Err(err).Msg("PostNonce")
+			logger.Fatal().Err(err).Msg("PostNonce")
 			return err
 		}
 	}
@@ -50,11 +50,11 @@ func (ob *ChainObserver) WatchGasPrice() {
 		case <-gasTicker.C:
 			err := ob.PostGasPrice()
 			if err != nil {
-				log.Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+				ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 				continue
 			}
 		case <-ob.stop:
-			log.Info().Msg("WatchGasPrice stopped")
+			ob.logger.Info().Msg("WatchGasPrice stopped")
 			return
 		}
 	}
@@ -64,12 +64,12 @@ func (ob *ChainObserver) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice:")
+		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
 	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice:")
+		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
 
@@ -171,7 +171,7 @@ func (ob *ChainObserver) PostGasPrice() error {
 
 	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
-		log.Err(err).Msg("PostGasPrice:")
+		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
 
@@ -193,7 +193,7 @@ func (ob *ChainObserver) PostGasPrice() error {
 func (ob *ChainObserver) getLastHeight() uint64 {
 	lastheight, err := ob.zetaClient.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
-		log.Warn().Err(err).Msgf("getLastHeight")
+		ob.logger.Warn().Err(err).Msgf("getLastHeight")
 		return 0
 	}
 	return lastheight.LastSendHeight
@@ -206,90 +206,18 @@ func (ob *ChainObserver) WatchExchangeRate() {
 		case <-ticker.C:
 			price, bn, err := ob.ZetaPriceQuerier.GetZetaPrice()
 			if err != nil {
-				log.Err(err).Msg("GetZetaExchangeRate error on " + ob.chain.String())
+				ob.logger.Error().Err(err).Msg("GetZetaExchangeRate error")
 				continue
 			}
 			priceInHex := fmt.Sprintf("0x%x", price)
 
 			_, err = ob.zetaClient.PostZetaConversionRate(ob.chain, priceInHex, bn)
 			if err != nil {
-				log.Err(err).Msg("PostZetaConversionRate error on " + ob.chain.String())
+				ob.logger.Error().Err(err).Msg("PostZetaConversionRate error")
 			}
 		case <-ob.stop:
-			log.Info().Msg("WatchExchangeRate stopped")
+			ob.logger.Info().Msg("WatchExchangeRate stopped")
 			return
 		}
 	}
 }
-
-// TODO : Call this function from shepard send or in a Separate Goroutine
-//func (ob *ChainObserver) HandleReceipts(receipt types.Receipt,nonce int )  {
-//	if receipt.Status == 1 {
-//		logs := receipt.Logs
-//		for _, vLog := range logs {
-//			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
-//			if err == nil {
-//				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, vLog.TxHash.Hex())
-//				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-//					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-//					sendHash := vLog.Topics[3].Hex()
-//					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-//					mMint := receivedLog.ZetaAmount.String()
-//					zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
-//						sendHash,
-//						vLog.TxHash.Hex(),
-//						vLog.BlockNumber,
-//						mMint,
-//						common.ReceiveStatus_Success,
-//						ob.chain.String(),
-//						nonce,
-//					)
-//					if err != nil {
-//						log.Error().Err(err).Msg("error posting confirmation to meta core")
-//						continue
-//					}
-//					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
-//					return true, true, nil
-//				} else {
-//					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
-//					return true, false, nil
-//				}
-//			}
-//			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
-//			if err == nil {
-//				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, vLog.TxHash.Hex())
-//				if vLog.BlockNumber+ob.confCount < ob.LastBlock {
-//					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-//					sendhash := vLog.Topics[3].Hex()
-//					mMint := revertedLog.ZetaAmount.String()
-//					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
-//						sendhash,
-//						vLog.TxHash.Hex(),
-//						vLog.BlockNumber,
-//						mMint,
-//						common.ReceiveStatus_Success,
-//						ob.chain.String(),
-//						nonce,
-//					)
-//					if err != nil {
-//						log.Err(err).Msg("error posting confirmation to meta core")
-//						continue
-//					}
-//					log.Info().Msgf("Zeta tx hash: %s", metaHash)
-//					return true, true, nil
-//				} else {
-//					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.LastBlock), ob.chain, nonce)
-//					return true, false, nil
-//				}
-//			}
-//		}
-//	} else if receipt.Status == 0 {
-//		log.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", inTXHash, ob.chain, receipt.TxHash.Hex())
-//		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
-//		if err != nil {
-//			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
-//		}
-//		log.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
-//		return true, true, nil
-//	}
-//}

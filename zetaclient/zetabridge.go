@@ -51,7 +51,7 @@ type ZetaCoreBridge struct {
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
 func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
 	// main module logger
-	logger := log.With().Str("module", "zetacore_client").Logger()
+	logger := log.With().Str("module", "CoreBridge").Logger()
 
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),

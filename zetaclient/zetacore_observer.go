@@ -39,10 +39,12 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 
 	fileLogger *zerolog.Logger
+	logger     zerolog.Logger
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
+	co.logger = log.With().Str("module", "CoreOb").Logger()
 	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
@@ -53,7 +55,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 
 	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
 	if err != nil {
-		log.Error().Err(err).Msg("error registering counter")
+		co.logger.Error().Err(err).Msg("error registering counter")
 	}
 
 	co.sendNew = make(chan *types.Send)
@@ -68,7 +70,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		// Can we log an error before we have our logger? :)
-		log.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
+		co.logger.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
 	}
 	fileLogger := zerolog.New(logFile).With().Logger()
 	co.fileLogger = &fileLogger
@@ -116,33 +118,33 @@ func (co *CoreObserver) keygenObserve() {
 				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
 				res, err := co.tss.Server.Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
-					log.Fatal().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 					continue
 				}
 				// Keygen succeed! Report TSS address
-				log.Info().Msgf("Keygen success! keygen response: %v...", res)
+				co.logger.Info().Msgf("Keygen success! keygen response: %v...", res)
 				err = co.tss.SetPubKey(res.PubKey)
 				if err != nil {
-					log.Error().Msgf("SetPubKey fail")
+					co.logger.Error().Msgf("SetPubKey fail")
 					continue
 				}
 
 				for _, chain := range config.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 					if err != nil {
-						log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
 				}
 
 				// Keysign test: sanity test
-				log.Info().Msgf("test keysign...")
+				co.logger.Info().Msgf("test keysign...")
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
-				log.Info().Msg("test keysign finished. exit keygen loop. ")
+				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
 					err = co.clientMap[chain].PostNonceIfNotRecorded()
 					if err != nil {
-						log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
 					}
 				}
 
@@ -161,11 +163,11 @@ func (co *CoreObserver) startObserve() {
 	for range observeTicker.C {
 		sendList, err := co.bridge.GetAllPendingSend()
 		if err != nil {
-			log.Error().Err(err).Msg("error requesting sends from zetacore")
+			co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
 		if len(sendList) > 0 {
-			log.Info().Msgf("#pending send: %d", len(sendList))
+			co.logger.Info().Msgf("#pending send: %d", len(sendList))
 		}
 		sort.Slice(sendList, func(i, j int) bool {
 			return sendList[i].Nonce < sendList[j].Nonce

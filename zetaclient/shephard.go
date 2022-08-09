@@ -19,24 +19,25 @@ import (
 )
 
 func (co *CoreObserver) ShepherdManager() {
+	logger := co.logger.With().Str("module", "ShepherdManager").Logger()
 	numShepherds := 0
 	for {
 		select {
 		case send := <-co.sendNew:
 			if _, ok := co.shepherds[send.Index]; !ok {
-				log.Info().Msgf("shepherd manager: new send %s", send.Index)
+				logger.Info().Msgf("shepherd manager: new send %s", send.Index)
 				co.shepherds[send.Index] = true
-				log.Info().Msg("waiting on a signer slot...")
+				logger.Info().Msg("waiting on a signer slot...")
 				<-co.signerSlots
-				log.Info().Msg("got a signer slot! spawn shepherd")
+				logger.Info().Msg("got a signer slot! spawn shepherd")
 				go co.shepherdSend(send)
 				numShepherds++
-				log.Info().Msgf("new shepherd: %d shepherds in total", numShepherds)
+				logger.Info().Msgf("new shepherd: %d shepherds in total", numShepherds)
 			}
 		case send := <-co.sendDone:
 			delete(co.shepherds, send.Index)
 			numShepherds--
-			log.Info().Msgf("remove shepherd: %d shepherds left", numShepherds)
+			logger.Info().Msgf("remove shepherd: %d shepherds left", numShepherds)
 		}
 	}
 }
@@ -45,6 +46,7 @@ func (co *CoreObserver) ShepherdManager() {
 // on external chains and ZetaCore.
 // FIXME: make sure that ZetaCore is updated when the Send cannot be processed.
 func (co *CoreObserver) shepherdSend(send *types.Send) {
+	logger := co.logger.With().Str("sendHash", send.Index).Logger()
 	startTime := time.Now()
 	confirmDone := make(chan bool, 1)
 	coreSendDone := make(chan bool, 1)
@@ -56,7 +58,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		kc := atomic.LoadInt32(&keysignCount)
 		nq := atomic.LoadInt32(&numQueries)
 		if kc > 0 {
-			log.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", nq, elapsedTime, kc)
+			logger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", nq, elapsedTime, kc)
 			co.fileLogger.Info().Msgf("shepherd stopped: numQueries %d; elapsed time %s; keysignCount %d", nq, elapsedTime, kc)
 		}
 		co.signerSlots <- true
@@ -68,7 +70,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
 	if !ok {
-		log.Error().Msg("error converting MBurnt to big.Int")
+		logger.Error().Msg("error converting MBurnt to big.Int")
 		return
 	}
 
@@ -78,48 +80,50 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	if send.Status == types.SendStatus_PendingRevert {
 		to = ethcommon.HexToAddress(send.Sender)
 		toChain, err = common.ParseChain(send.SenderChain)
-		log.Info().Msgf("Abort: reverting inbound")
+		logger.Info().Msgf("Abort: reverting inbound")
 	} else if send.Status == types.SendStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.Receiver)
 		toChain, err = common.ParseChain(send.ReceiverChain)
 	}
 	if err != nil {
-		log.Error().Err(err).Msg("ParseChain fail; skip")
+		logger.Error().Err(err).Msg("ParseChain fail; skip")
 		return
 	}
 
 	// Early return if the send is already processed
 	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 	if included || confirmed {
-		log.Info().Msgf("sendHash %s already processed; exit signer", send.Index)
+		logger.Info().Msgf("sendHash already processed; exit signer")
 		return
 	}
 
 	signer := co.signerMap[toChain]
 	message, err := base64.StdEncoding.DecodeString(send.Message)
 	if err != nil {
-		log.Err(err).Msgf("decode send.Message %s error", send.Message)
+		logger.Err(err).Msgf("decode send.Message %s error", send.Message)
 	}
 
 	gasLimit := send.GasLimit
 	if gasLimit < 50_000 {
 		gasLimit = 50_000
+		logger.Warn().Msgf("gasLimit %d is too low; set to %d", send.GasLimit, gasLimit)
 	}
 	if gasLimit > 1_000_000 {
 		gasLimit = 1_000_000
+		logger.Warn().Msgf("gasLimit %d is too high; set to %d", send.GasLimit, gasLimit)
 	}
 
-	log.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
+	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
-		log.Err(err).Msgf("decode sendHash %s error", send.Index)
+		logger.Error().Err(err).Msgf("decode sendHash %s error", send.Index)
 		return
 	}
 	var sendhash [32]byte
 	copy(sendhash[:32], sendHash[:32])
 	gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
 	if !ok {
-		log.Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
 		return
 	}
 	var tx *ethtypes.Transaction
@@ -136,7 +140,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 					atomic.AddInt32(&numQueries, 1)
 				}
 				if included || confirmed {
-					log.Info().Msgf("sendHash %s included; kill this shepherd", send.Index)
+					logger.Info().Msgf("sendHash included; kill this shepherd")
 					signloopDone <- true
 					return
 				}
@@ -155,11 +159,11 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 			default:
 				newSend, err := co.bridge.GetSendByHash(send.Index)
 				if err != nil || send == nil {
-					log.Info().Msgf("sendHash %s cannot be found in ZetaCore; kill the shepherd", send.Index)
+					logger.Info().Msgf("sendHash cannot be found in ZetaCore; kill the shepherd")
 					signloopDone <- true
 				}
 				if newSend.Status != send.Status {
-					log.Info().Msgf("sendHash %s status changed to %s from %s; kill the shepherd", send.Index, newSend.Status, send.Status)
+					logger.Info().Msgf("sendHash status changed to %s from %s; kill the shepherd", newSend.Status, send.Status)
 					signloopDone <- true
 				}
 				time.Sleep(12 * time.Second)
@@ -177,7 +181,7 @@ SIGNLOOP:
 	for range signTicker.C {
 		select {
 		case <-signloopDone:
-			log.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
+			logger.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
 			minNonce := atomic.LoadInt64(&co.clientMap[toChain].MinNonce)
@@ -193,20 +197,20 @@ SIGNLOOP:
 			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
 				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included || confirmed {
-					log.Info().Msgf("sendHash %s already confirmed; skip it", send.Index)
+					logger.Info().Msgf("sendHash already confirmed; skip it")
 					break SIGNLOOP
 				}
 				srcChainID := config.Chains[send.SenderChain].ChainID
 				if send.Status == types.SendStatus_PendingRevert {
-					log.Info().Msgf("SignRevertTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
+					logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 					toChainID := config.Chains[send.ReceiverChain].ChainID
 					tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 				} else if send.Status == types.SendStatus_PendingOutbound {
-					log.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, sendHash %s", send.SenderChain, toChain, send.Nonce, send.Index)
+					logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 					tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 				}
 				if err != nil {
-					log.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+					logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 					continue
 				}
 				lastSignTime = time.Now()
@@ -218,12 +222,12 @@ SIGNLOOP:
 				}
 				if tx != nil {
 					outTxHash := tx.Hash().Hex()
-					log.Info().Msgf("on chain %s nonce %d, sendHash: %s, outTxHash %s signer %s", signer.chain, send.Nonce, send.Index[:6], outTxHash, myid)
+					logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.Nonce, outTxHash, myid)
 					if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 						backOff := 1000 * time.Millisecond
 						// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 						for i := 0; i < 5; i++ {
-							log.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
+							logger.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
 							// #nosec G404 randomness is not a security issue here
 							time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 							err := signer.Broadcast(tx)
@@ -235,14 +239,14 @@ SIGNLOOP:
 								backOff *= 2
 								continue
 							}
-							log.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 							co.fileLogger.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 							zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
 							if err != nil {
-								log.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+								logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 								break
 							}
-							log.Info().Msgf("Broadcast to core successful %s", zetaHash)
+							logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 						}
 					}
 					// if outbound tx fails, kill this shepherd, a new one will be later spawned.

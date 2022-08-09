@@ -69,6 +69,7 @@ type ChainObserver struct {
 	wg                     sync.WaitGroup
 
 	fileLogger *zerolog.Logger // for critical info
+	logger     zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
@@ -79,6 +80,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 	ob.sampleLogger = &sampled
+	ob.logger = log.With().Str("chain", chain.String()).Logger()
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
@@ -101,10 +103,10 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.fileLogger = &fileLogger
 
 	// initialize the Client
-	log.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
 	client, err := ethclient.Dial(ob.endpoint)
 	if err != nil {
-		log.Error().Err(err).Msg("eth Client Dial")
+		ob.logger.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
 	ob.EvmClient = client
@@ -112,7 +114,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	// initialize the connector
 	connector, err := evm.NewConnector(addr, ob.EvmClient)
 	if err != nil {
-		log.Error().Err(err).Msg("Connector")
+		ob.logger.Error().Err(err).Msg("Connector")
 		return nil, err
 	}
 	ob.Connector = connector
@@ -139,7 +141,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
 	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
 	if os.Getenv("DUMMY_PRICE") != "" {
-		log.Info().Msg("Using dummy price of 1:1")
+		ob.logger.Info().Msg("Using dummy price of 1:1")
 		ob.ZetaPriceQuerier = dummyQuerior
 	}
 
@@ -151,7 +153,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		ob.BuildReceiptsMap()
 
 	}
-	log.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlock())
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlock())
 
 	return &ob, nil
 }
@@ -164,16 +166,16 @@ func (ob *ChainObserver) Start() {
 }
 
 func (ob *ChainObserver) Stop() {
-	log.Info().Msgf("ob %s is stopping", ob.chain)
+	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
-	log.Info().Msg("closing ob.db")
+	ob.logger.Info().Msg("closing ob.db")
 	err := ob.db.Close()
 	if err != nil {
-		log.Error().Err(err).Msg("error closing db")
+		ob.logger.Error().Err(err).Msg("error closing db")
 	}
 
-	log.Info().Msgf("%s observer stopped", ob.chain)
+	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
 }
 
 // returns: isIncluded, isConfirmed, Error
@@ -182,16 +184,17 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmedReceipts[nonce]
 	ob.mu.Unlock()
+	logger := ob.logger.With().Str("sendHash", sendHash).Logger()
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
 			receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 			if err == nil {
-				log.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
+				logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
-					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+					logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					if len(vLog.Topics) != 4 {
-						log.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
+						logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
 						return false, false, fmt.Errorf("wrong number of topics in log %d", len(vLog.Topics))
 					}
 					sendhash := vLog.Topics[3].Hex()
@@ -207,23 +210,23 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						nonce,
 					)
 					if err != nil {
-						log.Error().Err(err).Msg("error posting confirmation to meta core")
+						logger.Error().Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					log.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+					logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
 			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 			if err == nil {
-				log.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
+				logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
 				if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
-					log.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+					logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 					if len(vLog.Topics) != 3 {
-						log.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
+						logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
 						return false, false, fmt.Errorf("wrong number of topics in log %d", len(vLog.Topics))
 					}
 					sendhash := vLog.Topics[2].Hex()
@@ -238,25 +241,25 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						nonce,
 					)
 					if err != nil {
-						log.Err(err).Msg("error posting confirmation to meta core")
+						logger.Err(err).Msg("error posting confirmation to meta core")
 						continue
 					}
-					log.Info().Msgf("Zeta tx hash: %s", metaHash)
+					logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
 				} else {
-					log.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
 		}
 	} else if found && receipt.Status == 0 {
 		//FIXME: check nonce here by getTransaction RPC
-		log.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
+		logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
 		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
 		if err != nil {
-			log.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+			logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 		}
-		log.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+		logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 		return true, true, nil
 	}
 
@@ -266,6 +269,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *ChainObserver) observeOutTx() {
+	logger := ob.logger
 	ticker := time.NewTicker(30 * time.Second)
 	for {
 		select {
@@ -292,7 +296,7 @@ func (ob *ChainObserver) observeOutTx() {
 					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
-						log.Warn().Msgf("observeOutTx timeout on chain %s nonce %d", ob.chain, nonceInt)
+						logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
 						receipt, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
@@ -301,12 +305,12 @@ func (ob *ChainObserver) observeOutTx() {
 							ob.outTXConfirmedReceipts[nonceInt] = receipt
 							value, err := receipt.MarshalJSON()
 							if err != nil {
-								log.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
+								logger.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 							}
 							ob.mu.Unlock()
 							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
 							if err != nil {
-								log.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
 						}
@@ -315,7 +319,7 @@ func (ob *ChainObserver) observeOutTx() {
 				}
 			}
 		case <-ob.stop:
-			log.Info().Msg("observeOutTx: stopped")
+			logger.Info().Msg("observeOutTx: stopped")
 			return
 		}
 	}
@@ -326,6 +330,7 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
+	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
@@ -334,7 +339,7 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			log.Warn().Err(err).Msgf("%s %s TransactionReceipt err", ob.chain, txHash)
+			logger.Warn().Err(err).Msg("TransactionReceipt")
 		}
 		return nil, err
 	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlock() {
