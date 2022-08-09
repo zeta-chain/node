@@ -6,10 +6,10 @@ import (
 	"encoding/binary"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
+	"strings"
 )
 
 func (ob *ChainObserver) ExternalChainWatcher() {
@@ -19,11 +19,11 @@ func (ob *ChainObserver) ExternalChainWatcher() {
 		case <-ob.ticker.C:
 			err := ob.observeInTX()
 			if err != nil {
-				log.Err(err).Msg("observeInTX error on " + ob.chain.String())
+				ob.logger.Err(err).Msg("observeInTX error")
 				continue
 			}
 		case <-ob.stop:
-			log.Info().Msg("ExternalChainWatcher stopped")
+			ob.logger.Info().Msg("ExternalChainWatcher stopped")
 			return
 		}
 	}
@@ -36,7 +36,7 @@ func (ob *ChainObserver) observeInTX() error {
 	}
 	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
 	if err != nil {
-		log.Error().Err(err).Msg("GetPromCounter:")
+		ob.logger.Error().Err(err).Msg("GetPromCounter:")
 	}
 	counter.Inc()
 
@@ -71,8 +71,13 @@ func (ob *ChainObserver) observeInTX() error {
 	// Pull out arguments from logs
 	for logs.Next() {
 		event := logs.Event
-		log.Info().Msgf("TxBlockNumber %d Transaction Hash: %s\n", event.Raw.BlockNumber, event.Raw.TxHash)
+		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s", event.Raw.BlockNumber, event.Raw.TxHash)
 
+		destChain := config.FindChainByID(event.DestinationChainId)
+		destAddr := types.BytesToEthHex(event.DestinationAddress)
+		if strings.EqualFold(destAddr, config.Chains[destChain].ZETATokenContractAddress) {
+			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+		}
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
@@ -86,10 +91,10 @@ func (ob *ChainObserver) observeInTX() error {
 			event.DestinationGasLimit.Uint64(),
 		)
 		if err != nil {
-			log.Err(err).Msg("error posting to zeta core")
+			ob.logger.Error().Err(err).Msg("error posting to zeta core")
 			continue
 		}
-		log.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+		ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
 
 	//ob.LastBlock = toBlock
@@ -98,7 +103,7 @@ func (ob *ChainObserver) observeInTX() error {
 	n := binary.PutUvarint(buf, toBlock)
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
 	if err != nil {
-		log.Error().Err(err).Msg("error writing toBlock to db")
+		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
 	}
 	return nil
 }
@@ -107,7 +112,7 @@ func (ob *ChainObserver) observeInTX() error {
 func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
-		log.Err(err).Msg("GetBaseGasPrice")
+		ob.logger.Err(err).Msg("GetBaseGasPrice")
 		return nil
 	}
 	return gasPrice
