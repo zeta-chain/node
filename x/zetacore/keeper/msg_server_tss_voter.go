@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,9 +18,11 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
-	index := msg.Digest()
+	msgDigest := msg.Digest()
+	sessionID := ctx.BlockHeight() / 1000 * 1000
+	index := crypto.Keccak256Hash([]byte(msgDigest), []byte(fmt.Sprintf("%d", sessionID)))
 	// Check if the value already exists
-	tssVoter, isFound := k.GetTSSVoter(ctx, index)
+	tssVoter, isFound := k.GetTSSVoter(ctx, index.Hex())
 
 	if isDuplicateSigner(msg.Creator, tssVoter.Signers) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
@@ -30,7 +33,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	} else {
 		tssVoter = types.TSSVoter{
 			Creator:         msg.Creator,
-			Index:           index,
+			Index:           index.Hex(),
 			Chain:           msg.Chain,
 			Address:         msg.Address,
 			Pubkey:          msg.Pubkey,
