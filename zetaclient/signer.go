@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"math/big"
@@ -30,6 +31,7 @@ type Signer struct {
 	ethSigner           ethtypes.Signer
 	abi                 abi.ABI
 	metaContractAddress ethcommon.Address
+	logger              zerolog.Logger
 }
 
 func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
@@ -56,6 +58,7 @@ func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiStri
 		ethSigner:           ethSigner,
 		abi:                 abi,
 		metaContractAddress: metaContract,
+		logger:              log.With().Str("module", "Signer").Logger(),
 	}, nil
 }
 
@@ -70,10 +73,10 @@ func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, g
 	}
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
-		log.Error().Err(err).Msgf("SigToPub error")
+		signer.logger.Error().Err(err).Msgf("SigToPub error")
 	}
 	addr := crypto.PubkeyToAddress(*pubk)
-	log.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
