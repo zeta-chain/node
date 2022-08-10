@@ -143,6 +143,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		zetaCoreModuleTypes.ModuleName: nil,
 	}
 )
 
@@ -341,6 +342,8 @@ func New(
 		keys[zetaCoreModuleTypes.MemStoreKey],
 		app.StakingKeeper,
 		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
 	)
 	metacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
