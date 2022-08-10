@@ -20,7 +20,8 @@ type (
 
 		StakingKeeper types.StakingKeeper
 		paramstore    paramtypes.Subspace
-
+		authKeeper    types.AccountKeeper
+		bankKeeper    types.BankKeeper
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 
 	}
@@ -32,17 +33,24 @@ func NewKeeper(
 	memKey sdk.StoreKey,
 	stakingKeeper types.StakingKeeper, // custom
 	paramstore paramtypes.Subspace,
-
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 
 ) *Keeper {
+	// ensure governance module account is set
+	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		memKey:        memKey,
 		StakingKeeper: stakingKeeper,
 		paramstore:    paramstore,
-
+		authKeeper:    authKeeper,
+		bankKeeper:    bankKeeper,
 		// this line is used by starport scaffolding # ibc/keeper/return
 
 	}
