@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -175,3 +176,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	am.keeper.InitializeGenesisKeygen(sdk.WrapSDKContext(ctx))
 	return []abci.ValidatorUpdate{}
 }
+
+var (
+	ModuleAddress = authtypes.NewModuleAddress(types.ModuleName)
+)
