@@ -126,6 +126,9 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
 		return
 	}
+	// use 33% higher gas price for timely confirmation
+	gasprice = gasprice.Mul(gasprice, big.NewInt(4))
+	gasprice = gasprice.Div(gasprice, big.NewInt(3))
 	var tx *ethtypes.Transaction
 
 	signloopDone := make(chan bool, 1)
