@@ -27,15 +27,17 @@ type IndexDB struct {
 	EndBlock           int64
 	ClientMap          map[string]*ethclient.Client
 	TxHashQueue        chan TxHash
+	Secondary          bool // if true, indexer will lag 3 blocks behind
 }
 
-func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier, clientMap map[string]*ethclient.Client) (*IndexDB, error) {
+func NewIndexDB(sqldb *sql.DB, querier *query.ZetaQuerier, clientMap map[string]*ethclient.Client, secondary bool) (*IndexDB, error) {
 
 	return &IndexDB{
 		querier:     querier,
 		db:          sqldb,
 		ClientMap:   clientMap,
 		TxHashQueue: make(chan TxHash, 1_000_000),
+		Secondary:   secondary,
 	}, nil
 }
 
@@ -51,21 +53,25 @@ func (idb *IndexDB) Start(done chan bool) {
 	}
 
 	go func() {
-		ticker := time.NewTicker(3 * time.Second)
+		ticker := time.NewTicker(10 * time.Second)
 		for range ticker.C {
 			block, err := idb.querier.LatestBlock()
+			bn := block.Header.Height
+			if idb.Secondary {
+				bn -= 3
+			}
 			if err != nil {
 				log.Error().Err(err).Msg("LatestBlock error")
 				continue
 			}
-			if block.Header.Height > idb.LastBlockProcessed {
-				for i := idb.LastBlockProcessed + 1; i <= block.Header.Height && i <= idb.EndBlock; i++ {
+			if bn > idb.LastBlockProcessed {
+				for i := idb.LastBlockProcessed + 1; i <= bn && i <= idb.EndBlock; i++ {
 					err = idb.processBlock(i)
 					if err != nil {
 						log.Error().Err(err).Msgf("processBlock on block %d error", i)
 					}
 					idb.LastBlockProcessed = i
-					log.Info().Msgf("processed block %d; catching up to %d", i, block.Header.Height)
+					log.Info().Msgf("processed block %d; catching up to %d", i, bn)
 				}
 			}
 			if idb.LastBlockProcessed >= idb.EndBlock {

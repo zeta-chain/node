@@ -37,6 +37,7 @@ func main() {
 	dbpasswd := flag.String("dbpasswd", "", "password of PostgresSQL database")
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
 	scanRange := flag.String("scan-range", "0:9223372036854775807", "rescan from this block")
+	secondary := flag.Bool("secondary", false, "run as secondary indexer")
 	flag.Parse()
 
 	var startBlock, endBlock int64
@@ -90,7 +91,7 @@ func main() {
 		}
 	}
 
-	idb, err := indexdb.NewIndexDB(db, querier, clientMap)
+	idb, err := indexdb.NewIndexDB(db, querier, clientMap, *secondary)
 	if err != nil {
 		log.Error().Err(err).Msg("NewIndexDB error")
 		return
