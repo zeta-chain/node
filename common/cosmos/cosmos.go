@@ -1,25 +1,13 @@
 package cosmos
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"math/big"
-	"os"
-	"os/user"
-	"path/filepath"
-	"strings"
-
-	"github.com/cosmos/cosmos-sdk/client/input"
-	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" // nolint
 	se "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/hashicorp/go-multierror"
 )
 
-const DefaultCoinDecimals = 8
+const DefaultCoinDecimals = 18
 
 var (
 	KeyringServiceName      = sdk.KeyringServiceName
@@ -88,92 +76,3 @@ type (
 )
 
 var _ sdk.Address = AccAddress{}
-
-func ErrUnknownRequest(msg string) error {
-	return se.Wrap(se.ErrUnknownRequest, msg)
-}
-
-func ErrInvalidAddress(addr string) error {
-	return se.Wrap(se.ErrInvalidAddress, addr)
-}
-
-func ErrInvalidCoins(msg string) error {
-	return se.Wrap(se.ErrInvalidCoins, msg)
-}
-
-func ErrUnauthorized(msg string) error {
-	return se.Wrap(se.ErrUnauthorized, msg)
-}
-
-func ErrInsufficientCoins(err error, msg string) error {
-	return se.Wrap(multierror.Append(se.ErrInsufficientFunds, err), msg)
-}
-
-/*
-func SetupThorchainForTest(c *C) (config.ClientConfiguration, ckeys.Info, ckeys.Keybase) {
-	thorchain.SetupConfigForTest()
-	cfg := config.ClientConfiguration{
-		ChainID:         "thorchain",
-		ChainHost:       "localhost",
-		SignerName:      "bob",
-		SignerPasswd:    "password",
-		ChainHomeFolder: ".",
-	}
-	kb := ckeys.NewInMemory()
-	info, _, err := kb.NewMnemonic(cfg.SignerName, ckeys.English, cfg.SignerPasswd, hd.Secp256k1)
-	c.Assert(err, IsNil)
-	return cfg, info, kb
-}
-*/
-
-// RoundToDecimal round the given amt to the desire decimals
-func RoundToDecimal(amt Uint, dec int64) Uint {
-	if dec != 0 && dec < DefaultCoinDecimals {
-		prec := DefaultCoinDecimals - dec
-		if prec == 0 { // sanity check
-			return amt
-		}
-		precisionAdjust := sdk.NewUintFromBigInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(prec), nil))
-		amt = amt.Quo(precisionAdjust).Mul(precisionAdjust)
-	}
-	return amt
-}
-
-// KeybaseStore to store keys
-type KeybaseStore struct {
-	Keybase      ckeys.Keyring
-	SignerName   string
-	SignerPasswd string
-}
-
-func SignerCreds() (string, string) {
-	reader := bufio.NewReader(os.Stdin)
-	username, _ := input.GetString("Enter Signer name:", reader)
-	password, _ := input.GetPassword("Enter Signer password:", reader)
-
-	return strings.TrimSpace(username), strings.TrimSpace(password)
-}
-
-// GetKeybase will create an instance of Keybase
-func GetKeybase(zetachainHome string) (KeybaseStore, error) {
-	username, password := SignerCreds()
-	buf := bytes.NewBufferString(password)
-	// the library used by keyring is using ReadLine , which expect a new line
-	buf.WriteByte('\n')
-
-	cliDir := zetachainHome
-	if len(zetachainHome) == 0 {
-		usr, err := user.Current()
-		if err != nil {
-			return KeybaseStore{}, fmt.Errorf("fail to get current user,err:%w", err)
-		}
-		cliDir = filepath.Join(usr.HomeDir, ".thornode")
-	}
-
-	kb, err := ckeys.New(KeyringServiceName(), ckeys.BackendFile, cliDir, buf)
-	return KeybaseStore{
-		SignerName:   username,
-		SignerPasswd: password,
-		Keybase:      kb,
-	}, err
-}
