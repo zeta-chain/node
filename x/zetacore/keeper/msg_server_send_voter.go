@@ -136,8 +136,6 @@ func (k msgServer) updateSend(ctx sdk.Context, chain string, send *types.Send) b
 	}
 	send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
 
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(gasFeeInZeta))))
-
 	nonce, found := k.GetChainNonces(ctx, chain)
 	if !found {
 		send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
