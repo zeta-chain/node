@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"math/big"
 	"strconv"
 )
 
@@ -61,6 +62,17 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	if hasSuperMajorityValidators(len(receive.Signers), validators) {
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 
+		zetaBurnt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
+		if !ok {
+			log.Error().Msgf("ReceiveConfirmation: failed to parse ZetaBurnt: %s", send.ZetaBurnt)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to parse ZetaBurnt: %s", send.ZetaBurnt))
+		}
+		zetaMinted, ok := big.NewInt(0).SetString(send.ZetaMint, 10)
+		if !ok {
+			log.Error().Msgf("ReceiveConfirmation: failed to parse ZetaMint: %s", send.ZetaMint)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to parse ZetaMint: %s", send.ZetaMint))
+		}
+
 		if receive.Status == common.ReceiveStatus_Success {
 			oldstatus := send.Status.String()
 			if send.Status == types.SendStatus_PendingRevert {
@@ -68,6 +80,9 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			} else if send.Status == types.SendStatus_PendingOutbound {
 				send.Status = types.SendStatus_OutboundMined
 			}
+
+			k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
+
 			newstatus := send.Status.String()
 			event := sdk.NewEvent(sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
