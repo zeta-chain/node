@@ -3,27 +3,24 @@ package app
 import (
 	"fmt"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	ibccoreclienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
-	"github.com/prometheus/client_golang/prometheus"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	appParams "github.com/zeta-chain/zetacore/app/params"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cast"
 	"github.com/tendermint/spm/openapiconsole"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	appParams "github.com/zeta-chain/zetacore/app/params"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -104,36 +101,12 @@ import (
 const Name = "zetacore"
 
 var (
-	AccountAddressPrefix    = "zeta"
-	NodeDir                 = ".zetacored"
-	ProposalsEnabled        = "true"
-	EnableSpecificProposals = ""
+	AccountAddressPrefix = "zeta"
+	NodeDir              = ".zetacored"
 )
 
 // GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
 // produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
-}
-
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
-	var wasmOpts []wasm.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-	return wasmOpts
-}
 
 var (
 	// DefaultNodeHome default home directories for wasmd
@@ -398,7 +371,7 @@ func New(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate"
+	wasmOpts = GetWasmOpts(appCodec, appOpts, app.ZetaCoreKeeper)
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
@@ -415,7 +388,7 @@ func New(
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		supportedFeatures,
+		SupportedFeatures,
 		wasmOpts...,
 	)
 	if len(enabledProposals) != 0 {

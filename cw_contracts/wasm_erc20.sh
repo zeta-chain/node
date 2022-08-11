@@ -17,7 +17,7 @@ zetacored tx wasm instantiate 1 '{"admins":["zeta1syavy2npfyt9tcncdtsdzf7kny9lh7
 --chain-id localnet \
 -y
 
-#Receiptient is contract : <address>
+#Receiptient is contract : <zeta14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s62znql>
 
 zetacored q bank balances zeta14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s62znql
 #Query mario's allowance
