@@ -81,8 +81,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.Status = types.SendStatus_OutboundMined
 			}
 
-			k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
-
+			err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
+			if err != nil {
+				log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
+			}
 			newstatus := send.Status.String()
 			event := sdk.NewEvent(sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
