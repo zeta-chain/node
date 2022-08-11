@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	authkeeper2 "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper2 "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,12 +41,17 @@ func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		"ZetacoreParams",
 	)
 
+	bankkeeper := bankkeeper2.BaseKeeper{}
+	authkeeper := authkeeper2.AccountKeeper{}
+
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,
 		memStoreKey,
 		stakingkeeper.Keeper{}, // custom
 		paramsSubspace,
+		authkeeper,
+		bankkeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
