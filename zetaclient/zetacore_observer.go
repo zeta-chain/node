@@ -175,6 +175,9 @@ func (co *CoreObserver) startObserve() {
 				co.logger.Info().Msgf("#pending sends on chain %s: %d nonce range [%d,%d]", chain, len(sends), sends[0].Nonce, sends[len(sends)-1].Nonce)
 			}
 		}
+		sort.Slice(sendList, func(i, j int) bool {
+			return sendList[i].Nonce < sendList[j].Nonce
+		})
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
