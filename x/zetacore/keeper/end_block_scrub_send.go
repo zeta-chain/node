@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"math/big"
 )
 
 // ScrubGasPriceOfStuckOutTx change (increase) the gas price of a scheduled Send which has been stuck.
 // Stuck tx is one that is not confirmed in 100 blocks (roughly 10min)
 // Scrub stuck Send with current gas price, if current gas price is much higher (roughtly 20% higher)
 // Emit Scrub event.
+// TODO: This loops through all sends; it should only loop through "pending" sends
 func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	height := ctx.BlockHeight()
@@ -39,15 +39,24 @@ func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 						continue
 					}
 					mi := gasPrice.MedianIndex
-					newGasPrice := gasPrice.Prices[mi]
-					oldGasPrice, err := strconv.ParseInt(send.GasPrice, 10, 64)
-					if err != nil {
+					newGasPrice := big.NewInt(0).SetUint64(gasPrice.Prices[mi])
+					oldGasPrice, ok := big.NewInt(0).SetString(send.GasPrice, 10)
+					if !ok {
+						k.Logger(ctx).Error("failed to parse old gas price")
 						continue
 					}
-					if float64(newGasPrice) < float64(oldGasPrice)*1.2 {
-						newGasPrice = uint64(float64(oldGasPrice) * 1.2)
+					// do nothing if new gas price is even lower than old price
+					if newGasPrice.Cmp(oldGasPrice) < 0 {
+						continue
 					}
-					send.GasPrice = fmt.Sprintf("%d", newGasPrice)
+					targetGasPrice := oldGasPrice.Mul(oldGasPrice, big.NewInt(6))
+					targetGasPrice = targetGasPrice.Div(targetGasPrice, big.NewInt(5)) // targetGasPrice = oldGasPrice * 1.2
+					// if current new price is not much higher; make it at least 20% higher
+					// otherwise replacement tx will be rejected by the node
+					if newGasPrice.Cmp(targetGasPrice) < 0 {
+						newGasPrice = targetGasPrice
+					}
+					send.GasPrice = newGasPrice.String()
 					k.SetSend(ctx, send)
 					ctx.EventManager().EmitEvent(
 						sdk.NewEvent(sdk.EventTypeMessage,
