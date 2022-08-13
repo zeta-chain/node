@@ -178,7 +178,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := 128 * time.Second // minimum gap between two keysigns
+	signInterval := 64 * time.Second // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
@@ -187,17 +187,14 @@ SIGNLOOP:
 			logger.Info().Msg("breaking SignOutBoundTx loop: outbound already processed")
 			break SIGNLOOP
 		default:
-			minNonce := atomic.LoadInt64(&co.clientMap[toChain].MinNonce)
-			maxNonce := atomic.LoadInt64(&co.clientMap[toChain].MaxNonce)
-			if minNonce == int64(send.Nonce) && maxNonce > int64(send.Nonce)+10 {
-				//log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
-				signInterval = 32 * time.Second
-			}
+			//minNonce := atomic.LoadInt64(&co.clientMap[toChain].MinNonce)
+			//maxNonce := atomic.LoadInt64(&co.clientMap[toChain].MaxNonce)
+			//if minNonce == int64(send.Nonce) && maxNonce > int64(send.Nonce)+10 {
+			//	//log.Warn().Msgf("this signer is likely blocking subsequent txs! nonce %d", send.Nonce)
+			//	signInterval = 32 * time.Second
+			//}
 			tnow := time.Now()
-			if tnow.Before(lastSignTime.Add(signInterval)) {
-				continue
-			}
-			if tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
+			if tnow.After(lastSignTime.Add(signInterval)) && tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
 				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included || confirmed {
 					logger.Info().Msgf("sendHash already confirmed; skip it")
@@ -212,11 +209,14 @@ SIGNLOOP:
 					logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 					tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 				}
+
 				if err != nil {
 					logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 					continue
+				} else {
+					lastSignTime = time.Now()
+					logger.Info().Msgf("Keysign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 				}
-				lastSignTime = time.Now()
 				cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
 				if err != nil {
 					log.Error().Err(err).Msgf("GetPromCounter error")
