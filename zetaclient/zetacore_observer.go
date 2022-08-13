@@ -169,13 +169,46 @@ func (co *CoreObserver) startObserve() {
 		if len(sendList) > 0 {
 			co.logger.Info().Msgf("#pending send: %d", len(sendList))
 		}
-		sort.Slice(sendList, func(i, j int) bool {
-			return sendList[i].Nonce < sendList[j].Nonce
-		})
+		sendMap := splitAndSortSendListByChain(sendList)
+		for chain, sends := range sendMap {
+			if len(sends) > 0 {
+				co.logger.Info().Msgf("#pending sends on chain %s: %d nonce range [%d,%d]", chain, len(sends), sends[0].Nonce, sends[len(sends)-1].Nonce)
+			}
+		}
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
 			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
 		}
 	}
+}
+
+func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Send {
+	sendMap := make(map[string][]*types.Send)
+	for _, send := range sendList {
+		targetChain := getTargetChain(send)
+		if targetChain == "" {
+			continue
+		}
+		if _, found := sendMap[targetChain]; !found {
+			sendMap[targetChain] = make([]*types.Send, 0)
+		}
+		sendMap[targetChain] = append(sendMap[targetChain], send)
+	}
+	for chain, sends := range sendMap {
+		sort.Slice(sends, func(i, j int) bool {
+			return sends[i].Nonce < sends[j].Nonce
+		})
+		sendMap[chain] = sends
+	}
+	return sendMap
+}
+
+func getTargetChain(send *types.Send) string {
+	if send.Status == types.SendStatus_PendingOutbound {
+		return send.ReceiverChain
+	} else if send.Status == types.SendStatus_PendingRevert {
+		return send.SenderChain
+	}
+	return ""
 }
