@@ -49,8 +49,8 @@ func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 					if newGasPrice.Cmp(oldGasPrice) < 0 {
 						continue
 					}
-					targetGasPrice := oldGasPrice.Mul(oldGasPrice, big.NewInt(6))
-					targetGasPrice = targetGasPrice.Div(targetGasPrice, big.NewInt(5)) // targetGasPrice = oldGasPrice * 1.2
+					targetGasPrice := oldGasPrice.Mul(oldGasPrice, big.NewInt(4))
+					targetGasPrice = targetGasPrice.Div(targetGasPrice, big.NewInt(3)) // targetGasPrice = oldGasPrice * 1.2
 					// if current new price is not much higher; make it at least 20% higher
 					// otherwise replacement tx will be rejected by the node
 					if newGasPrice.Cmp(targetGasPrice) < 0 {
