@@ -178,7 +178,7 @@ func (co *CoreObserver) shepherdSend(send *types.Send) {
 	// 1. zetacore /zeta-chain/send/<sendHash> endpoint returns a changed status
 	// 2. outTx is confirmed to be successfully or failed
 	signTicker := time.NewTicker(time.Second)
-	signInterval := 64 * time.Second // minimum gap between two keysigns
+	signInterval := 128 * time.Second // minimum gap between two keysigns
 	lastSignTime := time.Unix(1, 0)
 SIGNLOOP:
 	for range signTicker.C {
