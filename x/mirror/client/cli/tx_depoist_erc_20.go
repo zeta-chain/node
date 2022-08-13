@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 
 func CmdDepoistERC20() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "depoist-erc-20 [home-erc-20-contract-address] [recipient-address]",
+		Use:   "depoist-erc-20 [home-erc-20-contract-address] [recipient-address] [amount]",
 		Short: "Broadcast message DepoistERC20",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
