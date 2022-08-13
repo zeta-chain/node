@@ -187,6 +187,13 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msg("NewTSS error")
 		return
 	}
+	kg, err := bridge1.GetKeyGen()
+	if err != nil {
+		log.Error().Err(err).Msg("GetKeyGen error")
+		return
+	}
+	log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
+	tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
 		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)

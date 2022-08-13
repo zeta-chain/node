@@ -44,6 +44,7 @@ type TSS struct {
 	PubkeyInBytes  []byte
 	PubkeyInBech32 string
 	AddressInHex   string
+	Pubkeys        []string
 }
 
 func (tss *TSS) Pubkey() []byte {
@@ -57,7 +58,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.PubkeyInBech32
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, nil, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, tss.Pubkeys, "0.13.0")
 	ks_res, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
