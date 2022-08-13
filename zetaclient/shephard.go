@@ -194,7 +194,7 @@ SIGNLOOP:
 			//	signInterval = 32 * time.Second
 			//}
 			tnow := time.Now()
-			if tnow.After(lastSignTime.Add(signInterval)) && tnow.Unix()%16 == int64(sendhash[0])%16 { // weakly sync the TSS signers
+			if tnow.After(lastSignTime.Add(signInterval)) && tnow.Unix()%8 == int64(sendhash[0])%8 { // weakly sync the TSS signers
 				included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
 				if included || confirmed {
 					logger.Info().Msgf("sendHash already confirmed; skip it")
