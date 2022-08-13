@@ -166,7 +166,6 @@ func (co *CoreObserver) keygenObserve() {
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
 func (co *CoreObserver) startSendScheduler() {
-	retryMap := make(map[string]int)
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64 = 0
 	for range observeTicker.C {
@@ -176,7 +175,9 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
-			co.logger.Info().Msgf("ZetaCore heart beat: %d", bn)
+			if bn%5 == 0 {
+				co.logger.Info().Msgf("ZetaCore heart beat: %d", bn)
+			}
 			sendList, err := co.bridge.GetAllPendingSend()
 			if err != nil {
 				co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
@@ -189,17 +190,19 @@ func (co *CoreObserver) startSendScheduler() {
 
 			// schedule sends
 			for chain, sendList := range sendMap {
-				co.logger.Info().Msgf("schedule %d sends on chain %s", len(sendList), chain)
+				if bn%5 == 0 {
+					co.logger.Info().Msgf("outstanding %d sends on chain %s", len(sendList), chain)
+				}
 				for idx, send := range sendList {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
-					if idx == 0 && sinceBlock%6 == 0 { // first send; always schedule on multiples of 6 blocks
-						go co.TrySend(send, sinceBlock, retryMap)
-					} else if isScheduled(sinceBlock) {
-						go co.TrySend(send, sinceBlock, retryMap)
+					if isScheduled(sinceBlock, idx == 0) { // first send on each chain has priority
+						go co.TrySend(send, sinceBlock)
+					}
+					if idx > 20 { // only schedule 20 sends per chain
+						break
 					}
 				}
 			}
-
 			// update last processed block number
 			lastBlockNum = bn
 		}
@@ -207,20 +210,14 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64, retryMap map[string]int) {
+func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64) {
 	chain := getTargetChain(send)
 	sendID := fmt.Sprintf("%s/%d", chain, send.Nonce)
-	_, found := retryMap[sendID]
-	if !found {
-		retryMap[sendID] = 1
-	} else {
-		retryMap[sendID]++
-	}
+
 	logger := co.logger.With().
 		Str("sendHash", send.Index).
 		Str("sendID", sendID).
 		Int64("sinceFinalized", sinceBlock).
-		Int("retry", retryMap[sendID]).
 		Logger()
 	tNow := time.Now()
 	defer func() {
@@ -346,13 +343,17 @@ func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64, retryMap map
 
 }
 
-func isScheduled(d int64) bool {
-	//      0 ----6 ---------12-------12---------18-------24--------
-	if d <= 0 {
+func isScheduled(diff int64, priority bool) bool {
+	d := diff - 1
+	if d < 0 {
 		return false
-	} else if d == 1 || d == 7 || d == 19 || d == 31 || d == 43 || d == 67 {
+	}
+	if priority {
+		return d%12 == 0
+	}
+	if d < 100 && d%12 == 0 {
 		return true
-	} else if d%100 == 0 {
+	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
 	}
 	return false
