@@ -254,5 +254,7 @@ func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *b
 
 	// price*gasLimit*exchangeRate/1e18
 	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), ONE_EIGHTEEN)
+	// add protocol flat fee: 1 ZETA
+	gasFeeInZeta.Add(gasFeeInZeta, ONE_EIGHTEEN)
 	return gasFeeInZeta, abort
 }
