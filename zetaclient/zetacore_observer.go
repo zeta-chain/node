@@ -14,6 +14,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -33,30 +34,20 @@ const (
 )
 
 type CoreObserver struct {
-	sendQueue []*types.Send
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]*Signer
 	clientMap map[common.Chain]*ChainObserver
 	metrics   *metrics.Metrics
 	tss       *TSS
-
-	// channels for shepherd manager
-	sendNew     chan *types.Send
-	sendDone    chan *types.Send
-	signerSlots chan bool
-	shepherds   map[string]bool
-
-	fileLogger *zerolog.Logger
-	logger     zerolog.Logger
+	logger    zerolog.Logger
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
-	co.logger = log.With().Str("module", "CoreOb").Logger()
+	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
-	co.sendQueue = make([]*types.Send, 0)
 
 	co.clientMap = clientMap
 	co.metrics = metrics
@@ -65,23 +56,6 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	if err != nil {
 		co.logger.Error().Err(err).Msg("error registering counter")
 	}
-
-	co.sendNew = make(chan *types.Send)
-	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 50 // assuming each signer takes 100s to finish (have outTx included), then throughput is bounded by 100/100 = 1 tx/s
-	co.signerSlots = make(chan bool, MAX_SIGNERS)
-	for i := 0; i < MAX_SIGNERS; i++ {
-		co.signerSlots <- true
-	}
-	co.shepherds = make(map[string]bool)
-
-	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		// Can we log an error before we have our logger? :)
-		co.logger.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
-	}
-	fileLogger := zerolog.New(logFile).With().Logger()
-	co.fileLogger = &fileLogger
 
 	return &co
 }
@@ -175,7 +149,7 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
-			if bn%5 == 0 {
+			if bn%10 == 0 {
 				co.logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
 			sendList, err := co.bridge.GetAllPendingSend()
@@ -183,22 +157,35 @@ func (co *CoreObserver) startSendScheduler() {
 				co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
-			if len(sendList) > 0 {
+			if len(sendList) > 0 && bn%5 == 0 {
 				co.logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			// schedule sends
 			for chain, sendList := range sendMap {
-				if bn%5 == 0 {
+				if bn%10 == 0 {
 					co.logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
 				for idx, send := range sendList {
+					ob, err := co.getTargetChainOb(send)
+					if err != nil {
+						co.logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						continue
+					}
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
+					if err != nil {
+						co.logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+					}
+					if included || confirmed {
+						co.logger.Info().Msgf("send outTx already included; do not schedule")
+						continue
+					}
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
 					if isScheduled(sinceBlock, idx == 0 || len(sendList) > 20) {
-						go co.TrySend(send, sinceBlock)
+						go co.TryProcessOutTx(send, sinceBlock)
 					}
 					if idx > 20 { // only schedule 20 sends per chain
 						break
@@ -212,18 +199,18 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64) {
+func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
 	chain := getTargetChain(send)
-	sendID := fmt.Sprintf("%s/%d", chain, send.Nonce)
+	outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
 	logger := co.logger.With().
 		Str("sendHash", send.Index).
-		Str("sendID", sendID).
-		Int64("sinceFinalized", sinceBlock).
+		Str("outTxID", outTxID).
+		Int64("sinceBlock", sinceBlock).
 		Logger()
 	tNow := time.Now()
 	defer func() {
-		logger.Info().Msgf("TrySend finished in %s", time.Since(tNow))
+		logger.Info().Msgf("TryProcessOutTx finished in %s", time.Since(tNow))
 	}()
 
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
@@ -324,7 +311,7 @@ func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64) {
 				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 				err := signer.Broadcast(tx)
 				if err != nil {
-					retry := HandlerBroadcastError(err, co.fileLogger, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
+					retry := HandlerBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
 					if !retry {
 						break
 					}
@@ -332,7 +319,6 @@ func (co *CoreObserver) TrySend(send *types.Send, sinceBlock int64) {
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-				co.fileLogger.Info().Msgf("Broadcast success: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 				zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
 				if err != nil {
 					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
@@ -389,4 +375,34 @@ func getTargetChain(send *types.Send) string {
 		return send.SenderChain
 	}
 	return ""
+}
+
+func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, error) {
+	chainStr := getTargetChain(send)
+	c, err := common.ParseChain(chainStr)
+	if err != nil {
+		return nil, err
+	}
+	chainOb, found := co.clientMap[c]
+	if !found {
+		return nil, fmt.Errorf("chain %s not found", c)
+	}
+	return chainOb, nil
+}
+
+func HandlerBroadcastError(err error, nonce, toChain, outTxHash string) bool {
+	if strings.Contains(err.Error(), "nonce too low") {
+		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+		return false
+	}
+	if strings.Contains(err.Error(), "replacement transaction underpriced") {
+		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false
+	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
+		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false
+	} // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
+
+	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
+	return true
 }

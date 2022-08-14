@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 	"os"
@@ -106,9 +105,8 @@ func (s *COSuite) SetUpTest(c *C) {
 
 	// setup zetacore observer
 	co := &CoreObserver{
-		sendQueue: make([]*types.Send, 0),
-		bridge:    s.bridge1,
-		signer:    signer,
+		bridge: s.bridge1,
+		signer: signer,
 	}
 	s.coreObserver = co
 	s.coreObserver.MonitorCore()
