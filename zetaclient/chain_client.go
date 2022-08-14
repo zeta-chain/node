@@ -184,7 +184,8 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmedReceipts[nonce]
 	ob.mu.Unlock()
-	logger := ob.logger.With().Str("sendHash", sendHash).Logger()
+	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
+	logger := ob.logger.With().Str("sendID", sendID).Logger()
 	if found && receipt.Status == 1 {
 		logs := receipt.Logs
 		for _, vLog := range logs {
@@ -263,7 +264,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 		return true, true, nil
 	}
 
-	return false, false, fmt.Errorf("IsSendOutTxProcessed: error on chain %s", ob.chain)
+	return false, false, nil
 }
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
