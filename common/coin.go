@@ -1,5 +1,5 @@
 package common
 
 const (
-	ZETADenom = "uuzeta"
+	ZETADenom = "azeta"
 )
