@@ -56,13 +56,13 @@ func (idb *IndexDB) Start(done chan bool) {
 		ticker := time.NewTicker(10 * time.Second)
 		for range ticker.C {
 			block, err := idb.querier.LatestBlock()
-			bn := block.Header.Height
-			if idb.Secondary {
-				bn -= 3
-			}
 			if err != nil {
 				log.Error().Err(err).Msg("LatestBlock error")
 				continue
+			}
+			bn := block.Header.Height
+			if idb.Secondary {
+				bn -= 3
 			}
 			if bn > idb.LastBlockProcessed {
 				for i := idb.LastBlockProcessed + 1; i <= bn && i <= idb.EndBlock; i++ {
