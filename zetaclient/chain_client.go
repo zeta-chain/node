@@ -279,12 +279,6 @@ func (ob *ChainObserver) observeOutTx() {
 			if err != nil {
 				return
 			}
-			//if len(trackers) > 0 {
-			//	err = ob.SetMinAndMaxNonce(trackers)
-			//	if err != nil {
-			//		return
-			//	}
-			//}
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
