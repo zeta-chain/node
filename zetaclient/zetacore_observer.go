@@ -184,7 +184,7 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx == 0 || len(sendList) > 20) {
+					if isScheduled(sinceBlock, idx < 3 || len(sendList) > 20) {
 						go co.TryProcessOutTx(send, sinceBlock)
 					}
 					if idx > 20 { // only schedule 20 sends per chain
