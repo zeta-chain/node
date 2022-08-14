@@ -106,6 +106,35 @@ func main() {
 		db.QueryRow(queryNumPendingOutbound).Scan(&numPendingOutbound)
 		db.QueryRow(queryNumPendingRevert).Scan(&numPendingRevert)
 		fmt.Printf("numPendingOutbound=%d, numPendingRevert=%d\n", numPendingOutbound, numPendingRevert)
+
+		queryPending := "select sendHash from txs where status = 'PendingOutbound' or status = 'PendingRevert'"
+		rowsPending, _ := db.Query(queryPending)
+		defer rowsPending.Close()
+		for rowsPending.Next() {
+			var sendhash string
+			if err := rowsPending.Scan(&sendhash); err != nil {
+				fmt.Printf("rowsPending.Scan error: %v\n", err)
+				continue
+			}
+			fmt.Printf("fixing sendhash=%s\n", sendhash)
+			blocks, err := querier.GetEventBlocks(sendhash)
+			if err != nil {
+				fmt.Printf("querier.GetOutboundSuccessEvent error: %v\n", err)
+				continue
+			} else {
+				for _, bn := range blocks {
+					fmt.Printf("bn=%d\n", bn)
+					err = idb.ProcessBlock(bn)
+					if err != nil {
+						fmt.Printf("idb.ProcessBlock error: %v\n", err)
+						continue
+					}
+				}
+			}
+		}
+		db.QueryRow(queryNumPendingOutbound).Scan(&numPendingOutbound)
+		db.QueryRow(queryNumPendingRevert).Scan(&numPendingRevert)
+		fmt.Printf("after fixing: numPendingOutbound=%d, numPendingRevert=%d\n", numPendingOutbound, numPendingRevert)
 		return
 	}
 

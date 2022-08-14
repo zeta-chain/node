@@ -34,7 +34,7 @@ var _ = Suite(&DBSuite{})
 //}
 //
 //func (ts *DBSuite) TestWatchEvent(c *C) {
-//	err := ts.idb.processBlock(123)
+//	err := ts.idb.ProcessBlock(123)
 //	c.Assert(err, IsNil)
 //}
 //

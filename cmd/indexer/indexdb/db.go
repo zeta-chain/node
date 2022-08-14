@@ -66,9 +66,9 @@ func (idb *IndexDB) Start(done chan bool) {
 			}
 			if bn > idb.LastBlockProcessed {
 				for i := idb.LastBlockProcessed + 1; i <= bn && i <= idb.EndBlock; i++ {
-					err = idb.processBlock(i)
+					err = idb.ProcessBlock(i)
 					if err != nil {
-						log.Error().Err(err).Msgf("processBlock on block %d error", i)
+						log.Error().Err(err).Msgf("ProcessBlock on block %d error", i)
 					}
 					idb.LastBlockProcessed = i
 					log.Info().Msgf("processed block %d; catching up to %d", i, bn)
@@ -136,7 +136,7 @@ func (idb *IndexDB) Start(done chan bool) {
 
 }
 
-func (idb *IndexDB) processBlock(bn int64) error {
+func (idb *IndexDB) ProcessBlock(bn int64) error {
 
 	cnt, err := idb.querier.VisitAllTxEvents(types.InboundFinalized, bn, func(res *sdk.TxResponse) error {
 		for _, v := range res.Logs {
@@ -159,7 +159,7 @@ func (idb *IndexDB) processBlock(bn int64) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
-				err := idb.processOutboundSuccessful(res, kv)
+				err := idb.ProcessOutboundSuccessful(res, kv)
 				if err != nil {
 					return err
 				}
@@ -176,7 +176,7 @@ func (idb *IndexDB) processBlock(bn int64) error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
-				err := idb.processOutboundFailed(res, kv)
+				err := idb.ProcessOutboundFailed(res, kv)
 				if err != nil {
 					return err
 				}
@@ -379,7 +379,7 @@ func (idb *IndexDB) Rebuild() error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
-				err2 := idb.processOutboundSuccessful(res, kv)
+				err2 := idb.ProcessOutboundSuccessful(res, kv)
 				if err2 != nil {
 					return err2
 				}
@@ -396,7 +396,7 @@ func (idb *IndexDB) Rebuild() error {
 		for _, v := range res.Logs {
 			for _, vv := range v.Events {
 				kv := AttributeToMap(vv.Attributes)
-				err2 := idb.processOutboundFailed(res, kv)
+				err2 := idb.ProcessOutboundFailed(res, kv)
 				if err2 != nil {
 					return err2
 				}
@@ -441,7 +441,7 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 	return nil
 }
 
-func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]string) error {
+func (idb *IndexDB) ProcessOutboundFailed(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
 	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9)",
 		types.OutboundTxFailed, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus, types.StatusMessage),
@@ -474,7 +474,7 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 	return nil
 }
 
-func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string]string) error {
+func (idb *IndexDB) ProcessOutboundSuccessful(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.SendHash], kv[types.OutTxHash])
 	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8)", types.OutboundTxSuccessful, types.SendHash, types.OutTxHash, types.ZetaMint, types.Chain, types.OldStatus, types.NewStatus),
 		kv[types.SendHash],

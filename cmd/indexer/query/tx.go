@@ -153,3 +153,30 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 
 	return processed, nil
 }
+
+func (q *ZetaQuerier) GetEventBlocks(sendHash string) ([]int64, error) {
+	client := txtypes.NewServiceClient(q.grpcConn)
+
+	events := []string{fmt.Sprintf("message.SendHash='%s'", sendHash)}
+
+	res, err := client.GetTxsEvent(context.Background(), &txtypes.GetTxsEventRequest{
+		Events: events,
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			CountTotal: false,
+			Reverse:    false,
+		},
+		OrderBy: 0,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("GetTxsEvent grpc fail")
+		return nil, err
+	}
+
+	var blocks []int64
+	for _, resp := range res.TxResponses {
+		blocks = append(blocks, resp.Height)
+	}
+	return blocks, nil
+}
