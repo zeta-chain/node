@@ -191,11 +191,13 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 			for chain, sendList := range sendMap {
 				if bn%5 == 0 {
-					co.logger.Info().Msgf("outstanding %d sends on chain %s", len(sendList), chain)
+					co.logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
 				for idx, send := range sendList {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
-					if isScheduled(sinceBlock, idx == 0) { // first send on each chain has priority
+					// if there are many outstanding sends, then all first 20 has priority
+					// otherwise, only the first one has priority
+					if isScheduled(sinceBlock, idx == 0 || len(sendList) > 20) {
 						go co.TrySend(send, sinceBlock)
 					}
 					if idx > 20 { // only schedule 20 sends per chain
@@ -349,9 +351,9 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%12 == 0
+		return d%15 == 0
 	}
-	if d < 100 && d%12 == 0 {
+	if d < 100 && d%15 == 0 {
 		return true
 	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
