@@ -38,6 +38,7 @@ func main() {
 	dbname := flag.String("dbname", "testdb", "database name of PostgresSQL database")
 	scanRange := flag.String("scan-range", "0:9223372036854775807", "rescan from this block")
 	secondary := flag.Bool("secondary", false, "run as secondary indexer")
+	tryfix := flag.Bool("tryfix", false, "try to fix the pending outbound/reverted tx")
 	flag.Parse()
 
 	var startBlock, endBlock int64
@@ -94,6 +95,17 @@ func main() {
 	idb, err := indexdb.NewIndexDB(db, querier, clientMap, *secondary)
 	if err != nil {
 		log.Error().Err(err).Msg("NewIndexDB error")
+		return
+	}
+
+	if *tryfix {
+		fmt.Printf("try to fix the pending outbound/reverted tx\n")
+		queryNumPendingOutbound := "select count(sendHash) from txs where status = 'PendingOutbound'"
+		queryNumPendingRevert := "select count(sendHash) from txs where status = 'PendingRevert'"
+		var numPendingOutbound, numPendingRevert int64
+		db.QueryRow(queryNumPendingOutbound).Scan(&numPendingOutbound)
+		db.QueryRow(queryNumPendingRevert).Scan(&numPendingRevert)
+		fmt.Printf("numPendingOutbound=%d, numPendingRevert=%d\n", numPendingOutbound, numPendingRevert)
 		return
 	}
 
