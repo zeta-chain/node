@@ -311,7 +311,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
 				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 				err := signer.Broadcast(tx)
 				if err != nil {
-					retry := HandlerBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
+					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
+					if report {
+						zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+						if err != nil {
+							logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+						}
+						logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+					}
 					if !retry {
 						break
 					}
@@ -319,12 +326,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+				zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+				if err != nil {
+					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+				}
+				logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+				break // successful broadcast; no need to retry
 			}
-			zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
-			if err != nil {
-				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-			}
-			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+
 		}
 	}
 
@@ -389,19 +398,20 @@ func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, erro
 	return chainOb, nil
 }
 
-func HandlerBroadcastError(err error, nonce, toChain, outTxHash string) bool {
+// returns whether to retry in a few seconds, and whether to report via AddTxHashToWatchlist
+func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
-		return false
+		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
 		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
-		return false
+		return false, false
 	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
 		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
-		return false
-	} // most likely an RPC error, such as timeout or being rate limited. Exp backoff retry
+		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
+	}
 
 	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
-	return true
+	return true, false
 }
