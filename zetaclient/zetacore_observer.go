@@ -319,13 +319,12 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-				zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
-				if err != nil {
-					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-					break
-				}
-				logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 			}
+			zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+			if err != nil {
+				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+			}
+			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 		}
 	}
 
