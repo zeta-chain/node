@@ -1,4 +1,3 @@
-use cosmwasm_std::{Uint256, Uint64};
 use cosmwasm_std::{entry_point, to_binary};
 use cosmwasm_std::{Deps, DepsMut, Env, MessageInfo};
 use cosmwasm_std::{QueryResponse, Response, StdError, StdResult};
@@ -42,30 +41,29 @@ Execute
 pub enum ExecuteMsg {
     AddToWatchList {
         chain: String,
-        nonce: Uint64,
+        nonce: u32,
         tx_hash: String,
     }
 }
 
 #[entry_point]
 pub fn execute(
-    deps: DepsMut<ZetaCoreQuery>,
+    _deps: DepsMut<ZetaCoreQuery>,
     _env: Env,
     _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<ZetaCoreMsg>, WatcherError> {
     match msg {
         ExecuteMsg::AddToWatchList { chain,nonce,tx_hash } => {
-            let add_watchlist_msg = SifchainMsg::Swap {
-                sent_asset: "rowan".to_string(),
-                received_asset: "ceth".to_string(),
-                sent_amount: amount.to_string(),
-                min_received_amount: "0".to_string(),
+            let add_watchlist_msg = ZetaCoreMsg::AddToWatchList {
+                chain,
+                nonce,
+                tx_hash,
             };
 
             Ok(Response::new()
-                .add_attribute("action", "swap")
-                .add_message(swap_msg))
+                .add_attribute("action", "add_watchlist")
+                .add_message(add_watchlist_msg))
         }
     }
 }
@@ -77,17 +75,17 @@ Query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    Pool { external_asset: String },
+    Watchlist {},
 }
 
 #[entry_point]
-pub fn query(deps: Deps<SifchainQuery>, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
+pub fn query(deps: Deps<ZetaCoreQuery>, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
-        QueryMsg::Pool { external_asset } => to_binary(&query_pool(deps, external_asset)?),
+        QueryMsg::Watchlist {} => to_binary(&query_pool(deps)?),
     }
 }
 
-fn query_pool(deps: Deps<SifchainQuery>, external_asset: String) -> StdResult<PoolResponse> {
-    let req = SifchainQuery::Pool { external_asset }.into();
+fn query_pool(deps: Deps<ZetaCoreQuery>) -> StdResult<WatchlistQueryResponse> {
+    let req = ZetaCoreQuery::WatchList{}.into();
     deps.querier.query(&req)
 }
