@@ -33,3 +33,13 @@ localnet/chains/zetachain/config/node*/*
 localnet/chains/zetachain/storage
 localnet/ganache/storage
 localnet/zetachain-monorepo
+/build/config/
+/cw_contracts/contract/target/
+/cw_contracts/contract/watcher.wasm
+/localnet/networks/
+/localnet/zetachain/
+/GOERLI_debug.log
+/localnet/package-lock.json
+/zetanode.log
+/zetacore_debug.log
+/zeta_std/target/
