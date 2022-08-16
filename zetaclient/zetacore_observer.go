@@ -72,7 +72,6 @@ func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startSendScheduler()
-	//go co.ShepherdManager()
 
 	noKeygen := os.Getenv("NO_KEYGEN")
 	if noKeygen == "" {
