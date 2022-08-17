@@ -207,13 +207,13 @@ func (co *CoreObserver) startSendScheduler() {
 					mu.Lock()
 					notInProcess := outTxInProcessing[outTxID] == false
 					mu.Unlock()
-					if isScheduled(sinceBlock, idx < 50) && notInProcess {
+					if isScheduled(sinceBlock, idx < 20) && notInProcess {
 						mu.Lock()
 						outTxInProcessing[outTxID] = true
 						mu.Unlock()
 						go co.TryProcessOutTx(send, sinceBlock, done)
 					}
-					if idx > 100 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
