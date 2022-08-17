@@ -27,14 +27,23 @@ func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
 		return err
 	}
 	ob.db = db
-	envvar := ob.chain.String() + "_SCAN_CURRENT"
-	if os.Getenv(envvar) != "" {
-		logger.Info().Msgf("envvar %s is set; scan from current block", envvar)
-		header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
-		if err != nil {
-			return err
+	envvar := ob.chain.String() + "_SCAN_FROM"
+	scanFromBlock := os.Getenv(envvar)
+	if scanFromBlock != "" {
+		logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+		if scanFromBlock == "latest" {
+			header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
+			if err != nil {
+				return err
+			}
+			ob.setLastBlock(header.Number.Uint64())
+		} else {
+			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
+			if err != nil {
+				return err
+			}
+			ob.setLastBlock(uint64(scanFromBlockInt))
 		}
-		ob.setLastBlock(header.Number.Uint64())
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
