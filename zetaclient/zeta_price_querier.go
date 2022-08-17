@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math"
 	"math/big"
 )
@@ -24,6 +25,7 @@ type UniswapV3ZetaPriceQuerier struct {
 	Client              *ethclient.Client
 	PoolContractAddress ethcommon.Address
 	Chain               common.Chain
+	TokenOrder          types.PoolTokenOrder
 }
 
 var _ ZetaPriceQuerier = &UniswapV3ZetaPriceQuerier{}
@@ -40,6 +42,7 @@ type UniswapV2ZetaPriceQuerier struct {
 	Client              *ethclient.Client
 	PoolContractAddress ethcommon.Address
 	Chain               common.Chain
+	TokenOrder          types.PoolTokenOrder
 }
 
 var _ ZetaPriceQuerier = &UniswapV2ZetaPriceQuerier{}
@@ -75,8 +78,11 @@ func (q *UniswapV3ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		return nil, 0, err
 	}
 	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
-	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[0], cumTicks[1]), big.NewInt(int64(TIME_WINDOW)))
+	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[1], cumTicks[0]), big.NewInt(int64(TIME_WINDOW)))
 	price := math.Pow(1.0001, float64(tickDiff.Int64())) * 1e18 // price is fixed point with decimal 18
+	if q.TokenOrder == types.ETHZETA {
+		price = 1.0 / price
+	}
 	v, _ := big.NewFloat(price).Int(nil)
 	return v, bn, nil
 }
@@ -112,6 +118,9 @@ func (q *UniswapV2ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 	}
 	reserve0 := *abi.ConvertType(output[0], new(*big.Int)).(**big.Int)
 	reserve1 := *abi.ConvertType(output[1], new(*big.Int)).(**big.Int)
+	if q.TokenOrder == types.ETHZETA {
+		reserve1, reserve0 = reserve0, reserve1
+	}
 	r0, acc0 := big.NewFloat(0).SetInt(reserve0).Float64()
 	r1, acc1 := big.NewFloat(0).SetInt(reserve1).Float64()
 
@@ -119,6 +128,7 @@ func (q *UniswapV2ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		log.Err(err).Msgf("%s inexact conversion acc0=%s acc1=%s r0=%d r1=%d", q.Chain, acc0, acc1, reserve0, reserve1)
 		return nil, 0, err
 	}
+
 	v, _ := big.NewFloat(r0 / r1 * 1.0e18).Int(nil)
 	return v, bn, nil
 }

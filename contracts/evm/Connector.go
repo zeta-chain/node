@@ -30,17 +30,17 @@ var (
 
 // ZetaInterfacesSendInput is an auto generated low-level Go binding around an user-defined struct.
 type ZetaInterfacesSendInput struct {
-	DestinationChainId *big.Int
-	DestinationAddress []byte
-	GasLimit           *big.Int
-	Message            []byte
-	ZetaAmount         *big.Int
-	ZetaParams         []byte
+	DestinationChainId  *big.Int
+	DestinationAddress  []byte
+	DestinationGasLimit *big.Int
+	Message             []byte
+	ZetaValueAndGas     *big.Int
+	ZetaParams          []byte
 }
 
 // ConnectorMetaData contains all meta data concerning the Connector contract.
 var ConnectorMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_zetaTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_tssAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_tssAddressUpdater\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"originSenderAddress\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"originChainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"destinationAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"ZetaReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"originSenderAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"originChainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"ZetaReverted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"originSenderAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getLockedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"originSenderAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"originChainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"destinationAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"onReceive\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"originSenderAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"originChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"onRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceTssAddressUpdater\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"gasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"zetaAmount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"internalType\":\"structZetaInterfaces.SendInput\",\"name\":\"input\",\"type\":\"tuple\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"tssAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"tssAddressUpdater\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_tssAddress\",\"type\":\"address\"}],\"name\":\"updateTssAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"zetaToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zetaTokenAddress_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tssAddress_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tssAddressUpdater_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"pauserAddress_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CallerIsNotPauser\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CallerIsNotTss\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CallerIsNotTssOrUpdater\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CallerIsNotTssUpdater\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxSupply\",\"type\":\"uint256\"}],\"name\":\"ExceedsMaxSupply\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZetaTransferError\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"updaterAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newTssAddress\",\"type\":\"address\"}],\"name\":\"PauserAddressUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newTssAddress\",\"type\":\"address\"}],\"name\":\"TSSAddressUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"zetaTxSenderAddress\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"sourceChainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"destinationAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaValue\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"ZetaReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"sourceChainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"remainingZetaValue\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"ZetaReverted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sourceTxOriginAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"getLockedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"maxSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"zetaTxSenderAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"sourceChainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"destinationAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"zetaValue\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"onReceive\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"sourceChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"remainingZetaValue\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"internalSendHash\",\"type\":\"bytes32\"}],\"name\":\"onRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pauserAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceTssAddressUpdater\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"internalType\":\"structZetaInterfaces.SendInput\",\"name\":\"input\",\"type\":\"tuple\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxSupply_\",\"type\":\"uint256\"}],\"name\":\"setMaxSupply\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"tssAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"tssAddressUpdater\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pauserAddress_\",\"type\":\"address\"}],\"name\":\"updatePauserAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tssAddress_\",\"type\":\"address\"}],\"name\":\"updateTssAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"zetaToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // ConnectorABI is the input ABI used to generate the binding from.
@@ -220,6 +220,37 @@ func (_Connector *ConnectorCallerSession) GetLockedAmount() (*big.Int, error) {
 	return _Connector.Contract.GetLockedAmount(&_Connector.CallOpts)
 }
 
+// MaxSupply is a free data retrieval call binding the contract method 0xd5abeb01.
+//
+// Solidity: function maxSupply() view returns(uint256)
+func (_Connector *ConnectorCaller) MaxSupply(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Connector.contract.Call(opts, &out, "maxSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// MaxSupply is a free data retrieval call binding the contract method 0xd5abeb01.
+//
+// Solidity: function maxSupply() view returns(uint256)
+func (_Connector *ConnectorSession) MaxSupply() (*big.Int, error) {
+	return _Connector.Contract.MaxSupply(&_Connector.CallOpts)
+}
+
+// MaxSupply is a free data retrieval call binding the contract method 0xd5abeb01.
+//
+// Solidity: function maxSupply() view returns(uint256)
+func (_Connector *ConnectorCallerSession) MaxSupply() (*big.Int, error) {
+	return _Connector.Contract.MaxSupply(&_Connector.CallOpts)
+}
+
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
 // Solidity: function paused() view returns(bool)
@@ -249,6 +280,37 @@ func (_Connector *ConnectorSession) Paused() (bool, error) {
 // Solidity: function paused() view returns(bool)
 func (_Connector *ConnectorCallerSession) Paused() (bool, error) {
 	return _Connector.Contract.Paused(&_Connector.CallOpts)
+}
+
+// PauserAddress is a free data retrieval call binding the contract method 0xf7fb869b.
+//
+// Solidity: function pauserAddress() view returns(address)
+func (_Connector *ConnectorCaller) PauserAddress(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Connector.contract.Call(opts, &out, "pauserAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// PauserAddress is a free data retrieval call binding the contract method 0xf7fb869b.
+//
+// Solidity: function pauserAddress() view returns(address)
+func (_Connector *ConnectorSession) PauserAddress() (common.Address, error) {
+	return _Connector.Contract.PauserAddress(&_Connector.CallOpts)
+}
+
+// PauserAddress is a free data retrieval call binding the contract method 0xf7fb869b.
+//
+// Solidity: function pauserAddress() view returns(address)
+func (_Connector *ConnectorCallerSession) PauserAddress() (common.Address, error) {
+	return _Connector.Contract.PauserAddress(&_Connector.CallOpts)
 }
 
 // TssAddress is a free data retrieval call binding the contract method 0x5b112591.
@@ -346,44 +408,44 @@ func (_Connector *ConnectorCallerSession) ZetaToken() (common.Address, error) {
 
 // OnReceive is a paid mutator transaction binding the contract method 0x29dd214d.
 //
-// Solidity: function onReceive(bytes originSenderAddress, uint256 originChainId, address destinationAddress, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorTransactor) OnReceive(opts *bind.TransactOpts, originSenderAddress []byte, originChainId *big.Int, destinationAddress common.Address, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.contract.Transact(opts, "onReceive", originSenderAddress, originChainId, destinationAddress, zetaAmount, message, internalSendHash)
+// Solidity: function onReceive(bytes zetaTxSenderAddress, uint256 sourceChainId, address destinationAddress, uint256 zetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorTransactor) OnReceive(opts *bind.TransactOpts, zetaTxSenderAddress []byte, sourceChainId *big.Int, destinationAddress common.Address, zetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.contract.Transact(opts, "onReceive", zetaTxSenderAddress, sourceChainId, destinationAddress, zetaValue, message, internalSendHash)
 }
 
 // OnReceive is a paid mutator transaction binding the contract method 0x29dd214d.
 //
-// Solidity: function onReceive(bytes originSenderAddress, uint256 originChainId, address destinationAddress, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorSession) OnReceive(originSenderAddress []byte, originChainId *big.Int, destinationAddress common.Address, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.Contract.OnReceive(&_Connector.TransactOpts, originSenderAddress, originChainId, destinationAddress, zetaAmount, message, internalSendHash)
+// Solidity: function onReceive(bytes zetaTxSenderAddress, uint256 sourceChainId, address destinationAddress, uint256 zetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorSession) OnReceive(zetaTxSenderAddress []byte, sourceChainId *big.Int, destinationAddress common.Address, zetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.Contract.OnReceive(&_Connector.TransactOpts, zetaTxSenderAddress, sourceChainId, destinationAddress, zetaValue, message, internalSendHash)
 }
 
 // OnReceive is a paid mutator transaction binding the contract method 0x29dd214d.
 //
-// Solidity: function onReceive(bytes originSenderAddress, uint256 originChainId, address destinationAddress, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorTransactorSession) OnReceive(originSenderAddress []byte, originChainId *big.Int, destinationAddress common.Address, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.Contract.OnReceive(&_Connector.TransactOpts, originSenderAddress, originChainId, destinationAddress, zetaAmount, message, internalSendHash)
+// Solidity: function onReceive(bytes zetaTxSenderAddress, uint256 sourceChainId, address destinationAddress, uint256 zetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorTransactorSession) OnReceive(zetaTxSenderAddress []byte, sourceChainId *big.Int, destinationAddress common.Address, zetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.Contract.OnReceive(&_Connector.TransactOpts, zetaTxSenderAddress, sourceChainId, destinationAddress, zetaValue, message, internalSendHash)
 }
 
 // OnRevert is a paid mutator transaction binding the contract method 0x942a5e16.
 //
-// Solidity: function onRevert(address originSenderAddress, uint256 originChainId, bytes destinationAddress, uint256 destinationChainId, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorTransactor) OnRevert(opts *bind.TransactOpts, originSenderAddress common.Address, originChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.contract.Transact(opts, "onRevert", originSenderAddress, originChainId, destinationAddress, destinationChainId, zetaAmount, message, internalSendHash)
+// Solidity: function onRevert(address zetaTxSenderAddress, uint256 sourceChainId, bytes destinationAddress, uint256 destinationChainId, uint256 remainingZetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorTransactor) OnRevert(opts *bind.TransactOpts, zetaTxSenderAddress common.Address, sourceChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, remainingZetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.contract.Transact(opts, "onRevert", zetaTxSenderAddress, sourceChainId, destinationAddress, destinationChainId, remainingZetaValue, message, internalSendHash)
 }
 
 // OnRevert is a paid mutator transaction binding the contract method 0x942a5e16.
 //
-// Solidity: function onRevert(address originSenderAddress, uint256 originChainId, bytes destinationAddress, uint256 destinationChainId, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorSession) OnRevert(originSenderAddress common.Address, originChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.Contract.OnRevert(&_Connector.TransactOpts, originSenderAddress, originChainId, destinationAddress, destinationChainId, zetaAmount, message, internalSendHash)
+// Solidity: function onRevert(address zetaTxSenderAddress, uint256 sourceChainId, bytes destinationAddress, uint256 destinationChainId, uint256 remainingZetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorSession) OnRevert(zetaTxSenderAddress common.Address, sourceChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, remainingZetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.Contract.OnRevert(&_Connector.TransactOpts, zetaTxSenderAddress, sourceChainId, destinationAddress, destinationChainId, remainingZetaValue, message, internalSendHash)
 }
 
 // OnRevert is a paid mutator transaction binding the contract method 0x942a5e16.
 //
-// Solidity: function onRevert(address originSenderAddress, uint256 originChainId, bytes destinationAddress, uint256 destinationChainId, uint256 zetaAmount, bytes message, bytes32 internalSendHash) returns()
-func (_Connector *ConnectorTransactorSession) OnRevert(originSenderAddress common.Address, originChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, zetaAmount *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
-	return _Connector.Contract.OnRevert(&_Connector.TransactOpts, originSenderAddress, originChainId, destinationAddress, destinationChainId, zetaAmount, message, internalSendHash)
+// Solidity: function onRevert(address zetaTxSenderAddress, uint256 sourceChainId, bytes destinationAddress, uint256 destinationChainId, uint256 remainingZetaValue, bytes message, bytes32 internalSendHash) returns()
+func (_Connector *ConnectorTransactorSession) OnRevert(zetaTxSenderAddress common.Address, sourceChainId *big.Int, destinationAddress []byte, destinationChainId *big.Int, remainingZetaValue *big.Int, message []byte, internalSendHash [32]byte) (*types.Transaction, error) {
+	return _Connector.Contract.OnRevert(&_Connector.TransactOpts, zetaTxSenderAddress, sourceChainId, destinationAddress, destinationChainId, remainingZetaValue, message, internalSendHash)
 }
 
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
@@ -449,6 +511,27 @@ func (_Connector *ConnectorTransactorSession) Send(input ZetaInterfacesSendInput
 	return _Connector.Contract.Send(&_Connector.TransactOpts, input)
 }
 
+// SetMaxSupply is a paid mutator transaction binding the contract method 0x6f8b44b0.
+//
+// Solidity: function setMaxSupply(uint256 maxSupply_) returns()
+func (_Connector *ConnectorTransactor) SetMaxSupply(opts *bind.TransactOpts, maxSupply_ *big.Int) (*types.Transaction, error) {
+	return _Connector.contract.Transact(opts, "setMaxSupply", maxSupply_)
+}
+
+// SetMaxSupply is a paid mutator transaction binding the contract method 0x6f8b44b0.
+//
+// Solidity: function setMaxSupply(uint256 maxSupply_) returns()
+func (_Connector *ConnectorSession) SetMaxSupply(maxSupply_ *big.Int) (*types.Transaction, error) {
+	return _Connector.Contract.SetMaxSupply(&_Connector.TransactOpts, maxSupply_)
+}
+
+// SetMaxSupply is a paid mutator transaction binding the contract method 0x6f8b44b0.
+//
+// Solidity: function setMaxSupply(uint256 maxSupply_) returns()
+func (_Connector *ConnectorTransactorSession) SetMaxSupply(maxSupply_ *big.Int) (*types.Transaction, error) {
+	return _Connector.Contract.SetMaxSupply(&_Connector.TransactOpts, maxSupply_)
+}
+
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
@@ -470,25 +553,46 @@ func (_Connector *ConnectorTransactorSession) Unpause() (*types.Transaction, err
 	return _Connector.Contract.Unpause(&_Connector.TransactOpts)
 }
 
-// UpdateTssAddress is a paid mutator transaction binding the contract method 0x9122c344.
+// UpdatePauserAddress is a paid mutator transaction binding the contract method 0x6128480f.
 //
-// Solidity: function updateTssAddress(address _tssAddress) returns()
-func (_Connector *ConnectorTransactor) UpdateTssAddress(opts *bind.TransactOpts, _tssAddress common.Address) (*types.Transaction, error) {
-	return _Connector.contract.Transact(opts, "updateTssAddress", _tssAddress)
+// Solidity: function updatePauserAddress(address pauserAddress_) returns()
+func (_Connector *ConnectorTransactor) UpdatePauserAddress(opts *bind.TransactOpts, pauserAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.contract.Transact(opts, "updatePauserAddress", pauserAddress_)
+}
+
+// UpdatePauserAddress is a paid mutator transaction binding the contract method 0x6128480f.
+//
+// Solidity: function updatePauserAddress(address pauserAddress_) returns()
+func (_Connector *ConnectorSession) UpdatePauserAddress(pauserAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.Contract.UpdatePauserAddress(&_Connector.TransactOpts, pauserAddress_)
+}
+
+// UpdatePauserAddress is a paid mutator transaction binding the contract method 0x6128480f.
+//
+// Solidity: function updatePauserAddress(address pauserAddress_) returns()
+func (_Connector *ConnectorTransactorSession) UpdatePauserAddress(pauserAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.Contract.UpdatePauserAddress(&_Connector.TransactOpts, pauserAddress_)
 }
 
 // UpdateTssAddress is a paid mutator transaction binding the contract method 0x9122c344.
 //
-// Solidity: function updateTssAddress(address _tssAddress) returns()
-func (_Connector *ConnectorSession) UpdateTssAddress(_tssAddress common.Address) (*types.Transaction, error) {
-	return _Connector.Contract.UpdateTssAddress(&_Connector.TransactOpts, _tssAddress)
+// Solidity: function updateTssAddress(address tssAddress_) returns()
+func (_Connector *ConnectorTransactor) UpdateTssAddress(opts *bind.TransactOpts, tssAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.contract.Transact(opts, "updateTssAddress", tssAddress_)
 }
 
 // UpdateTssAddress is a paid mutator transaction binding the contract method 0x9122c344.
 //
-// Solidity: function updateTssAddress(address _tssAddress) returns()
-func (_Connector *ConnectorTransactorSession) UpdateTssAddress(_tssAddress common.Address) (*types.Transaction, error) {
-	return _Connector.Contract.UpdateTssAddress(&_Connector.TransactOpts, _tssAddress)
+// Solidity: function updateTssAddress(address tssAddress_) returns()
+func (_Connector *ConnectorSession) UpdateTssAddress(tssAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.Contract.UpdateTssAddress(&_Connector.TransactOpts, tssAddress_)
+}
+
+// UpdateTssAddress is a paid mutator transaction binding the contract method 0x9122c344.
+//
+// Solidity: function updateTssAddress(address tssAddress_) returns()
+func (_Connector *ConnectorTransactorSession) UpdateTssAddress(tssAddress_ common.Address) (*types.Transaction, error) {
+	return _Connector.Contract.UpdateTssAddress(&_Connector.TransactOpts, tssAddress_)
 }
 
 // ConnectorPausedIterator is returned from FilterPaused and is used to iterate over the raw logs and unpacked data for Paused events raised by the Connector contract.
@@ -619,6 +723,276 @@ func (_Connector *ConnectorFilterer) WatchPaused(opts *bind.WatchOpts, sink chan
 func (_Connector *ConnectorFilterer) ParsePaused(log types.Log) (*ConnectorPaused, error) {
 	event := new(ConnectorPaused)
 	if err := _Connector.contract.UnpackLog(event, "Paused", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ConnectorPauserAddressUpdatedIterator is returned from FilterPauserAddressUpdated and is used to iterate over the raw logs and unpacked data for PauserAddressUpdated events raised by the Connector contract.
+type ConnectorPauserAddressUpdatedIterator struct {
+	Event *ConnectorPauserAddressUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ConnectorPauserAddressUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ConnectorPauserAddressUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ConnectorPauserAddressUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ConnectorPauserAddressUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ConnectorPauserAddressUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ConnectorPauserAddressUpdated represents a PauserAddressUpdated event raised by the Connector contract.
+type ConnectorPauserAddressUpdated struct {
+	UpdaterAddress common.Address
+	NewTssAddress  common.Address
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// FilterPauserAddressUpdated is a free log retrieval operation binding the contract event 0xd41d83655d484bdf299598751c371b2d92088667266fe3774b25a97bdd5d0397.
+//
+// Solidity: event PauserAddressUpdated(address updaterAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) FilterPauserAddressUpdated(opts *bind.FilterOpts) (*ConnectorPauserAddressUpdatedIterator, error) {
+
+	logs, sub, err := _Connector.contract.FilterLogs(opts, "PauserAddressUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &ConnectorPauserAddressUpdatedIterator{contract: _Connector.contract, event: "PauserAddressUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchPauserAddressUpdated is a free log subscription operation binding the contract event 0xd41d83655d484bdf299598751c371b2d92088667266fe3774b25a97bdd5d0397.
+//
+// Solidity: event PauserAddressUpdated(address updaterAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) WatchPauserAddressUpdated(opts *bind.WatchOpts, sink chan<- *ConnectorPauserAddressUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _Connector.contract.WatchLogs(opts, "PauserAddressUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ConnectorPauserAddressUpdated)
+				if err := _Connector.contract.UnpackLog(event, "PauserAddressUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParsePauserAddressUpdated is a log parse operation binding the contract event 0xd41d83655d484bdf299598751c371b2d92088667266fe3774b25a97bdd5d0397.
+//
+// Solidity: event PauserAddressUpdated(address updaterAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) ParsePauserAddressUpdated(log types.Log) (*ConnectorPauserAddressUpdated, error) {
+	event := new(ConnectorPauserAddressUpdated)
+	if err := _Connector.contract.UnpackLog(event, "PauserAddressUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// ConnectorTSSAddressUpdatedIterator is returned from FilterTSSAddressUpdated and is used to iterate over the raw logs and unpacked data for TSSAddressUpdated events raised by the Connector contract.
+type ConnectorTSSAddressUpdatedIterator struct {
+	Event *ConnectorTSSAddressUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ConnectorTSSAddressUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ConnectorTSSAddressUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ConnectorTSSAddressUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ConnectorTSSAddressUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ConnectorTSSAddressUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ConnectorTSSAddressUpdated represents a TSSAddressUpdated event raised by the Connector contract.
+type ConnectorTSSAddressUpdated struct {
+	ZetaTxSenderAddress common.Address
+	NewTssAddress       common.Address
+	Raw                 types.Log // Blockchain specific contextual infos
+}
+
+// FilterTSSAddressUpdated is a free log retrieval operation binding the contract event 0xe79965b5c67dcfb2cf5fe152715e4a7256cee62a3d5dd8484fd8a8539eb8beff.
+//
+// Solidity: event TSSAddressUpdated(address zetaTxSenderAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) FilterTSSAddressUpdated(opts *bind.FilterOpts) (*ConnectorTSSAddressUpdatedIterator, error) {
+
+	logs, sub, err := _Connector.contract.FilterLogs(opts, "TSSAddressUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &ConnectorTSSAddressUpdatedIterator{contract: _Connector.contract, event: "TSSAddressUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchTSSAddressUpdated is a free log subscription operation binding the contract event 0xe79965b5c67dcfb2cf5fe152715e4a7256cee62a3d5dd8484fd8a8539eb8beff.
+//
+// Solidity: event TSSAddressUpdated(address zetaTxSenderAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) WatchTSSAddressUpdated(opts *bind.WatchOpts, sink chan<- *ConnectorTSSAddressUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _Connector.contract.WatchLogs(opts, "TSSAddressUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ConnectorTSSAddressUpdated)
+				if err := _Connector.contract.UnpackLog(event, "TSSAddressUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseTSSAddressUpdated is a log parse operation binding the contract event 0xe79965b5c67dcfb2cf5fe152715e4a7256cee62a3d5dd8484fd8a8539eb8beff.
+//
+// Solidity: event TSSAddressUpdated(address zetaTxSenderAddress, address newTssAddress)
+func (_Connector *ConnectorFilterer) ParseTSSAddressUpdated(log types.Log) (*ConnectorTSSAddressUpdated, error) {
+	event := new(ConnectorTSSAddressUpdated)
+	if err := _Connector.contract.UnpackLog(event, "TSSAddressUpdated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -828,10 +1202,10 @@ func (it *ConnectorZetaReceivedIterator) Close() error {
 
 // ConnectorZetaReceived represents a ZetaReceived event raised by the Connector contract.
 type ConnectorZetaReceived struct {
-	OriginSenderAddress []byte
-	OriginChainId       *big.Int
+	ZetaTxSenderAddress []byte
+	SourceChainId       *big.Int
 	DestinationAddress  common.Address
-	ZetaAmount          *big.Int
+	ZetaValue           *big.Int
 	Message             []byte
 	InternalSendHash    [32]byte
 	Raw                 types.Log // Blockchain specific contextual infos
@@ -839,12 +1213,12 @@ type ConnectorZetaReceived struct {
 
 // FilterZetaReceived is a free log retrieval operation binding the contract event 0xf1302855733b40d8acb467ee990b6d56c05c80e28ebcabfa6e6f3f57cb50d698.
 //
-// Solidity: event ZetaReceived(bytes originSenderAddress, uint256 indexed originChainId, address indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
-func (_Connector *ConnectorFilterer) FilterZetaReceived(opts *bind.FilterOpts, originChainId []*big.Int, destinationAddress []common.Address, internalSendHash [][32]byte) (*ConnectorZetaReceivedIterator, error) {
+// Solidity: event ZetaReceived(bytes zetaTxSenderAddress, uint256 indexed sourceChainId, address indexed destinationAddress, uint256 zetaValue, bytes message, bytes32 indexed internalSendHash)
+func (_Connector *ConnectorFilterer) FilterZetaReceived(opts *bind.FilterOpts, sourceChainId []*big.Int, destinationAddress []common.Address, internalSendHash [][32]byte) (*ConnectorZetaReceivedIterator, error) {
 
-	var originChainIdRule []interface{}
-	for _, originChainIdItem := range originChainId {
-		originChainIdRule = append(originChainIdRule, originChainIdItem)
+	var sourceChainIdRule []interface{}
+	for _, sourceChainIdItem := range sourceChainId {
+		sourceChainIdRule = append(sourceChainIdRule, sourceChainIdItem)
 	}
 	var destinationAddressRule []interface{}
 	for _, destinationAddressItem := range destinationAddress {
@@ -856,7 +1230,7 @@ func (_Connector *ConnectorFilterer) FilterZetaReceived(opts *bind.FilterOpts, o
 		internalSendHashRule = append(internalSendHashRule, internalSendHashItem)
 	}
 
-	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaReceived", originChainIdRule, destinationAddressRule, internalSendHashRule)
+	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaReceived", sourceChainIdRule, destinationAddressRule, internalSendHashRule)
 	if err != nil {
 		return nil, err
 	}
@@ -865,12 +1239,12 @@ func (_Connector *ConnectorFilterer) FilterZetaReceived(opts *bind.FilterOpts, o
 
 // WatchZetaReceived is a free log subscription operation binding the contract event 0xf1302855733b40d8acb467ee990b6d56c05c80e28ebcabfa6e6f3f57cb50d698.
 //
-// Solidity: event ZetaReceived(bytes originSenderAddress, uint256 indexed originChainId, address indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
-func (_Connector *ConnectorFilterer) WatchZetaReceived(opts *bind.WatchOpts, sink chan<- *ConnectorZetaReceived, originChainId []*big.Int, destinationAddress []common.Address, internalSendHash [][32]byte) (event.Subscription, error) {
+// Solidity: event ZetaReceived(bytes zetaTxSenderAddress, uint256 indexed sourceChainId, address indexed destinationAddress, uint256 zetaValue, bytes message, bytes32 indexed internalSendHash)
+func (_Connector *ConnectorFilterer) WatchZetaReceived(opts *bind.WatchOpts, sink chan<- *ConnectorZetaReceived, sourceChainId []*big.Int, destinationAddress []common.Address, internalSendHash [][32]byte) (event.Subscription, error) {
 
-	var originChainIdRule []interface{}
-	for _, originChainIdItem := range originChainId {
-		originChainIdRule = append(originChainIdRule, originChainIdItem)
+	var sourceChainIdRule []interface{}
+	for _, sourceChainIdItem := range sourceChainId {
+		sourceChainIdRule = append(sourceChainIdRule, sourceChainIdItem)
 	}
 	var destinationAddressRule []interface{}
 	for _, destinationAddressItem := range destinationAddress {
@@ -882,7 +1256,7 @@ func (_Connector *ConnectorFilterer) WatchZetaReceived(opts *bind.WatchOpts, sin
 		internalSendHashRule = append(internalSendHashRule, internalSendHashItem)
 	}
 
-	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaReceived", originChainIdRule, destinationAddressRule, internalSendHashRule)
+	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaReceived", sourceChainIdRule, destinationAddressRule, internalSendHashRule)
 	if err != nil {
 		return nil, err
 	}
@@ -916,7 +1290,7 @@ func (_Connector *ConnectorFilterer) WatchZetaReceived(opts *bind.WatchOpts, sin
 
 // ParseZetaReceived is a log parse operation binding the contract event 0xf1302855733b40d8acb467ee990b6d56c05c80e28ebcabfa6e6f3f57cb50d698.
 //
-// Solidity: event ZetaReceived(bytes originSenderAddress, uint256 indexed originChainId, address indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
+// Solidity: event ZetaReceived(bytes zetaTxSenderAddress, uint256 indexed sourceChainId, address indexed destinationAddress, uint256 zetaValue, bytes message, bytes32 indexed internalSendHash)
 func (_Connector *ConnectorFilterer) ParseZetaReceived(log types.Log) (*ConnectorZetaReceived, error) {
 	event := new(ConnectorZetaReceived)
 	if err := _Connector.contract.UnpackLog(event, "ZetaReceived", log); err != nil {
@@ -995,11 +1369,11 @@ func (it *ConnectorZetaRevertedIterator) Close() error {
 
 // ConnectorZetaReverted represents a ZetaReverted event raised by the Connector contract.
 type ConnectorZetaReverted struct {
-	OriginSenderAddress common.Address
-	OriginChainId       *big.Int
+	ZetaTxSenderAddress common.Address
+	SourceChainId       *big.Int
 	DestinationChainId  *big.Int
-	DestinationAddress  common.Hash
-	ZetaAmount          *big.Int
+	DestinationAddress  []byte
+	RemainingZetaValue  *big.Int
 	Message             []byte
 	InternalSendHash    [32]byte
 	Raw                 types.Log // Blockchain specific contextual infos
@@ -1007,16 +1381,12 @@ type ConnectorZetaReverted struct {
 
 // FilterZetaReverted is a free log retrieval operation binding the contract event 0x521fb0b407c2eb9b1375530e9b9a569889992140a688bc076aa72c1712012c88.
 //
-// Solidity: event ZetaReverted(address originSenderAddress, uint256 originChainId, uint256 indexed destinationChainId, bytes indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
-func (_Connector *ConnectorFilterer) FilterZetaReverted(opts *bind.FilterOpts, destinationChainId []*big.Int, destinationAddress [][]byte, internalSendHash [][32]byte) (*ConnectorZetaRevertedIterator, error) {
+// Solidity: event ZetaReverted(address zetaTxSenderAddress, uint256 sourceChainId, uint256 indexed destinationChainId, bytes destinationAddress, uint256 remainingZetaValue, bytes message, bytes32 indexed internalSendHash)
+func (_Connector *ConnectorFilterer) FilterZetaReverted(opts *bind.FilterOpts, destinationChainId []*big.Int, internalSendHash [][32]byte) (*ConnectorZetaRevertedIterator, error) {
 
 	var destinationChainIdRule []interface{}
 	for _, destinationChainIdItem := range destinationChainId {
 		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
-	}
-	var destinationAddressRule []interface{}
-	for _, destinationAddressItem := range destinationAddress {
-		destinationAddressRule = append(destinationAddressRule, destinationAddressItem)
 	}
 
 	var internalSendHashRule []interface{}
@@ -1024,7 +1394,7 @@ func (_Connector *ConnectorFilterer) FilterZetaReverted(opts *bind.FilterOpts, d
 		internalSendHashRule = append(internalSendHashRule, internalSendHashItem)
 	}
 
-	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaReverted", destinationChainIdRule, destinationAddressRule, internalSendHashRule)
+	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaReverted", destinationChainIdRule, internalSendHashRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1033,16 +1403,12 @@ func (_Connector *ConnectorFilterer) FilterZetaReverted(opts *bind.FilterOpts, d
 
 // WatchZetaReverted is a free log subscription operation binding the contract event 0x521fb0b407c2eb9b1375530e9b9a569889992140a688bc076aa72c1712012c88.
 //
-// Solidity: event ZetaReverted(address originSenderAddress, uint256 originChainId, uint256 indexed destinationChainId, bytes indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
-func (_Connector *ConnectorFilterer) WatchZetaReverted(opts *bind.WatchOpts, sink chan<- *ConnectorZetaReverted, destinationChainId []*big.Int, destinationAddress [][]byte, internalSendHash [][32]byte) (event.Subscription, error) {
+// Solidity: event ZetaReverted(address zetaTxSenderAddress, uint256 sourceChainId, uint256 indexed destinationChainId, bytes destinationAddress, uint256 remainingZetaValue, bytes message, bytes32 indexed internalSendHash)
+func (_Connector *ConnectorFilterer) WatchZetaReverted(opts *bind.WatchOpts, sink chan<- *ConnectorZetaReverted, destinationChainId []*big.Int, internalSendHash [][32]byte) (event.Subscription, error) {
 
 	var destinationChainIdRule []interface{}
 	for _, destinationChainIdItem := range destinationChainId {
 		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
-	}
-	var destinationAddressRule []interface{}
-	for _, destinationAddressItem := range destinationAddress {
-		destinationAddressRule = append(destinationAddressRule, destinationAddressItem)
 	}
 
 	var internalSendHashRule []interface{}
@@ -1050,7 +1416,7 @@ func (_Connector *ConnectorFilterer) WatchZetaReverted(opts *bind.WatchOpts, sin
 		internalSendHashRule = append(internalSendHashRule, internalSendHashItem)
 	}
 
-	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaReverted", destinationChainIdRule, destinationAddressRule, internalSendHashRule)
+	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaReverted", destinationChainIdRule, internalSendHashRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1084,7 +1450,7 @@ func (_Connector *ConnectorFilterer) WatchZetaReverted(opts *bind.WatchOpts, sin
 
 // ParseZetaReverted is a log parse operation binding the contract event 0x521fb0b407c2eb9b1375530e9b9a569889992140a688bc076aa72c1712012c88.
 //
-// Solidity: event ZetaReverted(address originSenderAddress, uint256 originChainId, uint256 indexed destinationChainId, bytes indexed destinationAddress, uint256 zetaAmount, bytes message, bytes32 indexed internalSendHash)
+// Solidity: event ZetaReverted(address zetaTxSenderAddress, uint256 sourceChainId, uint256 indexed destinationChainId, bytes destinationAddress, uint256 remainingZetaValue, bytes message, bytes32 indexed internalSendHash)
 func (_Connector *ConnectorFilterer) ParseZetaReverted(log types.Log) (*ConnectorZetaReverted, error) {
 	event := new(ConnectorZetaReverted)
 	if err := _Connector.contract.UnpackLog(event, "ZetaReverted", log); err != nil {
@@ -1163,44 +1529,53 @@ func (it *ConnectorZetaSentIterator) Close() error {
 
 // ConnectorZetaSent represents a ZetaSent event raised by the Connector contract.
 type ConnectorZetaSent struct {
-	OriginSenderAddress common.Address
-	DestinationChainId  *big.Int
-	DestinationAddress  []byte
-	ZetaAmount          *big.Int
-	GasLimit            *big.Int
-	Message             []byte
-	ZetaParams          []byte
-	Raw                 types.Log // Blockchain specific contextual infos
+	SourceTxOriginAddress common.Address
+	ZetaTxSenderAddress   common.Address
+	DestinationChainId    *big.Int
+	DestinationAddress    []byte
+	ZetaValueAndGas       *big.Int
+	DestinationGasLimit   *big.Int
+	Message               []byte
+	ZetaParams            []byte
+	Raw                   types.Log // Blockchain specific contextual infos
 }
 
-// FilterZetaSent is a free log retrieval operation binding the contract event 0x97065cad1890c17c6cfbcc9b6cf03bb438e24fbe3776a826e6adb890032908a5.
+// FilterZetaSent is a free log retrieval operation binding the contract event 0x7ec1c94701e09b1652f3e1d307e60c4b9ebf99aff8c2079fd1d8c585e031c4e4.
 //
-// Solidity: event ZetaSent(address indexed originSenderAddress, uint256 destinationChainId, bytes destinationAddress, uint256 zetaAmount, uint256 gasLimit, bytes message, bytes zetaParams)
-func (_Connector *ConnectorFilterer) FilterZetaSent(opts *bind.FilterOpts, originSenderAddress []common.Address) (*ConnectorZetaSentIterator, error) {
+// Solidity: event ZetaSent(address sourceTxOriginAddress, address indexed zetaTxSenderAddress, uint256 indexed destinationChainId, bytes destinationAddress, uint256 zetaValueAndGas, uint256 destinationGasLimit, bytes message, bytes zetaParams)
+func (_Connector *ConnectorFilterer) FilterZetaSent(opts *bind.FilterOpts, zetaTxSenderAddress []common.Address, destinationChainId []*big.Int) (*ConnectorZetaSentIterator, error) {
 
-	var originSenderAddressRule []interface{}
-	for _, originSenderAddressItem := range originSenderAddress {
-		originSenderAddressRule = append(originSenderAddressRule, originSenderAddressItem)
+	var zetaTxSenderAddressRule []interface{}
+	for _, zetaTxSenderAddressItem := range zetaTxSenderAddress {
+		zetaTxSenderAddressRule = append(zetaTxSenderAddressRule, zetaTxSenderAddressItem)
+	}
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
 	}
 
-	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaSent", originSenderAddressRule)
+	logs, sub, err := _Connector.contract.FilterLogs(opts, "ZetaSent", zetaTxSenderAddressRule, destinationChainIdRule)
 	if err != nil {
 		return nil, err
 	}
 	return &ConnectorZetaSentIterator{contract: _Connector.contract, event: "ZetaSent", logs: logs, sub: sub}, nil
 }
 
-// WatchZetaSent is a free log subscription operation binding the contract event 0x97065cad1890c17c6cfbcc9b6cf03bb438e24fbe3776a826e6adb890032908a5.
+// WatchZetaSent is a free log subscription operation binding the contract event 0x7ec1c94701e09b1652f3e1d307e60c4b9ebf99aff8c2079fd1d8c585e031c4e4.
 //
-// Solidity: event ZetaSent(address indexed originSenderAddress, uint256 destinationChainId, bytes destinationAddress, uint256 zetaAmount, uint256 gasLimit, bytes message, bytes zetaParams)
-func (_Connector *ConnectorFilterer) WatchZetaSent(opts *bind.WatchOpts, sink chan<- *ConnectorZetaSent, originSenderAddress []common.Address) (event.Subscription, error) {
+// Solidity: event ZetaSent(address sourceTxOriginAddress, address indexed zetaTxSenderAddress, uint256 indexed destinationChainId, bytes destinationAddress, uint256 zetaValueAndGas, uint256 destinationGasLimit, bytes message, bytes zetaParams)
+func (_Connector *ConnectorFilterer) WatchZetaSent(opts *bind.WatchOpts, sink chan<- *ConnectorZetaSent, zetaTxSenderAddress []common.Address, destinationChainId []*big.Int) (event.Subscription, error) {
 
-	var originSenderAddressRule []interface{}
-	for _, originSenderAddressItem := range originSenderAddress {
-		originSenderAddressRule = append(originSenderAddressRule, originSenderAddressItem)
+	var zetaTxSenderAddressRule []interface{}
+	for _, zetaTxSenderAddressItem := range zetaTxSenderAddress {
+		zetaTxSenderAddressRule = append(zetaTxSenderAddressRule, zetaTxSenderAddressItem)
+	}
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
 	}
 
-	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaSent", originSenderAddressRule)
+	logs, sub, err := _Connector.contract.WatchLogs(opts, "ZetaSent", zetaTxSenderAddressRule, destinationChainIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1232,9 +1607,9 @@ func (_Connector *ConnectorFilterer) WatchZetaSent(opts *bind.WatchOpts, sink ch
 	}), nil
 }
 
-// ParseZetaSent is a log parse operation binding the contract event 0x97065cad1890c17c6cfbcc9b6cf03bb438e24fbe3776a826e6adb890032908a5.
+// ParseZetaSent is a log parse operation binding the contract event 0x7ec1c94701e09b1652f3e1d307e60c4b9ebf99aff8c2079fd1d8c585e031c4e4.
 //
-// Solidity: event ZetaSent(address indexed originSenderAddress, uint256 destinationChainId, bytes destinationAddress, uint256 zetaAmount, uint256 gasLimit, bytes message, bytes zetaParams)
+// Solidity: event ZetaSent(address sourceTxOriginAddress, address indexed zetaTxSenderAddress, uint256 indexed destinationChainId, bytes destinationAddress, uint256 zetaValueAndGas, uint256 destinationGasLimit, bytes message, bytes zetaParams)
 func (_Connector *ConnectorFilterer) ParseZetaSent(log types.Log) (*ConnectorZetaSent, error) {
 	event := new(ConnectorZetaSent)
 	if err := _Connector.contract.UnpackLog(event, "ZetaSent", log); err != nil {

@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -12,16 +14,16 @@ import (
 func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatchList) (*types.MsgAddToWatchListResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	//validators := k.StakingKeeper.GetAllValidators(ctx)
-	//if !IsBondedValidator(msg.Creator, validators) {
-	//	return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
-	//}
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !IsBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	}
 	nonceString := strconv.Itoa(int(msg.Nonce))
 	index := fmt.Sprintf("%s/%s", msg.Chain, nonceString)
 	tracker, found := k.GetOutTxTracker(ctx, index)
 	hash := types.TxHashList{
 		TxHash: msg.TxHash,
-		Singer: msg.Creator,
+		Signer: msg.Creator,
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
@@ -32,8 +34,16 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 		})
 		return &types.MsgAddToWatchListResponse{}, nil
 	}
-
-	tracker.HashList = append(tracker.HashList, &hash)
-	k.SetOutTxTracker(ctx, tracker)
+	var isDup = false
+	for _, hash := range tracker.HashList {
+		if strings.EqualFold(hash.TxHash, msg.TxHash) {
+			isDup = true
+			break
+		}
+	}
+	if !isDup {
+		tracker.HashList = append(tracker.HashList, &hash)
+		k.SetOutTxTracker(ctx, tracker)
+	}
 	return &types.MsgAddToWatchListResponse{}, nil
 }

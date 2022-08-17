@@ -39,10 +39,12 @@ type CoreObserver struct {
 	shepherds   map[string]bool
 
 	fileLogger *zerolog.Logger
+	logger     zerolog.Logger
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
+	co.logger = log.With().Str("module", "CoreOb").Logger()
 	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
@@ -53,12 +55,12 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 
 	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
 	if err != nil {
-		log.Error().Err(err).Msg("error registering counter")
+		co.logger.Error().Err(err).Msg("error registering counter")
 	}
 
 	co.sendNew = make(chan *types.Send)
 	co.sendDone = make(chan *types.Send)
-	MAX_SIGNERS := 100 // assuming each signer takes 100s to finish (have outTx included), then throughput is bounded by 100/100 = 1 tx/s
+	MAX_SIGNERS := 50 // assuming each signer takes 100s to finish (have outTx included), then throughput is bounded by 100/100 = 1 tx/s
 	co.signerSlots = make(chan bool, MAX_SIGNERS)
 	for i := 0; i < MAX_SIGNERS; i++ {
 		co.signerSlots <- true
@@ -68,7 +70,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		// Can we log an error before we have our logger? :)
-		log.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
+		co.logger.Error().Err(err).Msgf("there was an error creating a logFile on zetacore")
 	}
 	fileLogger := zerolog.New(logFile).With().Logger()
 	co.fileLogger = &fileLogger
@@ -116,33 +118,33 @@ func (co *CoreObserver) keygenObserve() {
 				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
 				res, err := co.tss.Server.Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
-					log.Fatal().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 					continue
 				}
 				// Keygen succeed! Report TSS address
-				log.Info().Msgf("Keygen success! keygen response: %v...", res)
+				co.logger.Info().Msgf("Keygen success! keygen response: %v...", res)
 				err = co.tss.SetPubKey(res.PubKey)
 				if err != nil {
-					log.Error().Msgf("SetPubKey fail")
+					co.logger.Error().Msgf("SetPubKey fail")
 					continue
 				}
 
 				for _, chain := range config.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
 					if err != nil {
-						log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
 				}
 
 				// Keysign test: sanity test
-				log.Info().Msgf("test keysign...")
+				co.logger.Info().Msgf("test keysign...")
 				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
-				log.Info().Msg("test keysign finished. exit keygen loop. ")
+				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
 					err = co.clientMap[chain].PostNonceIfNotRecorded()
 					if err != nil {
-						log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
 					}
 				}
 
@@ -161,19 +163,52 @@ func (co *CoreObserver) startObserve() {
 	for range observeTicker.C {
 		sendList, err := co.bridge.GetAllPendingSend()
 		if err != nil {
-			log.Error().Err(err).Msg("error requesting sends from zetacore")
+			co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
 			continue
 		}
 		if len(sendList) > 0 {
-			log.Info().Msgf("#pending send: %d", len(sendList))
+			co.logger.Info().Msgf("#pending send: %d", len(sendList))
 		}
-		sort.Slice(sendList, func(i, j int) bool {
-			return sendList[i].Nonce < sendList[j].Nonce
-		})
+		sendMap := splitAndSortSendListByChain(sendList)
+		for chain, sends := range sendMap {
+			if len(sends) > 0 {
+				co.logger.Info().Msgf("#pending sends on chain %s: %d nonce range [%d,%d]", chain, len(sends), sends[0].Nonce, sends[len(sends)-1].Nonce)
+			}
+		}
 		for _, send := range sendList {
 			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
 				co.sendNew <- send
 			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
 		}
 	}
+}
+
+func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Send {
+	sendMap := make(map[string][]*types.Send)
+	for _, send := range sendList {
+		targetChain := getTargetChain(send)
+		if targetChain == "" {
+			continue
+		}
+		if _, found := sendMap[targetChain]; !found {
+			sendMap[targetChain] = make([]*types.Send, 0)
+		}
+		sendMap[targetChain] = append(sendMap[targetChain], send)
+	}
+	for chain, sends := range sendMap {
+		sort.Slice(sends, func(i, j int) bool {
+			return sends[i].Nonce < sends[j].Nonce
+		})
+		sendMap[chain] = sends
+	}
+	return sendMap
+}
+
+func getTargetChain(send *types.Send) string {
+	if send.Status == types.SendStatus_PendingOutbound {
+		return send.ReceiverChain
+	} else if send.Status == types.SendStatus_PendingRevert {
+		return send.SenderChain
+	}
+	return ""
 }

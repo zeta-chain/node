@@ -13,6 +13,7 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"io/ioutil"
 	"strings"
 	"syscall"
@@ -116,47 +117,26 @@ func start(validatorName string, peers addr.AddrList) {
 		chainIP = "127.0.0.1"
 	}
 
-	ethEndPoint := os.Getenv("GOERLI_ENDPOINT")
-	if ethEndPoint != "" {
-		config.Chains[common.GoerliChain.String()].Endpoint = ethEndPoint
-		log.Info().Msgf("GOERLI_ENDPOINT: %s", ethEndPoint)
-	}
-	bscEndPoint := os.Getenv("BSCTESTNET_ENDPOINT")
-	if bscEndPoint != "" {
-		config.Chains[common.BSCTestnetChain.String()].Endpoint = bscEndPoint
-		log.Info().Msgf("BSCTESTNET_ENDPOINT: %s", bscEndPoint)
-	}
-	polygonEndPoint := os.Getenv("MUMBAI_ENDPOINT")
-	if polygonEndPoint != "" {
-		config.Chains[common.MumbaiChain.String()].Endpoint = polygonEndPoint
-		log.Info().Msgf("MUMBAI_ENDPOINT: %s", polygonEndPoint)
-	}
-	ropstenEndPoint := os.Getenv("ROPSTEN_ENDPOINT")
-	if ropstenEndPoint != "" {
-		config.Chains[common.RopstenChain.String()].Endpoint = ropstenEndPoint
-		log.Info().Msgf("ROPSTEN_ENDPOINT: %s", ropstenEndPoint)
-	}
+	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
+	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
+	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
+	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
 
-	ethMpiAddress := os.Getenv("GOERLI_MPI_ADDRESS")
-	if ethMpiAddress != "" {
-		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = ethMpiAddress
-		log.Info().Msgf("ETH_MPI_ADDRESS: %s", ethMpiAddress)
-	}
-	bscMpiAddress := os.Getenv("BSCTESTNET_MPI_ADDRESS")
-	if bscMpiAddress != "" {
-		config.Chains[common.BSCTestnetChain.String()].ConnectorContractAddress = bscMpiAddress
-		log.Info().Msgf("BSC_MPI_ADDRESS: %s", bscMpiAddress)
-	}
-	polygonMpiAddress := os.Getenv("MUMBAI_MPI_ADDRESS")
-	if polygonMpiAddress != "" {
-		config.Chains[common.MumbaiChain.String()].ConnectorContractAddress = polygonMpiAddress
-		log.Info().Msgf("polygonMpiAddress: %s", polygonMpiAddress)
-	}
-	ropstenMpiAddress := os.Getenv("ROPSTEN_MPI_ADDRESS")
-	if ropstenMpiAddress != "" {
-		config.Chains[common.RopstenChain.String()].ConnectorContractAddress = ropstenMpiAddress
-		log.Info().Msgf("ropstenMpiAddress: %s", ropstenMpiAddress)
-	}
+	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
+	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
+	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
+	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
+
+	// pools
+	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
+	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
+	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
+	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
+
+	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
+	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
+	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
+	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
@@ -207,6 +187,13 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msg("NewTSS error")
 		return
 	}
+	kg, err := bridge1.GetKeyGen()
+	if err != nil {
+		log.Error().Err(err).Msg("GetKeyGen error")
+		return
+	}
+	log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
+	tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
 		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)
@@ -275,4 +262,59 @@ func start(validatorName string, peers addr.AddrList) {
 		(*chainClientMap1)[chain].Stop()
 	}
 
+}
+
+func updatePoolAddress(envvar string, chain common.Chain) {
+	pool := os.Getenv(envvar)
+	parts := strings.Split(pool, ":")
+	if len(parts) != 3 {
+		log.Error().Msgf("%s is not a valid type:address", pool)
+		return
+	}
+	if strings.EqualFold(parts[0], "v2") {
+		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
+	} else if strings.EqualFold(parts[0], "v3") {
+		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
+	} else {
+		log.Error().Msgf("%s is not a valid type:address", pool)
+		return
+	}
+	if parts[1] != "" {
+		config.Chains[chain.String()].PoolContractAddress = parts[1]
+		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
+	} else {
+		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
+	}
+	if strings.EqualFold(parts[2], "ZETAETH") {
+		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
+	} else if strings.EqualFold(parts[2], "ETHZETA") {
+		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
+	} else {
+		log.Error().Msgf("%s is not a valid type:address:order", pool)
+		return
+	}
+}
+
+func updateMPIAddress(chain common.Chain, envvar string) {
+	mpi := os.Getenv(envvar)
+	if mpi != "" {
+		config.Chains[chain.String()].ConnectorContractAddress = mpi
+		log.Info().Msgf("MPI: %s", mpi)
+	}
+}
+
+func updateEndpoint(chain common.Chain, envvar string) {
+	endpoint := os.Getenv(envvar)
+	if endpoint != "" {
+		config.Chains[chain.String()].Endpoint = endpoint
+		log.Info().Msgf("ENDPOINT: %s", endpoint)
+	}
+}
+
+func updateTokenAddress(chain common.Chain, envvar string) {
+	token := os.Getenv(envvar)
+	if token != "" {
+		config.Chains[chain.String()].ZETATokenContractAddress = token
+		log.Info().Msgf("TOKEN: %s", token)
+	}
 }

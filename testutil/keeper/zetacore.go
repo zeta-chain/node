@@ -15,6 +15,8 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
@@ -28,11 +30,21 @@ func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	paramsSubspace := typesparams.NewSubspace(cdc,
+		types.Amino,
+		storeKey,
+		memStoreKey,
+		"ZetacoreParams",
+	)
+
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,
 		memStoreKey,
 		stakingkeeper.Keeper{}, // custom
+		paramsSubspace,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
