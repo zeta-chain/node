@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use serde::{Deserialize, Serialize};
 
-use zeta_std::{WatchlistQueryResponse,ZetaCoreMsg,ZetaCoreQuery};
+use zeta_std::{OutTxTrackerAllResponse,ZetaCoreMsg,ZetaCoreQuery};
 
 #[derive(Error, Debug)]
 pub enum WatcherError {
@@ -75,17 +75,17 @@ Query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    Watchlist {},
+    OutTxTrackerAll {},
 }
 
 #[entry_point]
 pub fn query(deps: Deps<ZetaCoreQuery>, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
-        QueryMsg::Watchlist {} => to_binary(&query_pool(deps)?),
+        QueryMsg::OutTxTrackerAll {} => to_binary(&query_watchlist(deps)?),
     }
 }
 
-fn query_pool(deps: Deps<ZetaCoreQuery>) -> StdResult<WatchlistQueryResponse> {
-    let req = ZetaCoreQuery::WatchList{}.into();
+fn query_watchlist(deps: Deps<ZetaCoreQuery>) -> StdResult<OutTxTrackerAllResponse> {
+    let req = ZetaCoreQuery::OutTxTrackerAll{}.into();
     deps.querier.query(&req)
 }

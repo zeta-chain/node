@@ -25,15 +25,15 @@ impl From<ZetaCoreMsg> for CosmosMsg<ZetaCoreMsg> {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ZetaCoreQuery {
-    WatchList {},
+    OutTxTrackerAll {},
 }
 
 impl CustomQuery for ZetaCoreQuery {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub struct WatchlistQueryResponse {
-    pub watchlist : Vec<OutTxTracker>
+pub struct OutTxTrackerAllResponse {
+    pub out_tx_tracker : Vec<OutTxTracker>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
