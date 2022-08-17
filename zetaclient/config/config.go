@@ -39,7 +39,7 @@ const (
 	ROPSTEN_BLOCK_TIME = 12
 
 	// to catch up:
-	MAX_BLOCKS_PER_PERIOD = 2000
+	MAX_BLOCKS_PER_PERIOD = 100
 )
 
 const (
