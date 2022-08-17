@@ -2,7 +2,6 @@
 
 zetacored tx wasm store ./contract/watcher.wasm --from=zeta --keyring-backend=test --broadcast-mode block --chain-id=localnet -y --gas=1000000000000000000
 
-sleep 7
 zetacored tx wasm instantiate 1 '{}' \
 --amount 50000stake \
 --label "watcher" \

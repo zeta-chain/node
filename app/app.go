@@ -371,6 +371,7 @@ func New(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
+
 	wasmOpts = GetWasmOpts(appCodec, appOpts, app.ZetaCoreKeeper)
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
