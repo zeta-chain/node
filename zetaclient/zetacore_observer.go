@@ -150,7 +150,7 @@ func (co *CoreObserver) startSendScheduler() {
 	go func() {
 		for {
 			id := <-done
-			logger.Info().Msgf("outTxID processor finished", id)
+			logger.Info().Msgf("outTxID %s processor finished", id)
 			mu.Lock()
 			outTxInProcessing[id] = false
 			mu.Unlock()
