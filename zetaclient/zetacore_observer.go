@@ -186,7 +186,7 @@ func (co *CoreObserver) startSendScheduler() {
 					if isScheduled(sinceBlock, idx < 3 || len(sendList) > 20) {
 						go co.TryProcessOutTx(send, sinceBlock)
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 30 { // only look at 50 sends per chain
 						break
 					}
 				}
