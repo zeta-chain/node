@@ -308,8 +308,6 @@ func (ob *ChainObserver) observeOutTx() {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
-						} else {
-							logger.Error().Err(err).Msgf("queryTxByHash error")
 						}
 						<-inTimeout
 					}
@@ -340,6 +338,7 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 		}
 		return nil, err
 	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlock() {
+		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlock())
 		return nil, fmt.Errorf("included but not confirmed")
 	} else { // confirmed outbound tx
 		return receipt, nil
