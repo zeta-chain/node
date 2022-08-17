@@ -207,7 +207,7 @@ func (co *CoreObserver) startSendScheduler() {
 					mu.Lock()
 					notInProcess := outTxInProcessing[outTxID] == false
 					mu.Unlock()
-					if isScheduled(sinceBlock, idx < 20) && notInProcess {
+					if isScheduled(sinceBlock, idx < 30) && notInProcess {
 						mu.Lock()
 						outTxInProcessing[outTxID] = true
 						mu.Unlock()
