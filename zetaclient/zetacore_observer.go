@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -139,6 +140,23 @@ func (co *CoreObserver) keygenObserve() {
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
 func (co *CoreObserver) startSendScheduler() {
+	logger := co.logger.With().Str("module", "SendScheduler").Logger()
+	// key is sendID: chain/nonce
+	// true means it's already being processed
+	// false means it's not being processed
+	outTxInProcessing := make(map[string]bool)
+	done := make(chan string)
+	mu := sync.Mutex{}
+	go func() {
+		for {
+			id := <-done
+			logger.Info().Msgf("outTxID processor finished", id)
+			mu.Lock()
+			outTxInProcessing[id] = false
+			mu.Unlock()
+
+		}
+	}()
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64 = 0
 	for range observeTicker.C {
@@ -180,11 +198,20 @@ func (co *CoreObserver) startSendScheduler() {
 						co.logger.Info().Msgf("send outTx already included; do not schedule")
 						continue
 					}
+					chain := getTargetChain(send)
+					outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
+
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 10) {
-						go co.TryProcessOutTx(send, sinceBlock)
+					mu.Lock()
+					notInProcess := outTxInProcessing[outTxID] == false
+					mu.Unlock()
+					if isScheduled(sinceBlock, idx < 10) && notInProcess {
+						mu.Lock()
+						outTxInProcessing[outTxID] = true
+						mu.Unlock()
+						go co.TryProcessOutTx(send, sinceBlock, done)
 					}
 					if idx > 30 { // only look at 50 sends per chain
 						break
@@ -198,18 +225,19 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
+func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done chan string) {
 	chain := getTargetChain(send)
 	outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
 	logger := co.logger.With().
 		Str("sendHash", send.Index).
 		Str("outTxID", outTxID).
-		Int64("sinceBlock", sinceBlock).
-		Logger()
+		Int64("sinceBlock", sinceBlock).Logger()
 	tNow := time.Now()
+	logger.Info().Msgf("start processing outTxID %s", outTxID)
 	defer func() {
 		logger.Info().Msgf("TryProcessOutTx finished in %s", time.Since(tNow))
+		done <- outTxID
 	}()
 
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
