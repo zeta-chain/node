@@ -308,6 +308,8 @@ func (ob *ChainObserver) observeOutTx() {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
+						} else {
+							logger.Error().Err(err).Msgf("queryTxByHash error")
 						}
 						<-inTimeout
 					}
