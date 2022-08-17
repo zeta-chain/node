@@ -186,7 +186,7 @@ func (co *CoreObserver) startSendScheduler() {
 					if isScheduled(sinceBlock, idx < 3 || len(sendList) > 20) {
 						go co.TryProcessOutTx(send, sinceBlock)
 					}
-					if idx > 100 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
@@ -310,6 +310,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64) {
 				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 				err := signer.Broadcast(tx)
 				if err != nil {
+					log.Warn().Err(err).Msgf("OutTx Broadcast error")
 					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
 					if report {
 						zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
