@@ -2,13 +2,12 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
+	"github.com/zeta-chain/zetacore/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing
-func MakeEncodingConfig(moduleBasics module.BasicManager) cosmoscmd.EncodingConfig {
-	encodingConfig := cosmoscmd.MakeEncodingConfig(moduleBasics)
+func MakeEncodingConfig() params.EncodingConfig {
+	encodingConfig := params.MakeEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)

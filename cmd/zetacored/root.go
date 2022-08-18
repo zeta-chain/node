@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/app/params"
@@ -103,7 +102,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
-	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, createSimappAndExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -225,18 +224,18 @@ func (ac appCreator) newApp(
 	)
 }
 
-func createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
+func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-	encCfg := app.MakeEncodingConfig(app.ModuleBasics) // Ideally, we would reuse the one created by NewRootCmd.
-	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
+	//encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
+	//encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var zetaApp cosmoscmd.App
 	if height != -1 {
-		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), cosmoscmd.EncodingConfig(ac.encCfg), appOpts)
 		if err := zetaApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), cosmoscmd.EncodingConfig(ac.encCfg), appOpts)
 	}
 	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
