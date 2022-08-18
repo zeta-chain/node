@@ -1,0 +1,35 @@
+name: 'Push Files To S3'
+description: 'Uploads Files To S3'
+inputs:
+  bucket-name:  
+    description: 'S3 Bucket Name'
+    required: true
+  release-name:  
+    description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
+    required: true
+  files:  
+    description: "Newline-delimited list of asset files to upload"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Environment Variables"
+      run: |
+        echo "Running Upload-To-S3 Action"
+        echo "::set-env name=RELEASE_NAME::${{ inputs.release-name }}"
+        echo "::set-env name=BUCKET_NAME::${{ inputs.bucket-name }}"
+      shell: bash
+
+    - run: |
+        # echo "${{ inputs.files }}"
+        while IFS= read -r FILEPATH; do
+            FILENAME=$(echo $FILEPATH | cut -d / -f2)
+            aws s3 cp $FILEPATH s3://${{ env.BUCKET_NAME }}/${{ env.RELEASE_NAME }}/$FILENAME
+        done <<< $(echo "${{ inputs.files }}" | awk NF)
+      shell: bash   
+      
+    - name: Save Latest Deployment ID to SSM # This is usually the release name
+      run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value ${{ env.RELEASE_NAME }} # > /dev/null 2>&1
+      shell: bash
+
