@@ -9,7 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/app/params"
 	"github.com/zeta-chain/zetacore/cmd"
 	"regexp"
 	"strconv"
@@ -126,7 +126,7 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithFromAddress(b.keys.GetSignerInfo().GetAddress())
 	ctx = ctx.WithBroadcastMode("sync")
 
-	encodingConfig := app.MakeEncodingConfig(app.ModuleBasics)
+	encodingConfig := params.MakeEncodingConfig()
 	ctx = ctx.WithJSONCodec(encodingConfig.Marshaler)
 	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)

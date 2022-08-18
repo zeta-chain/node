@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/app/params"
 	"io"
 	"os"
 	"path/filepath"
@@ -35,8 +36,8 @@ import (
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, cosmoscmd.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig(app.ModuleBasics)
+func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+	encodingConfig := params.MakeEncodingConfig()
 
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
@@ -86,7 +87,7 @@ func NewRootCmd() (*cobra.Command, cosmoscmd.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig cosmoscmd.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
@@ -170,7 +171,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg cosmoscmd.EncodingConfig
+	encCfg params.EncodingConfig
 }
 
 func (ac appCreator) newApp(
@@ -208,7 +209,7 @@ func (ac appCreator) newApp(
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		ac.encCfg,
+		cosmoscmd.EncodingConfig(ac.encCfg),
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
