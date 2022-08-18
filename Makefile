@@ -80,10 +80,10 @@ go.sum: go.mod
 		GO111MODULE=on go mod verify
 
 init: clean install-zetacore
-	./localnet/zetachain/standalone-network/init.sh
+	./localnet/standalone-network/init.sh
 
 run:
-	./localnet/zetachain/standalone-network/run.sh
+	./localnet/standalone-network/run.sh
 
 init-run: init run
 
