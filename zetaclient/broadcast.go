@@ -126,7 +126,7 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithFromAddress(b.keys.GetSignerInfo().GetAddress())
 	ctx = ctx.WithBroadcastMode("sync")
 
-	encodingConfig := app.MakeEncodingConfig()
+	encodingConfig := app.MakeEncodingConfig(app.ModuleBasics)
 	ctx = ctx.WithJSONCodec(encodingConfig.Marshaler)
 	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)

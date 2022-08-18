@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/app/params"
 	"io"
 	"os"
 	"path/filepath"
@@ -35,8 +35,8 @@ import (
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig()
+func NewRootCmd() (*cobra.Command, cosmoscmd.EncodingConfig) {
+	encodingConfig := app.MakeEncodingConfig(app.ModuleBasics)
 
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
@@ -86,7 +86,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig cosmoscmd.EncodingConfig) {
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
@@ -170,7 +170,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg params.EncodingConfig
+	encCfg cosmoscmd.EncodingConfig
 }
 
 func (ac appCreator) newApp(
@@ -226,16 +226,16 @@ func (ac appCreator) newApp(
 
 func createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-	encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
+	encCfg := app.MakeEncodingConfig(app.ModuleBasics) // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var sifApp *app.App
+	var zetaApp cosmoscmd.App
 	if height != -1 {
-		sifApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
-		if err := sifApp.LoadHeight(height); err != nil {
+		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		if err := zetaApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		sifApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
 	}
-	return sifApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
