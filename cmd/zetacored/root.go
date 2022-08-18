@@ -36,7 +36,7 @@ import (
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := params.MakeEncodingConfig()
+	encodingConfig := app.MakeEncodingConfig()
 
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
@@ -94,7 +94,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		// testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
 	)
@@ -115,7 +114,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
-
 }
 
 func queryCommand() *cobra.Command {
@@ -226,7 +224,7 @@ func (ac appCreator) newApp(
 
 func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-	//encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
+	//encCfg := app.MakeEncodingConfig()
 	//encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var zetaApp cosmoscmd.App
 	if height != -1 {

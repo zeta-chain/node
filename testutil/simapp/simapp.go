@@ -3,7 +3,6 @@ package simapp
 import (
 	"time"
 
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,7 +14,7 @@ import (
 )
 
 // New creates application instance with in-memory database and disabled logging.
-func New(dir string) servertypes.Application {
+func New(dir string) cosmoscmd.App {
 	db := tmdb.NewMemDB()
 	logger := log.NewNopLogger()
 
