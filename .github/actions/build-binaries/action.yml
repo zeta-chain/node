@@ -1,0 +1,58 @@
+name: 'Build Binaries'
+description: 'Builds ZetaChain Binaries'
+inputs:
+  build-indexer:  
+    description: 'Build Indexer Binary (true/false)'
+    required: true
+  run-tests:  
+    description: 'Run Build Tests (true/false)'
+    required: true
+  go-version:  
+    description: 'Optional - Install a specific verion of Go'
+    required: false
+    default: ''
+  ENVIRONMENT_NAME:  
+    description: 'Environment Name'
+    required: true
+    default: "STAGING"
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        echo Running ZetaChain Build Action
+        echo "::set-env name=INPUT_RUN_TESTS::${{ inputs.run-tests }}"
+        echo "::set-env name=INPUT_BUILD_INDEXER::${{ inputs.build-indexer }}"
+      shell: bash
+      
+    - name: Set Up Go 
+      # Optionally install a specific version of Go
+      # Only use if go has not been installed in a previous step of the calling workflow
+      if : ${{ inputs.go-version != '' }} 
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.go-version }}  
+    - run: ${GITHUB_ACTION_PATH}/build.sh
+      shell: bash
+
+    - run: ${GITHUB_ACTION_PATH}/build-indexer.sh
+      if: ${{ env.INPUT_BUILD_INDEXER == 'true' }}
+      shell: bash
+
+    - run: ${GITHUB_ACTION_PATH}/test.sh
+      if: ${{ env.INPUT_RUN_TESTS == 'true' }}
+      shell: bash
+
+    # - name: Create Package
+    #   run: |        
+    #     if [[ ${{inputs.ENVIRONMENT_NAME}} == "STAGING" ]]; then 
+    #       cp deploy/env_variables.staging network_values
+    #     elif [[ ${{inputs.ENVIRONMENT_NAME}} == "ATHENS" ]]; then 
+    #       cp deploy/env_variables.athens network_values
+    #     fi
+    #     tar -czvf package.tar.gz zetacored zetaclientd indexer deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+    #   shell: bash
+
+    - run: echo "Completed ZetaChain Build Action"
+      shell: bash
+
