@@ -3,15 +3,16 @@ package zetaclient
 import (
 	"context"
 	"fmt"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/contracts/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/zetacore/contracts/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -73,7 +74,7 @@ type ChainObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metrics.Metrics) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, mtrcs *metrics.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
@@ -84,7 +85,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.metrics = metrics
+	ob.metrics = mtrcs
 	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
@@ -125,6 +126,10 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 	err = ob.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
+	if err != nil {
+		return nil, err
+	}
+	err = ob.RegisterPromGauge(metrics.PENDING_TXS, "Number of pending transactions")
 	if err != nil {
 		return nil, err
 	}

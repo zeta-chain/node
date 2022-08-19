@@ -5,10 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"math/big"
 	"math/rand"
 	"os"
@@ -17,6 +13,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/rs/zerolog"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
@@ -189,6 +190,15 @@ func (co *CoreObserver) startSendScheduler() {
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
 						continue
+					}
+					// update metrics
+					if idx == 0 {
+						pTxs, err := ob.GetPromGauge(metrics.PENDING_TXS)
+						if err != nil {
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PENDING_TXS)
+							continue
+						}
+						pTxs.Set(float64(len(sendList)))
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
