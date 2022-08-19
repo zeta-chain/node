@@ -21,10 +21,13 @@ runs:
   steps:
     - run: |
         echo Running ZetaChain Build Action
-        # echo "::set-env name=INPUT_RUN_TESTS::${{ inputs.run-tests }}"
-        # echo "::set-env name=INPUT_BUILD_INDEXER::${{ inputs.build-indexer }}"
-        # echo "::set-env name=INPUT_ENVIRONMENT_NAME::${{ inputs.ENVIRONMENT_NAME }}"
+        export INPUT_RUN_TESTS=${{ inputs.run-tests }}
+        export INPUT_BUILD_INDEXER=${{ inputs.build-indexer  }}
+        export INPUT_ENVIRONMENT_NAME=${{ inputs.ENVIRONMENT_NAME }}
 
+        echo $INPUT_ENVIRONMENT_NAME
+        echo $INPUT_BUILD_INDEXER
+        echo $INPUT_RUN_TESTS
       shell: bash
       
     - name: Set Up Go 
@@ -39,14 +42,19 @@ runs:
       run: ${GITHUB_ACTION_PATH}/build.sh
       shell: bash
 
+    - name: IF
+      run: echo "IF TRUE"
+      if: ${{ inputs.ENVIRONMENT_NAME == 'STAGING' }}
+      shell: bash
+
     - name: Build Indexer
       run: ${GITHUB_ACTION_PATH}/build-indexer.sh
-      if: ${{ env.INPUT_BUILD_INDEXER == 'true' }}
+      if: ${{ inputs.build-indexer == 'true' }}
       shell: bash
 
     - name: Run Build tests
       run: ${GITHUB_ACTION_PATH}/test.sh
-      if: ${{ env.INPUT_RUN_TESTS == 'true' }}
+      if: ${{ inputs.run-tests == 'true' }}
       shell: bash
 
     - name: Add network_values file
@@ -58,10 +66,10 @@ runs:
         fi
       shell: bash
 
-    - name: Create tar.gz Package
-      run: |        
-        tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
-      shell: bash
+    # - name: Create tar.gz Package
+    #   run: |        
+    #     tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+    #   shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash

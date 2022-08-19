@@ -19,9 +19,9 @@ runs:
     - name: Set Environment Variables"
       run: |
         echo "Running Upload-To-S3 Action"
-        echo "::set-env name=DOCKER_FILENAME::${{ inputs.DOCKER_FILENAME }}"
-        echo "::set-env name=ECR_REPOSITORY::${{ inputs.ECR_REPOSITORY }}"
-        echo "::set-env name=IMAGE_TAG::${{ inputs.IMAGE_TAG }}"
+        export DOCKER_FILENAME=${{ inputs.DOCKER_FILENAME }}
+        export ECR_REPOSITORY=${{ inputs.ECR_REPOSITORY }}
+        export IMAGE_TAG=${{ inputs.IMAGE_TAG }}
       shell: bash
 
     - name: Login to Amazon ECR

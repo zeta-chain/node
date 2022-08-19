@@ -25,9 +25,14 @@ runs:
       - name: Set ENV Variables"
         run: |
           echo "Running update-nodes Action"
-          echo "::set-env name=TAKE_SNAPSHOTS::${{ inputs.TAKE_SNAPSHOTS }}"
-          echo "::set-env name=S3_BUCKET_NAME::${{ inputs.S3_BUCKET_NAME }}"
-          echo "::set-env name=UPDATE_INDEXER::${{ inputs.UPDATE_INDEXER }}"
+          # echo "::set-env name=TAKE_SNAPSHOTS::${{ inputs.TAKE_SNAPSHOTS }}"
+          # echo "::set-env name=S3_BUCKET_NAME::${{ inputs.S3_BUCKET_NAME }}"
+          # echo "::set-env name=UPDATE_INDEXER::${{ inputs.UPDATE_INDEXER }}"
+
+          export TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS}}
+          export S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME  }}
+          export UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}
+
         shell: bash 
       - name: Get Deployment ID
         run: |

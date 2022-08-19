@@ -1,4 +1,4 @@
-name: Deploy To AWS
+name: Staging - Build & Deploy
 
 ## TODO 
   # Remove static IAM creds and use short lived via Role Assumption
