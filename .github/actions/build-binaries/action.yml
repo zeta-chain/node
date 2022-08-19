@@ -19,6 +19,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Set Up Go 
+      # Optionally install a specific version of Go
+      # Only use if go has not been installed in a previous step of the calling workflow
+      if : ${{ inputs.go-version != '' }} 
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.go-version }}  
+
     - run: |
         echo Running ZetaChain Build Action
         export INPUT_RUN_TESTS=${{ inputs.run-tests }}
@@ -29,14 +37,6 @@ runs:
         echo $INPUT_BUILD_INDEXER
         echo $INPUT_RUN_TESTS
       shell: bash
-      
-    - name: Set Up Go 
-      # Optionally install a specific version of Go
-      # Only use if go has not been installed in a previous step of the calling workflow
-      if : ${{ inputs.go-version != '' }} 
-      uses: actions/setup-go@v3
-      with:
-        go-version: ${{ inputs.go-version }}  
 
     - name: build zetacored and zetaclientd
       run: ${GITHUB_ACTION_PATH}/build.sh
@@ -59,6 +59,7 @@ runs:
 
     - name: Add network_values file
       run: |        
+        export INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
         if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
           cp deploy/env_variables.staging network_values
         elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
@@ -66,10 +67,10 @@ runs:
         fi
       shell: bash
 
-    # - name: Create tar.gz Package
-    #   run: |        
-    #     tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
-    #   shell: bash
+    - name: Create tar.gz Package
+      run: |        
+        tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+      shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash

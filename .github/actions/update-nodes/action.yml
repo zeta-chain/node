@@ -30,7 +30,7 @@ runs:
           # echo "::set-env name=UPDATE_INDEXER::${{ inputs.UPDATE_INDEXER }}"
 
           export TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS}}
-          export S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME  }}
+          export S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}
           export UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}
 
         shell: bash 
@@ -43,7 +43,7 @@ runs:
         shell: bash
 
       - name: Snapshot All Running ZetaChain Instances
-        if: ${{ inputs.TAKE_SNAPSHOTS == "true" }}
+        if: ${{ inputs.TAKE_SNAPSHOTS == 'true' }}
         run: |
           echo "Taking Snapshots of ZetaChain Instances"
           INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" "Name=instance-state-name,Values=running"| jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')

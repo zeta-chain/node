@@ -20,7 +20,8 @@ runs:
         echo "Running Upload-To-S3 Action"
         export RELEASE_NAME=${{ inputs.release-name }}
         export S3_BUCKET_NAME=${{ inputs.bucket-name }}
-        echo $S3_BUCKET_NAME"
+        echo "$S3_BUCKET_NAME"
+        echo "$RELEASE_NAME"
 
       shell: bash
 
@@ -33,6 +34,9 @@ runs:
       shell: bash   
       
     - name: Save Latest Deployment ID to SSM # This is usually the release name
-      run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value "$RELEASE_NAME" > /dev/null 2>&1
+      run: |
+        export RELEASE_NAME=${{ inputs.release-name }}
+        echo "$RELEASE_NAME"
+        aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value "$RELEASE_NAME" | jq # > /dev/null 2>&1
       shell: bash
 
