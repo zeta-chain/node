@@ -1,0 +1,101 @@
+name: Deploy To AWS
+
+## TODO 
+  # Remove static IAM creds and use short lived via Role Assumption
+  # Add Testing Stage
+  # Add Rollback Stage
+
+on:
+  push:
+    branches:
+      - develop
+      - cicd-cosmovisor
+env:
+  ENVIRONMENT_NAME: "STAGING"
+  S3_BUCKET_NAME: "zetachain-deployment-files-staging"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+      - name: Build
+        uses: ./.github/actions/build-binaries
+        with:
+          run-tests: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+          build-indexer: true
+          go-version: '1.18'
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update 
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id:  ${{ env.AWS_ACCESS_KEY_ID }}          
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}          
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: upload-files-to-s3
+        uses: ./.github/actions/upload-to-s3
+        with:
+          bucket-name: ${{ env.S3_BUCKET_NAME_NAME }}
+          release-name: ${{ env.GITHUB_REF_NAME }}
+          files: |
+            zetacored
+            zetaclientd
+            deploy/zetaclientd-start.sh
+            deploy/zetacored-start.sh
+            network_values
+            package.tar.gz
+        # indexer
+
+      - name: Build, tag, and push image to Amazon ECR
+        uses:  ./.github/actions/upload-to-ecr
+        with:
+          DOCKER_FILENAME: Dockerfile.zetacore_binary
+          ECR_REPOSITORY: zetachain
+          IMAGE_TAG: latest
+       
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update 
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id:  ${{ env.AWS_ACCESS_KEY_ID }}          
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}          
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Nodes
+        uses:  ./.github/actions/update-nodes
+        with:
+          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME_NAME }}
+          TAKE_SNAPSHOTS: false
+          UPDATE_INDEXER: 'false'
+          # RELEASE_NAME: ${{ env.GITHUB_REF_NAME }}
+
+
+

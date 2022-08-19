@@ -10,13 +10,16 @@ name: Deploy To AWS
 
 on:
   push:
-    branches:
-      - develop
     tags:
       - athens-v*
-      - indexer-v*
 env:
-  AWS_REGION: us-east-1
+  ENVIRONMENT_NAME: "ATHENS"
+  S3_BUCKET_NAME: "zetachain-deployment-files-athens"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+  
 
 jobs:
 
@@ -54,10 +57,12 @@ jobs:
           echo "Environment Name:$ENVIRONMENT_NAME"
           echo "GITHUB_REF_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
 
-      - name: Set Up Go
-        uses: actions/setup-go@v3
+      - name: Build
+        uses: ./.github/actions/build-binaries
         with:
-          go-version: 1.18
+          run-tests: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+          build-indexer: true
+          go-version: '1.18'
 
       - name: Install AWS CLI
         run: |
@@ -81,39 +86,33 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}          
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Build Binaries
-        run: | 
-          make install
-          make install-indexer
-          cp $HOME/go/bin/* ./
+      # - name: Test
+      #   if: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+      #   run: go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-      - name: Test
-        if: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
-        run: go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
-
-      - name: Create Package
-        run: |
+      # - name: Create Package
+      #   run: |
           
-          if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
-            cp deploy/env_variables.staging network_values
-          elif [[ $ENVIRONMENT_NAME == "ATHENS" ]]; then 
-            cp deploy/env_variables.athens network_values
-          fi
+      #     if [[ $ENVIRONMENT_NAME == "STAGING" ]]; then 
+      #       cp deploy/env_variables.staging network_values
+      #     elif [[ $ENVIRONMENT_NAME == "ATHENS" ]]; then 
+      #       cp deploy/env_variables.athens network_values
+      #     fi
 
-          tar -czvf package.tar.gz zetacored zetaclientd indexer deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+      #     tar -czvf package.tar.gz zetacored zetaclientd indexer deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
 
-      - name: Push Files To S3
-        run: |
-          echo ${{ env.GITHUB_REF_NAME }}
-          aws s3 cp package.tar.gz ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
-          aws s3 cp zetacored ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
-          aws s3 cp zetaclientd ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
-          aws s3 cp indexer ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
-          aws s3 cp deploy/zetaclientd-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh
-          aws s3 cp deploy/zetacored-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh
+      # - name: Push Files To S3
+      #   run: |
+      #     echo ${{ env.GITHUB_REF_NAME }}
+      #     aws s3 cp package.tar.gz ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+      #     aws s3 cp zetacored ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+      #     aws s3 cp zetaclientd ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+      #     aws s3 cp indexer ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/
+      #     aws s3 cp deploy/zetaclientd-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh
+      #     aws s3 cp deploy/zetacored-start.sh ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh
 
-      - name: Update Latest Deployment ID SSM Parameter
-        run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value ${{ env.GITHUB_REF_NAME }}  > /dev/null 2>&1
+      # - name: Update Latest Deployment ID SSM Parameter
+      #   run: aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value ${{ env.GITHUB_REF_NAME }}  > /dev/null 2>&1
 
       - name: Login to Amazon ECR
         id: login-ecr

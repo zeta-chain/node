@@ -21,9 +21,9 @@ runs:
   steps:
     - run: |
         echo Running ZetaChain Build Action
-        echo "::set-env name=INPUT_RUN_TESTS::${{ inputs.run-tests }}"
-        echo "::set-env name=INPUT_BUILD_INDEXER::${{ inputs.build-indexer }}"
-        echo "::set-env name=INPUT_ENVIRONMENT_NAME::${{ inputs.ENVIRONMENT_NAME }}"
+        # echo "::set-env name=INPUT_RUN_TESTS::${{ inputs.run-tests }}"
+        # echo "::set-env name=INPUT_BUILD_INDEXER::${{ inputs.build-indexer }}"
+        # echo "::set-env name=INPUT_ENVIRONMENT_NAME::${{ inputs.ENVIRONMENT_NAME }}"
 
       shell: bash
       
