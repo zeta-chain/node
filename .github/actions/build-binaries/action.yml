@@ -23,6 +23,8 @@ runs:
         echo Running ZetaChain Build Action
         echo "::set-env name=INPUT_RUN_TESTS::${{ inputs.run-tests }}"
         echo "::set-env name=INPUT_BUILD_INDEXER::${{ inputs.build-indexer }}"
+        echo "::set-env name=INPUT_ENVIRONMENT_NAME::${{ inputs.ENVIRONMENT_NAME }}"
+
       shell: bash
       
     - name: Set Up Go 
@@ -32,27 +34,36 @@ runs:
       uses: actions/setup-go@v3
       with:
         go-version: ${{ inputs.go-version }}  
-    - run: ${GITHUB_ACTION_PATH}/build.sh
+
+    - name: build zetacored and zetaclientd
+      run: ${GITHUB_ACTION_PATH}/build.sh
       shell: bash
 
-    - run: ${GITHUB_ACTION_PATH}/build-indexer.sh
+    - name: Build Indexer
+      run: ${GITHUB_ACTION_PATH}/build-indexer.sh
       if: ${{ env.INPUT_BUILD_INDEXER == 'true' }}
       shell: bash
 
-    - run: ${GITHUB_ACTION_PATH}/test.sh
+    - name: Run Build tests
+      run: ${GITHUB_ACTION_PATH}/test.sh
       if: ${{ env.INPUT_RUN_TESTS == 'true' }}
       shell: bash
 
-    # - name: Create Package
-    #   run: |        
-    #     if [[ ${{inputs.ENVIRONMENT_NAME}} == "STAGING" ]]; then 
-    #       cp deploy/env_variables.staging network_values
-    #     elif [[ ${{inputs.ENVIRONMENT_NAME}} == "ATHENS" ]]; then 
-    #       cp deploy/env_variables.athens network_values
-    #     fi
-    #     tar -czvf package.tar.gz zetacored zetaclientd indexer deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
-    #   shell: bash
+    - name: Add network_values file
+      run: |        
+        if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
+          cp deploy/env_variables.staging network_values
+        elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
+          cp deploy/env_variables.athens network_values
+        fi
+      shell: bash
+
+    - name: Create tar.gz Package
+      run: |        
+        tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+      shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash
+
 

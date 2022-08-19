@@ -10,6 +10,7 @@ inputs:
   files:  
     description: "Newline-delimited list of asset files to upload"
     required: true
+  
 
 runs:
   using: "composite"
@@ -21,11 +22,11 @@ runs:
         echo "::set-env name=BUCKET_NAME::${{ inputs.bucket-name }}"
       shell: bash
 
-    - run: |
-        # echo "${{ inputs.files }}"
+    - name: Upload Files
+      run: |
         while IFS= read -r FILEPATH; do
-            FILENAME=$(echo $FILEPATH | cut -d / -f2)
-            aws s3 cp $FILEPATH s3://${{ env.BUCKET_NAME }}/${{ env.RELEASE_NAME }}/$FILENAME
+            FILENAME=$(echo "$FILEPATH" | cut -d / -f2)
+            aws s3 cp "$FILEPATH" s3://${{ env.BUCKET_NAME }}/${{ env.RELEASE_NAME }}/$FILENAME
         done <<< $(echo "${{ inputs.files }}" | awk NF)
       shell: bash   
       
