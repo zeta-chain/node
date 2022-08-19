@@ -1,0 +1,41 @@
+name: 'Upload Docker Image To ECR'
+description: 'Uploads Docker Image To ECR'
+inputs:
+  DOCKER_FILENAME:  
+    description: 'Name of the docker file to use for the build'
+    required: true
+  ECR_REPOSITORY:  
+    description: 'Name of the ECR Repository'
+    required: true
+  IMAGE_TAG:  
+    description: 'Image Tag'
+    required: false
+    default: 'latest'
+    
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Environment Variables"
+      run: |
+        echo "Running Upload-To-S3 Action"
+        echo "::set-env name=DOCKER_FILENAME::${{ inputs.DOCKER_FILENAME }}"
+        echo "::set-env name=ECR_REPOSITORY::${{ inputs.ECR_REPOSITORY }}"
+        echo "::set-env name=IMAGE_TAG::${{ inputs.IMAGE_TAG }}"
+      shell: bash
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      shell: bash
+
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: zetachain
+        IMAGE_TAG: latest
+      run: |
+        docker build -f $DOCKER_FILENAME -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      shell: bash
+
