@@ -12,7 +12,7 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/contracts/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -60,7 +60,7 @@ type ChainObserver struct {
 	mu                     *sync.Mutex
 	db                     *leveldb.DB
 	sampleLogger           *zerolog.Logger
-	metrics                *metrics.Metrics
+	metrics                *metricsPkg.Metrics
 	outTXConfirmedReceipts map[int]*ethtypes.Receipt
 	MinNonce               int64
 	MaxNonce               int64
@@ -74,7 +74,7 @@ type ChainObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, mtrcs *metrics.Metrics) (*ChainObserver, error) {
+func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
@@ -85,7 +85,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.metrics = mtrcs
+	ob.metrics = metrics
 	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
@@ -129,7 +129,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	if err != nil {
 		return nil, err
 	}
-	err = ob.RegisterPromGauge(metrics.PENDING_TXS, "Number of pending transactions")
+	err = ob.RegisterPromGauge(metricsPkg.PENDING_TXS, "Number of pending transactions")
 	if err != nil {
 		return nil, err
 	}
