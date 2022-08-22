@@ -39,7 +39,7 @@ chmod +x "$DAEMON_HOME"/cosmovisor/genesis/bin/zetaclientd
 # zetacored validate-genesis
 
 
-contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' "$DAEMON_HOME"/config/genesis.json)" && \
+contents="$(jq '.app_state.gov.voting_params.voting_period = "600s"' "$DAEMON_HOME"/config/genesis.json)" && \
 echo "${contents}" > "$DAEMON_HOME"/config/genesis.json
 
 

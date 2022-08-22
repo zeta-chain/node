@@ -95,6 +95,9 @@ if (( $NODE_NUMBER == 0 )); then
     sed -i 's/enable-hostname-label = false/enable-hostname-label = true/' /root/.zetacore/config/app.toml
     sed -i 's/prometheus-retention-time = 5/prometheus-retention-time = 5/' /root/.zetacore/config/app.toml
 
+    contents="$(jq '.app_state.gov.voting_params.voting_period = "600s"' /root/.zetacore/config/genesis.json)" && \
+        echo "${contents}" > "$DAEMON_HOME"/config/genesis.json
+
     cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
     cp -r /root/.zetacore/config/* /zetashared/node"$NODE_NUMBER"/config/
     cp -r /root/.zetacore/data/* /zetashared/node"$NODE_NUMBER"/data/

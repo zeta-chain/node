@@ -70,13 +70,21 @@ jobs:
           ECR_REPOSITORY: zetachain
           IMAGE_TAG: latest
 
-      - name: Update Nodes
+      - name: Update Nodes (OLD Method)
         uses:  ./.github/actions/update-nodes
         with:
           S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
           TAKE_SNAPSHOTS: false
           UPDATE_INDEXER: false
 
-
-
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
+        with:
+          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          VERSION: "0.0.1"
+          # DESCRIPTION: false
+          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          # CHECKSUM_ZETACORED: false
+          # CHECKSUM_ZETACLIENTD: false
+          CHAIN_ID: "athens-1"
 

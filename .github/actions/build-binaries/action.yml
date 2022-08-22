@@ -61,7 +61,9 @@ runs:
 
     - name: Create tar.gz Package
       run: |        
-        tar -czvf package.tar.gz zetacored zetaclientd deploy/zetaclientd-start.sh deploy/zetacored-start.sh network_values
+        cp deploy/zetaclientd-start.sh zetaclientd-start.sh
+        cp deploy/zetacored-start.sh zetacored-start.sh
+        tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
       shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
