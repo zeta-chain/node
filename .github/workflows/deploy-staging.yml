@@ -17,6 +17,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+
   
 jobs:
   build:
@@ -29,11 +30,11 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-      - name: Build
+      - name: Build Binaries
         uses: ./.github/actions/build-binaries
         with:
           run-tests: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
-          build-indexer: true
+          build-indexer: false
           go-version: '1.18'
 
       - name: Install AWS CLI
@@ -53,7 +54,7 @@ jobs:
         uses: ./.github/actions/upload-to-s3
         with:
           bucket-name: ${{ env.S3_BUCKET_NAME_NAME }}
-          release-name: ${{ env.GITHUB_REF_NAME }}
+          release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
           files: |
             zetacored
             zetaclientd

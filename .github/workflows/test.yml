@@ -27,13 +27,13 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-    # - name: Build
-    #   uses: ./.github/actions/build-binaries
-    #   with:
-    #     run-tests: false
-    #     build-indexer: false
-    #     go-version: '1.18'
-    #     ENVIRONMENT_NAME: ${{ env.ENVIRONMENT_NAME }}
+    - name: Build
+      uses: ./.github/actions/build-binaries
+      with:
+        run-tests: false
+        build-indexer: false
+        go-version: '1.18'
+        ENVIRONMENT_NAME: ${{ env.ENVIRONMENT_NAME }}
 
     # - name: LS
     #   run: ls -la

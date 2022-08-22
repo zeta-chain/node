@@ -29,23 +29,15 @@ runs:
 
     - run: |
         echo Running ZetaChain Build Action
-        export INPUT_RUN_TESTS=${{ inputs.run-tests }}
-        export INPUT_BUILD_INDEXER=${{ inputs.build-indexer  }}
-        export INPUT_ENVIRONMENT_NAME=${{ inputs.ENVIRONMENT_NAME }}
-
-        echo $INPUT_ENVIRONMENT_NAME
-        echo $INPUT_BUILD_INDEXER
-        echo $INPUT_RUN_TESTS
       shell: bash
 
     - name: build zetacored and zetaclientd
       run: ${GITHUB_ACTION_PATH}/build.sh
       shell: bash
 
-    - name: IF
-      run: echo "IF TRUE"
-      if: ${{ inputs.ENVIRONMENT_NAME == 'STAGING' }}
-      shell: bash
+    # - name: FAKE - build zetacored and zetaclientd
+    #   run: touch zetacored && touch zetaclientd
+    #   shell: bash
 
     - name: Build Indexer
       run: ${GITHUB_ACTION_PATH}/build-indexer.sh
@@ -59,7 +51,7 @@ runs:
 
     - name: Add network_values file
       run: |        
-        export INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
+        INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
         if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
           cp deploy/env_variables.staging network_values
         elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 

@@ -25,20 +25,16 @@ runs:
       - name: Set ENV Variables"
         run: |
           echo "Running update-nodes Action"
-          # echo "::set-env name=TAKE_SNAPSHOTS::${{ inputs.TAKE_SNAPSHOTS }}"
-          # echo "::set-env name=S3_BUCKET_NAME::${{ inputs.S3_BUCKET_NAME }}"
-          # echo "::set-env name=UPDATE_INDEXER::${{ inputs.UPDATE_INDEXER }}"
-
-          export TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS}}
-          export S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}
-          export UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}
-          export GITHUB_ACTION_PATH=${{ github.action_path }}
+          echo "UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
+          echo "TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS }}" >> $GITHUB_ENV
+          echo "GITHUB_ACTION_PATH=${{ github.action_path }}" >> $GITHUB_ENV
 
         shell: bash 
       - name: Get Deployment ID
         run: |
           echo "Getting latest deployment id"
-          export GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
+          GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
           echo "GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
           echo "$GITHUB_REF_NAME"
         shell: bash
@@ -62,7 +58,7 @@ runs:
         # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Copying Package Files from S3 to local node storage"
-          source ${{ github.action_path }}/functions.sh
+          source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "aws s3 cp ${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir /deployment-files/${{ env.GITHUB_REF_NAME }}, tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
           check_cmd_status $COMMAND_ID
         shell: bash
@@ -71,7 +67,7 @@ runs:
         # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Stopping ZetaChain"
-          source ${{ github.action_path }}/functions.sh
+          source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd, systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
         shell: bash
@@ -80,7 +76,7 @@ runs:
         # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Updating ZetaNode Binaries"
-          source ${{ github.action_path }}/functions.sh
+          source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "\
               cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
               cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
@@ -94,7 +90,7 @@ runs:
         # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Restarting ZetaChain"
-          source ${{ github.action_path }}/functions.sh
+          source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "systemctl restart zetaclientd, systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
         shell: bash
@@ -102,7 +98,7 @@ runs:
       - name: Update Indexer
         if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
         run: |
-          source ${{ github.action_path }}/functions.sh
+          source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp ${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }}, tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}, \
           systemctl stop indexer &&  cp /deployment-files/${{ env.GITHUB_REF_NAME }}/indexer /usr/local/bin/indexer && systemctl start indexer")
           check_cmd_status $COMMAND_ID
