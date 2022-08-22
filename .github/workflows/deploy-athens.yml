@@ -8,30 +8,30 @@ name: Athens - Build & Deploy
 #   # Add Rollback Stage
 #   # Potentially setup staging env to spun up JIT
 
-# on:
-#   push:
-#     tags:
-#       - athens-v*
-# env:
-#   ENVIRONMENT_NAME: "ATHENS"
-#   S3_BUCKET_NAME: "zetachain-deployment-files-athens"
-#   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}
-#   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}
-#   AWS_REGION: "us-east-1"
-#   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+on:
+  push:
+    tags:
+      - athens-v*
+env:
+  ENVIRONMENT_NAME: "ATHENS"
+  S3_BUCKET_NAME: "zetachain-deployment-files-athens"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_ATHENS }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
   
 
-# jobs:
+jobs:
 
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-#       - name: setup-git-credentials
-#         uses: de-vri-es/setup-git-credentials@v2.0.8
-#         with:
-#           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+      # - name: setup-git-credentials
+      #   uses: de-vri-es/setup-git-credentials@v2.0.8
+      #   with:
+      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
 #       - name: Set Environment Variables"
 #         run: |

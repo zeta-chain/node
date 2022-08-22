@@ -19,6 +19,7 @@ runs:
       run: |
         echo "Running Upload-To-S3 Action"
         RELEASE_NAME=${{ inputs.release-name }}
+        # S3_BUCKET_NAME=${{ inputs.bucket-name }}
         while IFS= read -r FILEPATH; do
             FILENAME=$(echo "$FILEPATH" | cut -d / -f2)
             aws s3 cp "$FILEPATH" s3://"$S3_BUCKET_NAME"/"$RELEASE_NAME"/"$FILENAME"

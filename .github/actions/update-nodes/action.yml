@@ -1,9 +1,6 @@
 name: 'Update Nodes'
 description: 'Builds ZetaChain Binaries'
 inputs:
-  # RELEASE_NAME:  
-  #   description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
-  #   required: true
   S3_BUCKET_NAME:  
     description: 'S3 Bucket Name'
     required: true
@@ -15,10 +12,10 @@ inputs:
     description: 'Update the Indexer Node'
     required: false
     default: "false"
-  # ENVIRONMENT_NAME:  
-  #   description: 'Environment Name'
+  # RELEASE_NAME:  
+  #   description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
   #   required: true
-  #   default: "STAGING"
+
 runs:
   using: "composite"
   steps:
@@ -27,11 +24,13 @@ runs:
           echo "Running update-nodes Action"
           echo "UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}" >> $GITHUB_ENV
           echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
-          echo "TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS }}" >> $GITHUB_ENV
-          echo "GITHUB_ACTION_PATH=${{ github.action_path }}" >> $GITHUB_ENV
+
+          # echo "GITHUB_ACTION_PATH=${{ github.action_path }}" >> $GITHUB_ENV
+          # echo "TAKE_SNAPSHOTS=${{ inputs.TAKE_SNAPSHOTS }}" >> $GITHUB_ENV
 
         shell: bash 
       - name: Get Deployment ID
+        # TODO - Could be removed and the latest-deployment-id passed through via GitHub Actions as $RELEASE_NAME instead 
         run: |
           echo "Getting latest deployment id"
           GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
@@ -55,7 +54,6 @@ runs:
         shell: bash
 
       - name: Copy Package Files
-        # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Copying Package Files from S3 to local node storage"
           source ${{ github.action_path }}/functions
@@ -64,7 +62,6 @@ runs:
         shell: bash
 
       - name: Stop ZetaChain
-        # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Stopping ZetaChain"
           source ${{ github.action_path }}/functions
@@ -73,7 +70,6 @@ runs:
         shell: bash
 
       - name: Update ZetaNode Binaries
-        # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Updating ZetaNode Binaries"
           source ${{ github.action_path }}/functions
@@ -87,7 +83,6 @@ runs:
         shell: bash
 
       - name: Restart ZetaChain
-        # if: ${{ env.UPDATE_NODES == 'TRUE' }}
         run: |
           echo "Restarting ZetaChain"
           source ${{ github.action_path }}/functions

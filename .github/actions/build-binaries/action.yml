@@ -35,7 +35,7 @@ runs:
       run: ${GITHUB_ACTION_PATH}/build.sh
       shell: bash
 
-    # - name: FAKE - build zetacored and zetaclientd
+    # - name: LOCAL TESTING - FAKE BINARIES - build zetacored and zetaclientd
     #   run: touch zetacored && touch zetaclientd
     #   shell: bash
 
