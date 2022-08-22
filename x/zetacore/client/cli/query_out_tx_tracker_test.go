@@ -29,7 +29,7 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
-			Index: strconv.Itoa(i),
+			Index: fmt.Sprintf("testchain-%d", i),
 		}
 		nullify.Fill(&outTxTracker)
 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
