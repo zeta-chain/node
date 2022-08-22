@@ -3,11 +3,12 @@ package metrics
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"time"
 )
 
 type Metrics struct {
@@ -17,9 +18,10 @@ type Metrics struct {
 type MetricName int
 
 const (
-//GAUGE_PENDING_TX MetricName = iota
-//
-//COUNTER_NUM_RPCS
+	//GAUGE_PENDING_TX MetricName = iota
+	//
+	//COUNTER_NUM_RPCS
+	PENDING_TXS = "pending_txs"
 )
 
 var (
