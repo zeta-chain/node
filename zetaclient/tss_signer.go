@@ -162,7 +162,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 			log.Fatal().Err(err).Msg("UserHomeDir")
 			return nil, err
 		}
-		tsspath = filepath.Join(home, ".Tss")
+		tsspath = filepath.Join(home, ".tss")
 	}
 	files, err := os.ReadDir(tsspath)
 	if err != nil {
@@ -260,7 +260,7 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 	return tssServer, s, nil
 }
 
-func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
+func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	log.Info().Msg("trying keysign...")
 	data := []byte("hello meta")
 	H := crypto.Keccak256Hash(data)
@@ -278,8 +278,13 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) {
 
 	if len(signature) == 0 {
 		log.Info().Msgf("signature has length 0, skipping verify")
+		return fmt.Errorf("signature has length 0")
 	} else {
-		verify_signature(tssPubkey, signature, H.Bytes())
+		if verify_signature(tssPubkey, signature, H.Bytes()) {
+			return nil
+		} else {
+			return fmt.Errorf("verify signature fail")
+		}
 	}
 }
 
