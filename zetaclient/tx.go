@@ -187,6 +187,18 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	return zetaTxHash, nil
 }
 
+func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*types.NodeAccount, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.NodeAccountAll(context.Background(), &types.QueryAllNodeAccountRequest{})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query GetAllNodeAccounts error")
+		return nil, err
+	}
+	b.logger.Info().Msgf("GetAllNodeAccounts: %d", len(resp.NodeAccount))
+
+	return resp.NodeAccount, nil
+}
+
 func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Keygen(context.Background(), &types.QueryGetKeygenRequest{})
