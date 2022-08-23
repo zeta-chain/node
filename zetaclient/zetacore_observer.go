@@ -121,7 +121,7 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				co.logger.Info().Msgf("test keysign...")
-				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				_ = TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
 				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
