@@ -208,7 +208,7 @@ func start(validatorName string, peers addr.AddrList) {
 	}
 
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
-	time.Sleep(20 * time.Second)
+	time.Sleep(12 * time.Second)
 
 	if keygenBlock > 0 {
 		log.Info().Msgf("Keygen at blocknum %d", keygenBlock)
@@ -217,7 +217,7 @@ func start(validatorName string, peers addr.AddrList) {
 			log.Error().Err(err).Msg("GetZetaBlockHeight error")
 			return
 		}
-		if int64(bn)+10 > keygenBlock {
+		if int64(bn)+3 > keygenBlock {
 			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", keygenBlock, bn)
 			return
 		}

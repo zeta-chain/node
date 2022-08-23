@@ -1,21 +1,31 @@
-set -e
+#set -e
 set -x
 ZETACORED=/home/ubuntu/go/bin/zetacored
 # AWS EC2: testnet1, testnet2, testnet3, testnet5
 NODES="3.137.46.147 3.20.194.40 3.19.64.252"
 
-rm -rf ~/.zetacore
+rm -rf ~/.zetacore/data
+rm -rf ~/.zetacore/config
 for NODE in $NODES; do
-	ssh -i ~/.ssh/meta.pem $NODE rm -rf ~/.zetacore
+	ssh -i ~/.ssh/meta.pem $NODE rm -rf ~/.zetacore/data
+	ssh -i ~/.ssh/meta.pem $NODE rm -rf ~/.zetacore/config
 done
 
 $ZETACORED init --chain-id athens-1 zetachain
-$ZETACORED keys add val --keyring-backend=test
+ADDR=$($ZETACORED keys show val -a --keyring-backend=test)
+if [ -z "$ADDR" ]; then
+  echo "No val key found; generate new val key"
+  $ZETACORED keys add val --keyring-backend=test
+fi
 $ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test) 1000000000stake
 
 
 for NODE in $NODES; do
-	ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test
+  ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test)
+  if [ -z "$ADDR" ]; then
+    echo "No val key found; generate new val key"
+	  ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test
+  fi
 	ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test)
 	$ZETACORED add-genesis-account $ADDR 1000000000stake --keyring-backend=test
 done
