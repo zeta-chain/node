@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/params"
 )
 
 func (ob *ChainObserver) PostNonceIfNotRecorded() error {
@@ -232,13 +234,14 @@ func (ob *ChainObserver) GetGasPrice(ctx context.Context, blockNum uint64) (*big
 	// get base fee
 	baseFee := block.BaseFee()
 	if baseFee == nil {
-		return ob.EvmClient.SuggestGasPrice(ctx) // return pre eip-1559 if not available
+		return ob.EvmClient.SuggestGasPrice(ctx) // return pre eip-1559 if not available , e.g. BSC
 	}
 	// get suggested tip cap
 	tipCap, err := ob.EvmClient.SuggestGasTipCap(ctx)
 	if err != nil {
 		ob.logger.Warn().Msg("Cannot obtain suggested tip cap will use default")
 		tipCap.SetUint64(2)
+		tipCap = tipCap.Mul(tipCap, big.NewInt(params.GWei))
 	}
 
 	// price = (2 * base fee) + tip cap
