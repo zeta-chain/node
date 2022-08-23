@@ -217,7 +217,7 @@ func start(validatorName string, peers addr.AddrList) {
 			log.Error().Err(err).Msg("GetZetaBlockHeight error")
 			return
 		}
-		if int64(bn) > keygenBlock {
+		if int64(bn)+10 > keygenBlock {
 			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", keygenBlock, bn)
 			return
 		}
@@ -230,10 +230,20 @@ func start(validatorName string, peers addr.AddrList) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
+		ticker := time.NewTicker(time.Second * 2)
+		for range ticker.C {
+			bn, err := bridge1.GetZetaBlockHeight()
+			if err != nil {
+				log.Error().Err(err).Msg("GetZetaBlockHeight error")
+				return
+			}
+			if int64(bn) == keygenBlock {
+				break
+			}
+		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)
 		var req keygen.Request
-
 		req = keygen.NewRequest(pubkeys, keygenBlock, "0.14.0")
 		res, err := tss.Server.Keygen(req)
 		if err != nil || res.Status != tsscommon.Success {
