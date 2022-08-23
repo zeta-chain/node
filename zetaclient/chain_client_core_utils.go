@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 )
 
@@ -61,13 +62,13 @@ func (ob *ChainObserver) WatchGasPrice() {
 }
 
 func (ob *ChainObserver) PostGasPrice() error {
-	// GAS PRICE
-	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
+	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
+	// GAS PRICE
+	gasPrice, err := ob.GetGasPrice(context.TODO(), blockNum)
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
@@ -220,4 +221,28 @@ func (ob *ChainObserver) WatchExchangeRate() {
 			return
 		}
 	}
+}
+
+// GetGasPrice calc gas price based on EIP 1559
+func (ob *ChainObserver) GetGasPrice(ctx context.Context, blockNum uint64) (*big.Int, error) {
+	block, err := ob.EvmClient.BlockByNumber(ctx, new(big.Int).SetUint64(blockNum))
+	if err != nil {
+		return nil, err
+	}
+	// get base fee
+	baseFee := block.BaseFee()
+	if baseFee == nil {
+		return ob.EvmClient.SuggestGasPrice(ctx) // return pre eip-1559 if not available
+	}
+	// get suggested tip cap
+	tipCap, err := ob.EvmClient.SuggestGasTipCap(ctx)
+	if err != nil {
+		ob.logger.Warn().Msg("Cannot obtain suggested tip cap will use default")
+		tipCap.SetUint64(2)
+	}
+
+	// price = (2 * base fee) + tip cap
+	price := baseFee.Mul(baseFee, big.NewInt(2))
+	price = price.Add(price, tipCap)
+	return price, nil
 }
