@@ -33,16 +33,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTSS(ctx, *elem)
 	}
 
-	// Set all the inTx
-	for _, elem := range genState.InTxList {
-		k.SetInTx(ctx, *elem)
-	}
-
-	// Set if defined
-	if genState.TxList != nil {
-		k.SetTxList(ctx, *genState.TxList)
-	}
-
 	// Set all the gasBalance
 	for _, elem := range genState.GasBalanceList {
 		k.SetGasBalance(ctx, *elem)
@@ -106,19 +96,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	for _, elem := range tSSList {
 		elem := elem
 		genesis.TSSList = append(genesis.TSSList, &elem)
-	}
-
-	// Get all inTx
-	inTxList := k.GetAllInTx(ctx)
-	for _, elem := range inTxList {
-		elem := elem
-		genesis.InTxList = append(genesis.InTxList, &elem)
-	}
-
-	// Get all txList
-	txList, found := k.GetTxList(ctx)
-	if found {
-		genesis.TxList = &txList
 	}
 
 	// Get all gasBalance

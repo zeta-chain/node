@@ -41,9 +41,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) AddTxHashToWatchlist(chain string, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgAddToWatchList(signerAddress, chain, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")

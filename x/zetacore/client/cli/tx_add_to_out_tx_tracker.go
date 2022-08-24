@@ -27,7 +27,7 @@ func CmdAddToWatchList() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgAddToWatchList(
+			msg := types.NewMsgAddToOutTxTracker(
 				clientCtx.GetFromAddress().String(),
 				argChain,
 				uint64(argNonce),

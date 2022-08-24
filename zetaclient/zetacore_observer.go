@@ -352,7 +352,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done
 					log.Warn().Err(err).Msgf("OutTx Broadcast error")
 					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
 					if report {
-						zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
 						if err != nil {
 							logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
@@ -365,7 +365,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-				zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
 				if err != nil {
 					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 				}
@@ -437,7 +437,7 @@ func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, erro
 	return chainOb, nil
 }
 
-// returns whether to retry in a few seconds, and whether to report via AddTxHashToWatchlist
+// returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
