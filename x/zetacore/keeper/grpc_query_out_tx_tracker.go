@@ -76,7 +76,7 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 
 	parts := strings.Split(req.Index, "-")
 	if len(parts) != 2 {
-		return nil, status.Error(codes.NotFound, "invalid index")
+		return nil, status.Error(codes.NotFound, "not found")
 	}
 
 	// this turns chain-nonce into the key chain/nonce
