@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/zeta-chain/zetacore/app/params"
 )
 
