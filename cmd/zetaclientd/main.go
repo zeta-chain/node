@@ -67,6 +67,10 @@ func main() {
 	}
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
 
+	if *logConsole {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
 	if *preParamsPath != "" {
 		log.Info().Msgf("pre-params file path %s", *preParamsPath)
 		preParamsFile, err := os.Open(*preParamsPath)
@@ -261,28 +265,31 @@ func start(validatorName string, peers addr.AddrList) {
 		}
 
 		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
-		err = tss.SetPubKey(res.PubKey)
+		err = tss.InsertPubKey(res.PubKey)
+		tss.CurrentPubkey = res.PubKey
 		if err != nil {
 			log.Error().Msgf("SetPubKey fail")
 			return
 		}
-		log.Info().Msgf("TSS address in hex: %s", tss.AddressInHex)
+		log.Info().Msgf("TSS address in hex: %s", tss.Address().Hex())
 		return
 	}
 
-	kg, err := bridge1.GetKeyGen()
-	if err != nil {
-		log.Error().Err(err).Msg("GetKeyGen error")
-		return
-	}
-	log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
-	tss.Pubkeys = kg.Pubkeys
+	//kg, err := bridge1.GetKeyGen()
+	//if err != nil {
+	//	log.Error().Err(err).Msg("GetKeyGen error")
+	//	return
+	//}
+	//log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
+	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)
+		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
