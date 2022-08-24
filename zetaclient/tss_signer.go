@@ -166,6 +166,8 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 	}
 	tss := TSS{
 		Server: server,
+		Keys:   make(map[string]*TSSKey),
+		logger: log.With().Str("module", "tss_signer").Logger(),
 	}
 	tsspath := os.Getenv(("TSSPATH"))
 	if len(tsspath) == 0 {
