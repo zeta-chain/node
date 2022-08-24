@@ -106,14 +106,15 @@ func (co *CoreObserver) keygenObserve() {
 				}
 				// Keygen succeed! Report TSS address
 				co.logger.Info().Msgf("Keygen success! keygen response: %v...", res)
-				err = co.tss.SetPubKey(res.PubKey)
+				err = co.tss.InsertPubKey(res.PubKey)
 				if err != nil {
-					co.logger.Error().Msgf("SetPubKey fail")
+					co.logger.Error().Msgf("InsertPubKey fail")
 					continue
 				}
+				co.tss.CurrentPubkey = res.PubKey
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
@@ -121,7 +122,7 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				co.logger.Info().Msgf("test keysign...")
-				_ = TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
 				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
