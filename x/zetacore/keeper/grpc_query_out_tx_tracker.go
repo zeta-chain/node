@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,9 +74,18 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
+	parts := strings.Split(req.Index, "-")
+	if len(parts) != 2 {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	// this turns chain-nonce into the key chain/nonce
+	// because using chain/nonce as key is problematic for HTTP URL
+	newIndex := fmt.Sprintf("%s/%s", parts[0], parts[1])
+
 	val, found := k.GetOutTxTracker(
 		ctx,
-		req.Index,
+		newIndex,
 	)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")

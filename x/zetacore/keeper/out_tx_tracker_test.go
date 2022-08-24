@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -18,7 +19,7 @@ var _ = strconv.IntSize
 func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutTxTracker {
 	items := make([]types.OutTxTracker, n)
 	for i := range items {
-		items[i].Index = strconv.Itoa(i)
+		items[i].Index = fmt.Sprintf("testchain-%d", i)
 
 		keeper.SetOutTxTracker(ctx, items[i])
 	}
