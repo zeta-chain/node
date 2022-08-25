@@ -12,15 +12,23 @@ fi
 
 echo "Starting Zetacore Node $NODE_NUMBER"
 
-FILE="~/.zetacore/config/app.toml"
+FILE="~/.zetacored/config/app.toml"
 if  [[ ! -f "$FILE" ]]; then
     echo "Copying Config From /zetashared/node$NODE_NUMBER/"
-    cp -rf /zetashared/node"$NODE_NUMBER"/* ~/.zetacore/
+    cp -rf /zetashared/node"$NODE_NUMBER"/* ~/.zetacored/
 fi
 
-zetacored start \
+zetacored start --trace \
+    --home ~/.zetacored \
+    --address "tcp://$MYIP:26658" \
     --rpc.laddr "tcp://0.0.0.0:26657" \
     --rpc.pprof_laddr "0.0.0.0:6060"  \
-    --address "tcp://$MYIP:26658" \
+    --moniker "node$NODE_NUMBER" \
     --log_format json \
-    --moniker "node$NODE_NUMBER"
+    --pruning custom \
+    --pruning-keep-recent 3 \
+    --pruning-keep-every 100  \
+    --pruning-interval 10 \
+    --state-sync.snapshot-interval 1000 \
+    --state-sync.snapshot-keep-recent 1 
+
