@@ -5,10 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"math/big"
 	"math/rand"
 	"os"
@@ -17,6 +13,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/rs/zerolog"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
@@ -74,7 +75,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 
-	noKeygen := os.Getenv("NO_KEYGEN")
+	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
 	if noKeygen == "" {
 		go co.keygenObserve()
 	}
@@ -105,14 +106,15 @@ func (co *CoreObserver) keygenObserve() {
 				}
 				// Keygen succeed! Report TSS address
 				co.logger.Info().Msgf("Keygen success! keygen response: %v...", res)
-				err = co.tss.SetPubKey(res.PubKey)
+				err = co.tss.InsertPubKey(res.PubKey)
 				if err != nil {
-					co.logger.Error().Msgf("SetPubKey fail")
+					co.logger.Error().Msgf("InsertPubKey fail")
 					continue
 				}
+				co.tss.CurrentPubkey = res.PubKey
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
@@ -120,7 +122,7 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				co.logger.Info().Msgf("test keysign...")
-				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
 				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
@@ -189,6 +191,15 @@ func (co *CoreObserver) startSendScheduler() {
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
 						continue
+					}
+					// update metrics
+					if idx == 0 {
+						pTxs, err := ob.GetPromGauge(metrics.PENDING_TXS)
+						if err != nil {
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PENDING_TXS)
+							continue
+						}
+						pTxs.Set(float64(len(sendList)))
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {

@@ -25,8 +25,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	index := msg.SendHash
 	send, isFound := k.GetSend(ctx, index)
 	if !isFound {
-		log.Error().Msgf("send not found: %v", index)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("sendHash %s does not exist", index))
+		log.Error().Msgf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain))
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
@@ -53,8 +53,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 	} else {
 		if isDuplicateSigner(msg.Creator, receive.Signers) {
-			log.Error().Msgf("ReceiveConfirmation: duplicate signer: %s", msg.Creator)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+			log.Info().Msgf("ReceiveConfirmation: TX %s has already been signed by %s", receiveIndex, msg.Creator)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("ReceiveConfirmation: TX %s has already been signed by %s", receiveIndex, msg.Creator))
 		}
 		receive.Signers = append(receive.Signers, msg.Creator)
 	}

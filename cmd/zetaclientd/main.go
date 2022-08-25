@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/cmd"
@@ -14,6 +14,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	"gitlab.com/thorchain/tss/go-tss/keygen"
+
 	"io/ioutil"
 	"strings"
 	"syscall"
@@ -33,7 +36,10 @@ import (
 	"time"
 )
 
-var preParams *keygen.LocalPreParams
+var (
+	preParams   *ecdsakeygen.LocalPreParams
+	keygenBlock int64
+)
 
 func main() {
 	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
@@ -42,8 +48,14 @@ func main() {
 	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
 	preParamsPath := flag.String("pre-params", "", "pre-params file path")
+	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 
 	flag.Parse()
+	keygenBlock = *keygen
+	if *logConsole {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
 	chains := strings.Split(*enabledChains, ",")
 	for _, chain := range chains {
 		if c, err := common.ParseChain(chain); err == nil {
@@ -187,19 +199,97 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Error().Err(err).Msg("NewTSS error")
 		return
 	}
-	kg, err := bridge1.GetKeyGen()
+
+	consKey := ""
+	pubkeySet, err := bridge1.GetKeys().GetPubKeySet()
 	if err != nil {
-		log.Error().Err(err).Msg("GetKeyGen error")
+		log.Error().Err(err).Msgf("Get Pubkey Set Error")
+	}
+	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
+	if err != nil {
+		log.Error().Err(err).Msgf("SetNodeKey error")
+	}
+
+	log.Info().Msg("wait for 20s for all node to SetNodeKey")
+	time.Sleep(12 * time.Second)
+
+	if keygenBlock > 0 {
+		log.Info().Msgf("Keygen at blocknum %d", keygenBlock)
+		bn, err := bridge1.GetZetaBlockHeight()
+		if err != nil {
+			log.Error().Err(err).Msg("GetZetaBlockHeight error")
+			return
+		}
+		if int64(bn)+3 > keygenBlock {
+			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", keygenBlock, bn)
+			return
+		}
+		nodeAccounts, err := bridge1.GetAllNodeAccounts()
+		if err != nil {
+			log.Error().Err(err).Msg("GetAllNodeAccounts error")
+			return
+		}
+		pubkeys := make([]string, 0)
+		for _, na := range nodeAccounts {
+			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
+		}
+		ticker := time.NewTicker(time.Second * 2)
+		for range ticker.C {
+			bn, err := bridge1.GetZetaBlockHeight()
+			if err != nil {
+				log.Error().Err(err).Msg("GetZetaBlockHeight error")
+				return
+			}
+			if int64(bn) == keygenBlock {
+				break
+			}
+		}
+		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
+		log.Info().Msgf("%s", pubkeys)
+		var req keygen.Request
+		req = keygen.NewRequest(pubkeys, keygenBlock, "0.14.0")
+		res, err := tss.Server.Keygen(req)
+		if err != nil || res.Status != tsscommon.Success {
+			log.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+			return
+		}
+		// Keygen succeed! Report TSS address
+		log.Info().Msgf("Keygen success! keygen response: %v...", res)
+
+		log.Info().Msgf("doing a keysign test...")
+		err = mc.TestKeysign(res.PubKey, tss.Server)
+		if err != nil {
+			log.Error().Err(err).Msg("TestKeysign error")
+			return
+		}
+
+		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
+		err = tss.InsertPubKey(res.PubKey)
+		tss.CurrentPubkey = res.PubKey
+		if err != nil {
+			log.Error().Msgf("SetPubKey fail")
+			return
+		}
+		log.Info().Msgf("TSS address in hex: %s", tss.Address().Hex())
 		return
 	}
-	log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
-	tss.Pubkeys = kg.Pubkeys
+
+	//kg, err := bridge1.GetKeyGen()
+	//if err != nil {
+	//	log.Error().Err(err).Msg("GetKeyGen error")
+	//	return
+	//}
+	//log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
+	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		_, err = bridge1.SetTSS(chain, tss.Address().Hex(), tss.PubkeyInBech32)
+		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+
 	}
 
 	signerMap1, err := CreateSignerMap(tss)
@@ -230,17 +320,6 @@ func start(validatorName string, peers addr.AddrList) {
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
-
-	consKey := ""
-	pubkeySet, err := bridge1.GetKeys().GetPubKeySet()
-	if err != nil {
-		log.Error().Err(err).Msgf("Get Pubkey Set Error")
-	}
-	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetNodeKey error")
-	}
 
 	// report TSS address nonce on ETHish chains
 	for _, chain := range config.ChainsEnabled {
