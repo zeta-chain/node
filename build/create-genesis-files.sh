@@ -39,7 +39,10 @@ if (( $NODE_NUMBER == 0 )); then
     sleep 5
     zetacored init --chain-id athens-1 zetachain
     zetacored config keyring-backend test
-    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  
+        echo "Generating new keys"
+        zetacored keys add val
+    fi    
     cd ~/.zetacore/config || exit
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "NODE_0_VALIDATOR: $NODE_0_VALIDATOR"
@@ -114,7 +117,12 @@ if (( $NODE_NUMBER > 0 )); then
 
     echo "Generating new keys"
     zetacored config keyring-backend test
-    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  zetacored keys add val; fi
+    echo "REUSE_EXISTING_KEYS: $REUSE_EXISTING_KEYS"
+    if [ -z "${REUSE_EXISTING_KEYS}" ]; then  
+        echo "Generating new keys"
+        zetacored keys add val
+    fi
+
     NODE_VALIDATOR=$(zetacored keys show val -a)
     echo "NODE_VALIDATOR: $NODE_VALIDATOR"
     echo "$NODE_VALIDATOR" > NODE_VALIDATOR_ID
