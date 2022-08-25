@@ -18,7 +18,7 @@ if  [[ ! -f "$FILE" ]]; then
     cp -rf /zetashared/node"$NODE_NUMBER"/* ~/.zetacored/
 fi
 
-zetacored start --trace \
+zetacored start \
     --home ~/.zetacored \
     --address "tcp://$MYIP:26658" \
     --rpc.laddr "tcp://0.0.0.0:26657" \
