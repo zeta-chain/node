@@ -75,7 +75,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 
-	noKeygen := os.Getenv("NO_KEYGEN")
+	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
 	if noKeygen == "" {
 		go co.keygenObserve()
 	}
