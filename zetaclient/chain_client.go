@@ -23,6 +23,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/gas"
 )
 
 const (
@@ -68,6 +69,7 @@ type ChainObserver struct {
 	ZetaPriceQuerier       ZetaPriceQuerier
 	stop                   chan struct{}
 	wg                     sync.WaitGroup
+	GasEstimator           *gas.GasEstimator
 
 	fileLogger *zerolog.Logger // for critical info
 	logger     zerolog.Logger
@@ -133,6 +135,9 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	if err != nil {
 		return nil, err
 	}
+
+	// initialize gas estimator
+	ob.GasEstimator = gas.NewGasEstimator(client, ob.logger)
 
 	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
 	if err != nil {

@@ -70,7 +70,7 @@ func (ob *ChainObserver) PostGasPrice() error {
 		return err
 	}
 	// GAS PRICE
-	gasPrice, err := ob.GetGasPrice(context.TODO(), blockNum)
+	gasPrice, err := ob.GasEstimator.GetPrice(context.TODO(), new(big.Int).SetUint64(blockNum))
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
@@ -225,7 +225,6 @@ func (ob *ChainObserver) WatchExchangeRate() {
 	}
 }
 
-// GetGasPrice calc gas price based on EIP 1559
 func (ob *ChainObserver) GetGasPrice(ctx context.Context, blockNum uint64) (*big.Int, error) {
 	block, err := ob.EvmClient.BlockByNumber(ctx, new(big.Int).SetUint64(blockNum))
 	if err != nil {
