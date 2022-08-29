@@ -16,21 +16,21 @@ echo "MyLocalIP: $(hostname -i)"
 rm -rf /zetashared/node"${NODE_NUMBER}"/ || true 
 if [ -z "${REUSE_EXISTING_KEYS}" ]; then 
     echo "Generating new keys"
-    rm -rf ~/.zetacore/* || true 
+    rm -rf ~/.zetacored/* || true 
     rm -rf ~/.tssnew/* || true
     rm -rf ~/.tss/* || true
     rm -rf ~/.zetaclient/* || true
 elif [ "${REUSE_EXISTING_KEYS}" == "true" ]; then 
     echo "Reusing existing keys"
     rm -rf ~/.zetaclient/* || true
-    rm -rf ~/.zetacore/data/* || true
-    rm -rf ~/.zetacore/config/* || true
+    rm -rf ~/.zetacored/data/* || true
+    rm -rf ~/.zetacored/config/* || true
 else
     echo "Unknown Input -- REUSE_EXISTING_KEYS=$REUSE_EXISTING_KEYS"
     exit 1
 fi
 
-mkdir -p ~/.zetacore/config/gentx/ ~/.zetacore/keyring-test/ ~/.zetacore/data/ ~/.zetaclient/ ~/.tssnew/
+mkdir -p ~/.zetacored/config/gentx/ ~/.zetacored/keyring-test/ ~/.zetacored/data/ ~/.zetaclient/ ~/.tssnew/
 
 if (( $NODE_NUMBER == 0 )); then
     echo "This is Node $NODE_NUMBER"
@@ -43,7 +43,7 @@ if (( $NODE_NUMBER == 0 )); then
         echo "Generating new keys"
         zetacored keys add val
     fi    
-    cd ~/.zetacore/config || exit
+    cd ~/.zetacored/config || exit
     NODE_0_VALIDATOR=$(zetacored keys show val -a)
     echo "NODE_0_VALIDATOR: $NODE_0_VALIDATOR"
     echo "$NODE_0_VALIDATOR" > NODE_VALIDATOR_ID
@@ -74,7 +74,7 @@ if (( $NODE_NUMBER == 0 )); then
         i=$[$i+1]
     done
 
-    cp ~/.zetacore/config/genesis.json /zetashared/genesis/init-genesis.json
+    cp ~/.zetacored/config/genesis.json /zetashared/genesis/init-genesis.json
     
     i=1
     while [ $i -le "$MAX_NODE_NUMBER" ]
@@ -85,26 +85,26 @@ if (( $NODE_NUMBER == 0 )); then
                 echo "Waiting for Node $i to generate gentx files"
                 sleep 3
             done
-        cp /zetashared/node$i/config/gentx/gentx-*.json ~/.zetacore/config/gentx/
+        cp /zetashared/node$i/config/gentx/gentx-*.json ~/.zetacored/config/gentx/
         i=$[$i+1]
     done
     zetacored gentx val 100000000stake --chain-id athens-1 --ip "$MYIP" --moniker "node$NODE_NUMBER" 
     zetacored collect-gentxs &> gentxs
 
-    sed -i '/\[instrumentation\]/,+3 s/prometheus = false/prometheus = true/' /root/.zetacore/config/config.toml
-    sed -i '/\[instrumentation\]/,+3 s/namespace = "tendermint"/namespace = "zetachain-athens"/' /root/.zetacore/config/config.toml
-    sed -i '/\[telemetry\]/,+6 s/enabled = false/enabled = false/' /root/.zetacore/config/app.toml
-    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
-    sed -i 's/enable-hostname-label = false/enable-hostname-label = true/' /root/.zetacore/config/app.toml
-    sed -i 's/prometheus-retention-time = 5/prometheus-retention-time = 5/' /root/.zetacore/config/app.toml
+    sed -i '/\[instrumentation\]/,+3 s/prometheus = false/prometheus = true/' /root/.zetacored/config/config.toml
+    sed -i '/\[instrumentation\]/,+3 s/namespace = "tendermint"/namespace = "zetachain-athens"/' /root/.zetacored/config/config.toml
+    sed -i '/\[telemetry\]/,+6 s/enabled = false/enabled = false/' /root/.zetacored/config/app.toml
+    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacored/config/app.toml
+    sed -i 's/enable-hostname-label = false/enable-hostname-label = true/' /root/.zetacored/config/app.toml
+    sed -i 's/prometheus-retention-time = 5/prometheus-retention-time = 5/' /root/.zetacored/config/app.toml
 
-    contents="$(jq '.app_state.gov.voting_params.voting_period = "600s"' /root/.zetacore/config/genesis.json)" && \
+    contents="$(jq '.app_state.gov.voting_params.voting_period = "600s"' /root/.zetacored/config/genesis.json)" && \
         echo "${contents}" > "$DAEMON_HOME"/config/genesis.json
 
-    cp /root/.zetacore/config/genesis.json /zetashared/genesis/genesis.json
-    cp -r /root/.zetacore/config/* /zetashared/node"$NODE_NUMBER"/config/
-    cp -r /root/.zetacore/data/* /zetashared/node"$NODE_NUMBER"/data/
-    cp -r /root/.zetacore/keyring-test/* /zetashared/node"$NODE_NUMBER"/keyring-test/
+    cp /root/.zetacored/config/genesis.json /zetashared/genesis/genesis.json
+    cp -r /root/.zetacored/config/* /zetashared/node"$NODE_NUMBER"/config/
+    cp -r /root/.zetacored/data/* /zetashared/node"$NODE_NUMBER"/data/
+    cp -r /root/.zetacored/keyring-test/* /zetashared/node"$NODE_NUMBER"/keyring-test/
 
    echo "Config Built -- Node $NODE_NUMBER"
 
@@ -139,19 +139,19 @@ if (( $NODE_NUMBER > 0 )); then
     sleep 10 # Wait to make sure node0 has finished configuring the genesis file
 
     # Happens after Node 0 creates the init-genesis file but before it runs collect-gentxs
-    cp /zetashared/genesis/init-genesis.json  ~/.zetacore/config/genesis.json 
+    cp /zetashared/genesis/init-genesis.json  ~/.zetacored/config/genesis.json 
     zetacored gentx val 100000000stake --chain-id athens-1 --ip "$MYIP" --moniker "node$NODE_NUMBER" 
 
-    sed -i '/\[instrumentation\]/,+3 s/prometheus = false/prometheus = true/' /root/.zetacore/config/config.toml
-    sed -i '/\[instrumentation\]/,+3 s/namespace = "tendermint"/namespace = "zetachain-athens"/' /root/.zetacore/config/config.toml
-    sed -i '/\[telemetry\]/,+6 s/enabled = false/enabled = false/' /root/.zetacore/config/app.toml
-    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacore/config/app.toml
-    sed -i 's/enable-hostname-label = false/enable-hostname-label = true/' /root/.zetacore/config/app.toml
-    sed -i 's/prometheus-retention-time = 5/prometheus-retention-time = 5/' /root/.zetacore/config/app.toml
+    sed -i '/\[instrumentation\]/,+3 s/prometheus = false/prometheus = true/' /root/.zetacored/config/config.toml
+    sed -i '/\[instrumentation\]/,+3 s/namespace = "tendermint"/namespace = "zetachain-athens"/' /root/.zetacored/config/config.toml
+    sed -i '/\[telemetry\]/,+6 s/enabled = false/enabled = false/' /root/.zetacored/config/app.toml
+    sed -i '/\[api\]/,+3 s/enable = false/enable = true/' /root/.zetacored/config/app.toml
+    sed -i 's/enable-hostname-label = false/enable-hostname-label = true/' /root/.zetacored/config/app.toml
+    sed -i 's/prometheus-retention-time = 5/prometheus-retention-time = 5/' /root/.zetacored/config/app.toml
 
-    cp -r /root/.zetacore/config/* /zetashared/node"$NODE_NUMBER"/config/
-    cp -r /root/.zetacore/keyring-test/* /zetashared/node"$NODE_NUMBER"/keyring-test/
-    cp -r /root/.zetacore/data/* /zetashared/node"$NODE_NUMBER"/data/
+    cp -r /root/.zetacored/config/* /zetashared/node"$NODE_NUMBER"/config/
+    cp -r /root/.zetacored/keyring-test/* /zetashared/node"$NODE_NUMBER"/keyring-test/
+    cp -r /root/.zetacored/data/* /zetashared/node"$NODE_NUMBER"/data/
 
 
     until [ -f /zetashared/genesis/genesis.json ]
@@ -161,8 +161,8 @@ if (( $NODE_NUMBER > 0 )); then
         done
     # echo "Final genesis.json found"
     sleep 5 
-    cp /zetashared/genesis/genesis.json  ~/.zetacore/config/genesis.json 
-    cp -r /root/.zetacore/config/* /zetashared/node"$NODE_NUMBER"/config/
+    cp /zetashared/genesis/genesis.json  ~/.zetacored/config/genesis.json 
+    cp -r /root/.zetacored/config/* /zetashared/node"$NODE_NUMBER"/config/
 
     echo "Config Built -- Node $NODE_NUMBER"
 
