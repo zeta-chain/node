@@ -39,7 +39,7 @@ func (s *COSuite) SetUpTest(c *C) {
 		c.Fail()
 	}
 	c.Logf("user home dir: %s", homeDir)
-	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
+	chainHomeFoler := filepath.Join(homeDir, ".zetacored")
 	c.Logf("chain home dir: %s", chainHomeFoler)
 
 	// first signer & zetaClient
