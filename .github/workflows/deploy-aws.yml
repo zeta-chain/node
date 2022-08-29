@@ -213,9 +213,9 @@ jobs:
           export GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
           echo "GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
 
-      - name: Snapshot Instances
+      - name: Snapshot Validator Instances
         run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" "Name=instance-state-name,Values=running"| jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Chain,Values=zetachain" "Name=tag:Role,Values=validator" "Name=instance-state-name,Values=running" | jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
           while IFS= read -r INSTANCE_ID; do
               echo "$INSTANCE_ID"
               aws ec2 create-snapshots \
