@@ -35,10 +35,6 @@ runs:
       run: ${GITHUB_ACTION_PATH}/build.sh
       shell: bash
 
-    # - name: LOCAL TESTING - FAKE BINARIES - build zetacored and zetaclientd
-    #   run: touch zetacored && touch zetaclientd
-    #   shell: bash
-
     - name: Build Indexer
       run: ${GITHUB_ACTION_PATH}/build-indexer.sh
       if: ${{ inputs.build-indexer == 'true' }}

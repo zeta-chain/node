@@ -4,12 +4,12 @@ name: Staging - Build & Deploy
   # Remove static IAM creds and use short lived via Role Assumption
   # Add Testing Stage
   # Add Rollback Stage
+  # Setup CosmoVisor Proposal action
 
 on:
   push:
     branches:
       - develop
-      - cicd-cosmovisor
 env:
   ENVIRONMENT_NAME: "STAGING"
   S3_BUCKET_NAME: "zetachain-deployment-files-staging"
@@ -76,15 +76,3 @@ jobs:
           S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
           TAKE_SNAPSHOTS: false
           UPDATE_INDEXER: false
-
-      - name: Cosmovisor Upgrade Proposal and Vote
-        uses:  ./.github/actions/cosmovisor-upgrade
-        with:
-          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-          VERSION: "0.0.1"
-          # DESCRIPTION: false
-          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          # CHECKSUM_ZETACORED: false
-          # CHECKSUM_ZETACLIENTD: false
-          CHAIN_ID: "athens-1"
-
