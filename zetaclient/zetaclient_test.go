@@ -25,7 +25,7 @@ func (s *MySuite) SetUpTest(c *C) {
 	c.Logf("Settting up test...")
 	homeDir, err := os.UserHomeDir()
 	c.Logf("user home dir: %s", homeDir)
-	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
+	chainHomeFoler := filepath.Join(homeDir, ".zetacored")
 	c.Logf("chain home dir: %s", chainHomeFoler)
 
 	// alice is the default user created by Starport chain serve

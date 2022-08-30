@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -75,7 +76,7 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 
-	noKeygen := os.Getenv("NO_KEYGEN")
+	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
 	if noKeygen == "" {
 		go co.keygenObserve()
 	}
@@ -139,57 +140,125 @@ func (co *CoreObserver) keygenObserve() {
 	}
 }
 
+type OutTxProcessorManager struct {
+	outTxStartTime     map[string]time.Time
+	outTxEndTime       map[string]time.Time
+	outTxActive        map[string]struct{}
+	mu                 sync.Mutex
+	logger             zerolog.Logger
+	numActiveProcessor int64
+}
+
+func NewOutTxProcessorManager() *OutTxProcessorManager {
+	return &OutTxProcessorManager{
+		outTxStartTime:     make(map[string]time.Time),
+		outTxEndTime:       make(map[string]time.Time),
+		outTxActive:        make(map[string]struct{}),
+		mu:                 sync.Mutex{},
+		logger:             log.With().Str("module", "OutTxProcessorManager").Logger(),
+		numActiveProcessor: 0,
+	}
+}
+
+func (outTxMan *OutTxProcessorManager) StartTryProcess(outTxID string) {
+	outTxMan.mu.Lock()
+	defer outTxMan.mu.Unlock()
+	outTxMan.outTxStartTime[outTxID] = time.Now()
+	outTxMan.outTxActive[outTxID] = struct{}{}
+	outTxMan.numActiveProcessor++
+	outTxMan.logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outTxID, outTxMan.numActiveProcessor)
+}
+
+func (outTxMan *OutTxProcessorManager) EndTryProcess(outTxID string) {
+	outTxMan.mu.Lock()
+	defer outTxMan.mu.Unlock()
+	outTxMan.outTxEndTime[outTxID] = time.Now()
+	delete(outTxMan.outTxActive, outTxID)
+	outTxMan.numActiveProcessor--
+	outTxMan.logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxMan.numActiveProcessor, time.Since(outTxMan.outTxStartTime[outTxID]))
+}
+
+func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
+	outTxMan.mu.Lock()
+	defer outTxMan.mu.Unlock()
+	_, found := outTxMan.outTxActive[outTxID]
+	return found
+}
+
+func (OutTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
+	OutTxMan.mu.Lock()
+	defer OutTxMan.mu.Unlock()
+	if _, found := OutTxMan.outTxActive[outTxID]; found {
+		return time.Since(OutTxMan.outTxStartTime[outTxID])
+	} else {
+		return 0
+	}
+}
+
+// suicide whole zetaclient if keysign appears deadlocked.
+func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
+	logger := OutTxMan.logger
+	logger.Info().Msgf("StartMonitorHealth")
+	ticker := time.NewTicker(60 * time.Second)
+	for range ticker.C {
+		count := 0
+		for outTxID, _ := range OutTxMan.outTxActive {
+			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+				count++
+			}
+		}
+		if count > 0 {
+			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
+		} else {
+			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", OutTxMan.numActiveProcessor)
+		}
+		if count > 10 {
+			// suicide:
+			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
+			logger.Info().Msgf("numActiveProcessor: %d", OutTxMan.numActiveProcessor)
+			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		}
+	}
+}
+
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
 func (co *CoreObserver) startSendScheduler() {
 	logger := co.logger.With().Str("module", "SendScheduler").Logger()
-	// key is sendID: chain/nonce
-	// true means it's already being processed
-	// false means it's not being processed
-	outTxInProcessing := make(map[string]bool)
-	done := make(chan string)
-	mu := sync.Mutex{}
-	go func() {
-		for {
-			id := <-done
-			logger.Info().Msgf("outTxID %s processor finished", id)
-			mu.Lock()
-			outTxInProcessing[id] = false
-			mu.Unlock()
+	outTxMan := NewOutTxProcessorManager()
+	go outTxMan.StartMonitorHealth()
 
-		}
-	}()
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
-			co.logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
+			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
 			if bn%10 == 0 {
-				co.logger.Info().Msgf("ZetaCore heart beat: %d", bn)
+				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
 			sendList, err := co.bridge.GetAllPendingSend()
 			if err != nil {
-				co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
+				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
 			if len(sendList) > 0 && bn%5 == 0 {
-				co.logger.Info().Msgf("#pending send: %d", len(sendList))
+				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			// schedule sends
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
-					co.logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
 				for idx, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
 						continue
 					}
 					// update metrics
@@ -203,10 +272,10 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 					}
 					if included || confirmed {
-						co.logger.Info().Msgf("send outTx already included; do not schedule")
+						logger.Info().Msgf("send outTx already included; do not schedule")
 						continue
 					}
 					chain := getTargetChain(send)
@@ -215,14 +284,10 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					mu.Lock()
-					notInProcess := outTxInProcessing[outTxID] == false
-					mu.Unlock()
-					if isScheduled(sinceBlock, idx < 30) && notInProcess {
-						mu.Lock()
-						outTxInProcessing[outTxID] = true
-						mu.Unlock()
-						go co.TryProcessOutTx(send, sinceBlock, done)
+
+					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+						outTxMan.StartTryProcess(outTxID)
+						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
 					if idx > 50 { // only look at 50 sends per chain
 						break
@@ -236,7 +301,7 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done chan string) {
+func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outTxMan *OutTxProcessorManager) {
 	chain := getTargetChain(send)
 	outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
@@ -244,11 +309,9 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done
 		Str("sendHash", send.Index).
 		Str("outTxID", outTxID).
 		Int64("sinceBlock", sinceBlock).Logger()
-	tNow := time.Now()
 	logger.Info().Msgf("start processing outTxID %s", outTxID)
 	defer func() {
-		logger.Info().Msgf("TryProcessOutTx finished in %s", time.Since(tNow))
-		done <- outTxID
+		outTxMan.EndTryProcess(outTxID)
 	}()
 
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
@@ -383,9 +446,9 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%15 == 0
+		return d%20 == 0
 	}
-	if d < 100 && d%15 == 0 {
+	if d < 100 && d%20 == 0 {
 		return true
 	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true

@@ -48,6 +48,7 @@ func main() {
 	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
 	preParamsPath := flag.String("pre-params", "", "pre-params file path")
+	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 
 	flag.Parse()
@@ -102,7 +103,7 @@ func main() {
 	}
 
 	fmt.Println("multi-node client")
-	start(*valKeyName, peers)
+	start(*valKeyName, peers, *zetaCoreHome)
 }
 
 func SetupConfigForTest() {
@@ -120,7 +121,7 @@ func SetupConfigForTest() {
 
 }
 
-func start(validatorName string, peers addr.AddrList) {
+func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
@@ -172,7 +173,7 @@ func start(validatorName string, peers addr.AddrList) {
 		log.Err(err).Msg("UserHomeDir error")
 		return
 	}
-	chainHomeFoler := filepath.Join(homeDir, ".zetacore")
+	chainHomeFoler := filepath.Join(homeDir, zetacoreHome)
 
 	// first signer & bridge
 	signerName := validatorName
