@@ -290,6 +290,7 @@ func (co *CoreObserver) startSendScheduler() {
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
 					if idx > 50 { // only look at 50 sends per chain
+						logger.Info().Msgf("sends per chain > 50 : %v", idx)
 						break
 					}
 				}
