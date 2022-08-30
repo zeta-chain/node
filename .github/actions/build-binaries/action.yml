@@ -40,7 +40,7 @@ runs:
       if: ${{ inputs.build-indexer == 'true' }}
       shell: bash
 
-    - name: Cosmovisor Indexer
+    - name: Cosmovisor
       run: |
         go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
