@@ -324,13 +324,17 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	var to ethcommon.Address
 	var err error
 	var toChain common.Chain
-	if send.Status == types.SendStatus_PendingRevert {
+	switch send.Status {
+	case types.SendStatus_PendingRevert:
 		to = ethcommon.HexToAddress(send.Sender)
 		toChain, err = common.ParseChain(send.SenderChain)
 		logger.Info().Msgf("Abort: reverting inbound")
-	} else if send.Status == types.SendStatus_PendingOutbound {
+	case types.SendStatus_PendingOutbound:
 		to = ethcommon.HexToAddress(send.Receiver)
 		toChain, err = common.ParseChain(send.ReceiverChain)
+	default:
+		logger.Error().Err(err).Msgf("Invalid pending send.Status: %v, [%s]\n", send.Status, send.String())
+		return
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
@@ -344,7 +348,11 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 		return
 	}
 
-	signer := co.signerMap[toChain]
+	signer, ok := co.signerMap[toChain]
+	if !ok {
+		logger.Error().Err(err).Msgf("cannot obtain signer: toChain:%v\n", toChain)
+		return
+	}
 	message, err := base64.StdEncoding.DecodeString(send.Message)
 	if err != nil {
 		logger.Err(err).Msgf("decode send.Message %s error", send.Message)
@@ -379,13 +387,17 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	var tx *ethtypes.Transaction
 
 	srcChainID := config.Chains[send.SenderChain].ChainID
-	if send.Status == types.SendStatus_PendingRevert {
+	switch send.Status {
+	case types.SendStatus_PendingRevert:
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		toChainID := config.Chains[send.ReceiverChain].ChainID
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
-	} else if send.Status == types.SendStatus_PendingOutbound {
+	case types.SendStatus_PendingOutbound:
 		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+	default:
+		logger.Error().Err(err).Msgf("Invalid pending send.Status: %v, [%s]\n", send.Status, send.String())
+		return
 	}
 
 	if err != nil {
@@ -437,6 +449,8 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 			}
 
 		}
+	} else {
+		logger.Warn().Msg("received null tx")
 	}
 
 }
