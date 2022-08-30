@@ -185,37 +185,36 @@ func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
 	return found
 }
 
-func (OutTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
-	OutTxMan.mu.Lock()
-	defer OutTxMan.mu.Unlock()
-	if _, found := OutTxMan.outTxActive[outTxID]; found {
-		return time.Since(OutTxMan.outTxStartTime[outTxID])
-	} else {
-		return 0
+func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
+	outTxMan.mu.Lock()
+	defer outTxMan.mu.Unlock()
+	if _, found := outTxMan.outTxActive[outTxID]; found {
+		return time.Since(outTxMan.outTxStartTime[outTxID])
 	}
+	return 0
 }
 
 // suicide whole zetaclient if keysign appears deadlocked.
-func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
-	logger := OutTxMan.logger
+func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
+	logger := outTxMan.logger
 	logger.Info().Msgf("StartMonitorHealth")
 	ticker := time.NewTicker(60 * time.Second)
 	for range ticker.C {
 		count := 0
-		for outTxID, _ := range OutTxMan.outTxActive {
-			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+		for outTxID := range outTxMan.outTxActive {
+			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
 				count++
 			}
 		}
 		if count > 0 {
 			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
 		} else {
-			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", OutTxMan.numActiveProcessor)
+			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
 		}
 		if count > 10 {
 			// suicide:
 			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
-			logger.Info().Msgf("numActiveProcessor: %d", OutTxMan.numActiveProcessor)
+			logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
 	}
