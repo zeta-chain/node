@@ -75,7 +75,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return zetaTxHash, fmt.Errorf("PostSend: re-try fails!")
+	return zetaTxHash, fmt.Errorf("postSend: re-try fails")
 }
 
 // FIXME: pass nonce
@@ -93,7 +93,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return zetaTxHash, fmt.Errorf("PostReceiveConfirmation: re-try fails!")
+	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
 func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {

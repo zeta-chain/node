@@ -59,7 +59,7 @@ func hasSuperMajorityValidators(numSigners int, validators []stakingtypes.Valida
 	numValidValidators := 0
 	for _, v := range validators {
 		if v.IsBonded() {
-			numValidValidators += 1
+			numValidValidators++
 		}
 	}
 	threshold := numValidValidators * 2 / 3

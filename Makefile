@@ -87,6 +87,13 @@ run:
 
 init-run: init run
 
+lint-pre:
+	@test -z $(gofmt -l .)
+	@GOFLAGS=$(GOFLAGS) go mod verify
+
+lint: lint-pre
+	@golangci-lint run
+
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################

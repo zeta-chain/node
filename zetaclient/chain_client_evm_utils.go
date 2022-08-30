@@ -46,7 +46,7 @@ func (ob *ChainObserver) observeInTX() error {
 	if confirmedBlockNum <= ob.GetLastBlock() {
 		return nil
 	}
-	toBlock := ob.GetLastBlock() + config.MAX_BLOCKS_PER_PERIOD // read at most 10 blocks in one go
+	toBlock := ob.GetLastBlock() + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}

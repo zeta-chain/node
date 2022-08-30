@@ -3,8 +3,8 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"math/big"
 	"math/rand"
 	"os"
@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
+	OutboundTxSignCount = "zetaclient_outbound_tx_sign_count"
 )
 
 type CoreObserver struct {
@@ -54,7 +54,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	co.clientMap = clientMap
 	co.metrics = metrics
 
-	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	err := metrics.RegisterCounter(OutboundTxSignCount, "number of outbound tx signed")
 	if err != nil {
 		co.logger.Error().Err(err).Msg("error registering counter")
 	}
@@ -63,11 +63,11 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 }
 
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
-	if cnt, found := metrics.Counters[name]; found {
-		return cnt, nil
-	} else {
+	cnt, found := metrics.Counters[name]
+	if !found {
 		return nil, errors.New("counter not found")
 	}
+	return cnt, nil
 }
 
 func (co *CoreObserver) MonitorCore() {
@@ -160,7 +160,7 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 	}()
 	observeTicker := time.NewTicker(3 * time.Second)
-	var lastBlockNum uint64 = 0
+	var lastBlockNum uint64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -194,9 +194,9 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					// update metrics
 					if idx == 0 {
-						pTxs, err := ob.GetPromGauge(metrics.PENDING_TXS)
+						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
 						if err != nil {
-							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PENDING_TXS)
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
 							continue
 						}
 						pTxs.Set(float64(len(sendList)))
@@ -328,10 +328,9 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, done
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 		return
-	} else {
-		logger.Info().Msgf("Keysign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 	}
-	cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
+	logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+	cnt, err := co.GetPromCounter(OutboundTxSignCount)
 	if err != nil {
 		log.Error().Err(err).Msgf("GetPromCounter error")
 	} else {

@@ -58,9 +58,9 @@ func (cl *ChainETHish) Listen() {
 //   bytes zetaParams);
 func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Payload, error) {
 	//("ZetaSent(address,uint16,bytes,uint256,uint256,bytes,bytes)")
-	vals, err := cl.mpi_abi.Unpack("ZetaSent", data)
+	vals, err := cl.mpiAbi.Unpack("ZetaSent", data)
 	if err != nil {
-		return Payload{}, fmt.Errorf("Unpack error %s\n", err)
+		return Payload{}, fmt.Errorf("unpack error %s", err.Error())
 	}
 
 	sender := topics[1]
@@ -81,7 +81,7 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 
 	return Payload{
 		sender:       sender.Bytes(),
-		srcChainID:   cl.chain_id,
+		srcChainID:   cl.chainID,
 		destChainID:  destChainID,
 		destContract: destContract,
 		zetaAmount:   zetaAmount,
@@ -101,13 +101,13 @@ func (cl *ChainETHish) recievePayload(topics []ethcommon.Hash, data []byte) (Pay
 //	 bytes calldata message,
 //	 bytes32 sendHash) external {
 func (cl *ChainETHish) sendTransaction(payload Payload) {
-	sendHash, err := hex.DecodeString(MAGIC_HASH[2:])
+	sendHash, err := hex.DecodeString(MagicHash[2:])
 	if err != nil {
 		log.Error().Err(err).Msg("sendTransaction: DecodeString err")
 	}
 	var sendHash32 [32]byte
 	copy(sendHash32[:], sendHash[:32])
-	data, err := cl.mpi_abi.Pack(
+	data, err := cl.mpiAbi.Pack(
 		"onReceive",
 		payload.sender,
 		payload.srcChainID,
@@ -141,8 +141,8 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 	GasLimit := payload.gasLimit.Uint64()
 
 	ethSigner := ethtypes.LatestSignerForChainID(other.id)
-	other_mpi := ethcommon.HexToAddress(other.MPI_CONTRACT)
-	tx := ethtypes.NewTransaction(nonce, other_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+	otherMpi := ethcommon.HexToAddress(other.MpiContract)
+	tx := ethtypes.NewTransaction(nonce, otherMpi, big.NewInt(0), GasLimit, gasPrice, data)
 	hashBytes := ethSigner.Hash(tx).Bytes()
 	sig, err := cl.tss.Sign(hashBytes)
 	if err != nil {
@@ -177,11 +177,10 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 			if receipt.Status == 1 { // Successful tx
 				log.Info().Msgf("tx %s succeed!", signedTX.Hash())
 				return
-			} else { // revert
-				log.Info().Msgf("tx %s reverted! initiating revert on origin chain...", signedTX.Hash())
-				cl.revertTransaction(payload)
-				return
 			}
+			log.Info().Msgf("tx %s reverted! initiating revert on origin chain...", signedTX.Hash())
+			cl.revertTransaction(payload)
+			return
 		}
 	}()
 }
@@ -196,13 +195,13 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 //	 bytes calldata message,
 //	 bytes32 sendHash) external {
 func (cl *ChainETHish) revertTransaction(payload Payload) {
-	sendHash, err := hex.DecodeString(MAGIC_HASH[2:])
+	sendHash, err := hex.DecodeString(MagicHash[2:])
 	if err != nil {
 		log.Error().Err(err).Msg("revertTransaction: DecodeString err")
 	}
 	var sendHash32 [32]byte
 	copy(sendHash32[:], sendHash[:32])
-	data, err := cl.mpi_abi.Pack(
+	data, err := cl.mpiAbi.Pack(
 		"onRevert",
 		ethcommon.BytesToAddress(payload.sender),
 		payload.srcChainID,
@@ -230,8 +229,8 @@ func (cl *ChainETHish) revertTransaction(payload Payload) {
 	GasLimit := payload.gasLimit.Uint64()
 
 	ethSigner := ethtypes.LatestSignerForChainID(cl.id)
-	other_mpi := ethcommon.HexToAddress(cl.MPI_CONTRACT)
-	tx := ethtypes.NewTransaction(nonce, other_mpi, big.NewInt(0), GasLimit, gasPrice, data)
+	otherMpi := ethcommon.HexToAddress(cl.MpiContract)
+	tx := ethtypes.NewTransaction(nonce, otherMpi, big.NewInt(0), GasLimit, gasPrice, data)
 	hashBytes := ethSigner.Hash(tx).Bytes()
 	sig, err := cl.tss.Sign(hashBytes)
 	if err != nil {

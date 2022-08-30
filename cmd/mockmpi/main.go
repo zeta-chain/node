@@ -15,26 +15,26 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-var ALL_CHAINS = []*ChainETHish{
+var AllChains = []*ChainETHish{
 	{
-		name:         common.Chain("ETH"),
-		MPI_CONTRACT: "0x68Bc806414e743D88436AEB771Be387A55B4df70",
-		chain_id:     big.NewInt(5),
+		name:        common.Chain("ETH"),
+		MpiContract: "0x68Bc806414e743D88436AEB771Be387A55B4df70",
+		chainID:     big.NewInt(5),
 	},
 	{
-		name:         common.Chain("BSC"),
-		MPI_CONTRACT: "0xE626402550fB921E4a47c11568F89dF3496fbEF0",
-		chain_id:     big.NewInt(97),
+		name:        common.Chain("BSC"),
+		MpiContract: "0xE626402550fB921E4a47c11568F89dF3496fbEF0",
+		chainID:     big.NewInt(97),
 	},
 	{
-		name:         common.Chain("POLYGON"),
-		MPI_CONTRACT: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
-		chain_id:     big.NewInt(80001),
+		name:        common.Chain("POLYGON"),
+		MpiContract: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
+		chainID:     big.NewInt(80001),
 	},
 }
 
 func startAllChainListeners() {
-	for _, chain := range ALL_CHAINS {
+	for _, chain := range AllChains {
 		chain.Start()
 	}
 }
@@ -62,8 +62,8 @@ func main() {
 
 	var logZetaSentSignature = []byte("ZetaSent(address,uint256,bytes,uint256,uint256,bytes,bytes)")
 	logZetaSentSignatureHash := crypto.Keccak256Hash(logZetaSentSignature)
-	MAGIC_HASH = logZetaSentSignatureHash.String()
-	log.Info().Msgf("Magic Hash: %s", MAGIC_HASH)
+	MagicHash = logZetaSentSignatureHash.String()
+	log.Info().Msgf("Magic Hash: %s", MagicHash)
 
 	debug := flag.Bool("debug", false, "sets log level to debug")
 	onlyChain := flag.String("only-chain", "all", "Uppercase name of a supported chain")

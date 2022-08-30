@@ -1,13 +1,23 @@
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
-    - golint
+    - revive
     - ineffassign
     - unconvert
     - misspell
     - govet
+    - gosec
+    - stylecheck
+    - typecheck
+    - misspell
+    - prealloc
+    - depguard
+    - dogsled
+    - goconst
+    - bodyclose
+    - unconvert
+    - unused
 linters-settings:
   gocyclo:
     min-complexity: 11

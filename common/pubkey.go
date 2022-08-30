@@ -24,7 +24,6 @@ type (
 	PubKeys []PubKey
 )
 
-// EmptyPubKey
 var EmptyPubKey PubKey
 
 // EmptyPubKeySet

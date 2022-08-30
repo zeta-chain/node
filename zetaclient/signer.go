@@ -128,14 +128,11 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 //bytes calldata message,
 //bytes32 internalSendHash
 //) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainId *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
-	if len(sendHash) < 32 {
-		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
-	}
+func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
-	data, err = signer.abi.Pack("onRevert", sender, srcChainID, to, toChainId, amount, message, sendHash)
+	data, err = signer.abi.Pack("onRevert", sender, srcChainID, to, toChainID, amount, message, sendHash)
 	if err != nil {
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
