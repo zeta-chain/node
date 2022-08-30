@@ -67,10 +67,8 @@ type ChainObserver struct {
 	OutTxChan              chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier       ZetaPriceQuerier
 	stop                   chan struct{}
-	wg                     sync.WaitGroup
-
-	fileLogger *zerolog.Logger // for critical info
-	logger     zerolog.Logger
+	fileLogger             *zerolog.Logger // for critical info
+	logger                 zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
