@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 
 func CmdRemoveFromWatchList() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-from-watch-list [chain] [nonce]",
+		Use:   "remove-from-out-tx-tracker [chain] [nonce]",
 		Short: "Broadcast message RemoveFromWatchlist",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -26,7 +26,7 @@ func CmdRemoveFromWatchList() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgRemoveFromWatchList(
+			msg := types.NewMsgRemoveFromOutTxTracker(
 				clientCtx.GetFromAddress().String(),
 				argChain,
 				uint64(argNonce),

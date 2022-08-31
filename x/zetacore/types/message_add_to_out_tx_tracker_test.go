@@ -11,18 +11,18 @@ import (
 func TestMsgAddToWatchList_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgAddToWatchList
+		msg  MsgAddToOutTxTracker
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgAddToWatchList{
+			msg: MsgAddToOutTxTracker{
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgAddToWatchList{
+			msg: MsgAddToOutTxTracker{
 				Creator: sample.AccAddress(),
 			},
 		},

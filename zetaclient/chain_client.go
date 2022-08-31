@@ -67,10 +67,8 @@ type ChainObserver struct {
 	OutTxChan              chan OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier       ZetaPriceQuerier
 	stop                   chan struct{}
-	wg                     sync.WaitGroup
-
-	fileLogger *zerolog.Logger // for critical info
-	logger     zerolog.Logger
+	fileLogger             *zerolog.Logger // for critical info
+	logger                 zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
@@ -90,7 +88,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
-		return nil, fmt.Errorf("Connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
+		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
 	}
 	ob.ConnectorAddress = addr
 	ob.endpoint = config.Chains[chain.String()].Endpoint
@@ -129,7 +127,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	if err != nil {
 		return nil, err
 	}
-	err = ob.RegisterPromGauge(metricsPkg.PENDING_TXS, "Number of pending transactions")
+	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
 	if err != nil {
 		return nil, err
 	}
@@ -221,10 +219,9 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					}
 					logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 					return true, true, nil
-				} else {
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
-					return true, false, nil
 				}
+				logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+				return true, false, nil
 			}
 			revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 			if err == nil {
@@ -252,10 +249,9 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					}
 					logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 					return true, true, nil
-				} else {
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
-					return true, false, nil
 				}
+				logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+				return true, false, nil
 			}
 		}
 	} else if found && receipt.Status == 0 {

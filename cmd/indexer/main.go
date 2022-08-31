@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	EXTERNAL_CHAINS = []string{"GOERLI", "BSCTESTNET", "MUMBAI", "ROPSTEN"}
+	ExternalChains = []string{"GOERLI", "BSCTESTNET", "MUMBAI", "ROPSTEN"}
 )
 
 func main() {
@@ -76,7 +76,7 @@ func main() {
 	}
 
 	clientMap := make(map[string]*ethclient.Client)
-	for _, chain := range EXTERNAL_CHAINS {
+	for _, chain := range ExternalChains {
 		envvar := chain + "_ENDPOINT"
 		endpoint := os.Getenv(envvar)
 		log.Info().Msgf("%s=%s, connecting...", envvar, endpoint)

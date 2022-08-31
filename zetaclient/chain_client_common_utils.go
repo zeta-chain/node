@@ -121,27 +121,27 @@ func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2A
 func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 	uniswapv3querier *UniswapV3ZetaPriceQuerier,
 	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
-	MIN_OB_INTERVAL := 24
+	MinObInterval := 24
 	switch chain {
 	case common.MumbaiChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.POLY_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.POLYGON_CONFIRMATION_COUNT
-		ob.BlockTime = config.POLY_BLOCK_TIME
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.PolygonConfirmationCount
+		ob.BlockTime = config.PolygonBlockTime
 
 	case common.GoerliChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ETH_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.ETH_CONFIRMATION_COUNT
-		ob.BlockTime = config.ETH_BLOCK_TIME
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.EthConfirmationCount
+		ob.BlockTime = config.EthBlockTime
 
 	case common.BSCTestnetChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BSC_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.BSC_CONFIRMATION_COUNT
-		ob.BlockTime = config.BSC_BLOCK_TIME
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.BscConfirmationCount
+		ob.BlockTime = config.BscBlockTime
 
 	case common.RopstenChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.ROPSTEN_BLOCK_TIME, MIN_OB_INTERVAL)) * time.Second)
-		ob.confCount = config.ROPSTEN_CONFIRMATION_COUNT
-		ob.BlockTime = config.ROPSTEN_BLOCK_TIME
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.RopstenConfirmationCount
+		ob.BlockTime = config.RopstenBlockTime
 	}
 	switch config.Chains[chain.String()].PoolContract {
 	case clienttypes.UniswapV2:

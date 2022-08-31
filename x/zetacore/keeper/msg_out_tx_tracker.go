@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
-func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatchList) (*types.MsgAddToWatchListResponse, error) {
+func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
@@ -19,7 +19,7 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 	nonceString := strconv.Itoa(int(msg.Nonce))
-	index := fmt.Sprintf("%s/%s", msg.Chain, nonceString)
+	index := fmt.Sprintf("%s-%s", msg.Chain, nonceString)
 	tracker, found := k.GetOutTxTracker(ctx, index)
 	hash := types.TxHashList{
 		TxHash: msg.TxHash,
@@ -32,7 +32,7 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 			Nonce:    nonceString,
 			HashList: []*types.TxHashList{&hash},
 		})
-		return &types.MsgAddToWatchListResponse{}, nil
+		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}
 	var isDup = false
 	for _, hash := range tracker.HashList {
@@ -45,5 +45,19 @@ func (k msgServer) AddToWatchList(goCtx context.Context, msg *types.MsgAddToWatc
 		tracker.HashList = append(tracker.HashList, &hash)
 		k.SetOutTxTracker(ctx, tracker)
 	}
-	return &types.MsgAddToWatchListResponse{}, nil
+	return &types.MsgAddToOutTxTrackerResponse{}, nil
+}
+
+func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !IsBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	}
+	nonceString := strconv.Itoa(int(msg.Nonce))
+	index := fmt.Sprintf("%s/%s", msg.Chain, nonceString)
+
+	k.RemoveOutTxTracker(ctx, index)
+	return &types.MsgRemoveFromOutTxTrackerResponse{}, nil
 }

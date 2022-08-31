@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ONE_EIGHTEEN, _ = big.NewInt(0).SetString("1000000000000000000", 10)
+	OneEighteen, _ = big.NewInt(0).SetString("1000000000000000000", 10)
 )
 
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {
@@ -210,33 +210,6 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 	)
 }
 
-func (k msgServer) UpdateTxList(ctx sdk.Context, send *types.Send) {
-	inTx, _ := k.GetInTx(ctx, send.InTxHash)
-	inTx.Index = send.InTxHash
-	inTx.SendHash = send.Index
-	k.SetInTx(ctx, inTx)
-
-	tx := &types.Tx{
-		SendHash:   send.Index,
-		RecvHash:   "",
-		InTxHash:   send.InTxHash,
-		InTxChain:  send.SenderChain,
-		OutTxHash:  "",
-		OutTxChain: "",
-	}
-	txList, found := k.GetTxList(ctx)
-	if !found {
-		txList = types.TxList{
-			Creator: "",
-			Tx:      []*types.Tx{tx},
-		}
-	} else {
-		txList.Tx = append(txList.Tx, tx)
-		send.IndexTxList = int64(len(txList.Tx) - 1)
-	}
-	k.SetTxList(ctx, txList)
-}
-
 // returns feeInZeta (uint uuzeta), and whether to abort zeta-tx
 func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *big.Int, chain string, send *types.Send) (*big.Int, bool) {
 	abort := false
@@ -252,8 +225,8 @@ func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *b
 	}
 
 	// price*gasLimit*exchangeRate/1e18
-	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), ONE_EIGHTEEN)
+	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), OneEighteen)
 	// add protocol flat fee: 1 ZETA
-	gasFeeInZeta.Add(gasFeeInZeta, ONE_EIGHTEEN)
+	gasFeeInZeta.Add(gasFeeInZeta, OneEighteen)
 	return gasFeeInZeta, abort
 }

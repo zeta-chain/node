@@ -132,25 +132,25 @@ func (m *MsgZetaConversionRateVoterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgZetaConversionRateVoterResponse proto.InternalMessageInfo
 
-type MsgAddToWatchList struct {
+type MsgAddToOutTxTracker struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Chain   string `protobuf:"bytes,2,opt,name=chain,proto3" json:"chain,omitempty"`
 	Nonce   uint64 `protobuf:"varint,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	TxHash  string `protobuf:"bytes,4,opt,name=txHash,proto3" json:"txHash,omitempty"`
 }
 
-func (m *MsgAddToWatchList) Reset()         { *m = MsgAddToWatchList{} }
-func (m *MsgAddToWatchList) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToWatchList) ProtoMessage()    {}
-func (*MsgAddToWatchList) Descriptor() ([]byte, []int) {
+func (m *MsgAddToOutTxTracker) Reset()         { *m = MsgAddToOutTxTracker{} }
+func (m *MsgAddToOutTxTracker) String() string { return proto.CompactTextString(m) }
+func (*MsgAddToOutTxTracker) ProtoMessage()    {}
+func (*MsgAddToOutTxTracker) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4b502766e6a14552, []int{2}
 }
-func (m *MsgAddToWatchList) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddToOutTxTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToWatchList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddToOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToWatchList.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddToOutTxTracker.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -160,61 +160,61 @@ func (m *MsgAddToWatchList) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToWatchList) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToWatchList.Merge(m, src)
+func (m *MsgAddToOutTxTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddToOutTxTracker.Merge(m, src)
 }
-func (m *MsgAddToWatchList) XXX_Size() int {
+func (m *MsgAddToOutTxTracker) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToWatchList) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToWatchList.DiscardUnknown(m)
+func (m *MsgAddToOutTxTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddToOutTxTracker.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToWatchList proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddToOutTxTracker proto.InternalMessageInfo
 
-func (m *MsgAddToWatchList) GetCreator() string {
+func (m *MsgAddToOutTxTracker) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgAddToWatchList) GetChain() string {
+func (m *MsgAddToOutTxTracker) GetChain() string {
 	if m != nil {
 		return m.Chain
 	}
 	return ""
 }
 
-func (m *MsgAddToWatchList) GetNonce() uint64 {
+func (m *MsgAddToOutTxTracker) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-func (m *MsgAddToWatchList) GetTxHash() string {
+func (m *MsgAddToOutTxTracker) GetTxHash() string {
 	if m != nil {
 		return m.TxHash
 	}
 	return ""
 }
 
-type MsgAddToWatchListResponse struct {
+type MsgAddToOutTxTrackerResponse struct {
 }
 
-func (m *MsgAddToWatchListResponse) Reset()         { *m = MsgAddToWatchListResponse{} }
-func (m *MsgAddToWatchListResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgAddToWatchListResponse) ProtoMessage()    {}
-func (*MsgAddToWatchListResponse) Descriptor() ([]byte, []int) {
+func (m *MsgAddToOutTxTrackerResponse) Reset()         { *m = MsgAddToOutTxTrackerResponse{} }
+func (m *MsgAddToOutTxTrackerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddToOutTxTrackerResponse) ProtoMessage()    {}
+func (*MsgAddToOutTxTrackerResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4b502766e6a14552, []int{3}
 }
-func (m *MsgAddToWatchListResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddToOutTxTrackerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgAddToWatchListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddToOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgAddToWatchListResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddToOutTxTrackerResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -224,36 +224,36 @@ func (m *MsgAddToWatchListResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgAddToWatchListResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgAddToWatchListResponse.Merge(m, src)
+func (m *MsgAddToOutTxTrackerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddToOutTxTrackerResponse.Merge(m, src)
 }
-func (m *MsgAddToWatchListResponse) XXX_Size() int {
+func (m *MsgAddToOutTxTrackerResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgAddToWatchListResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgAddToWatchListResponse.DiscardUnknown(m)
+func (m *MsgAddToOutTxTrackerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddToOutTxTrackerResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgAddToWatchListResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddToOutTxTrackerResponse proto.InternalMessageInfo
 
-type MsgRemoveFromWatchList struct {
+type MsgRemoveFromOutTxTracker struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Chain   string `protobuf:"bytes,2,opt,name=chain,proto3" json:"chain,omitempty"`
 	Nonce   uint64 `protobuf:"varint,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
 }
 
-func (m *MsgRemoveFromWatchList) Reset()         { *m = MsgRemoveFromWatchList{} }
-func (m *MsgRemoveFromWatchList) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveFromWatchList) ProtoMessage()    {}
-func (*MsgRemoveFromWatchList) Descriptor() ([]byte, []int) {
+func (m *MsgRemoveFromOutTxTracker) Reset()         { *m = MsgRemoveFromOutTxTracker{} }
+func (m *MsgRemoveFromOutTxTracker) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveFromOutTxTracker) ProtoMessage()    {}
+func (*MsgRemoveFromOutTxTracker) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4b502766e6a14552, []int{4}
 }
-func (m *MsgRemoveFromWatchList) XXX_Unmarshal(b []byte) error {
+func (m *MsgRemoveFromOutTxTracker) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveFromWatchList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRemoveFromOutTxTracker) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveFromWatchList.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRemoveFromOutTxTracker.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -263,54 +263,54 @@ func (m *MsgRemoveFromWatchList) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveFromWatchList) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveFromWatchList.Merge(m, src)
+func (m *MsgRemoveFromOutTxTracker) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveFromOutTxTracker.Merge(m, src)
 }
-func (m *MsgRemoveFromWatchList) XXX_Size() int {
+func (m *MsgRemoveFromOutTxTracker) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveFromWatchList) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveFromWatchList.DiscardUnknown(m)
+func (m *MsgRemoveFromOutTxTracker) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveFromOutTxTracker.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveFromWatchList proto.InternalMessageInfo
+var xxx_messageInfo_MsgRemoveFromOutTxTracker proto.InternalMessageInfo
 
-func (m *MsgRemoveFromWatchList) GetCreator() string {
+func (m *MsgRemoveFromOutTxTracker) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgRemoveFromWatchList) GetChain() string {
+func (m *MsgRemoveFromOutTxTracker) GetChain() string {
 	if m != nil {
 		return m.Chain
 	}
 	return ""
 }
 
-func (m *MsgRemoveFromWatchList) GetNonce() uint64 {
+func (m *MsgRemoveFromOutTxTracker) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-type MsgRemoveFromWatchListResponse struct {
+type MsgRemoveFromOutTxTrackerResponse struct {
 }
 
-func (m *MsgRemoveFromWatchListResponse) Reset()         { *m = MsgRemoveFromWatchListResponse{} }
-func (m *MsgRemoveFromWatchListResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRemoveFromWatchListResponse) ProtoMessage()    {}
-func (*MsgRemoveFromWatchListResponse) Descriptor() ([]byte, []int) {
+func (m *MsgRemoveFromOutTxTrackerResponse) Reset()         { *m = MsgRemoveFromOutTxTrackerResponse{} }
+func (m *MsgRemoveFromOutTxTrackerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveFromOutTxTrackerResponse) ProtoMessage()    {}
+func (*MsgRemoveFromOutTxTrackerResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4b502766e6a14552, []int{5}
 }
-func (m *MsgRemoveFromWatchListResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgRemoveFromWatchListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgRemoveFromWatchListResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -320,17 +320,17 @@ func (m *MsgRemoveFromWatchListResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *MsgRemoveFromWatchListResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRemoveFromWatchListResponse.Merge(m, src)
+func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.Merge(m, src)
 }
-func (m *MsgRemoveFromWatchListResponse) XXX_Size() int {
+func (m *MsgRemoveFromOutTxTrackerResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgRemoveFromWatchListResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRemoveFromWatchListResponse.DiscardUnknown(m)
+func (m *MsgRemoveFromOutTxTrackerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgRemoveFromWatchListResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse proto.InternalMessageInfo
 
 // this line is used by starport scaffolding # proto/tx/message
 type MsgCreateTSSVoter struct {
@@ -1137,10 +1137,10 @@ var xxx_messageInfo_MsgSetNodeKeysResponse proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*MsgZetaConversionRateVoter)(nil), "zetachain.zetacore.zetacore.MsgZetaConversionRateVoter")
 	proto.RegisterType((*MsgZetaConversionRateVoterResponse)(nil), "zetachain.zetacore.zetacore.MsgZetaConversionRateVoterResponse")
-	proto.RegisterType((*MsgAddToWatchList)(nil), "zetachain.zetacore.zetacore.MsgAddToWatchList")
-	proto.RegisterType((*MsgAddToWatchListResponse)(nil), "zetachain.zetacore.zetacore.MsgAddToWatchListResponse")
-	proto.RegisterType((*MsgRemoveFromWatchList)(nil), "zetachain.zetacore.zetacore.MsgRemoveFromWatchList")
-	proto.RegisterType((*MsgRemoveFromWatchListResponse)(nil), "zetachain.zetacore.zetacore.MsgRemoveFromWatchListResponse")
+	proto.RegisterType((*MsgAddToOutTxTracker)(nil), "zetachain.zetacore.zetacore.MsgAddToOutTxTracker")
+	proto.RegisterType((*MsgAddToOutTxTrackerResponse)(nil), "zetachain.zetacore.zetacore.MsgAddToOutTxTrackerResponse")
+	proto.RegisterType((*MsgRemoveFromOutTxTracker)(nil), "zetachain.zetacore.zetacore.MsgRemoveFromOutTxTracker")
+	proto.RegisterType((*MsgRemoveFromOutTxTrackerResponse)(nil), "zetachain.zetacore.zetacore.MsgRemoveFromOutTxTrackerResponse")
 	proto.RegisterType((*MsgCreateTSSVoter)(nil), "zetachain.zetacore.zetacore.MsgCreateTSSVoter")
 	proto.RegisterType((*MsgCreateTSSVoterResponse)(nil), "zetachain.zetacore.zetacore.MsgCreateTSSVoterResponse")
 	proto.RegisterType((*MsgGasBalanceVoter)(nil), "zetachain.zetacore.zetacore.MsgGasBalanceVoter")
@@ -1160,68 +1160,69 @@ func init() {
 func init() { proto.RegisterFile("zetacore/tx.proto", fileDescriptor_4b502766e6a14552) }
 
 var fileDescriptor_4b502766e6a14552 = []byte{
-	// 973 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6f, 0xe3, 0x44,
-	0x14, 0xaf, 0xfb, 0x77, 0xfd, 0xba, 0x2d, 0x74, 0xb6, 0xdb, 0x35, 0xde, 0x55, 0x14, 0x59, 0x2b,
-	0x54, 0x40, 0x4d, 0x44, 0x2b, 0x58, 0x09, 0x0e, 0x88, 0x46, 0x82, 0x45, 0xbb, 0xa9, 0x2a, 0xa7,
-	0x80, 0xb4, 0x07, 0x2a, 0x27, 0x1e, 0x1c, 0x6b, 0xe3, 0x99, 0xe0, 0x19, 0x47, 0xe9, 0x72, 0xe1,
-	0xc6, 0x95, 0x3f, 0x07, 0x6e, 0x7c, 0x10, 0x3e, 0x01, 0xc7, 0x3d, 0x72, 0x84, 0xf6, 0x8b, 0xa0,
-	0x99, 0xb1, 0xc7, 0xce, 0xbf, 0x3a, 0x09, 0x9c, 0x32, 0xef, 0xcd, 0xef, 0xbd, 0xf7, 0xcb, 0x6f,
-	0xde, 0xcc, 0x93, 0x61, 0xef, 0x15, 0xe6, 0x5e, 0x87, 0xc6, 0xb8, 0xce, 0x87, 0xb5, 0x7e, 0x4c,
-	0x39, 0x45, 0x0f, 0xa5, 0xab, 0xeb, 0x85, 0xa4, 0x96, 0x6d, 0xea, 0x85, 0x6d, 0xe5, 0x78, 0xc6,
-	0x2e, 0x07, 0x94, 0xe3, 0x58, 0x85, 0xd9, 0xf7, 0x3a, 0x34, 0x8a, 0x28, 0xa9, 0xab, 0x1f, 0xe5,
-	0x74, 0x7e, 0x37, 0xc0, 0x6e, 0xb2, 0xe0, 0x05, 0xe6, 0x5e, 0x83, 0x92, 0x01, 0x8e, 0x59, 0x48,
-	0x89, 0xeb, 0x71, 0xfc, 0x95, 0x88, 0x44, 0x16, 0x6c, 0x75, 0x62, 0xec, 0x71, 0x1a, 0x5b, 0x46,
-	0xd5, 0x38, 0x34, 0xdd, 0xcc, 0x44, 0xfb, 0xb0, 0x21, 0x29, 0x58, 0xab, 0xd2, 0xaf, 0x0c, 0x54,
-	0x03, 0xf4, 0x6a, 0x22, 0x95, 0xb5, 0x26, 0x21, 0x53, 0x76, 0x50, 0x15, 0xb6, 0xdb, 0x3d, 0xda,
-	0x79, 0x79, 0x96, 0x44, 0x6d, 0x1c, 0x5b, 0xeb, 0x55, 0xe3, 0x70, 0xdd, 0x2d, 0xba, 0x9c, 0xc7,
-	0xe0, 0xcc, 0xe6, 0xe7, 0x62, 0xd6, 0xa7, 0x84, 0x61, 0xe7, 0x3b, 0xd8, 0x6b, 0xb2, 0xe0, 0x53,
-	0xdf, 0xbf, 0xa0, 0x5f, 0x7b, 0xbc, 0xd3, 0x7d, 0x1e, 0x32, 0xbe, 0x30, 0xf9, 0x7d, 0xd8, 0x20,
-	0x94, 0x74, 0x14, 0xdf, 0x75, 0x57, 0x19, 0xe8, 0x00, 0x36, 0xf9, 0xf0, 0xa9, 0xc7, 0xba, 0x92,
-	0x9d, 0xe9, 0xa6, 0x96, 0xf3, 0x10, 0xde, 0x9a, 0x28, 0xa9, 0xf9, 0x7c, 0x03, 0x07, 0x4d, 0x16,
-	0xb8, 0x38, 0xa2, 0x03, 0xfc, 0x59, 0x4c, 0xa3, 0xff, 0x99, 0x94, 0x53, 0x85, 0xca, 0xf4, 0xfc,
-	0x9a, 0x41, 0x22, 0x15, 0x69, 0x88, 0xdc, 0xf8, 0xa2, 0xd5, 0x9a, 0xfb, 0x38, 0xd7, 0x8a, 0xc5,
-	0x2d, 0xd8, 0xf2, 0x7c, 0x3f, 0xc6, 0x8c, 0xa5, 0x7f, 0x3e, 0x33, 0x85, 0x2a, 0xfd, 0xa4, 0xfd,
-	0x12, 0x5f, 0x59, 0x1b, 0x4a, 0x15, 0x65, 0xa5, 0xaa, 0x8c, 0x96, 0xd5, 0x9c, 0x7e, 0x30, 0x00,
-	0x35, 0x59, 0xf0, 0xb9, 0xc7, 0x4e, 0xbd, 0x9e, 0x47, 0x3a, 0x4b, 0x36, 0x99, 0x05, 0x5b, 0x6d,
-	0x15, 0x9f, 0xb2, 0xcd, 0xcc, 0x39, 0xda, 0xe9, 0x91, 0x6c, 0xf7, 0x31, 0x06, 0x9a, 0xe0, 0x2f,
-	0x06, 0xbc, 0xa9, 0xb6, 0xcf, 0xe3, 0x70, 0x59, 0x7a, 0xfb, 0xb0, 0xd1, 0x17, 0xd1, 0xd9, 0x89,
-	0x49, 0xa3, 0x9c, 0x9a, 0x90, 0x94, 0x25, 0xfd, 0x7e, 0x4f, 0x4b, 0xaa, 0x2c, 0xc7, 0x06, 0x6b,
-	0x9c, 0x93, 0x26, 0xfc, 0x25, 0xec, 0x34, 0x59, 0x70, 0x46, 0xc9, 0x7f, 0x20, 0x3b, 0xa5, 0xbd,
-	0x1e, 0xc0, 0xfd, 0x91, 0xb4, 0xba, 0xde, 0xcf, 0xab, 0x69, 0x63, 0x77, 0x70, 0x38, 0xc0, 0x0d,
-	0x4a, 0xbe, 0x0d, 0xe3, 0xc8, 0xe3, 0x21, 0x25, 0xb7, 0x54, 0xb6, 0xe1, 0x0e, 0xc3, 0xc4, 0x97,
-	0x77, 0x48, 0x15, 0xd7, 0x36, 0x7a, 0x04, 0x26, 0x4d, 0xf8, 0x85, 0xba, 0x60, 0xea, 0x34, 0x73,
-	0x07, 0x7a, 0x1b, 0x76, 0x69, 0xc2, 0x4f, 0x85, 0x48, 0x4f, 0x71, 0x18, 0x74, 0x79, 0xaa, 0xdb,
-	0x98, 0x57, 0xfc, 0x8b, 0xa8, 0x19, 0x12, 0x9e, 0x2a, 0xa7, 0x0c, 0x74, 0x04, 0x9b, 0x8c, 0x7b,
-	0x3c, 0x61, 0xd6, 0x66, 0xd5, 0x38, 0xdc, 0x3d, 0xbe, 0x5f, 0x4b, 0x9f, 0xbe, 0x94, 0x7e, 0x4b,
-	0x6e, 0xba, 0x29, 0x28, 0x17, 0x68, 0xab, 0x28, 0x50, 0x15, 0xee, 0xd2, 0x84, 0x5f, 0xf2, 0xe1,
-	0xa5, 0xd2, 0xe9, 0x8e, 0x24, 0x00, 0x92, 0xe3, 0xd9, 0xc8, 0x5d, 0x9c, 0x90, 0x44, 0xab, 0xf6,
-	0xc7, 0x2a, 0xdc, 0x6d, 0xb2, 0xa0, 0x85, 0x89, 0x5f, 0x76, 0x4a, 0xa2, 0x09, 0x30, 0xf1, 0x71,
-	0x9c, 0x2a, 0x95, 0x5a, 0xa2, 0x7d, 0xd4, 0xaa, 0x51, 0xb8, 0xa5, 0x45, 0x97, 0x50, 0x39, 0x56,
-	0x1c, 0xe2, 0xf4, 0xb2, 0x6a, 0x1b, 0x3d, 0x86, 0x9d, 0x6c, 0xad, 0xe2, 0x95, 0x4e, 0xa3, 0x4e,
-	0x71, 0x16, 0xe2, 0x89, 0x3e, 0x4d, 0x62, 0xc2, 0xa5, 0x64, 0xa6, 0x9b, 0x3b, 0x04, 0xe7, 0x08,
-	0x33, 0xe6, 0x05, 0x4a, 0x03, 0xd3, 0xcd, 0x4c, 0x51, 0x39, 0x24, 0xe9, 0x11, 0x9a, 0xaa, 0x72,
-	0x66, 0x8b, 0xca, 0x21, 0x29, 0x1e, 0x20, 0x48, 0xfd, 0x46, 0x9d, 0x22, 0x43, 0xe0, 0xb1, 0xe7,
-	0x61, 0x14, 0x72, 0x6b, 0x5b, 0x02, 0xb4, 0xed, 0x1c, 0xc0, 0x7e, 0x51, 0x3b, 0x2d, 0xea, 0x6f,
-	0x06, 0xec, 0xca, 0x0d, 0x7e, 0x46, 0x7d, 0xfc, 0x0c, 0x5f, 0xb1, 0x5b, 0x64, 0xad, 0x83, 0xa9,
-	0x1e, 0xa8, 0x16, 0xe6, 0x52, 0xd9, 0xed, 0xe3, 0xbd, 0xac, 0x1b, 0xce, 0x93, 0xf6, 0x33, 0xb9,
-	0xe1, 0xe6, 0x18, 0xf4, 0x11, 0x58, 0x03, 0xaf, 0x17, 0xfa, 0x22, 0xba, 0x21, 0xea, 0x11, 0x96,
-	0xb0, 0x73, 0xf5, 0xe2, 0x29, 0xf1, 0x67, 0xee, 0x3b, 0x96, 0xbc, 0x23, 0x05, 0x62, 0x19, 0xe7,
-	0xe3, 0x7f, 0x4c, 0x58, 0x6b, 0xb2, 0x00, 0xfd, 0x6a, 0xc0, 0x83, 0x59, 0x23, 0xf7, 0x49, 0xed,
-	0x96, 0xf1, 0x5e, 0x9b, 0x3d, 0x0b, 0xed, 0x4f, 0x96, 0x0c, 0xcc, 0xd8, 0xa1, 0x21, 0xec, 0x8e,
-	0x4d, 0xd0, 0x5a, 0x59, 0xca, 0x51, 0xbc, 0xfd, 0xe1, 0x62, 0x78, 0x5d, 0xf9, 0x47, 0x03, 0xee,
-	0x4d, 0x1b, 0x96, 0x27, 0x65, 0xf9, 0xa6, 0x04, 0xd9, 0x1f, 0x2f, 0x11, 0x54, 0xd4, 0x60, 0x6c,
-	0x66, 0x96, 0x6a, 0x30, 0x8a, 0x2f, 0xd7, 0x60, 0xfa, 0x70, 0x44, 0xdf, 0xc3, 0x1b, 0xe3, 0x83,
-	0xb1, 0x5e, 0x96, 0x6a, 0x2c, 0xc0, 0x7e, 0xb2, 0x60, 0x80, 0x2e, 0x9e, 0xc0, 0xce, 0xe8, 0xd0,
-	0x3b, 0x9a, 0x23, 0x53, 0x0e, 0xb7, 0x3f, 0x58, 0x08, 0xae, 0xcb, 0xf6, 0x00, 0x0a, 0xb3, 0xeb,
-	0xdd, 0xb2, 0x24, 0x39, 0xd6, 0x3e, 0x9e, 0x1f, 0x3b, 0xd6, 0x65, 0x93, 0x93, 0x6b, 0x8e, 0x2e,
-	0x9b, 0x08, 0x9a, 0xa7, 0xcb, 0x66, 0x0e, 0x04, 0x14, 0x82, 0x99, 0x0f, 0x83, 0x77, 0xca, 0x32,
-	0x69, 0xa8, 0xfd, 0xfe, 0xdc, 0x50, 0x5d, 0x8a, 0xc2, 0x76, 0xf1, 0x89, 0x7c, 0xaf, 0x3c, 0x83,
-	0x06, 0xdb, 0x27, 0x0b, 0x80, 0xb3, 0x82, 0xa7, 0x5f, 0xfc, 0x79, 0x5d, 0x31, 0x5e, 0x5f, 0x57,
-	0x8c, 0xbf, 0xaf, 0x2b, 0xc6, 0x4f, 0x37, 0x95, 0x95, 0xd7, 0x37, 0x95, 0x95, 0xbf, 0x6e, 0x2a,
-	0x2b, 0x2f, 0xea, 0x41, 0xc8, 0xbb, 0x49, 0x5b, 0xbc, 0xbb, 0x75, 0x91, 0xe5, 0x48, 0x66, 0xae,
-	0xeb, 0x0f, 0x96, 0x61, 0xbe, 0xe4, 0x57, 0x7d, 0xcc, 0xda, 0x9b, 0xf2, 0x1b, 0xe5, 0xe4, 0xdf,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xe7, 0x09, 0x48, 0xd9, 0x04, 0x0d, 0x00, 0x00,
+	// 987 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4d, 0x6f, 0xe3, 0x44,
+	0x18, 0xae, 0xfb, 0xb9, 0x7e, 0xbb, 0x2d, 0xd4, 0xdb, 0xed, 0x1a, 0x6f, 0x15, 0x05, 0xb3, 0x42,
+	0x05, 0xd4, 0x44, 0xdb, 0x8a, 0x5d, 0x01, 0x12, 0x88, 0x46, 0x82, 0x45, 0x8b, 0x4b, 0xe5, 0x14,
+	0x0e, 0x7b, 0xa9, 0x9c, 0x78, 0x70, 0xad, 0xc6, 0x33, 0x91, 0x67, 0x1c, 0xa5, 0xcb, 0x05, 0x4e,
+	0x5c, 0x17, 0x38, 0x70, 0xe3, 0x87, 0xf0, 0x0b, 0x38, 0xf6, 0xc8, 0x11, 0xb5, 0x7f, 0x81, 0x1f,
+	0x80, 0x66, 0xc6, 0x1e, 0x3b, 0x5f, 0x75, 0x12, 0xf6, 0x14, 0xbf, 0x9f, 0xcf, 0x93, 0x67, 0x5e,
+	0xcf, 0x2b, 0xc3, 0xd6, 0x4b, 0xc4, 0xbc, 0x36, 0x89, 0x51, 0x9d, 0xf5, 0x6b, 0xdd, 0x98, 0x30,
+	0x62, 0x3c, 0x14, 0xae, 0x73, 0x2f, 0xc4, 0xb5, 0x2c, 0xa8, 0x1e, 0x2c, 0x33, 0xcf, 0xa7, 0xf4,
+	0xac, 0x47, 0x18, 0x8a, 0x65, 0x99, 0x75, 0xaf, 0x4d, 0xa2, 0x88, 0xe0, 0xba, 0xfc, 0x91, 0x4e,
+	0xfb, 0x0f, 0x0d, 0x2c, 0x87, 0x06, 0x2f, 0x10, 0xf3, 0x1a, 0x04, 0xf7, 0x50, 0x4c, 0x43, 0x82,
+	0x5d, 0x8f, 0xa1, 0xef, 0x78, 0xa5, 0x61, 0xc2, 0x5a, 0x3b, 0x46, 0x1e, 0x23, 0xb1, 0xa9, 0x55,
+	0xb5, 0x3d, 0xdd, 0xcd, 0x4c, 0x63, 0x1b, 0x56, 0x04, 0x05, 0x73, 0x51, 0xf8, 0xa5, 0x61, 0xd4,
+	0xc0, 0x78, 0x39, 0xd2, 0xca, 0x5c, 0x12, 0x29, 0x63, 0x22, 0x46, 0x15, 0xd6, 0x5b, 0x1d, 0xd2,
+	0xbe, 0x38, 0x4e, 0xa2, 0x16, 0x8a, 0xcd, 0xe5, 0xaa, 0xb6, 0xb7, 0xec, 0x16, 0x5d, 0xf6, 0x23,
+	0xb0, 0x27, 0xf3, 0x73, 0x11, 0xed, 0x12, 0x4c, 0x91, 0xcd, 0x60, 0xdb, 0xa1, 0xc1, 0xe7, 0xbe,
+	0x7f, 0x4a, 0xbe, 0x49, 0xd8, 0x69, 0xff, 0x34, 0xf6, 0xda, 0x17, 0x73, 0xf0, 0xdf, 0x86, 0x15,
+	0x4c, 0x70, 0x5b, 0x52, 0x5e, 0x76, 0xa5, 0x61, 0xec, 0xc0, 0x2a, 0xeb, 0x3f, 0xf3, 0xe8, 0xb9,
+	0x20, 0xa8, 0xbb, 0xa9, 0x65, 0x57, 0x60, 0x77, 0x1c, 0xaa, 0x62, 0xe5, 0xc1, 0x5b, 0x0e, 0x0d,
+	0x5c, 0x14, 0x91, 0x1e, 0xfa, 0x22, 0x26, 0xd1, 0xeb, 0xa7, 0x66, 0xbf, 0x03, 0x6f, 0x4f, 0x84,
+	0x50, 0x3c, 0x12, 0xd8, 0x72, 0x68, 0xd0, 0xe0, 0xed, 0xd1, 0x69, 0xb3, 0x39, 0xf5, 0xd1, 0x2e,
+	0x15, 0xf1, 0x4d, 0x58, 0xf3, 0x7c, 0x3f, 0x46, 0x94, 0xa6, 0x2a, 0x64, 0x26, 0x97, 0xa7, 0x9b,
+	0xb4, 0x2e, 0xd0, 0xa5, 0xb9, 0x22, 0xe5, 0x91, 0x96, 0xfd, 0x50, 0xfc, 0xfd, 0x41, 0x58, 0xc5,
+	0xe9, 0x47, 0x0d, 0x0c, 0x87, 0x06, 0x5f, 0x7a, 0xf4, 0xc8, 0xeb, 0x78, 0xb8, 0x3d, 0xe7, 0xc0,
+	0x99, 0xb0, 0xd6, 0x92, 0xf5, 0x29, 0xdb, 0xcc, 0x9c, 0x62, 0xb4, 0x76, 0xc5, 0xe8, 0x0f, 0x31,
+	0x50, 0x04, 0x7f, 0xd5, 0xe0, 0x4d, 0x19, 0x3e, 0x89, 0xc3, 0x79, 0xe9, 0x6d, 0xc3, 0x4a, 0x97,
+	0x57, 0x67, 0x87, 0x26, 0x8c, 0x72, 0x6a, 0x5c, 0x52, 0x9a, 0x74, 0xbb, 0x1d, 0x25, 0xa9, 0xb4,
+	0x6c, 0x0b, 0xcc, 0x61, 0x4e, 0x8a, 0xf0, 0xb7, 0xb0, 0xe1, 0xd0, 0xe0, 0x98, 0xe0, 0xff, 0x41,
+	0x76, 0xcc, 0x84, 0x3d, 0x80, 0xfb, 0x03, 0x6d, 0x15, 0xde, 0x2f, 0x8b, 0xb0, 0x23, 0x66, 0xaf,
+	0x8d, 0xc2, 0x1e, 0x6a, 0x10, 0xfc, 0x7d, 0x18, 0x47, 0x1e, 0x0b, 0x09, 0xbe, 0x05, 0xd9, 0x82,
+	0x3b, 0x14, 0x61, 0x5f, 0xbc, 0x4c, 0x12, 0x5c, 0xd9, 0xc6, 0x2e, 0xe8, 0x84, 0x8f, 0xaf, 0x08,
+	0xca, 0xd3, 0xcc, 0x1d, 0xc6, 0xbb, 0xb0, 0x49, 0x12, 0x76, 0xc4, 0x45, 0x7a, 0x86, 0xc2, 0xe0,
+	0x9c, 0xa5, 0xba, 0x0d, 0x79, 0xf9, 0xbf, 0x88, 0x9c, 0x10, 0xb3, 0x54, 0x39, 0x69, 0x18, 0xfb,
+	0xb0, 0x4a, 0x99, 0xc7, 0x12, 0x6a, 0xae, 0x56, 0xb5, 0xbd, 0xcd, 0x83, 0xfb, 0xb5, 0xf4, 0x1a,
+	0x4c, 0xe9, 0x37, 0x45, 0xd0, 0x4d, 0x93, 0x72, 0x81, 0xd6, 0x8a, 0x02, 0x55, 0xe1, 0x2e, 0x49,
+	0xd8, 0x19, 0xeb, 0x9f, 0x49, 0x9d, 0xee, 0x08, 0x02, 0x20, 0x38, 0x0a, 0x81, 0xec, 0x2a, 0x54,
+	0xc6, 0x4b, 0xa2, 0x54, 0xfb, 0x73, 0x11, 0xee, 0x3a, 0x34, 0x68, 0x22, 0xec, 0x97, 0x9d, 0x12,
+	0x1f, 0x02, 0x84, 0x7d, 0x14, 0xa7, 0x4a, 0xa5, 0x16, 0x1f, 0x1f, 0xf9, 0xd4, 0x28, 0xbc, 0xa5,
+	0x45, 0x17, 0x57, 0x39, 0x96, 0x1c, 0xe2, 0xf4, 0x65, 0x55, 0xb6, 0xf1, 0x08, 0x36, 0xb2, 0x67,
+	0x59, 0x2f, 0x75, 0x1a, 0x74, 0xf2, 0xb3, 0xe0, 0xd7, 0xf5, 0x51, 0x12, 0x63, 0x26, 0x24, 0xd3,
+	0xdd, 0xdc, 0xc1, 0x39, 0x47, 0x88, 0x52, 0x2f, 0x90, 0x1a, 0xe8, 0x6e, 0x66, 0x72, 0xe4, 0x10,
+	0xa7, 0x47, 0xa8, 0x4b, 0xe4, 0xcc, 0xe6, 0xc8, 0x21, 0x2e, 0x1e, 0x20, 0x08, 0xfd, 0x06, 0x9d,
+	0xbc, 0x43, 0xe0, 0xd1, 0xaf, 0xc3, 0x28, 0x64, 0xe6, 0xba, 0x48, 0x50, 0xb6, 0xbd, 0x23, 0xae,
+	0x79, 0xa5, 0x9d, 0x12, 0xf5, 0x77, 0x0d, 0x36, 0x45, 0x80, 0x1d, 0x13, 0x1f, 0x3d, 0x47, 0x97,
+	0xf4, 0x16, 0x59, 0xeb, 0xa0, 0xcb, 0x0b, 0xaa, 0x89, 0x98, 0x50, 0x76, 0xfd, 0x60, 0x2b, 0x9b,
+	0x86, 0x93, 0xa4, 0xf5, 0x5c, 0x04, 0xdc, 0x3c, 0xc7, 0xf8, 0x18, 0xcc, 0x9e, 0xd7, 0x09, 0x7d,
+	0x5e, 0xdd, 0xe0, 0x78, 0x98, 0x26, 0xf4, 0x44, 0xde, 0x78, 0x52, 0xfc, 0x89, 0x71, 0xdb, 0x14,
+	0xef, 0x48, 0x81, 0x58, 0xc6, 0xf9, 0xe0, 0x5f, 0x1d, 0x96, 0x1c, 0x1a, 0x18, 0xbf, 0x69, 0xf0,
+	0x60, 0xd2, 0xfa, 0x7d, 0x5a, 0xbb, 0x65, 0xd5, 0xd7, 0x26, 0xef, 0x45, 0xeb, 0xb3, 0x39, 0x0b,
+	0x33, 0x76, 0xc6, 0x4f, 0x1a, 0x6c, 0x8d, 0xae, 0xd3, 0xc7, 0x65, 0x6d, 0x47, 0x4a, 0xac, 0x8f,
+	0x66, 0x2e, 0x51, 0x1c, 0x5e, 0x69, 0xb0, 0x33, 0x61, 0x79, 0x3e, 0x29, 0xeb, 0x3a, 0xbe, 0xce,
+	0xfa, 0x74, 0xbe, 0x3a, 0x45, 0xa9, 0x0f, 0x9b, 0x43, 0x6b, 0xb4, 0x56, 0xd6, 0x71, 0x30, 0xdf,
+	0x7a, 0x32, 0x5b, 0xbe, 0x42, 0xfe, 0x01, 0xde, 0x18, 0xde, 0x95, 0xf5, 0xb2, 0x56, 0x43, 0x05,
+	0xd6, 0xd3, 0x19, 0x0b, 0x14, 0x78, 0x02, 0x1b, 0x83, 0x7b, 0x70, 0x7f, 0x8a, 0x4e, 0x79, 0xba,
+	0xf5, 0xe1, 0x4c, 0xe9, 0x0a, 0xb6, 0x03, 0x50, 0x58, 0x67, 0xef, 0x97, 0x35, 0xc9, 0x73, 0xad,
+	0x83, 0xe9, 0x73, 0x15, 0xda, 0xcf, 0x1a, 0xdc, 0x1b, 0xb7, 0xcc, 0x0e, 0xcb, 0x67, 0x66, 0xa4,
+	0xc8, 0xfa, 0x64, 0x8e, 0x22, 0xc5, 0x24, 0x04, 0x3d, 0xdf, 0x0f, 0xef, 0x95, 0x75, 0x52, 0xa9,
+	0xd6, 0xe3, 0xa9, 0x53, 0x15, 0x14, 0x81, 0xf5, 0xe2, 0xad, 0xf9, 0x41, 0x79, 0x07, 0x95, 0x6c,
+	0x1d, 0xce, 0x90, 0x9c, 0x01, 0x1e, 0x7d, 0xf5, 0xd7, 0x75, 0x45, 0xbb, 0xba, 0xae, 0x68, 0xff,
+	0x5c, 0x57, 0xb4, 0x57, 0x37, 0x95, 0x85, 0xab, 0x9b, 0xca, 0xc2, 0xdf, 0x37, 0x95, 0x85, 0x17,
+	0xf5, 0x20, 0x64, 0xe7, 0x49, 0x8b, 0x5f, 0xc5, 0x75, 0xde, 0x65, 0x5f, 0x74, 0xae, 0xab, 0xef,
+	0x99, 0x7e, 0xfe, 0xc8, 0x2e, 0xbb, 0x88, 0xb6, 0x56, 0xc5, 0x27, 0xcc, 0xe1, 0x7f, 0x01, 0x00,
+	0x00, 0xff, 0xff, 0x15, 0x42, 0x24, 0x46, 0x23, 0x0d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1237,8 +1238,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	ZetaConversionRateVoter(ctx context.Context, in *MsgZetaConversionRateVoter, opts ...grpc.CallOption) (*MsgZetaConversionRateVoterResponse, error)
-	AddToWatchList(ctx context.Context, in *MsgAddToWatchList, opts ...grpc.CallOption) (*MsgAddToWatchListResponse, error)
-	RemoveFromWatchList(ctx context.Context, in *MsgRemoveFromWatchList, opts ...grpc.CallOption) (*MsgRemoveFromWatchListResponse, error)
+	AddToOutTxTracker(ctx context.Context, in *MsgAddToOutTxTracker, opts ...grpc.CallOption) (*MsgAddToOutTxTrackerResponse, error)
+	RemoveFromOutTxTracker(ctx context.Context, in *MsgRemoveFromOutTxTracker, opts ...grpc.CallOption) (*MsgRemoveFromOutTxTrackerResponse, error)
 	CreateTSSVoter(ctx context.Context, in *MsgCreateTSSVoter, opts ...grpc.CallOption) (*MsgCreateTSSVoterResponse, error)
 	GasBalanceVoter(ctx context.Context, in *MsgGasBalanceVoter, opts ...grpc.CallOption) (*MsgGasBalanceVoterResponse, error)
 	GasPriceVoter(ctx context.Context, in *MsgGasPriceVoter, opts ...grpc.CallOption) (*MsgGasPriceVoterResponse, error)
@@ -1265,18 +1266,18 @@ func (c *msgClient) ZetaConversionRateVoter(ctx context.Context, in *MsgZetaConv
 	return out, nil
 }
 
-func (c *msgClient) AddToWatchList(ctx context.Context, in *MsgAddToWatchList, opts ...grpc.CallOption) (*MsgAddToWatchListResponse, error) {
-	out := new(MsgAddToWatchListResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetacore.Msg/AddToWatchList", in, out, opts...)
+func (c *msgClient) AddToOutTxTracker(ctx context.Context, in *MsgAddToOutTxTracker, opts ...grpc.CallOption) (*MsgAddToOutTxTrackerResponse, error) {
+	out := new(MsgAddToOutTxTrackerResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetacore.Msg/AddToOutTxTracker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) RemoveFromWatchList(ctx context.Context, in *MsgRemoveFromWatchList, opts ...grpc.CallOption) (*MsgRemoveFromWatchListResponse, error) {
-	out := new(MsgRemoveFromWatchListResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetacore.Msg/RemoveFromWatchList", in, out, opts...)
+func (c *msgClient) RemoveFromOutTxTracker(ctx context.Context, in *MsgRemoveFromOutTxTracker, opts ...grpc.CallOption) (*MsgRemoveFromOutTxTrackerResponse, error) {
+	out := new(MsgRemoveFromOutTxTrackerResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetacore.Msg/RemoveFromOutTxTracker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1349,8 +1350,8 @@ func (c *msgClient) SetNodeKeys(ctx context.Context, in *MsgSetNodeKeys, opts ..
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	ZetaConversionRateVoter(context.Context, *MsgZetaConversionRateVoter) (*MsgZetaConversionRateVoterResponse, error)
-	AddToWatchList(context.Context, *MsgAddToWatchList) (*MsgAddToWatchListResponse, error)
-	RemoveFromWatchList(context.Context, *MsgRemoveFromWatchList) (*MsgRemoveFromWatchListResponse, error)
+	AddToOutTxTracker(context.Context, *MsgAddToOutTxTracker) (*MsgAddToOutTxTrackerResponse, error)
+	RemoveFromOutTxTracker(context.Context, *MsgRemoveFromOutTxTracker) (*MsgRemoveFromOutTxTrackerResponse, error)
 	CreateTSSVoter(context.Context, *MsgCreateTSSVoter) (*MsgCreateTSSVoterResponse, error)
 	GasBalanceVoter(context.Context, *MsgGasBalanceVoter) (*MsgGasBalanceVoterResponse, error)
 	GasPriceVoter(context.Context, *MsgGasPriceVoter) (*MsgGasPriceVoterResponse, error)
@@ -1367,11 +1368,11 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) ZetaConversionRateVoter(ctx context.Context, req *MsgZetaConversionRateVoter) (*MsgZetaConversionRateVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ZetaConversionRateVoter not implemented")
 }
-func (*UnimplementedMsgServer) AddToWatchList(ctx context.Context, req *MsgAddToWatchList) (*MsgAddToWatchListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddToWatchList not implemented")
+func (*UnimplementedMsgServer) AddToOutTxTracker(ctx context.Context, req *MsgAddToOutTxTracker) (*MsgAddToOutTxTrackerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddToOutTxTracker not implemented")
 }
-func (*UnimplementedMsgServer) RemoveFromWatchList(ctx context.Context, req *MsgRemoveFromWatchList) (*MsgRemoveFromWatchListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromWatchList not implemented")
+func (*UnimplementedMsgServer) RemoveFromOutTxTracker(ctx context.Context, req *MsgRemoveFromOutTxTracker) (*MsgRemoveFromOutTxTrackerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromOutTxTracker not implemented")
 }
 func (*UnimplementedMsgServer) CreateTSSVoter(ctx context.Context, req *MsgCreateTSSVoter) (*MsgCreateTSSVoterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTSSVoter not implemented")
@@ -1417,38 +1418,38 @@ func _Msg_ZetaConversionRateVoter_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AddToWatchList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAddToWatchList)
+func _Msg_AddToOutTxTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddToOutTxTracker)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AddToWatchList(ctx, in)
+		return srv.(MsgServer).AddToOutTxTracker(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.zetacore.Msg/AddToWatchList",
+		FullMethod: "/zetachain.zetacore.zetacore.Msg/AddToOutTxTracker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AddToWatchList(ctx, req.(*MsgAddToWatchList))
+		return srv.(MsgServer).AddToOutTxTracker(ctx, req.(*MsgAddToOutTxTracker))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_RemoveFromWatchList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRemoveFromWatchList)
+func _Msg_RemoveFromOutTxTracker_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveFromOutTxTracker)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).RemoveFromWatchList(ctx, in)
+		return srv.(MsgServer).RemoveFromOutTxTracker(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.zetacore.Msg/RemoveFromWatchList",
+		FullMethod: "/zetachain.zetacore.zetacore.Msg/RemoveFromOutTxTracker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RemoveFromWatchList(ctx, req.(*MsgRemoveFromWatchList))
+		return srv.(MsgServer).RemoveFromOutTxTracker(ctx, req.(*MsgRemoveFromOutTxTracker))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1588,12 +1589,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_ZetaConversionRateVoter_Handler,
 		},
 		{
-			MethodName: "AddToWatchList",
-			Handler:    _Msg_AddToWatchList_Handler,
+			MethodName: "AddToOutTxTracker",
+			Handler:    _Msg_AddToOutTxTracker_Handler,
 		},
 		{
-			MethodName: "RemoveFromWatchList",
-			Handler:    _Msg_RemoveFromWatchList_Handler,
+			MethodName: "RemoveFromOutTxTracker",
+			Handler:    _Msg_RemoveFromOutTxTracker_Handler,
 		},
 		{
 			MethodName: "CreateTSSVoter",
@@ -1700,7 +1701,7 @@ func (m *MsgZetaConversionRateVoterResponse) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToWatchList) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddToOutTxTracker) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1710,12 +1711,12 @@ func (m *MsgAddToWatchList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToWatchList) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddToOutTxTracker) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToWatchList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddToOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1749,7 +1750,7 @@ func (m *MsgAddToWatchList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgAddToWatchListResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddToOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1759,12 +1760,12 @@ func (m *MsgAddToWatchListResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgAddToWatchListResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddToOutTxTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgAddToWatchListResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddToOutTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1772,7 +1773,7 @@ func (m *MsgAddToWatchListResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveFromWatchList) Marshal() (dAtA []byte, err error) {
+func (m *MsgRemoveFromOutTxTracker) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1782,12 +1783,12 @@ func (m *MsgRemoveFromWatchList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveFromWatchList) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRemoveFromOutTxTracker) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveFromWatchList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRemoveFromOutTxTracker) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1814,7 +1815,7 @@ func (m *MsgRemoveFromWatchList) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRemoveFromWatchListResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgRemoveFromOutTxTrackerResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1824,12 +1825,12 @@ func (m *MsgRemoveFromWatchListResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgRemoveFromWatchListResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgRemoveFromOutTxTrackerResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgRemoveFromWatchListResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgRemoveFromOutTxTrackerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2449,7 +2450,7 @@ func (m *MsgZetaConversionRateVoterResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToWatchList) Size() (n int) {
+func (m *MsgAddToOutTxTracker) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2473,7 +2474,7 @@ func (m *MsgAddToWatchList) Size() (n int) {
 	return n
 }
 
-func (m *MsgAddToWatchListResponse) Size() (n int) {
+func (m *MsgAddToOutTxTrackerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2482,7 +2483,7 @@ func (m *MsgAddToWatchListResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveFromWatchList) Size() (n int) {
+func (m *MsgRemoveFromOutTxTracker) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2502,7 +2503,7 @@ func (m *MsgRemoveFromWatchList) Size() (n int) {
 	return n
 }
 
-func (m *MsgRemoveFromWatchListResponse) Size() (n int) {
+func (m *MsgRemoveFromOutTxTrackerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2997,7 +2998,7 @@ func (m *MsgZetaConversionRateVoterResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToWatchList) Unmarshal(dAtA []byte) error {
+func (m *MsgAddToOutTxTracker) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3020,10 +3021,10 @@ func (m *MsgAddToWatchList) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToWatchList: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddToOutTxTracker: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToWatchList: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddToOutTxTracker: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3162,7 +3163,7 @@ func (m *MsgAddToWatchList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgAddToWatchListResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddToOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3185,10 +3186,10 @@ func (m *MsgAddToWatchListResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgAddToWatchListResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddToOutTxTrackerResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgAddToWatchListResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddToOutTxTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -3212,7 +3213,7 @@ func (m *MsgAddToWatchListResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveFromWatchList) Unmarshal(dAtA []byte) error {
+func (m *MsgRemoveFromOutTxTracker) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3235,10 +3236,10 @@ func (m *MsgRemoveFromWatchList) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveFromWatchList: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRemoveFromOutTxTracker: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveFromWatchList: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRemoveFromOutTxTracker: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3345,7 +3346,7 @@ func (m *MsgRemoveFromWatchList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgRemoveFromWatchListResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgRemoveFromOutTxTrackerResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3368,10 +3369,10 @@ func (m *MsgRemoveFromWatchListResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRemoveFromWatchListResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgRemoveFromOutTxTrackerResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRemoveFromWatchListResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgRemoveFromOutTxTrackerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

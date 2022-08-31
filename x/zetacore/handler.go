@@ -19,11 +19,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgZetaConversionRateVoter:
 			res, err := msgServer.ZetaConversionRateVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgAddToWatchList:
-			res, err := msgServer.AddToWatchList(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgAddToOutTxTracker:
+			res, err := msgServer.AddToOutTxTracker(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgRemoveFromWatchList:
-			res, err := msgServer.RemoveFromWatchList(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgRemoveFromOutTxTracker:
+			res, err := msgServer.RemoveFromOutTxTracker(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgCreateTSSVoter:
 			res, err := msgServer.CreateTSSVoter(sdk.WrapSDKContext(ctx), msg)

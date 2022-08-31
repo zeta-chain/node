@@ -9,20 +9,14 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgZetaConversionRateVoter{}, "zetacore/ZetaConversionRateVoter", nil)
-	cdc.RegisterConcrete(&MsgAddToWatchList{}, "zetacore/AddToWatchList", nil)
-	// this line is used by starport scaffolding # 2
+	cdc.RegisterConcrete(&MsgAddToOutTxTracker{}, "zetacore/AddToOutTxTracker", nil)
+	cdc.RegisterConcrete(&MsgRemoveFromOutTxTracker{}, "zetacore/RemoveFromOutTxTracker", nil)
 	cdc.RegisterConcrete(&MsgCreateTSSVoter{}, "zetacore/CreateTSSVoter", nil)
-
 	cdc.RegisterConcrete(&MsgGasBalanceVoter{}, "zetacore/GasBalanceVoter", nil)
-
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "zetacore/GasPriceVoter", nil)
-
 	cdc.RegisterConcrete(&MsgNonceVoter{}, "zetacore/NonceVoter", nil)
-
 	cdc.RegisterConcrete(&MsgReceiveConfirmation{}, "zetacore/ReceiveConfirmation", nil)
-
 	cdc.RegisterConcrete(&MsgSendVoter{}, "zetacore/SendVoter", nil)
-
 	cdc.RegisterConcrete(&MsgSetNodeKeys{}, "zetacore/SetNodeKeys", nil)
 
 }
@@ -32,9 +26,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgZetaConversionRateVoter{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgAddToWatchList{},
+		&MsgAddToOutTxTracker{},
 	)
-	// this line is used by starport scaffolding # 3
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgRemoveFromOutTxTracker{},
+	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateTSSVoter{},
 	)
@@ -53,7 +49,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSendVoter{},
 	)
-
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetNodeKeys{},
 	)

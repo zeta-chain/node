@@ -89,7 +89,7 @@ func (q *ZetaQuerier) TxByHash(hash string) (*txtypes.Tx, error) {
 // if blockNum <0, then query from block 0
 // each tx_response will be processed by the function processTxResponses
 func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTxResponses func(txRes *sdk.TxResponse) error) (uint64, error) {
-	const PAGE_LIMIT = 50
+	const PageLimit = 50
 	client := txtypes.NewServiceClient(q.grpcConn)
 	var offset, processed uint64
 
@@ -106,7 +106,7 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
-			Limit:      PAGE_LIMIT,
+			Limit:      PageLimit,
 			CountTotal: false,
 			Reverse:    false,
 		},
@@ -121,18 +121,18 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 		if err != nil {
 			return processed, err
 		}
-		processed += 1
+		processed++
 	}
 
 	// subsequent calls if necessary for paging
-	if res.Pagination.Total > PAGE_LIMIT {
-		for offset = PAGE_LIMIT; offset < res.Pagination.Total; offset += PAGE_LIMIT {
+	if res.Pagination.Total > PageLimit {
+		for offset = PageLimit; offset < res.Pagination.Total; offset += PageLimit {
 			res, err = client.GetTxsEvent(context.Background(), &txtypes.GetTxsEventRequest{
 				Events: events,
 				Pagination: &query.PageRequest{
 					Key:        nil,
 					Offset:     offset,
-					Limit:      PAGE_LIMIT,
+					Limit:      PageLimit,
 					CountTotal: false,
 					Reverse:    false,
 				},
@@ -146,7 +146,7 @@ func (q *ZetaQuerier) VisitAllTxEvents(subtype string, blockNum int64, processTx
 				if err != nil {
 					fmt.Printf("processTxResponses error: %s", err)
 				}
-				processed += 1
+				processed++
 			}
 		}
 	}

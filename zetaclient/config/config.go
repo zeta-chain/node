@@ -16,16 +16,16 @@ type ClientConfiguration struct {
 }
 
 const (
-	ETH_CONFIRMATION_COUNT     = 3
-	BSC_CONFIRMATION_COUNT     = 5
-	POLYGON_CONFIRMATION_COUNT = 5
-	ROPSTEN_CONFIRMATION_COUNT = 3
+	EthConfirmationCount     = 3
+	BscConfirmationCount     = 5
+	PolygonConfirmationCount = 5
+	RopstenConfirmationCount = 3
 )
 
 const (
-	TSS_TEST_PRIVKEY = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
-	TSS_TEST_ADDRESS = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
-	TEST_RECEIVER    = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
+	TssTestPrivkey = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
+	TssTestAddress = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
+	//TestReceiver  = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
 )
 
 // Constants
@@ -33,17 +33,17 @@ const (
 const (
 
 	// Ticker timers
-	ETH_BLOCK_TIME     = 12
-	POLY_BLOCK_TIME    = 2
-	BSC_BLOCK_TIME     = 5
-	ROPSTEN_BLOCK_TIME = 12
+	EthBlockTime     = 12
+	PolygonBlockTime = 2
+	BscBlockTime     = 5
+	RopstenBlockTime = 12
 
 	// to catch up:
-	MAX_BLOCKS_PER_PERIOD = 100
+	MaxBlocksPerPeriod = 100
 )
 
 const (
-	CONNECTOR_ABI_STRING = `
+	ConnectorAbiString = `
 [{"inputs":[{"internalType":"address","name":"_zetaTokenAddress","type":"address"},{"internalType":"address","name":"_tssAddress","type":"address"},{"internalType":"address","name":"_tssAddressUpdater","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"originSenderAddress","type":"bytes"},{"indexed":true,"internalType":"uint256","name":"originChainId","type":"uint256"},{"indexed":true,"internalType":"address","name":"destinationAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":true,"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"ZetaReceived","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"originSenderAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"originChainId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"indexed":true,"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":true,"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"ZetaReverted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"originSenderAddress","type":"address"},{"indexed":false,"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"indexed":false,"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"gasLimit","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"},{"indexed":false,"internalType":"bytes","name":"zetaParams","type":"bytes"}],"name":"ZetaSent","type":"event"},{"inputs":[],"name":"getLockedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"originSenderAddress","type":"bytes"},{"internalType":"uint256","name":"originChainId","type":"uint256"},{"internalType":"address","name":"destinationAddress","type":"address"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"onReceive","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"originSenderAddress","type":"address"},{"internalType":"uint256","name":"originChainId","type":"uint256"},{"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"bytes32","name":"internalSendHash","type":"bytes32"}],"name":"onRevert","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceTssAddressUpdater","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"uint256","name":"destinationChainId","type":"uint256"},{"internalType":"bytes","name":"destinationAddress","type":"bytes"},{"internalType":"uint256","name":"gasLimit","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"},{"internalType":"uint256","name":"zetaAmount","type":"uint256"},{"internalType":"bytes","name":"zetaParams","type":"bytes"}],"internalType":"struct ZetaInterfaces.SendInput","name":"input","type":"tuple"}],"name":"send","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"tssAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"tssAddressUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"unpause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_tssAddress","type":"address"}],"name":"updateTssAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"zetaToken","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`
 
 	UNISWAPV3POOL = `
@@ -65,7 +65,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContract:             types.UniswapV2,
 		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
 		ChainID:                  big.NewInt(5),
-		BlockTime:                ETH_BLOCK_TIME,
+		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.BSCTestnetChain.String(): {
@@ -75,7 +75,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContract:             types.UniswapV2,
 		ZETATokenContractAddress: "0x33580e10212342d0aA66C9de3F6F6a4AfefA144C",
 		ChainID:                  big.NewInt(97),
-		BlockTime:                BSC_BLOCK_TIME,
+		BlockTime:                BscBlockTime,
 		Endpoint:                 "https://bsc-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.MumbaiChain.String(): {
@@ -85,7 +85,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContract:             types.UniswapV3,
 		ZETATokenContractAddress: "0xBaEF590c5Aef9881b0a5C86e18D35432218C64D5",
 		ChainID:                  big.NewInt(80001),
-		BlockTime:                POLY_BLOCK_TIME,
+		BlockTime:                PolygonBlockTime,
 		Endpoint:                 "https://mumbai-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.RopstenChain.String(): {
@@ -95,7 +95,7 @@ var Chains = map[string]*types.ChainETHish{
 		PoolContract:             types.UniswapV2,
 		ZETATokenContractAddress: "0x251685b8A1bC0ed343a016FcF1aB1B1f444E3bf4",
 		ChainID:                  big.NewInt(3),
-		BlockTime:                ETH_BLOCK_TIME,
+		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.EmptyChain.String(): {

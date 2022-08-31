@@ -10,8 +10,6 @@ import "gogoproto/gogo.proto";
 import "zetacore/keygen.proto";
 import "zetacore/tss_voter.proto";
 import "zetacore/tss.proto";
-import "zetacore/in_tx.proto";
-import "zetacore/tx_list.proto";
 import "zetacore/gas_balance.proto";
 import "zetacore/gas_price.proto";
 import "zetacore/chain_nonces.proto";
@@ -81,40 +79,6 @@ service Query {
 	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/TSS";
 	}
-
-
-	// Queries a list of txListRich items.
-	rpc TxListRich(QueryTxListRichRequest) returns (QueryTxListRichResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/txListRich";
-	}
-
-
-	// Queries a inTx by index.
-	rpc InTx(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/inTx/{index}";
-	}
-
-	// Queries a inTx by index.
-	rpc InTxNS(QueryGetInTxRequest) returns (QueryGetInTxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/inTxNS/{index}";
-	}
-
-	// Queries a inTx by index.
-	rpc InTxRich(QueryGetInTxRichRequest) returns (QueryGetInTxRichResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/inTxRich/{index}";
-	}
-
-	// Queries a list of inTx items.
-	rpc InTxAll(QueryAllInTxRequest) returns (QueryAllInTxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/inTx";
-	}
-
-
-	// Queries a txList by index.
-	rpc TxList(QueryGetTxRequest) returns (QueryGetTxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/txList";
-	}
-
 
 	// Queries a gasBalance by index.
 	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
@@ -297,49 +261,7 @@ message QueryAllTSSResponse {
 	repeated TSS TSS = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryTxListRichRequest {
-  uint64 last = 1;
-}
 
-message QueryTxListRichResponse {
-	repeated Send tx = 1;
-	uint64 length = 2; 
-}
-
-message QueryGetInTxRequest {
-	string index = 1;
-}
-
-message QueryGetInTxResponse {
-	InTx InTx = 1;
-}
-
-message QueryGetInTxRichRequest {
-	string index = 1;
-}
-
-message QueryGetInTxRichResponse {
-	Send tx = 1;
-}
-
-message QueryAllInTxRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllInTxResponse {
-	repeated InTx InTx = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetTxRequest {
-	int64 from = 1;
-	int64 to = 2;
-	int64 last = 3; 
-}
-
-message QueryGetTxResponse {
-	repeated Tx tx = 1;
-	int64 length = 2;
-}
 message QueryGetGasBalanceRequest {
 	string index = 1;
 }

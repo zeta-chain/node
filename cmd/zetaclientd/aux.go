@@ -37,7 +37,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.CONNECTOR_ABI_STRING, mpiAddress)
+		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
 			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 			return nil, err
