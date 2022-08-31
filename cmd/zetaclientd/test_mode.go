@@ -193,22 +193,24 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		}
 		if bn > lastZetaBlock {
 			if bn > 0 {
-				go func() {
-					atomic.AddInt64(&numConcurrentKeysign, 1)
-					log.Info().Msgf("doing a keysign test at block %d... numConcurrentKeysign %d", bn, numConcurrentKeysign)
-					testMsg := fmt.Sprintf("test message at block %d", bn)
-					msgHash := crypto.Keccak256Hash([]byte(testMsg))
-					_, err := tss.Sign(msgHash.Bytes())
-					atomic.AddInt64(&totalKeysign, 1)
-					if err != nil {
-						log.Error().Err(err).Msg("Sign error")
-					} else {
-						log.Info().Msgf("sign success")
-						atomic.AddInt64(&successfulKeysign, 1)
-					}
-					atomic.AddInt64(&numConcurrentKeysign, -1)
-					log.Info().Msgf("done a keysign test at block %d numConcurrentKeysign %d", bn, numConcurrentKeysign)
-				}()
+				for idx := 0; idx < 5; idx++ {
+					go func(idx int) {
+						atomic.AddInt64(&numConcurrentKeysign, 1)
+						log.Info().Msgf("doing a keysign test at block %d... numConcurrentKeysign %d", bn, numConcurrentKeysign)
+						testMsg := fmt.Sprintf("test message at block %d num %d", bn, idx)
+						msgHash := crypto.Keccak256Hash([]byte(testMsg))
+						_, err := tss.Sign(msgHash.Bytes())
+						atomic.AddInt64(&totalKeysign, 1)
+						if err != nil {
+							log.Error().Err(err).Msg("Sign error")
+						} else {
+							log.Info().Msgf("sign success")
+							atomic.AddInt64(&successfulKeysign, 1)
+						}
+						atomic.AddInt64(&numConcurrentKeysign, -1)
+						log.Info().Msgf("done a keysign test at block %d numConcurrentKeysign %d", bn, numConcurrentKeysign)
+					}(idx)
+				}
 			}
 			lastZetaBlock = bn
 			log.Info().Msgf("current block %d, success/total keysign: %d/%d", bn, successfulKeysign, totalKeysign)
