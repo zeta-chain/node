@@ -1,135 +1,26 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"fmt"
-	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
+	"github.com/libp2p/go-libp2p-peerstore/addr"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
-
-	"io/ioutil"
-	"strings"
-	"syscall"
-
-	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
-	"github.com/cosmos/cosmos-sdk/types"
-	//"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
-	maddr "github.com/multiformats/go-multiaddr"
-
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 )
 
-var (
-	preParams   *ecdsakeygen.LocalPreParams
-	keygenBlock int64
-	testMode    bool
-)
-
-func main() {
-	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
-	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN", "enable chains, comma separated list")
-	valKeyName := flag.String("val", "alice", "validator name")
-	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
-	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
-	preParamsPath := flag.String("pre-params", "", "pre-params file path")
-	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
-	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
-	tssTestMode := flag.Bool("tss-test-mode", false, "tss test mode for testing TSS module")
-
-	flag.Parse()
-	keygenBlock = *keygen
-	if *logConsole {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	}
-
-	testMode = *tssTestMode
-
-	chains := strings.Split(*enabledChains, ",")
-	for _, chain := range chains {
-		if c, err := common.ParseChain(chain); err == nil {
-			config.ChainsEnabled = append(config.ChainsEnabled, c)
-		} else {
-			log.Error().Err(err).Msgf("invalid chain %s", chain)
-			return
-		}
-	}
-	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
-
-	if *logConsole {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	}
-
-	if *preParamsPath != "" {
-		log.Info().Msgf("pre-params file path %s", *preParamsPath)
-		preParamsFile, err := os.Open(*preParamsPath)
-		if err != nil {
-			log.Error().Err(err).Msg("open pre-params file failed; skip")
-		} else {
-			bz, err := ioutil.ReadAll(preParamsFile)
-			if err != nil {
-				log.Error().Err(err).Msg("read pre-params file failed; skip")
-			} else {
-				err = json.Unmarshal(bz, &preParams)
-				if err != nil {
-					log.Error().Err(err).Msg("unmarshal pre-params file failed; skip and generate new one")
-					preParams = nil // skip reading pre-params; generate new one instead
-				}
-			}
-		}
-	}
-
-	var peers addr.AddrList
-	fmt.Println("peer", *peer)
-	if *peer != "" {
-		address, err := maddr.NewMultiaddr(*peer)
-		if err != nil {
-			log.Error().Err(err).Msg("NewMultiaddr error")
-			return
-		}
-		peers = append(peers, address)
-	}
-
-	fmt.Println("multi-node client")
-	if !testMode {
-		start(*valKeyName, peers, *zetaCoreHome)
-	} else {
-		startTestMode(*valKeyName, peers, *zetaCoreHome)
-	}
-}
-
-func SetupConfigForTest() {
-	config := cosmos.GetConfig()
-	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
-	//config.SetCoinType(cmd.MetaChainCoinType)
-	config.SetFullFundraiserPath(cmd.ZetaChainHDPath)
-	types.SetCoinDenomRegex(func() string {
-		return cmd.DenomRegex
-	})
-
-	rand.Seed(time.Now().UnixNano())
-
-}
-
-func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
+func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
@@ -284,14 +175,6 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		return
 	}
 
-	//kg, err := bridge1.GetKeyGen()
-	//if err != nil {
-	//	log.Error().Err(err).Msg("GetKeyGen error")
-	//	return
-	//}
-	//log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
-	//tss.Pubkeys = kg.Pubkeys
-
 	for _, chain := range config.ChainsEnabled {
 		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
 		if err != nil {
@@ -350,59 +233,4 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		(*chainClientMap1)[chain].Stop()
 	}
 
-}
-
-func updatePoolAddress(envvar string, chain common.Chain) {
-	pool := os.Getenv(envvar)
-	parts := strings.Split(pool, ":")
-	if len(parts) != 3 {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if strings.EqualFold(parts[0], "v2") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
-	} else if strings.EqualFold(parts[0], "v3") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
-	} else {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if parts[1] != "" {
-		config.Chains[chain.String()].PoolContractAddress = parts[1]
-		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
-	} else {
-		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
-	}
-	if strings.EqualFold(parts[2], "ZETAETH") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
-	} else if strings.EqualFold(parts[2], "ETHZETA") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
-	} else {
-		log.Error().Msgf("%s is not a valid type:address:order", pool)
-		return
-	}
-}
-
-func updateMPIAddress(chain common.Chain, envvar string) {
-	mpi := os.Getenv(envvar)
-	if mpi != "" {
-		config.Chains[chain.String()].ConnectorContractAddress = mpi
-		log.Info().Msgf("MPI: %s", mpi)
-	}
-}
-
-func updateEndpoint(chain common.Chain, envvar string) {
-	endpoint := os.Getenv(envvar)
-	if endpoint != "" {
-		config.Chains[chain.String()].Endpoint = endpoint
-		log.Info().Msgf("ENDPOINT: %s", endpoint)
-	}
-}
-
-func updateTokenAddress(chain common.Chain, envvar string) {
-	token := os.Getenv(envvar)
-	if token != "" {
-		config.Chains[chain.String()].ZETATokenContractAddress = token
-		log.Info().Msgf("TOKEN: %s", token)
-	}
 }
