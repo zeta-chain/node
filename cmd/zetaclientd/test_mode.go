@@ -206,6 +206,7 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 						log.Info().Msgf("sign success")
 						atomic.AddInt64(&successfulKeysign, 1)
 					}
+					atomic.AddInt64(&numConcurrentKeysign, -1)
 					log.Info().Msgf("done a keysign test at block %d numConcurrentKeysign %d", bn, numConcurrentKeysign)
 				}()
 			}
