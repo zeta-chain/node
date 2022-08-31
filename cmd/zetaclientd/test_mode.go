@@ -6,9 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
@@ -28,27 +26,6 @@ func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome strin
 	if chainIP == "" {
 		chainIP = "127.0.0.1"
 	}
-
-	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
-	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
-	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
-
-	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
-	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
-	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
-
-	// pools
-	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
-	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
-	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
-
-	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
-	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
-	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
@@ -175,21 +152,6 @@ func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome strin
 		return
 	}
 
-	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
-		if err != nil {
-			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
-		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
-
-	}
-
-	signerMap1, err := CreateSignerMap(tss)
-	if err != nil {
-		log.Error().Err(err).Msg("CreateSignerMap")
-		return
-	}
-
 	metrics, err := metrics2.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
@@ -197,40 +159,11 @@ func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome strin
 	}
 	metrics.Start()
 
-	userDir, _ := os.UserHomeDir()
-	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics)
-	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
-		return
-	}
-	for _, v := range *chainClientMap1 {
-		v.Start()
-	}
-
-	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
-
-	mo1.MonitorCore()
-
-	// report TSS address nonce on ETHish chains
-	for _, chain := range config.ChainsEnabled {
-		err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
-		if err != nil {
-			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
-		}
-	}
-
 	// wait....
 	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-ch
 	log.Info().Msgf("stop signal received: %s", sig)
-
-	// stop zetacore observer
-	for _, chain := range config.ChainsEnabled {
-		(*chainClientMap1)[chain].Stop()
-	}
 
 }
