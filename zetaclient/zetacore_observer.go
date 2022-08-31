@@ -203,7 +203,7 @@ func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
 	for range ticker.C {
 		count := 0
 		for outTxID, _ := range OutTxMan.outTxActive {
-			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 3 {
 				count++
 			}
 		}
