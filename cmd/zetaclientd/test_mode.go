@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -194,7 +195,8 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 					atomic.AddInt64(&numConcurrentKeysign, 1)
 					log.Info().Msgf("doing a keysign test at block %d... numConcurrentKeysign %d", bn, numConcurrentKeysign)
 					testMsg := fmt.Sprintf("test message at block %d", bn)
-					sig, err := tss.Sign([]byte(testMsg))
+					msgHash := crypto.Keccak256Hash([]byte(testMsg))
+					sig, err := tss.Sign(msgHash.Bytes())
 					if err != nil {
 						log.Error().Err(err).Msg("Sign error")
 					} else {
