@@ -177,6 +177,8 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 	ticker := time.NewTicker(2 * time.Second)
 	var lastZetaBlock uint64 = 0
 	var numConcurrentKeysign int64 = 0
+	var totalKeysign int64 = 0
+	var successfulKeysign int64 = 0
 	startBlock, err := bridge.GetZetaBlockHeight()
 	if err != nil {
 		log.Error().Err(err).Msg("GetZetaBlockHeight error")
@@ -196,16 +198,19 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 					log.Info().Msgf("doing a keysign test at block %d... numConcurrentKeysign %d", bn, numConcurrentKeysign)
 					testMsg := fmt.Sprintf("test message at block %d", bn)
 					msgHash := crypto.Keccak256Hash([]byte(testMsg))
-					sig, err := tss.Sign(msgHash.Bytes())
+					_, err := tss.Sign(msgHash.Bytes())
+					atomic.AddInt64(&totalKeysign, 1)
 					if err != nil {
 						log.Error().Err(err).Msg("Sign error")
 					} else {
-						log.Info().Msgf("sign success: %x", sig)
+						log.Info().Msgf("sign success")
+						atomic.AddInt64(&successfulKeysign, 1)
 					}
 					log.Info().Msgf("done a keysign test at block %d numConcurrentKeysign %d", bn, numConcurrentKeysign)
 				}()
 			}
 			lastZetaBlock = bn
+			log.Info().Msgf("current block %d, success/total keysign: %d/%d", bn, successfulKeysign, totalKeysign)
 		}
 	}
 }
