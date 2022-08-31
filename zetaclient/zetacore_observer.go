@@ -203,16 +203,14 @@ func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
 	for range ticker.C {
 		count := 0
 		for outTxID, _ := range OutTxMan.outTxActive {
-			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 3 {
+			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 5 {
 				count++
 			}
 		}
 		if count > 0 {
-			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
-		} else {
-			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", OutTxMan.numActiveProcessor)
+			logger.Warn().Msgf("Health: %d OutTx are more than 5min in process!", count)
 		}
-		if count > 10 {
+		if count > 200 {
 			// suicide:
 			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
 			logger.Info().Msgf("numActiveProcessor: %d", OutTxMan.numActiveProcessor)
