@@ -199,16 +199,16 @@ func (OutTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
 	logger := OutTxMan.logger
 	logger.Info().Msgf("StartMonitorHealth")
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	for range ticker.C {
 		count := 0
 		for outTxID, _ := range OutTxMan.outTxActive {
-			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 5 {
 				count++
 			}
 		}
 		if count > 0 {
-			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
+			logger.Warn().Msgf("Health: %d OutTx are more than 5min in process!", count)
 		} else {
 			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", OutTxMan.numActiveProcessor)
 		}
@@ -285,7 +285,7 @@ func (co *CoreObserver) startSendScheduler() {
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
 
-					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 40) && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
@@ -447,7 +447,7 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%20 == 0
+		return d%15 == 0
 	}
 	if d < 100 && d%20 == 0 {
 		return true
