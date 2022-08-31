@@ -224,7 +224,7 @@ func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
 func (co *CoreObserver) startSendScheduler() {
 	logger := co.logger.With().Str("module", "SendScheduler").Logger()
 	outTxMan := NewOutTxProcessorManager()
-	go outTxMan.StartMonitorHealth()
+	//go outTxMan.StartMonitorHealth()
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64 = 0
