@@ -3,8 +3,8 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"math/big"
 	"math/rand"
 	"os"
@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
+	OutboundTxSignCount = "zetaclient_outbound_tx_sign_count"
 )
 
 type CoreObserver struct {
@@ -55,7 +55,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 	co.clientMap = clientMap
 	co.metrics = metrics
 
-	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	err := metrics.RegisterCounter(OutboundTxSignCount, "number of outbound tx signed")
 	if err != nil {
 		co.logger.Error().Err(err).Msg("error registering counter")
 	}
@@ -64,11 +64,11 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer,
 }
 
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
-	if cnt, found := metrics.Counters[name]; found {
-		return cnt, nil
-	} else {
+	cnt, found := metrics.Counters[name]
+	if !found {
 		return nil, errors.New("counter not found")
 	}
+	return cnt, nil
 }
 
 func (co *CoreObserver) MonitorCore() {
@@ -185,37 +185,36 @@ func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
 	return found
 }
 
-func (OutTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
-	OutTxMan.mu.Lock()
-	defer OutTxMan.mu.Unlock()
-	if _, found := OutTxMan.outTxActive[outTxID]; found {
-		return time.Since(OutTxMan.outTxStartTime[outTxID])
-	} else {
-		return 0
+func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
+	outTxMan.mu.Lock()
+	defer outTxMan.mu.Unlock()
+	if _, found := outTxMan.outTxActive[outTxID]; found {
+		return time.Since(outTxMan.outTxStartTime[outTxID])
 	}
+	return 0
 }
 
 // suicide whole zetaclient if keysign appears deadlocked.
-func (OutTxMan *OutTxProcessorManager) StartMonitorHealth() {
-	logger := OutTxMan.logger
+func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
+	logger := outTxMan.logger
 	logger.Info().Msgf("StartMonitorHealth")
 	ticker := time.NewTicker(60 * time.Second)
 	for range ticker.C {
 		count := 0
-		for outTxID, _ := range OutTxMan.outTxActive {
-			if OutTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+		for outTxID := range outTxMan.outTxActive {
+			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
 				count++
 			}
 		}
 		if count > 0 {
 			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
 		} else {
-			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", OutTxMan.numActiveProcessor)
+			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
 		}
 		if count > 10 {
 			// suicide:
 			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
-			logger.Info().Msgf("numActiveProcessor: %d", OutTxMan.numActiveProcessor)
+			logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
 	}
@@ -229,7 +228,7 @@ func (co *CoreObserver) startSendScheduler() {
 	go outTxMan.StartMonitorHealth()
 
 	observeTicker := time.NewTicker(3 * time.Second)
-	var lastBlockNum uint64 = 0
+	var lastBlockNum uint64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -263,9 +262,9 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					// update metrics
 					if idx == 0 {
-						pTxs, err := ob.GetPromGauge(metrics.PENDING_TXS)
+						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
 						if err != nil {
-							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PENDING_TXS)
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
 							continue
 						}
 						pTxs.Set(float64(len(sendList)))
@@ -391,10 +390,9 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 		return
-	} else {
-		logger.Info().Msgf("Keysign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 	}
-	cnt, err := co.GetPromCounter(OUTBOUND_TX_SIGN_COUNT)
+	logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+	cnt, err := co.GetPromCounter(OutboundTxSignCount)
 	if err != nil {
 		log.Error().Err(err).Msgf("GetPromCounter error")
 	} else {
@@ -415,7 +413,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 					log.Warn().Err(err).Msgf("OutTx Broadcast error")
 					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
 					if report {
-						zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
 						if err != nil {
 							logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 						}
@@ -428,7 +426,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-				zetaHash, err := co.bridge.AddTxHashToWatchlist(toChain.String(), tx.Nonce(), outTxHash)
+				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
 				if err != nil {
 					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 				}
@@ -500,7 +498,7 @@ func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, erro
 	return chainOb, nil
 }
 
-// returns whether to retry in a few seconds, and whether to report via AddTxHashToWatchlist
+// returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")

@@ -2,8 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
-	//sdk "github.com/cosmos/cosmos-sdk/types"
-	"net/url"
+
 	"sync"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -91,16 +90,6 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	cosmos.RegisterCodec(cdc)
 	stypes.RegisterCodec(cdc)
 	return cdc
-}
-
-// getZetaCoreURL with the given path
-func (b *ZetaCoreBridge) getZetaCoreURL(path string) string {
-	uri := url.URL{
-		Scheme: "http",
-		Host:   b.cfg.ChainHost,
-		Path:   path,
-	}
-	return uri.String()
 }
 
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {

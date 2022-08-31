@@ -10,8 +10,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 // Msg defines the Msg service.
 service Msg {
   rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
-  rpc AddToWatchList(MsgAddToWatchList) returns (MsgAddToWatchListResponse);
-  rpc RemoveFromWatchList(MsgRemoveFromWatchList) returns (MsgRemoveFromWatchListResponse);
+  rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
+  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
@@ -31,23 +31,23 @@ message MsgZetaConversionRateVoter {
 message MsgZetaConversionRateVoterResponse {
 }
 
-message MsgAddToWatchList {
+message MsgAddToOutTxTracker {
   string creator = 1;
   string chain = 2;
   uint64 nonce = 3;
   string txHash = 4;
 }
 
-message MsgAddToWatchListResponse {
+message MsgAddToOutTxTrackerResponse {
 }
 
-message MsgRemoveFromWatchList {
+message MsgRemoveFromOutTxTracker {
   string creator = 1;
   string chain = 2;
   uint64 nonce = 3;
 }
 
-message MsgRemoveFromWatchListResponse {
+message MsgRemoveFromOutTxTrackerResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

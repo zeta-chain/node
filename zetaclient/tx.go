@@ -41,9 +41,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) AddTxHashToWatchlist(chain string, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgAddToWatchList(signerAddress, chain, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
@@ -75,7 +75,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return zetaTxHash, fmt.Errorf("PostSend: re-try fails!")
+	return zetaTxHash, fmt.Errorf("postSend: re-try fails")
 }
 
 // FIXME: pass nonce
@@ -93,7 +93,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return zetaTxHash, fmt.Errorf("PostReceiveConfirmation: re-try fails!")
+	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
 func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {

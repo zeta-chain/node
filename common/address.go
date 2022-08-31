@@ -10,7 +10,7 @@ import (
 
 type Address string
 
-var NoAddress Address = Address("")
+var NoAddress Address
 
 const ETHAddressLen = 42
 

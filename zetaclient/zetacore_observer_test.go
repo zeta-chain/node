@@ -90,7 +90,7 @@ func (s *COSuite) SetUpTest(c *C) {
 
 	// setup mock TSS signers:
 	// The following PrivKey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	privateKey, err := crypto.HexToECDSA(config.TSS_TEST_PRIVKEY)
+	privateKey, err := crypto.HexToECDSA(config.TssTestPrivkey)
 	c.Assert(err, IsNil)
 	tss := TestSigner{
 		PrivKey: privateKey,

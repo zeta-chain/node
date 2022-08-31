@@ -8,11 +8,11 @@ import (
 )
 
 func (ob *ChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) {
-	if gauge, found := metrics.Gauges[ob.chain.String()+"_"+name]; found {
-		return gauge, nil
-	} else {
+	gauge, found := metrics.Gauges[ob.chain.String()+"_"+name]
+	if !found {
 		return nil, errors.New("gauge not found")
 	}
+	return gauge, nil
 }
 
 func (ob *ChainObserver) RegisterPromGauge(name string, help string) error {

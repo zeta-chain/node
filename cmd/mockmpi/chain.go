@@ -17,35 +17,34 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
-// What is this?
-var MAGIC_HASH = "0xcccb58610b0b65d5b1d8e5f16435254a787e324209d9b3877a8ece68859a0f55"
+var MagicHash = "0xcccb58610b0b65d5b1d8e5f16435254a787e324209d9b3877a8ece68859a0f55"
 
 type ChainETHish struct {
 	// TODO: Could these 3 be refactored out?
-	tss      zetaclient.TSSSigner
-	mpi_abi  abi.ABI
-	context  context.Context
-	chain_id *big.Int
+	tss     zetaclient.TSSSigner
+	mpiAbi  abi.ABI
+	context context.Context
+	chainID *big.Int
 
-	MPI_CONTRACT                 string
-	DEFAULT_DESTINATION_CONTRACT string
-	client                       *ethclient.Client
-	name                         common.Chain
-	id                           *big.Int
-	topics                       [][]ethcommon.Hash
-	channel                      chan types.Log
-	subscription                 ethereum.Subscription
+	MpiContract                string
+	DefaultDestinationContract string
+	client                     *ethclient.Client
+	name                       common.Chain
+	id                         *big.Int
+	topics                     [][]ethcommon.Hash
+	channel                    chan types.Log
+	subscription               ethereum.Subscription
 }
 
 func (cl *ChainETHish) Init() {
 	cl.tss = GetZetaTestSignature()
 
-	_abi, err := abi.JSON(strings.NewReader(ABI_MPI))
+	_abi, err := abi.JSON(strings.NewReader(AbiMpi))
 	if err != nil {
 		log.Err(err).Msg("abi.JSON")
 		os.Exit(1)
 	}
-	cl.mpi_abi = _abi
+	cl.mpiAbi = _abi
 
 	cl.context = context.TODO()
 
@@ -64,9 +63,9 @@ func (cl *ChainETHish) Init() {
 	}
 
 	cl.topics = make([][]ethcommon.Hash, 1)
-	cl.topics[0] = []ethcommon.Hash{ethcommon.HexToHash(MAGIC_HASH)}
+	cl.topics[0] = []ethcommon.Hash{ethcommon.HexToHash(MagicHash)}
 	query := ethereum.FilterQuery{
-		Addresses: []ethcommon.Address{ethcommon.HexToAddress(cl.MPI_CONTRACT)},
+		Addresses: []ethcommon.Address{ethcommon.HexToAddress(cl.MpiContract)},
 		Topics:    cl.topics,
 	}
 
@@ -86,19 +85,19 @@ func (cl *ChainETHish) Start() {
 }
 
 func FindChainByID(id *big.Int) (*ChainETHish, error) {
-	for _, chain := range ALL_CHAINS {
-		if chain.chain_id.Cmp(id) == 0 {
+	for _, chain := range AllChains {
+		if chain.chainID.Cmp(id) == 0 {
 			return chain, nil
 		}
 	}
-	return nil, fmt.Errorf("Not listening for chain with ID: %d", id)
+	return nil, fmt.Errorf("not listening for chain with ID: %d", id)
 }
 
 func FindChainByName(name string) (*ChainETHish, error) {
-	for _, chain := range ALL_CHAINS {
+	for _, chain := range AllChains {
 		if chain.name.String() == name {
 			return chain, nil
 		}
 	}
-	return nil, fmt.Errorf("Couldn't find chain: %s", name)
+	return nil, fmt.Errorf("couldn't find chain: %s", name)
 }

@@ -82,11 +82,11 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 
 	tssPubkey := tss.CurrentPubkey
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, nil, "0.14.0")
-	ks_res, err := tss.Server.KeySign(keysignReq)
+	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
-	signature := ks_res.Signatures
+	signature := ksRes.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
 	log.Info().Msgf("signature of digest is... %v", signature)
@@ -301,14 +301,12 @@ func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
 	if len(signature) == 0 {
 		log.Info().Msgf("signature has length 0, skipping verify")
 		return fmt.Errorf("signature has length 0")
-	} else {
-		verifySignature(tssPubkey, signature, H.Bytes())
-		if verifySignature(tssPubkey, signature, H.Bytes()) {
-			return nil
-		} else {
-			return fmt.Errorf("verify signature fail")
-		}
 	}
+	verifySignature(tssPubkey, signature, H.Bytes())
+	if verifySignature(tssPubkey, signature, H.Bytes()) {
+		return nil
+	}
+	return fmt.Errorf("verify signature fail")
 }
 
 func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) bool {

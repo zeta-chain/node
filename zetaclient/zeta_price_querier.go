@@ -50,13 +50,13 @@ var _ ZetaPriceQuerier = &UniswapV2ZetaPriceQuerier{}
 // return the ratio GAS(ETH, BNB, MATIC, etc)/ZETA from Uniswap v3
 // return price (gasasset/zeta), blockNum, error
 func (q *UniswapV3ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
-	TIME_WINDOW := 600 // time weighted average price over last 10min (600s) period
-	input, err := q.UniswapV3Abi.Pack("observe", []uint32{0, uint32(TIME_WINDOW)})
+	TimeWindow := 600 // time weighted average price over last 10min (600s) period
+	input, err := q.UniswapV3Abi.Pack("observe", []uint32{0, uint32(TimeWindow)})
 	if err != nil {
 		return nil, 0, fmt.Errorf("fail to pack observe")
 	}
 
-	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	fromAddr := ethcommon.HexToAddress(config.TssTestAddress)
 	toAddr := q.PoolContractAddress
 	res, err := q.Client.CallContract(context.TODO(), ethereum.CallMsg{
 		From: fromAddr,
@@ -78,7 +78,7 @@ func (q *UniswapV3ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		return nil, 0, err
 	}
 	cumTicks := *abi.ConvertType(output[0], new([2]*big.Int)).(*[2]*big.Int)
-	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[1], cumTicks[0]), big.NewInt(int64(TIME_WINDOW)))
+	tickDiff := big.NewInt(0).Div(big.NewInt(0).Sub(cumTicks[1], cumTicks[0]), big.NewInt(int64(TimeWindow)))
 	price := math.Pow(1.0001, float64(tickDiff.Int64())) * 1e18 // price is fixed point with decimal 18
 	if q.TokenOrder == types.ETHZETA {
 		price = 1.0 / price
@@ -95,7 +95,7 @@ func (q *UniswapV2ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		return nil, 0, fmt.Errorf("fail to pack getReserves")
 	}
 
-	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
+	fromAddr := ethcommon.HexToAddress(config.TssTestAddress)
 	toAddr := q.PoolContractAddress
 	res, err := q.Client.CallContract(context.TODO(), ethereum.CallMsg{
 		From: fromAddr,

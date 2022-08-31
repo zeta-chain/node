@@ -60,9 +60,9 @@ type indexValue struct {
 }
 
 func medianOfArray(values []uint64) int {
-	var array []indexValue
+	array := make([]indexValue, len(values))
 	for i, v := range values {
-		array = append(array, indexValue{Index: i, Value: v})
+		array[i] = indexValue{Index: i, Value: v}
 	}
 	sort.SliceStable(array, func(i, j int) bool {
 		return array[i].Value < array[j].Value

@@ -21,7 +21,7 @@ const (
 	//GAUGE_PENDING_TX MetricName = iota
 	//
 	//COUNTER_NUM_RPCS
-	PENDING_TXS = "pending_txs"
+	PendingTxs = "pending_txs"
 )
 
 var (

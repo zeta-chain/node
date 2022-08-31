@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -15,11 +14,9 @@ import (
 
 // HTTPServer provide http endpoint for Tss server
 type HTTPServer struct {
-	logger    zerolog.Logger
-	s         *http.Server
-	pendingTx uint64
-	mu        sync.Mutex
-	p2pid     string
+	logger zerolog.Logger
+	s      *http.Server
+	p2pid  string
 }
 
 // NewHTTPServer should only listen to the loopback
@@ -91,12 +88,4 @@ func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", t.p2pid)
-}
-
-func (t *HTTPServer) pendingHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	//json.NewEncoder(w).Encode(t.pendingTx)
 }

@@ -45,9 +45,8 @@ func (idb *IndexDB) Start(done chan bool) {
 		if err != nil {
 			log.Error().Err(err).Msg(" error querying max(blocknum) from block; please rebuild")
 			return
-		} else {
-			log.Info().Msgf("latest indexed blocknum %d", idb.LastBlockProcessed)
 		}
+		log.Info().Msgf("latest indexed blocknum %d", idb.LastBlockProcessed)
 	}
 
 	go func() {
@@ -417,14 +416,9 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 		fmt.Printf("cannot query TxResponsesByBlock from zetacore node: %s\n", err)
 		return err
 	}
-	var txhashes []string
-	for _, v := range txResponses {
-		txhashes = append(txhashes, v.TxHash)
-		//tx, _ := idb.querier.TxByHash(v.TxHash)
-		//msgs := tx.GetMsgs()
-		//for _, m := range msgs {
-		//	fmt.Printf("msg", m.)
-		//}
+	txhashes := make([]string, len(txResponses))
+	for i, v := range txResponses {
+		txhashes[i] = v.TxHash
 	}
 	_, err = idb.db.Exec("INSERT INTO block(blocknum, blocktimestamp, querytimestamp, numtxs, txhashes) values($1,$2,$3,$4,$5)",
 		block.Header.Height, block.Header.Time, time.Now().UTC(), len(txResponses), pq.Array(txhashes))

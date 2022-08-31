@@ -5,12 +5,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgAddToWatchList = "add_to_watch_list"
+const TypeMsgAddToOutTxTracker = "add_to_out_tx_tracker"
 
-var _ sdk.Msg = &MsgAddToWatchList{}
+var _ sdk.Msg = &MsgAddToOutTxTracker{}
 
-func NewMsgAddToWatchList(creator string, chain string, nonce uint64, txHash string) *MsgAddToWatchList {
-	return &MsgAddToWatchList{
+func NewMsgAddToOutTxTracker(creator string, chain string, nonce uint64, txHash string) *MsgAddToOutTxTracker {
+	return &MsgAddToOutTxTracker{
 		Creator: creator,
 		Chain:   chain,
 		Nonce:   nonce,
@@ -18,15 +18,15 @@ func NewMsgAddToWatchList(creator string, chain string, nonce uint64, txHash str
 	}
 }
 
-func (msg *MsgAddToWatchList) Route() string {
+func (msg *MsgAddToOutTxTracker) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgAddToWatchList) Type() string {
-	return TypeMsgAddToWatchList
+func (msg *MsgAddToOutTxTracker) Type() string {
+	return TypeMsgAddToOutTxTracker
 }
 
-func (msg *MsgAddToWatchList) GetSigners() []sdk.AccAddress {
+func (msg *MsgAddToOutTxTracker) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -34,12 +34,12 @@ func (msg *MsgAddToWatchList) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgAddToWatchList) GetSignBytes() []byte {
+func (msg *MsgAddToOutTxTracker) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgAddToWatchList) ValidateBasic() error {
+func (msg *MsgAddToOutTxTracker) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

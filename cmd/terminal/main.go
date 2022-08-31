@@ -61,7 +61,7 @@ func main() {
 	}
 	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
 
-	connABI, err := abi.JSON(strings.NewReader(config.CONNECTOR_ABI_STRING))
+	connABI, err := abi.JSON(strings.NewReader(config.ConnectorAbiString))
 	if err != nil {
 		log.Fatal().Err(err).Msg("parse connector abi error")
 	}
@@ -215,17 +215,18 @@ func SetSendInput(sendInput *SendInput, kv string) error {
 	}
 	switch kvList[0] {
 	case "GasLimit":
-		if gasLimit, ok := big.NewInt(0).SetString(kvList[1], 10); !ok {
+		gasLimit, ok := big.NewInt(0).SetString(kvList[1], 10)
+		if !ok {
 			return fmt.Errorf("wrong GasLimit %s", kvList)
-		} else {
-			sendInput.GasLimit = gasLimit
 		}
+		sendInput.GasLimit = gasLimit
+
 	case "DestChainID":
-		if chainID, ok := big.NewInt(0).SetString(kvList[1], 10); !ok {
+		chainID, ok := big.NewInt(0).SetString(kvList[1], 10)
+		if !ok {
 			return fmt.Errorf("wrong GasLimit %s", kvList)
-		} else {
-			sendInput.DestChainID = chainID
 		}
+		sendInput.DestChainID = chainID
 	}
 	return nil
 }
