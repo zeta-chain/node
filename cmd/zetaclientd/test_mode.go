@@ -176,6 +176,12 @@ func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 	ticker := time.NewTicker(2 * time.Second)
 	var lastZetaBlock uint64 = 0
 	var numConcurrentKeysign int64 = 0
+	startBlock, err := bridge.GetZetaBlockHeight()
+	if err != nil {
+		log.Error().Err(err).Msg("GetZetaBlockHeight error")
+		return
+	}
+	startBlock = (startBlock + 5) / 5 * 5
 	for range ticker.C {
 		bn, err := bridge.GetZetaBlockHeight()
 		if err != nil {
