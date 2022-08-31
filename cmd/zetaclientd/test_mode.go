@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -159,6 +160,9 @@ func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome strin
 	}
 	metrics.Start()
 
+	log.Info().Msg("starting keysign tests...")
+	go startKeysignTest(bridge1, tss)
+
 	// wait....
 	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
@@ -166,4 +170,34 @@ func startTestMode(validatorName string, peers addr.AddrList, zetacoreHome strin
 	sig := <-ch
 	log.Info().Msgf("stop signal received: %s", sig)
 
+}
+
+func startKeysignTest(bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
+	ticker := time.NewTicker(2 * time.Second)
+	var lastZetaBlock uint64 = 0
+	var numConcurrentKeysign int64 = 0
+	for range ticker.C {
+		bn, err := bridge.GetZetaBlockHeight()
+		if err != nil {
+			log.Error().Err(err).Msg("GetZetaBlockHeight error")
+			continue
+		}
+		if bn > lastZetaBlock {
+			if bn > 0 {
+				go func() {
+					atomic.AddInt64(&numConcurrentKeysign, 1)
+					log.Info().Msgf("doing a keysign test at block %d... numConcurrentKeysign %d", bn, numConcurrentKeysign)
+					testMsg := fmt.Sprintf("test message at block %d", bn)
+					sig, err := tss.Sign([]byte(testMsg))
+					if err != nil {
+						log.Error().Err(err).Msg("Sign error")
+					} else {
+						log.Info().Msgf("sign success: %x", sig)
+					}
+					log.Info().Msgf("done a keysign test at block %d numConcurrentKeysign %d", bn, numConcurrentKeysign)
+				}()
+			}
+			lastZetaBlock = bn
+		}
+	}
 }
