@@ -228,6 +228,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64 = 0
+	var sendList []*types.Send
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -238,10 +239,13 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
-			sendList, err := co.bridge.GetAllPendingSend()
-			if err != nil {
-				logger.Error().Err(err).Msg("error requesting sends from zetacore")
-				continue
+			if bn%15 == 0 { // roughly every 90s
+				logger.Info().Msgf("querying pending sends at block %d", bn)
+				sendList, err = co.bridge.GetAllPendingSend()
+				if err != nil {
+					logger.Error().Err(err).Msg("error requesting sends from zetacore")
+					continue
+				}
 			}
 			if len(sendList) > 0 && bn%5 == 0 {
 				logger.Info().Msgf("#pending send: %d", len(sendList))
