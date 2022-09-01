@@ -15,4 +15,6 @@ var (
 	ErrInvalidPubKeySet          = sdkerrors.Register(ModuleName, 1106, "invalid pubkeyset")
 	ErrUnableToGetGasPrice       = sdkerrors.Register(ModuleName, 1107, "unable to get gas price")
 	ErrUnableToGetConversionRate = sdkerrors.Register(ModuleName, 1108, "zeta conversion rate not found")
+	ErrNotEnoughZetaBurnt        = sdkerrors.Register(ModuleName, 1109, "not enough zeta burnt")
+	ErrCannotFindReceiverNonce   = sdkerrors.Register(ModuleName, 1110, "cannot find receiver chain nonce")
 )

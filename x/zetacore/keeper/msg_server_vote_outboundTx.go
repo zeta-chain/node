@@ -59,7 +59,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		receive.Signers = append(receive.Signers, msg.Creator)
 	}
 
-	if hasSuperMajorityValidators(len(receive.Signers), validators) {
+	if k.hasSuperMajorityValidators(ctx, receive.Signers) {
 		receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
 
 		zetaBurnt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
@@ -75,10 +75,10 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 
 		if receive.Status == common.ReceiveStatus_Success {
 			oldstatus := send.Status.String()
-			if send.Status == types.SendStatus_PendingRevert {
-				send.Status = types.SendStatus_Reverted
-			} else if send.Status == types.SendStatus_PendingOutbound {
-				send.Status = types.SendStatus_OutboundMined
+			if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+				send.CctxStatus.Status = types.SendStatus_Reverted
+			} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+				send.CctxStatus.Status = types.SendStatus_OutboundMined
 			}
 
 			err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
@@ -86,41 +86,42 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
 			}
-			newstatus := send.Status.String()
+			newstatus := send.CctxStatus.Status.String()
 			event := sdk.NewEvent(sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 				sdk.NewAttribute(types.SubTypeKey, string(types.OutboundTxSuccessful)),
-				sdk.NewAttribute(types.SendHash, receive.SendHash),
+				sdk.NewAttribute(types.CctxIndex, receive.SendHash),
 				sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 				sdk.NewAttribute(types.ZetaMint, msg.MMint),
-				sdk.NewAttribute(types.Chain, msg.Chain),
+				sdk.NewAttribute(types.OutBoundChain, msg.Chain),
 				sdk.NewAttribute(types.OldStatus, oldstatus),
 				sdk.NewAttribute(types.NewStatus, newstatus),
 			)
 			ctx.EventManager().EmitEvent(event)
 		} else if receive.Status == common.ReceiveStatus_Failed {
-			oldstatus := send.Status.String()
-			if send.Status == types.SendStatus_PendingOutbound {
-				send.Status = types.SendStatus_PendingRevert
-				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
-				chain := send.SenderChain
-				k.updateSend(ctx, chain, &send)
-			} else if send.Status == types.SendStatus_PendingRevert {
-				send.Status = types.SendStatus_Aborted
-				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
+			oldstatus := send.CctxStatus.Status.String()
+			if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+				send.CctxStatus.Status = types.CctxStatus_PendingRevert
+				send.CctxStatus.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
+				chain := send.InBoundTxParams.SenderChain
+				k.updateCctx(ctx, chain, &send)
+			} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+				send.CctxStatus.Status = types.CctxStatus_Aborted
+				send.CctxStatus.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
-			newstatus := send.Status.String()
+			newstatus := send.CctxStatus.Status.String()
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 					sdk.NewAttribute(types.SubTypeKey, types.OutboundTxFailed),
-					sdk.NewAttribute(types.SendHash, receive.SendHash),
+					sdk.NewAttribute(types.CctxIndex, receive.SendHash),
 					sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 					sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
-					sdk.NewAttribute(types.Chain, msg.Chain),
+					sdk.NewAttribute(types.OutBoundChain, msg.Chain),
 					sdk.NewAttribute(types.OldStatus, oldstatus),
 					sdk.NewAttribute(types.NewStatus, newstatus),
-					sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
+					sdk.NewAttribute(types.StatusMessage, send.CctxStatus.StatusMessage),
+					sdk.NewAttribute(types.Identifiers, send.CctxStatus.StatusMessage),
 				),
 			)
 		}
@@ -130,9 +131,9 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			k.RemoveOutTxTracker(ctx, index)
 		}
 
-		send.RecvHash = receive.Index
-		send.OutTxHash = receive.OutTxHash
-		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
+		send.OutBoundTxParams.OutBoundTXReceiveIndex = receive.Index
+		send.OutBoundTxParams.OutBoundTxHash = receive.OutTxHash
+		send.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 		k.SetCrossChainTx(ctx, send)
 
 	}

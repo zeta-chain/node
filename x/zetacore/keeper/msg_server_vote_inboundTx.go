@@ -20,30 +20,29 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgVoteOnObserved
 		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 	index := msg.Digest()
-	var cctx  types.CrossChainTx
+	var cctx types.CrossChainTx
 	cctx, isFound := k.GetCrossChainTx(ctx, index)
 
-
 	// Validate
-	recvChain, err := parseChainAndAddress(send.ReceiverChain, send.Receiver)
-	if err != nil {
-		send.StatusMessage = err.Error()
-		send.Status = types.SendStatus_PendingRevert
-		abort = true
-	}
-
-	var chain common.Chain // the chain for outbound
-	if abort {
-		chain, err = common.ParseChain(send.SenderChain)
-		if err != nil {
-			send.StatusMessage = fmt.Sprintf("cannot parse sender chain: %s", send.SenderChain)
-			send.Status = types.SendStatus_Aborted
-			goto EPILOGUE
-		}
-		send.Status = types.SendStatus_PendingRevert
-	} else {
-		chain = recvChain
-	}
+	recvChain, _ := parseChainAndAddress(cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.Receiver)
+	//if err != nil {
+	//	send.StatusMessage = err.Error()
+	//	send.Status = types.SendStatus_PendingRevert
+	//	abort = true
+	//}
+	//
+	//var chain common.Chain // the chain for outbound
+	//if abort {
+	//	chain, err = common.ParseChain(send.SenderChain)
+	//	if err != nil {
+	//		send.StatusMessage = fmt.Sprintf("cannot parse sender chain: %s", send.SenderChain)
+	//		send.Status = types.SendStatus_Aborted
+	//		goto EPILOGUE
+	//	}
+	//	send.Status = types.SendStatus_PendingRevert
+	//} else {
+	//	chain = recvChain
+	//}
 
 	if isFound {
 		if isDuplicateSigner(msg.Creator, cctx.Signers) {
@@ -51,28 +50,26 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgVoteOnObserved
 		}
 		cctx.Signers = append(cctx.Signers, msg.Creator)
 	} else {
-		cctx = k.createNewCCTX(ctx,msg,index)
+		cctx = k.createNewCCTX(ctx, msg, index)
 	}
 
-	hasEnoughVotes := k. hasSuperMajorityValidators(ctx,cctx.Signers)
+	hasEnoughVotes := k.hasSuperMajorityValidators(ctx, cctx.Signers)
 	if hasEnoughVotes {
-
+		err := k.finalizeInbound(ctx, cctx, recvChain.String())
+		if err != nil {
+			cctx.CctxStatus.Status = types.CctxStatus_Aborted
+			cctx.CctxStatus.StatusMessage = err.Error()
+			ctx.Logger().Error(err.Error())
+		}
 	}
-
-
-
-
-	}
-
-EPILOGUE:
-	k.SetCrossChainTx(ctx, send)
-	return &types.MsgSendVoterResponse{}, nil
+	k.SetCrossChainTx(ctx, cctx)
+	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
 // updates gas price, gas fee, zeta to mint, and nonce
 // returns ok?
 
-func (k msgServer)finalizeInbound(ctx sdk.Context,cctx types.CrossChainTx,receiveChain string) {
+func (k msgServer) finalizeInbound(ctx sdk.Context, cctx types.CrossChainTx, receiveChain string) error {
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	cctx.InBoundTxParams.InBoundTxFinalizedHeight = uint64(ctx.BlockHeader().Height)
 
@@ -81,11 +78,14 @@ func (k msgServer)finalizeInbound(ctx sdk.Context,cctx types.CrossChainTx,receiv
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 	cctx.OutBoundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % len(cctx.Signers))
 
-	k.updateSend(ctx,receiveChain, &cctx)
+	err := k.updateCctx(ctx, receiveChain, &cctx)
+	if err != nil {
+		return err
+	}
 	k.EmitEventSendFinalized(ctx, &send)
-
+	return err
 }
-func (k msgServer) createNewCCTX (ctx sdk.Context,msg *types.MsgVoteOnObservedInboundTx , index string) types.CrossChainTx {
+func (k msgServer) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
 	inboundParams := &types.InBoundTxParams{
 		Sender:                   msg.Sender,
 		SenderChain:              msg.SenderChain,
@@ -123,45 +123,45 @@ func (k msgServer) createNewCCTX (ctx sdk.Context,msg *types.MsgVoteOnObservedIn
 	k.EmitEventCCTXCreated(ctx, &newCctx)
 	return newCctx
 }
-func (k msgServer) updateSend(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
+func (k msgServer) updateCctx(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, receiveChain)
 	if !isFound {
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
-		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice,fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain ,cctx.LogIdentifierForCCTX()))
+		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
 	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
 
-	gasFeeInZeta, err := k.computeFeeInZeta(ctx, price, gasLimit, chain, send)
-	if err!=nil{
-		cctx.CctxStatus.Status = types.CctxStatus_Aborted
+	gasFeeInZeta, err := k.computeFeeInZeta(ctx, medianGasPrice, gasLimit, receiveChain, cctx)
+	if err != nil {
 		return err
 	}
-
+	// Check parse for Uint zetaBurntInt in validate Basic
 	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
-	zetaBurntInt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 0)
-	if !ok {
-		send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
-		send.Status = types.SendStatus_Aborted
-		return false
+	zetaBurnt := sdk.NewUintFromString(cctx.ZetaBurnt)
+	//zetaBurntInt, ok := big.NewInt(0).SetString(send.ZetaBurnt, 0)
+	//if !ok {
+	//	send.StatusMessage = fmt.Sprintf("ZetaBurnt cannot parse")
+	//	send.Status = types.SendStatus_Aborted
+	//	return false
+	//}
+	if gasFeeInZeta.GT(zetaBurnt) {
+		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than mBurnt (%s) | Identifiers : %s ", gasFeeInZeta, zetaBurnt, cctx.LogIdentifierForCCTX()))
 	}
-	if gasFeeInZeta.Cmp(zetaBurntInt) > 0 {
-		send.StatusMessage = fmt.Sprintf("feeInZeta(%d) more than mBurnt (%d)", gasFeeInZeta, zetaBurntInt)
-		send.Status = types.SendStatus_Aborted
-		return false
-	}
-	send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
+	//if gasFeeInZeta.Cmp(zetaBurntInt) > 0 {
+	//
+	//}
 
-	nonce, found := k.GetChainNonces(ctx, chain)
+	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta).String()
+	//send.ZetaMint = fmt.Sprintf("%d", big.NewInt(0).Sub(zetaBurntInt, gasFeeInZeta))
+
+	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {
-		send.StatusMessage = fmt.Sprintf("cannot find receiver chain nonce: %s", chain)
-		send.Status = types.SendStatus_Aborted
-		return false
+		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", receiveChain, cctx.LogIdentifierForCCTX()))
 	}
-
-	send.Nonce = nonce.Nonce
+	cctx.OutBoundTxParams.OutBoundTxTSSNonce = nonce.Nonce
 	nonce.Nonce++
 	k.SetChainNonces(ctx, nonce)
-	return true
+	return nil
 }
 
 // returns (chain,error)
@@ -194,56 +194,62 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 	k.SetLastBlockHeight(ctx, lastblock)
 }
 
-func (k msgServer) EmitEventCCTXCreated(ctx sdk.Context, send *types.CrossChainTx) {
+func (k msgServer) EmitEventCCTXCreated(ctx sdk.Context, cctx *types.CrossChainTx) {
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.SubTypeKey, types.InboundCreated),
-			sdk.NewAttribute(types.SendHash, send.Index),
-			sdk.NewAttribute(types.NewStatus, send.CctxStatus.String()),
+		sdk.NewEvent(types.InboundCreated,
+			sdk.NewAttribute(types.CctxIndex, cctx.Index),
+			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
+			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
+			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
+			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),
 	)
 }
 
-func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
+func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute(types.SubTypeKey, types.InboundFinalized),
-			sdk.NewAttribute(types.SendHash, send.Index),
-			sdk.NewAttribute(types.Sender, send.Sender),
-			sdk.NewAttribute(types.SenderChain, send.SenderChain),
-			sdk.NewAttribute(types.Receiver, send.Receiver),
-			sdk.NewAttribute(types.ReceiverChain, send.ReceiverChain),
-			sdk.NewAttribute(types.ZetaBurnt, send.ZetaBurnt),
-			sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
-			sdk.NewAttribute(types.Message, send.Message),
-			sdk.NewAttribute(types.InTxHash, send.InTxHash),
-			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", send.InBlockHeight)),
-			sdk.NewAttribute(types.NewStatus, send.Status.String()),
-			sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
+		sdk.NewEvent(types.InboundFinalized,
+			sdk.NewAttribute(types.CctxIndex, cctx.Index),
+			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
+			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
+			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InBoundTxParams.InBoundTxObservedHeight)),
+			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt),
+			sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint),
+			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
+			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
+			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),
 	)
 }
 
 // returns feeInZeta (uint uuzeta), and whether to abort zeta-tx
-func (k msgServer) computeFeeInZeta(ctx sdk.Context, price sdk.Uint, gasLimit sdk.Uint, chain string, cctx *types.CrossChainTx) (sdk.Uint, error) {
+// TODO : Add unit test
+func (k msgServer) computeFeeInZeta(ctx sdk.Context, price sdk.Uint, gasLimit sdk.Uint, receiveChain string, cctx *types.CrossChainTx) (sdk.Uint, error) {
 
-	rate, isFound := k.GetZetaConversionRate(ctx, chain)
+	rate, isFound := k.GetZetaConversionRate(ctx, receiveChain)
 	if !isFound {
-		return sdk.ZeroUint(),sdkerrors.Wrap(types.ErrUnableToGetConversionRate,fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain ,cctx.LogIdentifierForCCTX()))
+		return sdk.ZeroUint(), sdkerrors.Wrap(types.ErrUnableToGetConversionRate, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
-	exchangeRateInt, ok := big.NewInt(0).SetString(rate.ZetaConversionRates[rate.MedianIndex], 0)
-	if !ok {
-		return sdk.ZeroUint(),sdkerrors.Wrap(types.ErrFloatParseError,fmt.Sprintf("median exchange rate %s |Identifiers : %s ", rate.ZetaConversionRates[rate.MedianIndex],cctx.LogIdentifierForCCTX()))
-	}
+	//exchangeRateInt, ok := big.NewInt(0).SetString(rate.ZetaConversionRates[rate.MedianIndex], 0)
+	//if !ok {
+	//	return sdk.ZeroUint(),sdkerrors.Wrap(types.ErrFloatParseError,fmt.Sprintf("median exchange rate %s |Identifiers : %s ", rate.ZetaConversionRates[rate.MedianIndex],cctx.LogIdentifierForCCTX()))
+	//}
 	medianRate := rate.ZetaConversionRates[rate.MedianIndex]
-	uintMedianRate := rate
-
-
+	uintMedianRate := sdk.NewUintFromString(medianRate)
+	staticValue := sdk.NewUintFromString("1000000000000000000")
+	gasFeeInZeta := price.Mul(gasLimit).Mul(uintMedianRate).Quo(staticValue)
+	gasFeeInZetaIncludingProtocolFee := gasFeeInZeta.Add(staticValue)
 	// price*gasLimit*exchangeRate/1e18
-	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), OneEighteen)
+	//gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), OneEighteen)
 	// add protocol flat fee: 1 ZETA
-	gasFeeInZeta.Add(gasFeeInZeta, OneEighteen)
-	return gasFeeInZeta, abort
+	//gasFeeInZeta.Add(gasFeeInZeta, OneEighteen)
+	return gasFeeInZetaIncludingProtocolFee, nil
 }
