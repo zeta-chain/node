@@ -229,6 +229,28 @@ func (co *CoreObserver) startSendScheduler() {
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64 = 0
 	var sendList []*types.Send
+	var sendListLock sync.Mutex
+	go func() { // this updates sendList periodically
+		for {
+			bn, err := co.bridge.GetZetaBlockHeight()
+			if err != nil {
+				logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler sendList updater")
+				continue
+			}
+			if bn%15 == 0 { // roughly every 90s
+				logger.Info().Msgf("querying pending sends at block %d", bn)
+				sendListLocal, err := co.bridge.GetAllPendingSend()
+				if err != nil {
+					logger.Error().Err(err).Msg("error requesting sends from zetacore")
+					continue
+				}
+				sendListLock.Lock()
+				sendList = nil
+				sendList = append(sendList, sendListLocal...)
+				sendListLock.Unlock()
+			}
+		}
+	}()
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -239,25 +261,20 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
-			if bn%15 == 0 { // roughly every 90s
-				logger.Info().Msgf("querying pending sends at block %d", bn)
-				sendList, err = co.bridge.GetAllPendingSend()
-				if err != nil {
-					logger.Error().Err(err).Msg("error requesting sends from zetacore")
-					continue
-				}
-			}
+
+			sendListLock.Lock()
 			if len(sendList) > 0 && bn%5 == 0 {
 				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
+			sendListLock.Unlock()
 
 			// schedule sends
-			for chain, sendList := range sendMap {
+			for chain, sends := range sendMap {
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
-				for idx, send := range sendList {
+				for idx, send := range sends {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
 						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
@@ -270,7 +287,7 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PENDING_TXS)
 							continue
 						}
-						pTxs.Set(float64(len(sendList)))
+						pTxs.Set(float64(len(sends)))
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
