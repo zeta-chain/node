@@ -51,7 +51,7 @@ func TestSends(t *testing.T) {
 			Reverted:        10,
 		},
 		{
-			TestName:        "test pending",
+			TestName:        "test pending random",
 			PendingInbound:  rand.Intn(300-10) + 10,
 			PendingOutbound: rand.Intn(300-10) + 10,
 			Confirmed:       rand.Intn(300-10) + 10,
