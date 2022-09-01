@@ -150,6 +150,21 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/sendPending";
 	}
 
+	// Queries a send by index.
+	rpc SendLegacy(QueryGetSendLegacyRequest) returns (QueryGetSendLegacyResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/sendLegacy/{index}";
+	}
+
+	// Queries a list of send items.
+	rpc SendAllLegacy(QueryAllSendLegacyRequest) returns (QueryAllSendLegacyResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/sendLegacy";
+	}
+
+	// Queries a list of send items.
+	rpc SendAllPendingLegacy(QueryAllSendPendingLegacyRequest) returns (QueryAllSendPendingLegacyResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/sendPendingLegacy";
+	}
+
 
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
@@ -349,6 +364,31 @@ message QueryGetSendRequest {
 
 message QueryGetSendResponse {
 	Send Send = 1;
+}
+
+message QueryGetSendLegacyRequest {
+	string index = 1;
+}
+
+message QueryGetSendLegacyResponse {
+	Send Send = 1;
+}
+
+message QueryAllSendLegacyRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllSendLegacyResponse {
+	repeated Send Send = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllSendPendingLegacyRequest {
+
+}
+
+message QueryAllSendPendingLegacyResponse {
+	repeated Send Send = 1;
 }
 
 message QueryAllSendRequest {

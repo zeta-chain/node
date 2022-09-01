@@ -95,3 +95,15 @@ func (k Keeper) GetAllPendingInBoundSend(ctx sdk.Context) (list []*types.Send) {
 	}
 	return
 }
+
+//Deprecated:GetSendLegacy
+func (k Keeper) GetSendLegacy(ctx sdk.Context, index string) (val types.Send, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+
+	b := store.Get(types.KeyPrefix(index))
+	if b == nil {
+		return val, false
+	}
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
