@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
+	"errors"
+	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/evmos/ethermint/crypto/hd"
+	servercfg "github.com/evmos/ethermint/server/config"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/app/params"
+	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -26,6 +28,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
+	ethermintclient "github.com/evmos/ethermint/client"
+	ethermintserver "github.com/evmos/ethermint/server"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -33,9 +38,11 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
+const EnvPrefix = "zetacore"
+
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
 	cfg := sdk.GetConfig()
@@ -53,7 +60,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
 		WithHomeDir(app.DefaultNodeHome).
-		WithViper("")
+		WithKeyringOptions(hd.EthSecp256k1Option()).
+		WithViper(EnvPrefix)
 
 	rootCmd := &cobra.Command{
 		Use:   version.AppName,
@@ -77,7 +85,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			return server.InterceptConfigsPreRunHandler(cmd, "", nil)
+			customAppTemplate, customAppConfig := initAppConfig()
+
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 	}
 
@@ -86,14 +96,24 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+// initAppConfig helps to override default appConfig template and configs.
+// return "", nil if no custom configuration is required for the application.
+func initAppConfig() (string, interface{}) {
+	return servercfg.AppConfig(zetacoredconfig.BaseDenom)
+}
+
+func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		ethermintclient.ValidateChainID(
+			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
+		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+
 		debug.Cmd(),
 		config.Cmd(),
 	)
@@ -101,6 +121,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
+	ethermintserver.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
+
 	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
@@ -108,8 +130,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
+
+	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -168,7 +193,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg params.EncodingConfig
+	encCfg appparams.EncodingConfig
 }
 
 func (ac appCreator) newApp(
@@ -206,7 +231,8 @@ func (ac appCreator) newApp(
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		cosmoscmd.EncodingConfig(ac.encCfg),
+		//cosmoscmd.EncodingConfig(ac.encCfg),
+		ac.encCfg,
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
@@ -226,14 +252,61 @@ func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceSt
 	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
 	//encCfg := app.MakeEncodingConfig()
 	//encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var zetaApp cosmoscmd.App
+	var zetaApp *app.App
 	if height != -1 {
-		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), cosmoscmd.EncodingConfig(ac.encCfg), appOpts)
+		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
 		if err := zetaApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), cosmoscmd.EncodingConfig(ac.encCfg), appOpts)
+		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
 	}
 	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+}
+
+// appExport creates a new simapp (optionally at a given height)
+func (a appCreator) appExport(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
+	var anApp *app.App
+
+	homePath, ok := appOpts.Get(flags.FlagHome).(string)
+	if !ok || homePath == "" {
+		return servertypes.ExportedApp{}, errors.New("application home not set")
+	}
+
+	if height != -1 {
+		anApp = app.New(
+			logger,
+			db,
+			traceStore,
+			false,
+			map[int64]bool{},
+			homePath,
+			uint(1),
+			a.encCfg,
+			// this line is used by starport scaffolding # stargate/root/exportArgument
+			appOpts,
+		)
+
+		if err := anApp.LoadHeight(height); err != nil {
+			return servertypes.ExportedApp{}, err
+		}
+	} else {
+		anApp = app.New(
+			logger,
+			db,
+			traceStore,
+			true,
+			map[int64]bool{},
+			homePath,
+			uint(1),
+			a.encCfg,
+			// this line is used by starport scaffolding # stargate/root/noHeightExportArgument
+			appOpts,
+		)
+	}
+
+	return anApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
