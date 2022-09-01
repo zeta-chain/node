@@ -461,14 +461,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 }
 
 func isScheduled(diff int64, priority bool) bool {
-	d := diff - 1
+	d := diff - 5
 	if d < 0 {
 		return false
 	}
 	if priority {
-		return d%20 == 0
+		return d%10 == 0
 	}
-	if d < 100 && d%20 == 0 {
+	if d < 100 && d%10 == 0 {
 		return true
 	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
