@@ -117,6 +117,10 @@ func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
 }
 
 func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
+	startTime := time.Now()
+	defer func() {
+		b.logger.Info().Msgf("GetAllPendingSend takes %s", time.Since(startTime))
+	}()
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
 	if err != nil {
