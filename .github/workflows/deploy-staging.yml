@@ -10,6 +10,10 @@ on:
   push:
     branches:
       - develop
+      - github-action-refactor
+      - cicd-cosmovisor
+
+
 env:
   ENVIRONMENT_NAME: "STAGING"
   S3_BUCKET_NAME: "zetachain-deployment-files-staging"
@@ -48,7 +52,7 @@ jobs:
           aws-access-key-id:  ${{ env.AWS_ACCESS_KEY_ID }}          
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}          
           aws-region: ${{ env.AWS_REGION }}
-          
+
       - name: upload-files-to-s3
         uses: ./.github/actions/upload-to-s3
         with:
@@ -71,9 +75,22 @@ jobs:
           ECR_REPOSITORY: zetachain
           IMAGE_TAG: latest
 
-      - name: Update Nodes (OLD Method)
-        uses:  ./.github/actions/update-nodes
+      # - name: Update Nodes (OLD Method)
+      #   uses:  ./.github/actions/update-nodes
+      #   with:
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     TAKE_SNAPSHOTS: false
+      #     UPDATE_INDEXER: false
+
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
         with:
+          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          VERSION: "0.0.1"
+          # DESCRIPTION: "description"
           S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          TAKE_SNAPSHOTS: false
-          UPDATE_INDEXER: false
+          # CHECKSUM_ZETACORED: ""
+          # CHECKSUM_ZETACLIENTD: ""
+          CHAIN_ID: "athens-1"
+          API_ENDPOINT: "https://api.staging.zetachain.com"
+
