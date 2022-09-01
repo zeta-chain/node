@@ -1,0 +1,54 @@
+syntax = "proto3";
+package zetachain.zetacore.zetacore;
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
+
+import "gogoproto/gogo.proto";
+
+enum CctxStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  PendingInbound = 0; // some observer sees inbound tx
+  PendingOutbound = 1; // super majority observer see inbound tx
+  OutboundMined = 2;  // the corresponding outbound tx is mined
+  Confirmed = 3; // NOT USED CURRENTLY
+  PendingRevert = 4; // outbound cannot succeed; should revert inbound
+  Reverted =5; // inbound reverted.
+  Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
+}
+
+message InBoundTxParams{
+  string sender = 3;
+  string senderChain = 4;
+  string inBoundTxObservedHash = 10;
+  uint64 inBoundTxObservedHeight = 11;
+  uint64 inBoundTxFinalizedHeight = 12;
+}
+
+message OutBoundTxParams {
+  string receiver = 5;
+  string receiverChain = 6;
+  uint64 broadcaster = 15; // Can be removed
+  string outBoundTxHash = 21;
+  uint64 outBoundTxTSSNonce = 16;
+  uint64 outBoundTxGasLimit = 23;
+  string outBoundTxGasPrice = 17;
+  string outBoundTXReceiveIndex = 19;
+}
+
+message Status {
+  CctxStatus status = 1;
+  string statusMessage = 2;
+  int64  lastUpdateTimestamp = 22;
+}
+
+message CrossChainTx {
+  string creator = 1;
+  string index = 2;
+  string zetaBurnt = 3;
+  string zetaMint = 4;
+  string relayedMessage = 5; // Not used by protocol , just relayed across
+  repeated string signers = 6;
+  Status cctx_status = 7;
+  InBoundTxParams  InBoundTxParams = 8;
+  OutBoundTxParams OutBoundTxParams = 9;
+}

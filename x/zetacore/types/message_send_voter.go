@@ -11,7 +11,7 @@ import (
 var _ sdk.Msg = &MsgSendVoter{}
 
 func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) *MsgSendVoter {
-	return &MsgSendVoter{
+	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
 		SenderChain:   senderChain,
@@ -25,15 +25,15 @@ func NewMsgSendVoter(creator string, sender string, senderChain string, receiver
 	}
 }
 
-func (msg *MsgSendVoter) Route() string {
+func (msg *MsgVoteOnObservedInboundTx) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgSendVoter) Type() string {
+func (msg *MsgVoteOnObservedInboundTx) Type() string {
 	return "SendVoter"
 }
 
-func (msg *MsgSendVoter) GetSigners() []sdk.AccAddress {
+func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -41,12 +41,12 @@ func (msg *MsgSendVoter) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgSendVoter) GetSignBytes() []byte {
+func (msg *MsgVoteOnObservedInboundTx) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgSendVoter) ValidateBasic() error {
+func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
@@ -83,7 +83,7 @@ func (msg *MsgSendVoter) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgSendVoter) Digest() string {
+func (msg *MsgVoteOnObservedInboundTx) Digest() string {
 	m := *msg
 	m.Creator = ""
 	m.InBlockHeight = 0

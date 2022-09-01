@@ -60,7 +60,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Set all the send
 	for _, elem := range genState.SendList {
-		k.SetSend(ctx, *elem)
+		k.SetCrossChainTx(ctx, *elem)
 	}
 
 	// Set all the nodeAccount
@@ -134,7 +134,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all send
-	sendList := k.GetAllSend(ctx)
+	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
 		elem := elem
 		genesis.SendList = append(genesis.SendList, &elem)

@@ -15,7 +15,7 @@ import "zetacore/gas_price.proto";
 import "zetacore/chain_nonces.proto";
 import "zetacore/last_block_height.proto";
 import "zetacore/receive.proto";
-import "zetacore/send.proto";
+import "zetacore/cross_chain_tx.proto";
 import "zetacore/node_account.proto";
 import "zetacore/params.proto";
 
@@ -122,19 +122,6 @@ service Query {
 	rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest) returns (QueryAllLastBlockHeightResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight";
 	}
-
-
-	// Queries a receive by index.
-	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/receive/{index}";
-	}
-
-	// Queries a list of receive items.
-	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/receive";
-	}
-
-
 	// Queries a send by index.
 	rpc Send(QueryGetSendRequest) returns (QueryGetSendResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/send/{index}";
@@ -149,6 +136,19 @@ service Query {
 	rpc SendAllPending(QueryAllSendPendingRequest) returns (QueryAllSendPendingResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/sendPending";
 	}
+
+	// Queries a receive by index.
+	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/receive/{index}";
+	}
+
+	// Queries a list of receive items.
+	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/receive";
+	}
+
+
+
 
 
 	// Queries a nodeAccount by index.
@@ -347,7 +347,7 @@ message QueryGetSendRequest {
 }
 
 message QueryGetSendResponse {
-	Send Send = 1;
+	CrossChainTx CrossChainTx = 1;
 }
 
 message QueryAllSendRequest {
@@ -355,7 +355,7 @@ message QueryAllSendRequest {
 }
 
 message QueryAllSendResponse {
-	repeated Send Send = 1;
+	repeated CrossChainTx CrossChainTx = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -364,7 +364,7 @@ message QueryAllSendPendingRequest {
 }
 
 message QueryAllSendPendingResponse {
-	repeated Send Send = 1;
+	repeated CrossChainTx CrossChainTx = 1;
 }
 
 message QueryGetNodeAccountRequest {
@@ -389,3 +389,4 @@ message QueryLastMetaHeightRequest {
 message QueryLastMetaHeightResponse {
 	uint64 Height = 1;
 }
+

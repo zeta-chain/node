@@ -46,7 +46,7 @@ func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetSend(ctx, req.Index)
+	val, found := k.GetCrossChainTx(ctx, req.Index)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}

@@ -57,7 +57,7 @@ func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 						newGasPrice = targetGasPrice
 					}
 					send.GasPrice = newGasPrice.String()
-					k.SetSend(ctx, send)
+					k.SetCrossChainTx(ctx, send)
 					ctx.EventManager().EmitEvent(
 						sdk.NewEvent(sdk.EventTypeMessage,
 							sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),

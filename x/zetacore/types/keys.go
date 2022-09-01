@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "zetacore"
@@ -76,3 +78,7 @@ const (
 	StoredGameEventRed   = "Red"            // Is it relevant to me?
 	StoredGameEventBlack = "Black"          // Is it relevant to me?
 )
+
+func (cctx CrossChainTx) LogIdentifierForCCTX() string {
+	return fmt.Sprintf("%s-%s-%s", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain)
+}

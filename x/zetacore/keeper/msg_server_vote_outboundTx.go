@@ -23,7 +23,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	}
 
 	index := msg.SendHash
-	send, isFound := k.GetSend(ctx, index)
+	send, isFound := k.GetCrossChainTx(ctx, index)
 	if !isFound {
 		log.Error().Msgf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain))
@@ -133,7 +133,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		send.RecvHash = receive.Index
 		send.OutTxHash = receive.OutTxHash
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-		k.SetSend(ctx, send)
+		k.SetCrossChainTx(ctx, send)
 
 	}
 	k.SetReceive(ctx, receive)

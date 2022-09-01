@@ -3,10 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
@@ -53,21 +51,4 @@ func isDuplicateSigner(creator string, signers []string) bool {
 		}
 	}
 	return false
-}
-
-func hasSuperMajorityValidators(numSigners int, validators []stakingtypes.Validator) bool {
-	numValidValidators := 0
-	for _, v := range validators {
-		if v.IsBonded() {
-			numValidValidators++
-		}
-	}
-	threshold := numValidValidators * 2 / 3
-	if threshold < 2 {
-		threshold = 2
-	}
-	if numValidValidators == 1 {
-		threshold = 1
-	}
-	return numSigners == threshold
 }

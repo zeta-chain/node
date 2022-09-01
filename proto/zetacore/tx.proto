@@ -16,8 +16,8 @@ service Msg {
   rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
-  rpc ReceiveConfirmation(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
-  rpc SendVoter(MsgSendVoter) returns (MsgSendVoterResponse);
+  rpc VoteOnObservedOutboundTx(MsgReceiveConfirmation) returns (MsgReceiveConfirmationResponse);
+  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
 }
 
@@ -105,7 +105,7 @@ message MsgReceiveConfirmation {
 message MsgReceiveConfirmationResponse {
 }
 
-message MsgSendVoter {
+message MsgVoteOnObservedInboundTx {
   string creator = 1;
   string sender = 2;
   string senderChain = 3;
@@ -119,7 +119,7 @@ message MsgSendVoter {
   uint64 gasLimit = 11;
 }
 
-message MsgSendVoterResponse {
+message MsgVoteOnObservedInboundTxResponse {
 }
 
 message MsgSetNodeKeys {

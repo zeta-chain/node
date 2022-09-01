@@ -16,14 +16,27 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 // GetGasPrice returns a gasPrice from its index
 func (k Keeper) GetGasPrice(ctx sdk.Context, index string) (val types.GasPrice, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
 		return val, false
 	}
-
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
+}
+
+func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, index string) (sdk.Uint, bool) {
+	gasPrice, isFound := k.GetGasPrice(ctx, index)
+	if !isFound {
+		return sdk.ZeroUint(), isFound
+	}
+	mi := gasPrice.MedianIndex
+	return sdk.NewUint(gasPrice.Prices[mi]), true
+	//uintPrice := medianPrice)
+	////bugIntPrice, ok := big.NewInt(0).SetString(strconv.FormatUint(medianPrice, 10), 10)
+	////if !ok{
+	////	return sdk.ZeroUint(), ok
+	////}
+	//return uintPrice, true
 }
 
 // RemoveGasPrice removes a gasPrice from the store
