@@ -46,7 +46,7 @@ func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetSend(ctx, req.Index)
+	val, found := k.GetSend(ctx, req.Index, types.SendStatus(req.Status))
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
@@ -58,23 +58,8 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
-	var sends []*types.Send
 	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
-	iterator := sdk.KVStorePrefixIterator(sendStore, []byte{})
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Send
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		// if the status of send is pending, which means Finalized/Revert
-		if val.Status == types.SendStatus_PendingOutbound || val.Status == types.SendStatus_PendingRevert {
-			sends = append(sends, &val)
-		}
-	}
+	sends := k.GetAllPendingOutBoundSend(ctx)
 	sort.SliceStable(sends,
 		func(i, j int) bool {
 			if sends[i].FinalizedMetaHeight == sends[j].FinalizedMetaHeight {

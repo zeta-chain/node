@@ -344,6 +344,7 @@ message QueryAllReceiveResponse {
 }
 message QueryGetSendRequest {
 	string index = 1;
+	int32 status = 2;
 }
 
 message QueryGetSendResponse {

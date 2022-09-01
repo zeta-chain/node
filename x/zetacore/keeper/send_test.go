@@ -2,11 +2,7 @@ package keeper
 
 import (
 	"fmt"
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
@@ -20,27 +16,28 @@ func createNSend(keeper *Keeper, ctx sdk.Context, n int) []types.Send {
 	return items
 }
 
-func TestSendGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 10)
-	for _, item := range items {
-		rst, found := keeper.GetSend(ctx, item.Index)
-		assert.True(t, found)
-		assert.Equal(t, item, rst)
-	}
-}
-func TestSendRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 10)
-	for _, item := range items {
-		keeper.RemoveSend(ctx, item.Index)
-		_, found := keeper.GetSend(ctx, item.Index)
-		assert.False(t, found)
-	}
-}
-
-func TestSendGetAll(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 10)
-	assert.Equal(t, items, keeper.GetAllSend(ctx))
-}
+//
+//func TestSendGet(t *testing.T) {
+//	keeper, ctx := setupKeeper(t)
+//	items := createNSend(keeper, ctx, 10)
+//	for _, item := range items {
+//		rst, found := keeper.GetSend(ctx, item.Index)
+//		assert.True(t, found)
+//		assert.Equal(t, item, rst)
+//	}
+//}
+//func TestSendRemove(t *testing.T) {
+//	keeper, ctx := setupKeeper(t)
+//	items := createNSend(keeper, ctx, 10)
+//	for _, item := range items {
+//		keeper.RemoveSend(ctx, item.Index)
+//		_, found := keeper.GetSend(ctx, item.Index)
+//		assert.False(t, found)
+//	}
+//}
+//
+//func TestSendGetAll(t *testing.T) {
+//	keeper, ctx := setupKeeper(t)
+//	items := createNSend(keeper, ctx, 10)
+//	assert.Equal(t, items, keeper.GetAllSend(ctx))
+//}
