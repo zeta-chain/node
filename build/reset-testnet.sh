@@ -17,7 +17,7 @@ if [ -z "$ADDR" ]; then
   echo "No val key found; generate new val key"
   $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
 fi
-$ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test) 1000000000stake --home ~/.zetacore
+$ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore) 1000000000stake --home ~/.zetacore
 
 
 for NODE in $NODES; do
