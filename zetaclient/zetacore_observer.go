@@ -469,7 +469,7 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%5 == 0
+		return d%10 == 0
 	}
 	if d < 1000 && d%10 == 0 {
 		return true
