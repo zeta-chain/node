@@ -223,7 +223,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s/%d", chain.String(), nonce),
+		Index: fmt.Sprintf("%s-%d", chain.String(), nonce),
 	})
 	if err != nil {
 		return nil, err
