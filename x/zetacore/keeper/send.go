@@ -7,6 +7,18 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
+var (
+	AllStatus = []types.SendStatus{
+		types.SendStatus_PendingInbound,
+		types.SendStatus_PendingOutbound,
+		types.SendStatus_OutboundMined,
+		types.SendStatus_Confirmed,
+		types.SendStatus_PendingRevert,
+		types.SendStatus_Reverted,
+		types.SendStatus_Aborted,
+	}
+)
+
 func (k Keeper) SendMigrateStatus(ctx sdk.Context, send types.Send, oldStatus types.SendStatus) {
 	// Defensive Programming :Remove first set later
 	k.RemoveSend(ctx, send.Index, oldStatus)
@@ -36,6 +48,19 @@ func (k Keeper) GetSend(ctx sdk.Context, index string, status types.SendStatus) 
 
 func (k Keeper) GetSendMultipleStatus(ctx sdk.Context, index string, status []types.SendStatus) (val types.Send, found bool) {
 	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		send := store.Get(types.KeyPrefix(index))
+		if send != nil {
+			k.cdc.MustUnmarshal(send, &val)
+			return val, true
+		}
+	}
+	return val, false
+}
+
+func (k Keeper) GetSendAllStatus(ctx sdk.Context, index string) (val types.Send, found bool) {
+	for _, s := range AllStatus {
 		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 		send := store.Get(types.KeyPrefix(index))
