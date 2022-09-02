@@ -238,7 +238,7 @@ func (co *CoreObserver) startSendScheduler() {
 				logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler sendList updater")
 				continue
 			}
-			if bn%15 == 0 { // roughly every 90s
+			if bn%20 == 0 { // roughly every 120s
 				logger.Info().Msgf("querying pending sends at block %d", bn)
 				sendListLocal, err := co.bridge.GetAllPendingSend()
 				if err != nil {
@@ -275,6 +275,7 @@ func (co *CoreObserver) startSendScheduler() {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sends), chain, sends[0].Nonce, sends[len(sends)-1].Nonce)
 				}
 				numScheduled := 0
+				highPriorityButNotScheduled := []string{}
 				for idx, send := range sends {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
@@ -304,17 +305,20 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-
-					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 40) && outTxMan.IsOutTxActive(outTxID) {
+						highPriorityButNotScheduled = append(highPriorityButNotScheduled, outTxID)
+					}
+					if isScheduled(sinceBlock, idx < 40) && !outTxMan.IsOutTxActive(outTxID) {
 						numScheduled++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 100 { // only look at 100 sends per chain
 						break
 					}
 				}
-				logger.Info().Msgf("schedule chain %s takes %s, num pending tx %d, scheduled %d", chain, time.Since(startTime), len(sends), numScheduled)
+				logger.Info().Msgf("bn %d schedule chain %s takes %s, num pending tx %d, scheduled %d", bn, chain, time.Since(startTime), len(sends), numScheduled)
+				logger.Info().Msgf("bn %d high priority but not scheduled: %v", bn, highPriorityButNotScheduled)
 			}
 			// update last processed block number
 			lastBlockNum = bn

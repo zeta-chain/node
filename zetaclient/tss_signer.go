@@ -252,8 +252,8 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
 			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  20 * time.Second, // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    10 * time.Second,
+			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    20 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
 		preParams, // use pre-generated pre-params if non-nil
