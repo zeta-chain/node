@@ -9,9 +9,6 @@ import (
 
 func (k Keeper) SendMigrateStatus(ctx sdk.Context, send types.Send, oldStatus types.SendStatus) {
 	// Defensive Programming :Remove first set later
-	if oldStatus == send.Status { // old status == new status; do nothing
-		return 
-	}
 	k.RemoveSend(ctx, send.Index, oldStatus)
 	k.SetSend(ctx, send)
 }
