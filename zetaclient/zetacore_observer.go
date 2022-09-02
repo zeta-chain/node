@@ -305,15 +305,15 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 40) && outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 30) && outTxMan.IsOutTxActive(outTxID) {
 						highPriorityButNotScheduled = append(highPriorityButNotScheduled, outTxID)
 					}
-					if isScheduled(sinceBlock, idx < 40) && !outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
 						numScheduled++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
-					if idx > 100 { // only look at 100 sends per chain
+					if idx > 50 { // only look at 100 sends per chain
 						break
 					}
 				}
@@ -473,9 +473,9 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%10 == 0
+		return d%15 == 0
 	}
-	if d < 1000 && d%10 == 0 {
+	if d < 1000 && d%15 == 0 {
 		return true
 	} else if d >= 1000 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
