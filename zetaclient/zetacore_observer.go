@@ -231,7 +231,8 @@ func (co *CoreObserver) startSendScheduler() {
 	var sendList []*types.Send
 	var sendListLock sync.Mutex
 	go func() { // this updates sendList periodically
-		for {
+		ticker := time.NewTicker(1 * time.Second)
+		for range ticker.C {
 			bn, err := co.bridge.GetZetaBlockHeight()
 			if err != nil {
 				logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler sendList updater")
@@ -258,19 +259,20 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
-			if bn%10 == 0 {
-				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
-			}
+			logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 
+			startTime := time.Now()
 			sendListLock.Lock()
 			if len(sendList) > 0 && bn%5 == 0 {
 				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 			sendListLock.Unlock()
+			logger.Info().Msgf("splitAndSortSendListByChain takes %s", time.Since(startTime))
 
 			// schedule sends
 			for chain, sends := range sendMap {
+				startTime := time.Now()
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
@@ -312,6 +314,7 @@ func (co *CoreObserver) startSendScheduler() {
 						break
 					}
 				}
+				logger.Info().Msgf("schedule chain %s takes %s, num pending tx %d", chain, time.Since(startTime), len(sends))
 			}
 			// update last processed block number
 			lastBlockNum = bn
