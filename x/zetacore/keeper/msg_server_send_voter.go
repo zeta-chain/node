@@ -55,6 +55,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		}
 		k.EmitEventSendCreated(ctx, &send)
 	}
+	oldStatus := send.Status
 
 	if hasSuperMajorityValidators(len(send.Signers), validators) {
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
@@ -93,7 +94,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	}
 
 EPILOGUE:
-	k.SetSend(ctx, send)
+	k.SendMigrateStatus(ctx, send, oldStatus)
 	return &types.MsgSendVoterResponse{}, nil
 }
 

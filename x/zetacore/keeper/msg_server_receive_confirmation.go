@@ -73,8 +73,10 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to parse ZetaMint: %s", send.ZetaMint))
 		}
 
+		var oldstatus, newstatus types.SendStatus
+
 		if receive.Status == common.ReceiveStatus_Success {
-			oldstatus := send.Status.String()
+			oldstatus = send.Status
 			if send.Status == types.SendStatus_PendingRevert {
 				send.Status = types.SendStatus_Reverted
 			} else if send.Status == types.SendStatus_PendingOutbound {
@@ -86,7 +88,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
 			}
-			newstatus := send.Status.String()
+			newstatus = send.Status
 			event := sdk.NewEvent(sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 				sdk.NewAttribute(types.SubTypeKey, string(types.OutboundTxSuccessful)),
@@ -94,12 +96,12 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 				sdk.NewAttribute(types.ZetaMint, msg.MMint),
 				sdk.NewAttribute(types.Chain, msg.Chain),
-				sdk.NewAttribute(types.OldStatus, oldstatus),
-				sdk.NewAttribute(types.NewStatus, newstatus),
+				sdk.NewAttribute(types.OldStatus, oldstatus.String()),
+				sdk.NewAttribute(types.NewStatus, newstatus.String()),
 			)
 			ctx.EventManager().EmitEvent(event)
 		} else if receive.Status == common.ReceiveStatus_Failed {
-			oldstatus := send.Status.String()
+			oldstatus = send.Status
 			if send.Status == types.SendStatus_PendingOutbound {
 				send.Status = types.SendStatus_PendingRevert
 				send.StatusMessage = fmt.Sprintf("destination tx %s failed", msg.OutTxHash)
@@ -109,7 +111,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.Status = types.SendStatus_Aborted
 				send.StatusMessage = fmt.Sprintf("revert tx %s failed", msg.OutTxHash)
 			}
-			newstatus := send.Status.String()
+			newstatus = send.Status
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
@@ -118,8 +120,8 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 					sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
 					sdk.NewAttribute(types.ZetaMint, send.ZetaMint),
 					sdk.NewAttribute(types.Chain, msg.Chain),
-					sdk.NewAttribute(types.OldStatus, oldstatus),
-					sdk.NewAttribute(types.NewStatus, newstatus),
+					sdk.NewAttribute(types.OldStatus, oldstatus.String()),
+					sdk.NewAttribute(types.NewStatus, newstatus.String()),
 					sdk.NewAttribute(types.StatusMessage, send.StatusMessage),
 				),
 			)
@@ -133,7 +135,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		send.RecvHash = receive.Index
 		send.OutTxHash = receive.OutTxHash
 		send.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-		k.SetSend(ctx, send)
+		k.SendMigrateStatus(ctx, send, oldstatus)
 
 	}
 	k.SetReceive(ctx, receive)

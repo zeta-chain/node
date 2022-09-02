@@ -59,7 +59,7 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	sends := k.GetAllPendingOutBoundSend(ctx)
+	sends := k.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
 	sort.SliceStable(sends,
 		func(i, j int) bool {
 			if sends[i].FinalizedMetaHeight == sends[j].FinalizedMetaHeight {

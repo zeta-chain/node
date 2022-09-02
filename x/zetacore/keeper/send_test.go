@@ -73,9 +73,18 @@ func TestSends(t *testing.T) {
 			sends = append(sends, createNSendWithStatus(keeper, ctx, tt.Aborted, types.SendStatus_Aborted)...)
 			sends = append(sends, createNSendWithStatus(keeper, ctx, tt.OutboundMined, types.SendStatus_OutboundMined)...)
 			sends = append(sends, createNSendWithStatus(keeper, ctx, tt.Reverted, types.SendStatus_Reverted)...)
-			assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllPendingOutBoundSend(ctx)))
-			assert.Equal(t, tt.PendingInbound, len(keeper.GetAllPendingInBoundSend(ctx)))
-			assert.Equal(t, len(sends), len(keeper.GetAllSend(ctx)))
+			assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingOutbound})))
+			assert.Equal(t, tt.PendingInbound, len(keeper.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingInbound})))
+			assert.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})))
+			assert.Equal(t, len(sends), len(keeper.GetAllSend(ctx, []types.SendStatus{
+				types.SendStatus_PendingRevert,
+				types.SendStatus_PendingOutbound,
+				types.SendStatus_Aborted,
+				types.SendStatus_Confirmed,
+				types.SendStatus_OutboundMined,
+				types.SendStatus_PendingInbound,
+				types.SendStatus_Reverted,
+			})))
 			for _, s := range sends {
 				send, found := keeper.GetSend(ctx, s.Index, s.Status)
 				assert.True(t, found)

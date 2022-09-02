@@ -7,6 +7,12 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
+func (k Keeper) SendMigrateStatus(ctx sdk.Context, send types.Send, oldStatus types.SendStatus) {
+	// Defensive Programming :Remove first set later
+	k.RemoveSend(ctx, send.Index, oldStatus)
+	k.SetSend(ctx, send)
+}
+
 // SetSend set a specific send in the store from its index
 func (k Keeper) SetSend(ctx sdk.Context, send types.Send) {
 	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, send.Status))
@@ -48,52 +54,20 @@ func (k Keeper) RemoveSend(ctx sdk.Context, index string, status types.SendStatu
 	store.Delete(types.KeyPrefix(index))
 }
 
-// GetAllSend returns all send
-func (k Keeper) GetAllSend(ctx sdk.Context) []types.Send {
-	var list []types.Send
-	for i := 0; i <= 6; i++ {
-		list = append(list, k.GetAllSendWithStatus(ctx, types.SendStatus(i))...)
+func (k Keeper) GetAllSend(ctx sdk.Context, status []types.SendStatus) []*types.Send {
+	var sends []*types.Send
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.Send
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			sends = append(sends, &val)
+		}
 	}
-	return list
-}
-
-func (k Keeper) GetAllSendWithStatus(ctx sdk.Context, status types.SendStatus) (list []types.Send) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Send
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
-	}
-	return
-}
-
-func (k Keeper) GetAllPendingOutBoundSend(ctx sdk.Context) (list []*types.Send) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, types.SendStatus_PendingOutbound))
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Send
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, &val)
-	}
-	return
-}
-
-func (k Keeper) GetAllPendingInBoundSend(ctx sdk.Context) (list []*types.Send) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, types.SendStatus_PendingInbound))
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Send
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, &val)
-	}
-	return
+	return sends
 }
 
 //Deprecated:GetSendLegacy

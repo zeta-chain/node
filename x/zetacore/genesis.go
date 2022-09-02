@@ -134,10 +134,18 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all send
-	sendList := k.GetAllSend(ctx)
+	sendList := k.GetAllSend(ctx, []types.SendStatus{
+		types.SendStatus_PendingRevert,
+		types.SendStatus_PendingOutbound,
+		types.SendStatus_Aborted,
+		types.SendStatus_Confirmed,
+		types.SendStatus_OutboundMined,
+		types.SendStatus_PendingInbound,
+		types.SendStatus_Reverted,
+	})
 	for _, elem := range sendList {
 		elem := elem
-		genesis.SendList = append(genesis.SendList, &elem)
+		genesis.SendList = append(genesis.SendList, elem)
 	}
 
 	// Get all nodeAccount
