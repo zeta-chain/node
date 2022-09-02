@@ -23,7 +23,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 	}
 
 	index := msg.SendHash
-	send, isFound := k.GetSend(ctx, index, types.SendStatus_PendingOutbound)
+	send, isFound := k.GetSendMultipleStatus(ctx, index, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
 	if !isFound {
 		log.Error().Msgf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", index, msg.Chain))

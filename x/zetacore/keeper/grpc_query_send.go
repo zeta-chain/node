@@ -60,7 +60,7 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	sends := k.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
-	sort.SliceStable(sends,
+	sort.Slice(sends,
 		func(i, j int) bool {
 			if sends[i].FinalizedMetaHeight == sends[j].FinalizedMetaHeight {
 				return sends[i].Nonce < sends[j].Nonce
