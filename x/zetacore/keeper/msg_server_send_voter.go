@@ -23,7 +23,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 	}
 
 	index := msg.Digest()
-	send, isFound := k.GetSend(ctx, index, types.SendStatus_PendingInbound)
+	send, isFound := k.GetSendMultipleStatus(ctx, index, []types.SendStatus{types.SendStatus_PendingInbound, types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
+
 
 	if isDuplicateSigner(msg.Creator, send.Signers) {
 		return nil, sdkerrors.Wrap(types.ErrDuplicateMsg, fmt.Sprintf("signer %s double signing!!", msg.Creator))
