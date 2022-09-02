@@ -261,21 +261,20 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 
-			startTime := time.Now()
 			sendListLock.Lock()
 			if len(sendList) > 0 && bn%5 == 0 {
 				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 			sendListLock.Unlock()
-			logger.Info().Msgf("splitAndSortSendListByChain takes %s", time.Since(startTime))
 
 			// schedule sends
 			for chain, sends := range sendMap {
 				startTime := time.Now()
 				if bn%10 == 0 {
-					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sends), chain, sends[0].Nonce, sends[len(sends)-1].Nonce)
 				}
+				numScheduled := 0
 				for idx, send := range sends {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
@@ -307,6 +306,7 @@ func (co *CoreObserver) startSendScheduler() {
 					// otherwise, only the first one has priority
 
 					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+						numScheduled++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
@@ -314,7 +314,7 @@ func (co *CoreObserver) startSendScheduler() {
 						break
 					}
 				}
-				logger.Info().Msgf("schedule chain %s takes %s, num pending tx %d", chain, time.Since(startTime), len(sends))
+				logger.Info().Msgf("schedule chain %s takes %s, num pending tx %d, scheduled %d", chain, time.Since(startTime), len(sends), numScheduled)
 			}
 			// update last processed block number
 			lastBlockNum = bn
@@ -469,7 +469,7 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%10 == 0
+		return d%5 == 0
 	}
 	if d < 1000 && d%10 == 0 {
 		return true
