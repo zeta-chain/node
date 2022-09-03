@@ -236,16 +236,12 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
-			if bn%10 == 0 {
-				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
-			}
+			timeStart := time.Now()
 			sendList, err := co.bridge.GetAllPendingSend()
+			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
-			}
-			if len(sendList) > 0 && bn%5 == 0 {
-				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
