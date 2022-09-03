@@ -60,6 +60,14 @@ func (k Keeper) GetSendMultipleStatus(ctx sdk.Context, index string, status []ty
 }
 
 func (k Keeper) GetSendAllStatus(ctx sdk.Context, index string) (val types.Send, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+
+	b := store.Get(types.KeyPrefix(index))
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &val)
+		return val, true
+	}
+
 	for _, s := range AllStatus {
 		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
