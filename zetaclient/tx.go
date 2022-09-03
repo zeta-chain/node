@@ -52,6 +52,17 @@ func (b *ZetaCoreBridge) AddTxHashToWatchlist(chain string, nonce uint64, txHash
 	return zetaTxHash, nil
 }
 
+func (b *ZetaCoreBridge) RemoveTxHashFromWatchlist(chain string, nonce uint64) (string, error) {
+	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
+	msg := types.NewMsgRemoveFromWatchList(signerAddress, chain, nonce)
+	zetaTxHash, err := b.Broadcast(msg)
+	if err != nil {
+		b.logger.Error().Err(err).Msg("RemoveTxHashFromWatchlist broadcast fail")
+		return "", err
+	}
+	return zetaTxHash, nil
+}
+
 func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)

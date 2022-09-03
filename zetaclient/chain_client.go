@@ -168,6 +168,7 @@ func (ob *ChainObserver) Start() {
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
+	go ob.trackerCleaner()
 }
 
 func (ob *ChainObserver) Stop() {
@@ -356,4 +357,42 @@ func (ob *ChainObserver) setLastBlock(block uint64) {
 
 func (ob *ChainObserver) GetLastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
+}
+
+func (ob *ChainObserver) trackerCleaner() {
+	ticker := time.NewTicker(10 * time.Minute)
+	for range ticker.C {
+		trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("trackerCleaner: GetAllOutTxTrackerByChain")
+			continue
+		}
+		pendingSends, err := ob.zetaClient.GetAllPendingSend()
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("trackerCleaner: GetAllPendingSend")
+		}
+		pendingOutIDMap := make(map[string]bool)
+		for _, send := range pendingSends {
+			chain := GetTargetChain(send)
+			outTxID := fmt.Sprintf("%s-%d", chain, send.Nonce)
+			pendingOutIDMap[outTxID] = true
+		}
+		ob.logger.Info().Msgf("trackerCleaner: pendingOutIDMap len %d", len(pendingOutIDMap))
+		for _, tracker := range trackers {
+			outTxID := fmt.Sprintf("%s-%s", tracker.Chain, tracker.Nonce)
+			if _, ok := pendingOutIDMap[outTxID]; !ok {
+				nonce, err := strconv.Atoi(tracker.Nonce)
+				if err != nil {
+					ob.logger.Error().Err(err).Msg("trackerCleaner: strconv.Atoi")
+					continue
+				}
+				zetaHash, err := ob.zetaClient.RemoveTxHashFromWatchlist(tracker.Chain, uint64(nonce))
+				if err != nil {
+					ob.logger.Error().Err(err).Msgf("trackerCleaner: DeleteOutTxTracker %s", outTxID)
+				} else {
+					ob.logger.Info().Msgf("trackerCleaner: DeleteOutTxTracker %s, zetaHash %s", outTxID, zetaHash)
+				}
+			}
+		}
+	}
 }

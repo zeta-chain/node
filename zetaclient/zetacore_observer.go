@@ -299,7 +299,7 @@ func (co *CoreObserver) startSendScheduler() {
 						logger.Info().Msgf("send outTx already included; do not schedule")
 						continue
 					}
-					chain := getTargetChain(send)
+					chain := GetTargetChain(send)
 					outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
@@ -328,7 +328,7 @@ func (co *CoreObserver) startSendScheduler() {
 }
 
 func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outTxMan *OutTxProcessorManager) {
-	chain := getTargetChain(send)
+	chain := GetTargetChain(send)
 	outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
 	logger := co.logger.With().
@@ -486,7 +486,7 @@ func isScheduled(diff int64, priority bool) bool {
 func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Send {
 	sendMap := make(map[string][]*types.Send)
 	for _, send := range sendList {
-		targetChain := getTargetChain(send)
+		targetChain := GetTargetChain(send)
 		if targetChain == "" {
 			continue
 		}
@@ -504,7 +504,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 	return sendMap
 }
 
-func getTargetChain(send *types.Send) string {
+func GetTargetChain(send *types.Send) string {
 	if send.Status == types.SendStatus_PendingOutbound {
 		return send.ReceiverChain
 	} else if send.Status == types.SendStatus_PendingRevert {
@@ -514,7 +514,7 @@ func getTargetChain(send *types.Send) string {
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, error) {
-	chainStr := getTargetChain(send)
+	chainStr := GetTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {
 		return nil, err
