@@ -244,6 +244,7 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
+			numScheduledSends := 0
 			// schedule sends
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
@@ -280,6 +281,7 @@ func (co *CoreObserver) startSendScheduler() {
 					// otherwise, only the first one has priority
 
 					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+						numScheduledSends++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
@@ -290,6 +292,7 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			// update last processed block number
 			lastBlockNum = bn
+			logger.Info().Dur("elapsed", time.Since(timeStart)).Int("numScheduledSends", numScheduledSends).Msgf("SendScheduler")
 		}
 
 	}
