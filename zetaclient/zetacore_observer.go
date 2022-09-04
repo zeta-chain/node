@@ -245,12 +245,15 @@ func (co *CoreObserver) startSendScheduler() {
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			numScheduledSends := 0
+			numSendsToLook := 0
 			// schedule sends
+		SCHEDULE:
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
 				for idx, send := range sendList {
+					numSendsToLook++
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
 						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
@@ -289,8 +292,11 @@ func (co *CoreObserver) startSendScheduler() {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 100 { // only look at 50 sends per chain
 						break
+					}
+					if numSendsToLook > 150 {
+						break SCHEDULE
 					}
 				}
 			}
