@@ -1,16 +1,16 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
 )
 
-var _ sdk.Msg = &MsgSendVoter{}
+var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) *MsgSendVoter {
+func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
@@ -59,19 +59,13 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
 	}
-
-	// TODO: Verify the following logic: should validate receiverChain in msg handler rather than denying it here.
-	//receiverChain, err := common.ParseChain(msg.ReceiverChain)
-	//if err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid receiver chain (%s): %s", err, msg.ReceiverChain)
-	//}
-	//_, err = common.NewAddress(msg.Receiver, receiverChain)
-	//if err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid receiver address (%s): %s", err, msg.Receiver)
-	//}
-
-	if _, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10); !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot convert mburnt to amount %s: %s", err, msg.ZetaBurnt)
+	recvChain, err := common.ParseChain(msg.ReceiverChain)
+	if err != nil {
+		return fmt.Errorf("cannot parse receiver chain %s", msg.ReceiverChain)
+	}
+	_, err = common.NewAddress(msg.Receiver, recvChain)
+	if err != nil {
+		return fmt.Errorf("cannot parse receiver addr %s", msg.Receiver)
 	}
 
 	// TODO: should parameterize the hardcoded max len

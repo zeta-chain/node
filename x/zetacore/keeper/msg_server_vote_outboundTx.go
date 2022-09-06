@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgReceiveConfirmation) (*types.MsgReceiveConfirmationResponse, error) {
+func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgReceiveConfirmation) (*types.MsgReceiveConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	log.Info().Msgf("ReceiveConfirmation: %s", msg.String())
 
@@ -74,11 +74,11 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 
 		if receive.Status == common.ReceiveStatus_Success {
-			oldstatus := send.Status.String()
+			oldstatus := send.CctxStatus.Status.String()
 			if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-				send.CctxStatus.Status = types.SendStatus_Reverted
+				send.CctxStatus.Status = types.CctxStatus_Reverted
 			} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-				send.CctxStatus.Status = types.SendStatus_OutboundMined
+				send.CctxStatus.Status = types.CctxStatus_OutboundMined
 			}
 
 			err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))

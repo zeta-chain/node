@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"sort"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -17,14 +15,14 @@ func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*typ
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var sends []*types.Send
+	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
 
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
-		var send types.Send
+		var send types.CrossChainTx
 		if err := k.cdc.Unmarshal(value, &send); err != nil {
 			return err
 		}
@@ -37,7 +35,7 @@ func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*typ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllSendResponse{Send: sends, Pagination: pageRes}, nil
+	return &types.QueryAllSendResponse{CrossChainTx: sends, Pagination: pageRes}, nil
 }
 
 func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.QueryGetSendResponse, error) {
@@ -51,7 +49,7 @@ func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
-	return &types.QueryGetSendResponse{Send: &val}, nil
+	return &types.QueryGetSendResponse{CrossChainTx: &val}, nil
 }
 
 func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPendingRequest) (*types.QueryAllSendPendingResponse, error) {
@@ -59,7 +57,7 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var sends []*types.Send
+	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
@@ -68,20 +66,13 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var val types.Send
+		var val types.CrossChainTx
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		// if the status of send is pending, which means Finalized/Revert
-		if val.Status == types.SendStatus_PendingOutbound || val.Status == types.SendStatus_PendingRevert {
+		if val.CctxStatus.Status == types.CctxStatus_PendingOutbound || val.CctxStatus.Status == types.CctxStatus_PendingRevert {
 			sends = append(sends, &val)
 		}
 	}
-	sort.SliceStable(sends,
-		func(i, j int) bool {
-			if sends[i].FinalizedMetaHeight == sends[j].FinalizedMetaHeight {
-				return sends[i].Nonce < sends[j].Nonce
-			}
-			return sends[i].FinalizedMetaHeight < sends[j].FinalizedMetaHeight
-		})
 
-	return &types.QueryAllSendPendingResponse{Send: sends}, nil
+	return &types.QueryAllSendPendingResponse{CrossChainTx: sends}, nil
 }

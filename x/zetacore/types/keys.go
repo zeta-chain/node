@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 const (
 	// ModuleName defines the module name
@@ -17,7 +20,13 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
+
+	ProtocolFee = 1
 )
+
+func GetProtocolFee() sdk.Uint {
+	return sdk.NewUint(ProtocolFee)
+}
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
@@ -35,6 +44,8 @@ const (
 	LastBlockHeightKey          = "LastBlockHeight-value-"
 	ChainNoncesKey              = "ChainNonces-value-"
 	GasPriceKey                 = "GasPrice-value-"
+	SupportedChainsKey          = "SupportedChains-value-"
+	AllSupportedChainsKey       = "AllSupportedChains-value-"
 	GasBalanceKey               = "GasBalance-value-"
 	TxListKey                   = "TxList-value-"
 	InTxKey                     = "InTx-value-"

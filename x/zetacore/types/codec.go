@@ -16,7 +16,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "zetacore/GasPriceVoter", nil)
 	cdc.RegisterConcrete(&MsgNonceVoter{}, "zetacore/NonceVoter", nil)
 	cdc.RegisterConcrete(&MsgReceiveConfirmation{}, "zetacore/ReceiveConfirmation", nil)
-	cdc.RegisterConcrete(&MsgSendVoter{}, "zetacore/SendVoter", nil)
+	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "zetacore/SendVoter", nil)
 	cdc.RegisterConcrete(&MsgSetNodeKeys{}, "zetacore/SetNodeKeys", nil)
 
 }
@@ -47,7 +47,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgReceiveConfirmation{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgSendVoter{},
+		&MsgVoteOnObservedInboundTx{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetNodeKeys{},

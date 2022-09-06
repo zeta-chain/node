@@ -36,9 +36,9 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("chainNonce vote msg does not match state: %v vs %v", msg, chainNonce))
 	}
 
-	if hasSuperMajorityValidators(len(chainNonce.Signers), validators) {
-		chainNonce.FinalizedHeight = uint64(ctx.BlockHeader().Height)
-	}
+	//if hasSuperMajorityValidators(len(chainNonce.Signers), validators) {
+	//	chainNonce.FinalizedHeight = uint64(ctx.BlockHeader().Height)
+	//}
 
 	k.SetChainNonces(ctx, chainNonce)
 	return &types.MsgNonceVoterResponse{}, nil

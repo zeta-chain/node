@@ -23,8 +23,8 @@ func DefaultGenesis() *GenesisState {
 		ChainNoncesList:     []*ChainNonces{},
 		LastBlockHeightList: []*LastBlockHeight{},
 		ReceiveList:         []*Receive{},
-		SendList:            []*Send{},
-		NodeAccountList:     []*NodeAccount{},
+		//CCTX:            []*Send{},
+		NodeAccountList: []*NodeAccount{},
 	}
 }
 
@@ -118,14 +118,14 @@ func (gs GenesisState) Validate() error {
 		receiveIndexMap[elem.Index] = true
 	}
 	// Check for duplicated index in send
-	sendIndexMap := make(map[string]bool)
+	//sendIndexMap := make(map[string]bool)
 
-	for _, elem := range gs.SendList {
-		if _, ok := sendIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for send")
-		}
-		sendIndexMap[elem.Index] = true
-	}
+	//for _, elem := range gs.SendList {
+	//	if _, ok := sendIndexMap[elem.Index]; ok {
+	//		return fmt.Errorf("duplicated index for send")
+	//	}
+	//	sendIndexMap[elem.Index] = true
+	//}
 
 	// Check for duplicated index in nodeAccount
 	nodeAccountIndexMap := make(map[string]bool)

@@ -26,12 +26,12 @@ func TestSendQuerySingle(t *testing.T) {
 		{
 			desc:     "First",
 			request:  &types.QueryGetSendRequest{Index: msgs[0].Index},
-			response: &types.QueryGetSendResponse{Send: &msgs[0]},
+			response: &types.QueryGetSendResponse{CrossChainTx: &msgs[0]},
 		},
 		{
 			desc:     "Second",
 			request:  &types.QueryGetSendRequest{Index: msgs[1].Index},
-			response: &types.QueryGetSendResponse{Send: &msgs[1]},
+			response: &types.QueryGetSendResponse{CrossChainTx: &msgs[1]},
 		},
 		{
 			desc:    "KeyNotFound",
@@ -76,7 +76,7 @@ func TestSendQueryPaginated(t *testing.T) {
 			resp, err := keeper.SendAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.Send[j-i])
+				assert.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
 			}
 		}
 	})
@@ -87,7 +87,7 @@ func TestSendQueryPaginated(t *testing.T) {
 			resp, err := keeper.SendAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.Send[j-i])
+				assert.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
