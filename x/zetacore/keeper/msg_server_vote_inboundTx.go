@@ -72,20 +72,23 @@ func (k msgServer) updateCctx(ctx sdk.Context, receiveChain string, cctx *types.
 	}
 	medianRate := rate.ZetaConversionRates[rate.MedianIndex]
 	uintmedianRate := sdk.NewUintFromString(medianRate)
-
+	// Calculate Gas FEE
 	gasFeeInZeta := CalculateFee(medianGasPrice, gasLimit, uintmedianRate)
 
-	// Check parse for Uint zetaBurntInt in validate Basic
 	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
-	zetaBurnt := sdk.NewUintFromString(cctx.ZetaBurnt)
+
+	// Set ZetaBurnt and ZetaMint
+	zetaBurnt := cctx.ZetaBurnt
 	if gasFeeInZeta.GT(zetaBurnt) {
 		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than mBurnt (%s) | Identifiers : %s ", gasFeeInZeta, zetaBurnt, cctx.LogIdentifierForCCTX()))
 	}
-	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta).String()
+	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta)
 	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {
 		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", receiveChain, cctx.LogIdentifierForCCTX()))
 	}
+
+	// SET nonce
 	cctx.OutBoundTxParams.OutBoundTxTSSNonce = nonce.Nonce
 	nonce.Nonce++
 	k.SetChainNonces(ctx, nonce)
@@ -118,8 +121,8 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, cctx *types.CrossChai
 			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InBoundTxParams.InBoundTxObservedHeight)),
 			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
-			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt),
-			sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
+			sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint.String()),
 			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
 			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
 			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
@@ -169,10 +172,10 @@ func (k msgServer) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedIn
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,
 		Index:            index,
-		ZetaBurnt:        msg.ZetaBurnt,
-		ZetaMint:         "",
+		ZetaBurnt:        sdk.NewUintFromString(msg.ZetaBurnt),
+		ZetaMint:         sdk.Uint{},
 		RelayedMessage:   msg.Message,
-		Signers:          []string{msg.Creator},
+		Signers:          []string{},
 		CctxStatus:       status,
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
@@ -190,7 +193,7 @@ func (k msgServer) EmitEventCCTXCreated(ctx sdk.Context, cctx *types.CrossChainT
 			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
 			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
-			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
 			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
 			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),

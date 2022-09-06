@@ -1,9 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.zetacore;
-
-option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
-
 import "gogoproto/gogo.proto";
+option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 enum CctxStatus {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -17,35 +15,43 @@ enum CctxStatus {
 }
 
 message InBoundTxParams{
-  string sender = 3;
-  string senderChain = 4;
-  string inBoundTxObservedHash = 10;
-  uint64 inBoundTxObservedHeight = 11;
-  uint64 inBoundTxFinalizedHeight = 12;
+  string sender = 1;
+  string senderChain = 2;
+  string inBoundTxObservedHash = 3;
+  uint64 inBoundTxObservedHeight = 4;
+  uint64 inBoundTxFinalizedHeight = 5;
 }
 
 message OutBoundTxParams {
-  string receiver = 5;
-  string receiverChain = 6;
-  uint64 broadcaster = 15; // Can be removed
-  string outBoundTxHash = 21;
-  uint64 outBoundTxTSSNonce = 16;
-  uint64 outBoundTxGasLimit = 23;
-  string outBoundTxGasPrice = 17;
-  string outBoundTXReceiveIndex = 19;
+  string receiver = 1;
+  string receiverChain = 2;
+  uint64 broadcaster = 3; // Can be removed
+  string outBoundTxHash = 4;
+  uint64 outBoundTxTSSNonce = 5;
+  uint64 outBoundTxGasLimit = 6;
+  string outBoundTxGasPrice = 7;
+  string outBoundTXReceiveIndex = 8;
 }
 
 message Status {
   CctxStatus status = 1;
   string statusMessage = 2;
-  int64  lastUpdateTimestamp = 22;
+  int64  lastUpdateTimestamp = 3;
 }
 
 message CrossChainTx {
   string creator = 1;
   string index = 2;
-  string zetaBurnt = 3;
-  string zetaMint = 4;
+  string zetaBurnt = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"zetaBurnt\""
+  ];
+  string zetaMint = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"zetaMint\""
+  ];
   string relayedMessage = 5; // Not used by protocol , just relayed across
   repeated string signers = 6;
   Status cctx_status = 7;

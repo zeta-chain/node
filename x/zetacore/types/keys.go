@@ -40,6 +40,7 @@ const (
 	TxoutCountKey               = "Txout-count-"
 	TxoutConfirmationKey        = "TxoutConfirmation-value-"
 	SendKey                     = "Send-value-"
+	VoteCounterKey              = "VoteCounter-value-"
 	ReceiveKey                  = "Receive-value-"
 	LastBlockHeightKey          = "LastBlockHeight-value-"
 	ChainNoncesKey              = "ChainNonces-value-"

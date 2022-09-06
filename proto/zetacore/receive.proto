@@ -12,7 +12,7 @@ message Receive {
   string sendHash = 3; 
   string outTxHash = 4; 
   uint64 outBlockHeight = 5;
-  uint64 finalizedMetaHeight = 6;
+  uint64 finalizedZetaHeight = 6;
   repeated string signers = 7;
   common.ReceiveStatus status = 8;
   string chain = 9;

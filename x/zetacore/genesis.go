@@ -59,7 +59,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the send
-	for _, elem := range genState.SendList {
+	for _, elem := range genState.CrossChainTxs {
 		k.SetCrossChainTx(ctx, *elem)
 	}
 
@@ -137,7 +137,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
 		elem := elem
-		genesis.SendList = append(genesis.SendList, &elem)
+		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &elem)
 	}
 
 	// Get all nodeAccount
@@ -146,8 +146,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		elem := elem
 		genesis.NodeAccountList = append(genesis.NodeAccountList, &elem)
 	}
-
-	// this line is used by starport scaffolding # ibc/genesis/export
-
 	return genesis
 }
+
+// TODO : Verify genesis import and export

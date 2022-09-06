@@ -40,12 +40,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.NonceVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgReceiveConfirmation:
-			res, err := msgServer.ReceiveConfirmation(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgVoteOnObservedOutboundTx:
+			res, err := msgServer.VoteOnObservedOutboundTx(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgSendVoter:
-			res, err := msgServer.SendVoter(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgVoteOnObservedInboundTx:
+			res, err := msgServer.VoteOnObservedInboundTx(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgSetNodeKeys:
