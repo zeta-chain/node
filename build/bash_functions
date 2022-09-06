@@ -1,6 +1,14 @@
 run_ssm_cmds_nodes () {
     COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:ZetaChainValidator,Values=true \
+    --targets Key=tag:Role,Values=validator \
+    --document-name "AWS-RunShellScript" \
+    --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
+    echo "$COMMAND_ID"
+}
+
+run_ssm_cmds_api_nodes () {
+    COMMAND_ID=$(aws ssm send-command \
+    --targets Key=tag:Role,Values=api \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"

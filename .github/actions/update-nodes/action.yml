@@ -66,7 +66,7 @@ runs:
           source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd && systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop zetaclientd && systemctl stop zetacored")
+          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop zetacored")
           check_cmd_status $COMMAND_ID
 
         shell: bash
@@ -99,7 +99,7 @@ runs:
           source ${{ github.action_path }}/functions
           COMMAND_ID=$(run_ssm_cmds_validators "systemctl restart zetaclientd && systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl restart zetaclientd, systemctl restart zetacored")
+          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl restart zetacored")
           check_cmd_status $COMMAND_ID
         shell: bash
 
