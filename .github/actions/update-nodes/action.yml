@@ -19,96 +19,96 @@ inputs:
 runs:
   using: "composite"
   steps:
-      - name: Set ENV Variables"
-        run: |
-          echo "Running update-nodes Action"
-          echo "UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}" >> $GITHUB_ENV
-          echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
+  - name: Set ENV Variables"
+    run: |
+      echo "Running update-nodes Action"
+      echo "UPDATE_INDEXER=${{ inputs.UPDATE_INDEXER }}" >> $GITHUB_ENV
+      echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
 
-        shell: bash 
-      - name: Get Deployment ID
-        # TODO - Could be removed and the latest-deployment-id passed through via GitHub Actions as $RELEASE_NAME instead 
-        run: |
-          echo "Getting latest deployment id"
-          GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
-          echo "GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
-          echo "$GITHUB_REF_NAME"
-        shell: bash
+    shell: bash
+  - name: Get Deployment ID
+    # TODO - Could be removed and the latest-deployment-id passed through via GitHub Actions as $RELEASE_NAME instead 
+    run: |
+      echo "Getting latest deployment id"
+      GITHUB_REF_NAME=$(aws ssm get-parameter --name '/deployments/latest-deployment-id' | jq .Parameter.Value -r)
+      echo "GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}" >> $GITHUB_ENV
+      echo "$GITHUB_REF_NAME"
+    shell: bash
 
-      - name: Snapshot All Running ZetaChain Instances
-        if: ${{ inputs.TAKE_SNAPSHOTS == 'true' }}
-        run: |
-          echo "Taking Snapshots of ZetaChain Instances"
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag-key,Values=Chain" "Name=tag-value,Values=zetachain" "Name=instance-state-name,Values=running"| jq -r '[.Reservations | .[] | .Instances | .[]] | .[] | .InstanceId')
-          while IFS= read -r INSTANCE_ID; do
-              echo "$INSTANCE_ID"
-              aws ec2 create-snapshots \
-                --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
-                --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
-                --copy-tags-from-source "volume" > jq
-          done <<< "$INSTANCE_IDS"
-          sleep 2
-        shell: bash
+  - name: Snapshot All Running ZetaChain Instances
+    if: ${{ inputs.TAKE_SNAPSHOTS == 'true' }}
+    run: |
+      echo "Taking Snapshots of ZetaChain Instances"
+      INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Chain,Values=zetachain" "Name=tag:Role,Values=validator" "Name=instance-state-name,Values=running"| jq -r '.Reservations[].Instances[].InstanceId')
+      while IFS= read -r INSTANCE_ID; do
+          echo "$INSTANCE_ID"
+          aws ec2 create-snapshots \
+            --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
+            --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
+            --copy-tags-from-source "volume" > jq
+      done <<< "$INSTANCE_IDS"
+      sleep 2
+    shell: bash
 
-      - name: Copy Package Files
-        run: |
-          echo "Copying Package Files from S3 to local node storage"
-          source ${{ github.action_path }}/functions
-          COMMAND_ID=$(run_ssm_cmds_validators "aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp && mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
-          check_cmd_status $COMMAND_ID
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp, mkdir /deployment-files/${{ env.GITHUB_REF_NAME }}, tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
-          check_cmd_status $COMMAND_ID
-        shell: bash
+  - name: Copy Package Files
+    run: |
+      echo "Copying Package Files from S3 to local node storage"
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_validators "aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp && mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
+      check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_api_nodes "aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp && mkdir /deployment-files/${{ env.GITHUB_REF_NAME }} && tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }}")
+      check_cmd_status $COMMAND_ID
+    shell: bash
 
-      - name: Stop ZetaChain
-        run: |
-          echo "Stopping ZetaChain"
-          source ${{ github.action_path }}/functions
-          COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd && systemctl stop zetacored")
-          check_cmd_status $COMMAND_ID
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop zetacored")
-          check_cmd_status $COMMAND_ID
+  - name: Stop ZetaChain
+    run: |
+      echo "Stopping ZetaChain"
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd && systemctl stop zetacored")
+      check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop zetacored")
+      check_cmd_status $COMMAND_ID
 
-        shell: bash
+    shell: bash
 
-      - name: Update ZetaNode Binaries
-        run: |
-          echo "Updating ZetaNode Binaries"
-          source ${{ github.action_path }}/functions
-          COMMAND_ID=$(run_ssm_cmds_validators "\
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd && \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored && \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh && \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh && \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
-          check_cmd_status $COMMAND_ID
+  - name: Update ZetaNode Binaries
+    run: |
+      echo "Updating ZetaNode Binaries"
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_validators "\
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd && \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored && \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh && \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh && \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
+      check_cmd_status $COMMAND_ID
 
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "\
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
-              cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
-          check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_api_nodes "\
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
+      check_cmd_status $COMMAND_ID
 
-        shell: bash
+    shell: bash
 
-      - name: Restart ZetaChain
-        run: |
-          echo "Restarting ZetaChain"
-          source ${{ github.action_path }}/functions
-          COMMAND_ID=$(run_ssm_cmds_validators "systemctl restart zetaclientd && systemctl restart zetacored")
-          check_cmd_status $COMMAND_ID
-          COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl restart zetacored")
-          check_cmd_status $COMMAND_ID
-        shell: bash
+  - name: Restart ZetaChain
+    run: |
+      echo "Restarting ZetaChain"
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_validators "systemctl restart zetaclientd && systemctl restart zetacored")
+      check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl restart zetacored")
+      check_cmd_status $COMMAND_ID
+    shell: bash
 
-      - name: Update Indexer
-        if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
-        run: |
-          source ${{ github.action_path }}/functions
-          COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp && mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }} && \
-          systemctl stop indexer &&  cp /deployment-files/${{ env.GITHUB_REF_NAME }}/indexer /usr/local/bin/indexer && systemctl start indexer")
-          check_cmd_status $COMMAND_ID
+  - name: Update Indexer
+    if: ${{ env.UPDATE_INDEXER == 'TRUE' }}
+    run: |
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_indexer "aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/package.tar.gz /tmp && mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && tar -xzvf /tmp/package.tar.gz -C /deployment-files/${{ env.GITHUB_REF_NAME }} && \
+      systemctl stop indexer &&  cp /deployment-files/${{ env.GITHUB_REF_NAME }}/indexer /usr/local/bin/indexer && systemctl start indexer")
+      check_cmd_status $COMMAND_ID
 
-        shell: bash
+    shell: bash
