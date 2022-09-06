@@ -36,9 +36,6 @@ runs:
         DOCKER_FILENAME=${{ env.DOCKER_FILENAME }}
         ECR_REPOSITORY=${{ env.ECR_REPOSITORY }}
         IMAGE_TAG=${{ env.IMAGE_TAG }}
-        echo $DOCKER_FILENAME
-        echo $ECR_REPOSITORY
-        echo $IMAGE_TAG
         docker build -f $DOCKER_FILENAME -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       shell: bash
