@@ -13,10 +13,8 @@ func SetBech32Prefixes(config *sdk.Config) {
 }
 
 const (
-	// DisplayDenom defines the denomination displayed to users in client applications.
 	DisplayDenom = "zeta"
-	// BaseDenom defines to the default denomination used in Evmos (staking, EVM, governance, etc.)
-	BaseDenom = "azeta"
+	BaseDenom    = "azeta"
 )
 
 // RegisterDenoms registers the base and display denominations to the SDK.
