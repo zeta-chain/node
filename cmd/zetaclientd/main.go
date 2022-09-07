@@ -136,6 +136,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
 	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
 	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
+	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
 
 	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
 	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
