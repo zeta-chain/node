@@ -1,0 +1,93 @@
+name: Staging - Build & Deploy
+
+## TODO 
+  # Remove static IAM creds and use short lived via Role Assumption
+  # Add Testing Stage
+  # Add Rollback Stage
+  # Setup CosmoVisor Proposal action
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  ENVIRONMENT_NAME: "STAGING"
+  S3_BUCKET_NAME: "zetachain-deployment-files-staging"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+      - name: Build Binaries
+        uses: ./.github/actions/build-binaries
+        with:
+          run-tests: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+          build-indexer: false
+          go-version: '1.18'
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update 
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id:  ${{ env.AWS_ACCESS_KEY_ID }}          
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}          
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: upload-files-to-s3
+        uses: ./.github/actions/upload-to-s3
+        with:
+          bucket-name: ${{ env.S3_BUCKET_NAME }}
+          release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          files: |
+            zetacored
+            zetaclientd
+            deploy/zetaclientd-start.sh
+            deploy/zetacored-start.sh
+            network_values
+            package.tar.gz
+            cosmovisor
+
+      - name: Build, tag, and push image to Amazon ECR
+        uses:  ./.github/actions/upload-to-ecr
+        with:
+          DOCKER_FILENAME: Dockerfile.zetacore_binary
+          ECR_REPOSITORY: zetachain
+          IMAGE_TAG: latest
+
+      # - name: Update Nodes (OLD Method)
+      #   uses:  ./.github/actions/update-nodes
+      #   with:
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     TAKE_SNAPSHOTS: false
+      #     UPDATE_INDEXER: false
+
+      # NOT READY YET
+      # - name: Cosmovisor Upgrade Proposal and Vote
+      #   uses:  ./.github/actions/cosmovisor-upgrade
+      #   with:
+      #     RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+      #     VERSION: "0.0.1"
+      #     # DESCRIPTION: "description"
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     # CHECKSUM_ZETACORED: ""
+      #     # CHECKSUM_ZETACLIENTD: ""
+      #     CHAIN_ID: "athens-1"
+      #     API_ENDPOINT: "https://api.staging.zetachain.com"
+

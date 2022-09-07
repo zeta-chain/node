@@ -29,7 +29,6 @@ else
         echo "Waiting for Seed Node Validator ID"
         sleep 10
         curl -s "${SEED_NODE}":8123/p2p -o SEED_NODE_ID
-
     done
     SEED_NODE_ID=$(cat SEED_NODE_ID)
     echo "SEED_NODE_ID=${SEED_NODE_ID}"

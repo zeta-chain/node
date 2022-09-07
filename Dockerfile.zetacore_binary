@@ -6,8 +6,8 @@ RUN apt-get update -y && apt-get upgrade -y \
 WORKDIR /go/delivery
 COPY ./zetaclientd /usr/bin/
 COPY ./zetacored /usr/bin/
-COPY ./indexer /usr/bin/
-
+COPY ./build ./zeta-node/build
+COPY ./deploy ./zeta-node/deploy
 
 ENV SHELL /bin/bash
 EXPOSE 8400
