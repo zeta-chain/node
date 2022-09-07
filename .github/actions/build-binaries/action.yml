@@ -1,0 +1,74 @@
+name: 'Build Binaries'
+description: 'Builds ZetaChain Binaries'
+inputs:
+  build-indexer:  
+    description: 'Build Indexer Binary (true/false)'
+    required: true
+  run-tests:  
+    description: 'Run Build Tests (true/false)'
+    required: true
+  go-version:  
+    description: 'Optional - Install a specific verion of Go'
+    required: false
+    default: ''
+  ENVIRONMENT_NAME:  
+    description: 'Environment Name'
+    required: true
+    default: "STAGING"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Up Go 
+      # Optionally install a specific version of Go
+      # Only use if go has not been installed in a previous step of the calling workflow
+      if : ${{ inputs.go-version != '' }} 
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.go-version }}  
+
+    - run: |
+        echo Running ZetaChain Build Action
+      shell: bash
+
+    - name: build zetacored and zetaclientd
+      run: ${GITHUB_ACTION_PATH}/build.sh
+      shell: bash
+
+    - name: Build Indexer
+      run: ${GITHUB_ACTION_PATH}/build-indexer.sh
+      if: ${{ inputs.build-indexer == 'true' }}
+      shell: bash
+
+    - name: Cosmovisor
+      run: |
+        go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
+        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
+      shell: bash
+
+    - name: Run Build tests
+      run: ${GITHUB_ACTION_PATH}/test.sh
+      if: ${{ inputs.run-tests == 'true' }}
+      shell: bash
+
+    - name: Add network_values file
+      run: |        
+        INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
+        if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
+          cp deploy/env_variables.staging network_values
+        elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
+          cp deploy/env_variables.athens network_values
+        fi
+      shell: bash
+
+    - name: Create tar.gz Package
+      run: |        
+        cp deploy/zetaclientd-start.sh zetaclientd-start.sh
+        cp deploy/zetacored-start.sh zetacored-start.sh
+        tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
+      shell: bash
+
+    - run: echo "Completed ZetaChain Build Action"
+      shell: bash
+
+
