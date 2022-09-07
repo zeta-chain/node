@@ -265,7 +265,7 @@ func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceSt
 }
 
 // appExport creates a new simapp (optionally at a given height)
-func (a appCreator) appExport(
+func (ac appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
 ) (servertypes.ExportedApp, error) {
@@ -285,7 +285,7 @@ func (a appCreator) appExport(
 			map[int64]bool{},
 			homePath,
 			uint(1),
-			a.encCfg,
+			ac.encCfg,
 			// this line is used by starport scaffolding # stargate/root/exportArgument
 			appOpts,
 		)
@@ -302,7 +302,7 @@ func (a appCreator) appExport(
 			map[int64]bool{},
 			homePath,
 			uint(1),
-			a.encCfg,
+			ac.encCfg,
 			// this line is used by starport scaffolding # stargate/root/noHeightExportArgument
 			appOpts,
 		)

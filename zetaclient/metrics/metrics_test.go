@@ -1,9 +1,7 @@
 package metrics
 
 import (
-	"fmt"
 	. "gopkg.in/check.v1"
-	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -32,6 +30,6 @@ func (ms *MetricsSuite) TestMetrics(c *C) {
 	res, err := http.Get("http://127.0.0.1:8886/metrics")
 	c.Assert(err, IsNil)
 	defer res.Body.Close()
-	out, err := ioutil.ReadAll(res.Body)
-	fmt.Println(string(out))
+	//out, err := ioutil.ReadAll(res.Body)
+	//fmt.Println(string(out))
 }
