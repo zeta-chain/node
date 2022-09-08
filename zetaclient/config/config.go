@@ -1,9 +1,10 @@
 package config
 
 import (
+	"math/big"
+
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"math/big"
 )
 
 // ClientConfiguration
@@ -87,6 +88,16 @@ var Chains = map[string]*types.ChainETHish{
 		ChainID:                  big.NewInt(80001),
 		BlockTime:                PolygonBlockTime,
 		Endpoint:                 "https://mumbai-sh285ns91n5975.athens.zetachain.com",
+	},
+	common.BaobabChain.String(): {
+		Name:                     "BAOBAB",
+		ConnectorContractAddress: "0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c",
+		PoolContractAddress:      "", // KlaySwap 0xd2e72adcdd82e687158541fe196d53ed60caac09
+		PoolContract:             types.UniswapV3,
+		ZETATokenContractAddress: "0x000080383847bD75F91c168269Aa74004877592f",
+		ChainID:                  big.NewInt(1001),
+		BlockTime:                EthBlockTime,
+		Endpoint:                 "https://baobab-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.RopstenChain.String(): {
 		Name:                     "ROPSTEN",
