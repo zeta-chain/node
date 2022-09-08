@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -27,13 +28,14 @@ import (
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 	maddr "github.com/multiformats/go-multiaddr"
 
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
 	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -43,7 +45,7 @@ var (
 
 func main() {
 	fmt.Printf("zeta-node commit hash %s version %s build time %s \n", common.CommitHash, common.Version, common.BuildTime)
-	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN", "enable chains, comma separated list")
+	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN,BAOBAB", "enable chains, comma separated list")
 	valKeyName := flag.String("val", "alice", "validator name")
 	peer := flag.String("peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	logConsole := flag.Bool("log-console", false, "log to console (pretty print)")
@@ -134,22 +136,26 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
 	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
 	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
+	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
 
 	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
 	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
 	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
 	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
+	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
 
 	// pools
 	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
 	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
 	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
 	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
+	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
 
 	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
 	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
 	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
 	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
+	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
