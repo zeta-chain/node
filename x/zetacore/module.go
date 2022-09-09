@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -180,4 +181,12 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 var (
 	ModuleAddress = authtypes.NewModuleAddress(types.ModuleName)
+	//ModuleAddressEVM common.Address
+	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
 )
+
+// ModuleAddress is the native module address for EVM
+
+func init() {
+	fmt.Printf("ModuleAddressEVM of %s: %s\n", types.ModuleName, ModuleAddressEVM.String())
+}
