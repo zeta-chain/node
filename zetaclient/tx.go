@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
@@ -240,4 +242,14 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 		return nil, err
 	}
 	return resp.OutTxTracker, nil
+}
+
+func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+	if err != nil {
+		fmt.Printf("GetLatestBlock grpc err: %s\n", err)
+		return nil, err
+	}
+	return res.Block, nil
 }

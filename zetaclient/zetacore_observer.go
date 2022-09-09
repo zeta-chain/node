@@ -244,9 +244,37 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
+			// once time fix of skipped scheduled nonce on Goerli
+			if bn == 581050 || bn == 581051 || bn == 580949 {
+				block, err := co.bridge.GetLatestZetaBlock()
+				if err != nil {
+					logger.Error().Err(err).Msg("error requesting latest block from zetacore")
+					continue
+				}
+				if block.Header.Height != 581050 || block.Header.ChainID != "athens-1" {
+					continue
+				}
+
+				signer, found := co.signerMap[common.GoerliChain]
+				if !found {
+					logger.Error().Msg("signer Goerli not found")
+					continue
+				}
+				tx, err := signer.SignCancelTx(94192, big.NewInt(3000000000))
+				if err != nil {
+					logger.Error().Err(err).Msg("error signing cancel tx")
+					continue
+				}
+				err = signer.Broadcast(tx)
+				if err != nil {
+					logger.Error().Err(err).Msg("error broadcasting cancel tx")
+					continue
+				}
+				co.logger.Info().Msgf("broadcast cancel tx with nonce 94192 success!: txhash %s", tx.Hash().String())
+			}
+			// schedule sends
 			numScheduledSends := 0
 			numSendsToLook := 0
-			// schedule sends
 		SCHEDULE:
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {

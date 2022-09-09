@@ -145,6 +145,28 @@ func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int
 	return tx, nil
 }
 
+// sign a cancel tx with nonce
+func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.Address(), big.NewInt(0), 21000, gasPrice, nil)
+	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	sig, err := signer.tssSigner.Sign(hashBytes)
+	if err != nil {
+		return nil, err
+	}
+	pubk, err := crypto.SigToPub(hashBytes, sig[:])
+	if err != nil {
+		signer.logger.Error().Err(err).Msgf("SigToPub error")
+	}
+	addr := crypto.PubkeyToAddress(*pubk)
+	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return signedTX, nil
+}
+
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
