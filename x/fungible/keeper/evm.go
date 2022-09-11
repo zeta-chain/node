@@ -32,11 +32,11 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
 	ctorArgs, err := abi.Pack(
-		"",       // function--empty string for constructor
-		name,     // name
-		symbol,   // symbol
-		decimals, // decimals
-
+		"",                     // function--empty string for constructor
+		name,                   // name
+		symbol,                 // symbol
+		decimals,               // decimals
+		types.ModuleAddressEVM, // owner
 	)
 
 	if err != nil {
@@ -61,8 +61,27 @@ func (k Keeper) DeployZRC4Contract(
 	return contractAddr, nil
 }
 
-// QueryZRC4 returns the data of a deployed ZRC4 contract
-func (k Keeper) QueryZRC4(
+// Depoisit ZRC4 tokens into to account;
+// Callable only by the fungible module account
+func (k Keeper) DepositZRC4(
+	ctx sdk.Context,
+	contract common.Address,
+	to common.Address,
+	amount *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	abi, err := contracts.ZRC4MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", to, amount)
+	if err != nil {
+		return nil, err
+	}
+	return res, err
+}
+
+// QueryZRC4Data returns the data of a deployed ZRC4 contract
+func (k Keeper) QueryZRC4Data(
 	ctx sdk.Context,
 	contract common.Address,
 ) (types.ZRC4Data, error) {
@@ -113,13 +132,16 @@ func (k Keeper) QueryZRC4(
 	return types.NewZRC4Data(nameRes.Value, symbolRes.Value, decimalRes.Value), nil
 }
 
-// BalanceOf queries an account's balance for a given ZRC4 contract
-func (k Keeper) BalanceOf(
+// BalanceOfZRC4 queries an account's balance for a given ZRC4 contract
+func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
-	abi abi.ABI,
 	contract, account common.Address,
 ) *big.Int {
-	res, err := k.CallEVM(ctx, abi, types.ModuleAddressEVM, contract, false, "balanceOf", account)
+	abi, err := contracts.ZRC4MetaData.GetAbi()
+	if err != nil {
+		return nil
+	}
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, false, "balanceOf", account)
 	if err != nil {
 		return nil
 	}

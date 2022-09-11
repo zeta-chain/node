@@ -38,7 +38,7 @@ interface IZRC4Metadata is IZRC4 {
 }
 
 contract ZRC4 is Context, IZRC4, IZRC4Metadata {
-    address FUNGIBLE_MODULE_ADDRESS;
+    address public FUNGIBLE_MODULE_ADDRESS;
 
     mapping(address => uint256) private _balances;
 

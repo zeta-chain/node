@@ -185,7 +185,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		zetaCoreModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
-		fungibleModuleTypes.ModuleName: nil,
+		fungibleModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner}, //FIXME: is this necessary?
 	}
 )
 
@@ -342,6 +342,11 @@ func New(
 		app.AccountKeeper, app.BankKeeper, stakingKeeper,
 		&app.FeeMarketKeeper,
 		tracer,
+	)
+	app.EvmKeeper = app.EvmKeeper.SetHooks(
+		evmkeeper.NewMultiEvmHooks(
+			app.FungibleKeeper.Hooks(),
+		),
 	)
 
 	// Create IBC Keeper

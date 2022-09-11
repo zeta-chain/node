@@ -7,7 +7,15 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc FungibleTestMsg(MsgFungibleTestMsg) returns (MsgFungibleTestMsgResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgFungibleTestMsg {
+  string creator = 1;
+}
+
+message MsgFungibleTestMsgResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

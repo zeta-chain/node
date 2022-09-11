@@ -13,4 +13,5 @@ var (
 	ErrABIGet          = sdkerrors.Register(ModuleName, 1102, "abi get error")
 	ErrUnexpectedEvent = sdkerrors.Register(ModuleName, 1103, "unexpected event")
 	ErrABIUnpack       = sdkerrors.Register(ModuleName, 1104, "abi unpack error")
+	ErrBlanceQuery     = sdkerrors.Register(ModuleName, 1105, "balance query error")
 )
