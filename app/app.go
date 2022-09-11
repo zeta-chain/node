@@ -21,6 +21,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
+	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"io"
 	"net/http"
 	"os"
@@ -101,6 +103,8 @@ import (
 	zetaCoreModule "github.com/zeta-chain/zetacore/x/zetacore"
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 )
 
 const Name = "zetacore"
@@ -224,6 +228,7 @@ type App struct {
 	configurator         module.Configurator
 	EvmKeeper            *evmkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
+	FungibleKeeper       fungibleModuleKeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -260,6 +265,7 @@ func New(
 		capabilitytypes.StoreKey,
 		zetaCoreModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
+		fungibleModuleTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -401,6 +407,16 @@ func New(
 	)
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
+	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+		appCodec,
+		keys[fungibleModuleTypes.StoreKey],
+		keys[fungibleModuleTypes.MemStoreKey],
+		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		app.AccountKeeper,
+		*app.EvmKeeper,
+	)
+	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -433,6 +449,7 @@ func New(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		zetacoreModule,
+		fungibleModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -460,6 +477,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -473,6 +491,7 @@ func New(
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 
 		zetaCoreModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -501,6 +520,7 @@ func New(
 		vestingtypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 		zetaCoreModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

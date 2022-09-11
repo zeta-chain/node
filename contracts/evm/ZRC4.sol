@@ -38,7 +38,7 @@ interface IZRC4Metadata is IZRC4 {
 }
 
 contract ZRC4 is Context, IZRC4, IZRC4Metadata {
-    address ZETACORE_MODULE_ADDRESS = 0x63bb55940cda7a8EE95D5775eAB0EaEa2A1230B0;
+    address FUNGIBLE_MODULE_ADDRESS;
 
     mapping(address => uint256) private _balances;
 
@@ -48,10 +48,13 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
 
     string private _name;
     string private _symbol;
+    uint8 private _decimals;
 
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_, address fungibleModuleAddress_) {
         _name = name_;
         _symbol = symbol_;
+        _decimals = decimals_;
+        FUNGIBLE_MODULE_ADDRESS = fungibleModuleAddress_;
     }
 
     function name() public view virtual override returns (string memory) {
@@ -63,7 +66,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     }
 
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return _decimals;
     }
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -141,9 +144,9 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     }
 
     function deposit(address to, uint256 amount) external override returns (bool) {
-        require(msg.sender == ZETACORE_MODULE_ADDRESS, "permission error");
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         _mint(to, amount);
-        emit Deposit(abi.encodePacked(ZETACORE_MODULE_ADDRESS), to, amount);
+        emit Deposit(abi.encodePacked(FUNGIBLE_MODULE_ADDRESS), to, amount);
         return true;
     }
 

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package zetachain.zetacore.fungible;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+}
+
+// this line is used by starport scaffolding # proto/tx/message
