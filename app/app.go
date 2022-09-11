@@ -171,6 +171,7 @@ var (
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
 		zetaCoreModule.AppModuleBasic{},
+		fungibleModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -184,6 +185,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		zetaCoreModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		fungibleModuleTypes.ModuleName: nil,
 	}
 )
 
@@ -742,6 +744,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
+	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
 
 	return paramsKeeper
 }
