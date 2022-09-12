@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-
 	contracts "github.com/zeta-chain/zetacore/contracts/evm"
 )
 
@@ -50,19 +49,12 @@ func (k Keeper) PostTxProcessing(
 	if found {
 		fmt.Printf("#############################\n")
 		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
+		fmt.Printf("#############################\n")
+		fmt.Printf("#############################\n")
+		//zetacoreTypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZEVMChain, event.)
+		//k.zetacoreKeeper.GetSend()
 
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
 	}
 
 	return nil

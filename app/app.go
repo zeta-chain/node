@@ -421,6 +421,7 @@ func New(
 		app.GetSubspace(fungibleModuleTypes.ModuleName),
 		app.AccountKeeper,
 		*app.EvmKeeper,
+		app.ZetaCoreKeeper,
 	)
 	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
 
