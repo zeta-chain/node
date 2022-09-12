@@ -1,4 +1,6 @@
-run_ssm_cmds_nodes () {
+#!/bin/bash
+
+run_ssm_cmds_validators () {
     COMMAND_ID=$(aws ssm send-command \
     --targets Key=tag:Role,Values=validator \
     --document-name "AWS-RunShellScript" \
