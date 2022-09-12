@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
@@ -81,7 +82,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 // FIXME: pass nonce
 func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce int) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain, uint64(nonce))
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromString(mMint), status, chain, uint64(nonce))
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
@@ -96,34 +97,34 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
-func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {
+func (b *ZetaCoreBridge) GetAllSend() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAll(context.Background(), &types.QueryAllSendRequest{})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query SendAll error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
+func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{Index: sendHash})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("GetSendByHash error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
+func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query SendAllPending error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
 func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
