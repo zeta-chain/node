@@ -50,8 +50,11 @@ func main() {
 	preParamsPath := flag.String("pre-params", "", "pre-params file path")
 	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
+	chainID := flag.String("chain-id", "athens-1", "chain id")
 
 	flag.Parse()
+	cmd.CHAINID = *chainID
+
 	keygenBlock = *keygen
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
