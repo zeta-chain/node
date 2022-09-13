@@ -7,7 +7,6 @@ package evm
 import (
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -44,5 +43,5 @@ func init() {
 	if len(ZRC4Contract.Bin) == 0 {
 		panic("load contract failed")
 	}
-	fmt.Printf("ZRC4Contract:ZRC4AdminAddress %s\n", ZRC4AdminAddress.String())
+	//fmt.Printf("ZRC4Contract:ZRC4AdminAddress %s\n", ZRC4AdminAddress.String())
 }

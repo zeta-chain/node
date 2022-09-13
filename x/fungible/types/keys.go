@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -34,5 +33,5 @@ var (
 )
 
 func init() {
-	fmt.Printf("ModuleAddressEVM of %s: %s\n", ModuleName, ModuleAddressEVM.String())
+	//fmt.Printf("ModuleAddressEVM of %s: %s\n", ModuleName, ModuleAddressEVM.String())
 }

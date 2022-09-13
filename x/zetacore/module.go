@@ -188,5 +188,5 @@ var (
 // ModuleAddress is the native module address for EVM
 
 func init() {
-	fmt.Printf("ModuleAddressEVM of %s: %s\n", types.ModuleName, ModuleAddressEVM.String())
+	//fmt.Printf("ModuleAddressEVM of %s: %s\n", types.ModuleName, ModuleAddressEVM.String())
 }
