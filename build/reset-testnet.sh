@@ -41,7 +41,7 @@ for NODE in $NODES; do
 	  ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
   fi
 	ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore)
-	$ZETACORED add-genesis-account $ADDR 1000000000stake --keyring-backend=test --home ~/.zetacore
+	$ZETACORED add-genesis-account $ADDR 1000000000azeta --keyring-backend=test --home ~/.zetacore
 done
 
  
@@ -53,7 +53,7 @@ done
 $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=${CHAINID} --home ~/.zetacore
 
 for NODE in $NODES; do
-    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=${CHAINID} --ip $NODE --home ~/.zetacore
+    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000azeta --keyring-backend=test --chain-id=${CHAINID} --ip $NODE --home ~/.zetacore
     scp -i ~/.ssh/meta.pem $NODE:~/.zetacore/config/gentx/*.json ~/.zetacore/config/gentx/
 done
 
