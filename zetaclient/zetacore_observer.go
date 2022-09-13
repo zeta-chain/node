@@ -315,7 +315,7 @@ func (co *CoreObserver) startSendScheduler() {
 					offset := send.Index[len(send.Index)-1] % 4
 					sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 20) {
+					if isScheduled(sinceBlock, idx < 40) {
 						numScheduledSends++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
