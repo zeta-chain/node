@@ -50,7 +50,7 @@ for NODE in $NODES; do
 done
 
 
-$ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=${CHAINID} --home ~/.zetacore
+$ZETACORED gentx val 1000000000azeta --keyring-backend=test --chain-id=${CHAINID} --home ~/.zetacore
 
 for NODE in $NODES; do
     ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000azeta --keyring-backend=test --chain-id=${CHAINID} --ip $NODE --home ~/.zetacore
