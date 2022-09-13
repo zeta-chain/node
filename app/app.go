@@ -343,11 +343,10 @@ func New(
 		&app.FeeMarketKeeper,
 		tracer,
 	)
-	app.EvmKeeper = app.EvmKeeper.SetHooks(
-		evmkeeper.NewMultiEvmHooks(
-			app.FungibleKeeper.Hooks(),
-		),
-	)
+	//evmkeeper.NewMultiEvmHooks(
+	//	//app.FungibleKeeper.Hooks(),
+	//	app.ZetaCoreKeeper.Hooks(),
+	//),
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -413,6 +412,7 @@ func New(
 		app.BankKeeper,
 	)
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
+	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
 		appCodec,
@@ -421,7 +421,7 @@ func New(
 		app.GetSubspace(fungibleModuleTypes.ModuleName),
 		app.AccountKeeper,
 		*app.EvmKeeper,
-		app.ZetaCoreKeeper,
+		//&app.ZetaCoreKeeper,
 	)
 	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
 

@@ -8,7 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/evm"
+	zetacoretypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}
@@ -52,9 +54,41 @@ func (k Keeper) PostTxProcessing(
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 		fmt.Printf("#############################\n")
 		fmt.Printf("#############################\n")
-		//zetacoreTypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZEVMChain, event.)
-		//k.zetacoreKeeper.GetSend()
 
+		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), "GOERLI", event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000)
+		sendHash := msg.Digest()
+
+		//k.zetacoreKeeper.Get
+
+		send, found := k.GetSend(ctx, sendHash)
+		if found { // this is not supposed to happen
+			fmt.Printf("send already exists %s\n", sendHash)
+			return nil
+		}
+		fmt.Printf("send %s not found, create it\n", sendHash)
+
+		send.Sender = receipt.ContractAddress.Hex()
+		send.SenderChain = "ZETA"
+		send.Receiver = string(event.To)
+		send.ReceiverChain = "GOERLI"
+		send.FinalizedMetaHeight = uint64(ctx.BlockHeight())
+		send.Index = sendHash
+		send.ZetaBurnt = event.Value.String()
+		send.ZetaMint = event.Value.String() // does not deduct gas fee
+		send.InTxHash = event.Raw.TxHash.String()
+		send.InBlockHeight = event.Raw.BlockNumber
+		send.GasLimit = 90_000
+		//gasprice, found := k.GetGasPrice(ctx, "GOERLI")
+		//if !found {
+		//	fmt.Printf("cannot get gas price %s\n", "GOERLI")
+		//	return nil
+		//}
+		//send.GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+		send.GasPrice = "25714080"
+		send.Status = zetacoretypes.SendStatus_PendingOutbound
+		k.SetSend(ctx, send)
+		fmt.Printf("####setting send... ###########\n")
+		//fmt.Printf("%v\n", send)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetacoretypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 	"math/big"
 )
 
@@ -41,6 +42,10 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 			sdk.NewAttribute("balance2", bal2.String()),
 		),
 	)
+
+	send := zetacoretypes.Send{}
+	send.Index = "0x1337fromtestmsg"
+	//k.zetacoreKeeper.SetSend(ctx, send)
 
 	return &types.MsgFungibleTestMsgResponse{}, nil
 }

@@ -143,7 +143,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
 	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
-	if os.Getenv("DUMMY_PRICE") != "" {
+	if os.Getenv("DUMMY_PRICE") != "" || config.Chains[chain.String()].PoolContractAddress == "" {
 		ob.logger.Info().Msg("Using dummy price of 1:1")
 		ob.ZetaPriceQuerier = dummyQuerior
 	}

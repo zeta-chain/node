@@ -40,4 +40,5 @@ message Send {
   string outTxHash = 21;
   int64  lastUpdateTimestamp = 22;
   uint64 gasLimit = 23;
+  // addition
 }

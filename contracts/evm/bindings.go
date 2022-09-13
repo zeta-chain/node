@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/x/zetacore"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 var _ = Connector{}
@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	ZRC4AdminAddress = zetacore.ModuleAddressEVM
+	ZRC4AdminAddress = fungibletypes.ModuleAddressEVM
 
 	err := json.Unmarshal(ZRC4JSON, &ZRC4Contract)
 	if err != nil {
