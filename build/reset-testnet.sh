@@ -41,7 +41,7 @@ for NODE in $NODES; do
 	  ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
   fi
 	ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore)
-	$ZETACORED add-genesis-account $ADDR 1000000000azeta --keyring-backend=test --home ~/.zetacore
+	$ZETACORED add-genesis-account $ADDR 1000000000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
 done
 
  
