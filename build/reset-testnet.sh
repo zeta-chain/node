@@ -3,7 +3,7 @@ set -x
 
 CHAINID="athens_8666-2"
 KEYALGO="eth_secp256k1"
-
+KEYRING="test"
 
 ZETACORED=/home/ubuntu/go/bin/zetacored
 # AWS EC2: testnet1, testnet2, testnet3, testnet5
