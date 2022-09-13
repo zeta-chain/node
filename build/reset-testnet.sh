@@ -35,13 +35,13 @@ $ZETACORED add-genesis-account alice 1000000000000000000000azeta --keyring-backe
 $ZETACORED add-genesis-account bob 1000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
 
 for NODE in $NODES; do
-  ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test)
+  ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore)
   if [ -z "$ADDR" ]; then
     echo "No val key found; generate new val key"
-	  ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test
+	  ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
   fi
-	ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test)
-	$ZETACORED add-genesis-account $ADDR 1000000000stake --keyring-backend=test
+	ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore)
+	$ZETACORED add-genesis-account $ADDR 1000000000stake --keyring-backend=test --home ~/.zetacore
 done
 
  
@@ -50,10 +50,10 @@ for NODE in $NODES; do
 done
 
 
-$ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=athens-1
+$ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=${CHAINID} --home ~/.zetacore
 
 for NODE in $NODES; do
-    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=athens-1 --ip $NODE
+    ssh -i ~/.ssh/meta.pem $NODE $ZETACORED gentx val 1000000000stake --keyring-backend=test --chain-id=${CHAINID} --ip $NODE --home ~/.zetacore
     scp -i ~/.ssh/meta.pem $NODE:~/.zetacore/config/gentx/*.json ~/.zetacore/config/gentx/
 done
 
