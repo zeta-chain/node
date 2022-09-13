@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -237,6 +238,13 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.String(),
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			Limit:      300,
+			CountTotal: false,
+			Reverse:    false,
+		},
 	})
 	if err != nil {
 		return nil, err
