@@ -23,8 +23,7 @@ if [ -z "$ADDR" ]; then
   $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
 fi
 $ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore) 100000000000000000000000000azeta --home ~/.zetacore
-$ZETACORED add-genesis-account alice 1000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
-$ZETACORED add-genesis-account bob 1000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
+
 
 echo "Generating deterministic account - alice"
 echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | $ZETACORED keys add alice --recover --keyring-backend $KEYRING --home ~/.zetacore
@@ -32,7 +31,8 @@ echo "race draft rival universe maid cheese steel logic crowd fork comic easy tr
 echo "Generating deterministic account - bob"
 echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | $ZETACORED keys add bob --recover --keyring-backend $KEYRING --home ~/.zetacore
 
-
+$ZETACORED add-genesis-account alice 1000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
+$ZETACORED add-genesis-account bob 1000000000000000000000azeta --keyring-backend=test --home ~/.zetacore
 
 for NODE in $NODES; do
   ADDR=$(ssh -i ~/.ssh/meta.pem $NODE $ZETACORED keys show val -a --keyring-backend=test)
