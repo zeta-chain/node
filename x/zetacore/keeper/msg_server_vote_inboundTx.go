@@ -18,6 +18,9 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	var cctx types.CrossChainTx
 	cctx, isFound := k.GetCrossChainTx(ctx, index)
 	if isFound {
+		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		}
 		if isDuplicateSigner(msg.Creator, cctx.Signers) {
 			return nil, sdkerrors.Wrap(types.ErrDuplicateMsg, fmt.Sprintf("signer %s double signing!!", msg.Creator))
 		}
@@ -34,14 +37,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if hasEnoughVotes {
 		err := k.FinalizeInbound(ctx, cctx, msg.ReceiverChain)
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted)
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			ctx.Logger().Error(err.Error())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound")
 	}
-	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound)
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
@@ -57,7 +59,7 @@ func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx types.CrossChainTx, rec
 		return err
 	}
 	k.EmitEventSendFinalized(ctx, &cctx)
-	return err
+	return nil
 }
 
 func (k msgServer) updateCctx(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
@@ -132,17 +134,21 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, cctx *types.CrossChai
 }
 
 func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
-	gasFee := price.Mul(gasLimit).Mul(rate).Add(types.GetProtocolFee())
-	increasePrecision(&gasFee)
-	return gasFee
+	//90000, 20000000000,1000000000000000000/10000000000000
+	gasFee := price.Mul(gasLimit).Mul(rate)
+	gasFee = reducePrecision(gasFee)
+	return gasFee.Add(types.GetProtocolFee())
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 // These functions should always remain under private scope
-func increasePrecision(i *sdk.Uint) {
-	i.Mul(sdk.NewUintFromString("1000000000000000000"))
+func increasePrecision(i sdk.Uint) sdk.Uint {
+	return i.Mul(sdk.NewUintFromString("1000000000000000000"))
+}
+func reducePrecision(i sdk.Uint) sdk.Uint {
+	return i.Quo(sdk.NewUintFromString("1000000000000000000"))
 }
 
 func (k msgServer) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {

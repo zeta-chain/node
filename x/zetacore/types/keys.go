@@ -21,7 +21,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 1
+	ProtocolFee = 1000000000000000000
 )
 
 func GetProtocolFee() sdk.Uint {

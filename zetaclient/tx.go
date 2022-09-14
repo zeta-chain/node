@@ -171,7 +171,7 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetNonceByChain error")
+		b.logger.Error().Err(err).Msg("query QueryGetChainNoncesRequest error")
 		return nil, err
 	}
 	return resp.ChainNonces, nil
