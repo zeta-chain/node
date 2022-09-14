@@ -10,10 +10,10 @@ func Test_CalculateGassFee(t *testing.T) {
 
 	tt := []struct {
 		name        string
-		gasPrice    sdk.Uint
-		gasLimit    sdk.Uint
-		rate        sdk.Uint
-		expectedFee sdk.Uint
+		gasPrice    sdk.Uint // Sample gasPrice posted by zeta-client based on observed value and posted to core using PostGasPriceVoter
+		gasLimit    sdk.Uint // Sample gasLimit used in smartContract call
+		rate        sdk.Uint // Sample Rate obtained from UniSwapV2 / V3 and posted to core using PostGasPriceVoter
+		expectedFee sdk.Uint // ExpectedFee in Zeta Tokens
 	}{
 		{
 			name:        "Test Price1",
