@@ -67,7 +67,7 @@ func (k Keeper) PostTxProcessing(
 
 		send.Sender = receipt.ContractAddress.Hex()
 		send.SenderChain = "ZETA"
-		send.Receiver = string(event.To)
+		send.Receiver = hex.EncodeToString(event.To)
 		send.ReceiverChain = "GOERLI"
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeight())
 		send.Index = sendHash
