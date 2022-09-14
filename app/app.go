@@ -401,19 +401,6 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
-
-	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaCoreModuleTypes.StoreKey],
-		keys[zetaCoreModuleTypes.MemStoreKey],
-		app.StakingKeeper,
-		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-	)
-	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
-	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
-
 	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
 		appCodec,
 		keys[fungibleModuleTypes.StoreKey],
@@ -424,6 +411,19 @@ func New(
 		//&app.ZetaCoreKeeper,
 	)
 	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
+
+	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaCoreModuleTypes.StoreKey],
+		keys[zetaCoreModuleTypes.MemStoreKey],
+		app.StakingKeeper,
+		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.FungibleKeeper,
+	)
+	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
+	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	/****  Module Options ****/
 

@@ -73,6 +73,8 @@ func ParseChain(chainName string) (Chain, error) {
 		return BSCTestnetChain, nil
 	case "GOERLI":
 		return GoerliChain, nil
+	case "ZETA":
+		return ZETAChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}

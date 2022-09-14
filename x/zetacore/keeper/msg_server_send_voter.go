@@ -90,6 +90,10 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 		k.updateSend(ctx, chain.String(), &send)
 		k.EmitEventSendFinalized(ctx, &send)
+
+		if recvChain == common.ZETAChain { // if to zEVM, directly call EVM
+			//k.fungibleKeeper.DepositZRC4(ctx, )
+		}
 	}
 
 EPILOGUE:

@@ -112,6 +112,10 @@ func (ob *ChainObserver) observeInTX() error {
 			}
 			if *tx.To() == tssAddress {
 				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+				if receipt.Status != 1 { // 1: successful, 0: failed
+					ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
+					continue
+				}
 				if err != nil {
 					ob.logger.Err(err).Msg("TransactionReceipt")
 					continue
@@ -123,8 +127,24 @@ func (ob *ChainObserver) observeInTX() error {
 				}
 				ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
 				ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
-				ob.logger.Info().Msgf("TSS inTx status: %s", receipt.Status)
 				ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+				zetaHash, err := ob.zetaClient.PostSend(
+					from.Hex(),
+					ob.chain.String(),
+					from.Hex(),
+					"ZETA",
+					tx.Value().String(),
+					tx.Value().String(),
+					"",
+					tx.Hash().Hex(),
+					receipt.BlockNumber.Uint64(),
+					90_000,
+				)
+				if err != nil {
+					ob.logger.Error().Err(err).Msg("error posting to zeta core")
+					continue
+				}
+				ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 			}
 		}
 	}

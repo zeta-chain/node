@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -18,10 +19,11 @@ type (
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
 
-		StakingKeeper types.StakingKeeper
-		paramstore    paramtypes.Subspace
-		authKeeper    types.AccountKeeper
-		bankKeeper    types.BankKeeper
+		StakingKeeper  types.StakingKeeper
+		paramstore     paramtypes.Subspace
+		authKeeper     types.AccountKeeper
+		bankKeeper     types.BankKeeper
+		fungibleKeeper fungibleModuleKeeper.Keeper
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 
 	}
@@ -35,6 +37,8 @@ func NewKeeper(
 	paramstore paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	fungibleKeeper fungibleModuleKeeper.Keeper,
+
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 
 ) *Keeper {
@@ -45,13 +49,15 @@ func NewKeeper(
 	//}
 
 	return &Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		memKey:        memKey,
-		StakingKeeper: stakingKeeper,
-		paramstore:    paramstore,
-		authKeeper:    authKeeper,
-		bankKeeper:    bankKeeper,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		memKey:         memKey,
+		StakingKeeper:  stakingKeeper,
+		paramstore:     paramstore,
+		authKeeper:     authKeeper,
+		bankKeeper:     bankKeeper,
+		fungibleKeeper: fungibleKeeper,
+
 		// this line is used by starport scaffolding # ibc/keeper/return
 
 	}
