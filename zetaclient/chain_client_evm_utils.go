@@ -44,6 +44,7 @@ func (ob *ChainObserver) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
 	if confirmedBlockNum <= ob.GetLastBlock() {
+		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
 	toBlock := ob.GetLastBlock() + config.MaxBlocksPerPeriod // read at most 10 blocks in one go

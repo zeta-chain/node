@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"os"
+	"strconv"
+	"sync/atomic"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -13,10 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"os"
-	"strconv"
-	"sync/atomic"
-	"time"
 )
 
 func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
@@ -138,10 +139,20 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
+	case common.BaobabChain:
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.EthConfirmationCount
+		ob.BlockTime = config.EthBlockTime
+
 	case common.RopstenChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.RopstenConfirmationCount
 		ob.BlockTime = config.RopstenBlockTime
+
+	case common.Ganache:
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = 0
+		ob.BlockTime = 1
 	}
 	switch config.Chains[chain.String()].PoolContract {
 	case clienttypes.UniswapV2:

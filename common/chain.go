@@ -22,6 +22,8 @@ var (
 	GoerliChain     = Chain("Goerli")
 	RopstenChain    = Chain("ROPSTEN")
 	MumbaiChain     = Chain("Mumbai")
+	BaobabChain     = Chain("Baobab")
+	Ganache         = Chain("Ganache")
 )
 
 type SigninAlgo string
@@ -73,6 +75,10 @@ func ParseChain(chainName string) (Chain, error) {
 		return BSCTestnetChain, nil
 	case "GOERLI":
 		return GoerliChain, nil
+	case "BAOBAB":
+		return BaobabChain, nil
+	case "GANACHE":
+		return Ganache, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}
@@ -94,6 +100,8 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "tMATIC"
 	case BSCTestnetChain:
 		return "tBNB"
+	case Ganache:
+		return "CPAY"
 	default:
 		return "" // should not happen
 	}
@@ -122,7 +130,7 @@ func (chain Chain) String() string {
 // GetSigningAlgo get the signing algorithm for the given chain
 func (chain Chain) GetSigningAlgo() SigninAlgo {
 	switch chain {
-	case ETHChain, POLYGONChain, BSCChain, RopstenChain:
+	case ETHChain, POLYGONChain, BSCChain, RopstenChain, Ganache:
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1
