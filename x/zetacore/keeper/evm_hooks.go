@@ -89,6 +89,8 @@ func (k Keeper) PostTxProcessing(
 			return nil
 		}
 		send.Nonce = chainNonce.Nonce
+		chainNonce.Nonce++
+		k.SetChainNonces(ctx, chainNonce)
 
 		k.SetSend(ctx, send)
 		fmt.Printf("####setting send... ###########\n")
