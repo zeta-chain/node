@@ -79,7 +79,12 @@ func (k Keeper) PostTxProcessing(
 
 		send.GasPrice = "25714080"
 		send.Status = zetacoretypes.SendStatus_PendingOutbound
-		k.GetChainNonces(ctx, "GOERLI")
+		chainNonce, found := k.GetChainNonces(ctx, "GOERLI")
+		if !found {
+			fmt.Printf("chain nonce not found for GOERLI\n")
+			return nil
+		}
+		send.Nonce = chainNonce.Nonce
 
 		k.SetSend(ctx, send)
 		fmt.Printf("####setting send... ###########\n")
