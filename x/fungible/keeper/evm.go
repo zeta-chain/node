@@ -66,6 +66,8 @@ func (k Keeper) DeployZRC4Contract(
 	coin.Decimals = 18
 	coin.ERC20ContractAddress = ""
 	coin.ZRC4ContractAddress = contractAddr.String()
+	coin.Index = coinIndex
+	coin.ForeignChain = "GOERLI"
 	k.SetForeignCoins(ctx, coin)
 
 	return contractAddr, nil
