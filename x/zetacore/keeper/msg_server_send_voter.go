@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"math/big"
@@ -92,7 +93,31 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		k.EmitEventSendFinalized(ctx, &send)
 
 		if recvChain == common.ZETAChain { // if to zEVM, directly call EVM
-			//k.fungibleKeeper.DepositZRC4(ctx, )
+			coin, found := k.fungibleKeeper.GetForeignCoins(ctx, "GOERLI-ETHER")
+			if !found {
+				send.StatusMessage = fmt.Sprintf("cannot get GOERLI-ETHER: %s", err.Error())
+				send.Status = types.SendStatus_Aborted
+				goto EPILOGUE
+			}
+			to := ethcommon.HexToAddress(send.Receiver)
+			amount, ok := big.NewInt(0).SetString(send.ZetaMint, 10)
+			if !ok {
+				send.StatusMessage = fmt.Sprintf("cannot parse zetaMint: %s", send.ZetaMint)
+				send.Status = types.SendStatus_Aborted
+				goto EPILOGUE
+			}
+			tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ERC20ContractAddress), to, amount)
+			if err != nil {
+				send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
+				send.Status = types.SendStatus_Aborted
+				goto EPILOGUE
+			}
+			if tx.Failed() {
+				send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s", tx.Hash)
+				send.Status = types.SendStatus_Aborted
+				goto EPILOGUE
+			}
+			send.Status = types.SendStatus_OutboundMined
 		}
 	}
 
