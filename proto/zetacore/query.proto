@@ -165,6 +165,9 @@ service Query {
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
 	}
+	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/supportedChains";
+	}
 }
 
 
@@ -390,3 +393,9 @@ message QueryLastMetaHeightResponse {
 	uint64 Height = 1;
 }
 
+message QuerySupportedChains {
+}
+
+message QuerySupportedChainsResponse {
+	repeated string Chains = 1;
+}

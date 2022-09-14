@@ -60,6 +60,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowNodeAccount())
 
 	cmd.AddCommand(CmdLastMetaHeight())
+	cmd.AddCommand(CmdGetSupportedChains())
 
 	return cmd
 }

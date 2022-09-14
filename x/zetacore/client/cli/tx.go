@@ -46,6 +46,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(CmdSetNodeKeys())
 	cmd.AddCommand(CmdRemoveFromWatchList())
+	cmd.AddCommand(CmdSetSupportedChains())
 
 	return cmd
 }

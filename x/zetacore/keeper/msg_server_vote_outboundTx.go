@@ -52,7 +52,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			SendHash:            CctxIndex,
 			OutTxHash:           msg.ObservedOutTxHash,
 			OutBlockHeight:      msg.ObservedOutTxBlockHeight,
-			FinalizedMetaHeight: 0,
+			FinalizedZetaHeight: 0,
 			Signers:             []string{msg.Creator},
 			Status:              msg.Status, // TODO : Check how this status is set
 			Chain:               msg.OutTxChain,
@@ -92,7 +92,7 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 }
 
 func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive) error {
-	receive.FinalizedMetaHeight = uint64(ctx.BlockHeader().Height)
+	receive.FinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
 

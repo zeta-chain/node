@@ -46,7 +46,7 @@ const (
 	ChainNoncesKey              = "ChainNonces-value-"
 	GasPriceKey                 = "GasPrice-value-"
 	SupportedChainsKey          = "SupportedChains-value-"
-	AllSupportedChainsKey       = "AllSupportedChains-value-"
+	AllSupportedChainsKey       = "AllSupportedChains"
 	GasBalanceKey               = "GasBalance-value-"
 	TxListKey                   = "TxList-value-"
 	InTxKey                     = "InTx-value-"
