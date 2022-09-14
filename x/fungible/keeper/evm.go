@@ -23,7 +23,7 @@ import (
 func (k Keeper) DeployZRC4Contract(
 	ctx sdk.Context,
 
-) (common.Address, error) {
+) (common.Address, error) { // FIXME: geneeralized beyond ETH
 	decimals := uint8(18)
 	name := "ETH"
 	symbol := "zETH"
@@ -58,6 +58,15 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
 
+	coinIndex := "GOERLI-ETHER"
+	coin, _ := k.GetForeignCoins(ctx, coinIndex)
+	coin.CoinType = "gas"
+	coin.Name = name
+	coin.Symbol = symbol
+	coin.Decimals = 18
+	coin.ERC20ContractAddress = ""
+	coin.ZRC4ContractAddress = contractAddr.String()
+
 	return contractAddr, nil
 }
 
@@ -77,6 +86,7 @@ func (k Keeper) DepositZRC4(
 	if err != nil {
 		return nil, err
 	}
+
 	return res, err
 }
 

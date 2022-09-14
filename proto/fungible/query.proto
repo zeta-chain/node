@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "fungible/params.proto";
+import "fungible/foreign_coins.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
@@ -15,7 +16,17 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a ForeignCoins by index.
+	rpc ForeignCoins(QueryGetForeignCoinsRequest) returns (QueryGetForeignCoinsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins/{index}";
+	}
+
+	// Queries a list of ForeignCoins items.
+	rpc ForeignCoinsAll(QueryAllForeignCoinsRequest) returns (QueryAllForeignCoinsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -25,6 +36,24 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetForeignCoinsRequest {
+	  string index = 1;
+
+}
+
+message QueryGetForeignCoinsResponse {
+	ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllForeignCoinsRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllForeignCoinsResponse {
+	repeated ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3
