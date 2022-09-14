@@ -91,6 +91,49 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
+func (signer *Signer) SignWithdrawTx(to ethcommon.Address, amount *big.Int, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	tx := ethtypes.NewTransaction(nonce, to, amount, 21000, gasPrice, nil)
+	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	sig, err := signer.tssSigner.Sign(hashBytes)
+	if err != nil {
+		return nil, err
+	}
+	pubk, err := crypto.SigToPub(hashBytes, sig[:])
+	if err != nil {
+		signer.logger.Error().Err(err).Msgf("SigToPub error")
+	}
+	addr := crypto.PubkeyToAddress(*pubk)
+	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return signedTX, nil
+}
+
+// sign a cancel tx with nonce
+func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.Address(), big.NewInt(0), 21000, gasPrice, nil)
+	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	sig, err := signer.tssSigner.Sign(hashBytes)
+	if err != nil {
+		return nil, err
+	}
+	pubk, err := crypto.SigToPub(hashBytes, sig[:])
+	if err != nil {
+		signer.logger.Error().Err(err).Msgf("SigToPub error")
+	}
+	addr := crypto.PubkeyToAddress(*pubk)
+	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return signedTX, nil
+}
+
 //    function onReceive(
 //        bytes calldata originSenderAddress,
 //        uint256 originChainId,

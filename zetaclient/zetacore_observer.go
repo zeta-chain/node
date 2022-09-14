@@ -378,7 +378,10 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	var tx *ethtypes.Transaction
 
 	srcChainID := config.Chains[send.SenderChain].ChainID
-	if send.Status == types.SendStatus_PendingRevert {
+	if send.SenderChain == "ZETA" {
+		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+		tx, err = signer.SignWithdrawTx(to, amount, send.Nonce, gasprice)
+	} else if send.Status == types.SendStatus_PendingRevert {
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		toChainID := config.Chains[send.ReceiverChain].ChainID
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)

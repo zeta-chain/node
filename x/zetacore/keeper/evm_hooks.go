@@ -50,9 +50,7 @@ func (k Keeper) PostTxProcessing(
 	}
 	if found {
 		fmt.Printf("#############################\n")
-		fmt.Printf("#############################\n")
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
-		fmt.Printf("#############################\n")
 		fmt.Printf("#############################\n")
 
 		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), "GOERLI", event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000)
@@ -78,14 +76,11 @@ func (k Keeper) PostTxProcessing(
 		send.InTxHash = event.Raw.TxHash.String()
 		send.InBlockHeight = event.Raw.BlockNumber
 		send.GasLimit = 90_000
-		//gasprice, found := k.GetGasPrice(ctx, "GOERLI")
-		//if !found {
-		//	fmt.Printf("cannot get gas price %s\n", "GOERLI")
-		//	return nil
-		//}
-		//send.GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+
 		send.GasPrice = "25714080"
 		send.Status = zetacoretypes.SendStatus_PendingOutbound
+		k.GetChainNonces(ctx, "GOERLI")
+
 		k.SetSend(ctx, send)
 		fmt.Printf("####setting send... ###########\n")
 		//fmt.Printf("%v\n", send)
