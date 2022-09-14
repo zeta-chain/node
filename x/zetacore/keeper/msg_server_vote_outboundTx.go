@@ -27,7 +27,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
-		if msg.MMint != cctx.ZetaMint {
+		if !msg.MMint.Equal(cctx.ZetaMint) {
 			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.MMint, cctx.ZetaMint)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send ZetaMint %s", msg.MMint, cctx.ZetaMint))
 		}
