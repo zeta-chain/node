@@ -18,19 +18,19 @@ import (
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
-func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Send) {
+func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.CrossChainTx) {
 	t.Helper()
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.SendList = append(state.SendList, &types.Send{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
+		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), state.SendList
+	return network.New(t, cfg), state.CrossChainTxs
 }
 
 func TestShowSend(t *testing.T) {
@@ -45,7 +45,7 @@ func TestShowSend(t *testing.T) {
 		id   string
 		args []string
 		err  error
-		obj  *types.Send
+		obj  *types.CrossChainTx
 	}{
 		{
 			desc: "found",
@@ -73,8 +73,8 @@ func TestShowSend(t *testing.T) {
 				require.NoError(t, err)
 				var resp types.QueryGetSendResponse
 				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				require.NotNil(t, resp.Send)
-				require.Equal(t, tc.obj, resp.Send)
+				require.NotNil(t, resp.CrossChainTx)
+				require.Equal(t, tc.obj, resp.CrossChainTx)
 			}
 		})
 	}
@@ -108,7 +108,7 @@ func TestListSend(t *testing.T) {
 			var resp types.QueryAllSendResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				assert.Equal(t, objs[j], resp.Send[j-i])
+				assert.Equal(t, objs[j], resp.CrossChainTx[j-i])
 			}
 		}
 	})
@@ -122,7 +122,7 @@ func TestListSend(t *testing.T) {
 			var resp types.QueryAllSendResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				assert.Equal(t, objs[j], resp.Send[j-i])
+				assert.Equal(t, objs[j], resp.CrossChainTx[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
@@ -135,6 +135,6 @@ func TestListSend(t *testing.T) {
 		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
-		require.Equal(t, objs, resp.Send)
+		require.Equal(t, objs, resp.CrossChainTx)
 	})
 }

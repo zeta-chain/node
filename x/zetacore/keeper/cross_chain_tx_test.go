@@ -36,6 +36,8 @@ func createNSend(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			StatusMessage:       "any",
 			LastUpdateTimestamp: 0,
 		}
+		items[i].ZetaBurnt = sdk.OneUint()
+		items[i].ZetaMint = sdk.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
@@ -47,7 +49,6 @@ func TestSendGet(t *testing.T) {
 	items := createNSend(keeper, ctx, 1)
 	for _, item := range items {
 		rst, found := keeper.GetCrossChainTx(ctx, item.Index)
-		fmt.Println(rst.String())
 		assert.True(t, found)
 		assert.Equal(t, item, rst)
 	}

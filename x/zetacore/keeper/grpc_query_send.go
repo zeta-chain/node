@@ -73,6 +73,5 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 			sends = append(sends, &val)
 		}
 	}
-
 	return &types.QueryAllSendPendingResponse{CrossChainTx: sends}, nil
 }
