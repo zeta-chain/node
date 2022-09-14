@@ -131,31 +131,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	if chainIP == "" {
 		chainIP = "127.0.0.1"
 	}
-
-	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
-	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
-	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
-	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
-
-	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
-	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
-	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
-	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
-
-	// pools
-	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
-	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
-	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
-	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
-
-	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
-	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
-	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
-	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
+	updateConfig()
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
@@ -350,6 +326,38 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 }
 
+func updateConfig() {
+
+	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
+	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
+	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
+	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
+	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
+	updateEndpoint(common.Ganache, "GANACHE_ENDPOINT")
+
+	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
+	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
+	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
+	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
+	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
+	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
+
+	// pools
+	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
+	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
+	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
+	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
+	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
+	updatePoolAddress("GANACHE_POOL_ADDRESS", common.Ganache)
+
+	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
+	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
+	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
+	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
+	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
+	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
+}
+
 func updatePoolAddress(envvar string, chain common.Chain) {
 	pool := os.Getenv(envvar)
 	parts := strings.Split(pool, ":")
@@ -393,7 +401,7 @@ func updateEndpoint(chain common.Chain, envvar string) {
 	endpoint := os.Getenv(envvar)
 	if endpoint != "" {
 		config.Chains[chain.String()].Endpoint = endpoint
-		log.Info().Msgf("ENDPOINT: %s", endpoint)
+		log.Info().Msgf("Setting ENDPOINT: %s", endpoint)
 	}
 }
 
@@ -401,6 +409,6 @@ func updateTokenAddress(chain common.Chain, envvar string) {
 	token := os.Getenv(envvar)
 	if token != "" {
 		config.Chains[chain.String()].ZETATokenContractAddress = token
-		log.Info().Msgf("TOKEN: %s", token)
+		log.Info().Msgf("Setting TOKEN: %s", token)
 	}
 }

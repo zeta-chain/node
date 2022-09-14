@@ -250,6 +250,7 @@ func (co *CoreObserver) startSendScheduler() {
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			// schedule sends
+
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
@@ -269,6 +270,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
+					co.logger.Info().Msgf("Checking if send is processes already %s", send.Sender)
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
@@ -283,7 +285,7 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-
+					co.logger.Info().Msgf("Trying to process OutTX ", send.Sender)
 					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
