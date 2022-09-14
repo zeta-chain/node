@@ -285,7 +285,6 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					co.logger.Info().Msgf("Trying to process OutTX ", send.Sender)
 					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)

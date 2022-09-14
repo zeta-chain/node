@@ -401,7 +401,7 @@ func updateEndpoint(chain common.Chain, envvar string) {
 	endpoint := os.Getenv(envvar)
 	if endpoint != "" {
 		config.Chains[chain.String()].Endpoint = endpoint
-		log.Info().Msgf("Setting ENDPOINT: %s", endpoint)
+		log.Info().Msgf("ENDPOINT: %s", endpoint)
 	}
 }
 
@@ -409,6 +409,6 @@ func updateTokenAddress(chain common.Chain, envvar string) {
 	token := os.Getenv(envvar)
 	if token != "" {
 		config.Chains[chain.String()].ZETATokenContractAddress = token
-		log.Info().Msgf("Setting TOKEN: %s", token)
+		log.Info().Msgf("TOKEN: %s", token)
 	}
 }
