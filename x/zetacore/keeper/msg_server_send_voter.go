@@ -100,7 +100,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				goto EPILOGUE
 			}
 			to := ethcommon.HexToAddress(send.Receiver)
-			amount, ok := big.NewInt(0).SetString(send.ZetaMint, 10)
+			amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
 			if !ok {
 				send.StatusMessage = fmt.Sprintf("cannot parse zetaMint: %s", send.ZetaBurnt)
 				send.Status = types.SendStatus_Aborted
