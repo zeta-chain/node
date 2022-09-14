@@ -76,8 +76,12 @@ func (k Keeper) PostTxProcessing(
 		send.InTxHash = event.Raw.TxHash.String()
 		send.InBlockHeight = event.Raw.BlockNumber
 		send.GasLimit = 90_000
-
-		send.GasPrice = "25714080"
+		gasprice, found := k.GetGasPrice(ctx, "GOERLI")
+		if !found {
+			fmt.Printf("chain nonce not found for GOERLI\n")
+			return nil
+		}
+		send.GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 		send.Status = zetacoretypes.SendStatus_PendingOutbound
 		chainNonce, found := k.GetChainNonces(ctx, "GOERLI")
 		if !found {
