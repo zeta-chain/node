@@ -51,10 +51,11 @@ func (ob *ChainObserver) observeInTX() error {
 		toBlock = confirmedBlockNum
 	}
 	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlock()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
-
+	startBlock := ob.GetLastBlock() + 1
+	// ============= query the Connector contract =============
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   ob.GetLastBlock() + 1,
+		Start:   startBlock,
 		End:     &toBlock,
 		Context: context.TODO(),
 	}, []ethcommon.Address{}, []*big.Int{})
@@ -67,7 +68,6 @@ func (ob *ChainObserver) observeInTX() error {
 		return err
 	}
 	cnt.Inc()
-
 	// Pull out arguments from logs
 	for logs.Next() {
 		event := logs.Event
@@ -96,6 +96,39 @@ func (ob *ChainObserver) observeInTX() error {
 		}
 		ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
+	// ============= end of query the Connector contract =============
+
+	// ============= query the incoming tx to TSS address ==============
+	tssAddress := ob.Tss.Address()
+	for bn := startBlock; bn <= toBlock; bn++ {
+		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("error getting block")
+			continue
+		}
+		for _, tx := range block.Transactions() {
+			if tx.To() == nil {
+				continue
+			}
+			if *tx.To() == tssAddress {
+				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionReceipt")
+					continue
+				}
+				from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionSender")
+					continue
+				}
+				ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
+				ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
+				ob.logger.Info().Msgf("TSS inTx status: %s", receipt.Status)
+				ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+			}
+		}
+	}
+	// ============= end of query the incoming tx to TSS address ==============
 
 	//ob.LastBlock = toBlock
 	ob.setLastBlock(toBlock)
