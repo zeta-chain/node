@@ -269,7 +269,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
-					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce), send.SenderChain == "ZETA")
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 					}
@@ -337,7 +337,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	}
 
 	// Early return if the send is already processed
-	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce), send.SenderChain == "ZETA")
 	if included || confirmed {
 		logger.Info().Msgf("sendHash already processed; exit signer")
 		return
