@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_CalculateGassFee(t *testing.T) {
+func Test_CalculateGasFee(t *testing.T) {
 
 	tt := []struct {
 		name        string
