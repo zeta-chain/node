@@ -10,6 +10,10 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set all the zetaConversionRate
+	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []string{
+		"GANACHE",
+		"GOERILI",
+	}})
 	for _, elem := range genState.ZetaConversionRateList {
 		k.SetZetaConversionRate(ctx, elem)
 	}

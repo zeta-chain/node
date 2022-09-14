@@ -12,7 +12,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.5.3
 	github.com/ignite-hq/cli v0.20.4
 	github.com/libp2p/go-libp2p-peerstore v0.2.6
@@ -36,6 +36,7 @@ require (
 	github.com/binance-chain/tss-lib v1.3.2
 	github.com/lib/pq v1.10.6
 	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/pkg/errors v0.9.1
 	github.com/tendermint/spm v0.1.9
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -215,7 +216,6 @@ require (
 	github.com/otiai10/primes v0.0.0-20180210170552-f6d2a1ba97c4 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
