@@ -89,9 +89,6 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			chain = recvChain
 		}
 
-		k.updateSend(ctx, chain.String(), &send)
-		k.EmitEventSendFinalized(ctx, &send)
-
 		if recvChain == common.ZETAChain { // if to zEVM, directly call EVM
 			coin, found := k.fungibleKeeper.GetForeignCoins(ctx, "GOERLI-ETHER")
 			if !found {
@@ -118,6 +115,9 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				goto EPILOGUE
 			}
 			send.Status = types.SendStatus_OutboundMined
+		} else {
+			k.updateSend(ctx, chain.String(), &send)
+			k.EmitEventSendFinalized(ctx, &send)
 		}
 	}
 
