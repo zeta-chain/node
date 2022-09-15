@@ -1,8 +1,11 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
-func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
+func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	m.StatusMessage = msg
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
@@ -10,6 +13,7 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 		return
 	}
 	m.Status = newStatus
+	EmitStatusChangeEvent(ctx, m.Status.String(), newStatus.String(), logIdentifier)
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
@@ -47,4 +51,14 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	}
 	return stateTransitionMap
 
+}
+
+func EmitStatusChangeEvent(ctx *sdk.Context, oldStatus, newStatus, logIdentifier string) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(StatusChanged,
+			sdk.NewAttribute(OldStatus, oldStatus),
+			sdk.NewAttribute(NewStatus, newStatus),
+			sdk.NewAttribute(Identifiers, logIdentifier),
+		),
+	)
 }

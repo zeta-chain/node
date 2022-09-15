@@ -101,10 +101,10 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 	case common.ReceiveStatus_Success:
 		oldStatus := cctx.CctxStatus.Status.String()
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Reverted, "Set To Final status")
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
 		}
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Set To Final status")
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
 		}
 		newStatus := cctx.CctxStatus.Status.String()
 		if zetaBurnt.LT(zetaMinted) {
@@ -128,9 +128,9 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 			if err != nil {
 				return err
 			}
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert")
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
 		} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX")
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
 		}
 		newstatus := cctx.CctxStatus.Status.String()
 		EmitFailure(ctx, msg, receive, oldStatus, newstatus)

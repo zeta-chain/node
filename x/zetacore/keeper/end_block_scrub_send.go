@@ -9,6 +9,7 @@ import (
 // Scrub stuck Send with current gas price, if current gas price is much higher (roughtly 20% higher)
 // Emit Scrub event.
 // TODO: This loops through all sends; it should only loop through "pending" sends
+// TODO: Will modify this after merging in pending queue changes
 func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 	//ctx := sdk.UnwrapSDKContext(goCtx)
 	//height := ctx.BlockHeight()

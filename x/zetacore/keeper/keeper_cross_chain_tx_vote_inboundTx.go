@@ -37,12 +37,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if hasEnoughVotes {
 		err := k.FinalizeInbound(ctx, cctx, msg.ReceiverChain)
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			ctx.Logger().Error(err.Error())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound")
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	}
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
