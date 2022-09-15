@@ -115,7 +115,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 			send.OutTxHash = tx.Hash
 			if tx.Failed() {
-				send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s", tx.Hash)
+				send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s, error %s", tx.Hash, tx.VmError)
 				send.Status = types.SendStatus_Aborted
 				goto EPILOGUE
 			}
