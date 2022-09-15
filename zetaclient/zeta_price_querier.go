@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"math"
-	"math/big"
 )
 
 type ZetaPriceQuerier interface {
@@ -30,12 +31,27 @@ type UniswapV3ZetaPriceQuerier struct {
 
 var _ ZetaPriceQuerier = &UniswapV3ZetaPriceQuerier{}
 
-type DummyZetaPriceQuerier struct {
+type FixedZetaPriceQuerier struct {
 	Chain  common.Chain
 	Client *ethclient.Client
+	Price  *big.Float
 }
 
-var _ ZetaPriceQuerier = &DummyZetaPriceQuerier{}
+var _ ZetaPriceQuerier = &FixedZetaPriceQuerier{}
+
+func NewFixedZetaPriceQuerier(chain common.Chain, client *ethclient.Client, address string) *FixedZetaPriceQuerier {
+	var ok bool
+	price := big.NewFloat(1)
+	price, ok = price.SetString(address)
+	if !ok { // if set fails set price to 1
+		price = big.NewFloat(1)
+	}
+	return &FixedZetaPriceQuerier{
+		Chain:  chain,
+		Client: client,
+		Price:  price,
+	}
+}
 
 type UniswapV2ZetaPriceQuerier struct {
 	UniswapV2Abi        *abi.ABI
@@ -133,13 +149,14 @@ func (q *UniswapV2ZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 	return v, bn, nil
 }
 
-// dummy price: always 1; returns 1e18, bn, and error
-func (q *DummyZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
+// fixed price: returns a fixed price , bn, and error
+func (q *FixedZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 	bn, err := q.Client.BlockNumber(context.TODO())
 	if err != nil {
 		log.Err(err).Msgf("%s BlockNumber error", q.Chain)
 		return nil, 0, err
 	}
-	v, _ := big.NewFloat(1.0e18).Int(nil)
+	aux := new(big.Float)
+	v, _ := aux.Mul(q.Price, big.NewFloat(1.0e18)).Int(nil)
 	return v, bn, nil
 }

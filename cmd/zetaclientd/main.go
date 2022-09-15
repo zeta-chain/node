@@ -361,6 +361,8 @@ func updatePoolAddress(envvar string, chain common.Chain) {
 		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
 	} else if strings.EqualFold(parts[0], "v3") {
 		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
+	} else if strings.EqualFold(parts[0], "fixed") {
+		config.Chains[chain.String()].PoolContract = clienttypes.Fixed
 	} else {
 		log.Error().Msgf("%s is not a valid type:address", pool)
 		return

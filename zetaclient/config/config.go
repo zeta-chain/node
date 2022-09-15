@@ -93,7 +93,7 @@ var Chains = map[string]*types.ChainETHish{
 		Name:                     "BAOBAB",
 		ConnectorContractAddress: "0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c",
 		PoolContractAddress:      "", // KlaySwap 0xd2e72adcdd82e687158541fe196d53ed60caac09
-		PoolContract:             types.UniswapV3,
+		PoolContract:             types.Fixed,
 		ZETATokenContractAddress: "0x000080383847bD75F91c168269Aa74004877592f",
 		ChainID:                  big.NewInt(1001),
 		BlockTime:                EthBlockTime,
