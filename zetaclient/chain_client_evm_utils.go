@@ -72,7 +72,7 @@ func (ob *ChainObserver) observeInTX() error {
 	// Pull out arguments from logs
 	for logs.Next() {
 		event := logs.Event
-		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s", event.Raw.BlockNumber, event.Raw.TxHash)
+		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 
 		destChain := config.FindChainByID(event.DestinationChainId)
 		destAddr := types.BytesToEthHex(event.DestinationAddress)

@@ -26,7 +26,7 @@ func EmitEventSendFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	)
 }
 
-func EmitEventCCTXCreated(ctx sdk.Context, cctx *types.CrossChainTx) {
+func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.InboundCreated,
 			sdk.NewAttribute(types.CctxIndex, cctx.Index),

@@ -15,16 +15,16 @@ import (
 )
 
 // Keeper Tests
-func createNSend(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
+func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
 		items[i].InBoundTxParams = &types.InBoundTxParams{
-			Sender:                   fmt.Sprintf("%d", i),
-			SenderChain:              fmt.Sprintf("%d", i),
-			InBoundTxObservedHash:    fmt.Sprintf("%d", i),
-			InBoundTxObservedHeight:  uint64(i),
-			InBoundTxFinalizedHeight: uint64(i),
+			Sender:                          fmt.Sprintf("%d", i),
+			SenderChain:                     fmt.Sprintf("%d", i),
+			InBoundTxObservedHash:           fmt.Sprintf("%d", i),
+			InBoundTxObservedExternalHeight: uint64(i),
+			InBoundTxFinalizedZetaHeight:    uint64(i),
 		}
 		items[i].OutBoundTxParams = &types.OutBoundTxParams{
 			Receiver:               fmt.Sprintf("%d", i),
@@ -51,7 +51,7 @@ func createNSend(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 
 func TestSendGet(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 1)
+	items := createNCctx(keeper, ctx, 1)
 	for _, item := range items {
 		rst, found := keeper.GetCrossChainTx(ctx, item.Index)
 		assert.True(t, found)
@@ -60,7 +60,7 @@ func TestSendGet(t *testing.T) {
 }
 func TestSendRemove(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 10)
+	items := createNCctx(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveCrossChainTx(ctx, item.Index)
 		_, found := keeper.GetCrossChainTx(ctx, item.Index)
@@ -70,7 +70,7 @@ func TestSendRemove(t *testing.T) {
 
 func TestSendGetAll(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
-	items := createNSend(keeper, ctx, 10)
+	items := createNCctx(keeper, ctx, 10)
 	assert.Equal(t, items, keeper.GetAllCrossChainTx(ctx))
 }
 
@@ -79,7 +79,7 @@ func TestSendGetAll(t *testing.T) {
 func TestSendQuerySingle(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNSend(keeper, ctx, 2)
+	msgs := createNCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetSendRequest
@@ -121,7 +121,7 @@ func TestSendQuerySingle(t *testing.T) {
 func TestSendQueryPaginated(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNSend(keeper, ctx, 5)
+	msgs := createNCctx(keeper, ctx, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllSendRequest {
 		return &types.QueryAllSendRequest{

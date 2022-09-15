@@ -35,7 +35,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	hasEnoughVotes := k.hasSuperMajorityValidators(ctx, cctx.Signers)
 	if hasEnoughVotes {
-		err := k.FinalizeInbound(ctx, cctx, msg.ReceiverChain)
+		err := k.FinalizeInbound(ctx, &cctx, msg.ReceiverChain)
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			ctx.Logger().Error(err.Error())
@@ -48,25 +48,25 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
-func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx types.CrossChainTx, receiveChain string) error {
+func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain string) error {
 	cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	k.UpdateLastBlockHeight(ctx, &cctx)
+	k.UpdateLastBlockHeight(ctx, cctx)
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 	cctx.OutBoundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % len(cctx.Signers))
 
-	err := k.updatePrices(ctx, receiveChain, &cctx)
+	err := k.UpdatePrices(ctx, receiveChain, cctx)
 	if err != nil {
 		return err
 	}
-	err = k.updateNonce(ctx, receiveChain, &cctx)
+	err = k.UpdateNonce(ctx, receiveChain, cctx)
 	if err != nil {
 		return err
 	}
-	EmitEventSendFinalized(ctx, &cctx)
+	EmitEventSendFinalized(ctx, cctx)
 	return nil
 }
 
-func (k Keeper) updatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
+func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, receiveChain)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
@@ -89,9 +89,10 @@ func (k Keeper) updatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than mBurnt (%s) | Identifiers : %s ", gasFeeInZeta, zetaBurnt, cctx.LogIdentifierForCCTX()))
 	}
 	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta)
+	cctx.ZetaFees = gasFeeInZeta
 	return nil
 }
-func (k Keeper) updateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
+func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
 	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {
 		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", receiveChain, cctx.LogIdentifierForCCTX()))
@@ -131,6 +132,11 @@ func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
 // These functions should always remain under private scope
 
 func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
+	fmt.Println("---------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------")
+	fmt.Println("Creating New CCTX :", msg.Message)
+	fmt.Println("---------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------")
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     msg.SenderChain,
@@ -160,13 +166,14 @@ func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		Creator:          msg.Creator,
 		Index:            index,
 		ZetaBurnt:        sdk.NewUintFromString(msg.ZetaBurnt),
-		ZetaMint:         sdk.Uint{},
+		ZetaMint:         sdk.ZeroUint(),
+		ZetaFees:         sdk.ZeroUint(),
 		RelayedMessage:   msg.Message,
 		Signers:          []string{},
 		CctxStatus:       status,
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
 	}
-	EmitEventCCTXCreated(ctx, &newCctx)
+	EmitEventCCTXCreated(ctx, newCctx)
 	return newCctx
 }

@@ -123,11 +123,11 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 		oldStatus := cctx.CctxStatus.Status.String()
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 			chain := cctx.InBoundTxParams.SenderChain
-			err := k.updatePrices(ctx, chain, cctx)
+			err := k.UpdatePrices(ctx, chain, cctx)
 			if err != nil {
 				return err
 			}
-			err = k.updateNonce(ctx, chain, cctx)
+			err = k.UpdateNonce(ctx, chain, cctx)
 			if err != nil {
 				return err
 			}

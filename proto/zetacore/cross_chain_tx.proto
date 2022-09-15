@@ -53,9 +53,14 @@ message CrossChainTx {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"zetaMint\""
   ];
-  string relayedMessage = 5; // Not used by protocol , just relayed across
-  repeated string signers = 6;
-  Status cctx_status = 7;
-  InBoundTxParams  InBoundTxParams = 8;
-  OutBoundTxParams OutBoundTxParams = 9;
+  string zetaFees = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"zetaFees\""
+  ];
+  string relayedMessage = 6; // Not used by protocol , just relayed across
+  repeated string signers = 7;
+  Status cctx_status = 8;
+  InBoundTxParams  InBoundTxParams = 9;
+  OutBoundTxParams OutBoundTxParams = 10;
 }
