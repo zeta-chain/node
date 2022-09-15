@@ -84,5 +84,5 @@ func ZetaConversionRateKey(
 }
 
 func (cctx CrossChainTx) LogIdentifierForCCTX() string {
-	return fmt.Sprintf("%s-%s-%s-%s", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
+	return fmt.Sprintf("%s-%s-%s-%d", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
 }

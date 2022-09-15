@@ -23,9 +23,10 @@ func IsBondedValidator(creator string, validators []stakingtypes.Validator) bool
 	}
 	return false
 }
-func increasePrecision(i sdk.Uint) sdk.Uint {
-	return i.Mul(sdk.NewUintFromString("1000000000000000000"))
-}
+
+//func increasePrecision(i sdk.Uint) sdk.Uint {
+//	return i.Mul(sdk.NewUintFromString("1000000000000000000"))
+//}
 func reducePrecision(i sdk.Uint) sdk.Uint {
 	return i.Quo(sdk.NewUintFromString("1000000000000000000"))
 }

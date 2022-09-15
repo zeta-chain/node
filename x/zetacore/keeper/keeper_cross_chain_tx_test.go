@@ -27,14 +27,16 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			InBoundTxFinalizedZetaHeight:    uint64(i),
 		}
 		items[i].OutBoundTxParams = &types.OutBoundTxParams{
-			Receiver:               fmt.Sprintf("%d", i),
-			ReceiverChain:          fmt.Sprintf("%d", i),
-			Broadcaster:            uint64(i),
-			OutBoundTxHash:         fmt.Sprintf("%d", i),
-			OutBoundTxTSSNonce:     uint64(i),
-			OutBoundTxGasLimit:     uint64(i),
-			OutBoundTxGasPrice:     fmt.Sprintf("%d", i),
-			OutBoundTXReceiveIndex: fmt.Sprintf("%d", i),
+			Receiver:                         fmt.Sprintf("%d", i),
+			ReceiverChain:                    fmt.Sprintf("%d", i),
+			Broadcaster:                      uint64(i),
+			OutBoundTxHash:                   fmt.Sprintf("%d", i),
+			OutBoundTxTSSNonce:               uint64(i),
+			OutBoundTxGasLimit:               uint64(i),
+			OutBoundTxGasPrice:               fmt.Sprintf("%d", i),
+			OutBoundTXReceiveIndex:           fmt.Sprintf("%d", i),
+			OutBoundTxObservedExternalHeight: uint64(i),
+			OutBoundTxFinalizedZetaHeight:    uint64(i),
 		}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
@@ -43,6 +45,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 		}
 		items[i].ZetaBurnt = sdk.OneUint()
 		items[i].ZetaMint = sdk.OneUint()
+		items[i].ZetaFees = sdk.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
