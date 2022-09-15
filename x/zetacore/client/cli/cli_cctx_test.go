@@ -26,7 +26,7 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}, ZetaMint: sdk.OneUint(), ZetaBurnt: sdk.OneUint()})
+		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}, ZetaMint: sdk.OneUint(), ZetaBurnt: sdk.OneUint(), ZetaFees: sdk.OneUint()})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)

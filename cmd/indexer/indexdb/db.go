@@ -279,7 +279,7 @@ func (idb *IndexDB) Rebuild() error {
 		blocknumber INTEGER NOT NULL
     );
     `, types.OutboundTxSuccessful, types.CctxIndex, types.OutTxHash, types.ZetaMint,
-		types.ReceiverChain, types.OldStatus, types.NewStatus)
+		types.OutTXVotingChain, types.OldStatus, types.NewStatus)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -301,7 +301,7 @@ func (idb *IndexDB) Rebuild() error {
 		PRIMARY KEY ( %s, %s)
     );
     `, types.OutboundTxFailed, types.CctxIndex, types.OutTxHash, types.ZetaMint,
-		types.ReceiverChain, types.OldStatus, types.NewStatus, types.StatusMessage, types.CctxIndex, types.OutTxHash)
+		types.OutTXVotingChain, types.OldStatus, types.NewStatus, types.StatusMessage, types.CctxIndex, types.OutTxHash)
 
 	_, err = idb.db.Exec(query)
 	if err != nil {
@@ -432,11 +432,11 @@ func (idb *IndexDB) insertBlockTable(bn int64) error {
 func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.CctxIndex], kv[types.OutTxHash])
 	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber, %s) values($1,$2,$3,$4,$5,$6,$7,$8, $9)",
-		types.OutboundTxFailed, types.CctxIndex, types.OutTxHash, types.ZetaMint, types.ReceiverChain, types.OldStatus, types.NewStatus, types.StatusMessage),
+		types.OutboundTxFailed, types.CctxIndex, types.OutTxHash, types.ZetaMint, types.OutTXVotingChain, types.OldStatus, types.NewStatus, types.StatusMessage),
 		kv[types.CctxIndex],
 		kv[types.OutTxHash],
 		kv[types.ZetaMint],
-		kv[types.ReceiverChain],
+		kv[types.OutTXVotingChain],
 		kv[types.OldStatus],
 		kv[types.NewStatus],
 		res.Timestamp,
@@ -453,9 +453,9 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 		return err
 	}
 
-	if kv[types.OutTxHash] != "" && kv[types.ReceiverChain] != "" {
+	if kv[types.OutTxHash] != "" && kv[types.OutTXVotingChain] != "" {
 		idb.TxHashQueue <- TxHash{
-			Chain:  kv[types.ReceiverChain],
+			Chain:  kv[types.OutTXVotingChain],
 			TxHash: kv[types.OutTxHash],
 		}
 	}
@@ -464,11 +464,11 @@ func (idb *IndexDB) processOutboundFailed(res *sdk.TxResponse, kv map[string]str
 
 func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string]string) error {
 	fmt.Printf("%s:%s\n", kv[types.CctxIndex], kv[types.OutTxHash])
-	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8)", types.OutboundTxSuccessful, types.CctxIndex, types.OutTxHash, types.ZetaMint, types.ReceiverChain, types.OldStatus, types.NewStatus),
+	_, err := idb.db.Exec(fmt.Sprintf("INSERT INTO  %s(%s, %s, %s, %s, %s, %s, timestamp,blocknumber) values($1,$2,$3,$4,$5,$6,$7,$8)", types.OutboundTxSuccessful, types.CctxIndex, types.OutTxHash, types.ZetaMint, types.OutTXVotingChain, types.OldStatus, types.NewStatus),
 		kv[types.CctxIndex],
 		kv[types.OutTxHash],
 		kv[types.ZetaMint],
-		kv[types.ReceiverChain],
+		kv[types.OutTXVotingChain],
 		kv[types.OldStatus],
 		kv[types.NewStatus],
 		res.Timestamp,
@@ -482,9 +482,9 @@ func (idb *IndexDB) processOutboundSuccessful(res *sdk.TxResponse, kv map[string
 	if err != nil {
 		return err
 	}
-	if kv[types.OutTxHash] != "" && kv[types.ReceiverChain] != "" {
+	if kv[types.OutTxHash] != "" && kv[types.OutTXVotingChain] != "" {
 		idb.TxHashQueue <- TxHash{
-			Chain:  kv[types.ReceiverChain],
+			Chain:  kv[types.OutTXVotingChain],
 			TxHash: kv[types.OutTxHash],
 		}
 	}
