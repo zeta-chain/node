@@ -49,7 +49,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 }
 
 func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx types.CrossChainTx, receiveChain string) error {
-	cctx.InBoundTxParams.InBoundTxFinalizedHeight = uint64(ctx.BlockHeader().Height)
+	cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	k.UpdateLastBlockHeight(ctx, &cctx)
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 	cctx.OutBoundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % len(cctx.Signers))
@@ -111,11 +111,11 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 			Creator:           msg.Creator,
 			Index:             msg.InBoundTxParams.SenderChain, // ?
 			Chain:             msg.InBoundTxParams.SenderChain,
-			LastSendHeight:    msg.InBoundTxParams.InBoundTxObservedHeight,
+			LastSendHeight:    msg.InBoundTxParams.InBoundTxObservedExternalHeight,
 			LastReceiveHeight: 0,
 		}
 	} else {
-		lastblock.LastSendHeight = msg.InBoundTxParams.InBoundTxObservedHeight
+		lastblock.LastSendHeight = msg.InBoundTxParams.InBoundTxObservedExternalHeight
 	}
 	k.SetLastBlockHeight(ctx, lastblock)
 }
@@ -132,23 +132,24 @@ func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
 
 func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
 	inboundParams := &types.InBoundTxParams{
-		Sender:                   msg.Sender,
-		SenderChain:              msg.SenderChain,
-		InBoundTxObservedHash:    msg.InTxHash,
-		InBoundTxObservedHeight:  msg.InBlockHeight,
-		InBoundTxFinalizedHeight: 0,
+		Sender:                          msg.Sender,
+		SenderChain:                     msg.SenderChain,
+		InBoundTxObservedHash:           msg.InTxHash,
+		InBoundTxObservedExternalHeight: msg.InBlockHeight,
+		InBoundTxFinalizedZetaHeight:    0,
 	}
 
 	outBoundParams := &types.OutBoundTxParams{
-		Receiver:                  msg.Receiver,
-		ReceiverChain:             msg.ReceiverChain,
-		Broadcaster:               0,
-		OutBoundTxHash:            "",
-		OutBoundTxTSSNonce:        0,
-		OutBoundTxGasLimit:        msg.GasLimit,
-		OutBoundTxGasPrice:        "",
-		OutBoundTXReceiveIndex:    "",
-		OutBoundTxFinalizedHeight: 0,
+		Receiver:                         msg.Receiver,
+		ReceiverChain:                    msg.ReceiverChain,
+		Broadcaster:                      0,
+		OutBoundTxHash:                   "",
+		OutBoundTxTSSNonce:               0,
+		OutBoundTxGasLimit:               msg.GasLimit,
+		OutBoundTxGasPrice:               "",
+		OutBoundTXReceiveIndex:           "",
+		OutBoundTxFinalizedZetaHeight:    0,
+		OutBoundTxObservedExternalHeight: 0,
 	}
 	status := &types.Status{
 		Status:              types.CctxStatus_PendingInbound,

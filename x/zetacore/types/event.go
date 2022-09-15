@@ -14,14 +14,15 @@ const (
 	ReceiverChain = "ReceiverChain"
 	OutTxHash     = "OutTxObservedHash"
 
-	ZetaMint       = "ZetaMint"
-	ZetaBurnt      = "ZetaBurnt"
-	OutBoundChain  = "OutBoundChain"
-	OldStatus      = "OldStatus"
-	NewStatus      = "NewStatus"
-	StatusMessage  = "StatusMessage"
-	RelayedMessage = "RelayedMessage"
-	Identifiers    = "LogIdentifiers"
+	ZetaMint         = "ZetaMint"
+	ZetaBurnt        = "ZetaBurnt"
+	OutTXVotingChain = "OutTxVotingChain"
+	OutBoundChain    = "OutBoundChain"
+	OldStatus        = "OldStatus"
+	NewStatus        = "NewStatus"
+	StatusMessage    = "StatusMessage"
+	RelayedMessage   = "RelayedMessage"
+	Identifiers      = "LogIdentifiers"
 )
 
 const (

@@ -7,8 +7,7 @@ enum CctxStatus {
   option (gogoproto.goproto_enum_stringer) = true;
   PendingInbound = 0; // some observer sees inbound tx
   PendingOutbound = 1; // super majority observer see inbound tx
-  OutboundMined = 2;  // the corresponding outbound tx is mined
-  Confirmed = 3; // NOT USED CURRENTLY
+  OutboundMined = 3;  // the corresponding outbound tx is mined
   PendingRevert = 4; // outbound cannot succeed; should revert inbound
   Reverted =5; // inbound reverted.
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
@@ -18,8 +17,8 @@ message InBoundTxParams{
   string sender = 1;
   string senderChain = 2;
   string inBoundTxObservedHash = 3;
-  uint64 inBoundTxObservedHeight = 4;
-  uint64 inBoundTxFinalizedHeight = 5;
+  uint64 inBoundTxObservedExternalHeight = 4;
+  uint64 inBoundTxFinalizedZetaHeight = 5;
 }
 
 message OutBoundTxParams {
@@ -31,7 +30,8 @@ message OutBoundTxParams {
   uint64 outBoundTxGasLimit = 6;
   string outBoundTxGasPrice = 7;
   string outBoundTXReceiveIndex = 8;
-  uint64 outBoundTxFinalizedHeight = 9;
+  uint64 outBoundTxFinalizedZetaHeight = 9;
+  uint64 outBoundTxObservedExternalHeight = 10;
 }
 
 message Status {
