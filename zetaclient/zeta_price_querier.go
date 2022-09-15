@@ -156,7 +156,7 @@ func (q *FixedZetaPriceQuerier) GetZetaPrice() (*big.Int, uint64, error) {
 		log.Err(err).Msgf("%s BlockNumber error", q.Chain)
 		return nil, 0, err
 	}
-	price := big.NewFloat(1)
-	v, _ := price.Mul(q.Price, big.NewFloat(1.0e18)).Int(nil)
+	aux := new(big.Float)
+	v, _ := aux.Mul(q.Price, big.NewFloat(1.0e18)).Int(nil)
 	return v, bn, nil
 }
