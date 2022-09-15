@@ -126,7 +126,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 		}
 
 		if receive.Status == common.ReceiveStatus_Success || receive.Status == common.ReceiveStatus_Failed {
-			index := fmt.Sprintf("%s/%s", msg.Chain, strconv.Itoa(int(msg.OutTxNonce)))
+			index := fmt.Sprintf("%s-%s", msg.Chain, strconv.Itoa(int(msg.OutTxNonce)))
 			k.RemoveOutTxTracker(ctx, index)
 		}
 
