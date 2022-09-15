@@ -83,14 +83,6 @@ func ZetaConversionRateKey(
 	return key
 }
 
-// events follow here
-const (
-	SendEventKey         = "NewSendCreated" // Indicates what key to listen to
-	StoredGameEventIndex = "Index"          // What game is relevant
-	StoredGameEventRed   = "Red"            // Is it relevant to me?
-	StoredGameEventBlack = "Black"          // Is it relevant to me?
-)
-
 func (cctx CrossChainTx) LogIdentifierForCCTX() string {
-	return fmt.Sprintf("%s-%s-%s", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain)
+	return fmt.Sprintf("%s-%s-%s-%s", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
 }

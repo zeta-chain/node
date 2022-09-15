@@ -116,7 +116,7 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 		if err != nil {
 			return err
 		}
-		EmitSuccess(ctx, msg, receive, oldStatus, newStatus)
+		EmitReceiveSuccess(ctx, msg, receive, oldStatus, newStatus, cctx.LogIdentifierForCCTX())
 	case common.ReceiveStatus_Failed:
 		oldStatus := cctx.CctxStatus.Status.String()
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
@@ -134,31 +134,7 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
 		}
 		newstatus := cctx.CctxStatus.Status.String()
-		EmitFailure(ctx, msg, receive, oldStatus, newstatus)
+		EmitReceiveFailure(ctx, msg, receive, oldStatus, newstatus, cctx.LogIdentifierForCCTX())
 	}
 	return nil
-}
-
-func EmitSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive, oldStatus, newStatus string) {
-	event := sdk.NewEvent(types.OutboundTxSuccessful,
-		sdk.NewAttribute(types.CctxIndex, receive.SendHash),
-		sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
-		sdk.NewAttribute(types.ZetaMint, msg.MMint.String()),
-		sdk.NewAttribute(types.OutBoundChain, msg.OutTxChain),
-		sdk.NewAttribute(types.OldStatus, oldStatus),
-		sdk.NewAttribute(types.NewStatus, newStatus),
-	)
-	ctx.EventManager().EmitEvent(event)
-}
-
-func EmitFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive, oldStatus, newStatus string) {
-	event := sdk.NewEvent(types.OutboundTxFailed,
-		sdk.NewAttribute(types.CctxIndex, receive.SendHash),
-		sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
-		sdk.NewAttribute(types.ZetaMint, msg.MMint.String()),
-		sdk.NewAttribute(types.OutBoundChain, msg.OutTxChain),
-		sdk.NewAttribute(types.OldStatus, oldStatus),
-		sdk.NewAttribute(types.NewStatus, newStatus),
-	)
-	ctx.EventManager().EmitEvent(event)
 }

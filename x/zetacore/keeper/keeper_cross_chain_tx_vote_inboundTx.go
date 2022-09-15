@@ -120,43 +120,15 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 	k.SetLastBlockHeight(ctx, lastblock)
 }
 
-func EmitEventSendFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.InboundFinalized,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
-			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
-			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
-			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InBoundTxParams.InBoundTxObservedHeight)),
-			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
-			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
-			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint.String()),
-			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
-			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
-		),
-	)
-}
-
 func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
-	//90000, 20000000000,1000000000000000000/10000000000000
 	gasFee := price.Mul(gasLimit).Mul(rate)
 	gasFee = reducePrecision(gasFee)
 	return gasFee.Add(types.GetProtocolFee())
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 // These functions should always remain under private scope
-func increasePrecision(i sdk.Uint) sdk.Uint {
-	return i.Mul(sdk.NewUintFromString("1000000000000000000"))
-}
-func reducePrecision(i sdk.Uint) sdk.Uint {
-	return i.Quo(sdk.NewUintFromString("1000000000000000000"))
-}
 
 func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
 	inboundParams := &types.InBoundTxParams{
@@ -196,20 +168,4 @@ func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	}
 	EmitEventCCTXCreated(ctx, &newCctx)
 	return newCctx
-}
-
-func EmitEventCCTXCreated(ctx sdk.Context, cctx *types.CrossChainTx) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.InboundCreated,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
-			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
-			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
-			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
-			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
-			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
-		),
-	)
 }
