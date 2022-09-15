@@ -110,7 +110,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				goto EPILOGUE
 			}
 			fmt.Printf("=======  tx: %s\n", tx.Hash)
-			fmt.Printf("logs: %s\n", tx.Logs)
+			fmt.Printf("vmerror: %s\n", tx.VmError)
 			fmt.Printf("=======  tx: %s\n", tx.Hash)
 
 			send.OutTxHash = tx.Hash
