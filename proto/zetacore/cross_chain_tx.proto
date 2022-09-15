@@ -31,6 +31,7 @@ message OutBoundTxParams {
   uint64 outBoundTxGasLimit = 6;
   string outBoundTxGasPrice = 7;
   string outBoundTXReceiveIndex = 8;
+  uint64 outBoundTxFinalizedHeight = 9;
 }
 
 message Status {

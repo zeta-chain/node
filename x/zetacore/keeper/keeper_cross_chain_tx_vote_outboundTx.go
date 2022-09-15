@@ -94,6 +94,7 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive) error {
 
 	receive.FinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+	cctx.OutBoundTxParams.OutBoundTxFinalizedHeight = uint64(ctx.BlockHeader().Height)
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
 

@@ -168,14 +168,15 @@ func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	}
 
 	outBoundParams := &types.OutBoundTxParams{
-		Receiver:               msg.Receiver,
-		ReceiverChain:          msg.ReceiverChain,
-		Broadcaster:            0,
-		OutBoundTxHash:         "",
-		OutBoundTxTSSNonce:     0,
-		OutBoundTxGasLimit:     msg.GasLimit,
-		OutBoundTxGasPrice:     "",
-		OutBoundTXReceiveIndex: "",
+		Receiver:                  msg.Receiver,
+		ReceiverChain:             msg.ReceiverChain,
+		Broadcaster:               0,
+		OutBoundTxHash:            "",
+		OutBoundTxTSSNonce:        0,
+		OutBoundTxGasLimit:        msg.GasLimit,
+		OutBoundTxGasPrice:        "",
+		OutBoundTXReceiveIndex:    "",
+		OutBoundTxFinalizedHeight: 0,
 	}
 	status := &types.Status{
 		Status:              types.CctxStatus_PendingInbound,
