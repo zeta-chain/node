@@ -97,7 +97,7 @@ func (ob *ChainObserver) BuildReceiptsMap() {
 	}
 }
 
-func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *DummyZetaPriceQuerier) {
+func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *FixedZetaPriceQuerier) {
 	uniswapv3querier := &UniswapV3ZetaPriceQuerier{
 		UniswapV3Abi:        &uniswapV3ABI,
 		Client:              ob.EvmClient,
@@ -112,16 +112,14 @@ func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2A
 		Chain:               ob.chain,
 		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
-	dummyQuerier := &DummyZetaPriceQuerier{
-		Chain:  ob.chain,
-		Client: ob.EvmClient,
-	}
-	return uniswapv3querier, uniswapv2querier, dummyQuerier
+	fixedQuerier := NewFixedZetaPriceQuerier(ob.chain, ob.EvmClient, config.Chains[chain].PoolContractAddress)
+	return uniswapv3querier, uniswapv2querier, fixedQuerier
 }
 
 func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 	uniswapv3querier *UniswapV3ZetaPriceQuerier,
-	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
+	uniswapv2querier *UniswapV2ZetaPriceQuerier,
+	fixedQuerier *FixedZetaPriceQuerier) {
 	MinObInterval := 24
 	switch chain {
 	case common.MumbaiChain:
@@ -154,6 +152,8 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 		ob.ZetaPriceQuerier = uniswapv2querier
 	case clienttypes.UniswapV3:
 		ob.ZetaPriceQuerier = uniswapv3querier
+	case clienttypes.Fixed:
+		ob.ZetaPriceQuerier = fixedQuerier
 	default:
 		ob.logger.Error().Msgf("unknown pool contract type: %d", config.Chains[chain.String()].PoolContract)
 	}

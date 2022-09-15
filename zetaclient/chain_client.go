@@ -141,11 +141,11 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 
-	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
-	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
+	uniswapv3Querier, uniswapv2Querier, fixedQuerier := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
+	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier, fixedQuerier)
 	if os.Getenv("DUMMY_PRICE") != "" {
 		ob.logger.Info().Msg("Using dummy price of 1:1")
-		ob.ZetaPriceQuerier = dummyQuerior
+		ob.ZetaPriceQuerier = fixedQuerier
 	}
 
 	if dbpath != "" {
