@@ -103,12 +103,17 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				send.Status = types.SendStatus_Aborted
 				goto EPILOGUE
 			}
-			tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ERC20ContractAddress), to, amount)
+			tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ZRC4ContractAddress), to, amount)
 			if err != nil {
 				send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
 				send.Status = types.SendStatus_Aborted
 				goto EPILOGUE
 			}
+			fmt.Printf("=======  tx: %s\n", tx.Hash)
+			fmt.Printf("logs: %s\n", tx.Logs)
+			fmt.Printf("=======  tx: %s\n", tx.Hash)
+
+			send.OutTxHash = tx.Hash
 			if tx.Failed() {
 				send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s", tx.Hash)
 				send.Status = types.SendStatus_Aborted
