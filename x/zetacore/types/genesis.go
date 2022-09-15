@@ -15,14 +15,13 @@ func DefaultGenesis() *GenesisState {
 		ZetaConversionRateList: []ZetaConversionRate{},
 		OutTxTrackerList:       []OutTxTracker{},
 		// this line is used by starport scaffolding # genesis/types/default
-		Keygen:              nil,
-		TSSVoterList:        []*TSSVoter{},
-		TSSList:             []*TSS{},
-		GasBalanceList:      []*GasBalance{},
-		GasPriceList:        []*GasPrice{},
-		ChainNoncesList:     []*ChainNonces{},
-		LastBlockHeightList: []*LastBlockHeight{},
-		ReceiveList:         []*Receive{},
+		Keygen:          nil,
+		TSSVoterList:    []*TSSVoter{},
+		TSSList:         []*TSS{},
+		GasBalanceList:  []*GasBalance{},
+		GasPriceList:    []*GasPrice{},
+		ChainNoncesList: []*ChainNonces{},
+		ReceiveList:     []*Receive{},
 		//CCTX:            []*Send{},
 		NodeAccountList: []*NodeAccount{},
 	}
@@ -99,15 +98,7 @@ func (gs GenesisState) Validate() error {
 		}
 		chainNoncesIndexMap[elem.Index] = true
 	}
-	// Check for duplicated index in lastBlockHeight
-	lastBlockHeightIndexMap := make(map[string]bool)
 
-	for _, elem := range gs.LastBlockHeightList {
-		if _, ok := lastBlockHeightIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for lastBlockHeight")
-		}
-		lastBlockHeightIndexMap[elem.Index] = true
-	}
 	// Check for duplicated index in receive
 	receiveIndexMap := make(map[string]bool)
 

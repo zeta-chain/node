@@ -28,39 +28,25 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowZetaConversionRate())
 	cmd.AddCommand(CmdListOutTxTracker())
 	cmd.AddCommand(CmdShowOutTxTracker())
-	// this line is used by starport scaffolding # 1
-
 	cmd.AddCommand(CmdShowKeygen())
-
 	cmd.AddCommand(CmdListTSSVoter())
 	cmd.AddCommand(CmdShowTSSVoter())
-
 	cmd.AddCommand(CmdListTSS())
 	cmd.AddCommand(CmdShowTSS())
-
 	cmd.AddCommand(CmdListGasBalance())
 	cmd.AddCommand(CmdShowGasBalance())
-
 	cmd.AddCommand(CmdListGasPrice())
 	cmd.AddCommand(CmdShowGasPrice())
-
 	cmd.AddCommand(CmdListChainNonces())
 	cmd.AddCommand(CmdShowChainNonces())
-
-	cmd.AddCommand(CmdListLastBlockHeight())
-	cmd.AddCommand(CmdShowLastBlockHeight())
-
 	cmd.AddCommand(CmdListReceive())
 	cmd.AddCommand(CmdShowReceive())
-
 	cmd.AddCommand(CmdListSend())
 	cmd.AddCommand(CmdShowSend())
-
 	cmd.AddCommand(CmdListNodeAccount())
 	cmd.AddCommand(CmdShowNodeAccount())
-
-	cmd.AddCommand(CmdLastMetaHeight())
 	cmd.AddCommand(CmdGetSupportedChains())
+	cmd.AddCommand(CmdLastZetaHeight())
 
 	return cmd
 }

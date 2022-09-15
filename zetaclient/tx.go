@@ -147,16 +147,6 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
-	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
-		return 0, err
-	}
-	return resp.Height, nil
-}
-
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
@@ -165,6 +155,16 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
+}
+
+func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+	if err != nil {
+		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		return 0, err
+	}
+	return resp.Height, nil
 }
 
 func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
