@@ -98,6 +98,11 @@ var Chains = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
 	},
+	common.ZETAChain.String(): {
+		Name:      "ZETA",
+		ChainID:   big.NewInt(8666),
+		BlockTime: 6,
+	},
 	common.EmptyChain.String(): {
 		Name:                     "",
 		ConnectorContractAddress: "",
