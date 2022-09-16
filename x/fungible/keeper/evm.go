@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 
@@ -60,7 +61,7 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
 
-	coinIndex := "GOERLI-ETHER"
+	coinIndex := fmt.Sprintf("%s-%s", chain, name)
 	coin, _ := k.GetForeignCoins(ctx, coinIndex)
 	coin.CoinType = coinType
 	coin.Name = name
