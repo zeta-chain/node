@@ -23,11 +23,12 @@ import (
 // erc20 module account as owner.
 func (k Keeper) DeployZRC4Contract(
 	ctx sdk.Context,
-
+	name, symbol string,
+	decimals uint8,
+	chain string,
+	coinType zetacommon.CoinType,
+	erc20Contract string,
 ) (common.Address, error) { // FIXME: geneeralized beyond ETH
-	decimals := uint8(18)
-	name := "ETH"
-	symbol := "zETH"
 	abi, err := contracts.ZRC4MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
@@ -61,14 +62,14 @@ func (k Keeper) DeployZRC4Contract(
 
 	coinIndex := "GOERLI-ETHER"
 	coin, _ := k.GetForeignCoins(ctx, coinIndex)
-	coin.CoinType = zetacommon.CoinType_Gas
+	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
-	coin.Decimals = 18
-	coin.ERC20ContractAddress = ""
+	coin.Decimals = uint32(decimals)
+	coin.ERC20ContractAddress = erc20Contract
 	coin.ZRC4ContractAddress = contractAddr.String()
 	coin.Index = coinIndex
-	coin.ForeignChain = "GOERLI"
+	coin.ForeignChain = chain
 	k.SetForeignCoins(ctx, coin)
 
 	return contractAddr, nil

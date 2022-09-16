@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 )
@@ -14,7 +15,7 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO: Handling the message
-	addr, err := k.DeployZRC4Contract(ctx)
+	addr, err := k.DeployZRC4Contract(ctx, "ETH", "zETH", 18, "GOERLI", common.CoinType_Gas, "")
 	if err != nil {
 		return nil, err
 	}
@@ -36,11 +37,26 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 			sdk.NewAttribute("action", "FungibleTestMsg"),
+			sdk.NewAttribute("chain", "GOERLI"),
 			sdk.NewAttribute("contract", addr.String()),
 			sdk.NewAttribute("balance1", bal1.String()),
 			sdk.NewAttribute("balance2", bal2.String()),
 		),
 	)
+
+	addr, err = k.DeployZRC4Contract(ctx, "BNB", "zBNB", 18, "BSCTESTNET", common.CoinType_Gas, "")
+	if err != nil {
+		return nil, err
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+			sdk.NewAttribute("action", "FungibleTestMsg"),
+			sdk.NewAttribute("chain", "BSCTESTNET"),
+			sdk.NewAttribute("contract", addr.String()),
+		),
+	)
+	_, err = k.DepositZRC4(ctx, addr, alice, big.NewInt(1000))
 
 	return &types.MsgFungibleTestMsgResponse{}, nil
 }
