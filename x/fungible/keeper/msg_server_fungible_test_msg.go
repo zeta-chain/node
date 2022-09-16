@@ -61,7 +61,7 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	if err != nil {
 		return nil, err
 	}
-	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, addr, true, "withdraw", alice.Bytes(), big.NewInt(17))
+	_, err = k.CallEVM(ctx, *abi, alice, addr, true, "withdraw", alice.Bytes(), big.NewInt(17))
 	if err != nil {
 		return nil, err
 	}
