@@ -53,6 +53,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 			IndexTxList:         -1,
 			LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 			ZetaMint:            "",
+			CoinType:            msg.CoinType,
 		}
 		k.EmitEventSendCreated(ctx, &send)
 	}

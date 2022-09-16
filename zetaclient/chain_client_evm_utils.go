@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
@@ -89,6 +90,7 @@ func (ob *ChainObserver) observeInTX() error {
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
 			event.DestinationGasLimit.Uint64(),
+			common.CoinType_Zeta,
 		)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -139,6 +141,7 @@ func (ob *ChainObserver) observeInTX() error {
 					tx.Hash().Hex(),
 					receipt.BlockNumber.Uint64(),
 					90_000,
+					common.CoinType_Gas,
 				)
 				if err != nil {
 					ob.logger.Error().Err(err).Msg("error posting to zeta core")

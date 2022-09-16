@@ -53,7 +53,7 @@ func (k Keeper) PostTxProcessing(
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 		fmt.Printf("#############################\n")
 
-		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), "GOERLI", event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000)
+		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), "GOERLI", event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
 		sendHash := msg.Digest()
 
 		//k.zetacoreKeeper.Get

@@ -15,6 +15,7 @@ import (
 	"github.com/evmos/ethermint/server/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
+	zetacommon "github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/evm"
 )
 
@@ -60,7 +61,7 @@ func (k Keeper) DeployZRC4Contract(
 
 	coinIndex := "GOERLI-ETHER"
 	coin, _ := k.GetForeignCoins(ctx, coinIndex)
-	coin.CoinType = "gas"
+	coin.CoinType = zetacommon.CoinType_Gas
 	coin.Name = name
 	coin.Symbol = symbol
 	coin.Decimals = 18

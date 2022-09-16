@@ -31959,6 +31959,11 @@ paths:
                       type: string
                     coinType:
                       type: string
+                      enum:
+                        - Zeta
+                        - Gas
+                        - ERC20
+                      default: Zeta
               pagination:
                 type: object
                 properties:
@@ -32083,6 +32088,11 @@ paths:
                     type: string
                   coinType:
                     type: string
+                    enum:
+                      - Zeta
+                      - Gas
+                      - ERC20
+                    default: Zeta
         default:
           description: An unexpected error response.
           schema:
@@ -33795,6 +33805,14 @@ paths:
                     gasLimit:
                       type: string
                       format: uint64
+                    coinType:
+                      title: addition
+                      type: string
+                      enum:
+                        - Zeta
+                        - Gas
+                        - ERC20
+                      default: Zeta
               pagination:
                 type: object
                 properties:
@@ -33966,6 +33984,14 @@ paths:
                   gasLimit:
                     type: string
                     format: uint64
+                  coinType:
+                    title: addition
+                    type: string
+                    enum:
+                      - Zeta
+                      - Gas
+                      - ERC20
+                    default: Zeta
         default:
           description: An unexpected error response.
           schema:
@@ -34070,6 +34096,14 @@ paths:
                     gasLimit:
                       type: string
                       format: uint64
+                    coinType:
+                      title: addition
+                      type: string
+                      enum:
+                        - Zeta
+                        - Gas
+                        - ERC20
+                      default: Zeta
         default:
           description: An unexpected error response.
           schema:
@@ -55470,6 +55504,13 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  common.CoinType:
+    type: string
+    enum:
+      - Zeta
+      - Gas
+      - ERC20
+    default: Zeta
   zetachain.zetacore.fungible.ForeignCoins:
     type: object
     properties:
@@ -55490,6 +55531,11 @@ definitions:
         type: string
       coinType:
         type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
   zetachain.zetacore.fungible.MsgFungibleTestMsgResponse:
     type: object
   zetachain.zetacore.fungible.Params:
@@ -55520,6 +55566,11 @@ definitions:
               type: string
             coinType:
               type: string
+              enum:
+                - Zeta
+                - Gas
+                - ERC20
+              default: Zeta
       pagination:
         type: object
         properties:
@@ -55568,6 +55619,11 @@ definitions:
             type: string
           coinType:
             type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
   zetachain.zetacore.fungible.QueryParamsResponse:
     type: object
     properties:
@@ -56263,6 +56319,14 @@ definitions:
             gasLimit:
               type: string
               format: uint64
+            coinType:
+              title: addition
+              type: string
+              enum:
+                - Zeta
+                - Gas
+                - ERC20
+              default: Zeta
   zetachain.zetacore.zetacore.QueryAllSendResponse:
     type: object
     properties:
@@ -56335,6 +56399,14 @@ definitions:
             gasLimit:
               type: string
               format: uint64
+            coinType:
+              title: addition
+              type: string
+              enum:
+                - Zeta
+                - Gas
+                - ERC20
+              default: Zeta
       pagination:
         type: object
         properties:
@@ -56785,6 +56857,14 @@ definitions:
           gasLimit:
             type: string
             format: uint64
+          coinType:
+            title: addition
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
   zetachain.zetacore.zetacore.QueryGetTSSResponse:
     type: object
     properties:
@@ -56972,6 +57052,14 @@ definitions:
       gasLimit:
         type: string
         format: uint64
+      coinType:
+        title: addition
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
   zetachain.zetacore.zetacore.SendStatus:
     type: string
     enum:

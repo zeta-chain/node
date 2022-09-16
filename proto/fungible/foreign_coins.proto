@@ -3,6 +3,9 @@ package zetachain.zetacore.fungible;
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
+import "common/common.proto";
+
+
 message ForeignCoins {
   string index = 1; 
   string zRC4ContractAddress = 2; 
@@ -10,8 +13,8 @@ message ForeignCoins {
   string foreignChain = 4; 
   uint32 decimals = 5;
   string name = 6; 
-  string symbol = 7; 
-  string coinType = 8; 
+  string symbol = 7;
+  common.CoinType coinType = 8;
   
 }
 

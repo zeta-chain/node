@@ -4,6 +4,7 @@ package zetachain.zetacore.zetacore;
 option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 import "gogoproto/gogo.proto";
+import "common/common.proto";
 
 enum SendStatus {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -15,6 +16,8 @@ enum SendStatus {
   Reverted =5; // inbound reverted.
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
 }
+
+
 
 message Send {
   string creator = 1;
@@ -41,4 +44,5 @@ message Send {
   int64  lastUpdateTimestamp = 22;
   uint64 gasLimit = 23;
   // addition
+  common.CoinType coinType = 24;
 }

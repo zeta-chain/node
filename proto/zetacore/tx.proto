@@ -117,6 +117,7 @@ message MsgSendVoter {
   string inTxHash = 9;
   uint64 inBlockHeight = 10;
   uint64 gasLimit = 11;
+  common.CoinType coinType = 12; 
 }
 
 message MsgSendVoterResponse {
