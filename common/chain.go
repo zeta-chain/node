@@ -97,6 +97,8 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "tMATIC"
 	case BSCTestnetChain:
 		return "tBNB"
+	case BaobabChain:
+		return "KLAY"
 	default:
 		return "" // should not happen
 	}

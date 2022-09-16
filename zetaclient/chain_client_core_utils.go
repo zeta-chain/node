@@ -3,7 +3,10 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
 )
 
 func (ob *ChainObserver) PostNonceIfNotRecorded() error {
@@ -61,11 +64,16 @@ func (ob *ChainObserver) WatchGasPrice() {
 }
 
 func (ob *ChainObserver) PostGasPrice() error {
-	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
-		ob.logger.Err(err).Msg("PostGasPrice:")
-		return err
+		// this hack is because SuggestGasPrice call eventually fails on baobab
+		// it returns always that value anyway
+		if ob.chain == common.BaobabChain {
+			gasPrice = big.NewInt(50000000000)
+		} else {
+			ob.logger.Err(err).Msg("PostGasPrice:")
+			return err
+		}
 	}
 	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
 	if err != nil {
