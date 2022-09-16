@@ -48,6 +48,7 @@ func NewKeeper(
 		paramstore: ps,
 		authKeeper: authKeeper,
 		evmKeeper:  evmKeeper,
+		bankKeeper: bankKeeper,
 		//zetacoreKeeper: zetacoreKeeper,
 	}
 }
