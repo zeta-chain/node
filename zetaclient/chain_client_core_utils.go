@@ -67,6 +67,7 @@ func (ob *ChainObserver) PostGasPrice() error {
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
 		// this hack is because SuggestGasPrice call eventually fails on baobab
+		// it returns always that value anyway
 		if ob.chain == common.BaobabChain {
 			gasPrice = big.NewInt(50000000000)
 		} else {
