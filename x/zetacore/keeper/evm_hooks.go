@@ -76,7 +76,7 @@ func (k Keeper) PostTxProcessing(
 		send.Sender = receipt.ContractAddress.Hex()
 		send.SenderChain = "ZETA"
 		send.Receiver = "0x" + hex.EncodeToString(event.To)
-		send.ReceiverChain = "GOERLI"
+		send.ReceiverChain = receiverChain
 		send.FinalizedMetaHeight = uint64(ctx.BlockHeight())
 		send.Index = sendHash
 		send.ZetaBurnt = event.Value.String()
@@ -84,16 +84,16 @@ func (k Keeper) PostTxProcessing(
 		send.InTxHash = event.Raw.TxHash.String()
 		send.InBlockHeight = event.Raw.BlockNumber
 		send.GasLimit = 90_000
-		gasprice, found := k.GetGasPrice(ctx, "GOERLI")
+		gasprice, found := k.GetGasPrice(ctx, receiverChain)
 		if !found {
-			fmt.Printf("chain nonce not found for GOERLI\n")
+			fmt.Printf("chain nonce not found for %s\n", receiverChain)
 			return nil
 		}
 		send.GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 		send.Status = zetacoretypes.SendStatus_PendingOutbound
-		chainNonce, found := k.GetChainNonces(ctx, "GOERLI")
+		chainNonce, found := k.GetChainNonces(ctx, receiverChain)
 		if !found {
-			fmt.Printf("chain nonce not found for GOERLI\n")
+			fmt.Printf("chain nonce not found for %s\n", receiverChain)
 			return nil
 		}
 		send.Nonce = chainNonce.Nonce
