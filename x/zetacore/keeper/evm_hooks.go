@@ -52,8 +52,16 @@ func (k Keeper) PostTxProcessing(
 		fmt.Printf("#############################\n")
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 		fmt.Printf("#############################\n")
-
-		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), "GOERLI", event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
+		foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
+		found := false
+		receiverChain := ""
+		for _, coin := range foreignCoinList {
+			if coin.ZRC4ContractAddress == event.Raw.Address.Hex() {
+				receiverChain = coin.ForeignChain
+				found = true
+			}
+		}
+		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
 		sendHash := msg.Digest()
 
 		//k.zetacoreKeeper.Get
