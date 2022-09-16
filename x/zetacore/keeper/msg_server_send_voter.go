@@ -91,36 +91,54 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 		}
 
 		if recvChain == common.ZETAChain { // if to zEVM, directly call EVM
-			coin, found := k.fungibleKeeper.GetForeignCoins(ctx, "GOERLI-ETHER")
-			if !found {
-				send.StatusMessage = fmt.Sprintf("cannot get GOERLI-ETHER: %s", err.Error())
-				send.Status = types.SendStatus_Aborted
-				goto EPILOGUE
-			}
-			to := ethcommon.HexToAddress(send.Receiver)
-			amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
-			if !ok {
-				send.StatusMessage = fmt.Sprintf("cannot parse zetaBurnt: %s", send.ZetaBurnt)
-				send.Status = types.SendStatus_Aborted
-				goto EPILOGUE
-			}
-			tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ZRC4ContractAddress), to, amount)
-			if err != nil {
-				send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
-				send.Status = types.SendStatus_Aborted
-				goto EPILOGUE
-			}
-			fmt.Printf("=======  tx: %s\n", tx.Hash)
-			fmt.Printf("vmerror: %s\n", tx.VmError)
-			fmt.Printf("=======  tx: %s\n", tx.Hash)
+			if send.CoinType == common.CoinType_Gas {
+				coin, found := k.fungibleKeeper.GetForeignCoins(ctx, "GOERLI-ETHER")
+				if !found {
+					send.StatusMessage = fmt.Sprintf("cannot get GOERLI-ETHER: %s", err.Error())
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				to := ethcommon.HexToAddress(send.Receiver)
+				amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
+				if !ok {
+					send.StatusMessage = fmt.Sprintf("cannot parse zetaBurnt: %s", send.ZetaBurnt)
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ZRC4ContractAddress), to, amount)
+				if err != nil {
+					send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				fmt.Printf("=======  tx: %s\n", tx.Hash)
+				fmt.Printf("vmerror: %s\n", tx.VmError)
+				fmt.Printf("=======  tx: %s\n", tx.Hash)
 
-			send.OutTxHash = tx.Hash
-			if tx.Failed() {
-				send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s, error %s", tx.Hash, tx.VmError)
-				send.Status = types.SendStatus_Aborted
-				goto EPILOGUE
+				send.OutTxHash = tx.Hash
+				if tx.Failed() {
+					send.StatusMessage = fmt.Sprintf("deposit zetaMint failed: %s, error %s", tx.Hash, tx.VmError)
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				send.Status = types.SendStatus_OutboundMined
+			} else if send.CoinType == common.CoinType_Zeta {
+				toBytes := ethcommon.HexToAddress(send.Receiver).Bytes()
+				to := sdk.AccAddress(toBytes)
+				amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
+				if !ok {
+					send.StatusMessage = fmt.Sprintf("cannot parse zetaBurnt: %s", send.ZetaBurnt)
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				err := k.fungibleKeeper.MintZetaToEVMAccount(ctx, to, amount)
+				if err != nil {
+					send.StatusMessage = fmt.Sprintf("cannot MintZetaToEVMAccount: %s", err.Error())
+					send.Status = types.SendStatus_Aborted
+					goto EPILOGUE
+				}
+				send.Status = types.SendStatus_OutboundMined
 			}
-			send.Status = types.SendStatus_OutboundMined
 		} else {
 			k.updateSend(ctx, chain.String(), &send)
 			k.EmitEventSendFinalized(ctx, &send)

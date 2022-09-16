@@ -20,6 +20,7 @@ type (
 		paramstore paramtypes.Subspace
 		authKeeper types.AccountKeeper
 		evmKeeper  evmkeeper.Keeper
+		bankKeeper types.BankKeeper
 		//zetacoreKeeper *zetacorekeeper.Keeper
 	}
 )
@@ -31,6 +32,7 @@ func NewKeeper(
 	ps paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	evmKeeper evmkeeper.Keeper,
+	bankKeeper types.BankKeeper,
 	//zetacoreKeeper *zetacorekeeper.Keeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
