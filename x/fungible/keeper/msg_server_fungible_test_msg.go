@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
+	contracts "github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 )
@@ -35,7 +36,6 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
 			sdk.NewAttribute("action", "FungibleTestMsg"),
 			sdk.NewAttribute("chain", "GOERLI"),
 			sdk.NewAttribute("contract", addr.String()),
@@ -50,13 +50,27 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-			sdk.NewAttribute("action", "FungibleTestMsg"),
 			sdk.NewAttribute("chain", "BSCTESTNET"),
 			sdk.NewAttribute("contract", addr.String()),
 		),
 	)
 	_, err = k.DepositZRC4(ctx, addr, alice, big.NewInt(1000))
+
+	// test withdraw
+	abi, err := contracts.ZRC4MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, addr, true, "withdraw", alice.Bytes(), big.NewInt(17))
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("action", "withdraw"),
+		),
+	)
 
 	return &types.MsgFungibleTestMsgResponse{}, nil
 }
