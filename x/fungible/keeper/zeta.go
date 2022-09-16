@@ -8,6 +8,8 @@ import (
 	"math/big"
 )
 
+// Mint ZETA (gas token) to the given address
+// FIXME: mint to module and then transfer to the given address?
 func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount *big.Int) error {
 	balanceCoin := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
 	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
