@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"math/big"
 )
@@ -92,9 +93,18 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 
 		if recvChain == common.ZETAChain { // if to zEVM, directly call EVM
 			if send.CoinType == common.CoinType_Gas {
-				coin, found := k.fungibleKeeper.GetForeignCoins(ctx, "GOERLI-ETHER")
+				foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
+				found := false
+				var gasCoin fungibletypes.ForeignCoins
+				for _, coin := range foreignCoinList {
+					if coin.CoinType == common.CoinType_Gas && coin.ForeignChain == send.SenderChain {
+						found = true
+						gasCoin = coin
+						break
+					}
+				}
 				if !found {
-					send.StatusMessage = fmt.Sprintf("cannot get GOERLI-ETHER: %s", err.Error())
+					send.StatusMessage = fmt.Sprintf("cannot get gas coin on chain %s: %s", send.SenderChain, err.Error())
 					send.Status = types.SendStatus_Aborted
 					goto EPILOGUE
 				}
@@ -105,7 +115,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					send.Status = types.SendStatus_Aborted
 					goto EPILOGUE
 				}
-				tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(coin.ZRC4ContractAddress), to, amount)
+				tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount)
 				if err != nil {
 					send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
 					send.Status = types.SendStatus_Aborted
