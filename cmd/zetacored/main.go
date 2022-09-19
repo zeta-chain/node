@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/cosmos/cosmos-sdk/server"
+	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
@@ -9,6 +10,8 @@ import (
 )
 
 func main() {
+	cmdcfg.RegisterDenoms()
+
 	rootCmd, _ := NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, app.DefaultNodeHome); err != nil {
