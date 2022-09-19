@@ -325,6 +325,10 @@ func (k msgServer) EmitEventSendFinalized(ctx sdk.Context, send *types.Send) {
 
 // returns feeInZeta (uint uuzeta), and whether to abort zeta-tx
 func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *big.Int, chain string, send *types.Send) (*big.Int, bool) {
+	if send.CoinType == common.CoinType_Gas {
+		return big.NewInt(0).Mul(price, gasLimit), false
+	}
+
 	abort := false
 	rate, isFound := k.GetZetaConversionRate(ctx, chain)
 	if !isFound {
