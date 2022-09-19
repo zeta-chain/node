@@ -145,7 +145,7 @@ func (k Keeper) DepositZRC4(
 	amount *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
 	//abi, err := contracts.ZRC4MetaData.GetAbi()
-	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
+	abi, err := contracts.ZRC4MetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
