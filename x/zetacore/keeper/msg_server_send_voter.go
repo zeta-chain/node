@@ -126,10 +126,8 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 						goto EPILOGUE
 					}
 				} else { // non-empty message = [contractaddress, calldata]
-					from := ethcommon.HexToAddress(send.Sender)
 					contract, data, err := parseContractAndData(send.Message)
-					tx, err = k.fungibleKeeper.DepositZRC4AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount,
-						contract, from, data)
+					tx, err = k.fungibleKeeper.DepositZRC4AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), amount, contract, data)
 					if err != nil {
 						send.StatusMessage = fmt.Sprintf("cannot DepositZRC4AndCallContract zetaMint: %s", err.Error())
 						send.Status = types.SendStatus_Aborted

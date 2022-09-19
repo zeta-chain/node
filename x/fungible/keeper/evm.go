@@ -161,24 +161,26 @@ func (k Keeper) DepositZRC4(
 // callable from fungible module
 func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 	zrc4Contract common.Address,
-	to common.Address,
 	amount *big.Int,
-	contract common.Address,
-	from common.Address,
-	data []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	targetContract common.Address,
+	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 
-	abi, err := contracts.ZRC4MetaData.GetAbi()
+	zdc, found := k.GetZetaDepositAndCallContract(ctx)
+	if !found {
+		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCall address not found")
+	}
+	ZDCAddress := common.HexToAddress(zdc.Address)
+
+	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, zrc4Contract, true, "deposit", to, amount)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, ZDCAddress, true,
+		"DepositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err
 	}
-	res, err = k.CallEVMWithData(ctx, from, &contract, data, true)
-	if err != nil {
-		return nil, err
-	}
+
 	return res, err
 }
 

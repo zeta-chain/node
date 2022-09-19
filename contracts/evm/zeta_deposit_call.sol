@@ -37,7 +37,4 @@ contract ZetaDepositAndCall {
         zContract(target).onCCC(zrc4, amount, message);
     }
 
-    function Deposit(address zrc4, uint256 amount, address receipient) external {
-        IZRC4(zrc4).deposit(receipient, amount);
-    }
 }
