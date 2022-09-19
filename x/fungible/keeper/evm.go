@@ -149,7 +149,7 @@ func (k Keeper) DepositZRC4(
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", contract, to, amount)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", to, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +157,8 @@ func (k Keeper) DepositZRC4(
 	return res, err
 }
 
+// Deposit into ZRC4 and call contract function in a single tx
+// callable from fungible module
 func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 	zrc4Contract common.Address,
 	to common.Address,
