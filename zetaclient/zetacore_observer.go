@@ -377,8 +377,11 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	gasprice = gasprice.Div(gasprice, big.NewInt(3))
 	var tx *ethtypes.Transaction
 
-	if send.SenderChain == "ZETA" {
+	if send.SenderChain == "ZETA" && send.Status == types.SendStatus_PendingOutbound {
 		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+		tx, err = signer.SignWithdrawTx(to, amount, send.Nonce, gasprice)
+	} else if send.CoinType == common.CoinType_Gas && send.Status == types.SendStatus_PendingRevert {
+		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		tx, err = signer.SignWithdrawTx(to, amount, send.Nonce, gasprice)
 	} else if send.Status == types.SendStatus_PendingRevert {
 		srcChainID := config.Chains[send.SenderChain].ChainID
