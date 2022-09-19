@@ -58,14 +58,20 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 		fmt.Printf("#############################\n")
 		foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
-		found := false
+		foundCoin := false
 		receiverChain := ""
+		coinType := common.CoinType_Zeta
 		for _, coin := range foreignCoinList {
 			if coin.ZRC4ContractAddress == event.Raw.Address.Hex() {
 				receiverChain = coin.ForeignChain
-				found = true
+				foundCoin = true
+				coinType = coin.CoinType
 			}
 		}
+		if !foundCoin {
+			return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+		}
+
 		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), string(event.To), receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
 		sendHash := msg.Digest()
 
@@ -104,6 +110,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		send.Nonce = chainNonce.Nonce
 		chainNonce.Nonce++
 		k.SetChainNonces(ctx, chainNonce)
+		send.CoinType = coinType
 
 		k.SetSend(ctx, send)
 		fmt.Printf("####setting send... ###########\n")
