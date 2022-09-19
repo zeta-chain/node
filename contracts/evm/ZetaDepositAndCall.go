@@ -30,7 +30,7 @@ var (
 
 // ZetaDepositAndCallMetaData contains all meta data concerning the ZetaDepositAndCall contract.
 var ZetaDepositAndCallMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"fungibleModule\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receipient\",\"type\":\"address\"}],\"name\":\"Deposit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"DepositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"fungibleModule\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"DepositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // ZetaDepositAndCallABI is the input ABI used to generate the binding from.
@@ -208,27 +208,6 @@ func (_ZetaDepositAndCall *ZetaDepositAndCallSession) FUNGIBLEMODULEADDRESS() (c
 // Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
 func (_ZetaDepositAndCall *ZetaDepositAndCallCallerSession) FUNGIBLEMODULEADDRESS() (common.Address, error) {
 	return _ZetaDepositAndCall.Contract.FUNGIBLEMODULEADDRESS(&_ZetaDepositAndCall.CallOpts)
-}
-
-// Deposit is a paid mutator transaction binding the contract method 0xe31c7b8d.
-//
-// Solidity: function Deposit(address zrc4, uint256 amount, address receipient) returns()
-func (_ZetaDepositAndCall *ZetaDepositAndCallTransactor) Deposit(opts *bind.TransactOpts, zrc4 common.Address, amount *big.Int, receipient common.Address) (*types.Transaction, error) {
-	return _ZetaDepositAndCall.contract.Transact(opts, "Deposit", zrc4, amount, receipient)
-}
-
-// Deposit is a paid mutator transaction binding the contract method 0xe31c7b8d.
-//
-// Solidity: function Deposit(address zrc4, uint256 amount, address receipient) returns()
-func (_ZetaDepositAndCall *ZetaDepositAndCallSession) Deposit(zrc4 common.Address, amount *big.Int, receipient common.Address) (*types.Transaction, error) {
-	return _ZetaDepositAndCall.Contract.Deposit(&_ZetaDepositAndCall.TransactOpts, zrc4, amount, receipient)
-}
-
-// Deposit is a paid mutator transaction binding the contract method 0xe31c7b8d.
-//
-// Solidity: function Deposit(address zrc4, uint256 amount, address receipient) returns()
-func (_ZetaDepositAndCall *ZetaDepositAndCallTransactorSession) Deposit(zrc4 common.Address, amount *big.Int, receipient common.Address) (*types.Transaction, error) {
-	return _ZetaDepositAndCall.Contract.Deposit(&_ZetaDepositAndCall.TransactOpts, zrc4, amount, receipient)
 }
 
 // DepositAndCall is a paid mutator transaction binding the contract method 0x12cc2a3b.
