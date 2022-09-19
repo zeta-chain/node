@@ -175,6 +175,7 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
+
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, ZDCAddress, true,
 		"DepositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {

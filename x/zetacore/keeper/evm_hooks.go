@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -35,10 +36,14 @@ func (k Keeper) PostTxProcessing(
 	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
+	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, receipt.ContractAddress)
+}
 
+func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address) error {
 	var event *contracts.ZRC4Withdrawal
+
 	found := false
-	for _, log := range receipt.Logs {
+	for _, log := range logs {
 		e, err := ParseWithdrawalEvent(*log)
 		if err != nil {
 			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
@@ -61,7 +66,7 @@ func (k Keeper) PostTxProcessing(
 				found = true
 			}
 		}
-		msg := zetacoretypes.NewMsgSendVoter("", receipt.ContractAddress.Hex(), common.ZETAChain.String(), string(event.To), receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
+		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), string(event.To), receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Gas)
 		sendHash := msg.Digest()
 
 		//k.zetacoreKeeper.Get
@@ -69,11 +74,11 @@ func (k Keeper) PostTxProcessing(
 		send, found := k.GetSend(ctx, sendHash)
 		if found { // this is not supposed to happen
 			fmt.Printf("send already exists %s\n", sendHash)
-			return nil
+			return fmt.Errorf("send already exists %s", sendHash)
 		}
 		fmt.Printf("send %s not found, create it\n", sendHash)
 
-		send.Sender = receipt.ContractAddress.Hex()
+		send.Sender = contract.Hex()
 		send.SenderChain = "ZETA"
 		send.Receiver = "0x" + hex.EncodeToString(event.To)
 		send.ReceiverChain = receiverChain
@@ -86,15 +91,15 @@ func (k Keeper) PostTxProcessing(
 		send.GasLimit = 90_000
 		gasprice, found := k.GetGasPrice(ctx, receiverChain)
 		if !found {
-			fmt.Printf("chain nonce not found for %s\n", receiverChain)
-			return nil
+			fmt.Printf("gasprice not found for %s\n", receiverChain)
+			return fmt.Errorf("gasprice not found for %s", receiverChain)
 		}
 		send.GasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 		send.Status = zetacoretypes.SendStatus_PendingOutbound
 		chainNonce, found := k.GetChainNonces(ctx, receiverChain)
 		if !found {
 			fmt.Printf("chain nonce not found for %s\n", receiverChain)
-			return nil
+			return fmt.Errorf("chain nonce not found for %s", receiverChain)
 		}
 		send.Nonce = chainNonce.Nonce
 		chainNonce.Nonce++
@@ -102,9 +107,7 @@ func (k Keeper) PostTxProcessing(
 
 		k.SetSend(ctx, send)
 		fmt.Printf("####setting send... ###########\n")
-		//fmt.Printf("%v\n", send)
 	}
-
 	return nil
 }
 

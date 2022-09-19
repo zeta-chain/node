@@ -133,14 +133,18 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 						send.Status = types.SendStatus_Aborted
 						goto EPILOGUE
 					}
-					ctx.EventManager().EmitEvent(
-						sdk.NewEvent(sdk.EventTypeMessage,
-							sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-							sdk.NewAttribute("action", "depositZRC4AndCallContract"),
-							sdk.NewAttribute("contract", contract.String()),
-							sdk.NewAttribute("data", hex.EncodeToString(data)),
-						),
-					)
+					if !tx.Failed() {
+						logs := evmtypes.LogsToEthereum(tx.Logs)
+						k.ProcessWithdrawalEvent(ctx, logs, contract)
+						ctx.EventManager().EmitEvent(
+							sdk.NewEvent(sdk.EventTypeMessage,
+								sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+								sdk.NewAttribute("action", "depositZRC4AndCallContract"),
+								sdk.NewAttribute("contract", contract.String()),
+								sdk.NewAttribute("data", hex.EncodeToString(data)),
+							),
+						)
+					}
 				}
 				fmt.Printf("=======  tx: %s\n", tx.Hash)
 				fmt.Printf("vmerror: %s\n", tx.VmError)
