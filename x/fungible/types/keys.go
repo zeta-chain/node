@@ -35,3 +35,7 @@ var (
 func init() {
 	//fmt.Printf("ModuleAddressEVM of %s: %s\n", ModuleName, ModuleAddressEVM.String())
 }
+
+const (
+	ZetaDepositAndCallContractKey= "ZetaDepositAndCallContract-value-"
+)

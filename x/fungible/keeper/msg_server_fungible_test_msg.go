@@ -15,6 +15,17 @@ import (
 func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungibleTestMsg) (*types.MsgFungibleTestMsgResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	ZDCAddree, err := k.DeployZetaDepositAndCall(ctx)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to DeployZetaDepositAndCall")
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("action", "DeployZetaDepositAndCall"),
+			sdk.NewAttribute("ZDCAddree", ZDCAddree.String()),
+		),
+	)
+
 	// TODO: Handling the message
 	addr, err := k.DeployZRC4Contract(ctx, "ETH", "zETH", 18, "GOERLI", common.CoinType_Gas, "")
 	if err != nil {

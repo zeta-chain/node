@@ -73,6 +73,66 @@ func (k Keeper) DeployZRC4Contract(
 	coin.ForeignChain = chain
 	k.SetForeignCoins(ctx, coin)
 
+	// update ZetaDepositAndCall system contract addr
+	depositCaller, _ := k.GetZetaDepositAndCallContract(ctx)
+	if len(depositCaller.Address) != 0 {
+		ZDCAddr := common.HexToAddress(depositCaller.Address)
+		_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, true, "updateZetaDepositAndCallAddress", ZDCAddr)
+		if err != nil {
+			return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", name)
+		}
+	}
+
+	return contractAddr, nil
+}
+
+// Deploy the ZetaDepositAndCall system contract
+func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error) {
+	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZetaDepositAndCallMetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"",                     // function--empty string for constructor
+		types.ModuleAddressEVM, // owner: fungible module
+	)
+
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZetaDepositAndCallMetaData constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.ZetaDepositAndCallContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.ZetaDepositAndCallContract.Bin)], contracts.ZetaDepositAndCallContract.Bin)
+	copy(data[len(contracts.ZetaDepositAndCallContract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy ZetaDepositAndCall system contract")
+	}
+
+	depositCaller, _ := k.GetZetaDepositAndCallContract(ctx)
+	depositCaller.Address = contractAddr.String()
+	k.SetZetaDepositAndCallContract(ctx, depositCaller)
+
+	// go update all addr on ZRC-4 contracts
+	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
+	coins := k.GetAllForeignCoins(ctx)
+	for _, coin := range coins {
+		if len(coin.ZRC4ContractAddress) != 0 {
+			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
+			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateZetaDepositAndCallAddress", contractAddr)
+			if err != nil {
+				return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", coin.Name)
+			}
+		}
+	}
+
 	return contractAddr, nil
 }
 
@@ -84,11 +144,12 @@ func (k Keeper) DepositZRC4(
 	to common.Address,
 	amount *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	abi, err := contracts.ZRC4MetaData.GetAbi()
+	//abi, err := contracts.ZRC4MetaData.GetAbi()
+	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", to, amount)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", contract, to, amount)
 	if err != nil {
 		return nil, err
 	}

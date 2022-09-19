@@ -1,6 +1,8 @@
 //go:generate abigen --abi Connector.abi --pkg evm --type Connector --out Connector.go
 //go:generate sh -c "solc ZRC4.sol --combined-json abi,bin | jq '.contracts.\"ZRC4.sol:ZRC4\"'  > ZRC4.json"
 //go:generate sh -c "cat ZRC4.json | jq .abi | abigen --abi - --pkg evm --type ZRC4 --out ZRC4.go"
+//go:generate sh -c "solc zeta_deposit_call.sol --combined-json abi,bin | jq '.contracts.\"zeta_deposit_call.sol:ZetaDepositAndCall\"'  > zeta_deposit_call.json"
+//go:generate sh -c "cat zeta_deposit_call.json | jq .abi | abigen --abi - --pkg evm --type ZetaDepositAndCall --out ZetaDepositAndCall.go"
 
 package evm
 
@@ -26,7 +28,11 @@ var (
 	//go:embed ZRC4.json
 	ZRC4JSON []byte // nolint: golint
 
-	ZRC4Contract CompiledContract
+	//go:embed zeta_deposit_call.json
+	ZetaDepositAndCallJSON []byte // nolint: golint
+
+	ZRC4Contract               CompiledContract
+	ZetaDepositAndCallContract CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC4AdminAddress ethcommon.Address
@@ -40,8 +46,16 @@ func init() {
 		panic(err)
 	}
 
+	err = json.Unmarshal(ZetaDepositAndCallJSON, &ZetaDepositAndCallContract)
+	if err != nil {
+		panic(err)
+	}
+
 	if len(ZRC4Contract.Bin) == 0 {
 		panic("load contract failed")
 	}
-	//fmt.Printf("ZRC4Contract:ZRC4AdminAddress %s\n", ZRC4AdminAddress.String())
+
+	if len(ZRC4Contract.Bin) == 0 {
+		panic("load contract failed")
+	}
 }

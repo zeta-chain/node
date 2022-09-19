@@ -39,6 +39,7 @@ interface IZRC4Metadata is IZRC4 {
 
 contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     address public FUNGIBLE_MODULE_ADDRESS;
+    address public ZETA_DEPOSIT_AND_CALL_ADDRESS;
 
     mapping(address => uint256) private _balances;
 
@@ -144,7 +145,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     }
 
     function deposit(address to, uint256 amount) external override returns (bool) {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS || msg.sender == ZETA_DEPOSIT_AND_CALL_ADDRESS, "permission error");
         _mint(to, amount);
         emit Deposit(abi.encodePacked(FUNGIBLE_MODULE_ADDRESS), to, amount);
         return true;
@@ -154,5 +155,10 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         _burn(msg.sender, amount);
         emit Withdrawal(msg.sender, to, amount);
         return true;
+    }
+
+    function updateZetaDepositAndCallAddress(address addr) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+        ZETA_DEPOSIT_AND_CALL_ADDRESS = addr;
     }
 }

@@ -11,7 +11,8 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ForeignCoinsList: []ForeignCoins{},
-		// this line is used by starport scaffolding # genesis/types/default
+		ZetaDepositAndCallContract: nil,
+// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
 }

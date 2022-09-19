@@ -22,6 +22,9 @@ func TestGenesis(t *testing.T) {
 				Index: "1",
 			},
 		},
+		ZetaDepositAndCallContract: &types.ZetaDepositAndCallContract{
+		Address: "29",
+},
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
@@ -34,5 +37,6 @@ func TestGenesis(t *testing.T) {
 	nullify.Fill(got)
 
 	require.ElementsMatch(t, genesisState.ForeignCoinsList, got.ForeignCoinsList)
-	// this line is used by starport scaffolding # genesis/test/assert
+	require.Equal(t, genesisState.ZetaDepositAndCallContract, got.ZetaDepositAndCallContract)
+// this line is used by starport scaffolding # genesis/test/assert
 }

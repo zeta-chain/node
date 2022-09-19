@@ -1,0 +1,9 @@
+syntax = "proto3";
+package zetachain.zetacore.fungible;
+
+option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
+
+message ZetaDepositAndCallContract {
+  string address = 1; 
+  
+}
