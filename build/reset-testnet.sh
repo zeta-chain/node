@@ -67,7 +67,7 @@ cat $HOME/.zetacore/config/genesis.json | jq '.app_state["evm"]["params"]["evm_d
 
 
 # Set gas limit in genesis
-cat $HOME/.zetacore/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
+cat $HOME/.zetacore/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="100000000"' > $HOME/.zetacore/config/tmp_genesis.json && mv $HOME/.zetacore/config/tmp_genesis.json $HOME/.zetacore/config/genesis.json
 sed -i 's/create_empty_blocks = true/create_empty_blocks = false/g' $HOME/.zetacore/config/config.toml
 
 
