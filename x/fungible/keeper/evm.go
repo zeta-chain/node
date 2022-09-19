@@ -96,6 +96,29 @@ func (k Keeper) DepositZRC4(
 	return res, err
 }
 
+func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
+	zrc4Contract common.Address,
+	to common.Address,
+	amount *big.Int,
+	contract common.Address,
+	from common.Address,
+	data []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+
+	abi, err := contracts.ZRC4MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, zrc4Contract, true, "deposit", to, amount)
+	if err != nil {
+		return nil, err
+	}
+	res, err = k.CallEVMWithData(ctx, from, &contract, data, true)
+	if err != nil {
+		return nil, err
+	}
+	return res, err
+}
+
 // QueryZRC4Data returns the data of a deployed ZRC4 contract
 func (k Keeper) QueryZRC4Data(
 	ctx sdk.Context,

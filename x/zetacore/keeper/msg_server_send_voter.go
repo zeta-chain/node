@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -115,11 +117,24 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					send.Status = types.SendStatus_Aborted
 					goto EPILOGUE
 				}
-				tx, err := k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount)
-				if err != nil {
-					send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
-					send.Status = types.SendStatus_Aborted
-					goto EPILOGUE
+				var tx *evmtypes.MsgEthereumTxResponse
+				if len(send.Message) == 0 { // no message; transfer
+					tx, err = k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount)
+					if err != nil {
+						send.StatusMessage = fmt.Sprintf("cannot deposit zetaMint: %s", err.Error())
+						send.Status = types.SendStatus_Aborted
+						goto EPILOGUE
+					}
+				} else { // non-empty message = [contractaddress, calldata]
+					from := ethcommon.HexToAddress(send.Sender)
+					contract, data, err := parseContractAndData(send.Message)
+					tx, err = k.fungibleKeeper.DepositZRC4AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount,
+						contract, from, data)
+					if err != nil {
+						send.StatusMessage = fmt.Sprintf("cannot DepositZRC4AndCallContract zetaMint: %s", err.Error())
+						send.Status = types.SendStatus_Aborted
+						goto EPILOGUE
+					}
 				}
 				fmt.Printf("=======  tx: %s\n", tx.Hash)
 				fmt.Printf("vmerror: %s\n", tx.VmError)
@@ -149,6 +164,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 				}
 				send.Status = types.SendStatus_OutboundMined
 			}
+
 		} else {
 			k.updateSend(ctx, chain.String(), &send)
 			k.EmitEventSendFinalized(ctx, &send)
@@ -158,6 +174,23 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 EPILOGUE:
 	k.SetSend(ctx, send)
 	return &types.MsgSendVoterResponse{}, nil
+}
+
+// message is hex encoded byte array
+// [ contractAddress calldata ]
+// [ 20B, variable]
+func parseContractAndData(message string) (ethcommon.Address, []byte, error) {
+	data, err := hex.DecodeString(message)
+	if err != nil {
+		return ethcommon.Address{}, nil, err
+	}
+	if len(data) < 20 {
+		err = fmt.Errorf("invalid message length")
+		return ethcommon.Address{}, nil, err
+	}
+	contractAddress := ethcommon.BytesToAddress(data[:20])
+	data = data[20:]
+	return contractAddress, data, nil
 }
 
 // updates gas price, gas fee, zeta to mint, and nonce

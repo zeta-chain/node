@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
@@ -130,6 +131,10 @@ func (ob *ChainObserver) observeInTX() error {
 				ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
 				ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
 				ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+				message := ""
+				if len(tx.Data()) != 0 {
+					message = hex.EncodeToString(tx.Data())
+				}
 				zetaHash, err := ob.zetaClient.PostSend(
 					from.Hex(),
 					ob.chain.String(),
@@ -137,7 +142,7 @@ func (ob *ChainObserver) observeInTX() error {
 					"ZETA",
 					tx.Value().String(),
 					tx.Value().String(),
-					"",
+					message,
 					tx.Hash().Hex(),
 					receipt.BlockNumber.Uint64(),
 					90_000,
