@@ -100,6 +100,7 @@ message MsgReceiveConfirmation {
   common.ReceiveStatus status = 6;
   string chain = 7;
   uint64 out_tx_nonce = 8;
+  common.CoinType coinType = 9; 
 }
 
 message MsgReceiveConfirmationResponse {
@@ -117,7 +118,7 @@ message MsgSendVoter {
   string inTxHash = 9;
   uint64 inBlockHeight = 10;
   uint64 gasLimit = 11;
-  common.CoinType coinType = 12; 
+  common.CoinType coinType = 12;
 }
 
 message MsgSendVoterResponse {

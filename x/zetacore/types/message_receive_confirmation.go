@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgReceiveConfirmation{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce uint64) *MsgReceiveConfirmation {
+func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce uint64, cointype common.CoinType) *MsgReceiveConfirmation {
 	return &MsgReceiveConfirmation{
 		Creator:        creator,
 		SendHash:       sendHash,
@@ -19,6 +19,7 @@ func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string
 		Status:         status,
 		Chain:          chain,
 		OutTxNonce:     nonce,
+		CoinType:       cointype,
 	}
 }
 

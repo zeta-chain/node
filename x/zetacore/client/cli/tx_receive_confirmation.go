@@ -16,9 +16,9 @@ var _ = strconv.Itoa(0)
 
 func CmdReceiveConfirmation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [mMint] [Status] [chain] [outTXNonce]",
+		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [mMint] [Status] [chain] [outTXNonce] [cointype]",
 		Short: "Broadcast message receiveConfirmation",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSendHash := (args[0])
 			argsOutTxHash := (args[1])
@@ -40,12 +40,18 @@ func CmdReceiveConfirmation() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			ct, err := strconv.ParseInt(args[7], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			coinType := common.CoinType(ct)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), status, chain, uint64(outTxNonce))
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), (argsMMint), status, chain, uint64(outTxNonce), coinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

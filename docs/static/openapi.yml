@@ -33602,6 +33602,13 @@ paths:
                       default: Created
                     chain:
                       type: string
+                    coinType:
+                      type: string
+                      enum:
+                        - Zeta
+                        - Gas
+                        - ERC20
+                      default: Zeta
               pagination:
                 type: object
                 properties:
@@ -33736,6 +33743,13 @@ paths:
                     default: Created
                   chain:
                     type: string
+                  coinType:
+                    type: string
+                    enum:
+                      - Zeta
+                      - Gas
+                      - ERC20
+                    default: Zeta
         default:
           description: An unexpected error response.
           schema:
@@ -33841,13 +33855,13 @@ paths:
                       type: string
                       format: uint64
                     coinType:
-                      title: addition
                       type: string
                       enum:
                         - Zeta
                         - Gas
                         - ERC20
                       default: Zeta
+                      title: addition
               pagination:
                 type: object
                 properties:
@@ -34020,13 +34034,13 @@ paths:
                     type: string
                     format: uint64
                   coinType:
-                    title: addition
                     type: string
                     enum:
                       - Zeta
                       - Gas
                       - ERC20
                     default: Zeta
+                    title: addition
         default:
           description: An unexpected error response.
           schema:
@@ -34132,13 +34146,13 @@ paths:
                       type: string
                       format: uint64
                     coinType:
-                      title: addition
                       type: string
                       enum:
                         - Zeta
                         - Gas
                         - ERC20
                       default: Zeta
+                      title: addition
         default:
           description: An unexpected error response.
           schema:
@@ -56270,6 +56284,13 @@ definitions:
               default: Created
             chain:
               type: string
+            coinType:
+              type: string
+              enum:
+                - Zeta
+                - Gas
+                - ERC20
+              default: Zeta
       pagination:
         type: object
         properties:
@@ -56368,13 +56389,13 @@ definitions:
               type: string
               format: uint64
             coinType:
-              title: addition
               type: string
               enum:
                 - Zeta
                 - Gas
                 - ERC20
               default: Zeta
+              title: addition
   zetachain.zetacore.zetacore.QueryAllSendResponse:
     type: object
     properties:
@@ -56448,13 +56469,13 @@ definitions:
               type: string
               format: uint64
             coinType:
-              title: addition
               type: string
               enum:
                 - Zeta
                 - Gas
                 - ERC20
               default: Zeta
+              title: addition
       pagination:
         type: object
         properties:
@@ -56835,6 +56856,13 @@ definitions:
             default: Created
           chain:
             type: string
+          coinType:
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
   zetachain.zetacore.zetacore.QueryGetSendResponse:
     type: object
     properties:
@@ -56906,13 +56934,13 @@ definitions:
             type: string
             format: uint64
           coinType:
-            title: addition
             type: string
             enum:
               - Zeta
               - Gas
               - ERC20
             default: Zeta
+            title: addition
   zetachain.zetacore.zetacore.QueryGetTSSResponse:
     type: object
     properties:
@@ -57033,6 +57061,13 @@ definitions:
         default: Created
       chain:
         type: string
+      coinType:
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
   zetachain.zetacore.zetacore.Send:
     type: object
     properties:
@@ -57101,13 +57136,13 @@ definitions:
         type: string
         format: uint64
       coinType:
-        title: addition
         type: string
         enum:
           - Zeta
           - Gas
           - ERC20
         default: Zeta
+        title: addition
   zetachain.zetacore.zetacore.SendStatus:
     type: string
     enum:

@@ -50,6 +50,7 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 			Signers:             []string{msg.Creator},
 			Status:              msg.Status,
 			Chain:               msg.Chain,
+			CoinType:            msg.CoinType,
 		}
 	} else {
 		if isDuplicateSigner(msg.Creator, receive.Signers) {
@@ -81,10 +82,12 @@ func (k msgServer) ReceiveConfirmation(goCtx context.Context, msg *types.MsgRece
 				send.Status = types.SendStatus_OutboundMined
 			}
 
-			err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
-			if err != nil {
-				log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
+			if receive.CoinType == common.CoinType_Zeta {
+				err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(zetaBurnt.Sub(zetaBurnt, zetaMinted)))))
+				if err != nil {
+					log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
+					return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
+				}
 			}
 			newstatus := send.Status.String()
 			event := sdk.NewEvent(sdk.EventTypeMessage,

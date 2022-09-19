@@ -202,6 +202,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOr
 				common.ReceiveStatus_Success,
 				ob.chain.String(),
 				nonce,
+				common.CoinType_Gas,
 			)
 			if err != nil {
 				logger.Error().Err(err).Msg("error posting confirmation to meta core")
@@ -210,7 +211,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOr
 			return true, true, nil
 		} else if found && receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce, common.CoinType_Gas)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
@@ -241,6 +242,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOr
 							common.ReceiveStatus_Success,
 							ob.chain.String(),
 							nonce,
+							common.CoinType_Zeta,
 						)
 						if err != nil {
 							logger.Error().Err(err).Msg("error posting confirmation to meta core")
@@ -271,6 +273,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOr
 							common.ReceiveStatus_Success,
 							ob.chain.String(),
 							nonce,
+							common.CoinType_Zeta,
 						)
 						if err != nil {
 							logger.Err(err).Msg("error posting confirmation to meta core")
@@ -286,7 +289,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOr
 		} else if found && receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce, common.CoinType_Zeta)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}

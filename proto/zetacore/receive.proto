@@ -16,4 +16,5 @@ message Receive {
   repeated string signers = 7;
   common.ReceiveStatus status = 8;
   string chain = 9;
+  common.CoinType coinType = 10;
 }
