@@ -130,7 +130,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					tx, err = k.fungibleKeeper.DepositZRC4AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), amount, contract, data)
 					if err != nil {
 						send.StatusMessage = fmt.Sprintf("cannot DepositZRC4AndCallContract zetaMint: %s", err.Error())
-						send.Status = types.SendStatus_Aborted
+						send.Status = types.SendStatus_PendingRevert
 						goto EPILOGUE
 					}
 					if !tx.Failed() {
