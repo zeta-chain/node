@@ -131,6 +131,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					if err != nil {
 						send.StatusMessage = fmt.Sprintf("cannot DepositZRC4AndCallContract zetaMint: %s", err.Error())
 						send.Status = types.SendStatus_PendingRevert
+						k.updateSend(ctx, chain.String(), &send)
 						goto EPILOGUE
 					}
 					if !tx.Failed() {
