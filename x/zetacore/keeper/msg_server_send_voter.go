@@ -131,6 +131,12 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					if err != nil {
 						send.StatusMessage = fmt.Sprintf("cannot DepositZRC4AndCallContract zetaMint: %s", err.Error())
 						send.Status = types.SendStatus_PendingRevert
+						chain, err = common.ParseChain(send.SenderChain)
+						if err != nil {
+							send.StatusMessage = fmt.Sprintf("cannot parse sender chain: %s", send.SenderChain)
+							send.Status = types.SendStatus_Aborted
+							goto EPILOGUE
+						}
 						k.updateSend(ctx, chain.String(), &send)
 						goto EPILOGUE
 					}
