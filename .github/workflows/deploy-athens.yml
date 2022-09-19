@@ -239,19 +239,19 @@ jobs:
       run: |
         source build/bash_functions
         COMMAND_ID=$(run_ssm_cmds_nodes "\
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/deploy/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/deploy/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
         check_cmd_status $COMMAND_ID
 
         COMMAND_ID=$(run_ssm_cmds_api_nodes "\
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
-            cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/go/bin/zetaclientd, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/go/bin/zetacored, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/deploy/zetaclientd-start.sh /home/zetachain/zetaclientd-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/deploy/zetacored-start.sh /home/zetachain/zetacored-start.sh, \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/network_values /etc/zetachain/network_values")
         check_cmd_status $COMMAND_ID
 
     - name: Restart ZetaChain
