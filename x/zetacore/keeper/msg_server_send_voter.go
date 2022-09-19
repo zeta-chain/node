@@ -106,7 +106,7 @@ func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*t
 					}
 				}
 				if !found {
-					send.StatusMessage = fmt.Sprintf("cannot get gas coin on chain %s: %s", send.SenderChain, err.Error())
+					send.StatusMessage = fmt.Sprintf("cannot get gas coin on chain %s", send.SenderChain)
 					send.Status = types.SendStatus_Aborted
 					goto EPILOGUE
 				}
