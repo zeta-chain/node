@@ -68,7 +68,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	_, info, err := GetKeyringKeybase("/Users/tanmay/.zetacored/", "val", "")
+	_, info, err := GetKeyringKeybase("/Users/tanmay/.zetacored/", "bob", "password")
 	fmt.Println(info, err)
 }
 

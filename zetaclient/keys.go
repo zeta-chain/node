@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
@@ -42,16 +43,15 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	if len(signerName) == 0 {
 		return nil, nil, fmt.Errorf("signer name is empty")
 	}
-	if len(password) == 0 {
-		return nil, nil, fmt.Errorf("password is empty")
-	}
+	//if len(password) == 0 {
+	//	return nil, nil, fmt.Errorf("password is empty")
+	//}
 
 	buf := bytes.NewBufferString(password)
 	// the library used by keyring is using ReadLine , which expect a new line
 	buf.WriteByte('\n')
 	buf.WriteString(password)
 	buf.WriteByte('\n')
-	//fmt.Printf("password buf: %s\n", buf)
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get keybase,err:%w", err)
@@ -83,7 +83,11 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
+	op := func(options *ckeys.Options) {
+		options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
+		options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
+	}
+	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, op)
 }
 
 // GetSignerInfo return signer info
