@@ -3,7 +3,10 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
@@ -97,31 +100,31 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
-func (b *ZetaCoreBridge) GetAllSend() ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAll(context.Background(), &types.QueryAllSendRequest{})
+	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query SendAll error")
+		b.logger.Error().Err(err).Msg("query CctxAll error")
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{Index: sendHash})
+	resp, err := client.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: sendHash})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("GetSendByHash error")
+		b.logger.Error().Err(err).Msg("GetCctxByHash error")
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query SendAllPending error")
+		b.logger.Error().Err(err).Msg("query CctxAllPending error")
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
@@ -145,6 +148,16 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
+}
+
+func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+	if err != nil {
+		fmt.Printf("GetLatestBlock grpc err: %s\n", err)
+		return nil, err
+	}
+	return res.Block, nil
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
@@ -224,7 +237,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s/%d", chain.String(), nonce),
+		Index: fmt.Sprintf("%s-%d", chain.String(), nonce),
 	})
 	if err != nil {
 		return nil, err
@@ -236,6 +249,13 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.String(),
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			Limit:      300,
+			CountTotal: false,
+			Reverse:    false,
+		},
 	})
 	if err != nil {
 		return nil, err

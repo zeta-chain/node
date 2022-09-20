@@ -26,7 +26,19 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}, ZetaMint: sdk.OneUint(), ZetaBurnt: sdk.OneUint(), ZetaFees: sdk.OneUint()})
+		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
+			Creator: "ANY",
+			Index:   strconv.Itoa(i),
+			Signers: []string{},
+			CctxStatus: &types.Status{
+				Status:              types.CctxStatus_PendingInbound,
+				StatusMessage:       "",
+				LastUpdateTimestamp: 0,
+			},
+			ZetaMint:  sdk.OneUint(),
+			ZetaBurnt: sdk.OneUint(),
+			ZetaFees:  sdk.OneUint()},
+		)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
@@ -72,7 +84,7 @@ func TestShowSend(t *testing.T) {
 				require.ErrorIs(t, stat.Err(), tc.err)
 			} else {
 				require.NoError(t, err)
-				var resp types.QueryGetSendResponse
+				var resp types.QueryGetCctxResponse
 				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				require.NotNil(t, resp.CrossChainTx)
 				require.Equal(t, tc.obj, resp.CrossChainTx)
@@ -106,7 +118,7 @@ func TestListSend(t *testing.T) {
 			args := request(nil, uint64(i), uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSend(), args)
 			require.NoError(t, err)
-			var resp types.QueryAllSendResponse
+			var resp types.QueryAllCctxResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
 				assert.Equal(t, objs[j], resp.CrossChainTx[j-i])
@@ -120,7 +132,7 @@ func TestListSend(t *testing.T) {
 			args := request(next, 0, uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSend(), args)
 			require.NoError(t, err)
-			var resp types.QueryAllSendResponse
+			var resp types.QueryAllCctxResponse
 			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
 				assert.Equal(t, objs[j], resp.CrossChainTx[j-i])
@@ -132,7 +144,7 @@ func TestListSend(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
 		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSend(), args)
 		require.NoError(t, err)
-		var resp types.QueryAllSendResponse
+		var resp types.QueryAllCctxResponse
 		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))

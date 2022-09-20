@@ -5,6 +5,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func AllStatus() []CctxStatus {
+	return []CctxStatus{
+		CctxStatus_PendingInbound,
+		CctxStatus_PendingOutbound,
+		CctxStatus_OutboundMined,
+		CctxStatus_PendingRevert,
+		CctxStatus_Reverted,
+		CctxStatus_Aborted,
+	}
+}
+
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	m.StatusMessage = msg
 	if !m.ValidateTransition(newStatus) {

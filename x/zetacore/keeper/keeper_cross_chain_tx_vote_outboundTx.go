@@ -20,7 +20,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	CctxIndex := msg.CctxHash
-	cctx, isFound := k.GetCrossChainTx(ctx, CctxIndex)
+	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
+		CctxIndex,
+		[]types.CctxStatus{
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_PendingRevert,
+		})
 	if !isFound {
 		log.Error().Msgf("Cannot find Incoming Broadcast broadcast tx hash %s on %s chain", CctxIndex, msg.OutTxChain)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", CctxIndex, msg.OutTxChain))
@@ -62,6 +67,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	hasEnoughVotes := k.hasSuperMajorityValidators(ctx, receive.Signers)
 	if hasEnoughVotes {
 		// Finalize Receive Struct
+		oldStatus := cctx.CctxStatus.Status
 		err := FinalizeReceive(k, ctx, &cctx, msg, &receive)
 		if err != nil {
 			return nil, err
@@ -76,7 +82,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		cctx.OutBoundTxParams.OutBoundTXReceiveIndex = receive.Index
 		cctx.OutBoundTxParams.OutBoundTxHash = receive.OutTxHash
 		cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-		k.SetCrossChainTx(ctx, cctx)
+		k.CctxMigrateStatus(ctx, cctx, oldStatus)
 	}
 	k.SetReceive(ctx, receive)
 	// TODO Delete receive if finalized
@@ -93,22 +99,23 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 }
 
 func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive) error {
-
 	receive.FinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
-
+	oldStatus := cctx.CctxStatus.Status
 	switch receive.Status {
 	case common.ReceiveStatus_Success:
-		oldStatus := cctx.CctxStatus.Status.String()
-		if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
+		switch oldStatus {
+		case types.CctxStatus_PendingRevert:
+			cctx.CctxStatus.ChangeStatus(&ctx,
+				types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
+		case types.CctxStatus_PendingOutbound:
+			cctx.CctxStatus.ChangeStatus(&ctx,
+				types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
 		}
-		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
-		}
+
 		newStatus := cctx.CctxStatus.Status.String()
 		if zetaBurnt.LT(zetaMinted) {
 			// TODO :Handle Error ?
@@ -118,25 +125,31 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 		if err != nil {
 			return err
 		}
-		EmitReceiveSuccess(ctx, msg, receive, oldStatus, newStatus, cctx.LogIdentifierForCCTX())
+		EmitReceiveSuccess(ctx, msg, receive, oldStatus.String(), newStatus, cctx.LogIdentifierForCCTX())
 	case common.ReceiveStatus_Failed:
-		oldStatus := cctx.CctxStatus.Status.String()
-		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-			chain := cctx.InBoundTxParams.SenderChain
-			err := k.UpdatePrices(ctx, chain, cctx)
-			if err != nil {
-				return err
+		switch oldStatus {
+		case types.CctxStatus_PendingOutbound:
+			{
+				chain := cctx.InBoundTxParams.SenderChain
+				err := k.UpdatePrices(ctx, chain, cctx)
+				if err != nil {
+					return err
+				}
+				err = k.UpdateNonce(ctx, chain, cctx)
+				if err != nil {
+					return err
+				}
+				cctx.CctxStatus.ChangeStatus(&ctx,
+					types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
 			}
-			err = k.UpdateNonce(ctx, chain, cctx)
-			if err != nil {
-				return err
+		case types.CctxStatus_PendingRevert:
+			{
+				cctx.CctxStatus.ChangeStatus(&ctx,
+					types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
 			}
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
-		} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
 		}
 		newstatus := cctx.CctxStatus.Status.String()
-		EmitReceiveFailure(ctx, msg, receive, oldStatus, newstatus, cctx.LogIdentifierForCCTX())
+		EmitReceiveFailure(ctx, msg, receive, oldStatus.String(), newstatus, cctx.LogIdentifierForCCTX())
 	}
 	return nil
 }

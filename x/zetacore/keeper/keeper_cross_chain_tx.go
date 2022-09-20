@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -10,16 +11,27 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (k Keeper) CctxMigrateStatus(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
+	// Defensive Programming :Remove first set later
+	_, found := k.GetCrossChainTx(ctx, send.Index, oldStatus)
+	if found {
+		k.RemoveCrossChainTx(ctx, send.Index, oldStatus)
+	}
+	k.SetCrossChainTx(ctx, send)
+}
+
 // SetCrossChainTx set a specific send in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, send.CctxStatus.Status))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
 }
 
 // GetCrossChainTx returns a send from its index
-func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossChainTx, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) (val types.CrossChainTx, found bool) {
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
@@ -31,34 +43,48 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 }
 
 // RemoveCrossChainTx removes a send from the store
-func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) {
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	store.Delete(types.KeyPrefix(index))
 }
 
-// GetAllCrossChainTx returns all send
-func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.CrossChainTx
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
+func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status []types.CctxStatus) (val types.CrossChainTx, found bool) {
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		send := store.Get(types.KeyPrefix(index))
+		if send != nil {
+			k.cdc.MustUnmarshal(send, &val)
+			return val, true
+		}
 	}
+	return val, false
+}
 
-	return
+// GetAllCrossChainTx returns all cctx
+func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus) (list []*types.CrossChainTx) {
+	var sends []*types.CrossChainTx
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.CrossChainTx
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			sends = append(sends, &val)
+		}
+	}
+	return sends
 }
 
 // Queries
 
-func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*types.QueryAllSendResponse, error) {
+func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*types.QueryAllCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
 	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -70,7 +96,6 @@ func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*typ
 		if err := k.cdc.Unmarshal(value, &send); err != nil {
 			return err
 		}
-
 		sends = append(sends, &send)
 		return nil
 	})
@@ -79,43 +104,28 @@ func (k Keeper) SendAll(c context.Context, req *types.QueryAllSendRequest) (*typ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllSendResponse{CrossChainTx: sends, Pagination: pageRes}, nil
+	return &types.QueryAllCctxResponse{CrossChainTx: sends, Pagination: pageRes}, nil
 }
 
-func (k Keeper) Send(c context.Context, req *types.QueryGetSendRequest) (*types.QueryGetSendResponse, error) {
+func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.QueryGetCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetCrossChainTx(ctx, req.Index)
+	val, found := k.GetCctxByIndexAndStatuses(ctx, req.Index, types.AllStatus())
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
-	return &types.QueryGetSendResponse{CrossChainTx: &val}, nil
+	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
 }
 
-func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPendingRequest) (*types.QueryAllSendPendingResponse, error) {
+func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPendingRequest) (*types.QueryAllCctxPendingResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
-	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
-	iterator := sdk.KVStorePrefixIterator(sendStore, []byte{})
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.CrossChainTx
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		// if the status of send is pending, which means Finalized/Revert
-		if val.CctxStatus.Status == types.CctxStatus_PendingOutbound || val.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			sends = append(sends, &val)
-		}
-	}
-	return &types.QueryAllSendPendingResponse{CrossChainTx: sends}, nil
+	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }

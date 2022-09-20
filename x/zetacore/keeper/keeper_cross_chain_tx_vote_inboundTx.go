@@ -16,7 +16,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	index := msg.Digest()
 	var cctx types.CrossChainTx
-	cctx, isFound := k.GetCrossChainTx(ctx, index)
+	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx, index, types.AllStatus())
 	if isFound {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -26,8 +26,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		}
 		cctx.Signers = append(cctx.Signers, msg.Creator)
 	} else {
-		// We can return directlu from here as new CCTX has not been created yet
-		if !k.IsChainSupported(ctx, msg.ReceiverChain) || !k.IsChainSupported(ctx, msg.ReceiverChain) {
+		// We can return directly from here as new CCTX has not been created yet
+		if !k.IsChainSupported(ctx, msg.SenderChain) || !k.IsChainSupported(ctx, msg.ReceiverChain) {
 			return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, "Receiving chain is not supported")
 		}
 		cctx = k.createNewCCTX(ctx, msg, index)
@@ -35,14 +35,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	hasEnoughVotes := k.hasSuperMajorityValidators(ctx, cctx.Signers)
 	if hasEnoughVotes {
+		oldStatus := cctx.CctxStatus.Status
 		err := k.FinalizeInbound(ctx, &cctx, msg.ReceiverChain)
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			ctx.Logger().Error(err.Error())
-			k.SetCrossChainTx(ctx, cctx)
+			k.CctxMigrateStatus(ctx, cctx, oldStatus)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+		k.CctxMigrateStatus(ctx, cctx, oldStatus)
+		// Migrate also sets the CCTX , no need to call set separately
+		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -132,11 +136,6 @@ func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
 // These functions should always remain under private scope
 
 func (k Keeper) createNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
-	fmt.Println("---------------------------------------------------------")
-	fmt.Println("---------------------------------------------------------")
-	fmt.Println("Creating New CCTX :", msg.Message)
-	fmt.Println("---------------------------------------------------------")
-	fmt.Println("---------------------------------------------------------")
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     msg.SenderChain,

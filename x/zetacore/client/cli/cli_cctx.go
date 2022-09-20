@@ -26,11 +26,11 @@ func CmdListSend() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllSendRequest{
+			params := &types.QueryAllCctxRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.SendAll(context.Background(), params)
+			res, err := queryClient.CctxAll(context.Background(), params)
 			if err != nil {
 				return err
 			}
@@ -55,11 +55,11 @@ func CmdShowSend() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetSendRequest{
+			params := &types.QueryGetCctxRequest{
 				Index: args[0],
 			}
 
-			res, err := queryClient.Send(context.Background(), params)
+			res, err := queryClient.Cctx(context.Background(), params)
 			if err != nil {
 				return err
 			}

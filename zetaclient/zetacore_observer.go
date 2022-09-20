@@ -239,7 +239,7 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
-			sendList, err := co.bridge.GetAllPendingSend()
+			sendList, err := co.bridge.GetAllPendingCctx()
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
