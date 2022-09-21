@@ -11,7 +11,8 @@ import (
 )
 
 func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
-	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+	kb, _, err := mc.
+		GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		return nil, true
