@@ -52,7 +52,7 @@ func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	builder.SetGasLimit(5_000_000)
+	builder.SetGasLimit(10_000_000)
 	builder.SetFeeAmount(stypes.NewCoins(stypes.NewInt64Coin("azeta", 10000)))
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)

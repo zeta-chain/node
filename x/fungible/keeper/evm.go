@@ -182,7 +182,7 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }
 
 // QueryZRC4Data returns the data of a deployed ZRC4 contract
