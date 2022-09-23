@@ -1,8 +1,0 @@
-# The ID of the Network
-NETWORK_ID=137
-NETWORK_NAME=Polygon
-RPC_PORT=8140
-
-
-# The password to create and access the primary account
-ACCOUNT_PASSWORD=5uper53cr3t
