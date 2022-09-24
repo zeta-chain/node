@@ -27,10 +27,10 @@ zetacored config chain-id $CHAINID --home ~/.zetacored
 # if $KEY exists it should be deleted
 #zetacored keys add $KEY1 --keyring-backend $KEYRING --algo $KEYALGO
 echo "Generating deterministic account - alice"
-echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add alice --recover --keyring-backend $KEYRING --home ~/.zetacored
+echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add alice --recover --keyring-backend $KEYRING --algo=secp256k1 --home ~/.zetacored
 
 echo "Generating deterministic account - bob"
-echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add bob --recover --keyring-backend $KEYRING --home ~/.zetacored
+echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add bob --recover --algo=secp256k1 --keyring-backend $KEYRING --home ~/.zetacored
 
 
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
