@@ -119,3 +119,13 @@ func FindChainByID(id *big.Int) string {
 	}
 	return ""
 }
+
+// return nil if not found
+func FindIDByChainName(name string) *big.Int {
+	for _, v := range Chains {
+		if v.Name.String() == name {
+			return v.ChainID
+		}
+	}
+	return nil
+}

@@ -17,4 +17,5 @@ var (
 	ErrBalanceInvariance = sdkerrors.Register(ModuleName, 1106, "balance invariance error")
 	ErrContractNotFound  = sdkerrors.Register(ModuleName, 1107, "contract not found")
 	ErrChainNotFound     = sdkerrors.Register(ModuleName, 1108, "chain not found")
+	ErrContractCall      = sdkerrors.Register(ModuleName, 1109, "contract call error")
 )

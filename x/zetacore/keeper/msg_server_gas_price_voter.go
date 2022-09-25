@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
+	"math/big"
 	"sort"
 )
 
@@ -50,6 +52,13 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)
+
+	chainid := clientconfig.FindIDByChainName(chain)
+	if chainid != nil {
+		if err := k.fungibleKeeper.SetGasPrice(ctx, chainid, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex]))); err != nil {
+			return nil, err
+		}
+	}
 
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
