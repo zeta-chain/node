@@ -12,14 +12,20 @@ import (
 func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungibleTestMsg) (*types.MsgFungibleTestMsgResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("action", "FungibleTestMsg"),
+			sdk.NewAttribute("fungibleModuleAddress", types.ModuleAddressEVM.String()),
+		),
+	)
+
 	ZDCAddree, err := k.DeployZetaDepositAndCall(ctx)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to DeployZetaDepositAndCall")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("action", "FungibleTestMsg"),
-			sdk.NewAttribute("ZDCAddree", ZDCAddree.String()),
+			sdk.NewAttribute("ZetaDepositAndCallContract", ZDCAddree.String()),
 		),
 	)
 
