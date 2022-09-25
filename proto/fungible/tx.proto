@@ -12,6 +12,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 service Msg {
       rpc FungibleTestMsg(MsgFungibleTestMsg) returns (MsgFungibleTestMsgResponse);
   rpc DeployFungibleCoinZRC4(MsgDeployFungibleCoinZRC4) returns (MsgDeployFungibleCoinZRC4Response);
+  rpc DeployGasPriceOracle(MsgDeployGasPriceOracle) returns (MsgDeployGasPriceOracleResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -33,6 +34,13 @@ message MsgDeployFungibleCoinZRC4 {
 }
 
 message MsgDeployFungibleCoinZRC4Response {
+}
+
+message MsgDeployGasPriceOracle {
+  string creator = 1;
+}
+
+message MsgDeployGasPriceOracleResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

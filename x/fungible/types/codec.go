@@ -10,6 +10,7 @@ import (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgFungibleTestMsg{}, "fungible/FungibleTestMsg", nil)
 	cdc.RegisterConcrete(&MsgDeployFungibleCoinZRC4{}, "fungible/DeployFungibleCoinZRC4", nil)
+	cdc.RegisterConcrete(&MsgDeployGasPriceOracle{}, "fungible/DeployGasPriceOracle", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -19,6 +20,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDeployFungibleCoinZRC4{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgDeployGasPriceOracle{},
 	)
 	// this line is used by starport scaffolding # 3
 

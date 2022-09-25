@@ -55587,6 +55587,8 @@ definitions:
         default: Zeta
   zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC4Response:
     type: object
+  zetachain.zetacore.fungible.MsgDeployGasPriceOracleResponse:
+    type: object
   zetachain.zetacore.fungible.MsgFungibleTestMsgResponse:
     type: object
   zetachain.zetacore.fungible.Params:
