@@ -181,7 +181,8 @@ func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, e
 			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
 			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateGasPriceOracleAddress", contractAddr)
 			if err != nil {
-				return common.Address{}, sdkerrors.Wrapf(err, "failed to update GasPriceOracleAddress contract address for %s", coin.Name)
+				//return common.Address{}, sdkerrors.Wrapf(err, "failed to update GasPriceOracleAddress contract address for %s", coin.Name)
+				k.Logger(ctx).Error("failed to update GasPriceOracleAddress contract address for %s", coin.Name)
 			}
 		}
 	}

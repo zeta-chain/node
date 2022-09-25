@@ -19,13 +19,13 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 		),
 	)
 
-	ZDCAddree, err := k.DeployZetaDepositAndCall(ctx)
+	ZDCAddress, err := k.DeployZetaDepositAndCall(ctx)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to DeployZetaDepositAndCall")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("ZetaDepositAndCallContract", ZDCAddree.String()),
+			sdk.NewAttribute("ZetaDepositAndCallContract", ZDCAddress.String()),
 		),
 	)
 
@@ -40,7 +40,7 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	)
 
 	system, _ := k.GetSystemContract(ctx)
-	system.ZetaDepositAndCallContract = ZDCAddree.String()
+	system.ZetaDepositAndCallContract = ZDCAddress.String()
 	system.GasPriceOracleContract = gasPriceOracle.String()
 	k.SetSystemContract(ctx, system)
 
