@@ -10,7 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/evm"
+	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	zetacoretypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
@@ -118,6 +118,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	return nil
 }
 
+// FIXME: add check for event emitting contracts
 func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC4Withdrawal, error) {
 	zrc4Abi, err := contracts.ZRC4MetaData.GetAbi()
 	if err != nil {

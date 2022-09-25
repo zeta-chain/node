@@ -17,7 +17,8 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	zetacommon "github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/evm"
+	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
@@ -26,7 +27,7 @@ func (k Keeper) DeployZRC4Contract(
 	ctx sdk.Context,
 	name, symbol string,
 	decimals uint8,
-	chain string,
+	chainStr string,
 	coinType zetacommon.CoinType,
 	erc20Contract string,
 ) (common.Address, error) { // FIXME: geneeralized beyond ETH
@@ -34,12 +35,18 @@ func (k Keeper) DeployZRC4Contract(
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
+	chain, found := clientconfig.Chains[chainStr]
+	if !found {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrChainNotFound, "chain %s not found", chainStr)
+	}
+
 	ctorArgs, err := abi.Pack(
-		"",                     // function--empty string for constructor
-		name,                   // name
-		symbol,                 // symbol
-		decimals,               // decimals
-		types.ModuleAddressEVM, // owner
+		"",              // function--empty string for constructor
+		name,            // name
+		symbol,          // symbol
+		decimals,        // decimals
+		chain.ChainID,   // chainID
+		uint8(coinType), // coinType
 	)
 
 	if err != nil {
@@ -61,7 +68,7 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
 
-	coinIndex := fmt.Sprintf("%s-%s", chain, name)
+	coinIndex := fmt.Sprintf("%s-%s", chainStr, name)
 	coin, _ := k.GetForeignCoins(ctx, coinIndex)
 	coin.CoinType = coinType
 	coin.Name = name
@@ -70,7 +77,7 @@ func (k Keeper) DeployZRC4Contract(
 	coin.ERC20ContractAddress = erc20Contract
 	coin.ZRC4ContractAddress = contractAddr.String()
 	coin.Index = coinIndex
-	coin.ForeignChain = chain
+	coin.ForeignChain = chainStr
 	k.SetForeignCoins(ctx, coin)
 
 	// update ZetaDepositAndCall system contract addr
@@ -93,8 +100,7 @@ func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZetaDepositAndCallMetaData ABI: %s", err.Error())
 	}
 	ctorArgs, err := abi.Pack(
-		"",                     // function--empty string for constructor
-		types.ModuleAddressEVM, // owner: fungible module
+		"", // function--empty string for constructor
 	)
 
 	if err != nil {

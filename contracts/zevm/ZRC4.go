@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package evm
+package zevm
 
 import (
 	"errors"
@@ -30,7 +30,7 @@ var (
 
 // ZRC4MetaData contains all meta data concerning the ZRC4 contract.
 var ZRC4MetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"},{\"internalType\":\"uint8\",\"name\":\"decimals_\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"fungibleModuleAddress_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"from\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ZETA_DEPOSIT_AND_CALL_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateZetaDepositAndCallAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"},{\"internalType\":\"uint8\",\"name\":\"decimals_\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"chainid_\",\"type\":\"uint256\"},{\"internalType\":\"enumCoinType\",\"name\":\"coinType_\",\"type\":\"uint8\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"from\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasfee\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"CHAIN_ID\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"COIN_TYPE\",\"outputs\":[{\"internalType\":\"enumCoinType\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_PRICE_ORACLE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ZETA_DEPOSIT_AND_CALL_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateGasPriceOracleAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateZetaDepositAndCallAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // ZRC4ABI is the input ABI used to generate the binding from.
@@ -179,6 +179,68 @@ func (_ZRC4 *ZRC4TransactorRaw) Transact(opts *bind.TransactOpts, method string,
 	return _ZRC4.Contract.contract.Transact(opts, method, params...)
 }
 
+// CHAINID is a free data retrieval call binding the contract method 0x85e1f4d0.
+//
+// Solidity: function CHAIN_ID() view returns(uint256)
+func (_ZRC4 *ZRC4Caller) CHAINID(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _ZRC4.contract.Call(opts, &out, "CHAIN_ID")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// CHAINID is a free data retrieval call binding the contract method 0x85e1f4d0.
+//
+// Solidity: function CHAIN_ID() view returns(uint256)
+func (_ZRC4 *ZRC4Session) CHAINID() (*big.Int, error) {
+	return _ZRC4.Contract.CHAINID(&_ZRC4.CallOpts)
+}
+
+// CHAINID is a free data retrieval call binding the contract method 0x85e1f4d0.
+//
+// Solidity: function CHAIN_ID() view returns(uint256)
+func (_ZRC4 *ZRC4CallerSession) CHAINID() (*big.Int, error) {
+	return _ZRC4.Contract.CHAINID(&_ZRC4.CallOpts)
+}
+
+// COINTYPE is a free data retrieval call binding the contract method 0xa3413d03.
+//
+// Solidity: function COIN_TYPE() view returns(uint8)
+func (_ZRC4 *ZRC4Caller) COINTYPE(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _ZRC4.contract.Call(opts, &out, "COIN_TYPE")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// COINTYPE is a free data retrieval call binding the contract method 0xa3413d03.
+//
+// Solidity: function COIN_TYPE() view returns(uint8)
+func (_ZRC4 *ZRC4Session) COINTYPE() (uint8, error) {
+	return _ZRC4.Contract.COINTYPE(&_ZRC4.CallOpts)
+}
+
+// COINTYPE is a free data retrieval call binding the contract method 0xa3413d03.
+//
+// Solidity: function COIN_TYPE() view returns(uint8)
+func (_ZRC4 *ZRC4CallerSession) COINTYPE() (uint8, error) {
+	return _ZRC4.Contract.COINTYPE(&_ZRC4.CallOpts)
+}
+
 // FUNGIBLEMODULEADDRESS is a free data retrieval call binding the contract method 0x3ce4a5bc.
 //
 // Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
@@ -208,6 +270,37 @@ func (_ZRC4 *ZRC4Session) FUNGIBLEMODULEADDRESS() (common.Address, error) {
 // Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
 func (_ZRC4 *ZRC4CallerSession) FUNGIBLEMODULEADDRESS() (common.Address, error) {
 	return _ZRC4.Contract.FUNGIBLEMODULEADDRESS(&_ZRC4.CallOpts)
+}
+
+// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+//
+// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4Caller) GASPRICEORACLEADDRESS(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _ZRC4.contract.Call(opts, &out, "GAS_PRICE_ORACLE_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+//
+// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4Session) GASPRICEORACLEADDRESS() (common.Address, error) {
+	return _ZRC4.Contract.GASPRICEORACLEADDRESS(&_ZRC4.CallOpts)
+}
+
+// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+//
+// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4CallerSession) GASPRICEORACLEADDRESS() (common.Address, error) {
+	return _ZRC4.Contract.GASPRICEORACLEADDRESS(&_ZRC4.CallOpts)
 }
 
 // ZETADEPOSITANDCALLADDRESS is a free data retrieval call binding the contract method 0x319788f9.
@@ -509,6 +602,27 @@ func (_ZRC4 *ZRC4Session) TransferFrom(sender common.Address, recipient common.A
 // Solidity: function transferFrom(address sender, address recipient, uint256 amount) returns(bool)
 func (_ZRC4 *ZRC4TransactorSession) TransferFrom(sender common.Address, recipient common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _ZRC4.Contract.TransferFrom(&_ZRC4.TransactOpts, sender, recipient, amount)
+}
+
+// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+//
+// Solidity: function updateGasPriceOracleAddress(address addr) returns()
+func (_ZRC4 *ZRC4Transactor) UpdateGasPriceOracleAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.contract.Transact(opts, "updateGasPriceOracleAddress", addr)
+}
+
+// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+//
+// Solidity: function updateGasPriceOracleAddress(address addr) returns()
+func (_ZRC4 *ZRC4Session) UpdateGasPriceOracleAddress(addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.Contract.UpdateGasPriceOracleAddress(&_ZRC4.TransactOpts, addr)
+}
+
+// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+//
+// Solidity: function updateGasPriceOracleAddress(address addr) returns()
+func (_ZRC4 *ZRC4TransactorSession) UpdateGasPriceOracleAddress(addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.Contract.UpdateGasPriceOracleAddress(&_ZRC4.TransactOpts, addr)
 }
 
 // UpdateZetaDepositAndCallAddress is a paid mutator transaction binding the contract method 0x78121cb8.
@@ -1076,15 +1190,16 @@ func (it *ZRC4WithdrawalIterator) Close() error {
 
 // ZRC4Withdrawal represents a Withdrawal event raised by the ZRC4 contract.
 type ZRC4Withdrawal struct {
-	From  common.Address
-	To    []byte
-	Value *big.Int
-	Raw   types.Log // Blockchain specific contextual infos
+	From   common.Address
+	To     []byte
+	Value  *big.Int
+	Gasfee *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterWithdrawal is a free log retrieval operation binding the contract event 0xdc826303f7dae7bbeb3114366260e897a82d2679aa3f493a22a6706e3e22c4b4.
+// FilterWithdrawal is a free log retrieval operation binding the contract event 0x6cf92e651ecb67795ff01e9bce83f166b16214b1dfb2669dd73c12b767ba4f92.
 //
-// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value)
+// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value, uint256 gasfee)
 func (_ZRC4 *ZRC4Filterer) FilterWithdrawal(opts *bind.FilterOpts, from []common.Address) (*ZRC4WithdrawalIterator, error) {
 
 	var fromRule []interface{}
@@ -1099,9 +1214,9 @@ func (_ZRC4 *ZRC4Filterer) FilterWithdrawal(opts *bind.FilterOpts, from []common
 	return &ZRC4WithdrawalIterator{contract: _ZRC4.contract, event: "Withdrawal", logs: logs, sub: sub}, nil
 }
 
-// WatchWithdrawal is a free log subscription operation binding the contract event 0xdc826303f7dae7bbeb3114366260e897a82d2679aa3f493a22a6706e3e22c4b4.
+// WatchWithdrawal is a free log subscription operation binding the contract event 0x6cf92e651ecb67795ff01e9bce83f166b16214b1dfb2669dd73c12b767ba4f92.
 //
-// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value)
+// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value, uint256 gasfee)
 func (_ZRC4 *ZRC4Filterer) WatchWithdrawal(opts *bind.WatchOpts, sink chan<- *ZRC4Withdrawal, from []common.Address) (event.Subscription, error) {
 
 	var fromRule []interface{}
@@ -1141,9 +1256,9 @@ func (_ZRC4 *ZRC4Filterer) WatchWithdrawal(opts *bind.WatchOpts, sink chan<- *ZR
 	}), nil
 }
 
-// ParseWithdrawal is a log parse operation binding the contract event 0xdc826303f7dae7bbeb3114366260e897a82d2679aa3f493a22a6706e3e22c4b4.
+// ParseWithdrawal is a log parse operation binding the contract event 0x6cf92e651ecb67795ff01e9bce83f166b16214b1dfb2669dd73c12b767ba4f92.
 //
-// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value)
+// Solidity: event Withdrawal(address indexed from, bytes to, uint256 value, uint256 gasfee)
 func (_ZRC4 *ZRC4Filterer) ParseWithdrawal(log types.Log) (*ZRC4Withdrawal, error) {
 	event := new(ZRC4Withdrawal)
 	if err := _ZRC4.contract.UnpackLog(event, "Withdrawal", log); err != nil {

@@ -1,45 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-
-abstract contract Context {
-    function _msgSender() internal view virtual returns (address) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes calldata) {
-        return msg.data;
-    }
-}
-
-/**
- * @dev Interface of the IZRC4 standard as defined in the ZIP.
- */
-interface IZRC4 {
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address account) external view returns (uint256);
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function allowance(address owner, address spender) external view returns (uint256);
-    function approve(address spender, uint256 amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
-    function deposit(address to, uint256 amount) external returns (bool);
-    function withdraw(bytes memory to, uint256 amount) external returns (bool);
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event Deposit(bytes from, address indexed to, uint256 value);
-    event Withdrawal(address indexed from, bytes to, uint256 value);
-}
-
-interface IZRC4Metadata is IZRC4 {
-    function name() external view returns (string memory);
-    function symbol() external view returns (string memory);
-    function decimals() external view returns (uint8);
-}
+import "./ifaces.sol";
 
 contract ZRC4 is Context, IZRC4, IZRC4Metadata {
-    address public FUNGIBLE_MODULE_ADDRESS;
+    address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public ZETA_DEPOSIT_AND_CALL_ADDRESS;
+    address public GAS_PRICE_ORACLE_ADDRESS;
+    uint256 public CHAIN_ID;
+    CoinType public COIN_TYPE;
 
     mapping(address => uint256) private _balances;
 
@@ -51,11 +19,13 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     string private _symbol;
     uint8 private _decimals;
 
-    constructor(string memory name_, string memory symbol_, uint8 decimals_, address fungibleModuleAddress_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_) {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can deploy ZRC4");
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
-        FUNGIBLE_MODULE_ADDRESS = fungibleModuleAddress_;
+        CHAIN_ID = chainid_;
+        COIN_TYPE = coinType_;
     }
 
     function name() public view virtual override returns (string memory) {
@@ -151,14 +121,36 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         return true;
     }
 
+    // this function causes cctx module to send out outbound tx to the outbound chain
+    // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
+        address gasZRC4 = IGasPriceOracle(GAS_PRICE_ORACLE_ADDRESS).gasCoinERC4(CHAIN_ID);
+        require(gasZRC4 != address(0), "gas coin not set");
+        uint256 gasPrice = IGasPriceOracle(GAS_PRICE_ORACLE_ADDRESS).gasPrice(CHAIN_ID);
+        require(gasPrice > 0, "gas price not set");
+        uint256 gasLimit;
+        if (COIN_TYPE == CoinType.ERC20) {
+            gasLimit = 70000;
+        } else if (COIN_TYPE == CoinType.Gas) {
+            gasLimit = 21000;
+        } else {
+            revert("invalid coin type");
+        }
+        uint256 gasFee = gasPrice * gasLimit;
+        require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
+
         _burn(msg.sender, amount);
-        emit Withdrawal(msg.sender, to, amount);
+        emit Withdrawal(msg.sender, to, amount, gasFee);
         return true;
     }
 
     function updateZetaDepositAndCallAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         ZETA_DEPOSIT_AND_CALL_ADDRESS = addr;
+    }
+
+    function updateGasPriceOracleAddress(address addr) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+        GAS_PRICE_ORACLE_ADDRESS = addr;
     }
 }
