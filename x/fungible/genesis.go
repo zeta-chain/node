@@ -14,8 +14,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 		k.SetForeignCoins(ctx, elem)
 	}
 	// Set if defined
-	if genState.ZetaDepositAndCallContract != nil {
-		k.SetZetaDepositAndCallContract(ctx, *genState.ZetaDepositAndCallContract)
+	if genState.SystemContract != nil {
+		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
@@ -33,9 +33,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
 	// Get all zetaDepositAndCallContract
-	zetaDepositAndCallContract, found := k.GetZetaDepositAndCallContract(ctx)
+	system, found := k.GetSystemContract(ctx)
 	if found {
-		genesis.ZetaDepositAndCallContract = &zetaDepositAndCallContract
+		genesis.SystemContract = &system
 	}
 	// this line is used by starport scaffolding # genesis/module/export
 

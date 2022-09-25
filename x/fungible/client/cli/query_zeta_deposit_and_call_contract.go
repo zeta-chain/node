@@ -19,9 +19,9 @@ func CmdShowZetaDepositAndCallContract() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetZetaDepositAndCallContractRequest{}
+			params := &types.QueryGetSystemContractRequest{}
 
-			res, err := queryClient.ZetaDepositAndCallContract(context.Background(), params)
+			res, err := queryClient.SystemContract(context.Background(), params)
 			if err != nil {
 				return err
 			}

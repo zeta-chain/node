@@ -28,8 +28,8 @@ service Query {
 	}
 
 // Queries a ZetaDepositAndCallContract by index.
-	rpc ZetaDepositAndCallContract(QueryGetZetaDepositAndCallContractRequest) returns (QueryGetZetaDepositAndCallContractResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/fungible/zeta_deposit_and_call_contract";
+	rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
 	}
 // this line is used by starport scaffolding # 2
 }
@@ -61,9 +61,9 @@ message QueryAllForeignCoinsResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetZetaDepositAndCallContractRequest {}
+message QueryGetSystemContractRequest {}
 
-message QueryGetZetaDepositAndCallContractResponse {
-	ZetaDepositAndCallContract ZetaDepositAndCallContract = 1 [(gogoproto.nullable) = false];
+message QueryGetSystemContractResponse {
+	SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
 }
 // this line is used by starport scaffolding # 3

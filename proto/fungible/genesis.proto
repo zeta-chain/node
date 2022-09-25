@@ -13,6 +13,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated ForeignCoins foreignCoinsList = 2 [(gogoproto.nullable) = false];
-  ZetaDepositAndCallContract zetaDepositAndCallContract = 3;
+  SystemContract systemContract = 3;
   // this line is used by starport scaffolding # genesis/proto/state
 }

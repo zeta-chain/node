@@ -7,14 +7,14 @@ import (
 )
 
 // SetZetaDepositAndCallContract set zetaDepositAndCallContract in the store
-func (k Keeper) SetZetaDepositAndCallContract(ctx sdk.Context, zetaDepositAndCallContract types.ZetaDepositAndCallContract) {
+func (k Keeper) SetSystemContract(ctx sdk.Context, zetaDepositAndCallContract types.SystemContract) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
 	b := k.cdc.MustMarshal(&zetaDepositAndCallContract)
 	store.Set([]byte{0}, b)
 }
 
 // GetZetaDepositAndCallContract returns zetaDepositAndCallContract
-func (k Keeper) GetZetaDepositAndCallContract(ctx sdk.Context) (val types.ZetaDepositAndCallContract, found bool) {
+func (k Keeper) GetSystemContract(ctx sdk.Context) (val types.SystemContract, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
 
 	b := store.Get([]byte{0})
@@ -27,7 +27,7 @@ func (k Keeper) GetZetaDepositAndCallContract(ctx sdk.Context) (val types.ZetaDe
 }
 
 // RemoveZetaDepositAndCallContract removes zetaDepositAndCallContract from the store
-func (k Keeper) RemoveZetaDepositAndCallContract(ctx sdk.Context) {
+func (k Keeper) RemoveSystemContract(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
 	store.Delete([]byte{0})
 }

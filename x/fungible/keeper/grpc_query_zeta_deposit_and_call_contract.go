@@ -9,16 +9,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ZetaDepositAndCallContract(c context.Context, req *types.QueryGetZetaDepositAndCallContractRequest) (*types.QueryGetZetaDepositAndCallContractResponse, error) {
+func (k Keeper) SystemContract(c context.Context, req *types.QueryGetSystemContractRequest) (*types.QueryGetSystemContractResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetZetaDepositAndCallContract(ctx)
+	val, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	return &types.QueryGetZetaDepositAndCallContractResponse{ZetaDepositAndCallContract: val}, nil
+	return &types.QueryGetSystemContractResponse{SystemContract: val}, nil
 }

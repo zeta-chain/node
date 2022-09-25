@@ -297,25 +297,21 @@ func (m *QueryAllForeignCoinsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-type QueryGetZetaDepositAndCallContractRequest struct {
+type QueryGetSystemContractRequest struct {
 }
 
-func (m *QueryGetZetaDepositAndCallContractRequest) Reset() {
-	*m = QueryGetZetaDepositAndCallContractRequest{}
-}
-func (m *QueryGetZetaDepositAndCallContractRequest) String() string {
-	return proto.CompactTextString(m)
-}
-func (*QueryGetZetaDepositAndCallContractRequest) ProtoMessage() {}
-func (*QueryGetZetaDepositAndCallContractRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGetSystemContractRequest) Reset()         { *m = QueryGetSystemContractRequest{} }
+func (m *QueryGetSystemContractRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetSystemContractRequest) ProtoMessage()    {}
+func (*QueryGetSystemContractRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d671b6e9298b37cd, []int{6}
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetSystemContractRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetSystemContractRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetZetaDepositAndCallContractRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetSystemContractRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -325,38 +321,34 @@ func (m *QueryGetZetaDepositAndCallContractRequest) XXX_Marshal(b []byte, determ
 		return b[:n], nil
 	}
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetZetaDepositAndCallContractRequest.Merge(m, src)
+func (m *QueryGetSystemContractRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetSystemContractRequest.Merge(m, src)
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) XXX_Size() int {
+func (m *QueryGetSystemContractRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetZetaDepositAndCallContractRequest.DiscardUnknown(m)
+func (m *QueryGetSystemContractRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetSystemContractRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetZetaDepositAndCallContractRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetSystemContractRequest proto.InternalMessageInfo
 
-type QueryGetZetaDepositAndCallContractResponse struct {
-	ZetaDepositAndCallContract ZetaDepositAndCallContract `protobuf:"bytes,1,opt,name=ZetaDepositAndCallContract,proto3" json:"ZetaDepositAndCallContract"`
+type QueryGetSystemContractResponse struct {
+	SystemContract SystemContract `protobuf:"bytes,1,opt,name=SystemContract,proto3" json:"SystemContract"`
 }
 
-func (m *QueryGetZetaDepositAndCallContractResponse) Reset() {
-	*m = QueryGetZetaDepositAndCallContractResponse{}
-}
-func (m *QueryGetZetaDepositAndCallContractResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*QueryGetZetaDepositAndCallContractResponse) ProtoMessage() {}
-func (*QueryGetZetaDepositAndCallContractResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGetSystemContractResponse) Reset()         { *m = QueryGetSystemContractResponse{} }
+func (m *QueryGetSystemContractResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetSystemContractResponse) ProtoMessage()    {}
+func (*QueryGetSystemContractResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d671b6e9298b37cd, []int{7}
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetSystemContractResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetSystemContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetZetaDepositAndCallContractResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetSystemContractResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -366,23 +358,23 @@ func (m *QueryGetZetaDepositAndCallContractResponse) XXX_Marshal(b []byte, deter
 		return b[:n], nil
 	}
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetZetaDepositAndCallContractResponse.Merge(m, src)
+func (m *QueryGetSystemContractResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetSystemContractResponse.Merge(m, src)
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) XXX_Size() int {
+func (m *QueryGetSystemContractResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetZetaDepositAndCallContractResponse.DiscardUnknown(m)
+func (m *QueryGetSystemContractResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetSystemContractResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetZetaDepositAndCallContractResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetSystemContractResponse proto.InternalMessageInfo
 
-func (m *QueryGetZetaDepositAndCallContractResponse) GetZetaDepositAndCallContract() ZetaDepositAndCallContract {
+func (m *QueryGetSystemContractResponse) GetSystemContract() SystemContract {
 	if m != nil {
-		return m.ZetaDepositAndCallContract
+		return m.SystemContract
 	}
-	return ZetaDepositAndCallContract{}
+	return SystemContract{}
 }
 
 func init() {
@@ -392,54 +384,53 @@ func init() {
 	proto.RegisterType((*QueryGetForeignCoinsResponse)(nil), "zetachain.zetacore.fungible.QueryGetForeignCoinsResponse")
 	proto.RegisterType((*QueryAllForeignCoinsRequest)(nil), "zetachain.zetacore.fungible.QueryAllForeignCoinsRequest")
 	proto.RegisterType((*QueryAllForeignCoinsResponse)(nil), "zetachain.zetacore.fungible.QueryAllForeignCoinsResponse")
-	proto.RegisterType((*QueryGetZetaDepositAndCallContractRequest)(nil), "zetachain.zetacore.fungible.QueryGetZetaDepositAndCallContractRequest")
-	proto.RegisterType((*QueryGetZetaDepositAndCallContractResponse)(nil), "zetachain.zetacore.fungible.QueryGetZetaDepositAndCallContractResponse")
+	proto.RegisterType((*QueryGetSystemContractRequest)(nil), "zetachain.zetacore.fungible.QueryGetSystemContractRequest")
+	proto.RegisterType((*QueryGetSystemContractResponse)(nil), "zetachain.zetacore.fungible.QueryGetSystemContractResponse")
 }
 
 func init() { proto.RegisterFile("fungible/query.proto", fileDescriptor_d671b6e9298b37cd) }
 
 var fileDescriptor_d671b6e9298b37cd = []byte{
-	// 626 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x95, 0x41, 0x6b, 0x13, 0x4d,
-	0x18, 0xc7, 0x33, 0x7d, 0xdf, 0x06, 0x1c, 0x0b, 0xc2, 0x18, 0x41, 0xb6, 0x61, 0x95, 0x55, 0xaa,
-	0x6d, 0xcd, 0x8e, 0x6d, 0x10, 0x15, 0x45, 0x48, 0x53, 0x12, 0xbc, 0xd5, 0x78, 0x91, 0x5e, 0xc2,
-	0x64, 0x33, 0xd9, 0x2e, 0x4c, 0x66, 0xb6, 0x3b, 0x13, 0x69, 0x95, 0x5e, 0xfc, 0x04, 0x82, 0x27,
-	0xfd, 0x0a, 0x7e, 0x04, 0x3d, 0x78, 0xec, 0xb1, 0xe0, 0xc5, 0x93, 0x48, 0xe2, 0x37, 0xf0, 0x0b,
-	0x48, 0x66, 0x26, 0x69, 0x62, 0x93, 0x4d, 0xb4, 0xb7, 0x64, 0xf6, 0x79, 0x9e, 0xff, 0xef, 0x3f,
-	0xcf, 0xf3, 0xec, 0xc2, 0x5c, 0xab, 0xc3, 0xc3, 0xa8, 0xc1, 0x28, 0xde, 0xef, 0xd0, 0xe4, 0xd0,
-	0x8f, 0x13, 0xa1, 0x04, 0x5a, 0x7e, 0x45, 0x15, 0x09, 0xf6, 0x48, 0xc4, 0x7d, 0xfd, 0x4b, 0x24,
-	0xd4, 0x1f, 0x04, 0x3a, 0xb9, 0x50, 0x84, 0x42, 0xc7, 0xe1, 0xfe, 0x2f, 0x93, 0xe2, 0xe4, 0x43,
-	0x21, 0x42, 0x46, 0x31, 0x89, 0x23, 0x4c, 0x38, 0x17, 0x8a, 0xa8, 0x48, 0x70, 0x69, 0x9f, 0xae,
-	0x05, 0x42, 0xb6, 0x85, 0xc4, 0x0d, 0x22, 0xad, 0x12, 0x7e, 0xb9, 0xd1, 0xa0, 0x8a, 0x6c, 0xe0,
-	0x98, 0x84, 0x11, 0xd7, 0xc1, 0x36, 0xf6, 0xca, 0x10, 0x29, 0x26, 0x09, 0x69, 0x0f, 0x4a, 0xe4,
-	0x87, 0xc7, 0x2d, 0x91, 0xd0, 0x28, 0xe4, 0xf5, 0x40, 0x44, 0x43, 0x81, 0xc2, 0xf0, 0x69, 0x1f,
-	0xb8, 0xde, 0xa4, 0xb1, 0x90, 0x91, 0xaa, 0x13, 0xde, 0xac, 0x07, 0x84, 0xb1, 0x7a, 0x20, 0xb8,
-	0x4a, 0x48, 0xa0, 0x4c, 0xb8, 0x97, 0x83, 0xe8, 0x59, 0x9f, 0x62, 0x47, 0x2b, 0xd4, 0xe8, 0x7e,
-	0x87, 0x4a, 0xe5, 0xbd, 0x80, 0x97, 0xc7, 0x4e, 0x65, 0x2c, 0xb8, 0xa4, 0xa8, 0x04, 0xb3, 0x86,
-	0xe4, 0x2a, 0xb8, 0x0e, 0x6e, 0x5f, 0xdc, 0xbc, 0xe1, 0xa7, 0x5c, 0x8f, 0x6f, 0x92, 0xb7, 0xfe,
-	0x3f, 0xfe, 0x7e, 0x2d, 0x53, 0xb3, 0x89, 0x5e, 0x11, 0x2e, 0xeb, 0xca, 0x55, 0xaa, 0x2a, 0x86,
-	0xbe, 0xdc, 0x87, 0xb7, 0xc2, 0x28, 0x07, 0x17, 0x23, 0xde, 0xa4, 0x07, 0x5a, 0xe0, 0x42, 0xcd,
-	0xfc, 0xf1, 0x24, 0xcc, 0x4f, 0x4e, 0xb2, 0x5c, 0xcf, 0xe1, 0x52, 0x6b, 0xe4, 0xdc, 0xd2, 0xad,
-	0xa6, 0xd2, 0x8d, 0x16, 0xb2, 0x8c, 0x63, 0x45, 0x3c, 0x6a, 0x49, 0x4b, 0x8c, 0x4d, 0x22, 0xad,
-	0x40, 0x78, 0xda, 0x30, 0xab, 0xb8, 0xe2, 0x9b, 0xee, 0xfa, 0xfd, 0xee, 0xfa, 0x66, 0x8e, 0x6c,
-	0x77, 0xfd, 0x1d, 0x12, 0x52, 0x9b, 0x5b, 0x1b, 0xc9, 0xf4, 0x3e, 0x03, 0x6b, 0xee, 0x8c, 0xce,
-	0x54, 0x73, 0xff, 0x9d, 0xdb, 0x1c, 0xaa, 0x8e, 0xd1, 0x2f, 0x68, 0xfa, 0x5b, 0x33, 0xe9, 0x0d,
-	0xd1, 0x18, 0xfe, 0x3a, 0x5c, 0x1d, 0xb4, 0x66, 0x97, 0x2a, 0xb2, 0x6d, 0xc6, 0xad, 0xc4, 0x9b,
-	0x65, 0xc2, 0x58, 0xd9, 0xce, 0xda, 0x60, 0xac, 0x3e, 0x02, 0xb8, 0x36, 0x4f, 0xb4, 0x75, 0x7e,
-	0x04, 0x9d, 0xe9, 0x51, 0xf6, 0xca, 0xef, 0xa7, 0xde, 0xc3, 0xf4, 0x74, 0x7b, 0x2b, 0x29, 0x02,
-	0x9b, 0x1f, 0xb2, 0x70, 0x51, 0xd3, 0xa2, 0xf7, 0x00, 0x66, 0xcd, 0x34, 0x23, 0x9c, 0xaa, 0x77,
-	0x76, 0x95, 0x9c, 0xbb, 0xf3, 0x27, 0x18, 0xdb, 0xde, 0x9d, 0x37, 0x5f, 0x7f, 0xbe, 0x5b, 0x58,
-	0x41, 0x37, 0xf5, 0x06, 0x17, 0x74, 0x2a, 0x1e, 0xa4, 0xe2, 0x3f, 0xde, 0x09, 0xe8, 0x0b, 0x80,
-	0x4b, 0xa3, 0xed, 0x46, 0x0f, 0x66, 0x0b, 0x4e, 0x5e, 0x3e, 0xe7, 0xe1, 0x3f, 0x64, 0x5a, 0xe6,
-	0x47, 0x9a, 0xf9, 0x1e, 0x2a, 0xa6, 0x33, 0x8f, 0xbd, 0xb0, 0xf0, 0x6b, 0xbd, 0xdd, 0x47, 0xe8,
-	0x13, 0x80, 0x97, 0x46, 0xab, 0x96, 0x18, 0x9b, 0xc7, 0xc5, 0xe4, 0xc5, 0x9c, 0xc7, 0xc5, 0x94,
-	0x55, 0xf3, 0x8a, 0xda, 0x45, 0x01, 0xad, 0xff, 0x85, 0x0b, 0xf4, 0x0b, 0xa4, 0x8d, 0x29, 0xaa,
-	0xcc, 0x75, 0xa9, 0x33, 0x77, 0xc7, 0xa9, 0x9e, 0xbb, 0x8e, 0x35, 0xb9, 0xad, 0x4d, 0x3e, 0x41,
-	0x8f, 0xd3, 0x4d, 0xa6, 0x7f, 0x3d, 0xb6, 0x9e, 0x1e, 0x77, 0x5d, 0x70, 0xd2, 0x75, 0xc1, 0x8f,
-	0xae, 0x0b, 0xde, 0xf6, 0xdc, 0xcc, 0x49, 0xcf, 0xcd, 0x7c, 0xeb, 0xb9, 0x99, 0x5d, 0x1c, 0x46,
-	0x6a, 0xaf, 0xd3, 0xf0, 0x03, 0xd1, 0x9e, 0xa8, 0x70, 0x70, 0xaa, 0xa1, 0x0e, 0x63, 0x2a, 0x1b,
-	0x59, 0xfd, 0x25, 0x2a, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xa9, 0x89, 0xb5, 0xe2, 0x82, 0x07,
-	0x00, 0x00,
+	// 614 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x95, 0xcf, 0x6f, 0xd3, 0x30,
+	0x14, 0xc7, 0x9b, 0xc1, 0x2a, 0x61, 0x26, 0x90, 0x4c, 0x91, 0x50, 0x57, 0x32, 0x14, 0xd0, 0xf8,
+	0x31, 0x1a, 0xb3, 0x55, 0x93, 0x80, 0x9d, 0xba, 0x49, 0x9b, 0xb8, 0x8d, 0xee, 0x02, 0x5c, 0x2a,
+	0x37, 0x75, 0x33, 0x4b, 0xa9, 0x9d, 0xc5, 0x2e, 0x5a, 0x99, 0xb8, 0xf0, 0x17, 0x20, 0x71, 0xe2,
+	0x6f, 0x81, 0x03, 0xc7, 0x1d, 0x27, 0x71, 0xe1, 0x84, 0x50, 0x8b, 0xc4, 0xbf, 0x81, 0x62, 0xbb,
+	0x5d, 0xd2, 0xa5, 0x59, 0x19, 0xb7, 0x34, 0x7e, 0xdf, 0xf7, 0x3e, 0x5f, 0xbf, 0xf7, 0x52, 0x50,
+	0xea, 0xf4, 0x98, 0x4f, 0x5b, 0x01, 0x41, 0x07, 0x3d, 0x12, 0xf5, 0xdd, 0x30, 0xe2, 0x92, 0xc3,
+	0xc5, 0x77, 0x44, 0x62, 0x6f, 0x1f, 0x53, 0xe6, 0xaa, 0x27, 0x1e, 0x11, 0x77, 0x14, 0x58, 0x2e,
+	0xf9, 0xdc, 0xe7, 0x2a, 0x0e, 0xc5, 0x4f, 0x5a, 0x52, 0xae, 0xf8, 0x9c, 0xfb, 0x01, 0x41, 0x38,
+	0xa4, 0x08, 0x33, 0xc6, 0x25, 0x96, 0x94, 0x33, 0x61, 0x4e, 0x1f, 0x79, 0x5c, 0x74, 0xb9, 0x40,
+	0x2d, 0x2c, 0x4c, 0x25, 0xf4, 0x76, 0xb5, 0x45, 0x24, 0x5e, 0x45, 0x21, 0xf6, 0x29, 0x53, 0xc1,
+	0x26, 0xf6, 0xe6, 0x18, 0x29, 0xc4, 0x11, 0xee, 0x8e, 0x52, 0x54, 0xc6, 0xaf, 0x3b, 0x3c, 0x22,
+	0xd4, 0x67, 0x4d, 0x8f, 0xd3, 0x71, 0x81, 0xea, 0xf8, 0x34, 0x06, 0x6e, 0xb6, 0x49, 0xc8, 0x05,
+	0x95, 0x4d, 0xcc, 0xda, 0x4d, 0x0f, 0x07, 0x41, 0xd3, 0xe3, 0x4c, 0x46, 0xd8, 0x93, 0x3a, 0xdc,
+	0x29, 0x01, 0xf8, 0x32, 0xa6, 0xd8, 0x55, 0x15, 0x1a, 0xe4, 0xa0, 0x47, 0x84, 0x74, 0x5e, 0x81,
+	0x1b, 0xa9, 0xb7, 0x22, 0xe4, 0x4c, 0x10, 0x58, 0x07, 0x45, 0x4d, 0x72, 0xcb, 0xba, 0x63, 0x3d,
+	0xb8, 0xba, 0x76, 0xd7, 0xcd, 0xb9, 0x1e, 0x57, 0x8b, 0x37, 0x2f, 0x1f, 0xff, 0x5c, 0x2a, 0x34,
+	0x8c, 0xd0, 0xa9, 0x81, 0x45, 0x95, 0x79, 0x87, 0xc8, 0x6d, 0x4d, 0xbf, 0x15, 0xc3, 0x9b, 0xc2,
+	0xb0, 0x04, 0xe6, 0x29, 0x6b, 0x93, 0x43, 0x55, 0xe0, 0x4a, 0x43, 0xff, 0x70, 0x04, 0xa8, 0x64,
+	0x8b, 0x0c, 0xd7, 0x1e, 0x58, 0xe8, 0x24, 0xde, 0x1b, 0xba, 0x87, 0xb9, 0x74, 0xc9, 0x44, 0x86,
+	0x31, 0x95, 0xc4, 0x21, 0x86, 0xb4, 0x1e, 0x04, 0x59, 0xa4, 0xdb, 0x00, 0x9c, 0x36, 0xcc, 0x54,
+	0x5c, 0x76, 0x75, 0x77, 0xdd, 0xb8, 0xbb, 0xae, 0x9e, 0x23, 0xd3, 0x5d, 0x77, 0x17, 0xfb, 0xc4,
+	0x68, 0x1b, 0x09, 0xa5, 0xf3, 0xd5, 0x32, 0xe6, 0xce, 0xd4, 0x99, 0x6a, 0xee, 0xd2, 0x7f, 0x9b,
+	0x83, 0x3b, 0x29, 0xfa, 0x39, 0x45, 0x7f, 0xff, 0x5c, 0x7a, 0x4d, 0x94, 0xc2, 0x5f, 0x02, 0xb7,
+	0x47, 0xad, 0xd9, 0xeb, 0x0b, 0x49, 0xba, 0x5b, 0x66, 0xbe, 0x46, 0xa3, 0x74, 0x04, 0xec, 0x69,
+	0x01, 0xc6, 0xe0, 0x6b, 0x70, 0x2d, 0x7d, 0x62, 0x6e, 0x73, 0x25, 0xd7, 0x62, 0x5a, 0x62, 0x4c,
+	0x4e, 0x24, 0x5a, 0xfb, 0x33, 0x0f, 0xe6, 0x55, 0x75, 0xf8, 0xd9, 0x02, 0x45, 0x3d, 0x90, 0x10,
+	0xe5, 0xe6, 0x3d, 0xbb, 0x0d, 0xe5, 0x27, 0xb3, 0x0b, 0xb4, 0x25, 0xe7, 0xf1, 0x87, 0xef, 0xbf,
+	0x3f, 0xcd, 0x2d, 0xc3, 0x7b, 0x6a, 0x09, 0xab, 0x4a, 0x8a, 0x46, 0x52, 0x34, 0xb1, 0xd6, 0xf0,
+	0x9b, 0x05, 0x16, 0x92, 0x1d, 0x83, 0x4f, 0xcf, 0x2f, 0x98, 0xbd, 0x3f, 0xe5, 0x67, 0x17, 0x50,
+	0x1a, 0xe6, 0x0d, 0xc5, 0xbc, 0x0e, 0x6b, 0xf9, 0xcc, 0xa9, 0x6f, 0x0e, 0x3a, 0x52, 0x0b, 0xfa,
+	0x1e, 0x7e, 0xb1, 0xc0, 0xf5, 0x64, 0xd6, 0x7a, 0x10, 0xcc, 0xe2, 0x22, 0x7b, 0xb7, 0x66, 0x71,
+	0x31, 0x65, 0x5b, 0x9c, 0x9a, 0x72, 0x51, 0x85, 0x2b, 0xff, 0xe0, 0x22, 0x6e, 0xc0, 0xc4, 0xe4,
+	0xc0, 0xe7, 0x33, 0x5d, 0x64, 0xe6, 0xc8, 0x97, 0x37, 0x2e, 0xa4, 0x35, 0x06, 0xd6, 0x95, 0x01,
+	0x04, 0xab, 0xf9, 0x06, 0x84, 0x52, 0x8f, 0xbf, 0xe6, 0x9b, 0x2f, 0x8e, 0x07, 0xb6, 0x75, 0x32,
+	0xb0, 0xad, 0x5f, 0x03, 0xdb, 0xfa, 0x38, 0xb4, 0x0b, 0x27, 0x43, 0xbb, 0xf0, 0x63, 0x68, 0x17,
+	0xde, 0x20, 0x9f, 0xca, 0xfd, 0x5e, 0xcb, 0xf5, 0x78, 0x37, 0x33, 0xe5, 0xe1, 0x69, 0x52, 0xd9,
+	0x0f, 0x89, 0x68, 0x15, 0xd5, 0x3f, 0x43, 0xed, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x1c, 0x24,
+	0x4f, 0x5a, 0x12, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -461,7 +452,7 @@ type QueryClient interface {
 	// Queries a list of ForeignCoins items.
 	ForeignCoinsAll(ctx context.Context, in *QueryAllForeignCoinsRequest, opts ...grpc.CallOption) (*QueryAllForeignCoinsResponse, error)
 	// Queries a ZetaDepositAndCallContract by index.
-	ZetaDepositAndCallContract(ctx context.Context, in *QueryGetZetaDepositAndCallContractRequest, opts ...grpc.CallOption) (*QueryGetZetaDepositAndCallContractResponse, error)
+	SystemContract(ctx context.Context, in *QueryGetSystemContractRequest, opts ...grpc.CallOption) (*QueryGetSystemContractResponse, error)
 }
 
 type queryClient struct {
@@ -499,9 +490,9 @@ func (c *queryClient) ForeignCoinsAll(ctx context.Context, in *QueryAllForeignCo
 	return out, nil
 }
 
-func (c *queryClient) ZetaDepositAndCallContract(ctx context.Context, in *QueryGetZetaDepositAndCallContractRequest, opts ...grpc.CallOption) (*QueryGetZetaDepositAndCallContractResponse, error) {
-	out := new(QueryGetZetaDepositAndCallContractResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Query/ZetaDepositAndCallContract", in, out, opts...)
+func (c *queryClient) SystemContract(ctx context.Context, in *QueryGetSystemContractRequest, opts ...grpc.CallOption) (*QueryGetSystemContractResponse, error) {
+	out := new(QueryGetSystemContractResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Query/SystemContract", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +508,7 @@ type QueryServer interface {
 	// Queries a list of ForeignCoins items.
 	ForeignCoinsAll(context.Context, *QueryAllForeignCoinsRequest) (*QueryAllForeignCoinsResponse, error)
 	// Queries a ZetaDepositAndCallContract by index.
-	ZetaDepositAndCallContract(context.Context, *QueryGetZetaDepositAndCallContractRequest) (*QueryGetZetaDepositAndCallContractResponse, error)
+	SystemContract(context.Context, *QueryGetSystemContractRequest) (*QueryGetSystemContractResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -533,8 +524,8 @@ func (*UnimplementedQueryServer) ForeignCoins(ctx context.Context, req *QueryGet
 func (*UnimplementedQueryServer) ForeignCoinsAll(ctx context.Context, req *QueryAllForeignCoinsRequest) (*QueryAllForeignCoinsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ForeignCoinsAll not implemented")
 }
-func (*UnimplementedQueryServer) ZetaDepositAndCallContract(ctx context.Context, req *QueryGetZetaDepositAndCallContractRequest) (*QueryGetZetaDepositAndCallContractResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ZetaDepositAndCallContract not implemented")
+func (*UnimplementedQueryServer) SystemContract(ctx context.Context, req *QueryGetSystemContractRequest) (*QueryGetSystemContractResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SystemContract not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -595,20 +586,20 @@ func _Query_ForeignCoinsAll_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ZetaDepositAndCallContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetZetaDepositAndCallContractRequest)
+func _Query_SystemContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetSystemContractRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ZetaDepositAndCallContract(ctx, in)
+		return srv.(QueryServer).SystemContract(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.fungible.Query/ZetaDepositAndCallContract",
+		FullMethod: "/zetachain.zetacore.fungible.Query/SystemContract",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ZetaDepositAndCallContract(ctx, req.(*QueryGetZetaDepositAndCallContractRequest))
+		return srv.(QueryServer).SystemContract(ctx, req.(*QueryGetSystemContractRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -630,8 +621,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ForeignCoinsAll_Handler,
 		},
 		{
-			MethodName: "ZetaDepositAndCallContract",
-			Handler:    _Query_ZetaDepositAndCallContract_Handler,
+			MethodName: "SystemContract",
+			Handler:    _Query_SystemContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -841,7 +832,7 @@ func (m *QueryAllForeignCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetZetaDepositAndCallContractRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetSystemContractRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -851,12 +842,12 @@ func (m *QueryGetZetaDepositAndCallContractRequest) Marshal() (dAtA []byte, err 
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetZetaDepositAndCallContractRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetSystemContractRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetZetaDepositAndCallContractRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetSystemContractRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -864,7 +855,7 @@ func (m *QueryGetZetaDepositAndCallContractRequest) MarshalToSizedBuffer(dAtA []
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetZetaDepositAndCallContractResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetSystemContractResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -874,18 +865,18 @@ func (m *QueryGetZetaDepositAndCallContractResponse) Marshal() (dAtA []byte, err
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetZetaDepositAndCallContractResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetSystemContractResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetZetaDepositAndCallContractResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetSystemContractResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.ZetaDepositAndCallContract.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.SystemContract.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -984,7 +975,7 @@ func (m *QueryAllForeignCoinsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetZetaDepositAndCallContractRequest) Size() (n int) {
+func (m *QueryGetSystemContractRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -993,13 +984,13 @@ func (m *QueryGetZetaDepositAndCallContractRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetZetaDepositAndCallContractResponse) Size() (n int) {
+func (m *QueryGetSystemContractResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.ZetaDepositAndCallContract.Size()
+	l = m.SystemContract.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1514,7 +1505,7 @@ func (m *QueryAllForeignCoinsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetZetaDepositAndCallContractRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGetSystemContractRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1537,10 +1528,10 @@ func (m *QueryGetZetaDepositAndCallContractRequest) Unmarshal(dAtA []byte) error
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetZetaDepositAndCallContractRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetSystemContractRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetZetaDepositAndCallContractRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetSystemContractRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1564,7 +1555,7 @@ func (m *QueryGetZetaDepositAndCallContractRequest) Unmarshal(dAtA []byte) error
 	}
 	return nil
 }
-func (m *QueryGetZetaDepositAndCallContractResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGetSystemContractResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1587,15 +1578,15 @@ func (m *QueryGetZetaDepositAndCallContractResponse) Unmarshal(dAtA []byte) erro
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetZetaDepositAndCallContractResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetSystemContractResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetZetaDepositAndCallContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetSystemContractResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ZetaDepositAndCallContract", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SystemContract", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1622,7 +1613,7 @@ func (m *QueryGetZetaDepositAndCallContractResponse) Unmarshal(dAtA []byte) erro
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ZetaDepositAndCallContract.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.SystemContract.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

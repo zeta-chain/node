@@ -32154,20 +32154,22 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /zeta-chain/zetacore/fungible/zeta_deposit_and_call_contract:
+  /zeta-chain/zetacore/fungible/system_contract:
     get:
       summary: Queries a ZetaDepositAndCallContract by index.
-      operationId: ZetachainZetacoreFungibleZetaDepositAndCallContract
+      operationId: ZetachainZetacoreFungibleSystemContract
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              ZetaDepositAndCallContract:
+              SystemContract:
                 type: object
                 properties:
-                  address:
+                  gasPriceOracleContract:
+                    type: string
+                  zetaDepositAndCallContract:
                     type: string
         default:
           description: An unexpected error response.
@@ -55677,13 +55679,15 @@ definitions:
               - Gas
               - ERC20
             default: Zeta
-  zetachain.zetacore.fungible.QueryGetZetaDepositAndCallContractResponse:
+  zetachain.zetacore.fungible.QueryGetSystemContractResponse:
     type: object
     properties:
-      ZetaDepositAndCallContract:
+      SystemContract:
         type: object
         properties:
-          address:
+          gasPriceOracleContract:
+            type: string
+          zetaDepositAndCallContract:
             type: string
   zetachain.zetacore.fungible.QueryParamsResponse:
     type: object
@@ -55692,10 +55696,12 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetachain.zetacore.fungible.ZetaDepositAndCallContract:
+  zetachain.zetacore.fungible.SystemContract:
     type: object
     properties:
-      address:
+      gasPriceOracleContract:
+        type: string
+      zetaDepositAndCallContract:
         type: string
   common.PubKeySet:
     type: object

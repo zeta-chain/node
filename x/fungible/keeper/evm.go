@@ -81,9 +81,9 @@ func (k Keeper) DeployZRC4Contract(
 	k.SetForeignCoins(ctx, coin)
 
 	// update ZetaDepositAndCall system contract addr
-	depositCaller, _ := k.GetZetaDepositAndCallContract(ctx)
-	if len(depositCaller.Address) != 0 {
-		ZDCAddr := common.HexToAddress(depositCaller.Address)
+	system, _ := k.GetSystemContract(ctx)
+	if len(system.ZetaDepositAndCallContract) != 0 {
+		ZDCAddr := common.HexToAddress(system.ZetaDepositAndCallContract)
 		_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, true, "updateZetaDepositAndCallAddress", ZDCAddr)
 		if err != nil {
 			return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", name)
@@ -122,9 +122,9 @@ func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy ZetaDepositAndCall system contract")
 	}
 
-	depositCaller, _ := k.GetZetaDepositAndCallContract(ctx)
-	depositCaller.Address = contractAddr.String()
-	k.SetZetaDepositAndCallContract(ctx, depositCaller)
+	system, _ := k.GetSystemContract(ctx)
+	system.ZetaDepositAndCallContract = contractAddr.String()
+	k.SetSystemContract(ctx, system)
 
 	// go update all addr on ZRC-4 contracts
 	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
@@ -171,11 +171,11 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 	targetContract common.Address,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 
-	zdc, found := k.GetZetaDepositAndCallContract(ctx)
+	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCall address not found")
 	}
-	ZDCAddress := common.HexToAddress(zdc.Address)
+	ZDCAddress := common.HexToAddress(system.ZetaDepositAndCallContract)
 
 	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
 	if err != nil {
