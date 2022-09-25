@@ -22,7 +22,7 @@ import (
 )
 
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
-// erc20 module account as owner.
+// erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 func (k Keeper) DeployZRC4Contract(
 	ctx sdk.Context,
 	name, symbol string,
@@ -82,12 +82,13 @@ func (k Keeper) DeployZRC4Contract(
 
 	// update ZetaDepositAndCall system contract addr
 	system, _ := k.GetSystemContract(ctx)
-	if len(system.ZetaDepositAndCallContract) != 0 {
-		ZDCAddr := common.HexToAddress(system.ZetaDepositAndCallContract)
-		_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, true, "updateZetaDepositAndCallAddress", ZDCAddr)
-		if err != nil {
-			return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", name)
-		}
+	ZDCAddr := common.HexToAddress(system.ZetaDepositAndCallContract)
+	if ZDCAddr == common.HexToAddress("0x0") {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCallContract not found")
+	}
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, true, "updateZetaDepositAndCallAddress", ZDCAddr)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", name)
 	}
 
 	return contractAddr, nil
