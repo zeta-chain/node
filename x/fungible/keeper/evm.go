@@ -142,6 +142,55 @@ func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error
 	return contractAddr, nil
 }
 
+// Deploy the DeployGasPriceOracle system contract
+func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, error) {
+	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get GasPriceOracleMetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"", // function--empty string for constructor
+	)
+
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing GasPriceOracleMetaData constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.GasPriceOracleMetaData.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.GasPriceOracleMetaData.Bin)], contracts.GasPriceOracleMetaData.Bin)
+	copy(data[len(contracts.GasPriceOracleMetaData.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy GasPriceOracleMetaData system contract")
+	}
+
+	system, _ := k.GetSystemContract(ctx)
+	system.GasPriceOracleContract = contractAddr.String()
+	k.SetSystemContract(ctx, system)
+
+	// go update all addr on ZRC-4 contracts
+	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
+	coins := k.GetAllForeignCoins(ctx)
+	for _, coin := range coins {
+		if len(coin.ZRC4ContractAddress) != 0 {
+			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
+			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateGasPriceOracleAddress", contractAddr)
+			if err != nil {
+				return common.Address{}, sdkerrors.Wrapf(err, "failed to update GasPriceOracleAddress contract address for %s", coin.Name)
+			}
+		}
+	}
+
+	return contractAddr, nil
+}
+
 // Depoisit ZRC4 tokens into to account;
 // Callable only by the fungible module account
 func (k Keeper) DepositZRC4(

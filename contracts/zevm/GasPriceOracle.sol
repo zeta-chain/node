@@ -7,6 +7,10 @@ contract GasPriceOracle {
     mapping (uint256 => address) public gasCoinERC4;  // chainid => gas coin erc4
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
 
+    constructor() {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "only fungible module can deploy");
+    }
+
     // fungible module updates the gas price oracle periodically
     function setGasPrice(uint256 chainID, uint256 price) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set gas price");
