@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
@@ -20,60 +18,56 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("action", "DeployZetaDepositAndCall"),
+			sdk.NewAttribute("action", "FungibleTestMsg"),
 			sdk.NewAttribute("ZDCAddree", ZDCAddree.String()),
 		),
 	)
 
-	// TODO: Handling the message
-	addr, err := k.DeployZRC4Contract(ctx, "ETH", "zETH", 18, "GOERLI", common.CoinType_Gas, "")
+	gasPriceOracle, err := k.DeployGasPriceOracleContract(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	alice := ethcommon.HexToAddress("0x9B4547Dd93e93c526a11c5123Ab74D42aFb41B10")
-	bal1 := k.BalanceOfZRC4(ctx, addr, alice)
-	if bal1 == nil {
-		return nil, sdkerrors.Wrap(types.ErrBlanceQuery, fmt.Sprintf("zrc4 balance of %s", alice.String()))
-	}
-	_, err = k.DepositZRC4(ctx, addr, alice, big.NewInt(1000))
-	if err != nil {
-		return nil, err
-	}
-	bal2 := k.BalanceOfZRC4(ctx, addr, alice)
-	if bal2 == nil {
-		return nil, sdkerrors.Wrap(types.ErrBlanceQuery, fmt.Sprintf("zrc4 balance of %s", alice.String()))
+		return nil, sdkerrors.Wrapf(err, "failed to DeployZetaDepositAndCall")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("chain", "GOERLI"),
-			sdk.NewAttribute("contract", addr.String()),
+			sdk.NewAttribute("gasPriceOracle", gasPriceOracle.String()),
 		),
 	)
 
-	addr, err = k.DeployZRC4Contract(ctx, "BNB", "zBNB", 18, "BSCTESTNET", common.CoinType_Gas, "")
+	system, _ := k.GetSystemContract(ctx)
+	system.ZetaDepositAndCallContract = ZDCAddree.String()
+	system.GasPriceOracleContract = gasPriceOracle.String()
+	k.SetSystemContract(ctx, system)
+
+	transferGasLimit := big.NewInt(21_000)
+	addr, err := k.DeployZRC4Contract(ctx, "ETH", "zETH", 18, "GOERLI", common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("chain", "BSCTESTNET"),
-			sdk.NewAttribute("contract", addr.String()),
+			sdk.NewAttribute("ETH_GOERLI_ZRC4", addr.String()),
 		),
 	)
-	_, err = k.DepositZRC4(ctx, addr, alice, big.NewInt(1000))
 
-	addr, err = k.DeployZRC4Contract(ctx, "MATIC", "zMATIC", 18, "MUMBAI", common.CoinType_Gas, "")
+	addr, err = k.DeployZRC4Contract(ctx, "BNB", "zBNB", 18, "BSCTESTNET", common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("chain", "MUMBAI"),
-			sdk.NewAttribute("contract", addr.String()),
+			sdk.NewAttribute("BNB_BSCTESTNET_ZRC4", addr.String()),
 		),
 	)
-	_, err = k.DepositZRC4(ctx, addr, alice, big.NewInt(1000))
+
+	addr, err = k.DeployZRC4Contract(ctx, "MATIC", "zMATIC", 18, "MUMBAI", common.CoinType_Gas, "", transferGasLimit)
+	if err != nil {
+		return nil, err
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("MATIC_BSCTESTNET_ZRC4", addr.String()),
+		),
+	)
 
 	return &types.MsgFungibleTestMsgResponse{}, nil
 }

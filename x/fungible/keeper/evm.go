@@ -30,6 +30,7 @@ func (k Keeper) DeployZRC4Contract(
 	chainStr string,
 	coinType zetacommon.CoinType,
 	erc20Contract string,
+	gasLimit *big.Int,
 ) (common.Address, error) { // FIXME: geneeralized beyond ETH
 	abi, err := contracts.ZRC4MetaData.GetAbi()
 	if err != nil {
@@ -40,13 +41,20 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(types.ErrChainNotFound, "chain %s not found", chainStr)
 	}
 
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
+	}
 	ctorArgs, err := abi.Pack(
 		"",              // function--empty string for constructor
 		name,            // name
 		symbol,          // symbol
 		decimals,        // decimals
 		chain.ChainID,   // chainID
-		uint8(coinType), // coinType
+		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
+		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
+		system.ZetaDepositAndCallContract,
+		system.GasPriceOracleContract,
 	)
 
 	if err != nil {
@@ -79,17 +87,6 @@ func (k Keeper) DeployZRC4Contract(
 	coin.Index = coinIndex
 	coin.ForeignChain = chainStr
 	k.SetForeignCoins(ctx, coin)
-
-	// update ZetaDepositAndCall system contract addr
-	system, _ := k.GetSystemContract(ctx)
-	ZDCAddr := common.HexToAddress(system.ZetaDepositAndCallContract)
-	if ZDCAddr == common.HexToAddress("0x0") {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCallContract not found")
-	}
-	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, true, "updateZetaDepositAndCallAddress", ZDCAddr)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", name)
-	}
 
 	return contractAddr, nil
 }

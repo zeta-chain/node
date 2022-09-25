@@ -103,6 +103,7 @@ func (ob *ChainObserver) observeInTX() error {
 
 	// ============= query the incoming tx to TSS address ==============
 	tssAddress := ob.Tss.Address()
+	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 		if err != nil {
@@ -157,6 +158,8 @@ func (ob *ChainObserver) observeInTX() error {
 		}
 	}
 	// ============= end of query the incoming tx to TSS address ==============
+
+	// ============= query the incoming ERC20 (foreign coin) to TSS address ==============
 
 	//ob.LastBlock = toBlock
 	ob.setLastBlock(toBlock)

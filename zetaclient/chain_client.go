@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"os"
 	"strconv"
 	"strings"
@@ -70,6 +71,8 @@ type ChainObserver struct {
 	stop                      chan struct{}
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    zerolog.Logger
+	ForeignCoins              []types.ForeignCoins
+	rwlock                    sync.RWMutex
 }
 
 // Return configuration based on supplied target chain
@@ -168,6 +171,7 @@ func (ob *ChainObserver) Start() {
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
+	go ob.observerForeignCoins()
 }
 
 func (ob *ChainObserver) Stop() {

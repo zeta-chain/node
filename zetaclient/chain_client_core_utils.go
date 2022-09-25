@@ -221,3 +221,26 @@ func (ob *ChainObserver) WatchExchangeRate() {
 		}
 	}
 }
+
+// query zetacore fungible module and update the list of foreign coins to track
+// on this chain.
+func (ob *ChainObserver) observerForeignCoins() {
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			coins, err := ob.zetaClient.GetForeignCoins()
+			if err != nil {
+				ob.logger.Error().Err(err).Msg("GetForeignCoins error")
+				continue
+			}
+			ob.logger.Info().Msgf("GetForeignCoins: %v", coins)
+			ob.rwlock.RLock()
+			ob.ForeignCoins = coins
+			ob.rwlock.RUnlock()
+		case <-ob.stop:
+			ob.logger.Info().Msg("observerForeignCoins stopped")
+			return
+		}
+	}
+}

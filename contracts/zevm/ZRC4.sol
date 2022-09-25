@@ -8,6 +8,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     address public GAS_PRICE_ORACLE_ADDRESS;
     uint256 public CHAIN_ID;
     CoinType public COIN_TYPE;
+    uint256 public GAS_LIMIT = 21000;
 
     mapping(address => uint256) private _balances;
 
@@ -19,13 +20,17 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     string private _symbol;
     uint8 private _decimals;
 
-    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_,
+            address zetaDepositAndCallAddress_, address gasPriceOracleAddress_) {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can deploy ZRC4");
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
         CHAIN_ID = chainid_;
         COIN_TYPE = coinType_;
+        GAS_LIMIT = gasLimit_;
+        ZETA_DEPOSIT_AND_CALL_ADDRESS = zetaDepositAndCallAddress_;
+        GAS_PRICE_ORACLE_ADDRESS = gasPriceOracleAddress_;
     }
 
     function name() public view virtual override returns (string memory) {
@@ -128,15 +133,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         require(gasZRC4 != address(0), "gas coin not set");
         uint256 gasPrice = IGasPriceOracle(GAS_PRICE_ORACLE_ADDRESS).gasPrice(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");
-        uint256 gasLimit;
-        if (COIN_TYPE == CoinType.ERC20) {
-            gasLimit = 70000;
-        } else if (COIN_TYPE == CoinType.Gas) {
-            gasLimit = 21000;
-        } else {
-            revert("invalid coin type");
-        }
-        uint256 gasFee = gasPrice * gasLimit;
+        uint256 gasFee = gasPrice * GAS_LIMIT;
         require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
 
         _burn(msg.sender, amount);
@@ -152,5 +149,10 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     function updateGasPriceOracleAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         GAS_PRICE_ORACLE_ADDRESS = addr;
+    }
+
+    function updateGasLimit(uint256 gasLimit) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+        GAS_LIMIT = gasLimit;
     }
 }

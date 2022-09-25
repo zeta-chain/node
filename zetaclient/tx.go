@@ -3,7 +3,9 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/common"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
 )
@@ -134,6 +136,25 @@ func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
 		return nil, err
 	}
 	return resp.Receive, nil
+}
+
+func (b *ZetaCoreBridge) GetForeignCoins() ([]fungibletypes.ForeignCoins, error) {
+	client := fungibletypes.NewQueryClient(b.grpcConn)
+	//resp, err := client.ReceiveAll(context.Background(), &types.QueryAllReceiveRequest{})
+	resp, err := client.ForeignCoinsAll(context.Background(), &fungibletypes.QueryAllForeignCoinsRequest{
+		Pagination: &query.PageRequest{
+			Limit: 300, // NOTE: the list of fungible tokens to track should not be more than 300!
+		},
+	})
+	if resp.Pagination.Total > 300 {
+		b.logger.Warn().Msgf("getForeignCoins: too many fungible tokens: %d", resp.Pagination.Total)
+		return nil, fmt.Errorf("getForeignCoins: too many fungible tokens: %d", resp.Pagination.Total)
+	}
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query GetForeignCoins error")
+		return nil, err
+	}
+	return resp.ForeignCoins, nil
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
