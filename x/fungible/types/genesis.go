@@ -10,9 +10,9 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ForeignCoinsList: []ForeignCoins{},
+		ForeignCoinsList:           []ForeignCoins{},
 		ZetaDepositAndCallContract: nil,
-// this line is used by starport scaffolding # genesis/types/default
+		// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
 }

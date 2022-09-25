@@ -17,7 +17,7 @@ func (k Keeper) ZetaDepositAndCallContract(c context.Context, req *types.QueryGe
 
 	val, found := k.GetZetaDepositAndCallContract(ctx)
 	if !found {
-	    return nil, status.Error(codes.NotFound, "not found")
+		return nil, status.Error(codes.NotFound, "not found")
 	}
 
 	return &types.QueryGetZetaDepositAndCallContractResponse{ZetaDepositAndCallContract: val}, nil

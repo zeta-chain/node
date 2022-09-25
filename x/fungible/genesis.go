@@ -14,10 +14,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 		k.SetForeignCoins(ctx, elem)
 	}
 	// Set if defined
-if genState.ZetaDepositAndCallContract != nil {
-	k.SetZetaDepositAndCallContract(ctx, *genState.ZetaDepositAndCallContract)
-}
-// this line is used by starport scaffolding # genesis/module/init
+	if genState.ZetaDepositAndCallContract != nil {
+		k.SetZetaDepositAndCallContract(ctx, *genState.ZetaDepositAndCallContract)
+	}
+	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
 	// ensure erc20 module account is set on genesis
 	if acc := authKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
@@ -33,11 +33,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
 	// Get all zetaDepositAndCallContract
-zetaDepositAndCallContract, found := k.GetZetaDepositAndCallContract(ctx)
-if found {
-	genesis.ZetaDepositAndCallContract = &zetaDepositAndCallContract
-}
-// this line is used by starport scaffolding # genesis/module/export
+	zetaDepositAndCallContract, found := k.GetZetaDepositAndCallContract(ctx)
+	if found {
+		genesis.ZetaDepositAndCallContract = &zetaDepositAndCallContract
+	}
+	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
 }

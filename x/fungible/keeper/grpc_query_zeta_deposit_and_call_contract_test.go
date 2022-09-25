@@ -47,4 +47,3 @@ func TestZetaDepositAndCallContractQuery(t *testing.T) {
 		})
 	}
 }
-

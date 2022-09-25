@@ -12,14 +12,14 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/fungible/client/cli"
-    "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func networkWithZetaDepositAndCallContractObjects(t *testing.T) (*network.Network, types.ZetaDepositAndCallContract) {
 	t.Helper()
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
-    require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	zetaDepositAndCallContract := &types.ZetaDepositAndCallContract{}
 	nullify.Fill(&zetaDepositAndCallContract)
@@ -70,4 +70,3 @@ func TestShowZetaDepositAndCallContract(t *testing.T) {
 		})
 	}
 }
-

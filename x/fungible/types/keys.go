@@ -37,5 +37,5 @@ func init() {
 }
 
 const (
-	ZetaDepositAndCallContractKey= "ZetaDepositAndCallContract-value-"
+	ZetaDepositAndCallContractKey = "ZetaDepositAndCallContract-value-"
 )

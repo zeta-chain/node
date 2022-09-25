@@ -28,7 +28,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdListForeignCoins())
 	cmd.AddCommand(CmdShowForeignCoins())
 	cmd.AddCommand(CmdShowZetaDepositAndCallContract())
-// this line is used by starport scaffolding # 1
+	// this line is used by starport scaffolding # 1
 
 	return cmd
 }

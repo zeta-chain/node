@@ -1,14 +1,14 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
 // SetZetaDepositAndCallContract set zetaDepositAndCallContract in the store
 func (k Keeper) SetZetaDepositAndCallContract(ctx sdk.Context, zetaDepositAndCallContract types.ZetaDepositAndCallContract) {
-	store :=  prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
 	b := k.cdc.MustMarshal(&zetaDepositAndCallContract)
 	store.Set([]byte{0}, b)
 }
@@ -18,9 +18,9 @@ func (k Keeper) GetZetaDepositAndCallContract(ctx sdk.Context) (val types.ZetaDe
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ZetaDepositAndCallContractKey))
 
 	b := store.Get([]byte{0})
-    if b == nil {
-        return val, false
-    }
+	if b == nil {
+		return val, false
+	}
 
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true

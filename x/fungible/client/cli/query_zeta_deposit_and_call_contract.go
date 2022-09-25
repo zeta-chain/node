@@ -1,12 +1,12 @@
 package cli
 
 import (
-    "context"
+	"context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-    "github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func CmdShowZetaDepositAndCallContract() *cobra.Command {
@@ -15,22 +15,22 @@ func CmdShowZetaDepositAndCallContract() *cobra.Command {
 		Short: "shows ZetaDepositAndCallContract",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-            clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
-            queryClient := types.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 
-            params := &types.QueryGetZetaDepositAndCallContractRequest{}
+			params := &types.QueryGetZetaDepositAndCallContractRequest{}
 
-            res, err := queryClient.ZetaDepositAndCallContract(context.Background(), params)
-            if err != nil {
-                return err
-            }
+			res, err := queryClient.ZetaDepositAndCallContract(context.Background(), params)
+			if err != nil {
+				return err
+			}
 
-            return clientCtx.PrintProto(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
 
-    return cmd
+	return cmd
 }
