@@ -23,9 +23,9 @@ contract GasPriceOracle {
         emit SetGasPrice(chainID, price);
     }
 
-    function setGasCoinERC4(uint256 chainID, address erc4) external {
+    function setGasCoinERC4(uint256 chainID, address zrc4) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set gas coin erc4");
-        gasCoinERC4[chainID] = erc4;
-        emit SetGasCoin(chainID, erc4);
+        gasCoinERC4[chainID] = zrc4;
+        emit SetGasCoin(chainID, zrc4);
     }
 }
