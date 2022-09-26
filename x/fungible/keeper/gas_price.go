@@ -29,3 +29,24 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 
 	return nil
 }
+
+func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Address) error {
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract not found")
+	}
+	oracle := common.HexToAddress(system.GasPriceOracleContract)
+	if oracle == common.HexToAddress("0x0") {
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "gas price oracle contract wrong address")
+	}
+	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrABIGet, "GasPriceOracleMetaData")
+	}
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "SetGasCoin", chainid, address)
+	if err != nil || res.Failed() {
+		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasCoin")
+	}
+
+	return nil
+}

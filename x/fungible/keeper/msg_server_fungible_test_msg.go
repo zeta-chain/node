@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 )
 
@@ -54,6 +55,11 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 			sdk.NewAttribute("ETH_GOERLI_ZRC4", addr.String()),
 		),
 	)
+	chainid := clientconfig.Chains["GOERLI"].ChainID
+	err = k.SetGasCoin(ctx, chainid, addr)
+	if err != nil {
+		return nil, err
+	}
 
 	addr, err = k.DeployZRC4Contract(ctx, "BNB", "zBNB", 18, "BSCTESTNET", common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
@@ -64,6 +70,11 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 			sdk.NewAttribute("BNB_BSCTESTNET_ZRC4", addr.String()),
 		),
 	)
+	chainid = clientconfig.Chains["BSCTESTNET"].ChainID
+	k.SetGasCoin(ctx, chainid, addr)
+	if err != nil {
+		return nil, err
+	}
 
 	addr, err = k.DeployZRC4Contract(ctx, "MATIC", "zMATIC", 18, "MUMBAI", common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
@@ -74,6 +85,11 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 			sdk.NewAttribute("MATIC_BSCTESTNET_ZRC4", addr.String()),
 		),
 	)
+	chainid = clientconfig.Chains["MUMBAI"].ChainID
+	k.SetGasCoin(ctx, chainid, addr)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgFungibleTestMsgResponse{}, nil
 }
