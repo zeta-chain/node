@@ -42,11 +42,11 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	if len(signerName) == 0 {
 		return nil, nil, fmt.Errorf("signer name is empty")
 	}
-	//if len(password) == 0 {
-	//	return nil, nil, fmt.Errorf("password is empty")
-	//}
+	if len(password) == 0 {
+		return nil, nil, fmt.Errorf("password is empty")
+	}
 
-	buf := bytes.NewBufferString("")
+	buf := bytes.NewBufferString(password)
 	// the library used by keyring is using ReadLine , which expect a new line
 	buf.WriteByte('\n')
 	buf.WriteString(password)
