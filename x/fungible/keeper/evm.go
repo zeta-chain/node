@@ -154,9 +154,9 @@ func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, e
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing GasPriceOracleMetaData constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.GasPriceOracleMetaData.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.GasPriceOracleMetaData.Bin)], contracts.GasPriceOracleMetaData.Bin)
-	copy(data[len(contracts.GasPriceOracleMetaData.Bin):], ctorArgs)
+	data := make([]byte, len(contracts.GasPriceOracleContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.GasPriceOracleContract.Bin)], contracts.GasPriceOracleContract.Bin)
+	copy(data[len(contracts.GasPriceOracleContract.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
