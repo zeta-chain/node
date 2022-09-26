@@ -14,12 +14,13 @@ var _ = strconv.Itoa(0)
 
 func CmdSetZetaGasPool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-zeta-gas-pool [address] [pool-type]",
+		Use:   "set-zeta-gas-pool [address] [pool-type] [chain]",
 		Short: "Broadcast message setZetaGasPool",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argAddress := args[0]
 			argPoolType := args[1]
+			argChain := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -30,6 +31,7 @@ func CmdSetZetaGasPool() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argAddress,
 				argPoolType,
+				argChain,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

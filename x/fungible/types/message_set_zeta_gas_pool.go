@@ -9,11 +9,12 @@ const TypeMsgSetZetaGasPool = "set_zeta_gas_pool"
 
 var _ sdk.Msg = &MsgSetZetaGasPool{}
 
-func NewMsgSetZetaGasPool(creator string, address string, poolType string) *MsgSetZetaGasPool {
+func NewMsgSetZetaGasPool(creator string, address string, poolType string, chain string) *MsgSetZetaGasPool {
 	return &MsgSetZetaGasPool{
 		Creator:  creator,
 		Address:  address,
 		PoolType: poolType,
+		Chain:    chain,
 	}
 }
 
