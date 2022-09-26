@@ -53,12 +53,12 @@ func (k Keeper) DeployZRC4Contract(
 		chain.ChainID,   // chainID
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
-		system.ZetaDepositAndCallContract,
-		system.GasPriceOracleContract,
+		common.HexToAddress(system.ZetaDepositAndCallContract),
+		common.HexToAddress(system.GasPriceOracleContract),
 	)
 
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "coin metadata is invalid %s: %s", name, err.Error())
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "coin constructor is invalid %s: %s", name, err.Error())
 	}
 
 	data := make([]byte, len(contracts.ZRC4Contract.Bin)+len(ctorArgs))
