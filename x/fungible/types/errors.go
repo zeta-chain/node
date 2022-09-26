@@ -19,4 +19,5 @@ var (
 	ErrChainNotFound          = sdkerrors.Register(ModuleName, 1108, "chain not found")
 	ErrContractCall           = sdkerrors.Register(ModuleName, 1109, "contract call error")
 	ErrSystemContractNotFound = sdkerrors.Register(ModuleName, 1110, "system contract not found")
+	ErrInvalidAddress         = sdkerrors.Register(ModuleName, 1111, "invalid address")
 )

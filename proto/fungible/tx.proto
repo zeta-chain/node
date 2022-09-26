@@ -13,6 +13,7 @@ service Msg {
       rpc FungibleTestMsg(MsgFungibleTestMsg) returns (MsgFungibleTestMsgResponse);
   rpc DeployFungibleCoinZRC4(MsgDeployFungibleCoinZRC4) returns (MsgDeployFungibleCoinZRC4Response);
   rpc DeployGasPriceOracle(MsgDeployGasPriceOracle) returns (MsgDeployGasPriceOracleResponse);
+  rpc SetZetaGasPool(MsgSetZetaGasPool) returns (MsgSetZetaGasPoolResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -42,6 +43,16 @@ message MsgDeployGasPriceOracle {
 }
 
 message MsgDeployGasPriceOracleResponse {
+}
+
+message MsgSetZetaGasPool {
+  string creator = 1;
+  string address = 2;
+  string poolType = 3;
+  string chain = 4;
+}
+
+message MsgSetZetaGasPoolResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

@@ -33,6 +33,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdFungibleTestMsg())
 	cmd.AddCommand(CmdDeployFungibleCoinZRC4())
 	cmd.AddCommand(CmdDeployGasPriceOracle())
+	cmd.AddCommand(CmdSetZetaGasPool())
 	// this line is used by starport scaffolding # 1
 
 	return cmd

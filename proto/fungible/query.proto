@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "fungible/params.proto";
 import "fungible/foreign_coins.proto";
-import "fungible/zeta_deposit_and_call_contract.proto";
+import "fungible/system_contract.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";

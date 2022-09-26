@@ -32171,6 +32171,8 @@ paths:
                     type: string
                   zetaDepositAndCallContract:
                     type: string
+                  wzetaContractAddress:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -55593,6 +55595,8 @@ definitions:
     type: object
   zetachain.zetacore.fungible.MsgFungibleTestMsgResponse:
     type: object
+  zetachain.zetacore.fungible.MsgSetZetaGasPoolResponse:
+    type: object
   zetachain.zetacore.fungible.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -55689,6 +55693,8 @@ definitions:
             type: string
           zetaDepositAndCallContract:
             type: string
+          wzetaContractAddress:
+            type: string
   zetachain.zetacore.fungible.QueryParamsResponse:
     type: object
     properties:
@@ -55702,6 +55708,8 @@ definitions:
       gasPriceOracleContract:
         type: string
       zetaDepositAndCallContract:
+        type: string
+      wzetaContractAddress:
         type: string
   common.PubKeySet:
     type: object

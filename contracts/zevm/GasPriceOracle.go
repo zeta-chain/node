@@ -30,7 +30,7 @@ var (
 
 // GasPriceOracleMetaData contains all meta data concerning the GasPriceOracle contract.
 var GasPriceOracleMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Deployed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinERC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc4\",\"type\":\"address\"}],\"name\":\"setGasCoinERC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Deployed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasZetaPool\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinERC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasZetaPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"}],\"name\":\"setGasCoinERC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"pool\",\"type\":\"address\"}],\"name\":\"setGasZetaPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // GasPriceOracleABI is the input ABI used to generate the binding from.
@@ -272,25 +272,56 @@ func (_GasPriceOracle *GasPriceOracleCallerSession) GasPrice(arg0 *big.Int) (*bi
 	return _GasPriceOracle.Contract.GasPrice(&_GasPriceOracle.CallOpts, arg0)
 }
 
-// SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
+// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address erc4) returns()
-func (_GasPriceOracle *GasPriceOracleTransactor) SetGasCoinERC4(opts *bind.TransactOpts, chainID *big.Int, erc4 common.Address) (*types.Transaction, error) {
-	return _GasPriceOracle.contract.Transact(opts, "setGasCoinERC4", chainID, erc4)
+// Solidity: function gasZetaPool(uint256 ) view returns(address)
+func (_GasPriceOracle *GasPriceOracleCaller) GasZetaPool(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
+	var out []interface{}
+	err := _GasPriceOracle.contract.Call(opts, &out, "gasZetaPool", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
+//
+// Solidity: function gasZetaPool(uint256 ) view returns(address)
+func (_GasPriceOracle *GasPriceOracleSession) GasZetaPool(arg0 *big.Int) (common.Address, error) {
+	return _GasPriceOracle.Contract.GasZetaPool(&_GasPriceOracle.CallOpts, arg0)
+}
+
+// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
+//
+// Solidity: function gasZetaPool(uint256 ) view returns(address)
+func (_GasPriceOracle *GasPriceOracleCallerSession) GasZetaPool(arg0 *big.Int) (common.Address, error) {
+	return _GasPriceOracle.Contract.GasZetaPool(&_GasPriceOracle.CallOpts, arg0)
 }
 
 // SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address erc4) returns()
-func (_GasPriceOracle *GasPriceOracleSession) SetGasCoinERC4(chainID *big.Int, erc4 common.Address) (*types.Transaction, error) {
-	return _GasPriceOracle.Contract.SetGasCoinERC4(&_GasPriceOracle.TransactOpts, chainID, erc4)
+// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
+func (_GasPriceOracle *GasPriceOracleTransactor) SetGasCoinERC4(opts *bind.TransactOpts, chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.contract.Transact(opts, "setGasCoinERC4", chainID, zrc4)
 }
 
 // SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address erc4) returns()
-func (_GasPriceOracle *GasPriceOracleTransactorSession) SetGasCoinERC4(chainID *big.Int, erc4 common.Address) (*types.Transaction, error) {
-	return _GasPriceOracle.Contract.SetGasCoinERC4(&_GasPriceOracle.TransactOpts, chainID, erc4)
+// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
+func (_GasPriceOracle *GasPriceOracleSession) SetGasCoinERC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.Contract.SetGasCoinERC4(&_GasPriceOracle.TransactOpts, chainID, zrc4)
+}
+
+// SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
+//
+// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
+func (_GasPriceOracle *GasPriceOracleTransactorSession) SetGasCoinERC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.Contract.SetGasCoinERC4(&_GasPriceOracle.TransactOpts, chainID, zrc4)
 }
 
 // SetGasPrice is a paid mutator transaction binding the contract method 0xa7cb0507.
@@ -312,6 +343,27 @@ func (_GasPriceOracle *GasPriceOracleSession) SetGasPrice(chainID *big.Int, pric
 // Solidity: function setGasPrice(uint256 chainID, uint256 price) returns()
 func (_GasPriceOracle *GasPriceOracleTransactorSession) SetGasPrice(chainID *big.Int, price *big.Int) (*types.Transaction, error) {
 	return _GasPriceOracle.Contract.SetGasPrice(&_GasPriceOracle.TransactOpts, chainID, price)
+}
+
+// SetGasZetaPool is a paid mutator transaction binding the contract method 0x91dd645f.
+//
+// Solidity: function setGasZetaPool(uint256 chainID, address pool) returns()
+func (_GasPriceOracle *GasPriceOracleTransactor) SetGasZetaPool(opts *bind.TransactOpts, chainID *big.Int, pool common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.contract.Transact(opts, "setGasZetaPool", chainID, pool)
+}
+
+// SetGasZetaPool is a paid mutator transaction binding the contract method 0x91dd645f.
+//
+// Solidity: function setGasZetaPool(uint256 chainID, address pool) returns()
+func (_GasPriceOracle *GasPriceOracleSession) SetGasZetaPool(chainID *big.Int, pool common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.Contract.SetGasZetaPool(&_GasPriceOracle.TransactOpts, chainID, pool)
+}
+
+// SetGasZetaPool is a paid mutator transaction binding the contract method 0x91dd645f.
+//
+// Solidity: function setGasZetaPool(uint256 chainID, address pool) returns()
+func (_GasPriceOracle *GasPriceOracleTransactorSession) SetGasZetaPool(chainID *big.Int, pool common.Address) (*types.Transaction, error) {
+	return _GasPriceOracle.Contract.SetGasZetaPool(&_GasPriceOracle.TransactOpts, chainID, pool)
 }
 
 // GasPriceOracleDeployedIterator is returned from FilterDeployed and is used to iterate over the raw logs and unpacked data for Deployed events raised by the GasPriceOracle contract.
@@ -711,6 +763,141 @@ func (_GasPriceOracle *GasPriceOracleFilterer) WatchSetGasPrice(opts *bind.Watch
 func (_GasPriceOracle *GasPriceOracleFilterer) ParseSetGasPrice(log types.Log) (*GasPriceOracleSetGasPrice, error) {
 	event := new(GasPriceOracleSetGasPrice)
 	if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasPrice", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// GasPriceOracleSetGasZetaPoolIterator is returned from FilterSetGasZetaPool and is used to iterate over the raw logs and unpacked data for SetGasZetaPool events raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasZetaPoolIterator struct {
+	Event *GasPriceOracleSetGasZetaPool // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GasPriceOracleSetGasZetaPoolIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GasPriceOracleSetGasZetaPool)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GasPriceOracleSetGasZetaPool)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GasPriceOracleSetGasZetaPoolIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GasPriceOracleSetGasZetaPoolIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GasPriceOracleSetGasZetaPool represents a SetGasZetaPool event raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasZetaPool struct {
+	Arg0 *big.Int
+	Arg1 common.Address
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// FilterSetGasZetaPool is a free log retrieval operation binding the contract event 0x0ecec485166da6139b13bb7e033e9446e2d35348e80ebf1180d4afe2dba1704e.
+//
+// Solidity: event SetGasZetaPool(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) FilterSetGasZetaPool(opts *bind.FilterOpts) (*GasPriceOracleSetGasZetaPoolIterator, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.FilterLogs(opts, "SetGasZetaPool")
+	if err != nil {
+		return nil, err
+	}
+	return &GasPriceOracleSetGasZetaPoolIterator{contract: _GasPriceOracle.contract, event: "SetGasZetaPool", logs: logs, sub: sub}, nil
+}
+
+// WatchSetGasZetaPool is a free log subscription operation binding the contract event 0x0ecec485166da6139b13bb7e033e9446e2d35348e80ebf1180d4afe2dba1704e.
+//
+// Solidity: event SetGasZetaPool(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) WatchSetGasZetaPool(opts *bind.WatchOpts, sink chan<- *GasPriceOracleSetGasZetaPool) (event.Subscription, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.WatchLogs(opts, "SetGasZetaPool")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GasPriceOracleSetGasZetaPool)
+				if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasZetaPool", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSetGasZetaPool is a log parse operation binding the contract event 0x0ecec485166da6139b13bb7e033e9446e2d35348e80ebf1180d4afe2dba1704e.
+//
+// Solidity: event SetGasZetaPool(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) ParseSetGasZetaPool(log types.Log) (*GasPriceOracleSetGasZetaPool, error) {
+	event := new(GasPriceOracleSetGasZetaPool)
+	if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasZetaPool", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

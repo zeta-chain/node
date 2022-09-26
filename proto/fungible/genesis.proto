@@ -4,7 +4,7 @@ package zetachain.zetacore.fungible;
 import "gogoproto/gogo.proto";
 import "fungible/params.proto";
 import "fungible/foreign_coins.proto";
-import "fungible/zeta_deposit_and_call_contract.proto";
+import "fungible/system_contract.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";

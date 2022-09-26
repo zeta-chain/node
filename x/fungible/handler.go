@@ -26,6 +26,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeployGasPriceOracle:
 			res, err := msgServer.DeployGasPriceOracle(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgSetZetaGasPool:
+			res, err := msgServer.SetZetaGasPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 			// this line is used by starport scaffolding # 1
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
