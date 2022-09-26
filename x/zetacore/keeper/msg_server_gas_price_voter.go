@@ -53,11 +53,13 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	}
 	k.SetGasPrice(ctx, gasPrice)
 
-	chainid := clientconfig.FindIDByChainName(chain)
+	chainid := clientconfig.Chains[chain].ChainID
 	if chainid != nil {
 		if err := k.fungibleKeeper.SetGasPrice(ctx, chainid, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex]))); err != nil {
 			return nil, err
 		}
+	} else {
+		k.Logger(ctx).Error("chainid not found", "chain", chain)
 	}
 
 	return &types.MsgGasPriceVoterResponse{}, nil

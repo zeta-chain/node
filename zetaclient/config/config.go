@@ -127,5 +127,6 @@ func FindIDByChainName(name string) *big.Int {
 			return v.ChainID
 		}
 	}
+
 	return nil
 }
