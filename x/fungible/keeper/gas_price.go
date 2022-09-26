@@ -43,7 +43,7 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "GasPriceOracleMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "SetGasCoin", chainid, address)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "setGasCoin", chainid, address)
 	if err != nil || res.Failed() {
 		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasCoin")
 	}
