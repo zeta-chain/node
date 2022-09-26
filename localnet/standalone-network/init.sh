@@ -13,13 +13,13 @@ echo "race draft rival universe maid cheese steel logic crowd fork comic easy tr
 echo "Generating deterministic account - mario"
 echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
 
-echo "Generating deterministic account - zetaval"
-echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
+#echo "Generating deterministic account - zetaeth"
+#echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add mario --recover --keyring-backend=test
 
 
 zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000azeta,500000000000000000000000000000000stake --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 50000000000000000000000000000000azeta,500000000000000000000000000000000stake --keyring-backend=test
-zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 50000000000000000000000000000000azeta,500000000000000000000000000000000stake --keyring-backend=test
+#zetacored add-genesis-account $(zetacored keys show zetaeth -a --keyring-backend=test) 50000000000000000000000000000000azeta,500000000000000000000000000000000stake --keyring-backend=test
 
 zetacored gentx zeta 1000000000000000000000000stake --chain-id=localnet_101-1 --keyring-backend=test
 

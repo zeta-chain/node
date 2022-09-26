@@ -189,11 +189,11 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
 	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	if err != nil {
-		log.Error().Err(err).Msgf("SetNodeKey error")
+		log.Error().Err(err).Msgf("SetNodeKey error : %s", err.Error())
+		return
 	}
-
+	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 

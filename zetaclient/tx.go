@@ -195,7 +195,6 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil

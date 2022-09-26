@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
@@ -49,9 +48,9 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 
 	buf := bytes.NewBufferString("")
 	// the library used by keyring is using ReadLine , which expect a new line
-	//buf.WriteByte('\n')
-	//buf.WriteString(password)
-	//buf.WriteByte('\n')
+	buf.WriteByte('\n')
+	buf.WriteString(password)
+	buf.WriteByte('\n')
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get keybase,err:%w", err)
@@ -64,9 +63,6 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-	l, err := kb.List()
-	fmt.Println(l, err)
-	//fmt.Println("signer: ", signerName)
 	si, err := kb.Key(signerName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
@@ -86,12 +82,11 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!
-	op := func(options *ckeys.Options) {
-		options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
-		options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
-	}
-	fmt.Println("cliDir", cliDir)
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, nil, op)
+	//op := func(options *ckeys.Options) {
+	//	options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
+	//	options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
+	//}
+	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
 }
 
 // GetSignerInfo return signer info
