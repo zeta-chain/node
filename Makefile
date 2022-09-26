@@ -26,10 +26,12 @@ TEST_BUILD_FLAGS :=  -tags mocknet
 clean: clean-binaries clean-dir
 
 clean-binaries:
-	@rm -rf ${GOBIN}/zeta*
+	@rm -rf ${GOBIN}/zetacored
+	@rm -rf ${GOBIN}/zetaclientd
 
 clean-dir:
 	@rm -rf ~/.zetacored
+	@rm -rf ~/.zetacore
 
 all: install
 
