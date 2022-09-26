@@ -30,7 +30,7 @@ var (
 
 // GasPriceOracleMetaData contains all meta data concerning the GasPriceOracle contract.
 var GasPriceOracleMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinERC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc4\",\"type\":\"address\"}],\"name\":\"setGasCoinERC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Deployed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinERC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc4\",\"type\":\"address\"}],\"name\":\"setGasCoinERC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // GasPriceOracleABI is the input ABI used to generate the binding from.
@@ -312,4 +312,407 @@ func (_GasPriceOracle *GasPriceOracleSession) SetGasPrice(chainID *big.Int, pric
 // Solidity: function setGasPrice(uint256 chainID, uint256 price) returns()
 func (_GasPriceOracle *GasPriceOracleTransactorSession) SetGasPrice(chainID *big.Int, price *big.Int) (*types.Transaction, error) {
 	return _GasPriceOracle.Contract.SetGasPrice(&_GasPriceOracle.TransactOpts, chainID, price)
+}
+
+// GasPriceOracleDeployedIterator is returned from FilterDeployed and is used to iterate over the raw logs and unpacked data for Deployed events raised by the GasPriceOracle contract.
+type GasPriceOracleDeployedIterator struct {
+	Event *GasPriceOracleDeployed // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GasPriceOracleDeployedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GasPriceOracleDeployed)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GasPriceOracleDeployed)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GasPriceOracleDeployedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GasPriceOracleDeployedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GasPriceOracleDeployed represents a Deployed event raised by the GasPriceOracle contract.
+type GasPriceOracleDeployed struct {
+	Raw types.Log // Blockchain specific contextual infos
+}
+
+// FilterDeployed is a free log retrieval operation binding the contract event 0x3fad920548ed9f22deb8333b4cc1e4f9bc36666a1c2aa30ad59a0a3bb9dcbb92.
+//
+// Solidity: event Deployed()
+func (_GasPriceOracle *GasPriceOracleFilterer) FilterDeployed(opts *bind.FilterOpts) (*GasPriceOracleDeployedIterator, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.FilterLogs(opts, "Deployed")
+	if err != nil {
+		return nil, err
+	}
+	return &GasPriceOracleDeployedIterator{contract: _GasPriceOracle.contract, event: "Deployed", logs: logs, sub: sub}, nil
+}
+
+// WatchDeployed is a free log subscription operation binding the contract event 0x3fad920548ed9f22deb8333b4cc1e4f9bc36666a1c2aa30ad59a0a3bb9dcbb92.
+//
+// Solidity: event Deployed()
+func (_GasPriceOracle *GasPriceOracleFilterer) WatchDeployed(opts *bind.WatchOpts, sink chan<- *GasPriceOracleDeployed) (event.Subscription, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.WatchLogs(opts, "Deployed")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GasPriceOracleDeployed)
+				if err := _GasPriceOracle.contract.UnpackLog(event, "Deployed", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseDeployed is a log parse operation binding the contract event 0x3fad920548ed9f22deb8333b4cc1e4f9bc36666a1c2aa30ad59a0a3bb9dcbb92.
+//
+// Solidity: event Deployed()
+func (_GasPriceOracle *GasPriceOracleFilterer) ParseDeployed(log types.Log) (*GasPriceOracleDeployed, error) {
+	event := new(GasPriceOracleDeployed)
+	if err := _GasPriceOracle.contract.UnpackLog(event, "Deployed", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// GasPriceOracleSetGasCoinIterator is returned from FilterSetGasCoin and is used to iterate over the raw logs and unpacked data for SetGasCoin events raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasCoinIterator struct {
+	Event *GasPriceOracleSetGasCoin // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GasPriceOracleSetGasCoinIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GasPriceOracleSetGasCoin)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GasPriceOracleSetGasCoin)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GasPriceOracleSetGasCoinIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GasPriceOracleSetGasCoinIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GasPriceOracleSetGasCoin represents a SetGasCoin event raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasCoin struct {
+	Arg0 *big.Int
+	Arg1 common.Address
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// FilterSetGasCoin is a free log retrieval operation binding the contract event 0xd1b36d30f6248e97c473b4d1348ca164a4ef6759022f54a58ec200326c39c45d.
+//
+// Solidity: event SetGasCoin(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) FilterSetGasCoin(opts *bind.FilterOpts) (*GasPriceOracleSetGasCoinIterator, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.FilterLogs(opts, "SetGasCoin")
+	if err != nil {
+		return nil, err
+	}
+	return &GasPriceOracleSetGasCoinIterator{contract: _GasPriceOracle.contract, event: "SetGasCoin", logs: logs, sub: sub}, nil
+}
+
+// WatchSetGasCoin is a free log subscription operation binding the contract event 0xd1b36d30f6248e97c473b4d1348ca164a4ef6759022f54a58ec200326c39c45d.
+//
+// Solidity: event SetGasCoin(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) WatchSetGasCoin(opts *bind.WatchOpts, sink chan<- *GasPriceOracleSetGasCoin) (event.Subscription, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.WatchLogs(opts, "SetGasCoin")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GasPriceOracleSetGasCoin)
+				if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasCoin", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSetGasCoin is a log parse operation binding the contract event 0xd1b36d30f6248e97c473b4d1348ca164a4ef6759022f54a58ec200326c39c45d.
+//
+// Solidity: event SetGasCoin(uint256 arg0, address arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) ParseSetGasCoin(log types.Log) (*GasPriceOracleSetGasCoin, error) {
+	event := new(GasPriceOracleSetGasCoin)
+	if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasCoin", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// GasPriceOracleSetGasPriceIterator is returned from FilterSetGasPrice and is used to iterate over the raw logs and unpacked data for SetGasPrice events raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasPriceIterator struct {
+	Event *GasPriceOracleSetGasPrice // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GasPriceOracleSetGasPriceIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GasPriceOracleSetGasPrice)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GasPriceOracleSetGasPrice)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GasPriceOracleSetGasPriceIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GasPriceOracleSetGasPriceIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GasPriceOracleSetGasPrice represents a SetGasPrice event raised by the GasPriceOracle contract.
+type GasPriceOracleSetGasPrice struct {
+	Arg0 *big.Int
+	Arg1 *big.Int
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// FilterSetGasPrice is a free log retrieval operation binding the contract event 0x49f492222906ac486c3c1401fa545626df1f0c0e5a77a05597ea2ed66af9850d.
+//
+// Solidity: event SetGasPrice(uint256 arg0, uint256 arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) FilterSetGasPrice(opts *bind.FilterOpts) (*GasPriceOracleSetGasPriceIterator, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.FilterLogs(opts, "SetGasPrice")
+	if err != nil {
+		return nil, err
+	}
+	return &GasPriceOracleSetGasPriceIterator{contract: _GasPriceOracle.contract, event: "SetGasPrice", logs: logs, sub: sub}, nil
+}
+
+// WatchSetGasPrice is a free log subscription operation binding the contract event 0x49f492222906ac486c3c1401fa545626df1f0c0e5a77a05597ea2ed66af9850d.
+//
+// Solidity: event SetGasPrice(uint256 arg0, uint256 arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) WatchSetGasPrice(opts *bind.WatchOpts, sink chan<- *GasPriceOracleSetGasPrice) (event.Subscription, error) {
+
+	logs, sub, err := _GasPriceOracle.contract.WatchLogs(opts, "SetGasPrice")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GasPriceOracleSetGasPrice)
+				if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasPrice", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSetGasPrice is a log parse operation binding the contract event 0x49f492222906ac486c3c1401fa545626df1f0c0e5a77a05597ea2ed66af9850d.
+//
+// Solidity: event SetGasPrice(uint256 arg0, uint256 arg1)
+func (_GasPriceOracle *GasPriceOracleFilterer) ParseSetGasPrice(log types.Log) (*GasPriceOracleSetGasPrice, error) {
+	event := new(GasPriceOracleSetGasPrice)
+	if err := _GasPriceOracle.contract.UnpackLog(event, "SetGasPrice", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }

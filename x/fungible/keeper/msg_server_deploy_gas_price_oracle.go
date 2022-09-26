@@ -16,7 +16,6 @@ func (k msgServer) DeployGasPriceOracle(goCtx context.Context, msg *types.MsgDep
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("action", "DeployGasPriceOracle"),
 			sdk.NewAttribute("contract", addr.String()),
 		),
 	)

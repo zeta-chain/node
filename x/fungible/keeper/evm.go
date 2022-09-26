@@ -164,10 +164,11 @@ func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, e
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	res, err := k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy GasPriceOracleMetaData system contract")
 	}
+	k.Logger(ctx).Info("DeployGasPriceOracleContract", "res.log", res.Logs)
 
 	system, _ := k.GetSystemContract(ctx)
 	system.GasPriceOracleContract = contractAddr.String()
