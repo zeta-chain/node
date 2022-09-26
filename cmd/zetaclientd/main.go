@@ -104,7 +104,6 @@ func main() {
 		peers = append(peers, address)
 	}
 
-	fmt.Println("multi-node client")
 	start(*valKeyName, peers, *zetaCoreHome)
 }
 
@@ -360,6 +359,9 @@ func updateConfig() {
 
 func updatePoolAddress(envvar string, chain common.Chain) {
 	pool := os.Getenv(envvar)
+	if pool == "" {
+		return
+	}
 	parts := strings.Split(pool, ":")
 	if len(parts) != 3 {
 		log.Error().Msgf("%s is not a valid type:address", pool)
