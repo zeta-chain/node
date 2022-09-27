@@ -47,6 +47,11 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to DeployUniswapV2Factory")
 	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("UniswapV2Factory", uniswapV2Factory.String()),
+		),
+	)
 
 	// set the system contract
 	system, _ := k.GetSystemContract(ctx)
