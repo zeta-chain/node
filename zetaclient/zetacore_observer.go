@@ -253,7 +253,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
-					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
+					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
 				}
 				for idx, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
@@ -339,14 +339,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	// Early return if the send is already processed
 	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce))
 	if included || confirmed {
-		logger.Info().Msgf("sendHash already processed; exit signer")
+		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
 	}
 
 	signer := co.signerMap[toChain]
 	message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
 	if err != nil {
-		logger.Err(err).Msgf("decode send.Message %s error", send.RelayedMessage)
+		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
 	}
 
 	gasLimit := send.OutBoundTxParams.OutBoundTxGasLimit
@@ -362,7 +362,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, send.ZetaMint, to.Hex(), send.OutBoundTxParams.OutBoundTxTSSNonce, send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
-		logger.Error().Err(err).Msgf("decode sendHash %s error", send.Index)
+		logger.Error().Err(err).Msgf("decode CCTX %s error", send.Index)
 		return
 	}
 	var sendhash [32]byte
@@ -501,7 +501,7 @@ func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (*ChainObserv
 // returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
-		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary keysign. increase re-try interval and awaits outTx confirmation")
+		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
 		return false, false
 	}
 	if strings.Contains(err.Error(), "replacement transaction underpriced") {
@@ -512,6 +512,6 @@ func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bo
 		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
 	}
 
-	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retring...", nonce, toChain, outTxHash)
+	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
 	return true, false
 }
