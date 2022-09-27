@@ -1,0 +1,21 @@
+syntax = "proto3";
+package zetachain.zetacore.zetaobserver;
+
+import "gogoproto/gogo.proto";
+import "zetaobserver/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
+
+enum VoteType {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SuccessObservation = 0;
+  FailureObservation = 1; // Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.
+  NotYetVoted = 2;
+}
+
+message Voter {
+  string VoteIdentifier =1 ;
+  repeated string VoterList =2;
+  VoteType VoteType = 3;
+  ObservationType ObservationType =4;
+}
