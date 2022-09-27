@@ -26,10 +26,12 @@ TEST_BUILD_FLAGS :=  -tags mocknet
 clean: clean-binaries clean-dir
 
 clean-binaries:
-	@rm -rf ${GOBIN}/zeta*
+	@rm -rf ${GOBIN}/zetaclientd
+	@rm -rf ${GOBIN}/zetacored
 
 clean-dir:
 	@rm -rf ~/.zetacored
+	@rm -rf ~/.zetacore
 
 all: install
 
@@ -80,10 +82,10 @@ go.sum: go.mod
 		GO111MODULE=on go mod verify
 
 init: clean install-zetacore
-	./localnet/standalone-network/init.sh
+	./standalone-network/init.sh
 
 run:
-	./localnet/standalone-network/run.sh
+	./standalone-network/run.sh
 
 init-run: init run
 
