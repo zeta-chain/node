@@ -1,9 +1,7 @@
 package keeper
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 
@@ -77,7 +75,7 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
 
-	coinIndex := fmt.Sprintf("%s-%s", chainStr, name)
+	coinIndex := name
 	coin, _ := k.GetForeignCoins(ctx, coinIndex)
 	coin.CoinType = coinType
 	coin.Name = name
@@ -223,16 +221,9 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	//verify that factory is correct--hashOfPairCode must be: 96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f
 	// this is important because router02 needs exactly this build to compute correct pair address
 	// Name
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, false, "hashOfPairCode")
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, false, "hashOfPairCode")
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to call hashOfPairCode() contract")
-	}
-
-	var hashOfCode types.UniswapV2FactoryByte32Response
-	if err := abi.UnpackIntoInterface(&hashOfCode, "hashOfPairCode", res.Ret); err != nil {
-		k.Logger(ctx).Error("failed to unpack hashOfPairCode() contract", "err", err)
-	} else {
-		k.Logger(ctx).Info("hashOfPairCode", "hashOfPairCode", hex.EncodeToString(hashOfCode.Value[:]))
 	}
 
 	return contractAddr, nil
