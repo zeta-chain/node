@@ -438,6 +438,17 @@ func (k Keeper) CallEVMWithData(
 		return nil, sdkerrors.Wrap(evmtypes.ErrVMExecution, res.VmError)
 	}
 
+	logs, err := json.Marshal(res.Logs)
+	if err != nil {
+		k.Logger(ctx).Error("failed to marshal logs", "error", err)
+	} else {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(sdk.EventTypeMessage,
+				sdk.NewAttribute("ethTxLogs", string(logs)),
+			),
+		})
+	}
+
 	return res, nil
 }
 
