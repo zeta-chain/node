@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -186,6 +187,52 @@ func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, e
 				k.Logger(ctx).Error("failed to update GasPriceOracleAddress contract address for %s", coin.Name)
 			}
 		}
+	}
+
+	return contractAddr, nil
+}
+
+func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) {
+	abi, err := contracts.UniswapV2FactoryMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2FactoryMetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"",                     // function--empty string for constructor
+		types.ModuleAddressEVM, // feeToSetter
+	)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing UniswapV2Factory constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.UniswapV2FactoryContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.UniswapV2FactoryContract.Bin)], contracts.UniswapV2FactoryContract.Bin)
+	copy(data[len(contracts.UniswapV2FactoryContract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2FactoryContract contract")
+	}
+
+	//verify that factory is correct--hashOfPairCode must be: 96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f
+	// this is important because router02 needs exactly this build to compute correct pair address
+	// Name
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, false, "hashOfPairCode")
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to call hashOfPairCode() contract")
+	}
+
+	var hashOfCode types.UniswapV2FactoryByte32Response
+	if err := abi.UnpackIntoInterface(&hashOfCode, "hashOfPairCode", res.Ret); err != nil {
+		k.Logger(ctx).Error("failed to unpack hashOfPairCode() contract", "err", err)
+	} else {
+		k.Logger(ctx).Info("hashOfPairCode", "hashOfPairCode", hex.EncodeToString(hashOfCode.Value[:]))
 	}
 
 	return contractAddr, nil

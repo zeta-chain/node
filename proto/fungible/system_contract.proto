@@ -8,4 +8,5 @@ message SystemContract {
   string gasPriceOracleContract = 1;
   string zetaDepositAndCallContract = 2;
   string wzetaContractAddress = 3;
+  string uniswapv2FactoryAddress = 4; 
 }

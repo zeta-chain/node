@@ -23,6 +23,11 @@ type ZRC4BoolResponse struct {
 	Value bool
 }
 
+// ZRC4StringResponse defines the string value from the call response
+type UniswapV2FactoryByte32Response struct {
+	Value [32]byte
+}
+
 // NewZRC4Data creates a new ZRC4Data instance
 func NewZRC4Data(name, symbol string, decimals uint8) ZRC4Data {
 	return ZRC4Data{

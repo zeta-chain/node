@@ -32173,6 +32173,8 @@ paths:
                     type: string
                   wzetaContractAddress:
                     type: string
+                  uniswapv2FactoryAddress:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -55695,6 +55697,8 @@ definitions:
             type: string
           wzetaContractAddress:
             type: string
+          uniswapv2FactoryAddress:
+            type: string
   zetachain.zetacore.fungible.QueryParamsResponse:
     type: object
     properties:
@@ -55710,6 +55714,8 @@ definitions:
       zetaDepositAndCallContract:
         type: string
       wzetaContractAddress:
+        type: string
+      uniswapv2FactoryAddress:
         type: string
   common.PubKeySet:
     type: object

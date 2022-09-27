@@ -4,6 +4,7 @@
 //go:generate sh -c "cat ZetaDepositAndCall.json | jq .abi | abigen --abi - --pkg zevm --type ZetaDepositAndCall --out ZetaDepositAndCall.go"
 //go:generate sh -c "solc GasPriceOracle.sol --combined-json abi,bin | jq '.contracts.\"GasPriceOracle.sol:GasPriceOracle\"'  > GasPriceOracle.json"
 //go:generate sh -c "cat GasPriceOracle.json | jq .abi | abigen --abi - --pkg zevm --type GasPriceOracle --out GasPriceOracle.go"
+//go:generate sh -c "cat UniswapV2Factory.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Factory --out UniswapV2Factory.go"
 
 package zevm
 
@@ -20,6 +21,7 @@ import (
 var _ = ZRC4{}
 var _ = GasPriceOracle{}
 var _ = ZetaDepositAndCall{}
+var _ = UniswapV2Factory{}
 
 type CompiledContract struct {
 	ABI abi.ABI
@@ -34,10 +36,13 @@ var (
 	ZetaDepositAndCallJSON []byte // nolint: golint
 	//go:embed GasPriceOracle.json
 	GasPriceOracleJSON []byte // nolint: golint
+	//go:embed UniswapV2Factory.json
+	UniswapV2FactoryJSON []byte // nolint: golint
 
 	ZRC4Contract               CompiledContract
 	ZetaDepositAndCallContract CompiledContract
 	GasPriceOracleContract     CompiledContract
+	UniswapV2FactoryContract   CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC4AdminAddress ethcommon.Address
