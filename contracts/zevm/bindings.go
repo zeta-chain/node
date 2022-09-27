@@ -63,6 +63,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = json.Unmarshal(UniswapV2FactoryJSON, &UniswapV2FactoryContract)
+	if err != nil {
+		panic(err)
+	}
 
 	if len(ZRC4Contract.Bin) == 0 {
 		panic("load contract failed")
