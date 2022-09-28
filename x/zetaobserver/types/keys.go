@@ -20,3 +20,9 @@ const (
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
+
+const (
+	VoterKey          = "Voter-value-"
+	ObserverKey       = "Observer-value-"
+	ObserverMapperKey = "Observer-value-"
+)

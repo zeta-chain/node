@@ -8,5 +8,5 @@ import (
 
 // x/zetaobserver module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrVoter = sdkerrors.Register(ModuleName, 1100, "Error Voter")
 )

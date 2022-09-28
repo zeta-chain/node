@@ -14,8 +14,12 @@ enum VoteType {
 }
 
 message Voter {
-  string VoteIdentifier =1 ;
-  repeated string VoterList =2;
-  VoteType VoteType = 3;
+  string index =1;
+  string VoteIdentifier =2 ;
+  map <string,VoteType> VoterList =3;
   ObservationType ObservationType =4;
+  string VoteThreshold = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

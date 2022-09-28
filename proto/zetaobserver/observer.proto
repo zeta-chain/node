@@ -21,12 +21,14 @@ enum ObservationType {
 }
 
 message Observer {
-  ObserverChain ObserverChain = 1;
-  string ObserverAddress =2;
+  string index = 1;
+  ObserverChain ObserverChain = 2;
+  string ObserverAddress =3;
 }
 
 message ObserverMapper {
-  ObserverChain  ObserverChain =1;
-  ObservationType ObservationType =2;
-  repeated Observer observerList =3;
+  string index = 1;
+  ObserverChain  ObserverChain =2 ;
+  ObservationType ObservationType =3;
+  repeated Observer observerList =4;
 }
