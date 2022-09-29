@@ -22,8 +22,8 @@ func TestGenesis(t *testing.T) {
 				Index: "1",
 			},
 		},
-		ZetaDepositAndCallContract: &types.ZetaDepositAndCallContract{
-			Address: "29",
+		SystemContract: &types.SystemContract{
+			SystemContract: "29",
 		},
 		// this line is used by starport scaffolding # genesis/test/state
 	}

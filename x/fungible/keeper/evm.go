@@ -178,6 +178,36 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	return contractAddr, nil
 }
 
+func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address, wzeta common.Address) (common.Address, error) {
+	abi, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"", // function--empty string for constructor
+		factory, wzeta)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing UniswapV2Router02 constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.UniswapV2Router02Contract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.UniswapV2Router02Contract.Bin)], contracts.UniswapV2Router02Contract.Bin)
+	copy(data[len(contracts.UniswapV2Router02Contract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2Router02Contract contract")
+	}
+
+	return contractAddr, nil
+}
+
 func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	abi, err := contracts.WZETAMetaData.GetAbi()
 	if err != nil {
@@ -239,7 +269,7 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCall address not found")
+		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 

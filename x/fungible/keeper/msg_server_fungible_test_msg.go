@@ -45,6 +45,16 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 		),
 	)
 
+	router, err := k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to DeployUniswapV2Router02")
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("DeployUniswapV2Router02", router.String()),
+		),
+	)
+
 	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to SystemContractAddress")
