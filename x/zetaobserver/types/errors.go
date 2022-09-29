@@ -8,5 +8,6 @@ import (
 
 // x/zetaobserver module sentinel errors
 var (
-	ErrVoter = sdkerrors.Register(ModuleName, 1100, "Error Voter")
+	ErrUnableToAddVote = sdkerrors.Register(ModuleName, 1100, "Unable to add vote ")
+	ErrParamsThreshold = sdkerrors.Register(ModuleName, 1101, "Threshold cannot be more than 1")
 )

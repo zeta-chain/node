@@ -33,9 +33,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	for i, acc := range simState.Accounts {
 		accs[i] = acc.Address.String()
 	}
+	params := types.DefaultParams()
 	zetaobserverGenesis := types.GenesisState{
-		Params: types.DefaultParams(),
-		// this line is used by starport scaffolding # simapp/module/genesisState
+		Params: &params,
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&zetaobserverGenesis)
 }

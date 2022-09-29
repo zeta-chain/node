@@ -8,7 +8,7 @@ import (
 
 func (m *Voter) AddVote(address string, vote VoteType) error {
 	if !(m.VoterList[address] == VoteType_NotYetVoted) {
-		return errors.Wrap(ErrVoter, fmt.Sprintf("Unable to add vote | Voter : %s | Status : %s", address, m.VoterList[address]))
+		return errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s", address, m.VoterList[address]))
 	}
 	m.VoterList[address] = vote
 	return nil

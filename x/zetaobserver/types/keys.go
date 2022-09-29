@@ -22,7 +22,8 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	VoterKey          = "Voter-value-"
-	ObserverKey       = "Observer-value-"
-	ObserverMapperKey = "Observer-value-"
+	VoterKey                 = "Voter-value-"
+	ObserverKey              = "Observer-value-"
+	ObserverMapperKey        = "Observer-value-"
+	ParamVotingThresholdsKey = "VotingThreshold"
 )

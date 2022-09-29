@@ -27,6 +27,18 @@ func (k Keeper) GetVoter(ctx sdk.Context, index string) (val types.Voter, found 
 	return val, true
 }
 
+func (k Keeper) GetAllVoters(ctx sdk.Context) (voters []*types.Voter) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Voter
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		voters = append(voters, &val)
+	}
+	return
+}
+
 // Queries
 
 func (k Keeper) VoterByIdentifier(goCtx context.Context, req *types.QueryVoterByIdentifierRequest) (*types.QueryVoterByIdentifierResponse, error) {

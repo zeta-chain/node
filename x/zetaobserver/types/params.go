@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -8,7 +9,7 @@ import (
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-// ParamKeyTable the param key table for launch module
+// ParamKeyTable the param key table for zetaObserver module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -48,7 +49,9 @@ func DefaultParams() Params {
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{}
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.VotingThresholds, validateVotingThresholds),
+	}
 }
 
 // Validate validates the set of params
@@ -60,4 +63,26 @@ func (p Params) Validate() error {
 func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
+}
+
+func validateVotingThresholds(i interface{}) error {
+	v, ok := i.([]*VotingThreshold)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	for _, threshold := range v {
+		if threshold.Threshold.GT(sdk.OneDec()) {
+			return ErrParamsThreshold
+		}
+	}
+	return nil
+}
+
+func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (VotingThreshold, bool) {
+	for _, threshold := range p.GetVotingThresholds() {
+		if threshold.Chain == chain && threshold.Observation == observationType {
+			return *threshold, true
+		}
+	}
+	return VotingThreshold{}, false
 }
