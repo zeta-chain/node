@@ -33,11 +33,10 @@ func (k Keeper) VoterByIdentifier(goCtx context.Context, req *types.QueryVoterBy
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO: Process the query
-	_ = ctx
-
-	return &types.QueryVoterByIdentifierResponse{}, nil
+	voter, isFound := k.GetVoter(ctx, req.VoteIdentifier)
+	if !isFound {
+		return &types.QueryVoterByIdentifierResponse{Voter: "Not Found"}, nil
+	}
+	return &types.QueryVoterByIdentifierResponse{Voter: voter.String()}, nil
 }
