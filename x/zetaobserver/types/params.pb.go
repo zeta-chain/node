@@ -77,6 +77,7 @@ func (m *VotingThreshold) GetObservation() ObservationType {
 	return ObservationType_InboundTx
 }
 
+// Params defines the parameters for the module.
 type Params struct {
 	VotingThresholds []*VotingThreshold `protobuf:"bytes,1,rep,name=VotingThresholds,proto3" json:"VotingThresholds,omitempty"`
 }
