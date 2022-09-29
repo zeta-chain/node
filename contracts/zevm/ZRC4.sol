@@ -123,14 +123,23 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         return true;
     }
 
-    // this function causes cctx module to send out outbound tx to the outbound chain
-    // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
-    function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
+    // returns the ZRC4 address for gas on the same chain of this ZRC4,
+    // and calculate the gas fee for withdraw()
+    function withdrawGasFee() public override view returns (address,uint256) {
         address gasZRC4 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinERC4(CHAIN_ID);
         require(gasZRC4 != address(0), "gas coin not set");
         uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPrice(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");
         uint256 gasFee = gasPrice * GAS_LIMIT;
+        return (gasZRC4, gasFee);
+    }
+
+    // this function causes cctx module to send out outbound tx to the outbound chain
+    // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
+    function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
+        uint256 gasFee;
+        address gasZRC4;
+        (gasZRC4, gasFee )= withdrawGasFee();
         require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
 
         _burn(msg.sender, amount);

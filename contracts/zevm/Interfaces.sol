@@ -20,6 +20,8 @@ interface IZRC4 {
     function deposit(address to, uint256 amount) external returns (bool);
     function withdraw(bytes memory to, uint256 amount) external returns (bool);
 
+    function withdrawGasFee() external view returns (address,uint256);
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Deposit(bytes from, address indexed to, uint256 value);
