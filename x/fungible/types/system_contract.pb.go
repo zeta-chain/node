@@ -23,10 +23,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type SystemContract struct {
-	GasPriceOracleContract     string `protobuf:"bytes,1,opt,name=gasPriceOracleContract,proto3" json:"gasPriceOracleContract,omitempty"`
-	ZetaDepositAndCallContract string `protobuf:"bytes,2,opt,name=zetaDepositAndCallContract,proto3" json:"zetaDepositAndCallContract,omitempty"`
-	WzetaContractAddress       string `protobuf:"bytes,3,opt,name=wzetaContractAddress,proto3" json:"wzetaContractAddress,omitempty"`
-	Uniswapv2FactoryAddress    string `protobuf:"bytes,4,opt,name=uniswapv2FactoryAddress,proto3" json:"uniswapv2FactoryAddress,omitempty"`
+	SystemContract string `protobuf:"bytes,1,opt,name=systemContract,proto3" json:"systemContract,omitempty"`
 }
 
 func (m *SystemContract) Reset()         { *m = SystemContract{} }
@@ -62,30 +59,9 @@ func (m *SystemContract) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SystemContract proto.InternalMessageInfo
 
-func (m *SystemContract) GetGasPriceOracleContract() string {
+func (m *SystemContract) GetSystemContract() string {
 	if m != nil {
-		return m.GasPriceOracleContract
-	}
-	return ""
-}
-
-func (m *SystemContract) GetZetaDepositAndCallContract() string {
-	if m != nil {
-		return m.ZetaDepositAndCallContract
-	}
-	return ""
-}
-
-func (m *SystemContract) GetWzetaContractAddress() string {
-	if m != nil {
-		return m.WzetaContractAddress
-	}
-	return ""
-}
-
-func (m *SystemContract) GetUniswapv2FactoryAddress() string {
-	if m != nil {
-		return m.Uniswapv2FactoryAddress
+		return m.SystemContract
 	}
 	return ""
 }
@@ -97,24 +73,18 @@ func init() {
 func init() { proto.RegisterFile("fungible/system_contract.proto", fileDescriptor_77f5a98f5a394318) }
 
 var fileDescriptor_77f5a98f5a394318 = []byte{
-	// 257 bytes of a gzipped FileDescriptorProto
+	// 166 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0x2b, 0xcd, 0x4b,
 	0xcf, 0x4c, 0xca, 0x49, 0xd5, 0x2f, 0xae, 0x2c, 0x2e, 0x49, 0xcd, 0x8d, 0x4f, 0xce, 0xcf, 0x2b,
 	0x29, 0x4a, 0x4c, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0xae, 0x4a, 0x2d, 0x49,
-	0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x60, 0x5a, 0x94, 0xbe,
-	0x31, 0x72, 0xf1, 0x05, 0x83, 0xb5, 0x39, 0x43, 0x75, 0x09, 0x99, 0x71, 0x89, 0xa5, 0x27, 0x16,
-	0x07, 0x14, 0x65, 0x26, 0xa7, 0xfa, 0x17, 0x25, 0x26, 0xe7, 0xa4, 0xc2, 0x64, 0x24, 0x18, 0x15,
-	0x18, 0x35, 0x38, 0x83, 0x70, 0xc8, 0x0a, 0xd9, 0x71, 0x49, 0x81, 0xcc, 0x77, 0x49, 0x2d, 0xc8,
-	0x2f, 0xce, 0x2c, 0x71, 0xcc, 0x4b, 0x71, 0x4e, 0xcc, 0xc9, 0x81, 0xeb, 0x65, 0x02, 0xeb, 0xc5,
-	0xa3, 0x42, 0xc8, 0x88, 0x4b, 0xa4, 0x1c, 0x24, 0x0d, 0x13, 0x70, 0x4c, 0x49, 0x29, 0x4a, 0x2d,
-	0x2e, 0x96, 0x60, 0x06, 0xeb, 0xc4, 0x2a, 0x27, 0x64, 0xc1, 0x25, 0x5e, 0x9a, 0x97, 0x59, 0x5c,
-	0x9e, 0x58, 0x50, 0x66, 0xe4, 0x96, 0x98, 0x5c, 0x92, 0x5f, 0x54, 0x09, 0xd3, 0xc6, 0x02, 0xd6,
-	0x86, 0x4b, 0xda, 0xc9, 0xf3, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92,
-	0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0xf4,
-	0xd3, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x41, 0x76, 0xea, 0x82, 0xc3,
-	0x4e, 0x1f, 0x16, 0x76, 0xfa, 0x15, 0xfa, 0xf0, 0x00, 0x2f, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62,
-	0x03, 0x87, 0xb3, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xa5, 0xfd, 0x3e, 0x68, 0x89, 0x01, 0x00,
-	0x00,
+	0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x60, 0x5a, 0x94, 0x2c,
+	0xb8, 0xf8, 0x82, 0xc1, 0xba, 0x9c, 0xa1, 0x9a, 0x84, 0xd4, 0xb8, 0xf8, 0x8a, 0x51, 0x44, 0x24,
+	0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xd0, 0x44, 0x9d, 0x3c, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0,
+	0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8,
+	0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x3f, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57,
+	0x1f, 0x64, 0xa3, 0x2e, 0xd8, 0x72, 0x7d, 0x98, 0xe5, 0xfa, 0x15, 0xfa, 0x70, 0x17, 0x97, 0x54,
+	0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x1d, 0x6a, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x89, 0xdc,
+	0xc4, 0x2a, 0xca, 0x00, 0x00, 0x00,
 }
 
 func (m *SystemContract) Marshal() (dAtA []byte, err error) {
@@ -137,31 +107,10 @@ func (m *SystemContract) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Uniswapv2FactoryAddress) > 0 {
-		i -= len(m.Uniswapv2FactoryAddress)
-		copy(dAtA[i:], m.Uniswapv2FactoryAddress)
-		i = encodeVarintSystemContract(dAtA, i, uint64(len(m.Uniswapv2FactoryAddress)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.WzetaContractAddress) > 0 {
-		i -= len(m.WzetaContractAddress)
-		copy(dAtA[i:], m.WzetaContractAddress)
-		i = encodeVarintSystemContract(dAtA, i, uint64(len(m.WzetaContractAddress)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.ZetaDepositAndCallContract) > 0 {
-		i -= len(m.ZetaDepositAndCallContract)
-		copy(dAtA[i:], m.ZetaDepositAndCallContract)
-		i = encodeVarintSystemContract(dAtA, i, uint64(len(m.ZetaDepositAndCallContract)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.GasPriceOracleContract) > 0 {
-		i -= len(m.GasPriceOracleContract)
-		copy(dAtA[i:], m.GasPriceOracleContract)
-		i = encodeVarintSystemContract(dAtA, i, uint64(len(m.GasPriceOracleContract)))
+	if len(m.SystemContract) > 0 {
+		i -= len(m.SystemContract)
+		copy(dAtA[i:], m.SystemContract)
+		i = encodeVarintSystemContract(dAtA, i, uint64(len(m.SystemContract)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -185,19 +134,7 @@ func (m *SystemContract) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.GasPriceOracleContract)
-	if l > 0 {
-		n += 1 + l + sovSystemContract(uint64(l))
-	}
-	l = len(m.ZetaDepositAndCallContract)
-	if l > 0 {
-		n += 1 + l + sovSystemContract(uint64(l))
-	}
-	l = len(m.WzetaContractAddress)
-	if l > 0 {
-		n += 1 + l + sovSystemContract(uint64(l))
-	}
-	l = len(m.Uniswapv2FactoryAddress)
+	l = len(m.SystemContract)
 	if l > 0 {
 		n += 1 + l + sovSystemContract(uint64(l))
 	}
@@ -241,7 +178,7 @@ func (m *SystemContract) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GasPriceOracleContract", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SystemContract", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -269,103 +206,7 @@ func (m *SystemContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.GasPriceOracleContract = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ZetaDepositAndCallContract", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSystemContract
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ZetaDepositAndCallContract = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WzetaContractAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSystemContract
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.WzetaContractAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uniswapv2FactoryAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSystemContract
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSystemContract
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Uniswapv2FactoryAddress = string(dAtA[iNdEx:postIndex])
+			m.SystemContract = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

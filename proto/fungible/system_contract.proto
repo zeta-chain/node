@@ -5,8 +5,5 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
 
 message SystemContract {
-  string gasPriceOracleContract = 1;
-  string zetaDepositAndCallContract = 2;
-  string wzetaContractAddress = 3;
-  string uniswapv2FactoryAddress = 4; 
+  string systemContract = 1;
 }

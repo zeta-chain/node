@@ -30,7 +30,7 @@ var (
 
 // ZRC4MetaData contains all meta data concerning the ZRC4 contract.
 var ZRC4MetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"},{\"internalType\":\"uint8\",\"name\":\"decimals_\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"chainid_\",\"type\":\"uint256\"},{\"internalType\":\"enumCoinType\",\"name\":\"coinType_\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"gasLimit_\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zetaDepositAndCallAddress_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"gasPriceOracleAddress_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"from\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasfee\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"CHAIN_ID\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"COIN_TYPE\",\"outputs\":[{\"internalType\":\"enumCoinType\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_LIMIT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_PRICE_ORACLE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ZETA_DEPOSIT_AND_CALL_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"gasLimit\",\"type\":\"uint256\"}],\"name\":\"updateGasLimit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateGasPriceOracleAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateZetaDepositAndCallAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"},{\"internalType\":\"uint8\",\"name\":\"decimals_\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"chainid_\",\"type\":\"uint256\"},{\"internalType\":\"enumCoinType\",\"name\":\"coinType_\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"gasLimit_\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"systemContractAddress_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"from\",\"type\":\"bytes\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gasfee\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"CHAIN_ID\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"COIN_TYPE\",\"outputs\":[{\"internalType\":\"enumCoinType\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GAS_LIMIT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SYSTEM_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"gasLimit\",\"type\":\"uint256\"}],\"name\":\"updateGasLimit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"updateSystemContractAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // ZRC4ABI is the input ABI used to generate the binding from.
@@ -303,12 +303,12 @@ func (_ZRC4 *ZRC4CallerSession) GASLIMIT() (*big.Int, error) {
 	return _ZRC4.Contract.GASLIMIT(&_ZRC4.CallOpts)
 }
 
-// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+// SYSTEMCONTRACTADDRESS is a free data retrieval call binding the contract method 0xf2441b32.
 //
-// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4Caller) GASPRICEORACLEADDRESS(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function SYSTEM_CONTRACT_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4Caller) SYSTEMCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _ZRC4.contract.Call(opts, &out, "GAS_PRICE_ORACLE_ADDRESS")
+	err := _ZRC4.contract.Call(opts, &out, "SYSTEM_CONTRACT_ADDRESS")
 
 	if err != nil {
 		return *new(common.Address), err
@@ -320,49 +320,18 @@ func (_ZRC4 *ZRC4Caller) GASPRICEORACLEADDRESS(opts *bind.CallOpts) (common.Addr
 
 }
 
-// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+// SYSTEMCONTRACTADDRESS is a free data retrieval call binding the contract method 0xf2441b32.
 //
-// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4Session) GASPRICEORACLEADDRESS() (common.Address, error) {
-	return _ZRC4.Contract.GASPRICEORACLEADDRESS(&_ZRC4.CallOpts)
+// Solidity: function SYSTEM_CONTRACT_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4Session) SYSTEMCONTRACTADDRESS() (common.Address, error) {
+	return _ZRC4.Contract.SYSTEMCONTRACTADDRESS(&_ZRC4.CallOpts)
 }
 
-// GASPRICEORACLEADDRESS is a free data retrieval call binding the contract method 0xd0351cb0.
+// SYSTEMCONTRACTADDRESS is a free data retrieval call binding the contract method 0xf2441b32.
 //
-// Solidity: function GAS_PRICE_ORACLE_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4CallerSession) GASPRICEORACLEADDRESS() (common.Address, error) {
-	return _ZRC4.Contract.GASPRICEORACLEADDRESS(&_ZRC4.CallOpts)
-}
-
-// ZETADEPOSITANDCALLADDRESS is a free data retrieval call binding the contract method 0x319788f9.
-//
-// Solidity: function ZETA_DEPOSIT_AND_CALL_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4Caller) ZETADEPOSITANDCALLADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _ZRC4.contract.Call(opts, &out, "ZETA_DEPOSIT_AND_CALL_ADDRESS")
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// ZETADEPOSITANDCALLADDRESS is a free data retrieval call binding the contract method 0x319788f9.
-//
-// Solidity: function ZETA_DEPOSIT_AND_CALL_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4Session) ZETADEPOSITANDCALLADDRESS() (common.Address, error) {
-	return _ZRC4.Contract.ZETADEPOSITANDCALLADDRESS(&_ZRC4.CallOpts)
-}
-
-// ZETADEPOSITANDCALLADDRESS is a free data retrieval call binding the contract method 0x319788f9.
-//
-// Solidity: function ZETA_DEPOSIT_AND_CALL_ADDRESS() view returns(address)
-func (_ZRC4 *ZRC4CallerSession) ZETADEPOSITANDCALLADDRESS() (common.Address, error) {
-	return _ZRC4.Contract.ZETADEPOSITANDCALLADDRESS(&_ZRC4.CallOpts)
+// Solidity: function SYSTEM_CONTRACT_ADDRESS() view returns(address)
+func (_ZRC4 *ZRC4CallerSession) SYSTEMCONTRACTADDRESS() (common.Address, error) {
+	return _ZRC4.Contract.SYSTEMCONTRACTADDRESS(&_ZRC4.CallOpts)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
@@ -656,46 +625,25 @@ func (_ZRC4 *ZRC4TransactorSession) UpdateGasLimit(gasLimit *big.Int) (*types.Tr
 	return _ZRC4.Contract.UpdateGasLimit(&_ZRC4.TransactOpts, gasLimit)
 }
 
-// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+// UpdateSystemContractAddress is a paid mutator transaction binding the contract method 0xc835d7cc.
 //
-// Solidity: function updateGasPriceOracleAddress(address addr) returns()
-func (_ZRC4 *ZRC4Transactor) UpdateGasPriceOracleAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.contract.Transact(opts, "updateGasPriceOracleAddress", addr)
+// Solidity: function updateSystemContractAddress(address addr) returns()
+func (_ZRC4 *ZRC4Transactor) UpdateSystemContractAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.contract.Transact(opts, "updateSystemContractAddress", addr)
 }
 
-// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+// UpdateSystemContractAddress is a paid mutator transaction binding the contract method 0xc835d7cc.
 //
-// Solidity: function updateGasPriceOracleAddress(address addr) returns()
-func (_ZRC4 *ZRC4Session) UpdateGasPriceOracleAddress(addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.Contract.UpdateGasPriceOracleAddress(&_ZRC4.TransactOpts, addr)
+// Solidity: function updateSystemContractAddress(address addr) returns()
+func (_ZRC4 *ZRC4Session) UpdateSystemContractAddress(addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.Contract.UpdateSystemContractAddress(&_ZRC4.TransactOpts, addr)
 }
 
-// UpdateGasPriceOracleAddress is a paid mutator transaction binding the contract method 0x8fcfc813.
+// UpdateSystemContractAddress is a paid mutator transaction binding the contract method 0xc835d7cc.
 //
-// Solidity: function updateGasPriceOracleAddress(address addr) returns()
-func (_ZRC4 *ZRC4TransactorSession) UpdateGasPriceOracleAddress(addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.Contract.UpdateGasPriceOracleAddress(&_ZRC4.TransactOpts, addr)
-}
-
-// UpdateZetaDepositAndCallAddress is a paid mutator transaction binding the contract method 0x78121cb8.
-//
-// Solidity: function updateZetaDepositAndCallAddress(address addr) returns()
-func (_ZRC4 *ZRC4Transactor) UpdateZetaDepositAndCallAddress(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.contract.Transact(opts, "updateZetaDepositAndCallAddress", addr)
-}
-
-// UpdateZetaDepositAndCallAddress is a paid mutator transaction binding the contract method 0x78121cb8.
-//
-// Solidity: function updateZetaDepositAndCallAddress(address addr) returns()
-func (_ZRC4 *ZRC4Session) UpdateZetaDepositAndCallAddress(addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.Contract.UpdateZetaDepositAndCallAddress(&_ZRC4.TransactOpts, addr)
-}
-
-// UpdateZetaDepositAndCallAddress is a paid mutator transaction binding the contract method 0x78121cb8.
-//
-// Solidity: function updateZetaDepositAndCallAddress(address addr) returns()
-func (_ZRC4 *ZRC4TransactorSession) UpdateZetaDepositAndCallAddress(addr common.Address) (*types.Transaction, error) {
-	return _ZRC4.Contract.UpdateZetaDepositAndCallAddress(&_ZRC4.TransactOpts, addr)
+// Solidity: function updateSystemContractAddress(address addr) returns()
+func (_ZRC4 *ZRC4TransactorSession) UpdateSystemContractAddress(addr common.Address) (*types.Transaction, error) {
+	return _ZRC4.Contract.UpdateSystemContractAddress(&_ZRC4.TransactOpts, addr)
 }
 
 // Withdraw is a paid mutator transaction binding the contract method 0xc7012626.

@@ -12,15 +12,15 @@ import (
 func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract not found")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.GasPriceOracleContract)
+	oracle := common.HexToAddress(system.SystemContract)
 	if oracle == common.HexToAddress("0x0") {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "gas price oracle contract wrong address")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
+	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrABIGet, "GasPriceOracleMetaData")
+		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "setGasPrice", chainid, gasPrice)
 	if err != nil || res.Failed() {
@@ -33,19 +33,19 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract not found")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.GasPriceOracleContract)
+	oracle := common.HexToAddress(system.SystemContract)
 	if oracle == common.HexToAddress("0x0") {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "gas price oracle contract wrong address")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
+	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrABIGet, "GasPriceOracleMetaData")
+		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "setGasCoinERC4", chainid, address)
 	if err != nil || res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasCoin")
+		return sdkerrors.Wrapf(types.ErrContractCall, "setGasCoinERC4")
 	}
 
 	return nil
@@ -54,19 +54,19 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract not found")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.GasPriceOracleContract)
+	oracle := common.HexToAddress(system.SystemContract)
 	if oracle == common.HexToAddress("0x0") {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "gas price oracle contract wrong address")
+		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
+	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrABIGet, "GasPriceOracleMetaData")
+		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "setGasZetaPool", chainid, pool)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, true, "SetGasZetaPool", chainid, pool)
 	if err != nil || res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "setGasZetaPool")
+		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasZetaPool")
 	}
 
 	return nil

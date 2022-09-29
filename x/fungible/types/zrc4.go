@@ -1,5 +1,7 @@
 package types
 
+import ethcommon "github.com/ethereum/go-ethereum/common"
+
 // ZRC4Data represents the ZRC4 token details used to map
 // the token to a Cosmos Coin
 type ZRC4Data struct {
@@ -26,6 +28,10 @@ type ZRC4BoolResponse struct {
 // ZRC4StringResponse defines the string value from the call response
 type UniswapV2FactoryByte32Response struct {
 	Value [32]byte
+}
+
+type SystemAddressResponse struct {
+	Value ethcommon.Address
 }
 
 // NewZRC4Data creates a new ZRC4Data instance

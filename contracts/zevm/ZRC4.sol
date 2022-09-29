@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-import "./ifaces.sol";
+import "./Interfaces.sol";
 
 contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
-    address public ZETA_DEPOSIT_AND_CALL_ADDRESS;
-    address public GAS_PRICE_ORACLE_ADDRESS;
+    address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
     CoinType public COIN_TYPE;
     uint256 public GAS_LIMIT = 21000;
@@ -20,8 +19,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     string private _symbol;
     uint8 private _decimals;
 
-    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_,
-            address zetaDepositAndCallAddress_, address gasPriceOracleAddress_) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_, address systemContractAddress_) {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can deploy ZRC4");
         _name = name_;
         _symbol = symbol_;
@@ -29,8 +27,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         CHAIN_ID = chainid_;
         COIN_TYPE = coinType_;
         GAS_LIMIT = gasLimit_;
-        ZETA_DEPOSIT_AND_CALL_ADDRESS = zetaDepositAndCallAddress_;
-        GAS_PRICE_ORACLE_ADDRESS = gasPriceOracleAddress_;
+        SYSTEM_CONTRACT_ADDRESS = systemContractAddress_;
     }
 
     function name() public view virtual override returns (string memory) {
@@ -120,7 +117,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     }
 
     function deposit(address to, uint256 amount) external override returns (bool) {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS || msg.sender == ZETA_DEPOSIT_AND_CALL_ADDRESS, "permission error");
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS || msg.sender == SYSTEM_CONTRACT_ADDRESS, "permission error");
         _mint(to, amount);
         emit Deposit(abi.encodePacked(FUNGIBLE_MODULE_ADDRESS), to, amount);
         return true;
@@ -129,9 +126,9 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     // this function causes cctx module to send out outbound tx to the outbound chain
     // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
-        address gasZRC4 = IGasPriceOracle(GAS_PRICE_ORACLE_ADDRESS).gasCoinERC4(CHAIN_ID);
+        address gasZRC4 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinERC4(CHAIN_ID);
         require(gasZRC4 != address(0), "gas coin not set");
-        uint256 gasPrice = IGasPriceOracle(GAS_PRICE_ORACLE_ADDRESS).gasPrice(CHAIN_ID);
+        uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPrice(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");
         uint256 gasFee = gasPrice * GAS_LIMIT;
         require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
@@ -141,14 +138,9 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
         return true;
     }
 
-    function updateZetaDepositAndCallAddress(address addr) external {
+    function updateSystemContractAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
-        ZETA_DEPOSIT_AND_CALL_ADDRESS = addr;
-    }
-
-    function updateGasPriceOracleAddress(address addr) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
-        GAS_PRICE_ORACLE_ADDRESS = addr;
+        SYSTEM_CONTRACT_ADDRESS = addr;
     }
 
     function updateGasLimit(uint256 gasLimit) external {

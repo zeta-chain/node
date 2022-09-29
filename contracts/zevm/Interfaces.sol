@@ -3,8 +3,10 @@ pragma solidity ^0.8.4;
 
 interface ISystem {
     function FUNGIBLE_MODULE_ADDRESS() external view returns (address);
-    function ZETA_DEPOSIT_AND_CALL_ADDRESS() external view returns (address);
-    function GAS_PRICE_ORACLE_ADDRESS() external view returns (address);
+    function wzetaContractAddress() external view returns (address);
+    function uniswapv2FactoryAddress() external view returns (address);
+    function gasPrice(uint256) external view returns (uint256); // chainid => gas price
+    function gasCoinERC4(uint256) external view returns (address);  // chainid => gas coin erc4
 }
 
 interface IZRC4 {
@@ -40,13 +42,13 @@ interface IZRC4Metadata is IZRC4 {
     function decimals() external view returns (uint8);
 }
 
-interface IGasPriceOracle {
-    function gasPrice(uint256) external view returns (uint256); // chainid => gas price
-    function gasCoinERC4(uint256) external view returns (address);  // chainid => gas coin erc4
-}
 
 enum CoinType {
     Zeta, // this should not be used
     Gas,
     ERC20
+}
+
+interface zContract {
+    function onCrossChainCall(address zrc4, uint256 amount, bytes calldata message) external;
 }

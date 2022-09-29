@@ -32167,13 +32167,7 @@ paths:
               SystemContract:
                 type: object
                 properties:
-                  gasPriceOracleContract:
-                    type: string
-                  zetaDepositAndCallContract:
-                    type: string
-                  wzetaContractAddress:
-                    type: string
-                  uniswapv2FactoryAddress:
+                  systemContract:
                     type: string
         default:
           description: An unexpected error response.
@@ -55691,13 +55685,7 @@ definitions:
       SystemContract:
         type: object
         properties:
-          gasPriceOracleContract:
-            type: string
-          zetaDepositAndCallContract:
-            type: string
-          wzetaContractAddress:
-            type: string
-          uniswapv2FactoryAddress:
+          systemContract:
             type: string
   zetachain.zetacore.fungible.QueryParamsResponse:
     type: object
@@ -55709,13 +55697,7 @@ definitions:
   zetachain.zetacore.fungible.SystemContract:
     type: object
     properties:
-      gasPriceOracleContract:
-        type: string
-      zetaDepositAndCallContract:
-        type: string
-      wzetaContractAddress:
-        type: string
-      uniswapv2FactoryAddress:
+      systemContract:
         type: string
   common.PubKeySet:
     type: object

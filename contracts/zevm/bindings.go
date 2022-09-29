@@ -1,10 +1,9 @@
 //go:generate sh -c "solc ZRC4.sol --combined-json abi,bin | jq '.contracts.\"ZRC4.sol:ZRC4\"'  > ZRC4.json"
 //go:generate sh -c "cat ZRC4.json | jq .abi | abigen --abi - --pkg zevm --type ZRC4 --out ZRC4.go"
-//go:generate sh -c "solc ZetaDepositAndCall.sol --combined-json abi,bin | jq '.contracts.\"ZetaDepositAndCall.sol:ZetaDepositAndCall\"'  > ZetaDepositAndCall.json"
-//go:generate sh -c "cat ZetaDepositAndCall.json | jq .abi | abigen --abi - --pkg zevm --type ZetaDepositAndCall --out ZetaDepositAndCall.go"
-//go:generate sh -c "solc GasPriceOracle.sol --combined-json abi,bin | jq '.contracts.\"GasPriceOracle.sol:GasPriceOracle\"'  > GasPriceOracle.json"
-//go:generate sh -c "cat GasPriceOracle.json | jq .abi | abigen --abi - --pkg zevm --type GasPriceOracle --out GasPriceOracle.go"
 //go:generate sh -c "cat UniswapV2Factory.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Factory --out UniswapV2Factory.go"
+//go:generate sh -c "cat WZETA.json | jq .abi | abigen --abi - --pkg zevm --type WZETA --out WZETA.go"
+//go:generate sh -c "solc SystemContract.sol --combined-json abi,bin | jq '.contracts.\"SystemContract.sol:SystemContract\"'  > SystemContract.json"
+//go:generate sh -c "cat SystemContract.json | jq .abi | abigen --abi - --pkg zevm --type SystemContract --out SystemContract.go"
 
 package zevm
 
@@ -19,9 +18,8 @@ import (
 
 // test the existence of the generated bindings
 var _ = ZRC4{}
-var _ = GasPriceOracle{}
-var _ = ZetaDepositAndCall{}
 var _ = UniswapV2Factory{}
+var _ = SystemContract{}
 
 type CompiledContract struct {
 	ABI abi.ABI
@@ -31,18 +29,17 @@ type CompiledContract struct {
 var (
 	//go:embed ZRC4.json
 	ZRC4JSON []byte // nolint: golint
-
-	//go:embed ZetaDepositAndCall.json
-	ZetaDepositAndCallJSON []byte // nolint: golint
-	//go:embed GasPriceOracle.json
-	GasPriceOracleJSON []byte // nolint: golint
 	//go:embed UniswapV2Factory.json
 	UniswapV2FactoryJSON []byte // nolint: golint
+	//go:embed WZETA.json
+	WZETAJSON []byte // nolint: golint
+	//go:embed SystemContract.json
+	SystemContractJSON []byte // nolint: golint
 
-	ZRC4Contract               CompiledContract
-	ZetaDepositAndCallContract CompiledContract
-	GasPriceOracleContract     CompiledContract
-	UniswapV2FactoryContract   CompiledContract
+	ZRC4Contract             CompiledContract
+	UniswapV2FactoryContract CompiledContract
+	WZETAContract            CompiledContract
+	SystemContractContract   CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC4AdminAddress ethcommon.Address
@@ -55,15 +52,15 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(ZetaDepositAndCallJSON, &ZetaDepositAndCallContract)
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(GasPriceOracleJSON, &GasPriceOracleContract)
-	if err != nil {
-		panic(err)
-	}
 	err = json.Unmarshal(UniswapV2FactoryJSON, &UniswapV2FactoryContract)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(WZETAJSON, &WZETAContract)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(SystemContractJSON, &SystemContractContract)
 	if err != nil {
 		panic(err)
 	}
@@ -72,11 +69,15 @@ func init() {
 		panic("load contract failed")
 	}
 
-	if len(ZetaDepositAndCallContract.Bin) == 0 {
+	if len(UniswapV2FactoryContract.Bin) == 0 {
 		panic("load contract failed")
 	}
 
-	if len(GasPriceOracleContract.Bin) == 0 {
+	if len(WZETAContract.Bin) == 0 {
+		panic("load contract failed")
+	}
+
+	if len(SystemContractContract.Bin) == 0 {
 		panic("load contract failed")
 	}
 }

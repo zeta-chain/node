@@ -52,8 +52,7 @@ func (k Keeper) DeployZRC4Contract(
 		chain.ChainID,   // chainID
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
-		common.HexToAddress(system.ZetaDepositAndCallContract),
-		common.HexToAddress(system.GasPriceOracleContract),
+		common.HexToAddress(system.SystemContract),
 	)
 
 	if err != nil {
@@ -90,23 +89,24 @@ func (k Keeper) DeployZRC4Contract(
 	return contractAddr, nil
 }
 
-// Deploy the ZetaDepositAndCall system contract
-func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error) {
-	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
+func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address) (common.Address, error) {
+	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZetaDepositAndCallMetaData ABI: %s", err.Error())
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get SystemContract ABI: %s", err.Error())
 	}
 	ctorArgs, err := abi.Pack(
-		"", // function--empty string for constructor
+		"", // function--empty string for constructor,
+		wzeta,
+		v2factory,
 	)
 
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZetaDepositAndCallMetaData constructor arguments: %s", err.Error())
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing SystemContract constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.ZetaDepositAndCallContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.ZetaDepositAndCallContract.Bin)], contracts.ZetaDepositAndCallContract.Bin)
-	copy(data[len(contracts.ZetaDepositAndCallContract.Bin):], ctorArgs)
+	data := make([]byte, len(contracts.SystemContractContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.SystemContractContract.Bin)], contracts.SystemContractContract.Bin)
+	copy(data[len(contracts.SystemContractContract.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -116,11 +116,11 @@ func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
 	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy ZetaDepositAndCall system contract")
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContractContract system contract")
 	}
 
 	system, _ := k.GetSystemContract(ctx)
-	system.ZetaDepositAndCallContract = contractAddr.String()
+	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
 
 	// go update all addr on ZRC-4 contracts
@@ -129,60 +129,9 @@ func (k Keeper) DeployZetaDepositAndCall(ctx sdk.Context) (common.Address, error
 	for _, coin := range coins {
 		if len(coin.ZRC4ContractAddress) != 0 {
 			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
-			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateZetaDepositAndCallAddress", contractAddr)
+			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateSystemContractAddress", contractAddr)
 			if err != nil {
-				return common.Address{}, sdkerrors.Wrapf(err, "failed to update ZetaDepositAndCall contract address for %s", coin.Name)
-			}
-		}
-	}
-
-	return contractAddr, nil
-}
-
-// Deploy the DeployGasPriceOracle system contract
-func (k Keeper) DeployGasPriceOracleContract(ctx sdk.Context) (common.Address, error) {
-	abi, err := contracts.GasPriceOracleMetaData.GetAbi()
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get GasPriceOracleMetaData ABI: %s", err.Error())
-	}
-	ctorArgs, err := abi.Pack(
-		"", // function--empty string for constructor
-	)
-
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing GasPriceOracleMetaData constructor arguments: %s", err.Error())
-	}
-
-	data := make([]byte, len(contracts.GasPriceOracleContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.GasPriceOracleContract.Bin)], contracts.GasPriceOracleContract.Bin)
-	copy(data[len(contracts.GasPriceOracleContract.Bin):], ctorArgs)
-
-	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	res, err := k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy GasPriceOracleMetaData system contract")
-	}
-	k.Logger(ctx).Info("DeployGasPriceOracleContract", "res.log", res.Logs)
-
-	system, _ := k.GetSystemContract(ctx)
-	system.GasPriceOracleContract = contractAddr.String()
-	k.SetSystemContract(ctx, system)
-
-	// go update all addr on ZRC-4 contracts
-	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
-	coins := k.GetAllForeignCoins(ctx)
-	for _, coin := range coins {
-		if len(coin.ZRC4ContractAddress) != 0 {
-			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
-			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateGasPriceOracleAddress", contractAddr)
-			if err != nil {
-				//return common.Address{}, sdkerrors.Wrapf(err, "failed to update GasPriceOracleAddress contract address for %s", coin.Name)
-				k.Logger(ctx).Error("failed to update GasPriceOracleAddress contract address for %s", coin.Name)
+				return common.Address{}, sdkerrors.Wrapf(err, "failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr)
 			}
 		}
 	}
@@ -229,6 +178,36 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	return contractAddr, nil
 }
 
+func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
+	abi, err := contracts.WZETAMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get WZETAMetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"", // function--empty string for constructor
+	)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing WZETA constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.WZETAContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.WZETAContract.Bin)], contracts.WZETAContract.Bin)
+	copy(data[len(contracts.WZETAContract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy WZETA contract")
+	}
+
+	return contractAddr, nil
+}
+
 // Depoisit ZRC4 tokens into to account;
 // Callable only by the fungible module account
 func (k Keeper) DepositZRC4(
@@ -262,14 +241,14 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "ZetaDepositAndCall address not found")
 	}
-	ZDCAddress := common.HexToAddress(system.ZetaDepositAndCallContract)
+	systemAddress := common.HexToAddress(system.SystemContract)
 
-	abi, err := contracts.ZetaDepositAndCallMetaData.GetAbi()
+	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, ZDCAddress, true,
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, true,
 		"DepositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err
