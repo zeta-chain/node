@@ -34407,7 +34407,85 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /zeta-chain/zetacore/zetaobserver/params:
+  '/zeta-chain/zetacore/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}':
+    get:
+      summary: Queries a list of ObserversByChainAndType items.
+      operationId: ZetachainZetacoreZetaobserverObserversByChainAndType
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              observerMapper:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: observationChain
+          in: path
+          required: true
+          type: string
+        - name: observationType
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{voteIdentifier}':
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: ZetachainZetacoreZetaobserverVoterByIdentifier
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              voter:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: voteIdentifier
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zetachain/zetaobserver/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: ZetachainZetacoreZetaobserverParams
@@ -34420,6 +34498,30 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  VotingThresholds:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        Chain:
+                          type: string
+                          enum:
+                            - EthChainObserver
+                            - ZetaChainObserver
+                            - BTCChainObserver
+                            - PolygonChainObserver
+                            - BscChainObserver
+                          default: EthChainObserver
+                        Observation:
+                          type: string
+                          enum:
+                            - InboundTx
+                            - OutBoundTx
+                            - GasPrice
+                          default: InboundTx
+                        Threshold:
+                          type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -56769,13 +56871,108 @@ definitions:
       medianIndex:
         type: string
         format: uint64
+  zetachain.zetacore.zetaobserver.ObservationType:
+    type: string
+    enum:
+      - InboundTx
+      - OutBoundTx
+      - GasPrice
+    default: InboundTx
+  zetachain.zetacore.zetaobserver.ObserverChain:
+    type: string
+    enum:
+      - EthChainObserver
+      - ZetaChainObserver
+      - BTCChainObserver
+      - PolygonChainObserver
+      - BscChainObserver
+    default: EthChainObserver
   zetachain.zetacore.zetaobserver.Params:
     type: object
+    properties:
+      VotingThresholds:
+        type: array
+        items:
+          type: object
+          properties:
+            Chain:
+              type: string
+              enum:
+                - EthChainObserver
+                - ZetaChainObserver
+                - BTCChainObserver
+                - PolygonChainObserver
+                - BscChainObserver
+              default: EthChainObserver
+            Observation:
+              type: string
+              enum:
+                - InboundTx
+                - OutBoundTx
+                - GasPrice
+              default: InboundTx
+            Threshold:
+              type: string
     description: Params defines the parameters for the module.
+  zetachain.zetacore.zetaobserver.QueryObserversByChainAndTypeResponse:
+    type: object
+    properties:
+      observerMapper:
+        type: string
   zetachain.zetacore.zetaobserver.QueryParamsResponse:
     type: object
     properties:
       params:
         description: params holds all the parameters of this module.
         type: object
+        properties:
+          VotingThresholds:
+            type: array
+            items:
+              type: object
+              properties:
+                Chain:
+                  type: string
+                  enum:
+                    - EthChainObserver
+                    - ZetaChainObserver
+                    - BTCChainObserver
+                    - PolygonChainObserver
+                    - BscChainObserver
+                  default: EthChainObserver
+                Observation:
+                  type: string
+                  enum:
+                    - InboundTx
+                    - OutBoundTx
+                    - GasPrice
+                  default: InboundTx
+                Threshold:
+                  type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.zetaobserver.QueryVoterByIdentifierResponse:
+    type: object
+    properties:
+      voter:
+        type: string
+  zetachain.zetacore.zetaobserver.VotingThreshold:
+    type: object
+    properties:
+      Chain:
+        type: string
+        enum:
+          - EthChainObserver
+          - ZetaChainObserver
+          - BTCChainObserver
+          - PolygonChainObserver
+          - BscChainObserver
+        default: EthChainObserver
+      Observation:
+        type: string
+        enum:
+          - InboundTx
+          - OutBoundTx
+          - GasPrice
+        default: InboundTx
+      Threshold:
+        type: string

@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om types.ObserverMapper) {
@@ -35,4 +38,19 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []types.Observer
 		mappers = append(mappers, val)
 	}
 	return
+}
+
+//Queries
+
+func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryObserversByChainAndTypeRequest) (*types.QueryObserversByChainAndTypeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// TODO: Process the query
+	_ = ctx
+
+	return &types.QueryObserversByChainAndTypeResponse{}, nil
 }

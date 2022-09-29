@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k Keeper) SetVoter(ctx sdk.Context, voter types.Voter) {
@@ -22,4 +25,19 @@ func (k Keeper) GetVoter(ctx sdk.Context, index string) (val types.Voter, found 
 	}
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
+}
+
+// Queries
+
+func (k Keeper) VoterByIdentifier(goCtx context.Context, req *types.QueryVoterByIdentifierRequest) (*types.QueryVoterByIdentifierResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// TODO: Process the query
+	_ = ctx
+
+	return &types.QueryVoterByIdentifierResponse{}, nil
 }

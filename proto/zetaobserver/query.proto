@@ -15,7 +15,17 @@ service Query {
 	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
 		option (google.api.http).get = "/zetachain/zetaobserver/params";
 	}
-	// this line is used by starport scaffolding # 2
+	// Queries a list of VoterByIdentifier items.
+	rpc VoterByIdentifier(QueryVoterByIdentifierRequest) returns (QueryVoterByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{voteIdentifier}";
+	}
+
+// Queries a list of ObserversByChainAndType items.
+	rpc ObserversByChainAndType(QueryObserversByChainAndTypeRequest) returns (QueryObserversByChainAndTypeResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 message QueryParamsRequest {}
@@ -24,6 +34,23 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
 	// params holds all the parameters of this module.
 	Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryVoterByIdentifierRequest {
+  string voteIdentifier = 1;
+}
+
+message QueryVoterByIdentifierResponse {
+  string voter = 1;
+}
+
+message QueryObserversByChainAndTypeRequest {
+  string observationChain = 1;
+  string observationType = 2;
+}
+
+message QueryObserversByChainAndTypeResponse {
+  string observerMapper = 1;
 }
 
 // this line is used by starport scaffolding # 3
