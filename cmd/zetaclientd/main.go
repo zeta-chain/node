@@ -8,6 +8,8 @@ import (
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tsscommon "github.com/zeta-chain/go-tss-ctx/common"
+	"github.com/zeta-chain/go-tss-ctx/keygen"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -15,8 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
 
 	"io/ioutil"
 	"strings"
@@ -25,7 +25,7 @@ import (
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
+
 	maddr "github.com/multiformats/go-multiaddr"
 
 	"math/rand"
@@ -93,7 +93,7 @@ func main() {
 		}
 	}
 
-	var peers addr.AddrList
+	var peers []maddr.Multiaddr
 	fmt.Println("peer", *peer)
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
@@ -123,7 +123,7 @@ func SetupConfigForTest() {
 
 }
 
-func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
+func start(validatorName string, peers []maddr.Multiaddr, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 

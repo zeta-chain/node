@@ -5,23 +5,25 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
-	"github.com/rs/zerolog/log"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	maddr "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
+	tsscommon "github.com/zeta-chain/go-tss-ctx/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
+
 	"os"
 	"time"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/go-tss-ctx/keysign"
+	"github.com/zeta-chain/go-tss-ctx/tss"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
@@ -159,7 +161,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
+func NewTSS(peer []maddr.Multiaddr, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
 	server, _, err := SetupTSSServer(peer, privkey, preParams)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
@@ -224,7 +226,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer []maddr.Multiaddr, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -249,7 +251,7 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 		privkey,
 		"MetaMetaOpenTheDoor",
 		tsspath,
-		thorcommon.TssConfig{
+		tsscommon.TssConfig{
 			EnableMonitor:   true,
 			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
 			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
