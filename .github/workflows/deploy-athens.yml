@@ -11,7 +11,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ATHENS }}
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-  
+  GOPRIVATE: "github.com/zeta-chain/*"
 
 jobs:
 
