@@ -278,3 +278,5 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 replace github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+
+replace github.com/zeta-chain/go-tss-ctx => github.com/brewmaster012/tss v0.0.0-20220930191223-33d6f23bbcf4
