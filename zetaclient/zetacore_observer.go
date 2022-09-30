@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	"math/big"
 	"math/rand"
 	"os"
@@ -15,10 +14,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
+	"github.com/zeta-chain/go-tss-ctx/keygen"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
@@ -29,7 +30,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	tsscommon "github.com/zeta-chain/go-tss-ctx/common"
 )
 
 const (
