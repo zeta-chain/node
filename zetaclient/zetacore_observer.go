@@ -315,15 +315,15 @@ func (co *CoreObserver) startSendScheduler() {
 					offset := send.Index[len(send.Index)-1] % 4
 					sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 30) {
 						numScheduledSends++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
-					if idx > 100 { // only look at 50 sends per chain
+					if idx > 60 { // only look at 50 sends per chain
 						break
 					}
-					if numSendsToLook > 150 {
+					if numSendsToLook > 100 {
 						break SCHEDULE
 					}
 				}
