@@ -311,11 +311,11 @@ func (co *CoreObserver) startSendScheduler() {
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
 
-					// add some deterministic randomness to the sinceBlock to spread out the load across blocks
-					offset := send.Index[len(send.Index)-1] % 4
-					sinceBlock -= int64(offset)
+					//// add some deterministic randomness to the sinceBlock to spread out the load across blocks
+					//offset := send.Index[len(send.Index)-1] % 4
+					//sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 10) && !outTxMan.IsOutTxActive(outTxID) {
+					if isScheduled(sinceBlock, idx < 20) && !outTxMan.IsOutTxActive(outTxID) {
 						numScheduledSends++
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
