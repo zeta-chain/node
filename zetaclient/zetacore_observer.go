@@ -178,11 +178,16 @@ func (outTxMan *OutTxProcessorManager) EndTryProcess(outTxID string) {
 	outTxMan.logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxMan.numActiveProcessor, time.Since(outTxMan.outTxStartTime[outTxID]))
 }
 
-func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
+// returns active?, and if so, active for how long
+func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) (bool, time.Duration) {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	_, found := outTxMan.outTxActive[outTxID]
-	return found
+	dur := time.Duration(0)
+	if found {
+		dur = time.Since(outTxMan.outTxStartTime[outTxID])
+	}
+	return found, dur
 }
 
 func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
@@ -315,10 +320,14 @@ func (co *CoreObserver) startSendScheduler() {
 					//offset := send.Index[len(send.Index)-1] % 4
 					//sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 20) && !outTxMan.IsOutTxActive(outTxID) {
-						numScheduledSends++
-						outTxMan.StartTryProcess(outTxID)
-						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+					if isScheduled(sinceBlock, idx < 30) {
+						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
+							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
+						} else {
+							numScheduledSends++
+							outTxMan.StartTryProcess(outTxID)
+							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+						}
 					}
 					if idx > 50 { // only look at 50 sends per chain
 						break
@@ -481,7 +490,7 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%10 == 0
+		return d%15 == 0
 	}
 	if d < 1000 && d%20 == 0 {
 		return true
