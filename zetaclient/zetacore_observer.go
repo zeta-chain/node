@@ -320,10 +320,10 @@ func (co *CoreObserver) startSendScheduler() {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
-					if idx > 60 { // only look at 50 sends per chain
+					if idx > 40 { // only look at 50 sends per chain
 						break
 					}
-					if numSendsToLook > 100 {
+					if numSendsToLook > 80 {
 						break SCHEDULE
 					}
 				}
