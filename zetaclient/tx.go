@@ -7,6 +7,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"google.golang.org/grpc"
 	"time"
 )
 
@@ -120,7 +121,8 @@ func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
 
 func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{}, maxSizeOption)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query SendAllPending error")
 		return nil, err
