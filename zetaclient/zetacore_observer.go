@@ -281,7 +281,13 @@ func (co *CoreObserver) startSendScheduler() {
 			numScheduledSends := 0
 			numSendsToLook := 0
 
-			for chain, sendList := range sendMap {
+			keys := make([]string, 0)
+			for k, _ := range sendMap {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, chain := range keys {
+				sendList = sendMap[chain]
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
