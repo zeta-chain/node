@@ -280,7 +280,7 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 			numScheduledSends := 0
 			numSendsToLook := 0
-		SCHEDULE:
+
 			for chain, sendList := range sendMap {
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
@@ -297,9 +297,9 @@ func (co *CoreObserver) startSendScheduler() {
 						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
 						if err != nil {
 							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
-							continue
+						} else {
+							pTxs.Set(float64(len(sendList)))
 						}
-						pTxs.Set(float64(len(sendList)))
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
@@ -331,9 +331,6 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					if idx > 50 { // only look at 50 sends per chain
 						break
-					}
-					if numSendsToLook > 100 {
-						break SCHEDULE
 					}
 				}
 			}
