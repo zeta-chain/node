@@ -175,7 +175,7 @@ func (outTxMan *OutTxProcessorManager) EndTryProcess(outTxID string) {
 	outTxMan.outTxEndTime[outTxID] = time.Now()
 	delete(outTxMan.outTxActive, outTxID)
 	outTxMan.numActiveProcessor--
-	outTxMan.logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxMan.numActiveProcessor, time.Since(outTxMan.outTxStartTime[outTxID]))
+	outTxMan.logger.Info().Int64("numActiveProcessor", outTxMan.numActiveProcessor).Dur("elapsed", time.Since(outTxMan.outTxStartTime[outTxID])).Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID)
 }
 
 // returns active?, and if so, active for how long
