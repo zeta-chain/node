@@ -210,7 +210,6 @@ func (ob *ChainObserver) WatchExchangeRate() {
 				continue
 			}
 			priceInHex := fmt.Sprintf("0x%x", price)
-
 			_, err = ob.zetaClient.PostZetaConversionRate(ob.chain, priceInHex, bn)
 			if err != nil {
 				ob.logger.Error().Err(err).Msg("PostZetaConversionRate error")

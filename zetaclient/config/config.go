@@ -59,6 +59,16 @@ const (
 var ChainsEnabled = []common.Chain{}
 
 var Chains = map[string]*types.ChainETHish{
+	common.Ganache.String(): {
+		Name:                     "Ganache",
+		ConnectorContractAddress: "",
+		PoolContractAddress:      "",
+		PoolContract:             0,
+		ZETATokenContractAddress: "",
+		ChainID:                  big.NewInt(5777),
+		BlockTime:                EthBlockTime,
+		Endpoint:                 "http://0.0.0.0:8585",
+	},
 	common.GoerliChain.String(): {
 		Name:                     "GOERLI",
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",

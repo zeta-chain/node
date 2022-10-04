@@ -2,6 +2,8 @@ package zetaclient
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 	"os"
 	"path/filepath"
@@ -64,6 +66,12 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	return metaCliDir
 }
 
+func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
+	keyring.Debug = true
+	_, info, err := GetKeyringKeybase("/Users/tanmay/.zetacored/", "bob", "")
+	fmt.Println(info, err)
+}
+
 func (ks *KeysSuite) TestNewKeys(c *C) {
 	oldStdIn := os.Stdin
 	defer func() {
@@ -96,5 +104,4 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	c.Assert(err, IsNil)
 	pubKey := ki.GetSignerInfo().GetPubKey()
 	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
-
 }

@@ -241,7 +241,7 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 	}
 	IP := os.Getenv("MYIP")
 	if len(IP) == 0 {
-		log.Error().Msg("empty env MYIP")
+		log.Info().Msg("empty env MYIP")
 	}
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,

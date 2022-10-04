@@ -31,6 +31,7 @@ require (
 )
 
 require (
+	github.com/99designs/keyring v1.1.6
 	github.com/binance-chain/tss-lib v1.3.2
 	github.com/cosmos/ibc-go/v3 v3.2.0
 	github.com/evmos/ethermint v0.19.2
@@ -45,7 +46,6 @@ require (
 require (
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
-	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
