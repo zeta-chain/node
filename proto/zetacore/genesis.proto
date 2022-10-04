@@ -14,25 +14,24 @@ import "zetacore/gas_price.proto";
 import "zetacore/chain_nonces.proto";
 import "zetacore/last_block_height.proto";
 import "zetacore/receive.proto";
-import "zetacore/send.proto";
+import "zetacore/cross_chain_tx.proto";
 import "zetacore/node_account.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-    repeated ZetaConversionRate zetaConversionRateList = 13 [(gogoproto.nullable) = false];
-  repeated OutTxTracker outTxTrackerList = 14 [(gogoproto.nullable) = false];
-  // this line is used by starport scaffolding # genesis/proto/state
-		Keygen keygen = 12; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated TSSVoter tSSVoterList = 11; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated TSS tSSList = 10; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated GasBalance gasBalanceList = 7; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated GasPrice gasPriceList = 6; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated ChainNonces chainNoncesList = 5; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated LastBlockHeight lastBlockHeightList = 4; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated Send sendList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated Receive receiveList = 2; // this line is used by starport scaffolding # genesis/proto/stateField
-		repeated NodeAccount nodeAccountList = 3; // this line is used by starport scaffolding # genesis/proto/stateField
-    // this line is used by starport scaffolding # ibc/genesis/proto
+    repeated ZetaConversionRate zetaConversionRateList = 1 [(gogoproto.nullable) = false];
+		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
+		Keygen keygen = 3;
+		repeated TSSVoter tSSVoterList = 4;
+		repeated TSS tSSList = 5;
+		repeated GasBalance gasBalanceList = 6;
+		repeated GasPrice gasPriceList = 7;
+		repeated ChainNonces chainNoncesList = 8;
+		repeated CrossChainTx CrossChainTxs = 9;
+		repeated Receive receiveList = 10;
+		repeated NodeAccount nodeAccountList = 11;
+		repeated LastBlockHeight lastBlockHeightList = 12;
+
 }

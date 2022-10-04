@@ -31,21 +31,15 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(CmdZetaConversionRateVoter())
 	cmd.AddCommand(CmdAddToWatchList())
-	// this line is used by starport scaffolding # 1
 	cmd.AddCommand(CmdCreateTSSVoter())
-
 	cmd.AddCommand(CmdGasBalanceVoter())
-
 	cmd.AddCommand(CmdGasPriceVoter())
-
 	cmd.AddCommand(CmdNonceVoter())
-
 	cmd.AddCommand(CmdReceiveConfirmation())
-
 	cmd.AddCommand(CmdSendVoter())
-
 	cmd.AddCommand(CmdSetNodeKeys())
 	cmd.AddCommand(CmdRemoveFromWatchList())
+	cmd.AddCommand(CmdSetSupportedChains())
 
 	return cmd
 }

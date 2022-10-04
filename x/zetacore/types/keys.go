@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "zetacore"
@@ -15,7 +20,13 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
+
+	ProtocolFee = 1000000000000000000
 )
+
+func GetProtocolFee() sdk.Uint {
+	return sdk.NewUint(ProtocolFee)
+}
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
@@ -29,10 +40,13 @@ const (
 	TxoutCountKey               = "Txout-count-"
 	TxoutConfirmationKey        = "TxoutConfirmation-value-"
 	SendKey                     = "Send-value-"
+	VoteCounterKey              = "VoteCounter-value-"
 	ReceiveKey                  = "Receive-value-"
 	LastBlockHeightKey          = "LastBlockHeight-value-"
 	ChainNoncesKey              = "ChainNonces-value-"
 	GasPriceKey                 = "GasPrice-value-"
+	SupportedChainsKey          = "SupportedChains-value-"
+	AllSupportedChainsKey       = "AllSupportedChains"
 	GasBalanceKey               = "GasBalance-value-"
 	TxListKey                   = "TxList-value-"
 	InTxKey                     = "InTx-value-"
@@ -69,10 +83,6 @@ func ZetaConversionRateKey(
 	return key
 }
 
-// events follow here
-const (
-	SendEventKey         = "NewSendCreated" // Indicates what key to listen to
-	StoredGameEventIndex = "Index"          // What game is relevant
-	StoredGameEventRed   = "Red"            // Is it relevant to me?
-	StoredGameEventBlack = "Black"          // Is it relevant to me?
-)
+func (cctx CrossChainTx) LogIdentifierForCCTX() string {
+	return fmt.Sprintf("%s-%s-%s-%d", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
+}

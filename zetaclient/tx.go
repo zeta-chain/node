@@ -3,6 +3,10 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"time"
@@ -81,7 +85,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 // FIXME: pass nonce
 func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce int) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, mMint, status, chain, uint64(nonce))
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromString(mMint), status, chain, uint64(nonce))
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
@@ -96,34 +100,34 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
-func (b *ZetaCoreBridge) GetAllSend() ([]*types.Send, error) {
+func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAll(context.Background(), &types.QueryAllSendRequest{})
+	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query SendAll error")
+		b.logger.Error().Err(err).Msg("query CctxAll error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetSendByHash(sendHash string) (*types.Send, error) {
+func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Send(context.Background(), &types.QueryGetSendRequest{Index: sendHash})
+	resp, err := client.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: sendHash})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("GetSendByHash error")
+		b.logger.Error().Err(err).Msg("GetCctxByHash error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{})
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query SendAllPending error")
+		b.logger.Error().Err(err).Msg("query CctxAllPending error")
 		return nil, err
 	}
-	return resp.Send, nil
+	return resp.CrossChainTx, nil
 }
 
 func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
@@ -146,14 +150,14 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
-		return 0, err
+		fmt.Printf("GetLatestBlock grpc err: %s\n", err)
+		return nil, err
 	}
-	return resp.Height, nil
+	return res.Block, nil
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
@@ -166,11 +170,21 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 	return resp.LastBlockHeight, nil
 }
 
+func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+	if err != nil {
+		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		return 0, err
+	}
+	return resp.Height, nil
+}
+
 func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetNonceByChain error")
+		b.logger.Error().Err(err).Msg("query QueryGetChainNoncesRequest error")
 		return nil, err
 	}
 	return resp.ChainNonces, nil
@@ -181,7 +195,6 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
-		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -223,7 +236,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s/%d", chain.String(), nonce),
+		Index: fmt.Sprintf("%s-%d", chain.String(), nonce),
 	})
 	if err != nil {
 		return nil, err
@@ -235,6 +248,13 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.String(),
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			Limit:      300,
+			CountTotal: false,
+			Reverse:    false,
+		},
 	})
 	if err != nil {
 		return nil, err
