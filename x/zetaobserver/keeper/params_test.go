@@ -1,15 +1,14 @@
-package keeper_test
+package keeper
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.ZetaobserverKeeper(t)
+	k, ctx := SetupKeeper(t)
 	params := types.DefaultParams()
 
 	k.SetParams(ctx, params)

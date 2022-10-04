@@ -37,7 +37,6 @@ func (m *Voter) IsVoteFinalized() (VoteType, bool) {
 		}
 	}
 	if success.IsPositive() {
-
 		if success.Quo(total).GTE(m.VoteThreshold) {
 			return VoteType_SuccessObservation, true
 		}

@@ -23,3 +23,6 @@ message Voter {
     (gogoproto.nullable) = false
   ];
 }
+// v := NewVoter (msg.digest,InboundTx,VoterList(BSC,InboundTx),VoteThreshold(BSC,InboundTx))
+// v.AddVote(msg.Creator)
+// v.CheckStatus
