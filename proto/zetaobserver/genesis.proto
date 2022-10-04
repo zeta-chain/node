@@ -3,13 +3,13 @@ package zetachain.zetacore.zetaobserver;
 
 import "gogoproto/gogo.proto";
 import "zetaobserver/observer.proto";
-import "zetaobserver/voter.proto";
+import "zetaobserver/ballot.proto";
 import "zetaobserver/params.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
 
 message GenesisState {
-  repeated Voter Voters =1;
+  repeated Ballot Ballots =1;
   repeated ObserverMapper Observers = 2;
   Params Params = 3;
 }

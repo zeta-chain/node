@@ -5,7 +5,7 @@ import "zetaobserver/observer.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
 
-message VotingThreshold {
+message BallotThreshold {
     ObserverChain Chain =1;
     ObservationType Observation=2;
     string Threshold =3 [
@@ -17,5 +17,5 @@ message VotingThreshold {
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated VotingThreshold VotingThresholds =1;
+  repeated BallotThreshold BallotThresholds =1;
 }

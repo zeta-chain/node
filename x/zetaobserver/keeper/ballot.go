@@ -10,14 +10,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) SetVoter(ctx sdk.Context, voter types.Voter) {
+func (k Keeper) SetBallot(ctx sdk.Context, voter types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
-	voter.Index = fmt.Sprintf("%s", voter.VoteIdentifier)
+	voter.Index = fmt.Sprintf("%s", voter.BallotThreshold)
 	b := k.cdc.MustMarshal(&voter)
 	store.Set([]byte(voter.Index), b)
 }
 
-func (k Keeper) GetVoter(ctx sdk.Context, index string) (val types.Voter, found bool) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
@@ -27,12 +27,12 @@ func (k Keeper) GetVoter(ctx sdk.Context, index string) (val types.Voter, found 
 	return val, true
 }
 
-func (k Keeper) GetAllVoters(ctx sdk.Context) (voters []*types.Voter) {
+func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var val types.Voter
+		var val types.Ballot
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		voters = append(voters, &val)
 	}
@@ -41,14 +41,14 @@ func (k Keeper) GetAllVoters(ctx sdk.Context) (voters []*types.Voter) {
 
 // Queries
 
-func (k Keeper) VoterByIdentifier(goCtx context.Context, req *types.QueryVoterByIdentifierRequest) (*types.QueryVoterByIdentifierResponse, error) {
+func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallotByIdentifierRequest) (*types.QueryBallotByIdentifierResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	voter, isFound := k.GetVoter(ctx, req.VoteIdentifier)
+	voter, isFound := k.GetBallot(ctx, req.BallotIdentifier)
 	if !isFound {
-		return &types.QueryVoterByIdentifierResponse{Voter: "Not Found"}, nil
+		return &types.QueryBallotByIdentifierResponse{Ballot: "Not Found"}, nil
 	}
-	return &types.QueryVoterByIdentifierResponse{Voter: voter.String()}, nil
+	return &types.QueryBallotByIdentifierResponse{Ballot: voter.String()}, nil
 }

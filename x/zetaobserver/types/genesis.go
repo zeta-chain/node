@@ -8,7 +8,7 @@ func DefaultGenesis() *GenesisState {
 	params := DefaultParams()
 	return &GenesisState{
 		Params:    &params,
-		Voters:    nil,
+		Ballots:   nil,
 		Observers: nil,
 	}
 }

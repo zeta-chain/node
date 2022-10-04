@@ -16,8 +16,8 @@ service Query {
 		option (google.api.http).get = "/zetachain/zetaobserver/params";
 	}
 	// Queries a list of VoterByIdentifier items.
-	rpc VoterByIdentifier(QueryVoterByIdentifierRequest) returns (QueryVoterByIdentifierResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{voteIdentifier}";
+	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{ballotIdentifier}";
 	}
 
 // Queries a list of ObserversByChainAndType items.
@@ -36,12 +36,12 @@ message QueryParamsResponse {
 	Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryVoterByIdentifierRequest {
-  string voteIdentifier = 1;
+message QueryBallotByIdentifierRequest {
+  string ballotIdentifier = 1;
 }
 
-message QueryVoterByIdentifierResponse {
-  string voter = 1;
+message QueryBallotByIdentifierResponse {
+  string ballot = 1;
 }
 
 message QueryObserversByChainAndTypeRequest {

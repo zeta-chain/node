@@ -6,12 +6,12 @@ import (
 	"testing"
 )
 
-func TestVoter_IsVoteFinalized(t *testing.T) {
+func TestVoter_IsBallotFinalized(t *testing.T) {
 	tt := []struct {
 		name           string
 		threshold      sdk.Dec
 		finalVoterList map[string]VoteType
-		finalStatus    VoteType
+		finalStatus    BallotStatus
 		isFinalized    bool
 	}{
 		{
@@ -23,7 +23,7 @@ func TestVoter_IsVoteFinalized(t *testing.T) {
 				"Observer3": VoteType_SuccessObservation,
 				"Observer4": VoteType_SuccessObservation,
 			},
-			finalStatus: VoteType_SuccessObservation,
+			finalStatus: BallotStatus_BallotFinalized_SuccessObservation,
 			isFinalized: true,
 		},
 		{
@@ -35,7 +35,7 @@ func TestVoter_IsVoteFinalized(t *testing.T) {
 				"Observer3": VoteType_FailureObservation,
 				"Observer4": VoteType_FailureObservation,
 			},
-			finalStatus: VoteType_NotYetVoted,
+			finalStatus: BallotStatus_BallotInProgress,
 			isFinalized: false,
 		},
 		{
@@ -47,7 +47,7 @@ func TestVoter_IsVoteFinalized(t *testing.T) {
 				"Observer3": VoteType_FailureObservation,
 				"Observer4": VoteType_FailureObservation,
 			},
-			finalStatus: VoteType_FailureObservation,
+			finalStatus: BallotStatus_BallotFinalized_FailureObservation,
 			isFinalized: true,
 		},
 		{
@@ -59,7 +59,7 @@ func TestVoter_IsVoteFinalized(t *testing.T) {
 				"Observer3": VoteType_FailureObservation,
 				"Observer4": VoteType_FailureObservation,
 			},
-			finalStatus: VoteType_NotYetVoted,
+			finalStatus: BallotStatus_BallotInProgress,
 			isFinalized: false,
 		},
 	}
@@ -71,16 +71,17 @@ func TestVoter_IsVoteFinalized(t *testing.T) {
 			voterList["Observer2"] = VoteType_NotYetVoted
 			voterList["Observer3"] = VoteType_NotYetVoted
 			voterList["Observer4"] = VoteType_NotYetVoted
-			voter := Voter{
-				Index:           "index",
-				VoteIdentifier:  "identifier",
-				VoterList:       voterList,
-				ObservationType: ObservationType_InboundTx,
-				VoteThreshold:   test.threshold,
+			ballot := Ballot{
+				Index:            "index",
+				BallotIdentifier: "identifier",
+				VoterList:        voterList,
+				ObservationType:  ObservationType_InboundTx,
+				BallotThreshold:  test.threshold,
+				BallotStatus:     BallotStatus_BallotInProgress,
 			}
-			voter.VoterList = test.finalVoterList
-			status, isFinalized := voter.IsVoteFinalized()
-			assert.Equal(t, test.finalStatus, status)
+			ballot.VoterList = test.finalVoterList
+			isFinalized := ballot.IsBallotFinalized()
+			assert.Equal(t, test.finalStatus, ballot.BallotStatus)
 			assert.Equal(t, test.isFinalized, isFinalized)
 		})
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (m *Voter) AddVote(address string, vote VoteType) error {
+func (m *Ballot) AddVote(address string, vote VoteType) error {
 	if !(m.VoterList[address] == VoteType_NotYetVoted) {
 		return errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s", address, m.VoterList[address]))
 	}
@@ -14,7 +14,7 @@ func (m *Voter) AddVote(address string, vote VoteType) error {
 	return nil
 }
 
-func (m *Voter) IsVoteFinalized() (VoteType, bool) {
+func (m *Ballot) IsBallotFinalized() bool {
 	success, failure, total := sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()
 	for _, vote := range m.VoterList {
 		if vote != VoteType_NotYetVoted {
@@ -29,17 +29,20 @@ func (m *Voter) IsVoteFinalized() (VoteType, bool) {
 
 	}
 	if total.IsZero() {
-		return VoteType_NotYetVoted, false
+		m.BallotStatus = BallotStatus_BallotInProgress
+		return false
 	}
 	if failure.IsPositive() {
-		if failure.Quo(total).GTE(m.VoteThreshold) {
-			return VoteType_FailureObservation, true
+		if failure.Quo(total).GTE(m.BallotThreshold) {
+			m.BallotStatus = BallotStatus_BallotFinalized_FailureObservation
+			return true
 		}
 	}
 	if success.IsPositive() {
-		if success.Quo(total).GTE(m.VoteThreshold) {
-			return VoteType_SuccessObservation, true
+		if success.Quo(total).GTE(m.BallotThreshold) {
+			m.BallotStatus = BallotStatus_BallotFinalized_SuccessObservation
+			return true
 		}
 	}
-	return VoteType_NotYetVoted, false
+	return false
 }

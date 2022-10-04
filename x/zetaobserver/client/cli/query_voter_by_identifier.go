@@ -11,10 +11,10 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdVoterByIdentifier() *cobra.Command {
+func CmdBallotByIdentifier() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "voter [vote-identifier]",
-		Short: "Query VoterByIdentifier",
+		Use:   "ballot [ballot-identifier]",
+		Short: "Query BallotByIdentifier",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqVoteIdentifier := args[0]
@@ -26,12 +26,11 @@ func CmdVoterByIdentifier() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryVoterByIdentifierRequest{
-
-				VoteIdentifier: reqVoteIdentifier,
+			params := &types.QueryBallotByIdentifierRequest{
+				BallotIdentifier: reqVoteIdentifier,
 			}
 
-			res, err := queryClient.VoterByIdentifier(cmd.Context(), params)
+			res, err := queryClient.BallotByIdentifier(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

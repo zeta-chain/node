@@ -17,7 +17,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		VotingThresholds: []*VotingThreshold{
+		BallotThresholds: []*BallotThreshold{
 			{
 				Chain:       ObserverChain_EthChainObserver,
 				Observation: ObservationType_InboundTx,
@@ -50,7 +50,7 @@ func DefaultParams() Params {
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.VotingThresholds, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.BallotThresholds, validateVotingThresholds),
 	}
 }
 
@@ -66,7 +66,7 @@ func (p Params) String() string {
 }
 
 func validateVotingThresholds(i interface{}) error {
-	v, ok := i.([]*VotingThreshold)
+	v, ok := i.([]*BallotThreshold)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -78,11 +78,11 @@ func validateVotingThresholds(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (VotingThreshold, bool) {
-	for _, threshold := range p.GetVotingThresholds() {
+func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (BallotThreshold, bool) {
+	for _, threshold := range p.GetBallotThresholds() {
 		if threshold.Chain == chain && threshold.Observation == observationType {
 			return *threshold, true
 		}
 	}
-	return VotingThreshold{}, false
+	return BallotThreshold{}, false
 }

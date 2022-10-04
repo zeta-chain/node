@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 	return &types.GenesisState{
-		Voters:    k.GetAllVoters(ctx),
+		Ballots:   k.GetAllBallots(ctx),
 		Observers: k.GetAllObserverMappers(ctx),
 		Params:    &params,
 	}
