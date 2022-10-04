@@ -44,6 +44,7 @@ func (ob *ChainObserver) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
 	if confirmedBlockNum <= ob.GetLastBlock() {
+		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
 	toBlock := ob.GetLastBlock() + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
@@ -71,7 +72,7 @@ func (ob *ChainObserver) observeInTX() error {
 	// Pull out arguments from logs
 	for logs.Next() {
 		event := logs.Event
-		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s", event.Raw.BlockNumber, event.Raw.TxHash)
+		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 
 		destChain := config.FindChainByID(event.DestinationChainId)
 		destAddr := types.BytesToEthHex(event.DestinationAddress)

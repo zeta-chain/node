@@ -18,58 +18,67 @@ func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	height := ctx.BlockHeight()
 	if height%100 == 0 { // every 100 blocks, roughly 10min
-		store := ctx.KVStore(k.storeKey)
-		sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
-		iterator := sdk.KVStorePrefixIterator(sendStore, []byte{})
-		defer iterator.Close()
-		for ; iterator.Valid(); iterator.Next() {
-			var send types.Send
-			k.cdc.MustUnmarshal(iterator.Value(), &send)
-			// if the status of send is pending, which means Finalized/Revert
-			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
-				if height-int64(send.FinalizedMetaHeight) > 100 { // stuck send
-					var chain string
-					if send.Status == types.SendStatus_PendingOutbound {
-						chain = send.ReceiverChain
-					} else if send.Status == types.SendStatus_PendingRevert {
-						chain = send.SenderChain
-					}
-					gasPrice, isFound := k.GetGasPrice(ctx, chain)
-					if !isFound {
-						continue
-					}
-					mi := gasPrice.MedianIndex
-					newGasPrice := big.NewInt(0).SetUint64(gasPrice.Prices[mi])
-					oldGasPrice, ok := big.NewInt(0).SetString(send.GasPrice, 10)
-					if !ok {
-						k.Logger(ctx).Error("failed to parse old gas price")
-						continue
-					}
-					// do nothing if new gas price is even lower than old price
-					if newGasPrice.Cmp(oldGasPrice) < 0 {
-						continue
-					}
-					targetGasPrice := oldGasPrice.Mul(oldGasPrice, big.NewInt(4))
-					targetGasPrice = targetGasPrice.Div(targetGasPrice, big.NewInt(3)) // targetGasPrice = oldGasPrice * 1.2
-					// if current new price is not much higher; make it at least 20% higher
-					// otherwise replacement tx will be rejected by the node
-					if newGasPrice.Cmp(targetGasPrice) < 0 {
-						newGasPrice = targetGasPrice
-					}
-					send.GasPrice = newGasPrice.String()
-					k.SetSend(ctx, send)
-					ctx.EventManager().EmitEvent(
-						sdk.NewEvent(sdk.EventTypeMessage,
-							sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-							sdk.NewAttribute(types.SubTypeKey, types.SendScrubbed),
-							sdk.NewAttribute(types.SendHash, send.Index),
-							sdk.NewAttribute("OldGasPrice", fmt.Sprintf("%d", oldGasPrice)),
-							sdk.NewAttribute("NewGasPrice", fmt.Sprintf("%d", newGasPrice)),
-							sdk.NewAttribute("Chain", chain),
-							sdk.NewAttribute("Nonce", fmt.Sprintf("%d", send.Nonce)),
-						),
-					)
+		scrubingStatus := []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert}
+		for _, status := range scrubingStatus {
+			store := ctx.KVStore(k.storeKey)
+			p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+			k.ScrubUtility(ctx, store, p)
+		}
+	}
+}
+
+func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
+	sendStore := prefix.NewStore(store, p)
+	iterator := sdk.KVStorePrefixIterator(sendStore, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var send types.CrossChainTx
+		k.cdc.MustUnmarshal(iterator.Value(), &send)
+		// if the status of send is pending, which means Finalized/Revert
+		if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+			if ctx.BlockHeight()-int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight) > 100 { // stuck send
+				var chain string
+				if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+					chain = send.OutBoundTxParams.ReceiverChain
+				} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+					chain = send.InBoundTxParams.SenderChain
 				}
+				gasPrice, isFound := k.GetGasPrice(ctx, chain)
+				if !isFound {
+					continue
+				}
+				mi := gasPrice.MedianIndex
+				newGasPrice := big.NewInt(0).SetUint64(gasPrice.Prices[mi])
+				oldGasPrice, ok := big.NewInt(0).SetString(send.OutBoundTxParams.OutBoundTxGasPrice, 10)
+				if !ok {
+					k.Logger(ctx).Error("failed to parse old gas price")
+					continue
+				}
+				// do nothing if new gas price is even lower than old price
+				if newGasPrice.Cmp(oldGasPrice) < 0 {
+					continue
+				}
+				targetGasPrice := oldGasPrice.Mul(oldGasPrice, big.NewInt(4))
+				targetGasPrice = targetGasPrice.Div(targetGasPrice, big.NewInt(3)) // targetGasPrice = oldGasPrice * 1.2
+				// if current new price is not much higher; make it at least 20% higher
+				// otherwise replacement tx will be rejected by the node
+				if newGasPrice.Cmp(targetGasPrice) < 0 {
+					newGasPrice = targetGasPrice
+				}
+				send.OutBoundTxParams.OutBoundTxGasPrice = newGasPrice.String()
+				// No need to migrate as this function does not change the status of Send
+				k.SetCrossChainTx(ctx, send)
+				ctx.EventManager().EmitEvent(
+					sdk.NewEvent(sdk.EventTypeMessage,
+						sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+						sdk.NewAttribute(types.SubTypeKey, types.SendScrubbed),
+						sdk.NewAttribute(types.CctxIndex, send.Index),
+						sdk.NewAttribute("OldGasPrice", fmt.Sprintf("%d", oldGasPrice)),
+						sdk.NewAttribute("NewGasPrice", fmt.Sprintf("%d", newGasPrice)),
+						sdk.NewAttribute("Chain", chain),
+						sdk.NewAttribute("Nonce", fmt.Sprintf("%d", send.OutBoundTxParams.OutBoundTxTSSNonce)),
+					),
+				)
 			}
 		}
 	}

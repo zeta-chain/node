@@ -148,6 +148,11 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.RopstenConfirmationCount
 		ob.BlockTime = config.RopstenBlockTime
+
+	case common.Ganache:
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = 0
+		ob.BlockTime = 1
 	}
 	switch config.Chains[chain.String()].PoolContract {
 	case clienttypes.UniswapV2:

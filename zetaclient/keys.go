@@ -51,11 +51,11 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	buf.WriteByte('\n')
 	buf.WriteString(password)
 	buf.WriteByte('\n')
-	//fmt.Printf("password buf: %s\n", buf)
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get keybase,err:%w", err)
 	}
+
 	// the keyring library which used by cosmos sdk , will use interactive terminal if it detect it has one
 	// this will temporary trick it think there is no interactive terminal, thus will read the password from the buffer provided
 	oldStdIn := os.Stdin
@@ -63,7 +63,6 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-	//fmt.Println("signer: ", signerName)
 	si, err := kb.Key(signerName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
@@ -83,6 +82,10 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!
+	//op := func(options *ckeys.Options) {
+	//	options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
+	//	options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
+	//}
 	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
 }
 

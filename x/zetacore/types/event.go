@@ -2,28 +2,34 @@ package types
 
 const (
 	// event key
-	SubTypeKey    = "SubTypeKey"
-	SendHash      = "SendHash"
-	OutTxHash     = "OutTxHash"
-	ZetaMint      = "ZetaMint"
-	ZetaBurnt     = "ZetaBurnt"
-	Chain         = "Chain"
-	OldStatus     = "OldStatus"
-	NewStatus     = "NewStatus"
+	SubTypeKey = "SubTypeKey"
+	CctxIndex  = "CctxIndex"
+
 	Sender        = "Sender"
 	SenderChain   = "SenderChain"
+	InTxHash      = "InTxObservedHash"
+	InBlockHeight = "InTxObservedBlockHeight"
+
 	Receiver      = "Receiver"
 	ReceiverChain = "ReceiverChain"
-	Message       = "Message"
-	InTxHash      = "InTxHash"
-	InBlockHeight = "InBlockHeight"
-	StatusMessage = "StatusMessage"
+	OutTxHash     = "OutTxObservedHash"
+
+	ZetaMint         = "ZetaMint"
+	ZetaBurnt        = "ZetaBurnt"
+	OutTXVotingChain = "OutTxVotingChain"
+	OutBoundChain    = "OutBoundChain"
+	OldStatus        = "OldStatus"
+	NewStatus        = "NewStatus"
+	StatusMessage    = "StatusMessage"
+	RelayedMessage   = "RelayedMessage"
+	Identifiers      = "LogIdentifiers"
 )
 
 const (
-	OutboundTxSuccessful = "OutboundTxSuccessful"
-	OutboundTxFailed     = "OutboundTxFailed"
-	InboundCreated       = "InboundCreated"
-	InboundFinalized     = "InboundFinalized"
+	OutboundTxSuccessful = "zetacore/OutboundTxSuccessful"
+	OutboundTxFailed     = "zetacore/OutboundTxFailed"
+	InboundCreated       = "zetacore/InboundCreated"
+	InboundFinalized     = "zetacore/InboundFinalized"
+	StatusChanged        = "zetacore/StatusChanged"
 	SendScrubbed         = "SendScrubbed"
 )

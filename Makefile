@@ -26,8 +26,8 @@ TEST_BUILD_FLAGS :=  -tags mocknet
 clean: clean-binaries clean-dir
 
 clean-binaries:
-	@rm -rf ${GOBIN}/zetaclientd
 	@rm -rf ${GOBIN}/zetacored
+	@rm -rf ${GOBIN}/zetaclientd
 
 clean-dir:
 	@rm -rf ~/.zetacored
@@ -81,11 +81,11 @@ go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
 
-init: clean install-zetacore
-	./standalone-network/init.sh
+init:
+	./localnet/standalone-network/init.sh
 
 run:
-	./standalone-network/run.sh
+	./localnet/standalone-network/run.sh
 
 init-run: init run
 

@@ -10,6 +10,13 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set all the zetaConversionRate
+	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []string{
+		"GANACHE",
+		"GOERLI",
+		"ROPSTEN",
+		"Baobab",
+		"Mumbai",
+	}})
 	for _, elem := range genState.ZetaConversionRateList {
 		k.SetZetaConversionRate(ctx, elem)
 	}
@@ -59,8 +66,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the send
-	for _, elem := range genState.SendList {
-		k.SetSend(ctx, *elem)
+	for _, elem := range genState.CrossChainTxs {
+		k.SetCrossChainTx(ctx, *elem)
 	}
 
 	// Set all the nodeAccount
@@ -68,7 +75,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetNodeAccount(ctx, *elem)
 	}
 
-	// this line is used by starport scaffolding # ibc/genesis/init
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -134,10 +140,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all send
-	sendList := k.GetAllSend(ctx)
+	sendList := k.GetAllCctxByStatuses(ctx, types.AllStatus())
 	for _, elem := range sendList {
 		elem := elem
-		genesis.SendList = append(genesis.SendList, &elem)
+		genesis.CrossChainTxs = append(genesis.CrossChainTxs, elem)
 	}
 
 	// Get all nodeAccount
@@ -146,8 +152,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		elem := elem
 		genesis.NodeAccountList = append(genesis.NodeAccountList, &elem)
 	}
-
-	// this line is used by starport scaffolding # ibc/genesis/export
-
 	return genesis
 }
+
+// TODO : Verify genesis import and export
