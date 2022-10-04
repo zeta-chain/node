@@ -32,9 +32,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	if msg.Status != common.ReceiveStatus_Failed {
-		if !msg.MMint.Equal(cctx.ZetaMint) {
-			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.MMint, cctx.ZetaMint)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("MMint %s does not match send ZetaMint %s", msg.MMint, cctx.ZetaMint))
+		if !msg.ZetaMinted.Equal(cctx.ZetaMint) {
+			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.ZetaMint)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.ZetaMint))
 		}
 	}
 
@@ -129,27 +129,24 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 	case common.ReceiveStatus_Failed:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
-			{
-				chain := cctx.InBoundTxParams.SenderChain
-				err := k.UpdatePrices(ctx, chain, cctx)
-				if err != nil {
-					return err
-				}
-				err = k.UpdateNonce(ctx, chain, cctx)
-				if err != nil {
-					return err
-				}
-				cctx.CctxStatus.ChangeStatus(&ctx,
-					types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
+			chain := cctx.InBoundTxParams.SenderChain
+			err := k.UpdatePrices(ctx, chain, cctx)
+			if err != nil {
+				return err
 			}
+			err = k.UpdateNonce(ctx, chain, cctx)
+			if err != nil {
+				return err
+			}
+			cctx.CctxStatus.ChangeStatus(&ctx,
+				types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
 		case types.CctxStatus_PendingRevert:
-			{
-				cctx.CctxStatus.ChangeStatus(&ctx,
-					types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
-			}
+			cctx.CctxStatus.ChangeStatus(&ctx,
+				types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
+
 		}
-		newstatus := cctx.CctxStatus.Status.String()
-		EmitReceiveFailure(ctx, msg, receive, oldStatus.String(), newstatus, cctx.LogIdentifierForCCTX())
+		newStatus := cctx.CctxStatus.Status.String()
+		EmitReceiveFailure(ctx, msg, receive, oldStatus.String(), newStatus, cctx.LogIdentifierForCCTX())
 	}
 	return nil
 }

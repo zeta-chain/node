@@ -15,7 +15,7 @@ func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string
 		CctxHash:                 sendHash,
 		ObservedOutTxHash:        outTxHash,
 		ObservedOutTxBlockHeight: outBlockHeight,
-		MMint:                    mMint,
+		ZetaMinted:               mMint,
 		Status:                   status,
 		OutTxChain:               chain,
 		OutTxTssNonce:            nonce,

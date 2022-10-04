@@ -98,10 +98,10 @@ message MsgVoteOnObservedOutboundTx {
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
-  string mMint = 5[
+  string zeta_minted = 5[
   (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
   (gogoproto.nullable) = false,
-  (gogoproto.moretags) = "yaml:\"mMint\""
+  (gogoproto.moretags) = "yaml:\"zeta_minted\""
   ];
   common.ReceiveStatus status = 6;
   string outTx_chain = 7;

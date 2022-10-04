@@ -78,7 +78,7 @@ func CmdShowReceive() *cobra.Command {
 
 func CmdReceiveConfirmation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [mMint] [Status] [chain] [outTXNonce]",
+		Use:   "receive-confirmation [sendHash] [outTxHash] [outBlockHeight] [ZetaMinted] [Status] [chain] [outTXNonce]",
 		Short: "Broadcast message receiveConfirmation",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
