@@ -21,6 +21,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+
 	"io"
 	"net/http"
 	"os"
@@ -101,6 +102,10 @@ import (
 	zetaCoreModule "github.com/zeta-chain/zetacore/x/zetacore"
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	zetaObserverModule "github.com/zeta-chain/zetacore/x/zetaobserver"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 const Name = "zetacore"
@@ -167,6 +172,7 @@ var (
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
 		zetaCoreModule.AppModuleBasic{},
+		zetaObserverModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -219,6 +225,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
+	ZetaObserverKeeper   *zetaObserverModuleKeeper.Keeper
 	mm                   *module.Manager
 	sm                   *module.SimulationManager
 	configurator         module.Configurator
@@ -259,6 +266,7 @@ func New(
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 		zetaCoreModuleTypes.StoreKey,
+		zetaObserverModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
@@ -399,6 +407,12 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaObserverModuleTypes.StoreKey],
+		keys[zetaObserverModuleTypes.MemStoreKey],
+		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+	)
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
 	/****  Module Options ****/
@@ -433,6 +447,7 @@ func New(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		zetacoreModule,
+		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -460,6 +475,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
+		zetaObserverModuleTypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -471,8 +487,7 @@ func New(
 		paramstypes.ModuleName, genutiltypes.ModuleName,
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
-
-		zetaCoreModuleTypes.ModuleName,
+		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -499,8 +514,8 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		vestingtypes.ModuleName,
-		// this line is used by starport scaffolding # stargate/app/initGenesis
 		zetaCoreModuleTypes.ModuleName,
+		zetaObserverModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -722,7 +737,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
-
+	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
 	return paramsKeeper
 }
 
