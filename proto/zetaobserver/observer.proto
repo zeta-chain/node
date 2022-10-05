@@ -1,0 +1,28 @@
+syntax = "proto3";
+package zetachain.zetacore.zetaobserver;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
+
+enum ObserverChain {
+  option (gogoproto.goproto_enum_stringer) = true;
+  EthChainObserver = 0;
+  ZetaChainObserver = 1;
+  BTCChainObserver = 2;
+  PolygonChainObserver = 3;
+  BscChainObserver =4 ;
+}
+enum ObservationType {
+  option (gogoproto.goproto_enum_stringer) = true;
+  InboundTx = 0;
+  OutBoundTx = 2;
+  GasPrice = 3;
+}
+
+message ObserverMapper {
+  string index = 1;
+  ObserverChain  ObserverChain =2 ;
+  ObservationType ObservationType =3;
+  repeated string observerList =4;
+}
