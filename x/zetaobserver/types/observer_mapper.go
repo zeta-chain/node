@@ -12,7 +12,7 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	if err != nil {
 		return nil, err
 	}
-	input, err := ioutil.ReadFile(file)
+	input, err := ioutil.ReadFile(file) // #nosec G402
 	if err != nil {
 		return nil, err
 	}
