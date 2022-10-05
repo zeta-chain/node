@@ -19,6 +19,7 @@ service Msg {
 
 message MsgFungibleTestMsg {
   string creator = 1;
+  string testType = 2;
 }
 
 message MsgFungibleTestMsgResponse {

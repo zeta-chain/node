@@ -19,7 +19,7 @@ command -v jq > /dev/null 2>&1 || { echo >&2 "jq not installed. More info: https
 # remove existing daemon and client
 rm -rf ~/.zetacore*
 
-make install
+make install-zetacore
 
 zetacored config keyring-backend $KEYRING --home ~/.zetacore
 zetacored config chain-id $CHAINID --home ~/.zetacore

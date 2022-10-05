@@ -20,6 +20,10 @@ import (
 	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
+var (
+	ZERO_VALUE = big.NewInt(0)
+)
+
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 func (k Keeper) DeployZRC4Contract(
@@ -69,7 +73,7 @@ func (k Keeper) DeployZRC4Contract(
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
@@ -89,7 +93,7 @@ func (k Keeper) DeployZRC4Contract(
 	return contractAddr, nil
 }
 
-func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address) (common.Address, error) {
+func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address, router02 common.Address) (common.Address, error) {
 	abi, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get SystemContract ABI: %s", err.Error())
@@ -98,6 +102,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 		"", // function--empty string for constructor,
 		wzeta,
 		v2factory,
+		router02,
 	)
 
 	if err != nil {
@@ -114,7 +119,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContractContract system contract")
 	}
@@ -129,7 +134,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	for _, coin := range coins {
 		if len(coin.ZRC4ContractAddress) != 0 {
 			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
-			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, true, "updateSystemContractAddress", contractAddr)
+			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, ZERO_VALUE, nil, true, "updateSystemContractAddress", contractAddr)
 			if err != nil {
 				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr)
 			}
@@ -162,7 +167,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2FactoryContract contract")
 	}
@@ -170,7 +175,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	//verify that factory is correct--hashOfPairCode must be: 96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f
 	// this is important because router02 needs exactly this build to compute correct pair address
 	// Name
-	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, false, "hashOfPairCode")
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, ZERO_VALUE, nil, false, "hashOfPairCode")
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to call hashOfPairCode() contract")
 	}
@@ -200,7 +205,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2Router02Contract contract")
 	}
@@ -230,7 +235,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy WZETA contract")
 	}
@@ -251,7 +256,7 @@ func (k Keeper) DepositZRC4(
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, true, "deposit", to, amount)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, true, "deposit", to, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +283,7 @@ func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, true,
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, ZERO_VALUE, nil, true,
 		"DepositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err
@@ -301,7 +306,7 @@ func (k Keeper) QueryZRC4Data(
 	zrc4 := contracts.ZRC4Contract.ABI
 
 	// Name
-	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, false, "name")
+	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "name")
 	if err != nil {
 		return types.ZRC4Data{}, err
 	}
@@ -313,7 +318,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, false, "symbol")
+	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "symbol")
 	if err != nil {
 		return types.ZRC4Data{}, err
 	}
@@ -325,7 +330,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, false, "decimals")
+	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "decimals")
 	if err != nil {
 		return types.ZRC4Data{}, err
 	}
@@ -348,7 +353,7 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, false, "balanceOf", account)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "balanceOf", account)
 	if err != nil {
 		return nil
 	}
@@ -371,6 +376,8 @@ func (k Keeper) CallEVM(
 	ctx sdk.Context,
 	abi abi.ABI,
 	from, contract common.Address,
+	value *big.Int,
+	gasLimit *big.Int,
 	commit bool,
 	method string,
 	args ...interface{},
@@ -383,7 +390,8 @@ func (k Keeper) CallEVM(
 		)
 	}
 
-	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit)
+	k.Logger(ctx).Info("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
+	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, value, gasLimit)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
 	}
@@ -391,12 +399,16 @@ func (k Keeper) CallEVM(
 }
 
 // CallEVMWithData performs a smart contract method call using contract data
+// value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
+// to bisect the correct gas limit (this may sometimes results in insufficient gas limit; not sure why)
 func (k Keeper) CallEVMWithData(
 	ctx sdk.Context,
 	from common.Address,
 	contract *common.Address,
 	data []byte,
 	commit bool,
+	value *big.Int,
+	gasLimit *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
 	nonce, err := k.authKeeper.GetSequence(ctx, from.Bytes())
 	if err != nil {
@@ -404,7 +416,7 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	gasCap := config.DefaultGasCap
-	if commit {
+	if commit && gasLimit == nil {
 		args, err := json.Marshal(evmtypes.TransactionArgs{
 			From: &from,
 			To:   contract,
@@ -422,13 +434,17 @@ func (k Keeper) CallEVMWithData(
 			return nil, err
 		}
 		gasCap = gasRes.Gas
+		k.Logger(ctx).Info("call evm", "EstimateGas", gasCap)
+	}
+	if gasLimit != nil {
+		gasCap = gasLimit.Uint64()
 	}
 
 	msg := ethtypes.NewMessage(
 		from,
 		contract,
 		nonce,
-		big.NewInt(0), // amount
+		value,         // amount
 		gasCap,        // gasLimit
 		big.NewInt(0), // gasFeeCap
 		big.NewInt(0), // gasTipCap
@@ -437,7 +453,8 @@ func (k Keeper) CallEVMWithData(
 		ethtypes.AccessList{}, // AccessList
 		!commit,               // isFake
 	)
-
+	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
+	k.Logger(ctx).Info("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
 	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
 	if err != nil {
 		return nil, err

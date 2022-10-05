@@ -126,7 +126,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     // returns the ZRC4 address for gas on the same chain of this ZRC4,
     // and calculate the gas fee for withdraw()
     function withdrawGasFee() public override view returns (address,uint256) {
-        address gasZRC4 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinERC4(CHAIN_ID);
+        address gasZRC4 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC4(CHAIN_ID);
         require(gasZRC4 != address(0), "gas coin not set");
         uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPrice(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");

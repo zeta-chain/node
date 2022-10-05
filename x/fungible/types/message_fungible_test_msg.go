@@ -9,9 +9,10 @@ const TypeMsgFungibleTestMsg = "fungible_test_msg"
 
 var _ sdk.Msg = &MsgFungibleTestMsg{}
 
-func NewMsgFungibleTestMsg(creator string) *MsgFungibleTestMsg {
+func NewMsgFungibleTestMsg(creator string, testType string) *MsgFungibleTestMsg {
 	return &MsgFungibleTestMsg{
-		Creator: creator,
+		Creator:  creator,
+		TestType: testType,
 	}
 }
 

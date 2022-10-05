@@ -6,7 +6,7 @@ interface ISystem {
     function wzetaContractAddress() external view returns (address);
     function uniswapv2FactoryAddress() external view returns (address);
     function gasPrice(uint256) external view returns (uint256); // chainid => gas price
-    function gasCoinERC4(uint256) external view returns (address);  // chainid => gas coin erc4
+    function gasCoinZRC4(uint256) external view returns (address);  // chainid => gas coin zrc4
 }
 
 interface IZRC4 {

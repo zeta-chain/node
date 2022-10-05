@@ -469,7 +469,6 @@ func New(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
-		evmtypes.ModuleName,
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -484,6 +483,7 @@ func New(
 		vestingtypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		fungibleModuleTypes.ModuleName,

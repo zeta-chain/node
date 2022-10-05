@@ -4,22 +4,24 @@ import "./Interfaces.sol";
 
 contract SystemContract {
     mapping (uint256 => uint256) public gasPrice; // chainid => gas price
-    mapping (uint256 => address) public gasCoinERC4;  // chainid => gas coin erc4
+    mapping (uint256 => address) public gasCoinZRC4;  // chainid => gas coin zrc4
     mapping (uint256 => address) public gasZetaPool; // chainid => zeta/gas uniswap v2 pool
 
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public wzetaContractAddress;
     address public uniswapv2FactoryAddress;
+    address public uniswapv2Router02Address;
 
     event SystemContractDeployed();
     event SetGasPrice(uint256, uint256);
     event SetGasCoin(uint256, address);
     event SetGasZetaPool(uint256, address);
 
-    constructor(address wzeta_, address uniswapv2Factory_) {
+    constructor(address wzeta_, address uniswapv2Factory_, address uniswapv2Router02_) {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "only fungible module can deploy");
         wzetaContractAddress = wzeta_;
         uniswapv2FactoryAddress = uniswapv2Factory_;
+        uniswapv2Router02Address = uniswapv2Router02_;
         emit SystemContractDeployed();
     }
 
@@ -58,9 +60,9 @@ contract SystemContract {
         emit SetGasPrice(chainID, price);
     }
 
-    function setGasCoinERC4(uint256 chainID, address zrc4) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set gas coin erc4");
-        gasCoinERC4[chainID] = zrc4;
+    function setGasCoinZRC4(uint256 chainID, address zrc4) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set gas coin zrc4");
+        gasCoinZRC4[chainID] = zrc4;
         emit SetGasCoin(chainID, zrc4);
     }
 
@@ -80,5 +82,10 @@ contract SystemContract {
     function setUniswapv2FactoryAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set uniswapv2 factory address");
         uniswapv2FactoryAddress = addr;
+    }
+
+    function setUniswapv2Router02Address(address addr) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can set uniswapv2 router02 address");
+        uniswapv2Router02Address = addr;
     }
 }

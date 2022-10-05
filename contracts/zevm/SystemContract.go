@@ -30,7 +30,7 @@ var (
 
 // SystemContractMetaData contains all meta data concerning the SystemContract contract.
 var SystemContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Factory_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasZetaPool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"SystemContractDeployed\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"DepositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinERC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasZetaPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"}],\"name\":\"setGasCoinERC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"}],\"name\":\"setGasZetaPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setUniswapv2FactoryAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setWZETAContractAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenA\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenB\",\"type\":\"address\"}],\"name\":\"uniswapv2PairFor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"pair\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wzetaContractAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Factory_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Router02_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasZetaPool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"SystemContractDeployed\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"DepositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinZRC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasZetaPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"}],\"name\":\"setGasCoinZRC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"}],\"name\":\"setGasZetaPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setUniswapv2FactoryAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setUniswapv2Router02Address\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setWZETAContractAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenA\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenB\",\"type\":\"address\"}],\"name\":\"uniswapv2PairFor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"pair\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2Router02Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wzetaContractAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // SystemContractABI is the input ABI used to generate the binding from.
@@ -210,12 +210,12 @@ func (_SystemContract *SystemContractCallerSession) FUNGIBLEMODULEADDRESS() (com
 	return _SystemContract.Contract.FUNGIBLEMODULEADDRESS(&_SystemContract.CallOpts)
 }
 
-// GasCoinERC4 is a free data retrieval call binding the contract method 0xadbe1596.
+// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
 //
-// Solidity: function gasCoinERC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCaller) GasCoinERC4(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
+// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCaller) GasCoinZRC4(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
 	var out []interface{}
-	err := _SystemContract.contract.Call(opts, &out, "gasCoinERC4", arg0)
+	err := _SystemContract.contract.Call(opts, &out, "gasCoinZRC4", arg0)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -227,18 +227,18 @@ func (_SystemContract *SystemContractCaller) GasCoinERC4(opts *bind.CallOpts, ar
 
 }
 
-// GasCoinERC4 is a free data retrieval call binding the contract method 0xadbe1596.
+// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
 //
-// Solidity: function gasCoinERC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractSession) GasCoinERC4(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasCoinERC4(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
+func (_SystemContract *SystemContractSession) GasCoinZRC4(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasCoinZRC4(&_SystemContract.CallOpts, arg0)
 }
 
-// GasCoinERC4 is a free data retrieval call binding the contract method 0xadbe1596.
+// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
 //
-// Solidity: function gasCoinERC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCallerSession) GasCoinERC4(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasCoinERC4(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCallerSession) GasCoinZRC4(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasCoinZRC4(&_SystemContract.CallOpts, arg0)
 }
 
 // GasPrice is a free data retrieval call binding the contract method 0x052c72a4.
@@ -365,6 +365,37 @@ func (_SystemContract *SystemContractCallerSession) Uniswapv2PairFor(factory com
 	return _SystemContract.Contract.Uniswapv2PairFor(&_SystemContract.CallOpts, factory, tokenA, tokenB)
 }
 
+// Uniswapv2Router02Address is a free data retrieval call binding the contract method 0x842da36d.
+//
+// Solidity: function uniswapv2Router02Address() view returns(address)
+func (_SystemContract *SystemContractCaller) Uniswapv2Router02Address(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _SystemContract.contract.Call(opts, &out, "uniswapv2Router02Address")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// Uniswapv2Router02Address is a free data retrieval call binding the contract method 0x842da36d.
+//
+// Solidity: function uniswapv2Router02Address() view returns(address)
+func (_SystemContract *SystemContractSession) Uniswapv2Router02Address() (common.Address, error) {
+	return _SystemContract.Contract.Uniswapv2Router02Address(&_SystemContract.CallOpts)
+}
+
+// Uniswapv2Router02Address is a free data retrieval call binding the contract method 0x842da36d.
+//
+// Solidity: function uniswapv2Router02Address() view returns(address)
+func (_SystemContract *SystemContractCallerSession) Uniswapv2Router02Address() (common.Address, error) {
+	return _SystemContract.Contract.Uniswapv2Router02Address(&_SystemContract.CallOpts)
+}
+
 // WzetaContractAddress is a free data retrieval call binding the contract method 0x6719e404.
 //
 // Solidity: function wzetaContractAddress() view returns(address)
@@ -417,25 +448,25 @@ func (_SystemContract *SystemContractTransactorSession) DepositAndCall(zrc4 comm
 	return _SystemContract.Contract.DepositAndCall(&_SystemContract.TransactOpts, zrc4, amount, target, message)
 }
 
-// SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
+// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractTransactor) SetGasCoinERC4(opts *bind.TransactOpts, chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.contract.Transact(opts, "setGasCoinERC4", chainID, zrc4)
+// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
+func (_SystemContract *SystemContractTransactor) SetGasCoinZRC4(opts *bind.TransactOpts, chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _SystemContract.contract.Transact(opts, "setGasCoinZRC4", chainID, zrc4)
 }
 
-// SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
+// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractSession) SetGasCoinERC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.Contract.SetGasCoinERC4(&_SystemContract.TransactOpts, chainID, zrc4)
+// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
+func (_SystemContract *SystemContractSession) SetGasCoinZRC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetGasCoinZRC4(&_SystemContract.TransactOpts, chainID, zrc4)
 }
 
-// SetGasCoinERC4 is a paid mutator transaction binding the contract method 0xbbb49d4b.
+// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
 //
-// Solidity: function setGasCoinERC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractTransactorSession) SetGasCoinERC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.Contract.SetGasCoinERC4(&_SystemContract.TransactOpts, chainID, zrc4)
+// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
+func (_SystemContract *SystemContractTransactorSession) SetGasCoinZRC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetGasCoinZRC4(&_SystemContract.TransactOpts, chainID, zrc4)
 }
 
 // SetGasPrice is a paid mutator transaction binding the contract method 0xa7cb0507.
@@ -499,6 +530,27 @@ func (_SystemContract *SystemContractSession) SetUniswapv2FactoryAddress(addr co
 // Solidity: function setUniswapv2FactoryAddress(address addr) returns()
 func (_SystemContract *SystemContractTransactorSession) SetUniswapv2FactoryAddress(addr common.Address) (*types.Transaction, error) {
 	return _SystemContract.Contract.SetUniswapv2FactoryAddress(&_SystemContract.TransactOpts, addr)
+}
+
+// SetUniswapv2Router02Address is a paid mutator transaction binding the contract method 0x5ea58415.
+//
+// Solidity: function setUniswapv2Router02Address(address addr) returns()
+func (_SystemContract *SystemContractTransactor) SetUniswapv2Router02Address(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
+	return _SystemContract.contract.Transact(opts, "setUniswapv2Router02Address", addr)
+}
+
+// SetUniswapv2Router02Address is a paid mutator transaction binding the contract method 0x5ea58415.
+//
+// Solidity: function setUniswapv2Router02Address(address addr) returns()
+func (_SystemContract *SystemContractSession) SetUniswapv2Router02Address(addr common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetUniswapv2Router02Address(&_SystemContract.TransactOpts, addr)
+}
+
+// SetUniswapv2Router02Address is a paid mutator transaction binding the contract method 0x5ea58415.
+//
+// Solidity: function setUniswapv2Router02Address(address addr) returns()
+func (_SystemContract *SystemContractTransactorSession) SetUniswapv2Router02Address(addr common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetUniswapv2Router02Address(&_SystemContract.TransactOpts, addr)
 }
 
 // SetWZETAContractAddress is a paid mutator transaction binding the contract method 0x97770dff.
