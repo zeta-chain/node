@@ -1,16 +1,15 @@
-package testing
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"strconv"
 )
 
-func CreateObserverMapperList(items int, chain types.ObserverChain, observationType types.ObservationType) (list []types.ObserverMapper) {
+func CreateObserverMapperList(items int, chain ObserverChain, observationType ObservationType) (list []*ObserverMapper) {
 	SetConfig(false)
 	for i := 0; i < items; i++ {
-		mapper := types.ObserverMapper{
+		mapper := &ObserverMapper{
 			Index:           "Index" + strconv.Itoa(i),
 			ObserverChain:   chain,
 			ObservationType: observationType,

@@ -28,7 +28,6 @@ func CmdObserversByChainAndType() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryObserversByChainAndTypeRequest{
-
 				ObservationChain: reqObservationChain,
 				ObservationType:  reqObservationType,
 			}

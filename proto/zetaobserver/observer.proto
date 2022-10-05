@@ -7,15 +7,17 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
 
 enum ObserverChain {
   option (gogoproto.goproto_enum_stringer) = true;
-  EthChainObserver = 0;
-  ZetaChainObserver = 1;
-  BTCChainObserver = 2;
-  PolygonChainObserver = 3;
-  BscChainObserver =4 ;
+  EmptyObserver = 0;
+  EthChainObserver = 1;
+  ZetaChainObserver = 2;
+  BtcChainObserver = 3;
+  PolygonChainObserver = 4;
+  BscChainObserver =5 ;
 }
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;
-  InboundTx = 0;
+  EmptyObserverType = 0;
+  InBoundTx = 1;
   OutBoundTx = 2;
   GasPrice = 3;
 }
