@@ -1,27 +1,29 @@
-package zetaclient
+package infra
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
-	"github.com/rs/zerolog/log"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog"
+	thorcommon "github.com/zeta-chain/go-tss-ctx/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer/util"
+
 	"os"
 	"time"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	maddr "github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/go-tss-ctx/keysign"
+	"github.com/zeta-chain/go-tss-ctx/tss"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
@@ -65,14 +67,28 @@ func NewTSSKey(pk string) (*TSSKey, error) {
 }
 
 type TSS struct {
-	Server        *tss.TssServer
+	server        *tss.TssServer
 	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
-	CurrentPubkey string
+	currentPubkey string
 	logger        zerolog.Logger
 }
 
+var _ signer.TSSSigner = (*TSS)(nil)
+
+func (tss *TSS) CurrentPubKey() string {
+	return tss.currentPubkey
+}
+
+func (tss *TSS) SetCurrentPubKey(key string) {
+	tss.currentPubkey = key
+}
+
+func (tss *TSS) Server() *tss.TssServer {
+	return tss.server
+}
+
 func (tss *TSS) Pubkey() []byte {
-	return tss.Keys[tss.CurrentPubkey].PubkeyInBytes
+	return tss.Keys[tss.currentPubkey].PubkeyInBytes
 }
 
 // digest should be Keccak256 Hash of some data
@@ -80,9 +96,9 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
-	tssPubkey := tss.CurrentPubkey
+	tssPubkey := tss.currentPubkey
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, nil, "0.14.0")
-	ksRes, err := tss.Server.KeySign(keysignReq)
+	ksRes, err := tss.server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
@@ -95,7 +111,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 		log.Warn().Err(err).Msgf("signature has length 0")
 		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
-	if !verifySignature(tssPubkey, signature, H) {
+	if !util.VerifySignature(tssPubkey, signature, H) {
 		log.Error().Err(err).Msgf("signature verification failure")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
@@ -120,7 +136,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 }
 
 func (tss *TSS) Address() ethcommon.Address {
-	addr, err := getKeyAddr(tss.CurrentPubkey)
+	addr, err := getKeyAddr(tss.currentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ethcommon.Address{}
@@ -159,13 +175,13 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
+func NewTSS(peer []maddr.Multiaddr, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
 	server, _, err := SetupTSSServer(peer, privkey, preParams)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
 	tss := TSS{
-		Server: server,
+		server: server,
 		Keys:   make(map[string]*TSSKey),
 		logger: log.With().Str("module", "tss_signer").Logger(),
 	}
@@ -209,7 +225,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 				} else {
 					if found == false { // when reading the first file, set the current pubkey to the first one
 						log.Info().Msgf("setting current pubkey to %s", pk)
-						tss.CurrentPubkey = pk
+						tss.currentPubkey = pk
 					}
 					found = true
 
@@ -224,7 +240,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer []maddr.Multiaddr, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *util.HTTPServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -269,7 +285,7 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 		log.Error().Err(err).Msg("tss server start error")
 	}
 
-	s := NewHTTPServer()
+	s := util.NewHTTPServer()
 	go func() {
 		log.Info().Msg("Starting TSS HTTP Server...")
 		if err := s.Start(); err != nil {
@@ -278,57 +294,6 @@ func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *key
 	}()
 
 	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
-	s.p2pid = tssServer.GetLocalPeerID()
+	s.P2PID = tssServer.GetLocalPeerID()
 	return tssServer, s, nil
-}
-
-func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
-	log.Info().Msg("trying keysign...")
-	data := []byte("hello meta")
-	H := crypto.Keccak256Hash(data)
-	log.Info().Msgf("hash of data (hello meta) is %s", H)
-
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H.Bytes())}, 10, nil, "0.14.0")
-	ksRes, err := tssServer.KeySign(keysignReq)
-	if err != nil {
-		log.Warn().Msg("keysign fail")
-	}
-	signature := ksRes.Signatures
-	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
-	// 32B msg hash, 32B R, 32B S, 1B RC
-	log.Info().Msgf("signature of helloworld... %v", signature)
-
-	if len(signature) == 0 {
-		log.Info().Msgf("signature has length 0, skipping verify")
-		return fmt.Errorf("signature has length 0")
-	}
-	verifySignature(tssPubkey, signature, H.Bytes())
-	if verifySignature(tssPubkey, signature, H.Bytes()) {
-		return nil
-	}
-	return fmt.Errorf("verify signature fail")
-}
-
-func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) bool {
-	if len(signature) == 0 {
-		log.Warn().Msg("verify_signature: empty signature array")
-		return false
-	}
-	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		log.Error().Msg("get pubkey from bech32 fail")
-	}
-	// verify the signature of msg.
-	var sigbyte [65]byte
-	_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
-	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
-	if err != nil {
-		log.Error().Err(err).Msg("SigToPub error in verify_signature")
-		return false
-	}
-	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
-	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
-	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
 }

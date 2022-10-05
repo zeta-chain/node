@@ -1,4 +1,4 @@
-package zetaclient
+package eth
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (ob *ChainObserver) PostNonceIfNotRecorded() error {
+func (ob *EthChainObserver) PostNonceIfNotRecorded() error {
 	logger := ob.logger
 	zetaClient := ob.zetaClient
 	evmClient := ob.EvmClient
@@ -33,7 +33,7 @@ func (ob *ChainObserver) PostNonceIfNotRecorded() error {
 			logger.Fatal().Err(err).Msg("NonceAt")
 			return err
 		}
-		logger.Debug().Msgf("signer %s Posting Nonce of  of nonce %d", zetaClient.GetKeys().signerName, nonce)
+		logger.Debug().Msgf("signer %s Posting Nonce of  of nonce %d", zetaClient.GetKeys().SignerName(), nonce)
 		_, err = zetaClient.PostNonce(chain, nonce)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("PostNonce")
@@ -43,7 +43,7 @@ func (ob *ChainObserver) PostNonceIfNotRecorded() error {
 	return nil
 }
 
-func (ob *ChainObserver) WatchGasPrice() {
+func (ob *EthChainObserver) WatchGasPrice() {
 	gasTicker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -60,7 +60,7 @@ func (ob *ChainObserver) WatchGasPrice() {
 	}
 }
 
-func (ob *ChainObserver) PostGasPrice() error {
+func (ob *EthChainObserver) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
@@ -190,7 +190,7 @@ func (ob *ChainObserver) PostGasPrice() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (ob *ChainObserver) getLastHeight() uint64 {
+func (ob *EthChainObserver) getLastHeight() uint64 {
 	lastheight, err := ob.zetaClient.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
 		ob.logger.Warn().Err(err).Msgf("getLastHeight")
@@ -199,7 +199,7 @@ func (ob *ChainObserver) getLastHeight() uint64 {
 	return lastheight.LastSendHeight
 }
 
-func (ob *ChainObserver) WatchExchangeRate() {
+func (ob *EthChainObserver) WatchExchangeRate() {
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {

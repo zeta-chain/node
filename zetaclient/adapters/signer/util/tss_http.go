@@ -1,4 +1,4 @@
-package zetaclient
+package util
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 type HTTPServer struct {
 	logger zerolog.Logger
 	s      *http.Server
-	p2pid  string
+	P2PID  string
 }
 
 // NewHTTPServer should only listen to the loopback
@@ -87,5 +87,5 @@ func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 
 func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "%s", t.p2pid)
+	fmt.Fprintf(w, "%s", t.P2PID)
 }

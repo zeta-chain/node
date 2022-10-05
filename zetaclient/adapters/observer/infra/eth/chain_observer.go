@@ -1,4 +1,4 @@
-package zetaclient
+package eth
 
 import (
 	"context"
@@ -10,49 +10,35 @@ import (
 	"sync/atomic"
 	"time"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/contracts/evm"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/contracts/evm"
+	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/model"
 )
 
-const (
-	PosKey                 = "PosKey"
-	NonceTxHashesKeyPrefix = "NonceTxHashes-"
-	NonceTxKeyPrefix       = "NonceTx-"
-)
+var _ observer.ChainObserver = (*EthChainObserver)(nil)
 
-type TxHashEnvelope struct {
-	TxHash string
-	Done   chan struct{}
-}
-
-type OutTx struct {
-	SendHash string
-	TxHash   string
-	Nonce    int64
-}
-
-// Chain configuration struct
-// Filled with above constants depending on chain
-type ChainObserver struct {
+type EthChainObserver struct {
 	chain                  common.Chain
 	endpoint               string
 	ticker                 *time.Ticker
 	Connector              *evm.Connector
 	ConnectorAddress       ethcommon.Address
 	EvmClient              *ethclient.Client
-	zetaClient             *ZetaCoreBridge
-	Tss                    TSSSigner
+	zetaClient             *zetaclient.ZetaCoreBridge
+	Tss                    signer.TSSSigner
 	lastBlock              uint64
 	confCount              uint64 // must wait this many blocks to be considered "confirmed"
 	BlockTime              uint64 // block time in seconds
@@ -64,16 +50,15 @@ type ChainObserver struct {
 	outTXConfirmedReceipts map[int]*ethtypes.Receipt
 	MinNonce               int64
 	MaxNonce               int64
-	OutTxChan              chan OutTx // send to this channel if you want something back!
-	ZetaPriceQuerier       ZetaPriceQuerier
+	outTxChan              chan model.OutTx // send to this channel if you want something back!
+	ZetaPriceQuerier       zetaclient.ZetaPriceQuerier
 	stop                   chan struct{}
 	fileLogger             *zerolog.Logger // for critical info
 	logger                 zerolog.Logger
 }
 
-// Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*ChainObserver, error) {
-	ob := ChainObserver{}
+func NewEthChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBridge, tss signer.TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EthChainObserver, error) {
+	ob := EthChainObserver{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
@@ -85,7 +70,7 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.Tss = tss
 	ob.metrics = metrics
 	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
-	ob.OutTxChan = make(chan OutTx, 100)
+	ob.outTxChan = make(chan model.OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
 		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
@@ -161,14 +146,14 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	return &ob, nil
 }
 
-func (ob *ChainObserver) Start() {
+func (ob *EthChainObserver) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
 }
 
-func (ob *ChainObserver) Stop() {
+func (ob *EthChainObserver) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
@@ -183,7 +168,7 @@ func (ob *ChainObserver) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+func (ob *EthChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmedReceipts[nonce]
 	ob.mu.Unlock()
@@ -270,7 +255,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
-func (ob *ChainObserver) observeOutTx() {
+func (ob *EthChainObserver) observeOutTx() {
 	logger := ob.logger
 	ticker := time.NewTicker(30 * time.Second)
 	for {
@@ -304,7 +289,7 @@ func (ob *ChainObserver) observeOutTx() {
 								logger.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 							}
 							ob.mu.Unlock()
-							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
+							err = ob.db.Put([]byte(model.NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
 							if err != nil {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
@@ -325,7 +310,7 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
+func (ob *EthChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
 	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
@@ -346,10 +331,62 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 	}
 }
 
-func (ob *ChainObserver) setLastBlock(block uint64) {
+func (ob *EthChainObserver) setLastBlock(block uint64) {
 	atomic.StoreUint64(&ob.lastBlock, block)
 }
 
-func (ob *ChainObserver) GetLastBlock() uint64 {
+func (ob *EthChainObserver) GetLastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
+}
+
+func (ob *EthChainObserver) BlockTimeSeconds() uint64 {
+	return ob.BlockTime
+}
+
+func (ob *EthChainObserver) Chain() *common.Chain {
+	return &ob.chain
+}
+
+func (ob *EthChainObserver) ChainClient() *ethclient.Client {
+	return ob.EvmClient
+}
+
+func (ob *EthChainObserver) ConfirmationsCount() uint64 {
+	return ob.confCount
+}
+
+func (ob *EthChainObserver) CriticalLog() *zerolog.Logger {
+	return ob.fileLogger
+}
+
+func (ob *EthChainObserver) Log() zerolog.Logger {
+	return ob.logger
+}
+
+func (ob *EthChainObserver) Endpoint() string {
+	return ob.endpoint
+}
+
+func (ob *EthChainObserver) LastBlock() uint64 {
+	return ob.lastBlock
+}
+
+func (ob *EthChainObserver) OutTxChan() chan model.OutTx {
+	return ob.outTxChan
+}
+
+func (ob *EthChainObserver) TSSSigner() signer.TSSSigner {
+	return ob.Tss
+}
+
+func (ob *EthChainObserver) Ticker() *time.Ticker {
+	return ob.ticker
+}
+
+func (ob *EthChainObserver) TxWatchList() map[string]string {
+	watchList := make(map[string]string, len(ob.txWatchList))
+	for k, v := range ob.txWatchList {
+		watchList[k.Hex()] = v
+	}
+	return watchList
 }

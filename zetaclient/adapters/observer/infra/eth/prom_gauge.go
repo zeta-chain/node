@@ -1,4 +1,4 @@
-package zetaclient
+package eth
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func (ob *ChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) {
+func (ob *EthChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) {
 	gauge, found := metrics.Gauges[ob.chain.String()+"_"+name]
 	if !found {
 		return nil, errors.New("gauge not found")
@@ -15,7 +15,7 @@ func (ob *ChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) {
 	return gauge, nil
 }
 
-func (ob *ChainObserver) RegisterPromGauge(name string, help string) error {
+func (ob *EthChainObserver) RegisterPromGauge(name string, help string) error {
 	gaugeName := ob.chain.String() + "_" + name
 	return ob.metrics.RegisterGauge(gaugeName, help)
 }

@@ -3,13 +3,14 @@ package zetaclient
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
 	"os"
 	"os/user"
 	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -134,4 +135,8 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil
+}
+
+func (k *Keys) SignerName() string {
+	return k.signerName
 }

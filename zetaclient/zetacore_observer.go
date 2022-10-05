@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	"math/big"
 	"math/rand"
 	"os"
@@ -15,13 +14,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
+	"github.com/zeta-chain/go-tss-ctx/keygen"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
+	signerUtils "github.com/zeta-chain/zetacore/zetaclient/adapters/signer/util"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
@@ -29,7 +33,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	tsscommon "github.com/zeta-chain/go-tss-ctx/common"
 )
 
 const (
@@ -38,14 +42,14 @@ const (
 
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
-	signerMap map[common.Chain]*Signer
-	clientMap map[common.Chain]*ChainObserver
+	signerMap map[common.Chain]signer.Signer
+	clientMap map[common.Chain]observer.ChainObserver
 	metrics   *metrics.Metrics
-	tss       *TSS
+	tss       signer.TSSSigner
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]signer.Signer, clientMap map[common.Chain]observer.ChainObserver, metrics *metrics.Metrics, tss signer.TSSSigner) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -100,7 +104,7 @@ func (co *CoreObserver) keygenObserve() {
 				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
 				var req keygen.Request
 				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
-				res, err := co.tss.Server.Keygen(req)
+				res, err := co.tss.Server().Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
 					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 					continue
@@ -112,10 +116,10 @@ func (co *CoreObserver) keygenObserve() {
 					co.logger.Error().Msgf("InsertPubKey fail")
 					continue
 				}
-				co.tss.CurrentPubkey = res.PubKey
+				co.tss.SetCurrentPubKey(res.PubKey)
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubkey)
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubKey())
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
@@ -123,7 +127,7 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				co.logger.Info().Msgf("test keysign...")
-				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
+				_ = signerUtils.TestKeysign(co.tss.CurrentPubKey(), co.tss.Server())
 				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
@@ -400,7 +404,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	}
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.Nonce, outTxHash, myid)
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.Chain(), send.Nonce, outTxHash, myid)
 		if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 			backOff := 1000 * time.Millisecond
 			// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
@@ -485,7 +489,7 @@ func getTargetChain(send *types.Send) string {
 	return ""
 }
 
-func (co *CoreObserver) getTargetChainOb(send *types.Send) (*ChainObserver, error) {
+func (co *CoreObserver) getTargetChainOb(send *types.Send) (observer.ChainObserver, error) {
 	chainStr := getTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {

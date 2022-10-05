@@ -1,18 +1,20 @@
-package zetaclient
+package eth
 
 import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"math/big"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/model"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"math/big"
-	"strings"
 )
 
-func (ob *ChainObserver) ExternalChainWatcher() {
+func (ob *EthChainObserver) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
 	for {
 		select {
@@ -29,7 +31,7 @@ func (ob *ChainObserver) ExternalChainWatcher() {
 	}
 }
 
-func (ob *ChainObserver) observeInTX() error {
+func (ob *EthChainObserver) observeInTX() error {
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
@@ -101,7 +103,7 @@ func (ob *ChainObserver) observeInTX() error {
 	ob.setLastBlock(toBlock)
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
-	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
+	err = ob.db.Put([]byte(model.PosKey), buf[:n], nil)
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
 	}
@@ -109,7 +111,7 @@ func (ob *ChainObserver) observeInTX() error {
 }
 
 // query the base gas price for the block number bn.
-func (ob *ChainObserver) GetBaseGasPrice() *big.Int {
+func (ob *EthChainObserver) GetBaseGasPrice() *big.Int {
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
 		ob.logger.Err(err).Msg("GetBaseGasPrice")

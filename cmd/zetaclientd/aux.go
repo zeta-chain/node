@@ -1,13 +1,18 @@
 package main
 
 import (
+	"os"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
+	ethObserverInfra "github.com/zeta-chain/zetacore/zetaclient/adapters/observer/infra/eth"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
+	signerInfra "github.com/zeta-chain/zetacore/zetaclient/adapters/signer/infra"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"os"
 )
 
 func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
@@ -32,12 +37,12 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	signerMap := make(map[common.Chain]*mc.Signer)
+func CreateSignerMap(tss signer.TSSSigner) (map[common.Chain]signer.Signer, error) {
+	signerMap := make(map[common.Chain]signer.Signer)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+		signer, err := signerInfra.NewEthSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
 			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 			return nil, err
@@ -48,12 +53,12 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.ChainObserver)
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss signer.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]observer.ChainObserver, error) {
+	clientMap := make(map[common.Chain]observer.ChainObserver)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		log.Info().Msgf("starting %s observer...", chain)
-		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		co, err := ethObserverInfra.NewEthChainObserver(chain, bridge, tss, dbpath, metrics)
 		if err != nil {
 			log.Err(err).Msgf("%s NewChainObserver", chain)
 			return nil, err

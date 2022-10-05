@@ -1,4 +1,4 @@
-package zetaclient
+package eth
 
 import (
 	"context"
@@ -16,11 +16,13 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/model"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
+func (ob *EthChainObserver) BuildBlockIndex(dbpath, chain string) error {
 	logger := ob.logger
 	path := fmt.Sprintf("%s/%s", dbpath, chain) // e.g. ~/.zetaclient/ETH
 	db, err := leveldb.OpenFile(path, nil)
@@ -46,7 +48,7 @@ func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
 			ob.setLastBlock(uint64(scanFromBlockInt))
 		}
 	} else { // last observed block
-		buf, err := db.Get([]byte(PosKey), nil)
+		buf, err := db.Get([]byte(model.PosKey), nil)
 		if err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
 			ob.setLastBlock(ob.getLastHeight())
@@ -60,7 +62,7 @@ func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
 			n := binary.PutUvarint(buf2, ob.GetLastBlock())
-			err := db.Put([]byte(PosKey), buf2[:n], nil)
+			err := db.Put([]byte(model.PosKey), buf2[:n], nil)
 			if err != nil {
 				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 			}
@@ -72,12 +74,12 @@ func (ob *ChainObserver) BuildBlockIndex(dbpath, chain string) error {
 	return nil
 }
 
-func (ob *ChainObserver) BuildReceiptsMap() {
+func (ob *EthChainObserver) BuildReceiptsMap() {
 	logger := ob.logger
-	iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
+	iter := ob.db.NewIterator(util.BytesPrefix([]byte(model.NonceTxKeyPrefix)), nil)
 	for iter.Next() {
 		key := string(iter.Key())
-		nonce, err := strconv.ParseInt(key[len(NonceTxKeyPrefix):], 10, 64)
+		nonce, err := strconv.ParseInt(key[len(model.NonceTxKeyPrefix):], 10, 64)
 		if err != nil {
 			logger.Error().Err(err).Msgf("error parsing nonce: %s", key)
 			continue
@@ -97,55 +99,55 @@ func (ob *ChainObserver) BuildReceiptsMap() {
 	}
 }
 
-func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *DummyZetaPriceQuerier) {
-	uniswapv3querier := &UniswapV3ZetaPriceQuerier{
+func (ob *EthChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*zetaclient.UniswapV3ZetaPriceQuerier, *zetaclient.UniswapV2ZetaPriceQuerier, *zetaclient.DummyZetaPriceQuerier) {
+	uniswapv3querier := &zetaclient.UniswapV3ZetaPriceQuerier{
 		UniswapV3Abi:        &uniswapV3ABI,
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
 		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
-	uniswapv2querier := &UniswapV2ZetaPriceQuerier{
+	uniswapv2querier := &zetaclient.UniswapV2ZetaPriceQuerier{
 		UniswapV2Abi:        &uniswapV2ABI,
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
 		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
-	dummyQuerier := &DummyZetaPriceQuerier{
+	dummyQuerier := &zetaclient.DummyZetaPriceQuerier{
 		Chain:  ob.chain,
 		Client: ob.EvmClient,
 	}
 	return uniswapv3querier, uniswapv2querier, dummyQuerier
 }
 
-func (ob *ChainObserver) SetChainDetails(chain common.Chain,
-	uniswapv3querier *UniswapV3ZetaPriceQuerier,
-	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
+func (ob *EthChainObserver) SetChainDetails(chain common.Chain,
+	uniswapv3querier *zetaclient.UniswapV3ZetaPriceQuerier,
+	uniswapv2querier *zetaclient.UniswapV2ZetaPriceQuerier) {
 	MinObInterval := 24
 	switch chain {
 	case common.MumbaiChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
 	case common.GoerliChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
 	case common.BSCTestnetChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
 	case common.BaobabChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
 	case common.RopstenChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.RopstenConfirmationCount
 		ob.BlockTime = config.RopstenBlockTime
 	}
@@ -159,7 +161,7 @@ func (ob *ChainObserver) SetChainDetails(chain common.Chain,
 	}
 }
 
-func (ob *ChainObserver) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
+func (ob *EthChainObserver) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv, err := strconv.Atoi(tracker.Nonce)

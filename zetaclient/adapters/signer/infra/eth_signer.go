@@ -1,9 +1,13 @@
-package zetaclient
+package infra
 
 import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -12,29 +16,23 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
-	"strings"
-	"time"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
 )
 
-type TSSSigner interface {
-	Pubkey() []byte
-	Sign(data []byte) ([65]byte, error)
-	Address() ethcommon.Address
-}
+var _ signer.Signer = (*EthSigner)(nil)
 
-type Signer struct {
+type EthSigner struct {
 	client              *ethclient.Client
 	chain               common.Chain
 	chainID             *big.Int
-	tssSigner           TSSSigner
+	tssSigner           signer.TSSSigner
 	ethSigner           ethtypes.Signer
 	abi                 abi.ABI
 	metaContractAddress ethcommon.Address
 	logger              zerolog.Logger
 }
 
-func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
+func NewEthSigner(chain common.Chain, endpoint string, tssSigner signer.TSSSigner, abiString string, metaContract ethcommon.Address) (signer.Signer, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -50,7 +48,7 @@ func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiStri
 		return nil, err
 	}
 
-	return &Signer{
+	return &EthSigner{
 		client:              client,
 		chain:               chain,
 		tssSigner:           tssSigner,
@@ -64,7 +62,7 @@ func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiStri
 
 // given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
-func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
+func (signer *EthSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes)
@@ -85,7 +83,7 @@ func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, g
 }
 
 // takes in signed tx, broadcast to external chain node
-func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
+func (signer *EthSigner) Broadcast(tx *ethtypes.Transaction) error {
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	return signer.client.SendTransaction(ctxt, tx)
@@ -99,7 +97,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 //        bytes calldata message,
 //        bytes32 internalSendHash
 //    ) external virtual {}
-func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EthSigner) SignOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
@@ -128,7 +126,7 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 //bytes calldata message,
 //bytes32 internalSendHash
 //) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EthSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -143,6 +141,10 @@ func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int
 	}
 
 	return tx, nil
+}
+
+func (signer *EthSigner) Chain() string {
+	return string(signer.chain)
 }
 
 type TestSigner struct {

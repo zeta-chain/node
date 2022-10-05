@@ -8,15 +8,17 @@ import (
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tsscommon "github.com/zeta-chain/go-tss-ctx/common"
+	"github.com/zeta-chain/go-tss-ctx/keygen"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	mc "github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient"
+	mc "github.com/zeta-chain/zetacore/zetaclient/adapters/signer/infra"
+	util "github.com/zeta-chain/zetacore/zetaclient/adapters/signer/util"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
 
 	"io/ioutil"
 	"strings"
@@ -25,7 +27,6 @@ import (
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 	//"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
 	maddr "github.com/multiformats/go-multiaddr"
 
 	"math/rand"
@@ -93,7 +94,7 @@ func main() {
 		}
 	}
 
-	var peers addr.AddrList
+	var peers []maddr.Multiaddr
 	fmt.Println("peer", *peer)
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
@@ -123,7 +124,7 @@ func SetupConfigForTest() {
 
 }
 
-func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
+func start(validatorName string, peers []maddr.Multiaddr, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
@@ -256,7 +257,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Info().Msgf("%s", pubkeys)
 		var req keygen.Request
 		req = keygen.NewRequest(pubkeys, keygenBlock, "0.14.0")
-		res, err := tss.Server.Keygen(req)
+		res, err := tss.Server().Keygen(req)
 		if err != nil || res.Status != tsscommon.Success {
 			log.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 			return
@@ -265,7 +266,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Info().Msgf("Keygen success! keygen response: %v...", res)
 
 		log.Info().Msgf("doing a keysign test...")
-		err = mc.TestKeysign(res.PubKey, tss.Server)
+		err = util.TestKeysign(res.PubKey, tss.Server())
 		if err != nil {
 			log.Error().Err(err).Msg("TestKeysign error")
 			return
@@ -273,7 +274,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
 		err = tss.InsertPubKey(res.PubKey)
-		tss.CurrentPubkey = res.PubKey
+		tss.SetCurrentPubKey(res.PubKey)
 		if err != nil {
 			log.Error().Msgf("SetPubKey fail")
 			return
@@ -291,7 +292,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
+		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubKey())
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
@@ -324,7 +325,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	}
 
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
+	mo1 := zetaclient.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
 
