@@ -92,8 +92,9 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	if gasFeeInZeta.GT(zetaBurnt) {
 		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than mBurnt (%s) | Identifiers : %s ", gasFeeInZeta, zetaBurnt, cctx.LogIdentifierForCCTX()))
 	}
-	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta)
-	cctx.ZetaFees = gasFeeInZeta
+	// To account for reverting TX's
+	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta).Sub(cctx.ZetaMint)
+	cctx.ZetaFees = cctx.ZetaFees.Add(gasFeeInZeta)
 	return nil
 }
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
