@@ -22,3 +22,17 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	}
 	return observers, nil
 }
+
+func (*ObserverMapper) Validate() bool {
+	return true
+}
+
+func VerifyObserverMapper(obs []*ObserverMapper) bool {
+	for _, mapper := range obs {
+		ok := mapper.Validate()
+		if !ok {
+			return ok
+		}
+	}
+	return true
+}
