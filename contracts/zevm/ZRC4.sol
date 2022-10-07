@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity 0.8.7;
 import "./Interfaces.sol";
 
-contract ZRC4 is Context, IZRC4, IZRC4Metadata {
+interface ZRC4Errors {
+    error CallerIsNotFungibleModule();
+
+    error InvalidSender();
+}
+
+contract ZRC4 is Context, IZRC4, IZRC4Metadata, ZRC4Errors {
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
     CoinType public COIN_TYPE;
-    uint256 public GAS_LIMIT = 21000;
+    uint256 public GAS_LIMIT;
 
     mapping(address => uint256) private _balances;
 
@@ -20,7 +26,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     uint8 private _decimals;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_, address systemContractAddress_) {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "Only fungible module can deploy ZRC4");
+        if(msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
@@ -117,7 +123,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     }
 
     function deposit(address to, uint256 amount) external override returns (bool) {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS || msg.sender == SYSTEM_CONTRACT_ADDRESS, "permission error");
+        if(msg.sender != FUNGIBLE_MODULE_ADDRESS && msg.sender != SYSTEM_CONTRACT_ADDRESS) revert InvalidSender();
         _mint(to, amount);
         emit Deposit(abi.encodePacked(FUNGIBLE_MODULE_ADDRESS), to, amount);
         return true;
@@ -137,9 +143,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata {
     // this function causes cctx module to send out outbound tx to the outbound chain
     // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
-        uint256 gasFee;
-        address gasZRC4;
-        (gasZRC4, gasFee )= withdrawGasFee();
+        (uint256 gasZRC4, address gasFee)= withdrawGasFee();
         require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
 
         _burn(msg.sender, amount);
