@@ -5,8 +5,8 @@ interface ISystem {
     function FUNGIBLE_MODULE_ADDRESS() external view returns (address);
     function wzetaContractAddress() external view returns (address);
     function uniswapv2FactoryAddress() external view returns (address);
-    function gasPrice(uint256) external view returns (uint256); // chainid => gas price
-    function gasCoinZRC4(uint256) external view returns (address);  // chainid => gas coin zrc4
+    function gasPrice(uint256 chainID) external view returns (uint256);
+    function gasCoinZRC4(uint256 chainID) external view returns (address);
 }
 
 interface IZRC4 {
