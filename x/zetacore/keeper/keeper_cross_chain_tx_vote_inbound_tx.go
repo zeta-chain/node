@@ -5,17 +5,50 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.isAuthorized(ctx, msg.Creator) {
-		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	observationType := zetaObserverTypes.ObservationType_InBoundTx
+	observationChain := msg.SenderChain
+	ok, err := k.isAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	if !ok {
+		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, err.Error())
 	}
 
 	index := msg.Digest()
 	var cctx types.CrossChainTx
+
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
+	if !found {
+		if !k.IsChainSupported(ctx, msg.SenderChain) || !k.IsChainSupported(ctx, msg.ReceiverChain) {
+			return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, "Receiving chain is not supported")
+		}
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, msg.SenderChain, zetaObserverTypes.ObservationType_InBoundTx.String())
+		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(zetaObserverTypes.ConverChaintoObservationChain(observationChain), observationType)
+		if !found {
+			return nil, errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", observationChain, observationType))
+		}
+		k.zetaObserverKeeper.SetBallot(ctx, zetaObserverTypes.Ballot{
+			Index:            "",
+			BallotIdentifier: index,
+			VoterList:        zetaObserverTypes.CreateVoterList(observerMapper.ObserverList),
+			ObservationType:  observationType,
+			BallotThreshold:  threshohold.Threshold,
+			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+		})
+	}
+	if index != ballot.BallotIdentifier {
+
+	}
+	err = ballot.AddVote(msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+	if err != nil {
+		return nil, err
+	}
+
 	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx, index, types.AllStatus())
 	if isFound {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {

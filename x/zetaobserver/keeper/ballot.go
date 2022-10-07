@@ -17,13 +17,13 @@ func (k Keeper) SetBallot(ctx sdk.Context, voter types.Ballot) {
 	store.Set([]byte(voter.Index), b)
 }
 
-func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, found bool) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string) (val *types.Ballot, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
 		return val, false
 	}
-	k.cdc.MustUnmarshal(b, &val)
+	k.cdc.MustUnmarshal(b, val)
 	return val, true
 }
 

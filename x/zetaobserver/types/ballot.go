@@ -46,3 +46,10 @@ func (m *Ballot) IsBallotFinalized() bool {
 	}
 	return false
 }
+
+func CreateVoterList(addresses []string) (voterList map[string]VoteType) {
+	for _, address := range addresses {
+		voterList[address] = VoteType_NotYetVoted
+	}
+	return
+}

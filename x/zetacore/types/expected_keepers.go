@@ -40,6 +40,7 @@ type ZetaObserverKeeper interface {
 	GetObserverMapper(ctx sdk.Context, chain, obsType string) (val zetaObserverTypes.ObserverMapper, found bool)
 	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
 	SetBallot(ctx sdk.Context, voter zetaObserverTypes.Ballot)
-	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
+	GetBallot(ctx sdk.Context, index string) (val *zetaObserverTypes.Ballot, found bool)
 	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
+	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
 }

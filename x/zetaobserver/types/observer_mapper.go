@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"path/filepath"
 )
@@ -35,4 +36,17 @@ func VerifyObserverMapper(obs []*ObserverMapper) bool {
 		}
 	}
 	return true
+}
+
+func ConverChaintoObservationChain(chain string) ObserverChain {
+	commonChain := common.Chain(chain)
+	switch commonChain {
+	case common.ETHChain:
+		return ObserverChain_EthChainObserver
+	case common.BSCChain:
+		return ObserverChain_BscChainObserver
+	case common.POLYGONChain:
+		return ObserverChain_PolygonChainObserver
+	}
+	return ObserverChain_EmptyObserver
 }

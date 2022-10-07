@@ -1,12 +1,23 @@
 package keeper
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
 )
 
-func (k Keeper) isAuthorized(ctx sdk.Context, address string) bool {
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	return IsBondedValidator(address, validators)
+func (k Keeper) isAuthorized(ctx sdk.Context, address string, senderChain string, observationType string) (bool, error) {
+	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
+	if !found {
+		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
+	}
+	for _, obs := range observerMapper.ObserverList {
+		if obs == address {
+			return true, nil
+		}
+	}
+	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Adress: %s", address))
 }
 
 func (k Keeper) hasSuperMajorityValidators(ctx sdk.Context, signers []string) bool {
