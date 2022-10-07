@@ -406,6 +406,7 @@ func New(
 		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.ZetaObserverKeeper,
 	)
 	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
 		appCodec,
