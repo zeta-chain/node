@@ -254,4 +254,5 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 
 replace github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
 
-replace github.com/evmos/ethermint => github.com/brewmaster012/ethermint v0.19.2
+replace github.com/evmos/ethermint => github.com/brewmaster012/ethermint non-eth-tx
+
