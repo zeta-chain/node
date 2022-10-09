@@ -184,11 +184,11 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 }
 
 func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address, wzeta common.Address) (common.Address, error) {
-	abi, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
 	}
-	ctorArgs, err := abi.Pack(
+	ctorArgs, err := routerABI.Pack(
 		"", // function--empty string for constructor
 		factory, wzeta)
 	if err != nil {
@@ -478,25 +478,4 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	return res, nil
-}
-
-// monitorApprovalEvent returns an error if the given transactions logs include
-// an unexpected `Approval` event
-func (k Keeper) monitorApprovalEvent(res *evmtypes.MsgEthereumTxResponse) error {
-	if res == nil || len(res.Logs) == 0 {
-		return nil
-	}
-
-	logApprovalSig := []byte("Approval(address,address,uint256)")
-	logApprovalSigHash := crypto.Keccak256Hash(logApprovalSig)
-
-	for _, log := range res.Logs {
-		if log.Topics[0] == logApprovalSigHash.Hex() {
-			return sdkerrors.Wrapf(
-				types.ErrUnexpectedEvent, "unexpected Approval event",
-			)
-		}
-	}
-
-	return nil
 }
