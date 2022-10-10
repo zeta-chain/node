@@ -522,9 +522,23 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].Nonce < sends[j].Nonce
 		})
+		sends = trimSends(sends)
 		sendMap[chain] = sends
 	}
+
 	return sendMap
+}
+
+// trim "bogus" pending sends that are not actually pending
+func trimSends(sends []*types.Send) []*types.Send {
+	start := 0
+	for i := 1; i < len(sends); i++ {
+		if sends[i].Nonce > sends[i-1].Nonce+1 {
+			start = i
+		}
+	}
+
+	return sends[start:]
 }
 
 func getTargetChain(send *types.Send) string {
