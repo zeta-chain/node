@@ -1,4 +1,4 @@
-name: Staging - Build & Deploy
+name: Development - Build & Deploy
 
 ## TODO 
   # Remove static IAM creds and use short lived via Role Assumption
@@ -10,17 +10,18 @@ on:
   push:
     branches:
       - develop
+      - updating-dev-cicd 
 
 env:
-  ENVIRONMENT_NAME: "STAGING"
-  S3_BUCKET_NAME: "zetachain-deployment-files-staging"
+  ENVIRONMENT_NAME: "DEVELOPMENT"
+  S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_SPARTA }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_SPARTA }}
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  deploy-staging:
+  deploy-dev:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,7 +34,7 @@ jobs:
       - name: Build Binaries
         uses: ./.github/actions/build-binaries
         with:
-          run-tests: ${{ env.ENVIRONMENT_NAME != 'STAGING' }}
+          run-tests: ${{ env.ENVIRONMENT_NAME != 'DEVELOPMENT' }}
           build-indexer: false
           go-version: '1.18'
 
@@ -64,12 +65,12 @@ jobs:
             package.tar.gz
             cosmovisor
 
-      - name: Build, tag, and push image to Amazon ECR
-        uses:  ./.github/actions/upload-to-ecr
-        with:
-          DOCKER_FILENAME: Dockerfile.zetacore_binary
-          ECR_REPOSITORY: zetachain
-          IMAGE_TAG: latest
+      # - name: Build, tag, and push image to Amazon ECR
+      #   uses:  ./.github/actions/upload-to-ecr
+      #   with:
+      #     DOCKER_FILENAME: Dockerfile.zetacore_binary
+      #     ECR_REPOSITORY: zetachain
+      #     IMAGE_TAG: latest
 
       # - name: Update Nodes (OLD Method)
       #   uses:  ./.github/actions/update-nodes
