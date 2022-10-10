@@ -10,7 +10,6 @@ on:
   push:
     branches:
       - develop
-      - updating-dev-cicd 
 
 env:
   ENVIRONMENT_NAME: "DEVELOPMENT"
