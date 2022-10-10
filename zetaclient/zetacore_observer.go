@@ -327,15 +327,18 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock -= int64(offset)
 
 					if isScheduled(sinceBlock, idx < 30) {
-						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
+						if active, duration := outTxMan.IsOutTxActive(outTxID); active && duration < 10*time.Minute {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
+							if duration >= 10*time.Minute {
+								logger.Warn().Dur("active", duration).Msgf("Stale active processor %s", outTxID)
+							}
 							numScheduledSends++
 							outTxMan.StartTryProcess(outTxID)
 							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 						}
 					}
-					if idx > 100 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
