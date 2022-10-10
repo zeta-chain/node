@@ -522,7 +522,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].Nonce < sends[j].Nonce
 		})
-		sends = trimSends(sends)
+		//sends = trimSends(sends)
 		sendMap[chain] = sends
 	}
 
@@ -533,7 +533,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 func trimSends(sends []*types.Send) []*types.Send {
 	start := 0
 	for i := 1; i < len(sends); i++ {
-		if sends[i].Nonce > sends[i-1].Nonce+100 {
+		if sends[i].Nonce > sends[i-1].Nonce+1 {
 			start = i
 		}
 	}
