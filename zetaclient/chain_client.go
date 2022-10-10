@@ -289,7 +289,7 @@ func (ob *ChainObserver) observeOutTx() {
 				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(5000 * time.Millisecond)
+					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
