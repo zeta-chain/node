@@ -326,7 +326,7 @@ func (co *CoreObserver) startSendScheduler() {
 					offset := send.Index[len(send.Index)-1] % 4
 					sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 30) {
+					if isScheduled(sinceBlock, idx < 40) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active && duration < 10*time.Minute {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
@@ -338,7 +338,7 @@ func (co *CoreObserver) startSendScheduler() {
 							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 						}
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 80 { // only look at 50 sends per chain
 						break
 					}
 				}
