@@ -289,7 +289,7 @@ func (ob *ChainObserver) observeOutTx() {
 				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(1000 * time.Millisecond)
+					inTimeout := time.After(5000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
@@ -330,7 +330,7 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
-	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
