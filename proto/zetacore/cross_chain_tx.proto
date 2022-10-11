@@ -19,6 +19,7 @@ message InBoundTxParams{
   string inBoundTxObservedHash = 3;
   uint64 inBoundTxObservedExternalHeight = 4;
   uint64 inBoundTxFinalizedZetaHeight = 5;
+  string inBoundTXBallotIndex=6;
 }
 
 message OutBoundTxParams {
@@ -29,7 +30,7 @@ message OutBoundTxParams {
   uint64 outBoundTxTSSNonce = 5;
   uint64 outBoundTxGasLimit = 6;
   string outBoundTxGasPrice = 7;
-  string outBoundTXReceiveIndex = 8;
+  string outBoundTXBallotIndex = 8;
   uint64 outBoundTxFinalizedZetaHeight = 9;
   uint64 outBoundTxObservedExternalHeight = 10;
 }

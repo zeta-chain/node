@@ -8,15 +8,22 @@ import (
 
 func TestVoter_IsBallotFinalized(t *testing.T) {
 	tt := []struct {
-		name           string
-		threshold      sdk.Dec
-		finalVoterList map[string]VoteType
-		finalStatus    BallotStatus
-		isFinalized    bool
+		name             string
+		threshold        sdk.Dec
+		orginalVoterList map[string]VoteType
+		finalVoterList   map[string]VoteType
+		finalStatus      BallotStatus
+		isFinalized      bool
 	}{
 		{
 			name:      "All success",
 			threshold: sdk.MustNewDecFromStr("0.66"),
+			orginalVoterList: map[string]VoteType{
+				"Observer1": VoteType_NotYetVoted,
+				"Observer2": VoteType_NotYetVoted,
+				"Observer3": VoteType_NotYetVoted,
+				"Observer4": VoteType_NotYetVoted,
+			},
 			finalVoterList: map[string]VoteType{
 				"Observer1": VoteType_SuccessObservation,
 				"Observer2": VoteType_SuccessObservation,
@@ -29,6 +36,12 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 		{
 			name:      "Unable to finalize",
 			threshold: sdk.MustNewDecFromStr("0.66"),
+			orginalVoterList: map[string]VoteType{
+				"Observer1": VoteType_NotYetVoted,
+				"Observer2": VoteType_NotYetVoted,
+				"Observer3": VoteType_NotYetVoted,
+				"Observer4": VoteType_NotYetVoted,
+			},
 			finalVoterList: map[string]VoteType{
 				"Observer1": VoteType_SuccessObservation,
 				"Observer2": VoteType_SuccessObservation,
@@ -41,6 +54,12 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 		{
 			name:      "Low Threshold Failure first",
 			threshold: sdk.MustNewDecFromStr("0.33"),
+			orginalVoterList: map[string]VoteType{
+				"Observer1": VoteType_NotYetVoted,
+				"Observer2": VoteType_NotYetVoted,
+				"Observer3": VoteType_NotYetVoted,
+				"Observer4": VoteType_NotYetVoted,
+			},
 			finalVoterList: map[string]VoteType{
 				"Observer1": VoteType_SuccessObservation,
 				"Observer2": VoteType_SuccessObservation,
@@ -53,6 +72,12 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 		{
 			name:      "High threshold",
 			threshold: sdk.MustNewDecFromStr("0.90"),
+			orginalVoterList: map[string]VoteType{
+				"Observer1": VoteType_NotYetVoted,
+				"Observer2": VoteType_NotYetVoted,
+				"Observer3": VoteType_NotYetVoted,
+				"Observer4": VoteType_NotYetVoted,
+			},
 			finalVoterList: map[string]VoteType{
 				"Observer1": VoteType_SuccessObservation,
 				"Observer2": VoteType_FailureObservation,
@@ -62,26 +87,35 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 			finalStatus: BallotStatus_BallotInProgress,
 			isFinalized: false,
 		},
+		{
+			name:      "Two observers ",
+			threshold: sdk.MustNewDecFromStr("1.00"),
+			orginalVoterList: map[string]VoteType{
+				"Observer1": VoteType_NotYetVoted,
+				"Observer2": VoteType_NotYetVoted,
+			},
+			finalVoterList: map[string]VoteType{
+				"Observer1": VoteType_SuccessObservation,
+				"Observer2": VoteType_NotYetVoted,
+			},
+			finalStatus: BallotStatus_BallotInProgress,
+			isFinalized: false,
+		},
 	}
 	for _, test := range tt {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			voterList := make(map[string]VoteType)
-			voterList["Observer1"] = VoteType_NotYetVoted
-			voterList["Observer2"] = VoteType_NotYetVoted
-			voterList["Observer3"] = VoteType_NotYetVoted
-			voterList["Observer4"] = VoteType_NotYetVoted
 			ballot := Ballot{
 				Index:            "index",
 				BallotIdentifier: "identifier",
-				VoterList:        voterList,
+				VoterList:        test.orginalVoterList,
 				ObservationType:  ObservationType_InBoundTx,
 				BallotThreshold:  test.threshold,
 				BallotStatus:     BallotStatus_BallotInProgress,
 			}
 			ballot.VoterList = test.finalVoterList
-			isFinalized := ballot.IsBallotFinalized()
-			assert.Equal(t, test.finalStatus, ballot.BallotStatus)
+			finalBallot, isFinalized := ballot.IsBallotFinalized()
+			assert.Equal(t, test.finalStatus, finalBallot.BallotStatus)
 			assert.Equal(t, test.isFinalized, isFinalized)
 		})
 	}

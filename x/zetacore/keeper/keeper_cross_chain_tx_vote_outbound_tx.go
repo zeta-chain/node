@@ -5,20 +5,22 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"strconv"
 )
 
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	log.Info().Msgf("ReceiveConfirmation: %s", msg.String())
-
-	if !k.isAuthorized(ctx, msg.Creator) {
-		return nil, sdkerrors.Wrap(types.ErrNotBondedValidator, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	observationType := zetaObserverTypes.ObservationType_OutBoundTx
+	observationChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.OutTxChain)
+	ok, err := k.isAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	if !ok {
+		return nil, err
 	}
-
 	CctxIndex := msg.CctxHash
 	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
 		CctxIndex,
@@ -27,65 +29,60 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			types.CctxStatus_PendingRevert,
 		})
 	if !isFound {
-		log.Error().Msgf("Cannot find Incoming Broadcast broadcast tx hash %s on %s chain", CctxIndex, msg.OutTxChain)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", CctxIndex, msg.OutTxChain))
 	}
+	ballotIndex := msg.Digest()
+	// Add votes and Set Ballot
+	var ballot zetaObserverTypes.Ballot
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, ballotIndex)
+	if !found {
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, observationChain, observationType.String())
+		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(observationChain, observationType)
+		if !found {
+			return nil, errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", observationChain.String(), observationType))
+		}
 
-	if msg.Status != common.ReceiveStatus_Failed {
+		ballot = zetaObserverTypes.Ballot{
+			Index:            "",
+			BallotIdentifier: ballotIndex,
+			VoterList:        zetaObserverTypes.CreateVoterList(observerMapper.ObserverList),
+			ObservationType:  observationType,
+			BallotThreshold:  threshohold.Threshold,
+			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+		}
+		cctx.OutBoundTxParams.OutBoundTXBallotIndex = ballot.BallotIdentifier
+		k.SetCrossChainTx(ctx, cctx)
+	}
+	// AddVoteToBallot adds a vote and sets the ballot
+	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
+	if err != nil {
+		return nil, err
+	}
+
+	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
+	if !isFinalized {
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+	}
+
+	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ZetaMinted.Equal(cctx.ZetaMint) {
 			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.ZetaMint)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.ZetaMint))
 		}
 	}
+	cctx.OutBoundTxParams.OutBoundTxHash = msg.ObservedOutTxHash
+	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
-	receiveIndex := msg.Digest()
-	receive, isFound := k.GetReceive(ctx, receiveIndex)
-
-	if isFound {
-		if isDuplicateSigner(msg.Creator, receive.Signers) {
-			log.Info().Msgf("ReceiveConfirmation: TX %s has already been signed by %s", receiveIndex, msg.Creator)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("ReceiveConfirmation: TX %s has already been signed by %s", receiveIndex, msg.Creator))
-		}
-		receive.Signers = append(receive.Signers, msg.Creator)
-	} else {
-		if !k.IsChainSupported(ctx, msg.OutTxChain) {
-			return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, "Receiving chain is not supported")
-		}
-		receive = types.Receive{
-			Creator:             "",
-			Index:               receiveIndex,
-			SendHash:            CctxIndex,
-			OutTxHash:           msg.ObservedOutTxHash,
-			OutBlockHeight:      msg.ObservedOutTxBlockHeight,
-			FinalizedZetaHeight: 0,
-			Signers:             []string{msg.Creator},
-			Status:              msg.Status,
-			Chain:               msg.OutTxChain,
-		}
+	oldStatus := cctx.CctxStatus.Status
+	err = FinalizeReceive(k, ctx, &cctx, msg, ballot.BallotStatus)
+	if err != nil {
+		return nil, err
 	}
+	// Remove OutTX tracker
+	outTrackerIndex := fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce)))
+	k.RemoveOutTxTracker(ctx, outTrackerIndex)
+	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 
-	hasEnoughVotes := k.hasSuperMajorityValidators(ctx, receive.Signers)
-	if hasEnoughVotes {
-		// Finalize Receive Struct
-		oldStatus := cctx.CctxStatus.Status
-		err := FinalizeReceive(k, ctx, &cctx, msg, &receive)
-		if err != nil {
-			return nil, err
-		}
-
-		// Remove OutTX tracker
-		if receive.Status == common.ReceiveStatus_Success || receive.Status == common.ReceiveStatus_Failed {
-			index := fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce)))
-			k.RemoveOutTxTracker(ctx, index)
-		}
-
-		cctx.OutBoundTxParams.OutBoundTXReceiveIndex = receive.Index
-		cctx.OutBoundTxParams.OutBoundTxHash = receive.OutTxHash
-		cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-		k.CctxMigrateStatus(ctx, cctx, oldStatus)
-	}
-	k.SetReceive(ctx, receive)
-	// TODO Delete receive if finalized
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
@@ -98,15 +95,14 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 	return nil
 }
 
-func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive) error {
-	receive.FinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
 	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
 	oldStatus := cctx.CctxStatus.Status
-	switch receive.Status {
-	case common.ReceiveStatus_Success:
+	switch status {
+	case zetaObserverTypes.BallotStatus_BallotFinalized_SuccessObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingRevert:
 			cctx.CctxStatus.ChangeStatus(&ctx,
@@ -125,8 +121,8 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 		if err != nil {
 			return err
 		}
-		EmitReceiveSuccess(ctx, msg, receive, oldStatus.String(), newStatus, cctx.LogIdentifierForCCTX())
-	case common.ReceiveStatus_Failed:
+		EmitReceiveSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
+	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
 			chain := cctx.InBoundTxParams.SenderChain
@@ -146,7 +142,7 @@ func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg
 
 		}
 		newStatus := cctx.CctxStatus.Status.String()
-		EmitReceiveFailure(ctx, msg, receive, oldStatus.String(), newStatus, cctx.LogIdentifierForCCTX())
+		EmitReceiveFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
 	}
 	return nil
 }

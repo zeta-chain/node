@@ -21,7 +21,7 @@ func NewParams() Params {
 			{
 				Chain:       ObserverChain_EthChainObserver,
 				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Threshold:   sdk.MustNewDecFromStr("1.00"),
 			},
 			{
 				Chain:       ObserverChain_EthChainObserver,

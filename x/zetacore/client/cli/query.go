@@ -45,7 +45,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowSend())
 	cmd.AddCommand(CmdListNodeAccount())
 	cmd.AddCommand(CmdShowNodeAccount())
-	cmd.AddCommand(CmdGetSupportedChains())
 	cmd.AddCommand(CmdLastZetaHeight())
 
 	return cmd

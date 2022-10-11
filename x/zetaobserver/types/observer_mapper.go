@@ -38,7 +38,7 @@ func VerifyObserverMapper(obs []*ObserverMapper) bool {
 	return true
 }
 
-func ConverChaintoObservationChain(chain string) ObserverChain {
+func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 	commonChain := common.Chain(chain)
 	switch commonChain {
 	case common.ETHChain:
@@ -49,4 +49,15 @@ func ConverChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_PolygonChainObserver
 	}
 	return ObserverChain_EmptyObserver
+}
+
+func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {
+	switch status {
+	case common.ReceiveStatus_Success:
+		return VoteType_SuccessObservation
+	case common.ReceiveStatus_Failed:
+		return VoteType_FailureObservation
+	default:
+		return VoteType_NotYetVoted
+	}
 }

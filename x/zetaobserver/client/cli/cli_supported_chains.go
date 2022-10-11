@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"strings"
 )
 
@@ -45,6 +45,10 @@ func CmdSetSupportedChains() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			chains := strings.Split(args[0], ",")
+			observerChainList := make([]types.ObserverChain, len(chains))
+			for i, chain := range chains {
+				observerChainList[i] = types.ConvertStringChaintoObservationChain(chain)
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -52,7 +56,7 @@ func CmdSetSupportedChains() *cobra.Command {
 
 			msg := &types.MsgSetSupportedChains{
 				Creator:   clientCtx.GetFromAddress().String(),
-				Chainlist: chains,
+				Chainlist: observerChainList,
 			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err

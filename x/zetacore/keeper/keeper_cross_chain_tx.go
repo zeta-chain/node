@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) CctxMigrateStatus(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
+func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
 	// Defensive Programming :Remove first set later
 	_, found := k.GetCrossChainTx(ctx, send.Index, oldStatus)
 	if found {
@@ -128,4 +128,47 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	ctx := sdk.UnwrapSDKContext(c)
 	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
+}
+
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
+	inboundParams := &types.InBoundTxParams{
+		Sender:                          msg.Sender,
+		SenderChain:                     msg.SenderChain,
+		InBoundTxObservedHash:           msg.InTxHash,
+		InBoundTxObservedExternalHeight: msg.InBlockHeight,
+		InBoundTxFinalizedZetaHeight:    0,
+		InBoundTXBallotIndex:            index,
+	}
+
+	outBoundParams := &types.OutBoundTxParams{
+		Receiver:                         msg.Receiver,
+		ReceiverChain:                    msg.ReceiverChain,
+		Broadcaster:                      0,
+		OutBoundTxHash:                   "",
+		OutBoundTxTSSNonce:               0,
+		OutBoundTxGasLimit:               msg.GasLimit,
+		OutBoundTxGasPrice:               "",
+		OutBoundTXBallotIndex:            "",
+		OutBoundTxFinalizedZetaHeight:    0,
+		OutBoundTxObservedExternalHeight: 0,
+	}
+	status := &types.Status{
+		Status:              types.CctxStatus_PendingInbound,
+		StatusMessage:       "",
+		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
+	}
+	newCctx := types.CrossChainTx{
+		Creator:          msg.Creator,
+		Index:            index,
+		ZetaBurnt:        sdk.NewUintFromString(msg.ZetaBurnt),
+		ZetaMint:         sdk.ZeroUint(),
+		ZetaFees:         sdk.ZeroUint(),
+		RelayedMessage:   msg.Message,
+		Signers:          []string{},
+		CctxStatus:       status,
+		InBoundTxParams:  inboundParams,
+		OutBoundTxParams: outBoundParams,
+	}
+	EmitEventCCTXCreated(ctx, newCctx)
+	return newCctx
 }

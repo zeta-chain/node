@@ -9,14 +9,8 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+
 	// Set all the zetaConversionRate
-	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []string{
-		"GANACHE",
-		"GOERLI",
-		"ROPSTEN",
-		"Baobab",
-		"Mumbai",
-	}})
 	for _, elem := range genState.ZetaConversionRateList {
 		k.SetZetaConversionRate(ctx, elem)
 	}

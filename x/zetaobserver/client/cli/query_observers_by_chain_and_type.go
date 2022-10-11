@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 func CmdObserversByChainAndType() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "observer [observation-chain] [observation-type]",
-		Short: "Query ObserversByChainAndType",
+		Short: "Query ObserversByChainAndType , Use common.chain for querying",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqObservationChain := args[0]

@@ -13,12 +13,13 @@ import (
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	om.Index = fmt.Sprintf("%s-%s", om.ObserverChain.String(), om.ObservationType.String())
+	fmt.Println("Setting ", om.Index)
 	b := k.cdc.MustMarshal(om)
 	store.Set([]byte(om.Index), b)
 }
 
-func (k Keeper) GetObserverMapper(ctx sdk.Context, chain, obsType string) (val types.ObserverMapper, found bool) {
-	index := fmt.Sprintf("%s-%s", chain, obsType)
+func (k Keeper) GetObserverMapper(ctx sdk.Context, chain types.ObserverChain, obsType string) (val types.ObserverMapper, found bool) {
+	index := fmt.Sprintf("%s-%s", chain.String(), obsType)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
@@ -48,7 +49,10 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	mapper, _ := k.GetObserverMapper(ctx, req.ObservationChain, req.ObservationType)
+
+	types.ConvertStringChaintoObservationChain(req.ObservationChain)
+
+	mapper, _ := k.GetObserverMapper(ctx, types.ConvertStringChaintoObservationChain(req.ObservationChain), req.ObservationType)
 	//if !isFound {
 	//	return &types.QueryObserversByChainAndTypeResponse{ObserverMapper: "Not Found"}, nil
 	//}

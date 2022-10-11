@@ -42,28 +42,28 @@ func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	)
 }
 
-func EmitReceiveSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive, oldStatus, newStatus, logIdentifiers string) {
+func EmitReceiveSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
 	event := sdk.NewEvent(types.OutboundTxSuccessful,
-		sdk.NewAttribute(types.CctxIndex, receive.SendHash),
-		sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
+		sdk.NewAttribute(types.CctxIndex, cctx.Index),
+		sdk.NewAttribute(types.OutTxHash, cctx.OutBoundTxParams.OutBoundTxHash),
 		sdk.NewAttribute(types.ZetaMint, msg.ZetaMinted.String()),
 		sdk.NewAttribute(types.OutTXVotingChain, msg.OutTxChain),
 		sdk.NewAttribute(types.OldStatus, oldStatus),
 		sdk.NewAttribute(types.NewStatus, newStatus),
-		sdk.NewAttribute(types.Identifiers, logIdentifiers),
+		sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 	)
 	ctx.EventManager().EmitEvent(event)
 }
 
-func EmitReceiveFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, receive *types.Receive, oldStatus, newStatus, logIdentifiers string) {
+func EmitReceiveFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
 	event := sdk.NewEvent(types.OutboundTxFailed,
-		sdk.NewAttribute(types.CctxIndex, receive.SendHash),
-		sdk.NewAttribute(types.OutTxHash, receive.OutTxHash),
+		sdk.NewAttribute(types.CctxIndex, cctx.Index),
+		sdk.NewAttribute(types.OutTxHash, cctx.OutBoundTxParams.OutBoundTxHash),
 		sdk.NewAttribute(types.ZetaMint, msg.ZetaMinted.String()),
 		sdk.NewAttribute(types.OutTXVotingChain, msg.OutTxChain),
 		sdk.NewAttribute(types.OldStatus, oldStatus),
 		sdk.NewAttribute(types.NewStatus, newStatus),
-		sdk.NewAttribute(types.Identifiers, logIdentifiers),
+		sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 	)
 	ctx.EventManager().EmitEvent(event)
 }

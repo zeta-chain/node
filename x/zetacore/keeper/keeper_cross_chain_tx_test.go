@@ -53,7 +53,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			OutBoundTxTSSNonce:               uint64(i),
 			OutBoundTxGasLimit:               uint64(i),
 			OutBoundTxGasPrice:               fmt.Sprintf("%d", i),
-			OutBoundTXReceiveIndex:           fmt.Sprintf("%d", i),
+			OutBoundTXBallotIndex:            fmt.Sprintf("%d", i),
 			OutBoundTxObservedExternalHeight: uint64(i),
 			OutBoundTxFinalizedZetaHeight:    uint64(i),
 		}

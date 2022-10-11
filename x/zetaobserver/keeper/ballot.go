@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
@@ -10,20 +9,20 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) SetBallot(ctx sdk.Context, voter types.Ballot) {
+func (k Keeper) SetBallot(ctx sdk.Context, ballot *types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
-	voter.Index = fmt.Sprintf("%s", voter.BallotThreshold)
-	b := k.cdc.MustMarshal(&voter)
-	store.Set([]byte(voter.Index), b)
+	ballot.Index = ballot.BallotIdentifier
+	b := k.cdc.MustMarshal(ballot)
+	store.Set([]byte(ballot.Index), b)
 }
 
-func (k Keeper) GetBallot(ctx sdk.Context, index string) (val *types.Ballot, found bool) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
 		return val, false
 	}
-	k.cdc.MustUnmarshal(b, val)
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
 

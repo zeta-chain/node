@@ -74,6 +74,7 @@ func CmdShowSend() *cobra.Command {
 }
 
 // Transaction CLI /////////////////////////
+//zetacored tx zetacore cctx-voter 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 1000000000000000000 0 message hash 100 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
 
 func CmdSendVoter() *cobra.Command {
 	cmd := &cobra.Command{

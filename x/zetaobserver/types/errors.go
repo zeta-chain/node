@@ -10,4 +10,5 @@ import (
 var (
 	ErrUnableToAddVote = sdkerrors.Register(ModuleName, 1100, "Unable to add vote ")
 	ErrParamsThreshold = sdkerrors.Register(ModuleName, 1101, "Threshold cannot be more than 1")
+	ErrSupportedChains = sdkerrors.Register(ModuleName, 1102, "Err supported Chains")
 )

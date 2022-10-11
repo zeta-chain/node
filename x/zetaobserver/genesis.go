@@ -15,6 +15,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetObserverMapper(ctx, mapper)
 	}
 	k.SetParams(ctx, types.DefaultParams())
+	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []types.ObserverChain{
+		types.ObserverChain_EthChainObserver,
+		types.ObserverChain_PolygonChainObserver,
+		types.ObserverChain_BscChainObserver,
+	}})
 }
 
 // ExportGenesis returns the capability module's exported genesis.

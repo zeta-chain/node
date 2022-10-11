@@ -6,20 +6,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (m *Ballot) AddVote(address string, vote VoteType) error {
+func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
+	if m.BallotStatus != BallotStatus_BallotInProgress {
+		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s | Ballot Already Finalized", address, m.VoterList[address]))
+	}
 	if !(m.VoterList[address] == VoteType_NotYetVoted) {
-		return errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s", address, m.VoterList[address]))
+		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s", address, m.VoterList[address]))
 	}
 	m.VoterList[address] = vote
-	return nil
+	return m, nil
 }
 
-func (m *Ballot) IsBallotFinalized() bool {
-	success, failure, total := sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()
+func (m Ballot) IsBallotFinalized() (Ballot, bool) {
+	if m.BallotStatus != BallotStatus_BallotInProgress {
+		return m, false
+	}
+	success, failure := sdk.ZeroDec(), sdk.ZeroDec()
+	total := sdk.NewDec(int64(len(m.VoterList)))
 	for _, vote := range m.VoterList {
-		if vote != VoteType_NotYetVoted {
-			total = total.Add(sdk.OneDec())
-		}
 		if vote == VoteType_SuccessObservation {
 			success = success.Add(sdk.OneDec())
 		}
@@ -28,28 +32,27 @@ func (m *Ballot) IsBallotFinalized() bool {
 		}
 
 	}
-	if total.IsZero() {
-		m.BallotStatus = BallotStatus_BallotInProgress
-		return false
-	}
 	if failure.IsPositive() {
 		if failure.Quo(total).GTE(m.BallotThreshold) {
 			m.BallotStatus = BallotStatus_BallotFinalized_FailureObservation
-			return true
+			return m, true
 		}
 	}
 	if success.IsPositive() {
 		if success.Quo(total).GTE(m.BallotThreshold) {
 			m.BallotStatus = BallotStatus_BallotFinalized_SuccessObservation
-			return true
+			return m, true
 		}
 	}
-	return false
+	return m, false
 }
 
-func CreateVoterList(addresses []string) (voterList map[string]VoteType) {
+func CreateVoterList(addresses []string) map[string]VoteType {
+	voterList := make(map[string]VoteType, len(addresses))
+	fmt.Println("List ", voterList)
 	for _, address := range addresses {
 		voterList[address] = VoteType_NotYetVoted
 	}
-	return
+	fmt.Println("List 2", voterList)
+	return voterList
 }

@@ -18,6 +18,5 @@ var (
 	ErrNotEnoughZetaBurnt          = sdkerrors.Register(ModuleName, 1109, "not enough zeta burnt")
 	ErrCannotFindReceiverNonce     = sdkerrors.Register(ModuleName, 1110, "cannot find receiver chain nonce")
 	ErrStatusTransitionNotPossible = sdkerrors.Register(ModuleName, 1111, "cannot transition status for CCTX")
-	ErrSupportedChains             = sdkerrors.Register(ModuleName, 1112, "Err supported Chains")
-	ErrNotAuthorized               = sdkerrors.Register(ModuleName, 1113, "Err not authorized")
+	ErrNotAuthorized               = sdkerrors.Register(ModuleName, 1112, "Err not authorized")
 )
