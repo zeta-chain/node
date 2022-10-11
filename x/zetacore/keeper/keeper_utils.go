@@ -40,27 +40,7 @@ func (k Keeper) isAuthorized(ctx sdk.Context, address string, senderChain zetaOb
 	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
 }
 
-func (k Keeper) hasSuperMajorityValidators(ctx sdk.Context, signers []string) bool {
-	numSigners := len(signers)
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	numValidValidators := 0
-	for _, v := range validators {
-		if v.IsBonded() {
-			numValidValidators++
-		}
-	}
-	threshold := numValidValidators * 2 / 3
-	if threshold < 2 {
-		threshold = 2
-	}
-	if numValidValidators == 1 {
-		threshold = 1
-	}
-	return numSigners == threshold
-}
-
 func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
-	return nil
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, receiveChain)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
@@ -88,7 +68,6 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	return nil
 }
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
-	return nil
 	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {
 		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", receiveChain, cctx.LogIdentifierForCCTX()))
