@@ -23,6 +23,7 @@ var (
 	RopstenChain    = Chain("ROPSTEN")
 	MumbaiChain     = Chain("Mumbai")
 	BaobabChain     = Chain("Baobab")
+	BitcointChain   = Chain("Bitcoin")
 )
 
 type SigninAlgo string
@@ -76,6 +77,8 @@ func ParseChain(chainName string) (Chain, error) {
 		return GoerliChain, nil
 	case "BAOBAB":
 		return BaobabChain, nil
+	case "BITCOIN":
+		return BitcoinChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}

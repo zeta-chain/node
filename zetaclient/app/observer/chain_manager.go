@@ -1,61 +1,64 @@
-package bitcoin
+package observer
 
 import (
 	"context"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcd/wire"
-	"github.com/cosmos/btcutil"
 	"github.com/ethereum/go-ethereum"
-
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/model"
 )
 
-var _ observer.ChainObserver = (*BitcoinChainObserver)(nil)
+var _ observer.ChainObserver = (*EthChainObserver)(nil)
 
-type BitcoinChainObserver struct {
+type EthChainObserver struct {
 	chain                  common.Chain
 	endpoint               string
 	ticker                 *time.Ticker
-	BtcClient              *rpcclient.Client
+	Connector              *evm.Connector
+	ConnectorAddress       ethcommon.Address
+	EvmClient              *ethclient.Client
 	zetaClient             *zetaclient.ZetaCoreBridge
 	Tss                    signer.TSSSigner
 	lastBlock              uint64
-	confCount              uint64
-	BlockTime              uint64
-	txWatchList            map[btcutil.Tx]string
+	confCount              uint64 // must wait this many blocks to be considered "confirmed"
+	BlockTime              uint64 // block time in seconds
+	txWatchList            map[ethcommon.Hash]string
 	mu                     *sync.Mutex
 	db                     *leveldb.DB
 	sampleLogger           *zerolog.Logger
 	metrics                *metricsPkg.Metrics
-	outTXConfirmedReceipts map[int]*wire.TxOut
-	outTxChan              chan model.OutTx
+	outTXConfirmedReceipts map[int]*ethtypes.Receipt
+	MinNonce               int64
+	MaxNonce               int64
+	outTxChan              chan model.OutTx // send to this channel if you want something back!
 	ZetaPriceQuerier       zetaclient.ZetaPriceQuerier
 	stop                   chan struct{}
 	fileLogger             *zerolog.Logger // for critical info
 	logger                 zerolog.Logger
 }
 
-func NewBitcoinChainObserver() *BitcoinChainObserver {
-	return &BitcoinChainObserver{}
-}
-
-func NewBitcoinChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBridge, tss signer.TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainObserver, error) {
-	ob := BitcoinChainObserver{}
+func NewEthChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBridge, tss signer.TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EthChainObserver, error) {
+	ob := EthChainObserver{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
@@ -63,11 +66,16 @@ func NewBitcoinChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBrid
 	ob.sampleLogger = &sampled
 	ob.logger = log.With().Str("chain", chain.String()).Logger()
 	ob.zetaClient = bridge
-	ob.txWatchList = make(map[btcutil.Tx]string)
+	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.metrics = metrics
-	ob.outTXConfirmedReceipts = make(map[int]wire.TxOut)
+	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.outTxChan = make(chan model.OutTx, 100)
+	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
+	if addr == ethcommon.HexToAddress("0x0") {
+		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
+	}
+	ob.ConnectorAddress = addr
 	ob.endpoint = config.Chains[chain.String()].Endpoint
 	logFile, err := os.OpenFile(ob.chain.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 
@@ -80,17 +88,20 @@ func NewBitcoinChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBrid
 
 	// initialize the Client
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
-
-	connConfig := &rpcclient.ConnConfig{
-		Host:     ob.endpoint,
-		Endpoint: "http",
-	}
-	client, err := rpcclient.New(connConfig, nil)
+	client, err := ethclient.Dial(ob.endpoint)
 	if err != nil {
-		ob.logger.Error().Err(err).Msg("btc client Dial")
+		ob.logger.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
-	ob.BtcClient = client
+	ob.EvmClient = client
+
+	// initialize the connector
+	connector, err := evm.NewConnector(addr, ob.EvmClient)
+	if err != nil {
+		ob.logger.Error().Err(err).Msg("Connector")
+		return nil, err
+	}
+	ob.Connector = connector
 
 	// create metric counters
 	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
@@ -106,24 +117,21 @@ func NewBitcoinChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBrid
 		return nil, err
 	}
 
-	// TODO : check from wich contract if we will get BTC prices from
-	/*
-		uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
-		if err != nil {
-			return nil, err
-		}
-		uniswapV2ABI, err := abi.JSON(strings.NewReader(config.PANCAKEPOOL))
-		if err != nil {
-			return nil, err
-		}
+	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
+	if err != nil {
+		return nil, err
+	}
+	uniswapV2ABI, err := abi.JSON(strings.NewReader(config.PANCAKEPOOL))
+	if err != nil {
+		return nil, err
+	}
 
-		uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
-		ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
-		if os.Getenv("DUMMY_PRICE") != "" {
-	*/
-	ob.logger.Info().Msg("Using dummy price of 1:1")
-	ob.ZetaPriceQuerier = dummyQuerior
-	/*} */
+	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
+	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
+	if os.Getenv("DUMMY_PRICE") != "" {
+		ob.logger.Info().Msg("Using dummy price of 1:1")
+		ob.ZetaPriceQuerier = dummyQuerior
+	}
 
 	if dbpath != "" {
 		err := ob.BuildBlockIndex(dbpath, chain.String())
@@ -138,14 +146,14 @@ func NewBitcoinChainObserver(chain common.Chain, bridge *zetaclient.ZetaCoreBrid
 	return &ob, nil
 }
 
-func (ob *BtcChainObserver) Start() {
+func (ob *EthChainObserver) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
 }
 
-func (ob *BtcChainObserver) Stop() {
+func (ob *EthChainObserver) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
@@ -160,7 +168,7 @@ func (ob *BtcChainObserver) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *BtcChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
+func (ob *EthChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found := ob.outTXConfirmedReceipts[nonce]
 	ob.mu.Unlock()
@@ -247,7 +255,7 @@ func (ob *BtcChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bo
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
-func (ob *BtcChainObserver) observeOutTx() {
+func (ob *EthChainObserver) observeOutTx() {
 	logger := ob.logger
 	ticker := time.NewTicker(30 * time.Second)
 	for {
@@ -302,7 +310,7 @@ func (ob *BtcChainObserver) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *BtcChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
+func (ob *EthChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, error) {
 	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
@@ -323,59 +331,59 @@ func (ob *BtcChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes
 	}
 }
 
-func (ob *BtcChainObserver) setLastBlock(block uint64) {
+func (ob *EthChainObserver) setLastBlock(block uint64) {
 	atomic.StoreUint64(&ob.lastBlock, block)
 }
 
-func (ob *BtcChainObserver) GetLastBlock() uint64 {
+func (ob *EthChainObserver) GetLastBlock() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
 }
 
-func (ob *BtcChainObserver) BlockTimeSeconds() uint64 {
+func (ob *EthChainObserver) BlockTimeSeconds() uint64 {
 	return ob.BlockTime
 }
 
-func (ob *BtcChainObserver) Chain() *common.Chain {
+func (ob *EthChainObserver) Chain() *common.Chain {
 	return &ob.chain
 }
 
-func (ob *BtcChainObserver) ChainClient() *rpcclient.Client {
-	return ob.BtcClient
+func (ob *EthChainObserver) ChainClient() *ethclient.Client {
+	return ob.EvmClient
 }
 
-func (ob *BtcChainObserver) ConfirmationsCount() uint64 {
+func (ob *EthChainObserver) ConfirmationsCount() uint64 {
 	return ob.confCount
 }
 
-func (ob *BtcChainObserver) CriticalLog() *zerolog.Logger {
+func (ob *EthChainObserver) CriticalLog() *zerolog.Logger {
 	return ob.fileLogger
 }
 
-func (ob *BtcChainObserver) Log() zerolog.Logger {
+func (ob *EthChainObserver) Log() zerolog.Logger {
 	return ob.logger
 }
 
-func (ob *BtcChainObserver) Endpoint() string {
+func (ob *EthChainObserver) Endpoint() string {
 	return ob.endpoint
 }
 
-func (ob *BtcChainObserver) LastBlock() uint64 {
+func (ob *EthChainObserver) LastBlock() uint64 {
 	return ob.lastBlock
 }
 
-func (ob *BtcChainObserver) OutTxChan() chan model.OutTx {
+func (ob *EthChainObserver) OutTxChan() chan model.OutTx {
 	return ob.outTxChan
 }
 
-func (ob *BtcChainObserver) TSSSigner() signer.TSSSigner {
+func (ob *EthChainObserver) TSSSigner() signer.TSSSigner {
 	return ob.Tss
 }
 
-func (ob *BtcChainObserver) Ticker() *time.Ticker {
+func (ob *EthChainObserver) Ticker() *time.Ticker {
 	return ob.ticker
 }
 
-func (ob *BtcChainObserver) TxWatchList() map[string]string {
+func (ob *EthChainObserver) TxWatchList() map[string]string {
 	watchList := make(map[string]string, len(ob.txWatchList))
 	for k, v := range ob.txWatchList {
 		watchList[k.Hex()] = v

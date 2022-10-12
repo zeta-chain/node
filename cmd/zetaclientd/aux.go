@@ -58,10 +58,12 @@ func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss signer.TSSSigner, dbpat
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		log.Info().Msgf("starting %s observer...", chain)
-		co, err := ethObserverInfra.NewEthChainObserver(chain, bridge, tss, dbpath, metrics)
-		if err != nil {
-			log.Err(err).Msgf("%s NewChainObserver", chain)
-			return nil, err
+		if chain.Type == "ETH" {
+			co, err := ethObserverInfra.NewEthChainObserver(chain, bridge, tss, dbpath, metrics)
+			if err != nil {
+				log.Err(err).Msgf("%s NewChainObserver", chain)
+				return nil, err
+			}
 		}
 		clientMap[chain] = co
 	}

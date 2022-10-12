@@ -109,6 +109,16 @@ var Chains = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
 	},
+	common.BitcoinChain.String(): {
+		Name:                     "BITCOIN",
+		ConnectorContractAddress: "",
+		PoolContractAddress:      "",
+		PoolContract:             types.UniswapV3,
+		ZETATokenContractAddress: "",
+		ChainID:                  big.NewInt(0),
+		BlockTime:                EthBlockTime,
+		Endpoint:                 "https://hidden-holy-firefly.btc-testnet.discover.quiknode.pro/2610716f2259558b46f50a852032b5d09827aeaa/",
+	},
 	common.EmptyChain.String(): {
 		Name:                     "",
 		ConnectorContractAddress: "",
