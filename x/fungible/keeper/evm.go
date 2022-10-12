@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"encoding/json"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,6 +20,8 @@ import (
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
+
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 var (
@@ -464,18 +468,53 @@ func (k Keeper) CallEVMWithData(
 		return nil, sdkerrors.Wrap(evmtypes.ErrVMExecution, res.VmError)
 	}
 
-	logs, err := json.Marshal(res.Logs)
-	if err != nil {
-		k.Logger(ctx).Error("failed to marshal logs", "error", err)
-	} else {
-		if len(res.Logs) > 0 {
-			ctx.EventManager().EmitEvents(sdk.Events{
-				sdk.NewEvent(sdk.EventTypeMessage,
-					sdk.NewAttribute("ethTxLogs", string(logs)),
-				),
-			})
-		}
+	msgBytes, _ := json.Marshal(msg)
+	attrs := []sdk.Attribute{
+		sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
+		// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
+		sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, common.BytesToHash(crypto.Keccak256(msgBytes)).String()),
+		// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
+		sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
+		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
+		sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
 	}
+	if len(ctx.TxBytes()) > 0 {
+		// add event for tendermint transaction hash format
+		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
+	}
+	// receipient: contract address
+	attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
+	if res.Failed() {
+		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
+	}
+
+	txLogAttrs := make([]sdk.Attribute, len(res.Logs))
+	for i, log := range res.Logs {
+		value, err := json.Marshal(log)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to encode log")
+		}
+		txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
+	}
+
+	// emit events
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			evmtypes.EventTypeEthereumTx,
+			attrs...,
+		),
+		sdk.NewEvent(
+			evmtypes.EventTypeTxLog,
+			txLogAttrs...,
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
+			sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
+		),
+	})
 
 	return res, nil
 }
