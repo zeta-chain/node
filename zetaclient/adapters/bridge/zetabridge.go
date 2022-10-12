@@ -30,6 +30,7 @@ import (
 	//"strings"
 
 	stypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -42,13 +43,13 @@ type ZetaCoreBridge struct {
 	grpcConn      *grpc.ClientConn
 	httpClient    *retryablehttp.Client
 	cfg           config.ClientConfiguration
-	keys          *Keys
+	keys          *keys.Keys
 	broadcastLock *sync.RWMutex
 	ChainNonces   map[string]uint64
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *keys.Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 
@@ -97,6 +98,6 @@ func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, er
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetSignerInfo().GetAddress())
 }
 
-func (b *ZetaCoreBridge) GetKeys() *Keys {
+func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }

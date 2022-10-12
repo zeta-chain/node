@@ -1,7 +1,12 @@
-package zetaclient
+package bridge
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync/atomic"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	stypes "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +16,6 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync/atomic"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error

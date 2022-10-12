@@ -1,8 +1,11 @@
-package zetaclient
+package pricer
 
 import (
 	"context"
 	"fmt"
+	"math"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
-	"math"
-	"math/big"
 )
 
 type ZetaPriceQuerier interface {

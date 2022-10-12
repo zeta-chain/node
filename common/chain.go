@@ -23,7 +23,7 @@ var (
 	RopstenChain    = Chain("ROPSTEN")
 	MumbaiChain     = Chain("Mumbai")
 	BaobabChain     = Chain("Baobab")
-	BitcointChain   = Chain("Bitcoin")
+	BitcoinChain    = Chain("Bitcoin")
 )
 
 type SigninAlgo string

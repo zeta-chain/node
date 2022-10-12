@@ -1,4 +1,4 @@
-package zetaclient
+package keys
 
 import (
 	"bytes"

@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/adapters/bridge"
 	obs "github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/pricer"
 	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/model"

@@ -1,11 +1,12 @@
-package zetaclient
+package bridge
 
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	"time"
 )
 
 func (b *ZetaCoreBridge) PostZetaConversionRate(chain common.Chain, rate string, blockNum uint64) (string, error) {
