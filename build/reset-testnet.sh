@@ -20,7 +20,7 @@ $ZETACORED init --chain-id ${CHAINID} zetachain --home ~/.zetacore
 ADDR=$($ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore)
 if [ -z "$ADDR" ]; then
   echo "No val key found; generate new val key"
-  $ZETACORED keys add val --keyring-backend=test --home ~/.zetacore
+  $ZETACORED keys add val --algo secp256k1 --keyring-backend=test --home ~/.zetacore
 fi
 $ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test --home ~/.zetacore) 100000000000000000000000000azeta --home ~/.zetacore
 
