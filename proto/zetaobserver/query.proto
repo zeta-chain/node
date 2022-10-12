@@ -8,6 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "zetaobserver/params.proto";
 import "zetaobserver/observer.proto";
+import "zetaobserver/ballot.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
 
@@ -19,7 +20,7 @@ service Query {
 	}
 	// Queries a list of VoterByIdentifier items.
 	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{ballotIdentifier}";
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/ballot_by_identifier/{ballotIdentifier}";
 	}
 
 // Queries a list of ObserversByChainAndType items.
@@ -50,7 +51,7 @@ message QueryBallotByIdentifierRequest {
 }
 
 message QueryBallotByIdentifierResponse {
-  string ballot = 1;
+  Ballot ballot = 1;
 }
 
 message QueryObserversByChainAndTypeRequest {

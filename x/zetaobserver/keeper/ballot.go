@@ -45,9 +45,6 @@ func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallot
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	voter, isFound := k.GetBallot(ctx, req.BallotIdentifier)
-	if !isFound {
-		return &types.QueryBallotByIdentifierResponse{Ballot: "Not Found"}, nil
-	}
-	return &types.QueryBallotByIdentifierResponse{Ballot: voter.String()}, nil
+	voter, _ := k.GetBallot(ctx, req.BallotIdentifier)
+	return &types.QueryBallotByIdentifierResponse{Ballot: &voter}, nil
 }

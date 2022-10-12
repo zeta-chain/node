@@ -468,7 +468,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zetachain", "zetaobserver", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "zetaobserver", "voter_by_identifier", "ballotIdentifier"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "zetaobserver", "ballot_by_identifier", "ballotIdentifier"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ObserversByChainAndType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"zeta-chain", "zetacore", "zetaobserver", "observers_by_chain_and_type", "observationChain", "observationType"}, "", runtime.AssumeColonVerbOpt(true)))
 
