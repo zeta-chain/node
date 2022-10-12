@@ -525,7 +525,7 @@ func (k Keeper) CallEVMWithData(
 		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
 		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
 		k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
-		//k.evmKeeper.SetLogSizeTransient(ctx, uint64(txConfig.LogIndex)+uint64(len(receipt.Logs)))
+		k.evmKeeper.SetLogSizeTransient(ctx, uint64(k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
 	}
 
 	return res, nil
