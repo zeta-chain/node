@@ -143,7 +143,7 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata, ZRC4Errors {
     // this function causes cctx module to send out outbound tx to the outbound chain
     // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
-        (uint256 gasZRC4, address gasFee)= withdrawGasFee();
+        (address gasZRC4, uint256 gasFee)= withdrawGasFee();
         require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
 
         _burn(msg.sender, amount);

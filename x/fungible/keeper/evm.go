@@ -518,5 +518,15 @@ func (k Keeper) CallEVMWithData(
 		),
 	})
 
+	logs := evmtypes.LogsToEthereum(res.Logs)
+	var bloomReceipt ethtypes.Bloom
+	if len(logs) > 0 {
+		bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
+		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
+		k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
+		//k.evmKeeper.SetLogSizeTransient(ctx, uint64(txConfig.LogIndex)+uint64(len(receipt.Logs)))
+	}
+
 	return res, nil
 }

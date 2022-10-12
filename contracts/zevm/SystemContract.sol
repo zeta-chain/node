@@ -19,8 +19,8 @@ contract SystemContract is SystemContractErrors{
 
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public wzetaContractAddress;
-    address public immutable uniswapv2FactoryAddress;
-    address public immutable uniswapv2Router02Address;
+    address public uniswapv2FactoryAddress;
+    address public uniswapv2Router02Address;
 
     event SystemContractDeployed();
     event SetGasPrice(uint256, uint256);
