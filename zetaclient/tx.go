@@ -121,16 +121,6 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetSignersForBallot(ballotIndex string) (string, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.BallotByIdentifier(context.Background(), &zetaObserverTypes.QueryBallotByIdentifierRequest{BallotIdentifier: ballotIndex})
-	if err != nil {
-		b.logger.Error().Err(err).Msg("Query GetSignersForBallot error")
-		return "", err
-	}
-	return resp.Ballot, err
-}
-
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
