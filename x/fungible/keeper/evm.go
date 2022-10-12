@@ -484,7 +484,9 @@ func (k Keeper) CallEVMWithData(
 		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
 	}
 	// receipient: contract address
-	attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
+	if contract != nil {
+		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
+	}
 	if res.Failed() {
 		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
 	}
