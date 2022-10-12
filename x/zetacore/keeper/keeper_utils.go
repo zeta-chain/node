@@ -27,7 +27,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-func (k Keeper) isAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
 	if !found {
 		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
@@ -38,6 +38,47 @@ func (k Keeper) isAuthorized(ctx sdk.Context, address string, senderChain zetaOb
 		}
 	}
 	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
+}
+
+func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifier string) (cctx types.CrossChainTx, err error) {
+	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
+		cctxIdentifier,
+		[]types.CctxStatus{
+			types.CctxStatus_PendingOutbound,
+			types.CctxStatus_PendingRevert,
+		})
+	if !isFound {
+		return cctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find cctx hash %s", cctxIdentifier))
+	}
+	if cctx.OutBoundTxParams.OutBoundTXBallotIndex == "" {
+		cctx.OutBoundTxParams.OutBoundTXBallotIndex = ballotIdentifier
+		k.SetCrossChainTx(ctx, cctx)
+	}
+	return
+}
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, err error) {
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
+	if !found {
+		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
+			return ballot, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
+		}
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType.String())
+		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(chain, observationType)
+		if !found {
+			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
+			return
+		}
+
+		ballot = zetaObserverTypes.Ballot{
+			Index:            "",
+			BallotIdentifier: index,
+			VoterList:        zetaObserverTypes.CreateVoterList(observerMapper.ObserverList),
+			ObservationType:  observationType,
+			BallotThreshold:  threshohold.Threshold,
+			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+		}
+	}
+	return
 }
 
 func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {

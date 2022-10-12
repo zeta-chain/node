@@ -38,6 +38,17 @@ func VerifyObserverMapper(obs []*ObserverMapper) bool {
 	return true
 }
 
+func CheckReceiveStatus(status common.ReceiveStatus) error {
+	switch status {
+	case common.ReceiveStatus_Success:
+		return nil
+	case common.ReceiveStatus_Failed:
+		return nil
+	default:
+		return ErrInvalidStatus
+	}
+}
+
 func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 	commonChain := common.Chain(chain)
 	switch commonChain {

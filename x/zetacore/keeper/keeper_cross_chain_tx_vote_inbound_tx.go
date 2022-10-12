@@ -2,10 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
@@ -14,33 +11,17 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_InBoundTx
 	observationChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.SenderChain)
-	receiverChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.ReceiverChain)
-	ok, err := k.isAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	//Check is msg.Creator is authorized to vote
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
 	if !ok {
 		return nil, err
 	}
+
 	index := msg.Digest()
 	// Add votes and Set Ballot
-	var ballot zetaObserverTypes.Ballot
-	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
-	if !found {
-		if !k.zetaObserverKeeper.IsChainSupported(ctx, observationChain) || !k.zetaObserverKeeper.IsChainSupported(ctx, receiverChain) {
-			return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, "Receiving chain is not supported")
-		}
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, observationChain, observationType.String())
-		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(observationChain, observationType)
-		if !found {
-			return nil, errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", observationChain.String(), observationType))
-		}
-
-		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: index,
-			VoterList:        zetaObserverTypes.CreateVoterList(observerMapper.ObserverList),
-			ObservationType:  observationType,
-			BallotThreshold:  threshohold.Threshold,
-			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
-		}
+	ballot, err := k.GetBallot(ctx, index, observationChain, observationType)
+	if err != nil {
+		return nil, err
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
@@ -54,20 +35,20 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 	// Inbound Ballot has been finalized , Create CCTX
-	// Ballot and CCTX have same index , but different prefix stores
+	// New CCTX can only set either to Aborted or PendingOutbound
 	cctx := k.CreateNewCCTX(ctx, msg, index)
-	oldStatus := cctx.CctxStatus.Status
-	// Finalize updates CCTX Prices and Nonce , Abort CCTX is any of the updates fail
+	// FinalizeInbound updates CCTX Prices and Nonce
+	// Aborts is any of the updates fail
 	err = k.FinalizeInbound(ctx, &cctx, msg.ReceiverChain, len(ballot.VoterList))
 	if err != nil {
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 		ctx.Logger().Error(err.Error())
-		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		k.SetCrossChainTx(ctx, cctx)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 
 	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
-	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 
 }

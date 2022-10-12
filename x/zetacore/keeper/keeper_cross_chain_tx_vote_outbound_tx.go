@@ -5,7 +5,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
@@ -17,48 +16,32 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
 	observationChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.OutTxChain)
-	ok, err := k.isAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
+	if err != nil {
+		return nil, err
+	}
+	//Check is msg.Creator is authorized to vote
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
 	if !ok {
 		return nil, err
 	}
-	CctxIndex := msg.CctxHash
-	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
-		CctxIndex,
-		[]types.CctxStatus{
-			types.CctxStatus_PendingOutbound,
-			types.CctxStatus_PendingRevert,
-		})
-	if !isFound {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find broadcast tx hash %s on %s chain", CctxIndex, msg.OutTxChain))
-	}
+
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	var ballot zetaObserverTypes.Ballot
-	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, ballotIndex)
-	if !found {
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, observationChain, observationType.String())
-		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(observationChain, observationType)
-		if !found {
-			return nil, errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", observationChain.String(), observationType))
-		}
-
-		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: ballotIndex,
-			VoterList:        zetaObserverTypes.CreateVoterList(observerMapper.ObserverList),
-			ObservationType:  observationType,
-			BallotThreshold:  threshohold.Threshold,
-			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
-		}
-		cctx.OutBoundTxParams.OutBoundTXBallotIndex = ballot.BallotIdentifier
-		k.SetCrossChainTx(ctx, cctx)
+	ballot, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
+	if err != nil {
+		return nil, err
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
-
+	// Check CCTX exists after confirmed vote
+	cctx, err := k.CheckCCTXExists(ctx, ballot.Index, msg.CctxHash)
+	if err != nil {
+		return nil, err
+	}
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
@@ -74,13 +57,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	oldStatus := cctx.CctxStatus.Status
-	err = FinalizeReceive(k, ctx, &cctx, msg, ballot.BallotStatus)
+	// FinalizeOutbound sets final status for a successfull vote
+	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
+	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, err
 	}
-	// Remove OutTX tracker
-	outTrackerIndex := fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce)))
-	k.RemoveOutTxTracker(ctx, outTrackerIndex)
+	// Remove OutTX tracker and change CCTX prefix store
+	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
@@ -95,7 +79,7 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 	return nil
 }
 
-func FinalizeReceive(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
+func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
 	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.ZetaBurnt
