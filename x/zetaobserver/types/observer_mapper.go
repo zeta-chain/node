@@ -58,6 +58,8 @@ func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_Bsc
 	case common.POLYGONChain:
 		return ObserverChain_Polygon
+	case common.GoerliChain:
+		return ObserverChain_Goerli
 	}
 	return ObserverChain_Empty
 }
