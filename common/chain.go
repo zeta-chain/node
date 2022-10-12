@@ -61,6 +61,22 @@ func NewChain(chainID string) (Chain, error) {
 
 func ParseChain(chainName string) (Chain, error) {
 	switch chainName {
+	case "Eth":
+		return ETHChain, nil
+	case "Polygon":
+		return POLYGONChain, nil
+	case "Ropsten":
+		return RopstenChain, nil
+	case "Mumbai":
+		return MumbaiChain, nil
+	case "Bsc":
+		return BSCTestnetChain, nil
+	case "Goerli":
+		return GoerliChain, nil
+	case "Baobap":
+		return BaobabChain, nil
+	case "Ganache":
+		return Ganache, nil
 	case "ETH":
 		return ETHChain, nil
 	case "BSC":

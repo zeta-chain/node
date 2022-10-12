@@ -53,13 +53,13 @@ func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 	commonChain := common.Chain(chain)
 	switch commonChain {
 	case common.ETHChain:
-		return ObserverChain_EthChainObserver
+		return ObserverChain_Eth
 	case common.BSCChain:
-		return ObserverChain_BscChainObserver
+		return ObserverChain_Bsc
 	case common.POLYGONChain:
-		return ObserverChain_PolygonChainObserver
+		return ObserverChain_Polygon
 	}
-	return ObserverChain_EmptyObserver
+	return ObserverChain_Empty
 }
 
 func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {

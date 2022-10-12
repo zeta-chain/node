@@ -7,6 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "zetaobserver/params.proto";
+import "zetaobserver/observer.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
 
@@ -24,6 +25,9 @@ service Query {
 // Queries a list of ObserversByChainAndType items.
 	rpc ObserversByChainAndType(QueryObserversByChainAndTypeRequest) returns (QueryObserversByChainAndTypeResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}";
+	}
+	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/all_observer_mappers";
 	}
 
 	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
@@ -55,8 +59,15 @@ message QueryObserversByChainAndTypeRequest {
 }
 
 message QueryObserversByChainAndTypeResponse {
-  string observerMapper = 1;
+  repeated string Observers = 1;
 }
+
+message QueryAllObserverMappersRequest {
+}
+message QueryAllObserverMappersResponse {
+	repeated ObserverMapper ObserverMappers = 1;
+}
+
 
 message QuerySupportedChains {
 }

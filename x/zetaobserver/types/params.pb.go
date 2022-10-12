@@ -67,7 +67,7 @@ func (m *BallotThreshold) GetChain() ObserverChain {
 	if m != nil {
 		return m.Chain
 	}
-	return ObserverChain_EmptyObserver
+	return ObserverChain_Empty
 }
 
 func (m *BallotThreshold) GetObservation() ObservationType {

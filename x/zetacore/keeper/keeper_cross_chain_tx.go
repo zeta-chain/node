@@ -164,7 +164,6 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		ZetaMint:         sdk.ZeroUint(),
 		ZetaFees:         sdk.ZeroUint(),
 		RelayedMessage:   msg.Message,
-		Signers:          []string{},
 		CctxStatus:       status,
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
