@@ -2,10 +2,13 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
 	"strconv"
 )
@@ -76,9 +79,9 @@ func CmdShowSend() *cobra.Command {
 // Transaction CLI /////////////////////////
 //zetacored tx zetacore cctx-voter 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 1000000000000000000 0 message hash 100 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
 
-func CmdSendVoter() *cobra.Command {
+func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cctx-voter [sender] [senderChain] [receiver] [receiverChain] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight]",
+		Use:   "inbound-voter [sender] [senderChain] [receiver] [receiverChain] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight]",
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -100,6 +103,50 @@ func CmdSendVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdCCTXOutboundVoter() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [ZetaMinted] [Status] [chain] [outTXNonce]",
+		Short: "Broadcast message receiveConfirmation",
+		Args:  cobra.ExactArgs(7),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			argsSendHash := (args[0])
+			argsOutTxHash := (args[1])
+			argsOutBlockHeight, err := strconv.ParseInt(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+			argsMMint := (args[3])
+			var status common.ReceiveStatus
+			if args[4] == "0" {
+				status = common.ReceiveStatus_Success
+			} else if args[4] == "1" {
+				status = common.ReceiveStatus_Failed
+			} else {
+				return fmt.Errorf("wrong status")
+			}
+			chain := args[5]
+			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
+			if err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, chain, uint64(outTxNonce))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

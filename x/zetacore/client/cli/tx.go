@@ -35,8 +35,8 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdGasBalanceVoter())
 	cmd.AddCommand(CmdGasPriceVoter())
 	cmd.AddCommand(CmdNonceVoter())
-	cmd.AddCommand(CmdReceiveConfirmation())
-	cmd.AddCommand(CmdSendVoter())
+	cmd.AddCommand(CmdCCTXOutboundVoter())
+	cmd.AddCommand(CmdCCTXInboundVoter())
 	cmd.AddCommand(CmdSetNodeKeys())
 	cmd.AddCommand(CmdRemoveFromWatchList())
 

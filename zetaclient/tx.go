@@ -130,16 +130,6 @@ func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ReceiveAll(context.Background(), &types.QueryAllReceiveRequest{})
-	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetAllReceive error")
-		return nil, err
-	}
-	return resp.Receive, nil
-}
-
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
