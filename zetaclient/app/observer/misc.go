@@ -1,4 +1,4 @@
-package zetaclient
+package observer
 
 // returns the maximum of two ints
 func MaxInt(a int, b int) int {

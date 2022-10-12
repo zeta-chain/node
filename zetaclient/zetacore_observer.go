@@ -23,9 +23,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/adapters/observer"
+	brdg "github.com/zeta-chain/zetacore/zetaclient/adapters/bridge"
 	"github.com/zeta-chain/zetacore/zetaclient/adapters/signer"
 	signerUtils "github.com/zeta-chain/zetacore/zetaclient/adapters/signer/util"
+	"github.com/zeta-chain/zetacore/zetaclient/app/observer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
@@ -41,15 +42,15 @@ const (
 )
 
 type CoreObserver struct {
-	bridge    *ZetaCoreBridge
+	bridge    *brdg.ZetaCoreBridge
 	signerMap map[common.Chain]signer.Signer
-	clientMap map[common.Chain]observer.ChainObserver
+	clientMap map[common.Chain]observer.Observer
 	metrics   *metrics.Metrics
 	tss       signer.TSSSigner
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]signer.Signer, clientMap map[common.Chain]observer.ChainObserver, metrics *metrics.Metrics, tss signer.TSSSigner) *CoreObserver {
+func NewCoreObserver(bridge *brdg.ZetaCoreBridge, signerMap map[common.Chain]signer.Signer, clientMap map[common.Chain]observer.Observer, metrics *metrics.Metrics, tss signer.TSSSigner) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -489,7 +490,7 @@ func getTargetChain(send *types.Send) string {
 	return ""
 }
 
-func (co *CoreObserver) getTargetChainOb(send *types.Send) (observer.ChainObserver, error) {
+func (co *CoreObserver) getTargetChainOb(send *types.Send) (observer.Observer, error) {
 	chainStr := getTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {

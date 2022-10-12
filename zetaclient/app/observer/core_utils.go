@@ -1,4 +1,4 @@
-package eth
+package observer
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (ob *EthChainObserver) PostNonceIfNotRecorded() error {
+func (ob *Observer) PostNonceIfNotRecorded() error {
 	logger := ob.logger
 	zetaClient := ob.zetaClient
 	evmClient := ob.EvmClient
@@ -43,7 +43,7 @@ func (ob *EthChainObserver) PostNonceIfNotRecorded() error {
 	return nil
 }
 
-func (ob *EthChainObserver) WatchGasPrice() {
+func (ob *Observer) WatchGasPrice() {
 	gasTicker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -60,7 +60,7 @@ func (ob *EthChainObserver) WatchGasPrice() {
 	}
 }
 
-func (ob *EthChainObserver) PostGasPrice() error {
+func (ob *Observer) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
@@ -190,7 +190,7 @@ func (ob *EthChainObserver) PostGasPrice() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (ob *EthChainObserver) getLastHeight() uint64 {
+func (ob *Observer) getLastHeight() uint64 {
 	lastheight, err := ob.zetaClient.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
 		ob.logger.Warn().Err(err).Msgf("getLastHeight")
@@ -199,7 +199,7 @@ func (ob *EthChainObserver) getLastHeight() uint64 {
 	return lastheight.LastSendHeight
 }
 
-func (ob *EthChainObserver) WatchExchangeRate() {
+func (ob *Observer) WatchExchangeRate() {
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {

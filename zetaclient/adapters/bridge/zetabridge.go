@@ -1,4 +1,4 @@
-package zetaclient
+package bridge
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package eth
+package observer
 
 import (
 	"context"
@@ -16,13 +16,13 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/adapters/pricer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/model"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
-func (ob *EthChainObserver) BuildBlockIndex(dbpath, chain string) error {
+func (ob *Observer) BuildBlockIndex(dbpath, chain string) error {
 	logger := ob.logger
 	path := fmt.Sprintf("%s/%s", dbpath, chain) // e.g. ~/.zetaclient/ETH
 	db, err := leveldb.OpenFile(path, nil)
@@ -74,7 +74,7 @@ func (ob *EthChainObserver) BuildBlockIndex(dbpath, chain string) error {
 	return nil
 }
 
-func (ob *EthChainObserver) BuildReceiptsMap() {
+func (ob *Observer) BuildReceiptsMap() {
 	logger := ob.logger
 	iter := ob.db.NewIterator(util.BytesPrefix([]byte(model.NonceTxKeyPrefix)), nil)
 	for iter.Next() {
@@ -99,55 +99,55 @@ func (ob *EthChainObserver) BuildReceiptsMap() {
 	}
 }
 
-func (ob *EthChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*zetaclient.UniswapV3ZetaPriceQuerier, *zetaclient.UniswapV2ZetaPriceQuerier, *zetaclient.DummyZetaPriceQuerier) {
-	uniswapv3querier := &zetaclient.UniswapV3ZetaPriceQuerier{
+func (ob *Observer) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*pricer.UniswapV3ZetaPriceQuerier, *pricer.UniswapV2ZetaPriceQuerier, *pricer.DummyZetaPriceQuerier) {
+	uniswapv3querier := &pricer.UniswapV3ZetaPriceQuerier{
 		UniswapV3Abi:        &uniswapV3ABI,
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
 		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
-	uniswapv2querier := &zetaclient.UniswapV2ZetaPriceQuerier{
+	uniswapv2querier := &pricer.UniswapV2ZetaPriceQuerier{
 		UniswapV2Abi:        &uniswapV2ABI,
 		Client:              ob.EvmClient,
 		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
 		Chain:               ob.chain,
 		TokenOrder:          config.Chains[chain].PoolTokenOrder,
 	}
-	dummyQuerier := &zetaclient.DummyZetaPriceQuerier{
+	dummyQuerier := &pricer.DummyZetaPriceQuerier{
 		Chain:  ob.chain,
 		Client: ob.EvmClient,
 	}
 	return uniswapv3querier, uniswapv2querier, dummyQuerier
 }
 
-func (ob *EthChainObserver) SetChainDetails(chain common.Chain,
-	uniswapv3querier *zetaclient.UniswapV3ZetaPriceQuerier,
-	uniswapv2querier *zetaclient.UniswapV2ZetaPriceQuerier) {
+func (ob *Observer) SetChainDetails(chain common.Chain,
+	uniswapv3querier *pricer.UniswapV3ZetaPriceQuerier,
+	uniswapv2querier *pricer.UniswapV2ZetaPriceQuerier) {
 	MinObInterval := 24
 	switch chain {
 	case common.MumbaiChain:
-		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
 	case common.GoerliChain:
-		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
 	case common.BSCTestnetChain:
-		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
 	case common.BaobabChain:
-		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
 	case common.RopstenChain:
-		ob.ticker = time.NewTicker(time.Duration(zetaclient.MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.RopstenConfirmationCount
 		ob.BlockTime = config.RopstenBlockTime
 	}
@@ -161,7 +161,7 @@ func (ob *EthChainObserver) SetChainDetails(chain common.Chain,
 	}
 }
 
-func (ob *EthChainObserver) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
+func (ob *Observer) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv, err := strconv.Atoi(tracker.Nonce)
