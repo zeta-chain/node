@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
@@ -51,16 +51,15 @@ func CheckReceiveStatus(status common.ReceiveStatus) error {
 }
 
 func ConvertStringChaintoObservationChain(chain string) ObserverChain {
-	fmt.Println("PArsing Chain", chain)
 	commonChain := common.Chain(chain)
 	switch commonChain {
-	case common.ETHChain:
+	case common.ETHChain, common.Chain(strings.ToUpper(string(common.ETHChain))):
 		return ObserverChain_Eth
-	case common.BSCChain:
+	case common.BSCChain, common.Chain(strings.ToUpper(string(common.BSCChain))):
 		return ObserverChain_Bsc
-	case common.POLYGONChain:
+	case common.POLYGONChain, common.Chain(strings.ToUpper(string(common.POLYGONChain))):
 		return ObserverChain_Polygon
-	case common.GoerliChain:
+	case common.GoerliChain, common.Chain(strings.ToUpper(string(common.GoerliChain))):
 		return ObserverChain_Goerli
 	}
 	return ObserverChain_Empty
