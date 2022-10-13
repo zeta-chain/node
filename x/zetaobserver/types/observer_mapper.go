@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"path/filepath"
@@ -50,6 +51,7 @@ func CheckReceiveStatus(status common.ReceiveStatus) error {
 }
 
 func ConvertStringChaintoObservationChain(chain string) ObserverChain {
+	fmt.Println("PArsing Chain", chain)
 	commonChain := common.Chain(chain)
 	switch commonChain {
 	case common.ETHChain:

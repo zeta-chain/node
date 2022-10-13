@@ -38,6 +38,16 @@ func NewParams() Params {
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
+			{
+				Chain:       ObserverChain_Goerli,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Goerli,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
 		},
 	}
 }
