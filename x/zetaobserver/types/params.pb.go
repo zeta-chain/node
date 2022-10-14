@@ -67,14 +67,14 @@ func (m *BallotThreshold) GetChain() ObserverChain {
 	if m != nil {
 		return m.Chain
 	}
-	return ObserverChain_EthChainObserver
+	return ObserverChain_EmptyObserver
 }
 
 func (m *BallotThreshold) GetObservation() ObservationType {
 	if m != nil {
 		return m.Observation
 	}
-	return ObservationType_InboundTx
+	return ObservationType_EmptyObserverType
 }
 
 // Params defines the parameters for the module.

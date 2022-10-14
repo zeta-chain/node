@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) SetObserverMapper(ctx sdk.Context, om types.ObserverMapper) {
+func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	om.Index = fmt.Sprintf("%s-%s", om.ObserverChain.String(), om.ObservationType.String())
-	b := k.cdc.MustMarshal(&om)
+	b := k.cdc.MustMarshal(om)
 	store.Set([]byte(om.Index), b)
 }
 
@@ -48,10 +48,11 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	mapper, _ := k.GetObserverMapper(ctx, req.ObservationChain, req.ObservationType)
 	//if !isFound {
 	//	return &types.QueryObserversByChainAndTypeResponse{ObserverMapper: "Not Found"}, nil
 	//}
+	//fmt.Println("req", req.ObservationChain, req.ObservationType)
+	//fmt.Println(mapper.ObserverList)
 	return &types.QueryObserversByChainAndTypeResponse{ObserverMapper: mapper.String()}, nil
 }

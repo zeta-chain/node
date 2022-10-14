@@ -147,7 +147,7 @@ func (m *Ballot) GetObservationType() ObservationType {
 	if m != nil {
 		return m.ObservationType
 	}
-	return ObservationType_InboundTx
+	return ObservationType_EmptyObserverType
 }
 
 func (m *Ballot) GetBallotStatus() BallotStatus {
