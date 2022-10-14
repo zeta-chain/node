@@ -23,12 +23,12 @@ enum BallotStatus {
 message Ballot {
   string index =1;
   string BallotIdentifier =2 ;
-  map <string,VoteType> VoterList =3;
-  ObservationType ObservationType =4;
-  string BallotThreshold = 5 [
+  repeated string VoterList =3;
+  repeated VoteType Votes = 4;
+  ObservationType ObservationType =5;
+  string BallotThreshold = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  BallotStatus BallotStatus =6;
+  BallotStatus BallotStatus =7;
 }
-

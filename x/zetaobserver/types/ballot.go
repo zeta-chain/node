@@ -8,13 +8,29 @@ import (
 
 func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 	if m.BallotStatus != BallotStatus_BallotInProgress {
-		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s | Ballot Already Finalized", address, m.VoterList[address]))
+		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot Already Finalized", address))
 	}
-	if !(m.VoterList[address] == VoteType_NotYetVoted) {
-		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Status : %s", address, m.VoterList[address]))
+	if m.HasVoted(address) {
+		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Already Voted", address))
 	}
-	m.VoterList[address] = vote
+	index := m.GetVoterIndex(address)
+	m.Votes[index] = vote
 	return m, nil
+}
+
+func (m Ballot) HasVoted(address string) bool {
+	index := m.GetVoterIndex(address)
+	return m.Votes[index] != VoteType_NotYetVoted
+}
+
+func (m Ballot) GetVoterIndex(address string) int {
+	index := -1
+	for i, addr := range m.VoterList {
+		if addr == address {
+			return i
+		}
+	}
+	return index
 }
 
 func (m Ballot) IsBallotFinalized() (Ballot, bool) {
@@ -23,7 +39,7 @@ func (m Ballot) IsBallotFinalized() (Ballot, bool) {
 	}
 	success, failure := sdk.ZeroDec(), sdk.ZeroDec()
 	total := sdk.NewDec(int64(len(m.VoterList)))
-	for _, vote := range m.VoterList {
+	for _, vote := range m.Votes {
 		if vote == VoteType_SuccessObservation {
 			success = success.Add(sdk.OneDec())
 		}
@@ -47,12 +63,10 @@ func (m Ballot) IsBallotFinalized() (Ballot, bool) {
 	return m, false
 }
 
-func CreateVoterList(addresses []string) map[string]VoteType {
-	voterList := make(map[string]VoteType, len(addresses))
-	fmt.Println("List ", voterList)
-	for _, address := range addresses {
-		voterList[address] = VoteType_NotYetVoted
+func CreateVotes(len int) []VoteType {
+	voterList := make([]VoteType, len)
+	for i := range voterList {
+		voterList[i] = VoteType_NotYetVoted
 	}
-	fmt.Println("List 2", voterList)
 	return voterList
 }

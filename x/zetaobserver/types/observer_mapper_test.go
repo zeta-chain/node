@@ -21,9 +21,9 @@ func TestParsefileToObserverMapper(t *testing.T) {
 }
 
 func createObserverList(fp string) (list []*ObserverMapper) {
-	list = append(append(append(list, CreateObserverMapperList(1, ObserverChain_EthChainObserver, ObservationType_InBoundTx)...),
-		CreateObserverMapperList(1, ObserverChain_BscChainObserver, ObservationType_InBoundTx)...),
-		CreateObserverMapperList(1, ObserverChain_PolygonChainObserver, ObservationType_OutBoundTx)...)
+	list = append(append(append(list, CreateObserverMapperList(1, ObserverChain_Eth, ObservationType_InBoundTx)...),
+		CreateObserverMapperList(1, ObserverChain_Bsc, ObservationType_InBoundTx)...),
+		CreateObserverMapperList(1, ObserverChain_Polygon, ObservationType_OutBoundTx)...)
 
 	file, _ := json.MarshalIndent(list, "", " ")
 	_ = ioutil.WriteFile(fp, file, 0600)

@@ -9,9 +9,9 @@ import (
 func TestKeeper_SupportedChains(t *testing.T) {
 	keeper, ctx := SetupKeeper(t)
 	list := []types.ObserverChain{
-		types.ObserverChain_EthChainObserver,
-		types.ObserverChain_BscChainObserver,
-		types.ObserverChain_BtcChainObserver,
+		types.ObserverChain_Eth,
+		types.ObserverChain_Bsc,
+		types.ObserverChain_Btc,
 	}
 	keeper.SetSupportedChain(ctx, types.SupportedChains{ChainList: list})
 	getList, found := keeper.GetSupportedChains(ctx)
