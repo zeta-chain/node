@@ -32,13 +32,16 @@ runs:
       shell: bash
 
     - name: build zetacored and zetaclientd
-      run: ${GITHUB_ACTION_PATH}/build.sh
+      run: |
+        make install
+        cp "$HOME"/go/bin/* ./
+
       shell: bash
 
-    - name: Build Indexer
-      run: ${GITHUB_ACTION_PATH}/build-indexer.sh
-      if: ${{ inputs.build-indexer == 'true' }}
-      shell: bash
+    # - name: Build Indexer
+    #   run: ${GITHUB_ACTION_PATH}/build-indexer.sh
+    #   if: ${{ inputs.build-indexer == 'true' }}
+    #   shell: bash
 
     - name: Cosmovisor
       run: |
@@ -51,22 +54,24 @@ runs:
       if: ${{ inputs.run-tests == 'true' }}
       shell: bash
 
-    - name: Add network_values file
-      run: |        
-        INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
-        if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
-          cp deploy/env_variables.staging network_values
-        elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
-          cp deploy/env_variables.athens network_values
-        fi
-      shell: bash
+# TODO - Remove - Managed via Ansible
+    # - name: Add network_values file
+    #   run: |        
+    #     INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
+    #     if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
+    #       cp deploy/env_variables.staging network_values
+    #     elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
+    #       cp deploy/env_variables.athens network_values
+    #     fi
+    #   shell: bash
 
-    - name: Create tar.gz Package
-      run: |        
-        cp deploy/zetaclientd-start.sh zetaclientd-start.sh
-        cp deploy/zetacored-start.sh zetacored-start.sh
-        tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
-      shell: bash
+# TODO - Remove - ZIP is no longer needed
+    # - name: Create tar.gz Package
+    #   run: |        
+    #     cp deploy/zetaclientd-start.sh zetaclientd-start.sh
+    #     cp deploy/zetacored-start.sh zetacored-start.sh
+    #     tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
+    #   shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash
