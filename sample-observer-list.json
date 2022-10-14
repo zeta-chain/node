@@ -1,0 +1,35 @@
+[
+ {
+  "index": "",
+  "ObserverChain": 1,
+  "ObservationType": 1,
+  "observerList": [
+   "zeta1acdh3rca2elta9jdg5a6mjsw2cv3map677am6a",
+   "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
+   "zeta12xyxcdvxg8xqydu2lejadvmycuryuxxc93xk52",
+   "zeta1u0yj66x98sshaddfww5dtjx34apjsqvq9m8s8l"
+  ]
+ },
+ {
+  "index": "",
+  "ObserverChain": 2,
+  "ObservationType": 1,
+  "observerList": [
+   "zeta1acdh3rca2elta9jdg5a6mjsw2cv3map677am6a",
+   "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
+   "zeta12xyxcdvxg8xqydu2lejadvmycuryuxxc93xk52",
+   "zeta1u0yj66x98sshaddfww5dtjx34apjsqvq9m8s8l"
+  ]
+ },
+ {
+  "index": "",
+  "ObserverChain": 3,
+  "ObservationType": 2,
+  "observerList": [
+   "zeta1acdh3rca2elta9jdg5a6mjsw2cv3map677am6a",
+   "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
+   "zeta12xyxcdvxg8xqydu2lejadvmycuryuxxc93xk52",
+   "zeta1u0yj66x98sshaddfww5dtjx34apjsqvq9m8s8l"
+  ]
+ }
+]

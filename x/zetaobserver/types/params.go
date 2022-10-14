@@ -20,7 +20,7 @@ func NewParams() Params {
 		BallotThresholds: []*BallotThreshold{
 			{
 				Chain:       ObserverChain_EthChainObserver,
-				Observation: ObservationType_InboundTx,
+				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
@@ -30,7 +30,7 @@ func NewParams() Params {
 			},
 			{
 				Chain:       ObserverChain_BscChainObserver,
-				Observation: ObservationType_InboundTx,
+				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{

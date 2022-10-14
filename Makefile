@@ -82,12 +82,12 @@ go.sum: go.mod
 		GO111MODULE=on go mod verify
 
 init:
-	./localnet/standalone-network/init.sh
+	./standalone-network/init.sh
 
 run:
-	./localnet/standalone-network/run.sh
+	./standalone-network/run.sh
 
-init-run: init run
+init-run: clean install-zetacore init run
 
 lint-pre:
 	@test -z $(gofmt -l .)

@@ -75,7 +75,7 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 				Index:            "index",
 				BallotIdentifier: "identifier",
 				VoterList:        voterList,
-				ObservationType:  ObservationType_InboundTx,
+				ObservationType:  ObservationType_InBoundTx,
 				BallotThreshold:  test.threshold,
 				BallotStatus:     BallotStatus_BallotInProgress,
 			}
