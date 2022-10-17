@@ -10,6 +10,8 @@ on:
   push:
     branches:
       - develop
+      - feature/zetacore-observer-fixes
+      - cosmovisor-action
 
 env:
   ENVIRONMENT_NAME: "DEVELOPMENT"
@@ -55,11 +57,13 @@ jobs:
         with:
           bucket-name: ${{ env.S3_BUCKET_NAME }}
           release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          git-sha: ${{ github.sha }}
           files: |
             zetacored
             zetaclientd
             cosmovisor
 
+      ## Not being used anymore / for now
       # - name: Build, tag, and push image to Amazon ECR
       #   uses:  ./.github/actions/upload-to-ecr
       #   with:
