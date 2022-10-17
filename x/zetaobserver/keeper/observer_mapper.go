@@ -64,3 +64,22 @@ func (k Keeper) AllObserverMappers(goCtx context.Context, req *types.QueryAllObs
 	mappers := k.GetAllObserverMappers(ctx)
 	return &types.QueryAllObserverMappersResponse{ObserverMappers: mappers}, nil
 }
+
+// Utils
+
+func (k Keeper) GetAllObserverAddresses(ctx sdk.Context) []string {
+	var val []string
+	mappers := k.GetAllObserverMappers(ctx)
+	for _, mapper := range mappers {
+		val = append(val, mapper.ObserverList...)
+	}
+	allKeys := make(map[string]bool)
+	var dedupedList []string
+	for _, item := range val {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			dedupedList = append(dedupedList, item)
+		}
+	}
+	return dedupedList
+}

@@ -161,3 +161,15 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 		})
 	}
 }
+
+func TestKeeper_GetAllObserverAddresses(t *testing.T) {
+	mappers := append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
+		types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
+		types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...)
+	keeper, ctx := SetupKeeper(t)
+	for _, mapper := range mappers {
+		keeper.SetObserverMapper(ctx, mapper)
+	}
+	addresses := keeper.GetAllObserverAddresses(ctx)
+	assert.Equal(t, 4, len(addresses))
+}

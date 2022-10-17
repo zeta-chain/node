@@ -21,6 +21,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/app/ante"
 
 	"io"
 	"net/http"
@@ -535,19 +536,19 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := evmante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		IBCKeeper:       app.IBCKeeper,
-
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  maxGasWanted,
+	options := ante.HandlerOptions{
+		AccountKeeper:      app.AccountKeeper,
+		BankKeeper:         app.BankKeeper,
+		EvmKeeper:          app.EvmKeeper,
+		FeeMarketKeeper:    app.FeeMarketKeeper,
+		IBCKeeper:          app.IBCKeeper,
+		ZetaObserverKeeper: app.ZetaObserverKeeper,
+		SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:     evmante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:     maxGasWanted,
 	}
 
-	anteHandler, err := evmante.NewAnteHandler(options)
+	anteHandler, err := ante.NewAnteHandler(options)
 	if err != nil {
 		panic(err)
 	}
