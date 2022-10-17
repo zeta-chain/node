@@ -282,7 +282,7 @@ func (co *CoreObserver) startSendScheduler() {
 			numSendsToLook := 0
 
 			keys := make([]string, 0)
-			for k, _ := range sendMap {
+			for k := range sendMap {
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
@@ -519,7 +519,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].Nonce < sends[j].Nonce
 		})
-		//sends = trimSends(sends)
+		sends = trimSends(sends)
 		sendMap[chain] = sends
 	}
 
@@ -530,7 +530,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 func trimSends(sends []*types.Send) []*types.Send {
 	start := 0
 	for i := 1; i < len(sends); i++ {
-		if sends[i].Nonce > sends[i-1].Nonce+1 {
+		if sends[i].Nonce > sends[i-1].Nonce+43200 { // TODO: fix this magic number; 43200 is 1day assuming 2s block time
 			start = i
 		}
 	}
