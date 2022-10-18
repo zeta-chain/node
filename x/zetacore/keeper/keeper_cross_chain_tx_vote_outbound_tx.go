@@ -105,7 +105,7 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 		if err != nil {
 			return err
 		}
-		EmitReceiveSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
+		EmitOutboundSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
@@ -126,7 +126,7 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 
 		}
 		newStatus := cctx.CctxStatus.Status.String()
-		EmitReceiveFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
+		EmitOutboundFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
 	}
 	return nil
 }
