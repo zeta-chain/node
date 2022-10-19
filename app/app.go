@@ -542,6 +542,7 @@ func New(
 		vestingtypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
