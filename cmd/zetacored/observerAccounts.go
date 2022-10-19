@@ -62,7 +62,7 @@ func AddObserverAccountCmd() *cobra.Command {
 				3: "PolygonChainObserver",
 				4: "BscChainObserver",	
     
-				0: "InboundTx",
+				0: "InBoundTx",
 				1: "OutBoundTx",
 				2: "GasPrice",
 			`,

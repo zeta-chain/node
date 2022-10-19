@@ -14,7 +14,6 @@ import "zetacore/gas_balance.proto";
 import "zetacore/gas_price.proto";
 import "zetacore/chain_nonces.proto";
 import "zetacore/last_block_height.proto";
-import "zetacore/receive.proto";
 import "zetacore/cross_chain_tx.proto";
 import "zetacore/node_account.proto";
 import "zetacore/params.proto";
@@ -136,21 +135,6 @@ service Query {
 	rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/cctxPending";
 	}
-
-	// Queries a receive by index.
-	rpc Receive(QueryGetReceiveRequest) returns (QueryGetReceiveResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/receive/{index}";
-	}
-
-	// Queries a list of receive items.
-	rpc ReceiveAll(QueryAllReceiveRequest) returns (QueryAllReceiveResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/receive";
-	}
-
-
-
-
-
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount/{index}";
@@ -165,9 +149,7 @@ service Query {
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
 	}
-	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/supportedChains";
-	}
+
 }
 
 
@@ -329,22 +311,7 @@ message QueryAllLastBlockHeightResponse {
 	repeated LastBlockHeight LastBlockHeight = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryGetReceiveRequest {
-	string index = 1;
-}
 
-message QueryGetReceiveResponse {
-	Receive Receive = 1;
-}
-
-message QueryAllReceiveRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllReceiveResponse {
-	repeated Receive Receive = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
 message QueryGetCctxRequest {
 	string index = 1;
 	int32 status = 2;
@@ -394,9 +361,3 @@ message QueryLastMetaHeightResponse {
 	uint64 Height = 1;
 }
 
-message QuerySupportedChains {
-}
-
-message QuerySupportedChainsResponse {
-	repeated string Chains = 1;
-}

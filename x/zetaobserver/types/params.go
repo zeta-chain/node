@@ -19,22 +19,32 @@ func NewParams() Params {
 	return Params{
 		BallotThresholds: []*BallotThreshold{
 			{
-				Chain:       ObserverChain_EthChainObserver,
+				Chain:       ObserverChain_Eth,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_EthChainObserver,
+				Chain:       ObserverChain_Eth,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_BscChainObserver,
+				Chain:       ObserverChain_Bsc,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_BscChainObserver,
+				Chain:       ObserverChain_Bsc,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Goerli,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Goerli,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},

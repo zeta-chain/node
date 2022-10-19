@@ -1,0 +1,24 @@
+syntax = "proto3";
+package zetachain.zetacore.zetaobserver;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+import "common/common.proto";
+import "gogoproto/gogo.proto";
+import "zetaobserver/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+}
+
+message MsgSetSupportedChains {
+  string creator = 1;
+  repeated ObserverChain Chainlist=2;
+}
+
+message MsgSetSupportedChainsResponse{
+
+}

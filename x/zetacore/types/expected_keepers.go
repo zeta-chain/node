@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 type StakingKeeper interface {
@@ -32,4 +33,15 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+}
+
+type ZetaObserverKeeper interface {
+	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
+	GetObserverMapper(ctx sdk.Context, chain zetaObserverTypes.ObserverChain, obsType string) (val zetaObserverTypes.ObserverMapper, found bool)
+	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
+	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
+	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
+	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
+	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
+	IsChainSupported(ctx sdk.Context, checkChain zetaObserverTypes.ObserverChain) bool
 }

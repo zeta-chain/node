@@ -397,6 +397,12 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
+	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaObserverModuleTypes.StoreKey],
+		keys[zetaObserverModuleTypes.MemStoreKey],
+		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+	)
 
 	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
 		appCodec,
@@ -406,13 +412,9 @@ func New(
 		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.ZetaObserverKeeper,
 	)
-	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaObserverModuleTypes.StoreKey],
-		keys[zetaObserverModuleTypes.MemStoreKey],
-		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
-	)
+
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
 	/****  Module Options ****/

@@ -26,4 +26,6 @@ const (
 	ObserverKey              = "Observer-value-"
 	ObserverMapperKey        = "Observer-value-"
 	ParamVotingThresholdsKey = "VotingThreshold"
+	SupportedChainsKey       = "SupportedChains-value-"
+	AllSupportedChainsKey    = "AllSupportedChains"
 )

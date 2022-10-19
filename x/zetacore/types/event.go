@@ -28,8 +28,9 @@ const (
 const (
 	OutboundTxSuccessful = "zetacore/OutboundTxSuccessful"
 	OutboundTxFailed     = "zetacore/OutboundTxFailed"
-	InboundCreated       = "zetacore/InboundCreated"
+	CctxCreated          = "zetacore/CctxCreated"
 	InboundFinalized     = "zetacore/InboundFinalized"
 	StatusChanged        = "zetacore/StatusChanged"
+	CctxFinalized        = "zetacore/CctxFinalized"
 	SendScrubbed         = "SendScrubbed"
 )

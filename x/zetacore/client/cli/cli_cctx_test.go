@@ -29,7 +29,6 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
 			Creator: "ANY",
 			Index:   strconv.Itoa(i),
-			Signers: []string{},
 			CctxStatus: &types.Status{
 				Status:              types.CctxStatus_PendingInbound,
 				StatusMessage:       "",

@@ -80,6 +80,8 @@ install-mockmpi:
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
+test-cctx:
+	./standalone-network/cctx-creator.sh
 
 init:
 	./standalone-network/init.sh
@@ -88,6 +90,7 @@ run:
 	./standalone-network/run.sh
 
 init-run: clean install-zetacore init run
+
 
 lint-pre:
 	@test -z $(gofmt -l .)
