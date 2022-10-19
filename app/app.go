@@ -21,6 +21,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	"io"
 	"net/http"
@@ -106,6 +108,8 @@ import (
 	zetaObserverModule "github.com/zeta-chain/zetacore/x/zetaobserver"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+
+	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
 )
 
 const Name = "zetacore"
@@ -173,6 +177,7 @@ var (
 		feemarket.AppModuleBasic{},
 		zetaCoreModule.AppModuleBasic{},
 		zetaObserverModule.AppModuleBasic{},
+		fungibleModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -186,6 +191,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		zetaCoreModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		fungibleModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -231,6 +237,7 @@ type App struct {
 	configurator         module.Configurator
 	EvmKeeper            *evmkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
+	FungibleKeeper       fungibleModuleKeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -397,6 +404,19 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
+
+	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+		appCodec,
+		keys[fungibleModuleTypes.StoreKey],
+		keys[fungibleModuleTypes.MemStoreKey],
+		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		app.AccountKeeper,
+		*app.EvmKeeper,
+		app.BankKeeper,
+		//&app.ZetaCoreKeeper,
+	)
+	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
+
 	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
 		appCodec,
 		keys[zetaObserverModuleTypes.StoreKey],
@@ -416,6 +436,7 @@ func New(
 	)
 
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
+	//app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	/****  Module Options ****/
 
@@ -450,6 +471,7 @@ func New(
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		zetacoreModule,
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
+		fungibleModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -478,6 +500,7 @@ func New(
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -490,6 +513,7 @@ func New(
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
