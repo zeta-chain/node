@@ -15,7 +15,7 @@ import (
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
-	observationChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.OutTxChain)
+	observationChain := zetaObserverTypes.ParseCommonChaintoObservationChain(msg.OutTxChain)
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err

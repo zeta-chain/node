@@ -9,7 +9,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
-	"strconv"
 	"strings"
 )
 
@@ -53,18 +52,27 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 func AddObserverAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [chain] [observationtype] [comma separate list of address] ",
+		Use:   "add-observer [chain] [observationType] [comma separate list of address] ",
 		Short: "Add a list of observers to the observer mapper",
 		Long: `
-				0: "EthChainObserver",
-				1: "ZetaChainObserver",
-				2: "BTCChainObserver",
-				3: "PolygonChainObserver",
-				4: "BscChainObserver",	
-    
-				0: "InBoundTx",
-				1: "OutBoundTx",
-				2: "GasPrice",
+           Chain Types :
+					"Empty"     
+					"Eth"       
+					"ZetaChain" 
+					"Btc"       
+					"Polygon"   
+					"BscMainnet"
+					"Goerli"    
+					"Mumbai"    
+					"Ropsten"   
+					"Ganache"   
+					"Baobap"    
+					"BscTestnet"
+					
+            Observation Types : 
+				    "InBoundTx",
+				    "OutBoundTx",
+				    "GasPrice",
 			`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,18 +80,12 @@ func AddObserverAccountCmd() *cobra.Command {
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			chain, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-			obs, err := strconv.Atoi(args[1])
-			if err != nil {
-				return err
-			}
+			chain := types.ParseStringToObserverChain(args[0])
+			obs := types.ParseStringToObservationType(args[1])
 			observer := &types.ObserverMapper{
 				Index:           "",
-				ObserverChain:   types.ObserverChain(chain),
-				ObservationType: types.ObservationType(obs),
+				ObserverChain:   chain,
+				ObservationType: obs,
 				ObserverList:    strings.Split(args[2], ","),
 			}
 			genFile := config.GenesisFile()
