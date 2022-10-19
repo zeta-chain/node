@@ -48,6 +48,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+	EmitEventInboundFinalized(ctx, &cctx)
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 
@@ -67,7 +68,6 @@ func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, re
 	if err != nil {
 		return err
 	}
-	EmitEventSendFinalized(ctx, cctx)
 	return nil
 }
 
