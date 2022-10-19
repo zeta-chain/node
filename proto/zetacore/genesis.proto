@@ -13,7 +13,6 @@ import "zetacore/gas_balance.proto";
 import "zetacore/gas_price.proto";
 import "zetacore/chain_nonces.proto";
 import "zetacore/last_block_height.proto";
-import "zetacore/receive.proto";
 import "zetacore/cross_chain_tx.proto";
 import "zetacore/node_account.proto";
 
@@ -30,7 +29,6 @@ message GenesisState {
 		repeated GasPrice gasPriceList = 7;
 		repeated ChainNonces chainNoncesList = 8;
 		repeated CrossChainTx CrossChainTxs = 9;
-		repeated Receive receiveList = 10;
 		repeated NodeAccount nodeAccountList = 11;
 		repeated LastBlockHeight lastBlockHeightList = 12;
 

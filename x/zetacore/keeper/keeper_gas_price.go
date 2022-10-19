@@ -38,12 +38,6 @@ func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, index string) (sdk.Uint
 	}
 	mi := gasPrice.MedianIndex
 	return sdk.NewUint(gasPrice.Prices[mi]), true
-	//uintPrice := medianPrice)
-	////bugIntPrice, ok := big.NewInt(0).SetString(strconv.FormatUint(medianPrice, 10), 10)
-	////if !ok{
-	////	return sdk.ZeroUint(), ok
-	////}
-	//return uintPrice, true
 }
 
 // RemoveGasPrice removes a gasPrice from the store

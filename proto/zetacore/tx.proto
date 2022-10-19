@@ -20,7 +20,6 @@ service Msg {
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
-  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 }
 
 message MsgZetaConversionRateVoter {
@@ -126,15 +125,6 @@ message MsgVoteOnObservedInboundTx {
 }
 
 message MsgVoteOnObservedInboundTxResponse {
-}
-
-message MsgSetSupportedChains {
-  string creator = 1;
-  repeated string Chainlist=2;
-}
-
-message MsgSetSupportedChainsResponse{
-
 }
 
 message MsgSetNodeKeys {

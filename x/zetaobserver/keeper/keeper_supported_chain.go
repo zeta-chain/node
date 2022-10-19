@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 func (k Keeper) SetSupportedChain(ctx sdk.Context, chain types.SupportedChains) {
@@ -23,7 +23,7 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) (val types.SupportedChains, 
 	return val, false
 }
 
-func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain string) bool {
+func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.ObserverChain) bool {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return false
@@ -36,18 +36,18 @@ func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain string) bool {
 	return false
 }
 
-func (k msgServer) SetSupportedChains(goCtx context.Context, msg *types.MsgSetSupportedChains) (*types.MsgSetSupportedChainsResponse, error) {
+func (k Keeper) SetSupportedChains(goCtx context.Context, msg *types.MsgSetSupportedChains) (*types.MsgSetSupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supportedChains := types.SupportedChains{ChainList: msg.GetChainlist()}
 	k.SetSupportedChain(ctx, supportedChains)
 	return &types.MsgSetSupportedChainsResponse{}, nil
 }
 
-func (k Keeper) SupportedChains(goCtx context.Context, req *types.QuerySupportedChains) (*types.QuerySupportedChainsResponse, error) {
+func (k Keeper) SupportedChains(goCtx context.Context, _ *types.QuerySupportedChains) (*types.QuerySupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return nil, types.ErrSupportedChains.Wrap("Supported chains not set")
 	}
-	return &types.QuerySupportedChainsResponse{Chains: chains.ChainList}, nil
+	return &types.QuerySupportedChainsResponse{Chains: chains.String()}, nil
 }

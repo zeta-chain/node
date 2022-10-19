@@ -13,7 +13,7 @@ var _ = strconv.Itoa(0)
 
 func CmdBallotByIdentifier() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ballot [ballot-identifier]",
+		Use:   "show-ballot [ballot-identifier]",
 		Short: "Query BallotByIdentifier",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

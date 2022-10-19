@@ -4,15 +4,19 @@ package zetachain.zetacore.zetaobserver;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/zetaobserver/types";
-
 enum ObserverChain {
   option (gogoproto.goproto_enum_stringer) = true;
-  EmptyObserver = 0;
-  EthChainObserver = 1;
-  ZetaChainObserver = 2;
-  BtcChainObserver = 3;
-  PolygonChainObserver = 4;
-  BscChainObserver =5 ;
+  Empty = 0;
+  Eth = 1;
+  ZetaChain = 2;
+  Btc = 3;
+  Polygon = 4;
+  Bsc = 5 ;
+  Goerli = 6;
+  Mumbai = 7;
+  Ropsten = 8;
+  Ganache = 9;
+  Baobap = 10;
 }
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;

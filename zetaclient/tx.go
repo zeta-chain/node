@@ -9,6 +9,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"time"
 )
 
@@ -120,6 +121,19 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
+		ObservationChain: chain.String(),
+		ObservationType:  observationType,
+	})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query GetObserverList error")
+		return nil, err
+	}
+	return resp.Observers, nil
+}
+
 func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{})
@@ -128,16 +142,6 @@ func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
-}
-
-func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ReceiveAll(context.Background(), &types.QueryAllReceiveRequest{})
-	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetAllReceive error")
-		return nil, err
-	}
-	return resp.Receive, nil
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {

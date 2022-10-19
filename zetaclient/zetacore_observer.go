@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"math/big"
 	"math/rand"
 	"os"
@@ -244,6 +245,7 @@ func (co *CoreObserver) startSendScheduler() {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
+
 			if len(sendList) > 0 && bn%5 == 0 {
 				logger.Info().Msgf("#pending send: %d", len(sendList))
 			}
@@ -398,10 +400,15 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	} else {
 		cnt.Inc()
 	}
+	signers, err := co.bridge.GetObserverList(toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	if err != nil {
+		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.OutBoundTxParams.OutBoundTxTSSNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+
+	}
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
 		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.OutBoundTxParams.OutBoundTxTSSNonce, outTxHash, myid)
-		if myid == send.Signers[send.OutBoundTxParams.Broadcaster] || myid == send.Signers[int(send.OutBoundTxParams.Broadcaster+1)%len(send.Signers)] {
+		if myid == signers[send.OutBoundTxParams.Broadcaster] || myid == signers[int(send.OutBoundTxParams.Broadcaster+1)%len(signers)] {
 			backOff := 1000 * time.Millisecond
 			// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 			for i := 0; i < 5; i++ {

@@ -9,14 +9,8 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+
 	// Set all the zetaConversionRate
-	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []string{
-		"GANACHE",
-		"GOERLI",
-		"ROPSTEN",
-		"Baobab",
-		"Mumbai",
-	}})
 	for _, elem := range genState.ZetaConversionRateList {
 		k.SetZetaConversionRate(ctx, elem)
 	}
@@ -58,11 +52,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the lastBlockHeight
 	for _, elem := range genState.LastBlockHeightList {
 		k.SetLastBlockHeight(ctx, *elem)
-	}
-
-	// Set all the receive
-	for _, elem := range genState.ReceiveList {
-		k.SetReceive(ctx, *elem)
 	}
 
 	// Set all the send
@@ -130,13 +119,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	for _, elem := range lastBlockHeightList {
 		elem := elem
 		genesis.LastBlockHeightList = append(genesis.LastBlockHeightList, &elem)
-	}
-
-	// Get all receive
-	receiveList := k.GetAllReceive(ctx)
-	for _, elem := range receiveList {
-		elem := elem
-		genesis.ReceiveList = append(genesis.ReceiveList, &elem)
 	}
 
 	// Get all send

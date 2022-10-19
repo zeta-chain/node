@@ -157,7 +157,7 @@ func (m *QueryBallotByIdentifierRequest) GetBallotIdentifier() string {
 }
 
 type QueryBallotByIdentifierResponse struct {
-	Ballot string `protobuf:"bytes,1,opt,name=ballot,proto3" json:"ballot,omitempty"`
+	Ballot *Ballot `protobuf:"bytes,1,opt,name=ballot,proto3" json:"ballot,omitempty"`
 }
 
 func (m *QueryBallotByIdentifierResponse) Reset()         { *m = QueryBallotByIdentifierResponse{} }
@@ -193,11 +193,11 @@ func (m *QueryBallotByIdentifierResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryBallotByIdentifierResponse proto.InternalMessageInfo
 
-func (m *QueryBallotByIdentifierResponse) GetBallot() string {
+func (m *QueryBallotByIdentifierResponse) GetBallot() *Ballot {
 	if m != nil {
 		return m.Ballot
 	}
-	return ""
+	return nil
 }
 
 type QueryObserversByChainAndTypeRequest struct {
@@ -253,7 +253,7 @@ func (m *QueryObserversByChainAndTypeRequest) GetObservationType() string {
 }
 
 type QueryObserversByChainAndTypeResponse struct {
-	ObserverMapper string `protobuf:"bytes,1,opt,name=observerMapper,proto3" json:"observerMapper,omitempty"`
+	Observers []string `protobuf:"bytes,1,rep,name=Observers,proto3" json:"Observers,omitempty"`
 }
 
 func (m *QueryObserversByChainAndTypeResponse) Reset()         { *m = QueryObserversByChainAndTypeResponse{} }
@@ -289,9 +289,169 @@ func (m *QueryObserversByChainAndTypeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryObserversByChainAndTypeResponse proto.InternalMessageInfo
 
-func (m *QueryObserversByChainAndTypeResponse) GetObserverMapper() string {
+func (m *QueryObserversByChainAndTypeResponse) GetObservers() []string {
 	if m != nil {
-		return m.ObserverMapper
+		return m.Observers
+	}
+	return nil
+}
+
+type QueryAllObserverMappersRequest struct {
+}
+
+func (m *QueryAllObserverMappersRequest) Reset()         { *m = QueryAllObserverMappersRequest{} }
+func (m *QueryAllObserverMappersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllObserverMappersRequest) ProtoMessage()    {}
+func (*QueryAllObserverMappersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84c8b44c277c1476, []int{6}
+}
+func (m *QueryAllObserverMappersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllObserverMappersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllObserverMappersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllObserverMappersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllObserverMappersRequest.Merge(m, src)
+}
+func (m *QueryAllObserverMappersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllObserverMappersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllObserverMappersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllObserverMappersRequest proto.InternalMessageInfo
+
+type QueryAllObserverMappersResponse struct {
+	ObserverMappers []*ObserverMapper `protobuf:"bytes,1,rep,name=ObserverMappers,proto3" json:"ObserverMappers,omitempty"`
+}
+
+func (m *QueryAllObserverMappersResponse) Reset()         { *m = QueryAllObserverMappersResponse{} }
+func (m *QueryAllObserverMappersResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllObserverMappersResponse) ProtoMessage()    {}
+func (*QueryAllObserverMappersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84c8b44c277c1476, []int{7}
+}
+func (m *QueryAllObserverMappersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllObserverMappersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllObserverMappersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllObserverMappersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllObserverMappersResponse.Merge(m, src)
+}
+func (m *QueryAllObserverMappersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllObserverMappersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllObserverMappersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllObserverMappersResponse proto.InternalMessageInfo
+
+func (m *QueryAllObserverMappersResponse) GetObserverMappers() []*ObserverMapper {
+	if m != nil {
+		return m.ObserverMappers
+	}
+	return nil
+}
+
+type QuerySupportedChains struct {
+}
+
+func (m *QuerySupportedChains) Reset()         { *m = QuerySupportedChains{} }
+func (m *QuerySupportedChains) String() string { return proto.CompactTextString(m) }
+func (*QuerySupportedChains) ProtoMessage()    {}
+func (*QuerySupportedChains) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84c8b44c277c1476, []int{8}
+}
+func (m *QuerySupportedChains) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySupportedChains) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySupportedChains.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySupportedChains) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySupportedChains.Merge(m, src)
+}
+func (m *QuerySupportedChains) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySupportedChains) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySupportedChains.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySupportedChains proto.InternalMessageInfo
+
+type QuerySupportedChainsResponse struct {
+	Chains string `protobuf:"bytes,1,opt,name=Chains,proto3" json:"Chains,omitempty"`
+}
+
+func (m *QuerySupportedChainsResponse) Reset()         { *m = QuerySupportedChainsResponse{} }
+func (m *QuerySupportedChainsResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySupportedChainsResponse) ProtoMessage()    {}
+func (*QuerySupportedChainsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_84c8b44c277c1476, []int{9}
+}
+func (m *QuerySupportedChainsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySupportedChainsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySupportedChainsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySupportedChainsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySupportedChainsResponse.Merge(m, src)
+}
+func (m *QuerySupportedChainsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySupportedChainsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySupportedChainsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySupportedChainsResponse proto.InternalMessageInfo
+
+func (m *QuerySupportedChainsResponse) GetChains() string {
+	if m != nil {
+		return m.Chains
 	}
 	return ""
 }
@@ -303,46 +463,59 @@ func init() {
 	proto.RegisterType((*QueryBallotByIdentifierResponse)(nil), "zetachain.zetacore.zetaobserver.QueryBallotByIdentifierResponse")
 	proto.RegisterType((*QueryObserversByChainAndTypeRequest)(nil), "zetachain.zetacore.zetaobserver.QueryObserversByChainAndTypeRequest")
 	proto.RegisterType((*QueryObserversByChainAndTypeResponse)(nil), "zetachain.zetacore.zetaobserver.QueryObserversByChainAndTypeResponse")
+	proto.RegisterType((*QueryAllObserverMappersRequest)(nil), "zetachain.zetacore.zetaobserver.QueryAllObserverMappersRequest")
+	proto.RegisterType((*QueryAllObserverMappersResponse)(nil), "zetachain.zetacore.zetaobserver.QueryAllObserverMappersResponse")
+	proto.RegisterType((*QuerySupportedChains)(nil), "zetachain.zetacore.zetaobserver.QuerySupportedChains")
+	proto.RegisterType((*QuerySupportedChainsResponse)(nil), "zetachain.zetacore.zetaobserver.QuerySupportedChainsResponse")
 }
 
 func init() { proto.RegisterFile("zetaobserver/query.proto", fileDescriptor_84c8b44c277c1476) }
 
 var fileDescriptor_84c8b44c277c1476 = []byte{
-	// 537 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x41, 0x6b, 0x13, 0x41,
-	0x14, 0xce, 0x06, 0x1b, 0x70, 0x04, 0x95, 0xb1, 0x68, 0x5c, 0x64, 0x53, 0x56, 0xa9, 0xa5, 0xe0,
-	0x0e, 0x6d, 0xbc, 0x78, 0x52, 0x57, 0x0b, 0x2a, 0x56, 0x6b, 0xf0, 0x24, 0x42, 0x98, 0xcd, 0x8e,
-	0xdb, 0x95, 0x64, 0x66, 0xba, 0x33, 0x09, 0xae, 0x21, 0x17, 0x7f, 0x81, 0xe8, 0xd1, 0xbb, 0xbf,
-	0xa5, 0xc7, 0x82, 0x17, 0x4f, 0x22, 0x89, 0x17, 0xff, 0x85, 0xcc, 0xec, 0x24, 0xcd, 0x6e, 0x9a,
-	0x26, 0xea, 0xed, 0xe5, 0x9b, 0xf7, 0xbe, 0xf7, 0x7d, 0xef, 0xbd, 0x2c, 0xa8, 0xbe, 0x27, 0x12,
-	0xb3, 0x40, 0x90, 0xa4, 0x47, 0x12, 0x74, 0xd0, 0x25, 0x49, 0xea, 0xf1, 0x84, 0x49, 0x06, 0x6b,
-	0xea, 0xa5, 0xb5, 0x8f, 0x63, 0xea, 0xe9, 0x88, 0x25, 0xc4, 0x9b, 0x4e, 0xb6, 0xaf, 0x45, 0x8c,
-	0x45, 0x6d, 0x82, 0x30, 0x8f, 0x11, 0xa6, 0x94, 0x49, 0x2c, 0x63, 0x46, 0x45, 0x56, 0x6e, 0x6f,
-	0xb6, 0x98, 0xe8, 0x30, 0x81, 0x02, 0x2c, 0x48, 0xc6, 0x8b, 0x7a, 0x5b, 0x01, 0x91, 0x78, 0x0b,
-	0x71, 0x1c, 0xc5, 0x54, 0x27, 0x9b, 0xdc, 0xd5, 0x88, 0x45, 0x4c, 0x87, 0x48, 0x45, 0x06, 0xbd,
-	0x9a, 0x93, 0xc6, 0x71, 0x82, 0x3b, 0x86, 0xdc, 0x5d, 0x05, 0xf0, 0x85, 0xa2, 0xdc, 0xd3, 0x60,
-	0x83, 0x1c, 0x74, 0x89, 0x90, 0xee, 0x6b, 0x70, 0x29, 0x87, 0x0a, 0xce, 0xa8, 0x20, 0x70, 0x07,
-	0x54, 0xb2, 0xe2, 0xaa, 0xb5, 0x66, 0x6d, 0x9c, 0xdb, 0xbe, 0xe9, 0x2d, 0x70, 0xe6, 0x65, 0x04,
-	0xfe, 0x99, 0xc3, 0x1f, 0xb5, 0x52, 0xc3, 0x14, 0xbb, 0x4f, 0x81, 0xa3, 0xd9, 0x7d, 0xdc, 0x6e,
-	0x33, 0xe9, 0xa7, 0x8f, 0x43, 0x42, 0x65, 0xfc, 0x26, 0x26, 0x89, 0xe9, 0x0f, 0x37, 0xc1, 0xc5,
-	0x40, 0x3f, 0x1e, 0x3f, 0xe9, 0x96, 0x67, 0x1b, 0x33, 0xb8, 0x7b, 0x07, 0xd4, 0xe6, 0xb2, 0x19,
-	0xdd, 0x97, 0x41, 0x25, 0x2b, 0x33, 0x24, 0xe6, 0x97, 0xdb, 0x07, 0xd7, 0x75, 0xe9, 0x73, 0x23,
-	0x57, 0xf8, 0xe9, 0x03, 0x65, 0xe6, 0x3e, 0x0d, 0x5f, 0xa6, 0x9c, 0x4c, 0xa9, 0xc9, 0x0c, 0xe9,
-	0x49, 0xeb, 0x8c, 0xb1, 0x9a, 0x22, 0x0e, 0x37, 0xc0, 0x85, 0x29, 0x4c, 0xb1, 0x54, 0xcb, 0x3a,
-	0xb5, 0x08, 0xbb, 0xcf, 0xc0, 0x8d, 0xd3, 0x9b, 0x1b, 0xf1, 0xeb, 0xe0, 0xfc, 0x78, 0x9c, 0xbb,
-	0x98, 0xf3, 0xc9, 0x24, 0x0a, 0xe8, 0xf6, 0xd7, 0x15, 0xb0, 0xa2, 0x09, 0xe1, 0x17, 0x0b, 0x54,
-	0xb2, 0xc1, 0xc3, 0xfa, 0xc2, 0x0d, 0xcd, 0x6e, 0xdf, 0xbe, 0xfd, 0x77, 0x45, 0x99, 0x4e, 0x77,
-	0xfd, 0xc3, 0xb7, 0x5f, 0x9f, 0xcb, 0x6b, 0xd0, 0x41, 0x93, 0x6a, 0x74, 0xc2, 0xdd, 0xc1, 0xdf,
-	0x16, 0x80, 0xb3, 0xbb, 0x82, 0x77, 0x97, 0x6b, 0x3a, 0xf7, 0x66, 0xec, 0x7b, 0xff, 0x4e, 0x60,
-	0x1c, 0xec, 0x69, 0x07, 0x4f, 0xe0, 0x23, 0xad, 0xfb, 0xd6, 0xb1, 0x05, 0x45, 0x95, 0xf7, 0xd2,
-	0x63, 0x92, 0x24, 0xcd, 0x20, 0x6d, 0xc6, 0x13, 0x1a, 0xd4, 0x2f, 0x9e, 0xe6, 0x00, 0x7e, 0x2a,
-	0x83, 0x2b, 0x73, 0xf6, 0x0b, 0x1f, 0x2e, 0xa7, 0xf7, 0xf4, 0xdb, 0xb4, 0x77, 0xfe, 0x93, 0xc5,
-	0x58, 0x7f, 0xab, 0xad, 0x87, 0x30, 0x58, 0x6c, 0x7d, 0x1c, 0x08, 0x65, 0x5f, 0x27, 0x36, 0x31,
-	0x0d, 0x9b, 0x32, 0xe5, 0x04, 0xf5, 0x8b, 0xff, 0x87, 0x41, 0x0e, 0x52, 0x2d, 0x07, 0xfe, 0xee,
-	0xe1, 0xd0, 0xb1, 0x8e, 0x86, 0x8e, 0xf5, 0x73, 0xe8, 0x58, 0x1f, 0x47, 0x4e, 0xe9, 0x68, 0xe4,
-	0x94, 0xbe, 0x8f, 0x9c, 0xd2, 0xab, 0x7a, 0x14, 0xcb, 0xfd, 0x6e, 0xe0, 0xb5, 0x58, 0xe7, 0x44,
-	0x1d, 0xef, 0xf2, 0x4a, 0x54, 0x4b, 0x11, 0x54, 0xf4, 0x87, 0xac, 0xfe, 0x27, 0x00, 0x00, 0xff,
-	0xff, 0xb7, 0x96, 0xfa, 0xb8, 0x80, 0x05, 0x00, 0x00,
+	// 686 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xc1, 0x4f, 0xd4, 0x4e,
+	0x14, 0xde, 0xf2, 0xfb, 0xb9, 0x91, 0xe1, 0x80, 0x19, 0x09, 0xae, 0x2b, 0x29, 0x9b, 0x6a, 0x94,
+	0x90, 0xd8, 0x09, 0xac, 0x12, 0x3d, 0x28, 0xb2, 0xc2, 0x81, 0x28, 0x51, 0xaa, 0x17, 0x8d, 0x49,
+	0x33, 0x65, 0xc7, 0x52, 0xd3, 0xed, 0x94, 0x4e, 0x97, 0x58, 0x91, 0x8b, 0x7f, 0x81, 0xd1, 0xa3,
+	0xff, 0x8d, 0x07, 0xc3, 0x91, 0xc4, 0x83, 0x9e, 0x8c, 0x01, 0x4f, 0xfe, 0x15, 0xa6, 0x33, 0xd3,
+	0x42, 0xbb, 0x5d, 0x5a, 0xf1, 0x36, 0xfb, 0xde, 0xfb, 0xbe, 0xf7, 0x7d, 0xaf, 0xef, 0x01, 0x68,
+	0xbc, 0x21, 0x21, 0xa6, 0x16, 0x23, 0xc1, 0x36, 0x09, 0xd0, 0x56, 0x9f, 0x04, 0x91, 0xee, 0x07,
+	0x34, 0xa4, 0x70, 0x3a, 0xce, 0x6c, 0x6c, 0x62, 0xc7, 0xd3, 0xf9, 0x8b, 0x06, 0x44, 0x3f, 0x5e,
+	0xdc, 0x9c, 0xb2, 0x29, 0xb5, 0x5d, 0x82, 0xb0, 0xef, 0x20, 0xec, 0x79, 0x34, 0xc4, 0xa1, 0x43,
+	0x3d, 0x26, 0xe0, 0xcd, 0xd9, 0x0d, 0xca, 0x7a, 0x94, 0x21, 0x0b, 0x33, 0x22, 0x78, 0xd1, 0xf6,
+	0x9c, 0x45, 0x42, 0x3c, 0x87, 0x7c, 0x6c, 0x3b, 0x1e, 0x2f, 0x96, 0xb5, 0x13, 0x36, 0xb5, 0x29,
+	0x7f, 0xa2, 0xf8, 0x25, 0xa3, 0x17, 0x33, 0xd2, 0x7c, 0x1c, 0xe0, 0x5e, 0x42, 0x7e, 0x29, 0x93,
+	0x4a, 0x1e, 0x85, 0x38, 0x0b, 0xbb, 0x2e, 0x0d, 0x45, 0x4a, 0x9b, 0x00, 0x70, 0x3d, 0x96, 0xf2,
+	0x98, 0x93, 0x19, 0x64, 0xab, 0x4f, 0x58, 0xa8, 0xbd, 0x00, 0xe7, 0x33, 0x51, 0xe6, 0x53, 0x8f,
+	0x11, 0xb8, 0x02, 0xea, 0xa2, 0x69, 0x43, 0x69, 0x29, 0x33, 0x63, 0xf3, 0xd7, 0xf4, 0x92, 0x89,
+	0xe8, 0x82, 0xa0, 0xf3, 0xff, 0xde, 0x8f, 0xe9, 0x9a, 0x21, 0xc1, 0xda, 0x43, 0xa0, 0x72, 0xf6,
+	0x0e, 0x17, 0xd2, 0x89, 0x56, 0xbb, 0xc4, 0x0b, 0x9d, 0x97, 0x0e, 0x09, 0x64, 0x7f, 0x38, 0x0b,
+	0xce, 0x09, 0x95, 0x47, 0x29, 0xde, 0x72, 0xd4, 0x18, 0x88, 0x6b, 0x16, 0x98, 0x1e, 0xca, 0x26,
+	0x75, 0x2f, 0x82, 0xba, 0x80, 0x55, 0xd6, 0x2d, 0xc8, 0x0c, 0x09, 0xd3, 0x76, 0xc0, 0x65, 0xde,
+	0xe3, 0x91, 0xcc, 0xb3, 0x4e, 0x74, 0x3f, 0x46, 0x2f, 0x79, 0xdd, 0xa7, 0x91, 0x4f, 0x8e, 0xc9,
+	0x16, 0x0c, 0xfc, 0x53, 0xf2, 0x8a, 0x44, 0x76, 0x3e, 0x0e, 0x67, 0xc0, 0xf8, 0xb1, 0x58, 0xcc,
+	0xd2, 0x18, 0xe1, 0xa5, 0xf9, 0xb0, 0xb6, 0x0c, 0xae, 0x9c, 0xdc, 0x5c, 0xba, 0x9c, 0x02, 0xa3,
+	0x69, 0x49, 0x43, 0x69, 0xfd, 0x37, 0x33, 0x6a, 0x1c, 0x05, 0xb4, 0x96, 0x1c, 0xfa, 0x92, 0xeb,
+	0x26, 0xc1, 0x35, 0xec, 0xfb, 0x24, 0x48, 0x3f, 0xfa, 0x5b, 0x39, 0xc8, 0xa2, 0x0a, 0xd9, 0xe2,
+	0x19, 0x18, 0xcf, 0xa5, 0x78, 0xa3, 0xb1, 0x79, 0x54, 0x3a, 0xd1, 0x2c, 0xce, 0xc8, 0xf3, 0x68,
+	0x93, 0x60, 0x82, 0x77, 0x7f, 0xd2, 0xf7, 0x7d, 0x1a, 0x84, 0xa4, 0xcb, 0x3d, 0x32, 0x6d, 0x01,
+	0x4c, 0x15, 0xc5, 0x53, 0x49, 0x93, 0xa0, 0x2e, 0x22, 0x72, 0xd2, 0xf2, 0xd7, 0xfc, 0x97, 0xb3,
+	0xe0, 0x0c, 0x07, 0xc2, 0x4f, 0x0a, 0xa8, 0x8b, 0x3d, 0x84, 0xed, 0x52, 0x99, 0x83, 0xc7, 0xd0,
+	0xbc, 0xf1, 0x77, 0x20, 0xa1, 0x4b, 0xbb, 0xfa, 0xee, 0xeb, 0xaf, 0x8f, 0x23, 0x2d, 0xa8, 0xa2,
+	0x14, 0x8d, 0x0a, 0xce, 0x17, 0xfe, 0x56, 0x00, 0x1c, 0x5c, 0x5d, 0xb8, 0x58, 0xad, 0xe9, 0xd0,
+	0x13, 0x6a, 0xde, 0x3b, 0x3d, 0x81, 0x74, 0xb0, 0xce, 0x1d, 0x3c, 0x80, 0xab, 0x5c, 0xf7, 0xf5,
+	0x23, 0x0b, 0x31, 0x15, 0x2a, 0xf8, 0x93, 0x62, 0x5a, 0x91, 0xe9, 0xa4, 0x3c, 0x68, 0x27, 0x7f,
+	0xaa, 0xbb, 0xf0, 0xc3, 0x08, 0xb8, 0x30, 0x64, 0x8d, 0xe1, 0x72, 0x35, 0xc1, 0x27, 0x9f, 0x60,
+	0x73, 0xe5, 0x1f, 0x59, 0xa4, 0xf7, 0x57, 0xdc, 0x7b, 0x17, 0x5a, 0xe5, 0xde, 0x93, 0x07, 0x8b,
+	0xed, 0xf3, 0x42, 0x13, 0x7b, 0x5d, 0x33, 0x8c, 0x7c, 0x82, 0x76, 0xf2, 0x67, 0xbf, 0x9b, 0x09,
+	0xc5, 0x2d, 0x77, 0xe1, 0x37, 0x05, 0xc0, 0xc1, 0x9b, 0xab, 0xba, 0x01, 0x43, 0xef, 0xb9, 0xea,
+	0x06, 0x0c, 0x3f, 0x77, 0xed, 0x2e, 0x9f, 0xc2, 0x2d, 0xb8, 0x50, 0x3e, 0x05, 0xec, 0xba, 0x66,
+	0xf2, 0xc3, 0xec, 0x49, 0x0b, 0x9f, 0x15, 0x30, 0x9e, 0xbb, 0x5b, 0x78, 0xb3, 0x9a, 0xaa, 0x1c,
+	0xac, 0x79, 0xe7, 0x54, 0xb0, 0xd4, 0xc9, 0x6d, 0xee, 0xa4, 0x0d, 0xe7, 0xca, 0x9d, 0xb0, 0x2c,
+	0x45, 0x67, 0x6d, 0xef, 0x40, 0x55, 0xf6, 0x0f, 0x54, 0xe5, 0xe7, 0x81, 0xaa, 0xbc, 0x3f, 0x54,
+	0x6b, 0xfb, 0x87, 0x6a, 0xed, 0xfb, 0xa1, 0x5a, 0x7b, 0xde, 0xb6, 0x9d, 0x70, 0xb3, 0x6f, 0xe9,
+	0x1b, 0xb4, 0x57, 0x48, 0xfb, 0x3a, 0x4b, 0x1c, 0x6f, 0x04, 0xb3, 0xea, 0xfc, 0xff, 0x6e, 0xfb,
+	0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x43, 0x6b, 0xf5, 0x62, 0x67, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -363,6 +536,8 @@ type QueryClient interface {
 	BallotByIdentifier(ctx context.Context, in *QueryBallotByIdentifierRequest, opts ...grpc.CallOption) (*QueryBallotByIdentifierResponse, error)
 	// Queries a list of ObserversByChainAndType items.
 	ObserversByChainAndType(ctx context.Context, in *QueryObserversByChainAndTypeRequest, opts ...grpc.CallOption) (*QueryObserversByChainAndTypeResponse, error)
+	AllObserverMappers(ctx context.Context, in *QueryAllObserverMappersRequest, opts ...grpc.CallOption) (*QueryAllObserverMappersResponse, error)
+	SupportedChains(ctx context.Context, in *QuerySupportedChains, opts ...grpc.CallOption) (*QuerySupportedChainsResponse, error)
 }
 
 type queryClient struct {
@@ -400,6 +575,24 @@ func (c *queryClient) ObserversByChainAndType(ctx context.Context, in *QueryObse
 	return out, nil
 }
 
+func (c *queryClient) AllObserverMappers(ctx context.Context, in *QueryAllObserverMappersRequest, opts ...grpc.CallOption) (*QueryAllObserverMappersResponse, error) {
+	out := new(QueryAllObserverMappersResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetaobserver.Query/AllObserverMappers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SupportedChains(ctx context.Context, in *QuerySupportedChains, opts ...grpc.CallOption) (*QuerySupportedChainsResponse, error) {
+	out := new(QuerySupportedChainsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.zetaobserver.Query/SupportedChains", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -408,6 +601,8 @@ type QueryServer interface {
 	BallotByIdentifier(context.Context, *QueryBallotByIdentifierRequest) (*QueryBallotByIdentifierResponse, error)
 	// Queries a list of ObserversByChainAndType items.
 	ObserversByChainAndType(context.Context, *QueryObserversByChainAndTypeRequest) (*QueryObserversByChainAndTypeResponse, error)
+	AllObserverMappers(context.Context, *QueryAllObserverMappersRequest) (*QueryAllObserverMappersResponse, error)
+	SupportedChains(context.Context, *QuerySupportedChains) (*QuerySupportedChainsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -422,6 +617,12 @@ func (*UnimplementedQueryServer) BallotByIdentifier(ctx context.Context, req *Qu
 }
 func (*UnimplementedQueryServer) ObserversByChainAndType(ctx context.Context, req *QueryObserversByChainAndTypeRequest) (*QueryObserversByChainAndTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ObserversByChainAndType not implemented")
+}
+func (*UnimplementedQueryServer) AllObserverMappers(ctx context.Context, req *QueryAllObserverMappersRequest) (*QueryAllObserverMappersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllObserverMappers not implemented")
+}
+func (*UnimplementedQueryServer) SupportedChains(ctx context.Context, req *QuerySupportedChains) (*QuerySupportedChainsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SupportedChains not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -482,6 +683,42 @@ func _Query_ObserversByChainAndType_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllObserverMappers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllObserverMappersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllObserverMappers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.zetaobserver.Query/AllObserverMappers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllObserverMappers(ctx, req.(*QueryAllObserverMappersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SupportedChains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySupportedChains)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SupportedChains(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.zetaobserver.Query/SupportedChains",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SupportedChains(ctx, req.(*QuerySupportedChains))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.zetaobserver.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -497,6 +734,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ObserversByChainAndType",
 			Handler:    _Query_ObserversByChainAndType_Handler,
+		},
+		{
+			MethodName: "AllObserverMappers",
+			Handler:    _Query_AllObserverMappers_Handler,
+		},
+		{
+			MethodName: "SupportedChains",
+			Handler:    _Query_SupportedChains_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -609,10 +854,15 @@ func (m *QueryBallotByIdentifierResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Ballot) > 0 {
-		i -= len(m.Ballot)
-		copy(dAtA[i:], m.Ballot)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Ballot)))
+	if m.Ballot != nil {
+		{
+			size, err := m.Ballot.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -676,10 +926,125 @@ func (m *QueryObserversByChainAndTypeResponse) MarshalToSizedBuffer(dAtA []byte)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ObserverMapper) > 0 {
-		i -= len(m.ObserverMapper)
-		copy(dAtA[i:], m.ObserverMapper)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.ObserverMapper)))
+	if len(m.Observers) > 0 {
+		for iNdEx := len(m.Observers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Observers[iNdEx])
+			copy(dAtA[i:], m.Observers[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Observers[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllObserverMappersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllObserverMappersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllObserverMappersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllObserverMappersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllObserverMappersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllObserverMappersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ObserverMappers) > 0 {
+		for iNdEx := len(m.ObserverMappers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ObserverMappers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySupportedChains) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySupportedChains) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySupportedChains) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySupportedChainsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySupportedChainsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySupportedChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Chains) > 0 {
+		i -= len(m.Chains)
+		copy(dAtA[i:], m.Chains)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Chains)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -736,8 +1101,8 @@ func (m *QueryBallotByIdentifierResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Ballot)
-	if l > 0 {
+	if m.Ballot != nil {
+		l = m.Ballot.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -766,7 +1131,55 @@ func (m *QueryObserversByChainAndTypeResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ObserverMapper)
+	if len(m.Observers) > 0 {
+		for _, s := range m.Observers {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryAllObserverMappersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllObserverMappersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ObserverMappers) > 0 {
+		for _, e := range m.ObserverMappers {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QuerySupportedChains) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QuerySupportedChainsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Chains)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -1027,7 +1440,7 @@ func (m *QueryBallotByIdentifierResponse) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ballot", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1037,23 +1450,27 @@ func (m *QueryBallotByIdentifierResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Ballot = string(dAtA[iNdEx:postIndex])
+			if m.Ballot == nil {
+				m.Ballot = &Ballot{}
+			}
+			if err := m.Ballot.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1221,7 +1638,7 @@ func (m *QueryObserversByChainAndTypeResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObserverMapper", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Observers", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1249,7 +1666,273 @@ func (m *QueryObserversByChainAndTypeResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ObserverMapper = string(dAtA[iNdEx:postIndex])
+			m.Observers = append(m.Observers, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllObserverMappersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllObserverMappersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllObserverMappersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllObserverMappersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllObserverMappersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllObserverMappersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObserverMappers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ObserverMappers = append(m.ObserverMappers, &ObserverMapper{})
+			if err := m.ObserverMappers[len(m.ObserverMappers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySupportedChains) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySupportedChains: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySupportedChains: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySupportedChainsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySupportedChainsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySupportedChainsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chains", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Chains = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
