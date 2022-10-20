@@ -49,5 +49,5 @@ func (k Keeper) SupportedChains(goCtx context.Context, _ *types.QuerySupportedCh
 	if !found {
 		return nil, types.ErrSupportedChains.Wrap("Supported chains not set")
 	}
-	return &types.QuerySupportedChainsResponse{Chains: chains.String()}, nil
+	return &types.QuerySupportedChainsResponse{Chains: chains.ChainList}, nil
 }
