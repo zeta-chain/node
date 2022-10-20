@@ -2217,23 +2217,23 @@ var (
 
 	pattern_Query_ChainNonces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "chainNonces", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChainNoncesAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "chainNonces"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChainNoncesAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "chainNonces"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_LastBlockHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "zetacore", "lastBlockHeight", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LastBlockHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "lastBlockHeight", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_LastBlockHeightAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "lastBlockHeight"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LastBlockHeightAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "lastBlockHeight"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Cctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "zetacore", "cctx", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Cctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "cctx", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_CctxAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "cctx"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_CctxAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "cctx"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_CctxAllPending_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "cctxPending"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_CctxAllPending_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "cctxPending"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_NodeAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "zetacore", "nodeAccount", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_NodeAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "nodeAccount", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_NodeAccountAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "nodeAccount"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_NodeAccountAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "nodeAccount"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_LastMetaHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "zetacore", "lastMetaHeight"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LastMetaHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "lastMetaHeight"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

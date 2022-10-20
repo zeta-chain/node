@@ -108,46 +108,46 @@ service Query {
 
 	// Queries a list of chainNonces items.
 	rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/chainNonces";
+		option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
 	}
 
 
 	// Queries a lastBlockHeight by index.
 	rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight/{index}";
+		option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight/{index}";
 	}
 
 	// Queries a list of lastBlockHeight items.
 	rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest) returns (QueryAllLastBlockHeightResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight";
+		option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight";
 	}
 	// Queries a send by index.
 	rpc Cctx(QueryGetCctxRequest) returns (QueryGetCctxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/cctx/{index}";
+		option (google.api.http).get = "/zeta-chain/crosschain/cctx/{index}";
 	}
 
 	// Queries a list of send items.
 	rpc CctxAll(QueryAllCctxRequest) returns (QueryAllCctxResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/cctx";
+		option (google.api.http).get = "/zeta-chain/crosschain/cctx";
 	}
 
 	// Queries a list of send items.
 	rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/cctxPending";
+		option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
 	}
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount/{index}";
+		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount/{index}";
 	}
 
 	// Queries a list of nodeAccount items.
 	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount";
+		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount";
 	}
 
 	// Queries a list of lastMetaHeight items.
 	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
+		option (google.api.http).get = "/zeta-chain/crosschain/lastMetaHeight";
 	}
 
 }
