@@ -1,0 +1,363 @@
+syntax = "proto3";
+package zetachain.zetacore.crosschain;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "crosschain/zeta_conversion_rate.proto";
+import "crosschain/out_tx_tracker.proto";
+// this line is used by starport scaffolding # 1
+import "gogoproto/gogo.proto";
+import "crosschain/keygen.proto";
+import "crosschain/tss_voter.proto";
+import "crosschain/tss.proto";
+import "crosschain/gas_balance.proto";
+import "crosschain/gas_price.proto";
+import "crosschain/chain_nonces.proto";
+import "crosschain/last_block_height.proto";
+import "crosschain/cross_chain_tx.proto";
+import "crosschain/node_account.proto";
+import "crosschain/params.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+
+// Query defines the gRPC querier service.
+service Query {
+	// Parameters queries the parameters of the module.
+	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/params";
+	}
+    // Queries a ZetaConversionRate by index.
+	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/zetaConversionRate/{index}";
+	}
+
+	// Queries a list of ZetaConversionRate items.
+	rpc ZetaConversionRateAll(QueryAllZetaConversionRateRequest) returns (QueryAllZetaConversionRateResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/zetaConversionRate";
+	}
+
+// Queries a OutTxTracker by index.
+	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{index}";
+	}
+
+	// Queries a list of OutTxTracker items.
+	rpc OutTxTrackerAll(QueryAllOutTxTrackerRequest) returns (QueryAllOutTxTrackerResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker";
+	}
+
+	rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain";
+	}
+
+// this line is used by starport scaffolding # 2
+
+	// Queries a keygen by index.
+	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/keygen";
+	}
+
+
+	// Queries a tSSVoter by index.
+	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter/{index}";
+	}
+
+	// Queries a list of tSSVoter items.
+	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter";
+	}
+
+
+	// Queries a tSS by index.
+	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/TSS/{index}";
+	}
+
+	// Queries a list of tSS items.
+	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/TSS";
+	}
+
+	// Queries a gasBalance by index.
+	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/gasBalance/{index}";
+	}
+
+	// Queries a list of gasBalance items.
+	rpc GasBalanceAll(QueryAllGasBalanceRequest) returns (QueryAllGasBalanceResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/gasBalance";
+	}
+
+
+	// Queries a gasPrice by index.
+	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/gasPrice/{index}";
+	}
+
+	// Queries a list of gasPrice items.
+	rpc GasPriceAll(QueryAllGasPriceRequest) returns (QueryAllGasPriceResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/gasPrice";
+	}
+
+
+	// Queries a chainNonces by index.
+	rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/chainNonces/{index}";
+	}
+
+	// Queries a list of chainNonces items.
+	rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/chainNonces";
+	}
+
+
+	// Queries a lastBlockHeight by index.
+	rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight/{index}";
+	}
+
+	// Queries a list of lastBlockHeight items.
+	rpc LastBlockHeightAll(QueryAllLastBlockHeightRequest) returns (QueryAllLastBlockHeightResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/lastBlockHeight";
+	}
+	// Queries a send by index.
+	rpc Cctx(QueryGetCctxRequest) returns (QueryGetCctxResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/cctx/{index}";
+	}
+
+	// Queries a list of send items.
+	rpc CctxAll(QueryAllCctxRequest) returns (QueryAllCctxResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/cctx";
+	}
+
+	// Queries a list of send items.
+	rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/cctxPending";
+	}
+	// Queries a nodeAccount by index.
+	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount/{index}";
+	}
+
+	// Queries a list of nodeAccount items.
+	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/nodeAccount";
+	}
+
+	// Queries a list of lastMetaHeight items.
+	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/lastMetaHeight";
+	}
+
+}
+
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+	// params holds all the parameters of this module.
+	Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetZetaConversionRateRequest {
+	  string index = 1;
+
+}
+
+message QueryGetZetaConversionRateResponse {
+	ZetaConversionRate zetaConversionRate = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllZetaConversionRateRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllZetaConversionRateResponse {
+	repeated ZetaConversionRate zetaConversionRate = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetOutTxTrackerRequest {
+	  string index = 1;
+
+}
+
+message QueryGetOutTxTrackerResponse {
+	OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllOutTxTrackerRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllOutTxTrackerResponse {
+	repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllOutTxTrackerByChainRequest {
+	string chain = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllOutTxTrackerByChainResponse {
+	repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetKeygenRequest {}
+
+message QueryGetKeygenResponse {
+	Keygen Keygen = 1;
+}
+message QueryGetTSSVoterRequest {
+	string index = 1;
+}
+
+message QueryGetTSSVoterResponse {
+	TSSVoter TSSVoter = 1;
+}
+
+message QueryAllTSSVoterRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTSSVoterResponse {
+	repeated TSSVoter TSSVoter = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetTSSRequest {
+	string index = 1;
+}
+
+message QueryGetTSSResponse {
+	TSS TSS = 1;
+}
+
+message QueryAllTSSRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTSSResponse {
+	repeated TSS TSS = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetGasBalanceRequest {
+	string index = 1;
+}
+
+message QueryGetGasBalanceResponse {
+	GasBalance GasBalance = 1;
+}
+
+message QueryAllGasBalanceRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllGasBalanceResponse {
+	repeated GasBalance GasBalance = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetGasPriceRequest {
+	string index = 1;
+}
+
+message QueryGetGasPriceResponse {
+	GasPrice GasPrice = 1;
+}
+
+message QueryAllGasPriceRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllGasPriceResponse {
+	repeated GasPrice GasPrice = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetChainNoncesRequest {
+	string index = 1;
+}
+
+message QueryGetChainNoncesResponse {
+	ChainNonces ChainNonces = 1;
+}
+
+message QueryAllChainNoncesRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllChainNoncesResponse {
+	repeated ChainNonces ChainNonces = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetLastBlockHeightRequest {
+	string index = 1;
+}
+
+message QueryGetLastBlockHeightResponse {
+	LastBlockHeight LastBlockHeight = 1;
+}
+
+message QueryAllLastBlockHeightRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllLastBlockHeightResponse {
+	repeated LastBlockHeight LastBlockHeight = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetCctxRequest {
+	string index = 1;
+	int32 status = 2;
+}
+
+message QueryGetCctxResponse {
+	CrossChainTx CrossChainTx = 1;
+}
+
+message QueryAllCctxRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllCctxResponse {
+	repeated CrossChainTx CrossChainTx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllCctxPendingRequest {
+
+}
+
+message QueryAllCctxPendingResponse {
+	repeated CrossChainTx CrossChainTx = 1;
+}
+
+message QueryGetNodeAccountRequest {
+	string index = 1;
+}
+
+message QueryGetNodeAccountResponse {
+	NodeAccount NodeAccount = 1;
+}
+
+message QueryAllNodeAccountRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeAccountResponse {
+	repeated NodeAccount NodeAccount = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryLastMetaHeightRequest {
+}
+
+message QueryLastMetaHeightResponse {
+	uint64 Height = 1;
+}
+

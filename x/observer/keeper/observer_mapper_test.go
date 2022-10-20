@@ -29,7 +29,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:      types.ObserverChain_Eth,
 			assertObsType:    types.ObservationType_InBoundTx,
 			assertObsListLen: 4,
@@ -39,7 +39,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:      types.ObserverChain_Eth,
 			assertObsType:    types.ObservationType_InBoundTx,
 			assertObsListLen: 0,
@@ -49,7 +49,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 			name: "No Observers of expected Observation Type",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:      types.ObserverChain_Eth,
 			assertObsType:    types.ObservationType_GasPrice,
 			assertObsListLen: 0,
@@ -99,7 +99,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 		},
 		{
 			name:          "4 BSC InBoundTx Observers",
-			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_InBoundTx),
+			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_InBoundTx),
 			assertChain:   "BscChainObserver",
 			assertObsType: "InBoundTx",
 			isFound:       true,
@@ -115,7 +115,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:   "EthChainObserver",
 			assertObsType: "InBoundTx",
 			isFound:       true,
@@ -124,7 +124,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:   "EthChainObserver",
 			assertObsType: "InBoundTx",
 			isFound:       false,
@@ -133,7 +133,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 			name: "No Observers of expected Observation Type",
 			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...),
+				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
 			assertChain:   "EthChainObserver",
 			assertObsType: "GasPrice",
 			isFound:       false,
@@ -165,7 +165,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 func TestKeeper_GetAllObserverAddresses(t *testing.T) {
 	mappers := append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
 		types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-		types.CreateObserverMapperList(1, types.ObserverChain_Bsc, types.ObservationType_OutBoundTx)...)
+		types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...)
 	keeper, ctx := SetupKeeper(t)
 	for _, mapper := range mappers {
 		keeper.SetObserverMapper(ctx, mapper)

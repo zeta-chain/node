@@ -28,7 +28,7 @@ import (
 
 	prom "github.com/prometheus/client_golang/prometheus"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )

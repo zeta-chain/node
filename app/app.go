@@ -100,9 +100,9 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	zetaCoreModule "github.com/zeta-chain/zetacore/x/zetacore"
-	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
-	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
+	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
