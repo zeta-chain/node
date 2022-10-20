@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type StakingKeeper interface {

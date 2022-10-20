@@ -7,8 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 	"strconv"
 )
 

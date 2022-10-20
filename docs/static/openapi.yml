@@ -31927,6 +31927,284 @@ paths:
           format: uint64
       tags:
         - Query
+  /zeta-chain/observer/all_observer_mappers:
+    get:
+      operationId: ZetachainZetacoreObserverAllObserverMappers
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              ObserverMappers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    index:
+                      type: string
+                    ObserverChain:
+                      type: string
+                      enum:
+                        - Empty
+                        - Eth
+                        - ZetaChain
+                        - Btc
+                        - Polygon
+                        - BscMainnet
+                        - Goerli
+                        - Mumbai
+                        - Ropsten
+                        - Ganache
+                        - Baobap
+                        - BscTestnet
+                      default: Empty
+                    ObservationType:
+                      type: string
+                      enum:
+                        - EmptyObserverType
+                        - InBoundTx
+                        - OutBoundTx
+                        - GasPrice
+                      default: EmptyObserverType
+                    observerList:
+                      type: array
+                      items:
+                        type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  '/zeta-chain/observer/ballot_by_identifier/{ballotIdentifier}':
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: ZetachainZetacoreObserverBallotByIdentifier
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              ballot:
+                type: object
+                properties:
+                  index:
+                    type: string
+                  BallotIdentifier:
+                    type: string
+                  VoterList:
+                    type: array
+                    items:
+                      type: string
+                  Votes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - SuccessObservation
+                        - FailureObservation
+                        - NotYetVoted
+                      default: SuccessObservation
+                  ObservationType:
+                    type: string
+                    enum:
+                      - EmptyObserverType
+                      - InBoundTx
+                      - OutBoundTx
+                      - GasPrice
+                    default: EmptyObserverType
+                  BallotThreshold:
+                    type: string
+                  BallotStatus:
+                    type: string
+                    enum:
+                      - BallotFinalized_SuccessObservation
+                      - BallotFinalized_FailureObservation
+                      - BallotInProgress
+                    default: BallotFinalized_SuccessObservation
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: ballotIdentifier
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/zeta-chain/observer/observers_by_chain_and_type/{observationChain}/{observationType}':
+    get:
+      summary: Queries a list of ObserversByChainAndType items.
+      operationId: ZetachainZetacoreObserverObserversByChainAndType
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Observers:
+                type: array
+                items:
+                  type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: observationChain
+          in: path
+          required: true
+          type: string
+        - name: observationType
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/observer/supportedChains:
+    get:
+      operationId: ZetachainZetacoreObserverSupportedChains
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Chains:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /zetachain/observer/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreObserverParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  BallotThresholds:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        Chain:
+                          type: string
+                          enum:
+                            - Empty
+                            - Eth
+                            - ZetaChain
+                            - Btc
+                            - Polygon
+                            - BscMainnet
+                            - Goerli
+                            - Mumbai
+                            - Ropsten
+                            - Ganache
+                            - Baobap
+                            - BscTestnet
+                          default: Empty
+                        Observation:
+                          type: string
+                          enum:
+                            - EmptyObserverType
+                            - InBoundTx
+                            - OutBoundTx
+                            - GasPrice
+                          default: EmptyObserverType
+                        Threshold:
+                          type: string
+                description: Params defines the parameters for the module.
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /zeta-chain/zetacore/TSS:
     get:
       summary: Queries a list of tSS items.
@@ -32287,6 +32565,418 @@ paths:
           in: path
           required: true
           type: string
+      tags:
+        - Query
+  /zeta-chain/zetacore/cctx:
+    get:
+      summary: Queries a list of send items.
+      operationId: ZetachainZetacoreZetacoreCctxAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              CrossChainTx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    zetaBurnt:
+                      type: string
+                    zetaMint:
+                      type: string
+                    zetaFees:
+                      type: string
+                    relayedMessage:
+                      type: string
+                    cctx_status:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                            - PendingInbound
+                            - PendingOutbound
+                            - OutboundMined
+                            - PendingRevert
+                            - Reverted
+                            - Aborted
+                          default: PendingInbound
+                        statusMessage:
+                          type: string
+                        lastUpdateTimestamp:
+                          type: string
+                          format: int64
+                    InBoundTxParams:
+                      type: object
+                      properties:
+                        sender:
+                          type: string
+                        senderChain:
+                          type: string
+                        inBoundTxObservedHash:
+                          type: string
+                        inBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+                        inBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        inBoundTXBallotIndex:
+                          type: string
+                    OutBoundTxParams:
+                      type: object
+                      properties:
+                        receiver:
+                          type: string
+                        receiverChain:
+                          type: string
+                        broadcaster:
+                          type: string
+                          format: uint64
+                        outBoundTxHash:
+                          type: string
+                        outBoundTxTSSNonce:
+                          type: string
+                          format: uint64
+                        outBoundTxGasLimit:
+                          type: string
+                          format: uint64
+                        outBoundTxGasPrice:
+                          type: string
+                        outBoundTXBallotIndex:
+                          type: string
+                        outBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        outBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/zeta-chain/zetacore/cctx/{index}':
+    get:
+      summary: Queries a send by index.
+      operationId: ZetachainZetacoreZetacoreCctx
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              CrossChainTx:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  zetaBurnt:
+                    type: string
+                  zetaMint:
+                    type: string
+                  zetaFees:
+                    type: string
+                  relayedMessage:
+                    type: string
+                  cctx_status:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                          - PendingInbound
+                          - PendingOutbound
+                          - OutboundMined
+                          - PendingRevert
+                          - Reverted
+                          - Aborted
+                        default: PendingInbound
+                      statusMessage:
+                        type: string
+                      lastUpdateTimestamp:
+                        type: string
+                        format: int64
+                  InBoundTxParams:
+                    type: object
+                    properties:
+                      sender:
+                        type: string
+                      senderChain:
+                        type: string
+                      inBoundTxObservedHash:
+                        type: string
+                      inBoundTxObservedExternalHeight:
+                        type: string
+                        format: uint64
+                      inBoundTxFinalizedZetaHeight:
+                        type: string
+                        format: uint64
+                      inBoundTXBallotIndex:
+                        type: string
+                  OutBoundTxParams:
+                    type: object
+                    properties:
+                      receiver:
+                        type: string
+                      receiverChain:
+                        type: string
+                      broadcaster:
+                        type: string
+                        format: uint64
+                      outBoundTxHash:
+                        type: string
+                      outBoundTxTSSNonce:
+                        type: string
+                        format: uint64
+                      outBoundTxGasLimit:
+                        type: string
+                        format: uint64
+                      outBoundTxGasPrice:
+                        type: string
+                      outBoundTXBallotIndex:
+                        type: string
+                      outBoundTxFinalizedZetaHeight:
+                        type: string
+                        format: uint64
+                      outBoundTxObservedExternalHeight:
+                        type: string
+                        format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+        - name: status
+          in: query
+          required: false
+          type: integer
+          format: int32
+      tags:
+        - Query
+  /zeta-chain/zetacore/cctxPending:
+    get:
+      summary: Queries a list of send items.
+      operationId: ZetachainZetacoreZetacoreCctxAllPending
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              CrossChainTx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    zetaBurnt:
+                      type: string
+                    zetaMint:
+                      type: string
+                    zetaFees:
+                      type: string
+                    relayedMessage:
+                      type: string
+                    cctx_status:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                            - PendingInbound
+                            - PendingOutbound
+                            - OutboundMined
+                            - PendingRevert
+                            - Reverted
+                            - Aborted
+                          default: PendingInbound
+                        statusMessage:
+                          type: string
+                        lastUpdateTimestamp:
+                          type: string
+                          format: int64
+                    InBoundTxParams:
+                      type: object
+                      properties:
+                        sender:
+                          type: string
+                        senderChain:
+                          type: string
+                        inBoundTxObservedHash:
+                          type: string
+                        inBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+                        inBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        inBoundTXBallotIndex:
+                          type: string
+                    OutBoundTxParams:
+                      type: object
+                      properties:
+                        receiver:
+                          type: string
+                        receiverChain:
+                          type: string
+                        broadcaster:
+                          type: string
+                          format: uint64
+                        outBoundTxHash:
+                          type: string
+                        outBoundTxTSSNonce:
+                          type: string
+                          format: uint64
+                        outBoundTxGasLimit:
+                          type: string
+                          format: uint64
+                        outBoundTxGasPrice:
+                          type: string
+                        outBoundTXBallotIndex:
+                          type: string
+                        outBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        outBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
       tags:
         - Query
   /zeta-chain/zetacore/chainNonces:
@@ -33298,48 +33988,36 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/zetacore/receive:
+  /zeta-chain/zetacore/outTxTracker:
     get:
-      summary: Queries a list of receive items.
-      operationId: ZetachainZetacoreZetacoreReceiveAll
+      summary: Queries a list of OutTxTracker items.
+      operationId: ZetachainZetacoreZetacoreOutTxTrackerAll
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              Receive:
+              outTxTracker:
                 type: array
                 items:
                   type: object
                   properties:
-                    creator:
-                      type: string
                     index:
                       type: string
-                    sendHash:
-                      type: string
-                    outTxHash:
-                      type: string
-                    outBlockHeight:
-                      type: string
-                      format: uint64
-                    finalizedMetaHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    status:
-                      type: string
-                      enum:
-                        - Created
-                        - Success
-                        - Failed
-                      default: Created
                     chain:
                       type: string
+                    nonce:
+                      type: string
+                    hashList:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          txHash:
+                            type: string
+                          signer:
+                            type: string
               pagination:
                 type: object
                 properties:
@@ -33434,46 +34112,34 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/receive/{index}':
+  '/zeta-chain/zetacore/outTxTracker/{index}':
     get:
-      summary: Queries a receive by index.
-      operationId: ZetachainZetacoreZetacoreReceive
+      summary: Queries a OutTxTracker by index.
+      operationId: ZetachainZetacoreZetacoreOutTxTracker
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              Receive:
+              outTxTracker:
                 type: object
                 properties:
-                  creator:
-                    type: string
                   index:
                     type: string
-                  sendHash:
-                    type: string
-                  outTxHash:
-                    type: string
-                  outBlockHeight:
-                    type: string
-                    format: uint64
-                  finalizedMetaHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  status:
-                    type: string
-                    enum:
-                      - Created
-                      - Success
-                      - Failed
-                    default: Created
                   chain:
                     type: string
+                  nonce:
+                    type: string
+                  hashList:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        txHash:
+                          type: string
+                        signer:
+                          type: string
         default:
           description: An unexpected error response.
           schema:
@@ -33499,85 +34165,35 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/zetacore/send:
+  /zeta-chain/zetacore/outTxTrackerByChain:
     get:
-      summary: Queries a list of send items.
-      operationId: ZetachainZetacoreZetacoreSendAll
+      operationId: ZetachainZetacoreZetacoreOutTxTrackerAllByChain
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              Send:
+              outTxTracker:
                 type: array
                 items:
                   type: object
                   properties:
-                    creator:
-                      type: string
                     index:
                       type: string
-                    sender:
+                    chain:
                       type: string
-                    senderChain:
-                      type: string
-                    receiver:
-                      type: string
-                    receiverChain:
-                      type: string
-                    zetaBurnt:
-                      type: string
-                    zetaMint:
-                      type: string
-                    message:
-                      type: string
-                    inTxHash:
-                      type: string
-                    inBlockHeight:
-                      type: string
-                      format: uint64
-                    finalizedMetaHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    status:
-                      type: string
-                      enum:
-                        - PendingInbound
-                        - PendingOutbound
-                        - OutboundMined
-                        - Confirmed
-                        - PendingRevert
-                        - Reverted
-                        - Aborted
-                      default: PendingInbound
-                    broadcaster:
-                      type: string
-                      format: uint64
                     nonce:
                       type: string
-                      format: uint64
-                    gasPrice:
-                      type: string
-                    statusMessage:
-                      type: string
-                    recvHash:
-                      type: string
-                    indexTxList:
-                      type: string
-                      format: int64
-                    outTxHash:
-                      type: string
-                    lastUpdateTimestamp:
-                      type: string
-                      format: int64
-                    gasLimit:
-                      type: string
-                      format: uint64
+                    hashList:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          txHash:
+                            type: string
+                          signer:
+                            type: string
               pagination:
                 type: object
                 properties:
@@ -33624,6 +34240,10 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
+        - name: chain
+          in: query
+          required: false
+          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -33672,187 +34292,25 @@ paths:
           type: boolean
       tags:
         - Query
-  '/zeta-chain/zetacore/send/{index}':
+  /zeta-chain/zetacore/params:
     get:
-      summary: Queries a send by index.
-      operationId: ZetachainZetacoreZetacoreSend
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreZetacoreParams
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              Send:
+              params:
                 type: object
                 properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  sender:
-                    type: string
-                  senderChain:
-                    type: string
-                  receiver:
-                    type: string
-                  receiverChain:
-                    type: string
-                  zetaBurnt:
-                    type: string
-                  zetaMint:
-                    type: string
-                  message:
-                    type: string
-                  inTxHash:
-                    type: string
-                  inBlockHeight:
-                    type: string
-                    format: uint64
-                  finalizedMetaHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  status:
-                    type: string
-                    enum:
-                      - PendingInbound
-                      - PendingOutbound
-                      - OutboundMined
-                      - Confirmed
-                      - PendingRevert
-                      - Reverted
-                      - Aborted
-                    default: PendingInbound
-                  broadcaster:
-                    type: string
-                    format: uint64
-                  nonce:
-                    type: string
-                    format: uint64
-                  gasPrice:
-                    type: string
-                  statusMessage:
-                    type: string
-                  recvHash:
-                    type: string
-                  indexTxList:
-                    type: string
-                    format: int64
-                  outTxHash:
-                    type: string
-                  lastUpdateTimestamp:
-                    type: string
-                    format: int64
-                  gasLimit:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /zeta-chain/zetacore/sendPending:
-    get:
-      summary: Queries a list of send items.
-      operationId: ZetachainZetacoreZetacoreSendAllPending
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              Send:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    sender:
-                      type: string
-                    senderChain:
-                      type: string
-                    receiver:
-                      type: string
-                    receiverChain:
-                      type: string
-                    zetaBurnt:
-                      type: string
-                    zetaMint:
-                      type: string
-                    message:
-                      type: string
-                    inTxHash:
-                      type: string
-                    inBlockHeight:
-                      type: string
-                      format: uint64
-                    finalizedMetaHeight:
-                      type: string
-                      format: uint64
-                    signers:
-                      type: array
-                      items:
-                        type: string
-                    status:
-                      type: string
-                      enum:
-                        - PendingInbound
-                        - PendingOutbound
-                        - OutboundMined
-                        - Confirmed
-                        - PendingRevert
-                        - Reverted
-                        - Aborted
-                      default: PendingInbound
-                    broadcaster:
-                      type: string
-                      format: uint64
-                    nonce:
-                      type: string
-                      format: uint64
-                    gasPrice:
-                      type: string
-                    statusMessage:
-                      type: string
-                    recvHash:
-                      type: string
-                    indexTxList:
-                      type: string
-                      format: int64
-                    outTxHash:
-                      type: string
-                    lastUpdateTimestamp:
-                      type: string
-                      format: int64
-                    gasLimit:
-                      type: string
-                      format: uint64
+                  enabled:
+                    type: boolean
+                description: Params defines the parameters for the module.
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
         default:
           description: An unexpected error response.
           schema:
@@ -34062,487 +34520,6 @@ paths:
           in: path
           required: true
           type: string
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/outTxTracker:
-    get:
-      summary: Queries a list of OutTxTracker items.
-      operationId: ZetachainZetacoreZetacoreOutTxTrackerAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              outTxTracker:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    index:
-                      type: string
-                    chain:
-                      type: string
-                    nonce:
-                      type: string
-                    hashList:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          txHash:
-                            type: string
-                          signer:
-                            type: string
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/zeta-chain/zetacore/zetacore/outTxTracker/{index}':
-    get:
-      summary: Queries a OutTxTracker by index.
-      operationId: ZetachainZetacoreZetacoreOutTxTracker
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              outTxTracker:
-                type: object
-                properties:
-                  index:
-                    type: string
-                  chain:
-                    type: string
-                  nonce:
-                    type: string
-                  hashList:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        txHash:
-                          type: string
-                        signer:
-                          type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /zeta-chain/zetacore/zetacore/outTxTrackerByChain:
-    get:
-      operationId: ZetachainZetacoreZetacoreOutTxTrackerAllByChain
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              outTxTracker:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    index:
-                      type: string
-                    chain:
-                      type: string
-                    nonce:
-                      type: string
-                    hashList:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          txHash:
-                            type: string
-                          signer:
-                            type: string
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: chain
-          in: query
-          required: false
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /zetachain/zetacore/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: ZetachainZetacoreZetacoreParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                description: params holds all the parameters of this module.
-                type: object
-                properties:
-                  enabled:
-                    type: boolean
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  '/zeta-chain/zetacore/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}':
-    get:
-      summary: Queries a list of ObserversByChainAndType items.
-      operationId: ZetachainZetacoreZetaobserverObserversByChainAndType
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              observerMapper:
-                type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: observationChain
-          in: path
-          required: true
-          type: string
-        - name: observationType
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  '/zeta-chain/zetacore/zetaobserver/voter_by_identifier/{voteIdentifier}':
-    get:
-      summary: Queries a list of VoterByIdentifier items.
-      operationId: ZetachainZetacoreZetaobserverVoterByIdentifier
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              voter:
-                type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: voteIdentifier
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /zetachain/zetaobserver/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: ZetachainZetacoreZetaobserverParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                description: params holds all the parameters of this module.
-                type: object
-                properties:
-                  VotingThresholds:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        Chain:
-                          type: string
-                          enum:
-                            - EthChainObserver
-                            - ZetaChainObserver
-                            - BTCChainObserver
-                            - PolygonChainObserver
-                            - BscChainObserver
-                          default: EthChainObserver
-                        Observation:
-                          type: string
-                          enum:
-                            - InboundTx
-                            - OutBoundTx
-                            - GasPrice
-                          default: InboundTx
-                        Threshold:
-                          type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
       tags:
         - Query
 definitions:
@@ -55391,6 +55368,309 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  zetachain.zetacore.observer.Ballot:
+    type: object
+    properties:
+      index:
+        type: string
+      BallotIdentifier:
+        type: string
+      VoterList:
+        type: array
+        items:
+          type: string
+      Votes:
+        type: array
+        items:
+          type: string
+          enum:
+            - SuccessObservation
+            - FailureObservation
+            - NotYetVoted
+          default: SuccessObservation
+      ObservationType:
+        type: string
+        enum:
+          - EmptyObserverType
+          - InBoundTx
+          - OutBoundTx
+          - GasPrice
+        default: EmptyObserverType
+      BallotThreshold:
+        type: string
+      BallotStatus:
+        type: string
+        enum:
+          - BallotFinalized_SuccessObservation
+          - BallotFinalized_FailureObservation
+          - BallotInProgress
+        default: BallotFinalized_SuccessObservation
+  zetachain.zetacore.observer.BallotStatus:
+    type: string
+    enum:
+      - BallotFinalized_SuccessObservation
+      - BallotFinalized_FailureObservation
+      - BallotInProgress
+    default: BallotFinalized_SuccessObservation
+  zetachain.zetacore.observer.BallotThreshold:
+    type: object
+    properties:
+      Chain:
+        type: string
+        enum:
+          - Empty
+          - Eth
+          - ZetaChain
+          - Btc
+          - Polygon
+          - BscMainnet
+          - Goerli
+          - Mumbai
+          - Ropsten
+          - Ganache
+          - Baobap
+          - BscTestnet
+        default: Empty
+      Observation:
+        type: string
+        enum:
+          - EmptyObserverType
+          - InBoundTx
+          - OutBoundTx
+          - GasPrice
+        default: EmptyObserverType
+      Threshold:
+        type: string
+  zetachain.zetacore.observer.MsgSetSupportedChainsResponse:
+    type: object
+  zetachain.zetacore.observer.ObservationType:
+    type: string
+    enum:
+      - EmptyObserverType
+      - InBoundTx
+      - OutBoundTx
+      - GasPrice
+    default: EmptyObserverType
+  zetachain.zetacore.observer.ObserverChain:
+    type: string
+    enum:
+      - Empty
+      - Eth
+      - ZetaChain
+      - Btc
+      - Polygon
+      - BscMainnet
+      - Goerli
+      - Mumbai
+      - Ropsten
+      - Ganache
+      - Baobap
+      - BscTestnet
+    default: Empty
+  zetachain.zetacore.observer.ObserverMapper:
+    type: object
+    properties:
+      index:
+        type: string
+      ObserverChain:
+        type: string
+        enum:
+          - Empty
+          - Eth
+          - ZetaChain
+          - Btc
+          - Polygon
+          - BscMainnet
+          - Goerli
+          - Mumbai
+          - Ropsten
+          - Ganache
+          - Baobap
+          - BscTestnet
+        default: Empty
+      ObservationType:
+        type: string
+        enum:
+          - EmptyObserverType
+          - InBoundTx
+          - OutBoundTx
+          - GasPrice
+        default: EmptyObserverType
+      observerList:
+        type: array
+        items:
+          type: string
+  zetachain.zetacore.observer.Params:
+    type: object
+    properties:
+      BallotThresholds:
+        type: array
+        items:
+          type: object
+          properties:
+            Chain:
+              type: string
+              enum:
+                - Empty
+                - Eth
+                - ZetaChain
+                - Btc
+                - Polygon
+                - BscMainnet
+                - Goerli
+                - Mumbai
+                - Ropsten
+                - Ganache
+                - Baobap
+                - BscTestnet
+              default: Empty
+            Observation:
+              type: string
+              enum:
+                - EmptyObserverType
+                - InBoundTx
+                - OutBoundTx
+                - GasPrice
+              default: EmptyObserverType
+            Threshold:
+              type: string
+    description: Params defines the parameters for the module.
+  zetachain.zetacore.observer.QueryAllObserverMappersResponse:
+    type: object
+    properties:
+      ObserverMappers:
+        type: array
+        items:
+          type: object
+          properties:
+            index:
+              type: string
+            ObserverChain:
+              type: string
+              enum:
+                - Empty
+                - Eth
+                - ZetaChain
+                - Btc
+                - Polygon
+                - BscMainnet
+                - Goerli
+                - Mumbai
+                - Ropsten
+                - Ganache
+                - Baobap
+                - BscTestnet
+              default: Empty
+            ObservationType:
+              type: string
+              enum:
+                - EmptyObserverType
+                - InBoundTx
+                - OutBoundTx
+                - GasPrice
+              default: EmptyObserverType
+            observerList:
+              type: array
+              items:
+                type: string
+  zetachain.zetacore.observer.QueryBallotByIdentifierResponse:
+    type: object
+    properties:
+      ballot:
+        type: object
+        properties:
+          index:
+            type: string
+          BallotIdentifier:
+            type: string
+          VoterList:
+            type: array
+            items:
+              type: string
+          Votes:
+            type: array
+            items:
+              type: string
+              enum:
+                - SuccessObservation
+                - FailureObservation
+                - NotYetVoted
+              default: SuccessObservation
+          ObservationType:
+            type: string
+            enum:
+              - EmptyObserverType
+              - InBoundTx
+              - OutBoundTx
+              - GasPrice
+            default: EmptyObserverType
+          BallotThreshold:
+            type: string
+          BallotStatus:
+            type: string
+            enum:
+              - BallotFinalized_SuccessObservation
+              - BallotFinalized_FailureObservation
+              - BallotInProgress
+            default: BallotFinalized_SuccessObservation
+  zetachain.zetacore.observer.QueryObserversByChainAndTypeResponse:
+    type: object
+    properties:
+      Observers:
+        type: array
+        items:
+          type: string
+  zetachain.zetacore.observer.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          BallotThresholds:
+            type: array
+            items:
+              type: object
+              properties:
+                Chain:
+                  type: string
+                  enum:
+                    - Empty
+                    - Eth
+                    - ZetaChain
+                    - Btc
+                    - Polygon
+                    - BscMainnet
+                    - Goerli
+                    - Mumbai
+                    - Ropsten
+                    - Ganache
+                    - Baobap
+                    - BscTestnet
+                  default: Empty
+                Observation:
+                  type: string
+                  enum:
+                    - EmptyObserverType
+                    - InBoundTx
+                    - OutBoundTx
+                    - GasPrice
+                  default: EmptyObserverType
+                Threshold:
+                  type: string
+        description: Params defines the parameters for the module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.observer.QuerySupportedChainsResponse:
+    type: object
+    properties:
+      Chains:
+        type: string
+  zetachain.zetacore.observer.VoteType:
+    type: string
+    enum:
+      - SuccessObservation
+      - FailureObservation
+      - NotYetVoted
+    default: SuccessObservation
   common.PubKeySet:
     type: object
     properties:
@@ -55406,6 +55686,16 @@ definitions:
       - Success
       - Failed
     default: Created
+  zetachain.zetacore.zetacore.CctxStatus:
+    type: string
+    enum:
+      - PendingInbound
+      - PendingOutbound
+      - OutboundMined
+      - PendingRevert
+      - Reverted
+      - Aborted
+    default: PendingInbound
   zetachain.zetacore.zetacore.ChainNonces:
     type: object
     properties:
@@ -55425,6 +55715,84 @@ definitions:
       finalizedHeight:
         type: string
         format: uint64
+  zetachain.zetacore.zetacore.CrossChainTx:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      zetaBurnt:
+        type: string
+      zetaMint:
+        type: string
+      zetaFees:
+        type: string
+      relayedMessage:
+        type: string
+      cctx_status:
+        type: object
+        properties:
+          status:
+            type: string
+            enum:
+              - PendingInbound
+              - PendingOutbound
+              - OutboundMined
+              - PendingRevert
+              - Reverted
+              - Aborted
+            default: PendingInbound
+          statusMessage:
+            type: string
+          lastUpdateTimestamp:
+            type: string
+            format: int64
+      InBoundTxParams:
+        type: object
+        properties:
+          sender:
+            type: string
+          senderChain:
+            type: string
+          inBoundTxObservedHash:
+            type: string
+          inBoundTxObservedExternalHeight:
+            type: string
+            format: uint64
+          inBoundTxFinalizedZetaHeight:
+            type: string
+            format: uint64
+          inBoundTXBallotIndex:
+            type: string
+      OutBoundTxParams:
+        type: object
+        properties:
+          receiver:
+            type: string
+          receiverChain:
+            type: string
+          broadcaster:
+            type: string
+            format: uint64
+          outBoundTxHash:
+            type: string
+          outBoundTxTSSNonce:
+            type: string
+            format: uint64
+          outBoundTxGasLimit:
+            type: string
+            format: uint64
+          outBoundTxGasPrice:
+            type: string
+          outBoundTXBallotIndex:
+            type: string
+          outBoundTxFinalizedZetaHeight:
+            type: string
+            format: uint64
+          outBoundTxObservedExternalHeight:
+            type: string
+            format: uint64
   zetachain.zetacore.zetacore.GasBalance:
     type: object
     properties:
@@ -55476,6 +55844,23 @@ definitions:
       medianIndex:
         type: string
         format: uint64
+  zetachain.zetacore.zetacore.InBoundTxParams:
+    type: object
+    properties:
+      sender:
+        type: string
+      senderChain:
+        type: string
+      inBoundTxObservedHash:
+        type: string
+      inBoundTxObservedExternalHeight:
+        type: string
+        format: uint64
+      inBoundTxFinalizedZetaHeight:
+        type: string
+        format: uint64
+      inBoundTXBallotIndex:
+        type: string
   zetachain.zetacore.zetacore.Keygen:
     type: object
     properties:
@@ -55516,13 +55901,13 @@ definitions:
     type: object
   zetachain.zetacore.zetacore.MsgNonceVoterResponse:
     type: object
-  zetachain.zetacore.zetacore.MsgReceiveConfirmationResponse:
-    type: object
   zetachain.zetacore.zetacore.MsgRemoveFromOutTxTrackerResponse:
     type: object
-  zetachain.zetacore.zetacore.MsgSendVoterResponse:
-    type: object
   zetachain.zetacore.zetacore.MsgSetNodeKeysResponse:
+    type: object
+  zetachain.zetacore.zetacore.MsgVoteOnObservedInboundTxResponse:
+    type: object
+  zetachain.zetacore.zetacore.MsgVoteOnObservedOutboundTxResponse:
     type: object
   zetachain.zetacore.zetacore.MsgZetaConversionRateVoterResponse:
     type: object
@@ -55564,6 +55949,34 @@ definitions:
       - Active
       - Disabled
     default: Unknown
+  zetachain.zetacore.zetacore.OutBoundTxParams:
+    type: object
+    properties:
+      receiver:
+        type: string
+      receiverChain:
+        type: string
+      broadcaster:
+        type: string
+        format: uint64
+      outBoundTxHash:
+        type: string
+      outBoundTxTSSNonce:
+        type: string
+        format: uint64
+      outBoundTxGasLimit:
+        type: string
+        format: uint64
+      outBoundTxGasPrice:
+        type: string
+      outBoundTXBallotIndex:
+        type: string
+      outBoundTxFinalizedZetaHeight:
+        type: string
+        format: uint64
+      outBoundTxObservedExternalHeight:
+        type: string
+        format: uint64
   zetachain.zetacore.zetacore.OutTxTracker:
     type: object
     properties:
@@ -55588,6 +56001,197 @@ definitions:
       enabled:
         type: boolean
     description: Params defines the parameters for the module.
+  zetachain.zetacore.zetacore.QueryAllCctxPendingResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            zetaFees:
+              type: string
+            relayedMessage:
+              type: string
+            cctx_status:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PendingInbound
+                    - PendingOutbound
+                    - OutboundMined
+                    - PendingRevert
+                    - Reverted
+                    - Aborted
+                  default: PendingInbound
+                statusMessage:
+                  type: string
+                lastUpdateTimestamp:
+                  type: string
+                  format: int64
+            InBoundTxParams:
+              type: object
+              properties:
+                sender:
+                  type: string
+                senderChain:
+                  type: string
+                inBoundTxObservedHash:
+                  type: string
+                inBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
+                inBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                inBoundTXBallotIndex:
+                  type: string
+            OutBoundTxParams:
+              type: object
+              properties:
+                receiver:
+                  type: string
+                receiverChain:
+                  type: string
+                broadcaster:
+                  type: string
+                  format: uint64
+                outBoundTxHash:
+                  type: string
+                outBoundTxTSSNonce:
+                  type: string
+                  format: uint64
+                outBoundTxGasLimit:
+                  type: string
+                  format: uint64
+                outBoundTxGasPrice:
+                  type: string
+                outBoundTXBallotIndex:
+                  type: string
+                outBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                outBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
+  zetachain.zetacore.zetacore.QueryAllCctxResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            zetaFees:
+              type: string
+            relayedMessage:
+              type: string
+            cctx_status:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PendingInbound
+                    - PendingOutbound
+                    - OutboundMined
+                    - PendingRevert
+                    - Reverted
+                    - Aborted
+                  default: PendingInbound
+                statusMessage:
+                  type: string
+                lastUpdateTimestamp:
+                  type: string
+                  format: int64
+            InBoundTxParams:
+              type: object
+              properties:
+                sender:
+                  type: string
+                senderChain:
+                  type: string
+                inBoundTxObservedHash:
+                  type: string
+                inBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
+                inBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                inBoundTXBallotIndex:
+                  type: string
+            OutBoundTxParams:
+              type: object
+              properties:
+                receiver:
+                  type: string
+                receiverChain:
+                  type: string
+                broadcaster:
+                  type: string
+                  format: uint64
+                outBoundTxHash:
+                  type: string
+                outBoundTxTSSNonce:
+                  type: string
+                  format: uint64
+                outBoundTxGasLimit:
+                  type: string
+                  format: uint64
+                outBoundTxGasPrice:
+                  type: string
+                outBoundTXBallotIndex:
+                  type: string
+                outBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                outBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
   zetachain.zetacore.zetacore.QueryAllChainNoncesResponse:
     type: object
     properties:
@@ -55947,235 +56551,6 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  zetachain.zetacore.zetacore.QueryAllReceiveResponse:
-    type: object
-    properties:
-      Receive:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            sendHash:
-              type: string
-            outTxHash:
-              type: string
-            outBlockHeight:
-              type: string
-              format: uint64
-            finalizedMetaHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            status:
-              type: string
-              enum:
-                - Created
-                - Success
-                - Failed
-              default: Created
-            chain:
-              type: string
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-  zetachain.zetacore.zetacore.QueryAllSendPendingResponse:
-    type: object
-    properties:
-      Send:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            sender:
-              type: string
-            senderChain:
-              type: string
-            receiver:
-              type: string
-            receiverChain:
-              type: string
-            zetaBurnt:
-              type: string
-            zetaMint:
-              type: string
-            message:
-              type: string
-            inTxHash:
-              type: string
-            inBlockHeight:
-              type: string
-              format: uint64
-            finalizedMetaHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            status:
-              type: string
-              enum:
-                - PendingInbound
-                - PendingOutbound
-                - OutboundMined
-                - Confirmed
-                - PendingRevert
-                - Reverted
-                - Aborted
-              default: PendingInbound
-            broadcaster:
-              type: string
-              format: uint64
-            nonce:
-              type: string
-              format: uint64
-            gasPrice:
-              type: string
-            statusMessage:
-              type: string
-            recvHash:
-              type: string
-            indexTxList:
-              type: string
-              format: int64
-            outTxHash:
-              type: string
-            lastUpdateTimestamp:
-              type: string
-              format: int64
-            gasLimit:
-              type: string
-              format: uint64
-  zetachain.zetacore.zetacore.QueryAllSendResponse:
-    type: object
-    properties:
-      Send:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            sender:
-              type: string
-            senderChain:
-              type: string
-            receiver:
-              type: string
-            receiverChain:
-              type: string
-            zetaBurnt:
-              type: string
-            zetaMint:
-              type: string
-            message:
-              type: string
-            inTxHash:
-              type: string
-            inBlockHeight:
-              type: string
-              format: uint64
-            finalizedMetaHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            status:
-              type: string
-              enum:
-                - PendingInbound
-                - PendingOutbound
-                - OutboundMined
-                - Confirmed
-                - PendingRevert
-                - Reverted
-                - Aborted
-              default: PendingInbound
-            broadcaster:
-              type: string
-              format: uint64
-            nonce:
-              type: string
-              format: uint64
-            gasPrice:
-              type: string
-            statusMessage:
-              type: string
-            recvHash:
-              type: string
-            indexTxList:
-              type: string
-              format: int64
-            outTxHash:
-              type: string
-            lastUpdateTimestamp:
-              type: string
-              format: int64
-            gasLimit:
-              type: string
-              format: uint64
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
   zetachain.zetacore.zetacore.QueryAllTSSResponse:
     type: object
     properties:
@@ -56331,6 +56706,87 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  zetachain.zetacore.zetacore.QueryGetCctxResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          zetaBurnt:
+            type: string
+          zetaMint:
+            type: string
+          zetaFees:
+            type: string
+          relayedMessage:
+            type: string
+          cctx_status:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - PendingInbound
+                  - PendingOutbound
+                  - OutboundMined
+                  - PendingRevert
+                  - Reverted
+                  - Aborted
+                default: PendingInbound
+              statusMessage:
+                type: string
+              lastUpdateTimestamp:
+                type: string
+                format: int64
+          InBoundTxParams:
+            type: object
+            properties:
+              sender:
+                type: string
+              senderChain:
+                type: string
+              inBoundTxObservedHash:
+                type: string
+              inBoundTxObservedExternalHeight:
+                type: string
+                format: uint64
+              inBoundTxFinalizedZetaHeight:
+                type: string
+                format: uint64
+              inBoundTXBallotIndex:
+                type: string
+          OutBoundTxParams:
+            type: object
+            properties:
+              receiver:
+                type: string
+              receiverChain:
+                type: string
+              broadcaster:
+                type: string
+                format: uint64
+              outBoundTxHash:
+                type: string
+              outBoundTxTSSNonce:
+                type: string
+                format: uint64
+              outBoundTxGasLimit:
+                type: string
+                format: uint64
+              outBoundTxGasPrice:
+                type: string
+              outBoundTXBallotIndex:
+                type: string
+              outBoundTxFinalizedZetaHeight:
+                type: string
+                format: uint64
+              outBoundTxObservedExternalHeight:
+                type: string
+                format: uint64
   zetachain.zetacore.zetacore.QueryGetChainNoncesResponse:
     type: object
     properties:
@@ -56498,109 +56954,6 @@ definitions:
                   type: string
                 signer:
                   type: string
-  zetachain.zetacore.zetacore.QueryGetReceiveResponse:
-    type: object
-    properties:
-      Receive:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          sendHash:
-            type: string
-          outTxHash:
-            type: string
-          outBlockHeight:
-            type: string
-            format: uint64
-          finalizedMetaHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          status:
-            type: string
-            enum:
-              - Created
-              - Success
-              - Failed
-            default: Created
-          chain:
-            type: string
-  zetachain.zetacore.zetacore.QueryGetSendResponse:
-    type: object
-    properties:
-      Send:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          sender:
-            type: string
-          senderChain:
-            type: string
-          receiver:
-            type: string
-          receiverChain:
-            type: string
-          zetaBurnt:
-            type: string
-          zetaMint:
-            type: string
-          message:
-            type: string
-          inTxHash:
-            type: string
-          inBlockHeight:
-            type: string
-            format: uint64
-          finalizedMetaHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          status:
-            type: string
-            enum:
-              - PendingInbound
-              - PendingOutbound
-              - OutboundMined
-              - Confirmed
-              - PendingRevert
-              - Reverted
-              - Aborted
-            default: PendingInbound
-          broadcaster:
-            type: string
-            format: uint64
-          nonce:
-            type: string
-            format: uint64
-          gasPrice:
-            type: string
-          statusMessage:
-            type: string
-          recvHash:
-            type: string
-          indexTxList:
-            type: string
-            format: int64
-          outTxHash:
-            type: string
-          lastUpdateTimestamp:
-            type: string
-            format: int64
-          gasLimit:
-            type: string
-            format: uint64
   zetachain.zetacore.zetacore.QueryGetTSSResponse:
     type: object
     properties:
@@ -56685,120 +57038,30 @@ definitions:
     type: object
     properties:
       params:
-        description: params holds all the parameters of this module.
         type: object
         properties:
           enabled:
             type: boolean
+        description: Params defines the parameters for the module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetachain.zetacore.zetacore.Receive:
+  zetachain.zetacore.zetacore.Status:
     type: object
     properties:
-      creator:
-        type: string
-      index:
-        type: string
-      sendHash:
-        type: string
-      outTxHash:
-        type: string
-      outBlockHeight:
-        type: string
-        format: uint64
-      finalizedMetaHeight:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      status:
-        type: string
-        enum:
-          - Created
-          - Success
-          - Failed
-        default: Created
-      chain:
-        type: string
-  zetachain.zetacore.zetacore.Send:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      sender:
-        type: string
-      senderChain:
-        type: string
-      receiver:
-        type: string
-      receiverChain:
-        type: string
-      zetaBurnt:
-        type: string
-      zetaMint:
-        type: string
-      message:
-        type: string
-      inTxHash:
-        type: string
-      inBlockHeight:
-        type: string
-        format: uint64
-      finalizedMetaHeight:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
       status:
         type: string
         enum:
           - PendingInbound
           - PendingOutbound
           - OutboundMined
-          - Confirmed
           - PendingRevert
           - Reverted
           - Aborted
         default: PendingInbound
-      broadcaster:
-        type: string
-        format: uint64
-      nonce:
-        type: string
-        format: uint64
-      gasPrice:
-        type: string
       statusMessage:
-        type: string
-      recvHash:
-        type: string
-      indexTxList:
-        type: string
-        format: int64
-      outTxHash:
         type: string
       lastUpdateTimestamp:
         type: string
         format: int64
-      gasLimit:
-        type: string
-        format: uint64
-  zetachain.zetacore.zetacore.SendStatus:
-    type: string
-    enum:
-      - PendingInbound
-      - PendingOutbound
-      - OutboundMined
-      - Confirmed
-      - PendingRevert
-      - Reverted
-      - Aborted
-    default: PendingInbound
   zetachain.zetacore.zetacore.TSS:
     type: object
     properties:
@@ -56871,108 +57134,3 @@ definitions:
       medianIndex:
         type: string
         format: uint64
-  zetachain.zetacore.zetaobserver.ObservationType:
-    type: string
-    enum:
-      - InboundTx
-      - OutBoundTx
-      - GasPrice
-    default: InboundTx
-  zetachain.zetacore.zetaobserver.ObserverChain:
-    type: string
-    enum:
-      - EthChainObserver
-      - ZetaChainObserver
-      - BTCChainObserver
-      - PolygonChainObserver
-      - BscChainObserver
-    default: EthChainObserver
-  zetachain.zetacore.zetaobserver.Params:
-    type: object
-    properties:
-      VotingThresholds:
-        type: array
-        items:
-          type: object
-          properties:
-            Chain:
-              type: string
-              enum:
-                - EthChainObserver
-                - ZetaChainObserver
-                - BTCChainObserver
-                - PolygonChainObserver
-                - BscChainObserver
-              default: EthChainObserver
-            Observation:
-              type: string
-              enum:
-                - InboundTx
-                - OutBoundTx
-                - GasPrice
-              default: InboundTx
-            Threshold:
-              type: string
-    description: Params defines the parameters for the module.
-  zetachain.zetacore.zetaobserver.QueryObserversByChainAndTypeResponse:
-    type: object
-    properties:
-      observerMapper:
-        type: string
-  zetachain.zetacore.zetaobserver.QueryParamsResponse:
-    type: object
-    properties:
-      params:
-        description: params holds all the parameters of this module.
-        type: object
-        properties:
-          VotingThresholds:
-            type: array
-            items:
-              type: object
-              properties:
-                Chain:
-                  type: string
-                  enum:
-                    - EthChainObserver
-                    - ZetaChainObserver
-                    - BTCChainObserver
-                    - PolygonChainObserver
-                    - BscChainObserver
-                  default: EthChainObserver
-                Observation:
-                  type: string
-                  enum:
-                    - InboundTx
-                    - OutBoundTx
-                    - GasPrice
-                  default: InboundTx
-                Threshold:
-                  type: string
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetachain.zetacore.zetaobserver.QueryVoterByIdentifierResponse:
-    type: object
-    properties:
-      voter:
-        type: string
-  zetachain.zetacore.zetaobserver.VotingThreshold:
-    type: object
-    properties:
-      Chain:
-        type: string
-        enum:
-          - EthChainObserver
-          - ZetaChainObserver
-          - BTCChainObserver
-          - PolygonChainObserver
-          - BscChainObserver
-        default: EthChainObserver
-      Observation:
-        type: string
-        enum:
-          - InboundTx
-          - OutBoundTx
-          - GasPrice
-        default: InboundTx
-      Threshold:
-        type: string

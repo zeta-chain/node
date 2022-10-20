@@ -15,9 +15,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
+	zetaobserverKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	zetaobserverKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
 
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 )

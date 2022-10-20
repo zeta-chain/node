@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 
 	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"

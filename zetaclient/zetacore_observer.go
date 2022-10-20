@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"math/rand"
 	"os"

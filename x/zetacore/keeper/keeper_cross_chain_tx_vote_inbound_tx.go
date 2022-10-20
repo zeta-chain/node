@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
 )
 
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {

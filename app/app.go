@@ -104,9 +104,9 @@ import (
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
 
-	zetaObserverModule "github.com/zeta-chain/zetacore/x/zetaobserver"
-	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const Name = "zetacore"
