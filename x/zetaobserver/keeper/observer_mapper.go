@@ -49,8 +49,8 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	types.ConvertStringChaintoObservationChain(req.ObservationChain)
-	mapper, _ := k.GetObserverMapper(ctx, types.ConvertStringChaintoObservationChain(req.ObservationChain), req.ObservationType)
+	types.ParseCommonChaintoObservationChain(req.ObservationChain)
+	mapper, _ := k.GetObserverMapper(ctx, types.ParseCommonChaintoObservationChain(req.ObservationChain), req.ObservationType)
 	return &types.QueryObserversByChainAndTypeResponse{Observers: mapper.ObserverList}, nil
 }
 
