@@ -13,15 +13,20 @@ Closes: <PD-XXXX>
 
 # How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
+Please describe the tests that you ran to verify your changes. Include instructions and any relevant details so others can reproduce. 
+
+- [ ] Tested CCTX in localnet
+- [ ] Go unit tests
+- [ ] Go integration tests
 
 # Checklist:
 
 - [ ] I have performed a self-review of my code
-- [ ] My code follows the style guidelines of this project
 - [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-<!-- - [ ] I have made corresponding changes to the documentation -->
+- [ ] I have added unit tests that prove my fix feature works
+- [ ] I included code comments (if needed)
+- [ ] Upgrade Handler (if needed)
+- [ ] I have made corresponding changes to the documentation (if needed)
 
 [comment]: <## Env variables>
 
