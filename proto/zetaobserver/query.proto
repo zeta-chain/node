@@ -20,19 +20,19 @@ service Query {
 	}
 	// Queries a list of VoterByIdentifier items.
 	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/ballot_by_identifier/{ballotIdentifier}";
+		option (google.api.http).get = "/zeta-chain/zetaobserver/ballot_by_identifier/{ballotIdentifier}";
 	}
 
 // Queries a list of ObserversByChainAndType items.
 	rpc ObserversByChainAndType(QueryObserversByChainAndTypeRequest) returns (QueryObserversByChainAndTypeResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}";
+		option (google.api.http).get = "/zeta-chain/zetaobserver/observers_by_chain_and_type/{observationChain}/{observationType}";
 	}
 	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/all_observer_mappers";
+		option (google.api.http).get = "/zeta-chain/zetaobserver/all_observer_mappers";
 	}
 
 	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetaobserver/supportedChains";
+		option (google.api.http).get = "/zeta-chain/zetaobserver/supportedChains";
 	}
 
 // this line is used by starport scaffolding # 2

@@ -12,7 +12,7 @@ import (
 
 func CmdGetSupportedChains() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-supported-chains",
+		Use:   "list-chains",
 		Short: "list all SupportedChains",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

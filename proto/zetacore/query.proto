@@ -24,7 +24,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
 service Query {
 	// Parameters queries the parameters of the module.
 	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-		option (google.api.http).get = "/zetachain/zetacore/params";
+		option (google.api.http).get = "/zeta-chain/zetacore/params";
 	}
     // Queries a ZetaConversionRate by index.
 	rpc ZetaConversionRate(QueryGetZetaConversionRateRequest) returns (QueryGetZetaConversionRateResponse) {
@@ -38,16 +38,16 @@ service Query {
 
 // Queries a OutTxTracker by index.
 	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTracker/{index}";
+		option (google.api.http).get = "/zeta-chain/zetacore/outTxTracker/{index}";
 	}
 
 	// Queries a list of OutTxTracker items.
 	rpc OutTxTrackerAll(QueryAllOutTxTrackerRequest) returns (QueryAllOutTxTrackerResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTracker";
+		option (google.api.http).get = "/zeta-chain/zetacore/outTxTracker";
 	}
 
 	rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/zetacore/outTxTrackerByChain";
+		option (google.api.http).get = "/zeta-chain/zetacore/outTxTrackerByChain";
 	}
 
 // this line is used by starport scaffolding # 2
