@@ -47,7 +47,7 @@ func CmdSetSupportedChains() *cobra.Command {
 			chains := strings.Split(args[0], ",")
 			observerChainList := make([]types.ObserverChain, len(chains))
 			for i, chain := range chains {
-				observerChainList[i] = types.ConvertStringChaintoObservationChain(chain)
+				observerChainList[i] = types.ParseCommonChaintoObservationChain(chain)
 			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

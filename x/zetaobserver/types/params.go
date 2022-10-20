@@ -29,12 +29,12 @@ func NewParams() Params {
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Bsc,
+				Chain:       ObserverChain_BscMainnet,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Bsc,
+				Chain:       ObserverChain_BscMainnet,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
@@ -45,6 +45,36 @@ func NewParams() Params {
 			},
 			{
 				Chain:       ObserverChain_Goerli,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Ropsten,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Ropsten,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_BscTestnet,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_BscTestnet,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Mumbai,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_Mumbai,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},

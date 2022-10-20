@@ -10,7 +10,7 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_InBoundTx
-	observationChain := zetaObserverTypes.ConvertStringChaintoObservationChain(msg.SenderChain)
+	observationChain := zetaObserverTypes.ParseCommonChaintoObservationChain(msg.SenderChain)
 	//Check is msg.Creator is authorized to vote
 	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
 	if !ok {
