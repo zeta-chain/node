@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"strings"
 )
 
