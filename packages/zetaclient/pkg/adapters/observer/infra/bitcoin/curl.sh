@@ -1,0 +1,1 @@
+curl --data-binary '{"jsonrpc": "1.0", "id": "curltest", "method": "getblockcount", "params": []}' -H 'content-type: text/plain;' https://btc.getblock.io/testnet/?api_key=14a8dcca-3d41-4e17-a0bb-4c2d4dc2a524

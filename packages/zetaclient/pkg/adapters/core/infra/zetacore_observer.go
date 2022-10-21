@@ -1,0 +1,179 @@
+package infra
+
+import (
+	"errors"
+	"os"
+	"sort"
+	"time"
+
+	"gitlab.com/thorchain/tss/go-tss/keygen"
+
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/packages/zetaclient/pkg/config"
+	"github.com/zeta-chain/zetacore/packages/zetaclient/pkg/logger"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+
+	prom "github.com/prometheus/client_golang/prometheus"
+
+	"github.com/zeta-chain/zetacore/x/zetacore/types"
+
+	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+)
+
+const (
+	OUTBOUND_TX_SIGN_COUNT = "zetaclient_outbound_tx_sign_count"
+)
+
+type CoreObserver struct {
+	sendQueue []*types.Send
+	bridge    *ZetaCoreBridge
+	signerMap map[common.Chain]*Signer
+	clientMap map[common.Chain]*ChainObserver
+	metrics   *metrics.Metrics
+	tss       *TSS
+	log       logger.Logger
+	cfg       *config.Configuration
+
+	// channels for shepherd manager
+	sendNew     chan *types.Send
+	sendDone    chan *types.Send
+	signerSlots chan bool
+	shepherds   map[string]bool
+}
+
+func NewCoreObserver(cfg *config.Configuration, bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS, logger logger.Logger) *CoreObserver {
+	co := CoreObserver{}
+	co.cfg = cfg
+	co.tss = tss
+	co.bridge = bridge
+	co.signerMap = signerMap
+	co.sendQueue = make([]*types.Send, 0)
+	co.log = logger
+
+	co.clientMap = clientMap
+	co.metrics = metrics
+	co.log = logger
+
+	err := metrics.RegisterCounter(OUTBOUND_TX_SIGN_COUNT, "number of outbound tx signed")
+	if err != nil {
+		co.log.Errorw("error registering counter", "error", err.Error())
+	}
+
+	co.sendNew = make(chan *types.Send)
+	co.sendDone = make(chan *types.Send)
+	MAX_SIGNERS := 100 // assuming each signer takes 100s to finish (have outTx included), then throughput is bounded by 100/100 = 1 tx/s
+	co.signerSlots = make(chan bool, MAX_SIGNERS)
+	for i := 0; i < MAX_SIGNERS; i++ {
+		co.signerSlots <- true
+	}
+	co.shepherds = make(map[string]bool)
+
+	logFile, err := os.OpenFile("zetacore_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		// Can we log an error before we have our logger? :)
+		co.log.Errorw("there was an error creating a logFile on zetacore", "error", err.Error())
+	}
+	return &co
+}
+
+func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
+	if cnt, found := metrics.Counters[name]; found {
+		return cnt, nil
+	} else {
+		return nil, errors.New("counter not found")
+	}
+}
+
+func (co *CoreObserver) MonitorCore() {
+	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	co.log.Infow("MonitorCore started by signer", "signer", myid)
+	go co.startObserve()
+	go co.ShepherdManager()
+
+	noKeygen := os.Getenv("NO_KEYGEN")
+	if !co.cfg.NoKeygen {
+		go co.keygenObserve()
+	}
+}
+
+func (co *CoreObserver) keygenObserve() {
+	co.log.Infow("keygen observe started")
+	observeTicker := time.NewTicker(2 * time.Second)
+	for range observeTicker.C {
+		kg, err := co.bridge.GetKeyGen()
+		if err != nil {
+			continue
+		}
+		bn, _ := co.bridge.GetZetaBlockHeight()
+		if bn != kg.BlockNumber {
+			continue
+		}
+
+		go func() {
+			for {
+				co.log.Infof("Detected KeyGen, initiate keygen at blocknumm  %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
+				var req keygen.Request
+				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+				res, err := co.tss.Server.Keygen(req)
+				if err != nil || res.Status != tsscommon.Success {
+					col.log.Fatalf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					continue
+				}
+				// Keygen succeed! Report TSS address
+				co.log.Infof("Keygen success! keygen response: %v...", res)
+				err = co.tss.SetPubKey(res.PubKey)
+				if err != nil {
+					co.log.Errorf("SetPubKey fail")
+					continue
+				}
+
+				for _, chain := range co.cfg.EnabledChains {
+					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.PubkeyInBech32)
+					if err != nil {
+						co.log.Errorf("SetTSS fail %s", chain)
+					}
+				}
+
+				// Keysign test: sanity test
+				co.log.Infow("test keysign...")
+				TestKeysign(co.tss.PubkeyInBech32, co.tss.Server)
+				co.log.Infow("test keysign finished. exit keygen loop. ")
+
+				for _, chain := range config.ChainsEnabled {
+					err = co.clientMap[chain].PostNonceIfNotRecorded()
+					if err != nil {
+						co.log.Errorf("PostNonceIfNotRecorded fail %s", chain)
+					}
+				}
+
+				return
+			}
+		}()
+		return
+	}
+}
+
+// startObserve retrieves the pending list of Sends from ZetaCore every 10s
+// for each new send, it tries to launch a send shepherd.
+// the send shepherd makes sure the send is settled on all chains.
+func (co *CoreObserver) startObserve() {
+	observeTicker := time.NewTicker(12 * time.Second)
+	for range observeTicker.C {
+		sendList, err := co.bridge.GetAllPendingSend()
+		if err != nil {
+			co.log.Errorw("error requesting sends from zetacore", "error", err.Error())
+			continue
+		}
+		if len(sendList) > 0 {
+			co.log.Infof("#pending send: %d", len(sendList))
+		}
+		sort.Slice(sendList, func(i, j int) bool {
+			return sendList[i].Nonce < sendList[j].Nonce
+		})
+		for _, send := range sendList {
+			if send.Status == types.SendStatus_PendingOutbound || send.Status == types.SendStatus_PendingRevert {
+				co.sendNew <- send
+			} //else if send.Status == types.SendStatus_Mined || send.Status == types.SendStatus_Reverted || send.Status == types.SendStatus_Aborted {
+		}
+	}
+}

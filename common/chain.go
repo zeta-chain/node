@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/zeta-chain/zetacore/packages/zetaclient/pkg/model"
 )
 
 var (
@@ -13,17 +15,18 @@ var (
 	ETHChain     = Chain("ETH")
 	POLYGONChain = Chain("POLYGON")
 	ZETAChain    = Chain("ZETA")
+	BitcoinChain = Chain("Bitcoin")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
 
 	// testnets
-	BSCTestnetChain = Chain("BSCTestnet")
-	GoerliChain     = Chain("Goerli")
-	RopstenChain    = Chain("ROPSTEN")
-	MumbaiChain     = Chain("Mumbai")
-	BaobabChain     = Chain("Baobab")
-	BitcoinChain    = Chain("Bitcoin")
+	BSCTestnetChain     = Chain("BSCTestnet")
+	GoerliChain         = Chain("Goerli")
+	RopstenChain        = Chain("ROPSTEN")
+	MumbaiChain         = Chain("Mumbai")
+	BaobabChain         = Chain("Baobab")
+	BitcoinTestnetChain = Chain("BitcoinTestnet")
 )
 
 type SigninAlgo string
@@ -132,6 +135,15 @@ func (chain Chain) GetSigningAlgo() SigninAlgo {
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1
+	}
+}
+
+func (chain Chain) Type() string {
+	switch chain {
+	case BitcoinChain, BitcoinTestnetChain:
+		return model.ChainTypeBTC
+	default:
+		return model.ChainTypeETH
 	}
 }
 
