@@ -76,3 +76,7 @@ const (
 	StoredGameEventRed   = "Red"            // Is it relevant to me?
 	StoredGameEventBlack = "Black"          // Is it relevant to me?
 )
+
+const (
+	AdminKey = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
+)
