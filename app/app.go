@@ -275,6 +275,7 @@ func New(
 		zetaCoreModuleTypes.StoreKey,
 		zetaObserverModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
+		fungibleModuleTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -765,6 +766,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
+	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
 	return paramsKeeper
 }
 

@@ -129,6 +129,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	}
 
 	system, _ := k.GetSystemContract(ctx)
+	//system := types.SystemContract{}
 	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
 
