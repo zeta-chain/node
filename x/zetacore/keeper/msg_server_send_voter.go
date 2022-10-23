@@ -12,6 +12,7 @@ import (
 
 var (
 	OneEighteen, _ = big.NewInt(0).SetString("1000000000000000000", 10)
+	TwoEighteen, _ = big.NewInt(0).SetString("2000000000000000000", 10)
 )
 
 func (k msgServer) SendVoter(goCtx context.Context, msg *types.MsgSendVoter) (*types.MsgSendVoterResponse, error) {
@@ -226,8 +227,8 @@ func (k msgServer) computeFeeInZeta(ctx sdk.Context, price *big.Int, gasLimit *b
 	}
 
 	// price*gasLimit*exchangeRate/1e18
-	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), OneEighteen)
+	gasFeeInZeta := big.NewInt(0).Div(big.NewInt(0).Mul(big.NewInt(0).Mul(price, gasLimit), exchangeRateInt), TwoEighteen)
 	// add protocol flat fee: 1 ZETA
-	gasFeeInZeta.Add(gasFeeInZeta, OneEighteen)
+	gasFeeInZeta.Add(gasFeeInZeta, TwoEighteen)
 	return gasFeeInZeta, abort
 }

@@ -326,7 +326,7 @@ func (co *CoreObserver) startSendScheduler() {
 					offset := send.Index[len(send.Index)-1] % 4
 					sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 30) {
+					if isScheduled(sinceBlock, idx < 40) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
@@ -335,7 +335,7 @@ func (co *CoreObserver) startSendScheduler() {
 							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 						}
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 60 { // only look at 50 sends per chain
 						break
 					}
 				}
@@ -429,6 +429,9 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	if send.Status == types.SendStatus_PendingRevert {
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		toChainID := config.Chains[send.ReceiverChain].ChainID
+		if toChainID.Uint64() == 5 { // FIXME: GOERLI suggested gas often is too low
+			gasprice = gasprice.Mul(gasprice, big.NewInt(2))
+		}
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 	} else if send.Status == types.SendStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
