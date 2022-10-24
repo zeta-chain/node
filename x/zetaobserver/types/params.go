@@ -29,12 +29,12 @@ func NewParams() Params {
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Bsc,
+				Chain:       ObserverChain_BscTestnet,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Bsc,
+				Chain:       ObserverChain_BscTestnet,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
