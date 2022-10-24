@@ -137,7 +137,7 @@ func (k msgServer) FungibleTestMsg(goCtx context.Context, msg *types.MsgFungible
 }
 
 // setup gas ERC-4, and ZETA/gas pool for a chain
-//
+// add 0.1gas/0.1wzeta to the pool
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
 	transferGasLimit := big.NewInt(21_000)
@@ -204,7 +204,11 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)
 	Liquidity := new(*big.Int)
-	routerABI.UnpackIntoInterface(&[]interface{}{AmountToken, AmountETH, Liquidity}, "addLiquidityETH", res.Ret)
+	err = routerABI.UnpackIntoInterface(&[]interface{}{AmountToken, AmountETH, Liquidity}, "addLiquidityETH", res.Ret)
+	if err != nil {
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to UnpackIntoInterface addLiquidityETH")
+
+	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute("function", "addLiquidityETH"),
@@ -214,42 +218,42 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 		),
 	)
 
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
-	amounts, err := k.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1e16), zrc4Addr)
-	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapExactETHForToken")
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("function", "swapExactETHForTokens"),
-			sdk.NewAttribute("amounts", fmt.Sprintf("%v", amounts)),
-		),
-	)
-
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewInt(1e18))))
-
-	amounts, err = k.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(1e16), zrc4Addr)
-	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to QueryUniswapv2RouterGetAmountsIn")
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("function", "GetAmountsIn"),
-			sdk.NewAttribute("amounts[0]", amounts[0].String()),
-			sdk.NewAttribute("amounts[1]", amounts[1].String()),
-		),
-	)
-
-	amounts, err = k.CallUniswapv2RouterSwapEthForExactToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amounts[0], amounts[1], zrc4Addr)
-	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapEthForExactToken")
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("function", "SwapEthForExactToken"),
-			sdk.NewAttribute("amounts", fmt.Sprintf("%v", amounts)),
-		),
-	)
+	//k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+	//amounts, err := k.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1e16), zrc4Addr)
+	//if err != nil {
+	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapExactETHForToken")
+	//}
+	//ctx.EventManager().EmitEvent(
+	//	sdk.NewEvent(sdk.EventTypeMessage,
+	//		sdk.NewAttribute("function", "swapExactETHForTokens"),
+	//		sdk.NewAttribute("amounts", fmt.Sprintf("%v", amounts)),
+	//	),
+	//)
+	//
+	//k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewInt(1e18))))
+	//
+	//amounts, err = k.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(1e16), zrc4Addr)
+	//if err != nil {
+	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to QueryUniswapv2RouterGetAmountsIn")
+	//}
+	//ctx.EventManager().EmitEvent(
+	//	sdk.NewEvent(sdk.EventTypeMessage,
+	//		sdk.NewAttribute("function", "GetAmountsIn"),
+	//		sdk.NewAttribute("amounts[0]", amounts[0].String()),
+	//		sdk.NewAttribute("amounts[1]", amounts[1].String()),
+	//	),
+	//)
+	//
+	//amounts, err = k.CallUniswapv2RouterSwapEthForExactToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amounts[0], amounts[1], zrc4Addr)
+	//if err != nil {
+	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapEthForExactToken")
+	//}
+	//ctx.EventManager().EmitEvent(
+	//	sdk.NewEvent(sdk.EventTypeMessage,
+	//		sdk.NewAttribute("function", "SwapEthForExactToken"),
+	//		sdk.NewAttribute("amounts", fmt.Sprintf("%v", amounts)),
+	//	),
+	//)
 
 	return zrc4Addr, nil
 }
