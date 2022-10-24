@@ -23,7 +23,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	"io"
 	"net/http"
 	"os"
@@ -113,6 +112,14 @@ import (
 )
 
 const Name = "zetacore"
+
+func init() {
+	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
+	sdk.DefaultPowerReduction = ethermint.PowerReduction
+	// modify fee market parameter defaults through global
+	//feemarkettypes.DefaultMinGasPrice = v5.MainnetMinGasPrices
+	//feemarkettypes.DefaultMinGasMultiplier = v5.MainnetMinGasMultiplier
+}
 
 var (
 	AccountAddressPrefix = "zeta"
