@@ -42,8 +42,8 @@ zetacored add-observer 6 1 "$observer_list" #goerli
 zetacored add-observer 6 2 "$observer_list"
 zetacored add-observer 11 1 "$observer_list" #bsctestnet
 zetacored add-observer 11 2 "$observer_list"
-zetacored add-observer 7 2 "$observer_list" #mumbai
-zetacored add-observer 7 3 "$observer_list"
+zetacored add-observer 7 1 "$observer_list" #mumbai
+zetacored add-observer 7 2 "$observer_list"
  
 for NODE in $NODES; do
 	scp -i ~/.ssh/meta.pem ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/

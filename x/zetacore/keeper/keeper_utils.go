@@ -27,6 +27,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
+// FIXME: the observationType should not be a string; rather it should be properly typed
 func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
 	if !found {
