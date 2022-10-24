@@ -18,11 +18,11 @@ var (
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
 
 	// testnets
-	BSCTestnetChain = Chain("BSCTESTNET")
-	GoerliChain     = Chain("GOERLI")
+	BSCTestnetChain = Chain("BSCTestnet")
+	GoerliChain     = Chain("Goerli")
 	RopstenChain    = Chain("ROPSTEN")
-	MumbaiChain     = Chain("MUMBAI")
-	BaobabChain     = Chain("BAOBAB")
+	MumbaiChain     = Chain("Mumbai")
+	BaobabChain     = Chain("Baobab")
 	Ganache         = Chain("Ganache")
 )
 
