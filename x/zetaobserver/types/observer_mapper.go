@@ -66,6 +66,8 @@ func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_Goerli
 	case common.BSCTestnetChain:
 		return ObserverChain_BscTestnet
+	case common.MumbaiChain:
+		return ObserverChain_Mumbai
 	}
 	return ObserverChain_Empty
 }
