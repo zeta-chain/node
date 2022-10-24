@@ -34535,7 +34535,8 @@ paths:
                         - Mumbai
                         - Ropsten
                         - Ganache
-                        - Baobap
+                        - Baobab
+                        - BscTestnet
                       default: Empty
                     ObservationType:
                       type: string
@@ -34746,7 +34747,8 @@ paths:
                             - Mumbai
                             - Ropsten
                             - Ganache
-                            - Baobap
+                            - Baobab
+                            - BscTestnet
                           default: Empty
                         Observation:
                           type: string
@@ -57297,7 +57299,8 @@ definitions:
           - Mumbai
           - Ropsten
           - Ganache
-          - Baobap
+          - Baobab
+          - BscTestnet
         default: Empty
       Observation:
         type: string
@@ -57332,7 +57335,8 @@ definitions:
       - Mumbai
       - Ropsten
       - Ganache
-      - Baobap
+      - Baobab
+      - BscTestnet
     default: Empty
   zetachain.zetacore.zetaobserver.ObserverMapper:
     type: object
@@ -57352,7 +57356,8 @@ definitions:
           - Mumbai
           - Ropsten
           - Ganache
-          - Baobap
+          - Baobab
+          - BscTestnet
         default: Empty
       ObservationType:
         type: string
@@ -57387,7 +57392,8 @@ definitions:
                 - Mumbai
                 - Ropsten
                 - Ganache
-                - Baobap
+                - Baobab
+                - BscTestnet
               default: Empty
             Observation:
               type: string
@@ -57423,7 +57429,8 @@ definitions:
                 - Mumbai
                 - Ropsten
                 - Ganache
-                - Baobap
+                - Baobab
+                - BscTestnet
               default: Empty
             ObservationType:
               type: string
@@ -57508,7 +57515,8 @@ definitions:
                     - Mumbai
                     - Ropsten
                     - Ganache
-                    - Baobap
+                    - Baobab
+                    - BscTestnet
                   default: Empty
                 Observation:
                   type: string
