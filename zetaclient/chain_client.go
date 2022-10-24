@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -203,7 +204,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 					}
 					sendhash := vLog.Topics[3].Hex()
 					//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
-					mMint := receivedLog.ZetaValue.String()
+					mMint := receivedLog.ZetaValue
 					zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
@@ -233,7 +234,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 						return false, false, fmt.Errorf("wrong number of topics in log %d", len(vLog.Topics))
 					}
 					sendhash := vLog.Topics[2].Hex()
-					mMint := revertedLog.RemainingZetaValue.String()
+					mMint := revertedLog.RemainingZetaValue
 					metaHash, err := ob.zetaClient.PostReceiveConfirmation(
 						sendhash,
 						vLog.TxHash.Hex(),
@@ -257,7 +258,7 @@ func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int) (bool,
 	} else if found && receipt.Status == 0 {
 		//FIXME: check nonce here by getTransaction RPC
 		logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
-		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), "", common.ReceiveStatus_Failed, ob.chain.String(), nonce)
+		zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain.String(), nonce)
 		if err != nil {
 			logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 		}
