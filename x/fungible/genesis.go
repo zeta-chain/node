@@ -24,52 +24,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 		// NOTE: shouldn't occur
 		panic("the fungible module account has not been set")
 	}
-
-	// setup system contract & some auxiliary contracts
-	// setup uniswap v2 factory
-	uniswapV2Factory, err := k.DeployUniswapV2Factory(ctx)
-	if err != nil {
-		panic(err)
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("UniswapV2Factory", uniswapV2Factory.String()),
-		),
-	)
-	wzeta, err := k.DeployWZETA(ctx)
-	if err != nil {
-		panic(err)
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("DeployWZetaContract", wzeta.String()),
-		),
-	)
-
-	router, err := k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
-	if err != nil {
-		panic(err)
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("DeployUniswapV2Router02", router.String()),
-		),
-	)
-
-	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, router)
-	if err != nil {
-		panic(err)
-	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("SystemContractAddress", SystemContractAddress.String()),
-		),
-	)
-
-	// set the system contract
-	system, _ := k.GetSystemContract(ctx)
-	system.SystemContract = SystemContractAddress.String()
-	k.SetSystemContract(ctx, system)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
