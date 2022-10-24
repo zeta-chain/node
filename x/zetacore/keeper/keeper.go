@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -23,6 +24,7 @@ type (
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
 		zetaObserverKeeper types.ZetaObserverKeeper
+		fungibleKeeper     fungibleModuleKeeper.Keeper
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 
 	}
@@ -37,6 +39,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ZetaObserverKeeper,
+	fungibleKeeper fungibleModuleKeeper.Keeper,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 
 ) *Keeper {
@@ -55,8 +58,8 @@ func NewKeeper(
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
 		zetaObserverKeeper: zetaObserverKeeper,
+		fungibleKeeper:     fungibleKeeper,
 		// this line is used by starport scaffolding # ibc/keeper/return
-
 	}
 }
 

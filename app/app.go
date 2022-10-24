@@ -441,6 +441,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
+		app.FungibleKeeper,
 	)
 
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
