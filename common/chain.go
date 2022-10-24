@@ -61,23 +61,23 @@ func NewChain(chainID string) (Chain, error) {
 
 func ParseChain(chainName string) (Chain, error) {
 	switch chainName {
-	case "ETH", "Eth":
+	case "ETH":
 		return ETHChain, nil
 	case "BSC":
 		return BSCChain, nil
-	case "POLYGON", "Polygon":
+	case "POLYGON":
 		return POLYGONChain, nil
-	case "ROPSTEN", "Ropsten":
+	case "ROPSTEN":
 		return RopstenChain, nil
-	case "MUMBAI", "Mumbai":
+	case "MUMBAI":
 		return MumbaiChain, nil
-	case "BSCTESTNET", "Bsc":
+	case "BSCTESTNET":
 		return BSCTestnetChain, nil
-	case "GOERLI", "Goerli":
+	case "GOERLI":
 		return GoerliChain, nil
-	case "BAOBAB", "Baobap":
+	case "BAOBAB":
 		return BaobabChain, nil
-	case "GANACHE", "Ganache":
+	case "GANACHE":
 		return Ganache, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)

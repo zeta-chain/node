@@ -51,7 +51,10 @@ func CheckReceiveStatus(status common.ReceiveStatus) error {
 }
 
 func ConvertStringChaintoObservationChain(chain string) ObserverChain {
-	commonChain := common.Chain(chain)
+	commonChain, err := common.ParseChain(chain)
+	if err != nil {
+		return ObserverChain_Empty
+	}
 	switch commonChain {
 	case common.ETHChain, common.Chain(strings.ToUpper(string(common.ETHChain))):
 		return ObserverChain_Eth
