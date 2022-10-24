@@ -18,7 +18,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []types.ObserverChain{
 		types.ObserverChain_Eth,
 		types.ObserverChain_Polygon,
+		types.ObserverChain_Mumbai,
 		types.ObserverChain_Bsc,
+		types.ObserverChain_BscTestnet,
 		types.ObserverChain_Goerli,
 		types.ObserverChain_Ropsten,
 		types.ObserverChain_Baobab,
