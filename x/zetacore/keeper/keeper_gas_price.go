@@ -8,8 +8,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math/big"
 	"sort"
 )
 
@@ -149,6 +151,16 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)
+
+	// set gas price on the System Contract on zEVM as well
+	chainid := clientconfig.Chains[chain].ChainID
+	if chainid != nil {
+		if err := k.fungibleKeeper.SetGasPrice(ctx, chainid, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex]))); err != nil {
+			return nil, err
+		}
+	} else {
+		k.Logger(ctx).Error("chainid not found", "chain", chain)
+	}
 
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
