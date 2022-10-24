@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// FIXME: This is for testnet only
 func (k Keeper) BlockZeroDeploySystemContracts(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -55,5 +56,19 @@ func (k Keeper) BlockZeroDeploySystemContracts(goCtx context.Context) error {
 	system, _ := k.GetSystemContract(ctx)
 	system.SystemContract = SystemContractAddress.String()
 	k.SetSystemContract(ctx, system)
+
+	_, err = k.setupChainGasCoinAndPool(ctx, "GOERLI", "ETH", "gETH", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, "BSCTESTNET", "BNB", "tBNB", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, "MUMBAI", "MATIC", "tMATIC", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+
 	return nil
 }
