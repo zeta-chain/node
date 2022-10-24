@@ -22,7 +22,12 @@ if [ -z "$ADDR" ]; then
   echo "No val key found; generate new val key"
   $ZETACORED keys add val --keyring-backend=test --algo=secp256k1
 fi
-$ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test) 1000000000stake,100000000000000000000000000azeta
+$ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test) 100000000000000000000000000azeta
+
+# give test address bob 10000 ZETA
+# cosmos:zeta1h4m2lf04kpzn4c6fj7tfcnr29fmgk2vfpkjma6
+# hex: 0xBD76aFa5f5b0453aE34997969C4c6a2A768b2989
+$ZETACORED add-genesis-account zeta1h4m2lf04kpzn4c6fj7tfcnr29fmgk2vfpkjma6 10000000000000000000000azeta
 
 
 for NODE in $NODES; do
