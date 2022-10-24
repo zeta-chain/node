@@ -61,6 +61,8 @@ func ConvertStringChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_Polygon
 	case common.GoerliChain, common.Chain(strings.ToUpper(string(common.GoerliChain))):
 		return ObserverChain_Goerli
+	case common.BSCTestnetChain:
+		return ObserverChain_BscTestnet
 	}
 	return ObserverChain_Empty
 }
