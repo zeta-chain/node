@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"math/rand"
 	"os"
@@ -28,7 +28,7 @@ import (
 
 	prom "github.com/prometheus/client_golang/prometheus"
 
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )
