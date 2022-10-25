@@ -27,7 +27,7 @@ func (msg *MsgVoteOnObservedOutboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) Type() string {
-	return "ReceiveConfirmation"
+	return "OutBoundTXVoter"
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) GetSigners() []sdk.AccAddress {

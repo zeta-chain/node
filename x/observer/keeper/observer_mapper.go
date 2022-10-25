@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,7 +18,7 @@ func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store.Set([]byte(om.Index), b)
 }
 
-func (k Keeper) GetObserverMapper(ctx sdk.Context, chain types.ObserverChain, obsType string) (val types.ObserverMapper, found bool) {
+func (k Keeper) GetObserverMapper(ctx sdk.Context, chain types.ObserverChain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
 	index := fmt.Sprintf("%s-%s", chain.String(), obsType)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
@@ -40,6 +41,24 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []*types.Observe
 	return
 }
 
+// Tx
+
+func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.IsValidator(ctx, msg.Creator) {
+		return nil, types.ErrNotValidator
+	}
+	if !k.IsChainSupported(ctx, msg.ObserverChain) {
+		return nil, errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("chain %s", msg.ObserverChain.String()))
+	}
+	k.AddObserverToMapper(ctx,
+		msg.ObserverChain,
+		msg.ObservationType,
+		msg.Creator)
+
+	return &types.MsgAddObserverResponse{}, nil
+}
+
 //Queries
 
 func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryObserversByChainAndTypeRequest) (*types.QueryObserversByChainAndTypeResponse, error) {
@@ -48,9 +67,7 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	types.ParseCommonChaintoObservationChain(req.ObservationChain)
-	mapper, _ := k.GetObserverMapper(ctx, types.ParseCommonChaintoObservationChain(req.ObservationChain), req.ObservationType)
+	mapper, _ := k.GetObserverMapper(ctx, types.ParseCommonChaintoObservationChain(req.ObservationChain), types.ParseStringToObservationType(req.ObservationType))
 	return &types.QueryObserversByChainAndTypeResponse{Observers: mapper.ObserverList}, nil
 }
 
@@ -82,4 +99,19 @@ func (k Keeper) GetAllObserverAddresses(ctx sdk.Context) []string {
 		}
 	}
 	return dedupedList
+}
+
+func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain types.ObserverChain, obsType types.ObservationType, address string) {
+	mapper, found := k.GetObserverMapper(ctx, chain, obsType)
+	if !found {
+		k.SetObserverMapper(ctx, &types.ObserverMapper{
+			Index:           "",
+			ObserverChain:   chain,
+			ObservationType: obsType,
+			ObserverList:    []string{address},
+		})
+		return
+	}
+	mapper.ObserverList = append(mapper.ObserverList, address)
+	k.SetObserverMapper(ctx, &mapper)
 }

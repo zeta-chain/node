@@ -403,6 +403,7 @@ func New(
 		keys[zetaObserverModuleTypes.StoreKey],
 		keys[zetaObserverModuleTypes.MemStoreKey],
 		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+		app.StakingKeeper,
 	)
 
 	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(

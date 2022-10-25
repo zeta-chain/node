@@ -27,7 +27,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
 	if !found {
 		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
@@ -62,7 +62,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes
 		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
 			return ballot, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
 		}
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType.String())
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(chain, observationType)
 		if !found {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))

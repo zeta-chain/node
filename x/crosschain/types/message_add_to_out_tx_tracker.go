@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgAddToOutTxTracker = "add_to_out_tx_tracker"
+const TypeMsgAddToOutTxTracker = "AddToTracker"
 
 var _ sdk.Msg = &MsgAddToOutTxTracker{}
 

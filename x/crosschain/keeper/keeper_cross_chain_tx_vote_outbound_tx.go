@@ -21,7 +21,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType)
 	if !ok {
 		return nil, err
 	}

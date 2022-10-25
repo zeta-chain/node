@@ -25,8 +25,8 @@ message MsgSetSupportedChainsResponse{
 }
 message MsgAddObserver {
   string creator = 1;
-  string observerChain = 2;
-  string observationType = 3;
+  ObserverChain observerChain = 2;
+  ObservationType observationType = 3;
 }
 
 message MsgAddObserverResponse {

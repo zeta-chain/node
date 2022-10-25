@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgRemoveFromOutTxTracker = "remove_from_out_tx_tracker"
+const TypeMsgRemoveFromOutTxTracker = "RemoveFromTracker"
 
 var _ sdk.Msg = &MsgRemoveFromOutTxTracker{}
 

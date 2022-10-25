@@ -28,8 +28,8 @@ func CmdAddObserver() *cobra.Command {
 
 			msg := types.NewMsgAddObserver(
 				clientCtx.GetFromAddress().String(),
-				argObserverChain,
-				argObservationType,
+				types.ParseStringToObserverChain(argObserverChain),
+				types.ParseStringToObservationType(argObservationType),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
