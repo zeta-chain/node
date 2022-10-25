@@ -363,7 +363,7 @@ func (ob *ChainObserver) observeOutTx() {
 // receipt non-nil, err nil: txHash confirmed
 func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
 	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
-	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
+	if ob.outTXConfirmedReceipts[int(nonce)] != nil && ob.outTXConfirmedTransaction[int(nonce)] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
