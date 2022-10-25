@@ -18,13 +18,14 @@ func AllStatus() []CctxStatus {
 
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	m.StatusMessage = msg
+	oldStatus := m.Status
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
 		m.Status = CctxStatus_Aborted
 		return
 	}
 	m.Status = newStatus
-	EmitStatusChangeEvent(ctx, m.Status.String(), newStatus.String(), logIdentifier)
+	EmitStatusChangeEvent(ctx, oldStatus.String(), newStatus.String(), logIdentifier)
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
