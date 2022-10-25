@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
@@ -47,7 +49,9 @@ func (ob *ChainObserver) observeInTX() error {
 		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
-	toBlock := ob.GetLastBlock() + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
+	lastBlock := ob.GetLastBlock()
+	startBlock := lastBlock + 1
+	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
@@ -55,7 +59,7 @@ func (ob *ChainObserver) observeInTX() error {
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   ob.GetLastBlock() + 1,
+		Start:   startBlock,
 		End:     &toBlock,
 		Context: context.TODO(),
 	}, []ethcommon.Address{}, []*big.Int{})
@@ -90,6 +94,7 @@ func (ob *ChainObserver) observeInTX() error {
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
 			event.DestinationGasLimit.Uint64(),
+			common.CoinType_Zeta,
 		)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -97,6 +102,64 @@ func (ob *ChainObserver) observeInTX() error {
 		}
 		ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
+
+	// ============= query the incoming tx to TSS address ==============
+	tssAddress := ob.Tss.Address()
+	// query incoming gas asset
+	for bn := startBlock; bn <= toBlock; bn++ {
+		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("error getting block")
+			continue
+		}
+		for _, tx := range block.Transactions() {
+			if tx.To() == nil {
+				continue
+			}
+			if *tx.To() == tssAddress {
+				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+				if receipt.Status != 1 { // 1: successful, 0: failed
+					ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
+					continue
+				}
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionReceipt")
+					continue
+				}
+				from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionSender")
+					continue
+				}
+				ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
+				ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
+				ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+				message := ""
+				if len(tx.Data()) != 0 {
+					message = hex.EncodeToString(tx.Data())
+				}
+				zetaHash, err := ob.zetaClient.PostSend(
+					from.Hex(),
+					ob.chain.String(),
+					from.Hex(),
+					"ZETA",
+					tx.Value().String(),
+					tx.Value().String(),
+					message,
+					tx.Hash().Hex(),
+					receipt.BlockNumber.Uint64(),
+					90_000,
+					common.CoinType_Gas,
+				)
+				if err != nil {
+					ob.logger.Error().Err(err).Msg("error posting to zeta core")
+					continue
+				}
+				ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+			}
+		}
+	}
+	// ============= end of query the incoming tx to TSS address ==============
 
 	//ob.LastBlock = toBlock
 	ob.setLastBlock(toBlock)

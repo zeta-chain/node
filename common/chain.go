@@ -79,6 +79,8 @@ func ParseChain(chainName string) (Chain, error) {
 		return BaobabChain, nil
 	case "GANACHE":
 		return Ganache, nil
+	case "ZETA":
+		return ZETAChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}
@@ -100,6 +102,8 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "tMATIC"
 	case BSCTestnetChain:
 		return "tBNB"
+	case ZETAChain:
+		return "ZETA"
 	case Ganache:
 		return "CPAY"
 	default:
