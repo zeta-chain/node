@@ -56920,6 +56920,8 @@ definitions:
         default: EmptyObserverType
       Threshold:
         type: string
+  zetachain.zetacore.observer.MsgAddObserverResponse:
+    type: object
   zetachain.zetacore.observer.MsgSetSupportedChainsResponse:
     type: object
   zetachain.zetacore.observer.ObservationType:
