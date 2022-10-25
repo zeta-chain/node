@@ -374,9 +374,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.OutBoundTxParams.OutBoundTxGasPrice)
 		return
 	}
-	// use 33% higher gas price for timely confirmation
-	gasprice = gasprice.Mul(gasprice, big.NewInt(4))
-	gasprice = gasprice.Div(gasprice, big.NewInt(3))
+
 	var tx *ethtypes.Transaction
 	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
