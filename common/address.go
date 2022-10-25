@@ -30,7 +30,7 @@ func NewAddress(address string, chain Chain) (Address, error) {
 func IsETHChain(chain Chain) bool {
 	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
 		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain ||
-		chain == GoerliChain || chain == Ganache {
+		chain == GoerliChain || chain == Ganache || chain == ZETAChain {
 		return true
 	}
 
