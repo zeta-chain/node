@@ -7,7 +7,7 @@ import (
 )
 
 // FIXME: This is for testnet only
-func (k Keeper) BlockZeroDeploySystemContracts(goCtx context.Context) error {
+func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// setup uniswap v2 factory
