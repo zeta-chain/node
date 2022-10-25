@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"time"
 )
 
