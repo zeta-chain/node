@@ -17,6 +17,7 @@ type ClientConfiguration struct {
 }
 
 const (
+	BtcConfirmationCount     = 6
 	EthConfirmationCount     = 3
 	BscConfirmationCount     = 5
 	PolygonConfirmationCount = 5
@@ -118,6 +119,16 @@ var Chains = map[string]*types.ChainETHish{
 		ChainID:                  big.NewInt(3),
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
+	},
+	common.BTCTestnetChain.String(): {
+		Name:                     "BTCTestnet",
+		ConnectorContractAddress: "",
+		PoolContractAddress:      "",
+		PoolContract:             types.UniswapV3,
+		ZETATokenContractAddress: "",
+		ChainID:                  big.NewInt(1001),
+		BlockTime:                EthBlockTime,
+		Endpoint:                 "https://nd-456-407-783.p2pify.com/cee81511fd724bdcc75021ae81a9b5c9",
 	},
 	common.EmptyChain.String(): {
 		Name:                     "",
