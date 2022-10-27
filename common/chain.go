@@ -13,6 +13,7 @@ var (
 	ETHChain     = Chain("ETH")
 	POLYGONChain = Chain("POLYGON")
 	ZETAChain    = Chain("ZETA")
+	BTCChain     = Chain("BTC")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
@@ -24,6 +25,7 @@ var (
 	MumbaiChain     = Chain("Mumbai")
 	BaobabChain     = Chain("Baobab")
 	Ganache         = Chain("Ganache")
+	BTCTestnetChain = Chain("BTCTestnet")
 )
 
 type SigninAlgo string

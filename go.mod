@@ -33,12 +33,16 @@ require (
 require (
 	github.com/99designs/keyring v1.1.6
 	github.com/binance-chain/tss-lib v1.3.2
+	github.com/buger/jsonparser v1.1.1
 	github.com/cosmos/ibc-go/v3 v3.2.0
 	github.com/evmos/ethermint v0.19.2
 	github.com/lib/pq v1.10.6
+	github.com/libsv/go-bk v0.1.6
+	github.com/libsv/go-bt/v2 v2.1.0-beta.4
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
+	github.com/stevenroose/go-bitcoin-core-rpc v0.0.0-20181021223752-1f5e57e12ba1
 	github.com/tendermint/spm v0.1.9
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -57,6 +61,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
+	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
