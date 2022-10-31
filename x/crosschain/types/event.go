@@ -23,12 +23,18 @@ const (
 	StatusMessage    = "StatusMessage"
 	RelayedMessage   = "RelayedMessage"
 	Identifiers      = "LogIdentifiers"
+
+	BallotIdentifier       = "BallotIdentifier"
+	CCTXIndex              = "CCTXIndex"
+	BallotObservationHash  = "BallotObservationHash"
+	BallotObservationChain = "BallotObservationChain"
 )
 
 const (
 	OutboundTxSuccessful = "crosschain/OutboundTxSuccessful"
 	OutboundTxFailed     = "crosschain/OutboundTxFailed"
 	CctxCreated          = "crosschain/CctxCreated"
+	BallotCreated        = "crosschain/BallotCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"

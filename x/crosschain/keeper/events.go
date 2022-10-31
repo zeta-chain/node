@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
@@ -38,6 +39,17 @@ func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
 			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
 			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
+		),
+	)
+}
+
+func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, observationHash string, obserVationChain string) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.BallotCreated,
+			sdk.NewAttribute(types.BallotIdentifier, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.CCTXIndex, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.BallotObservationHash, observationHash),
+			sdk.NewAttribute(types.BallotObservationChain, obserVationChain),
 		),
 	)
 }

@@ -56,11 +56,12 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	}
 	return
 }
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, err error) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
+	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
 		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
-			return ballot, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
+			return ballot, isNew, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
 		}
 		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 		obsParams, found := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
@@ -68,7 +69,6 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
 			return
 		}
-
 		ballot = zetaObserverTypes.Ballot{
 			Index:            "",
 			BallotIdentifier: index,
@@ -78,6 +78,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes
 			BallotThreshold:  obsParams.BallotThreshold,
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
 		}
+		isNew = true
 	}
 	return
 }

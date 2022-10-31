@@ -28,9 +28,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
+	ballot, isNew, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
 	if err != nil {
 		return nil, err
+	}
+	if isNew {
+		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
