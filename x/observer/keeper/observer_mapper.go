@@ -45,8 +45,13 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []*types.Observe
 
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.IsValidator(ctx, msg.Creator) {
-		return nil, types.ErrNotValidator
+	err := k.IsValidator(ctx, msg.ObserverOperator)
+	if err != nil {
+		return nil, err
+	}
+	err = k.CheckObserverDelegation(ctx, msg)
+	if err != nil {
+		return nil, err
 	}
 	if !k.IsChainSupported(ctx, msg.ObserverChain) {
 		return nil, errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("chain %s", msg.ObserverChain.String()))

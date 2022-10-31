@@ -24,7 +24,7 @@ echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale de
 
 zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 50000000000000000000000000000000azeta --keyring-backend=test
-zetacored add-observer-list sample-observer-list.json
+#zetacored add-observer-list sample-observer-list.json
 #zetacored add-observer Eth InBoundTx $(zetacored keys show zeta -a --keyring-backend=test)
 #zetacored add-observer Eth OutBoundTx $(zetacored keys show zeta -a --keyring-backend=test)
 #zetacored add-genesis-account $(zetacored keys show zetaeth -a --keyring-backend=test) 50000000000000000000000000000000azeta,500000000000000000000000000000000stake --keyring-backend=test

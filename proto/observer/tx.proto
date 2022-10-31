@@ -27,6 +27,7 @@ message MsgAddObserver {
   string creator = 1;
   ObserverChain observerChain = 2;
   ObservationType observationType = 3;
+  string observerOperator = 4;
 }
 
 message MsgAddObserverResponse {

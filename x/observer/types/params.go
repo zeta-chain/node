@@ -17,66 +17,78 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		BallotThresholds: []*BallotThreshold{
+		ObserverParams: []*ObserverParams{
 			{
-				Chain:       ObserverChain_Eth,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Eth,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Eth,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Eth,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_BscMainnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_BscMainnet,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_BscMainnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_BscMainnet,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Goerli,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Goerli,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Ropsten,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Ropsten,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Ropsten,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Ropsten,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_BscTestnet,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_BscTestnet,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Mumbai,
+				Observation:           ObservationType_InBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
+				Chain:                 ObserverChain_Mumbai,
+				Observation:           ObservationType_OutBoundTx,
+				BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+				MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000000"),
 			},
 		},
 	}
@@ -90,7 +102,7 @@ func DefaultParams() Params {
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.BallotThresholds, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.ObserverParams, validateVotingThresholds),
 	}
 }
 
@@ -106,23 +118,23 @@ func (p Params) String() string {
 }
 
 func validateVotingThresholds(i interface{}) error {
-	v, ok := i.([]*BallotThreshold)
+	v, ok := i.([]*ObserverParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	for _, threshold := range v {
-		if threshold.Threshold.GT(sdk.OneDec()) {
+		if threshold.BallotThreshold.GT(sdk.OneDec()) {
 			return ErrParamsThreshold
 		}
 	}
 	return nil
 }
 
-func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (BallotThreshold, bool) {
-	for _, threshold := range p.GetBallotThresholds() {
+func (p Params) GetParamsForChainAndType(chain ObserverChain, observationType ObservationType) (ObserverParams, bool) {
+	for _, threshold := range p.GetObserverParams() {
 		if threshold.Chain == chain && threshold.Observation == observationType {
 			return *threshold, true
 		}
 	}
-	return BallotThreshold{}, false
+	return ObserverParams{}, false
 }

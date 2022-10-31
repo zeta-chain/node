@@ -1,6 +1,7 @@
 package cli
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,11 +26,16 @@ func CmdAddObserver() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			valAddress := sdk.ValAddress(clientCtx.GetFromAddress())
+			operatorAddress, err := sdk.ValAddressFromBech32(valAddress.String())
+			if err != nil {
+				return err
+			}
 			msg := types.NewMsgAddObserver(
 				clientCtx.GetFromAddress().String(),
 				types.ParseStringToObserverChain(argObserverChain),
 				types.ParseStringToObservationType(argObservationType),
+				operatorAddress.String(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
