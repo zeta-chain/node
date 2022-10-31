@@ -22,7 +22,7 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 		return nil, err
 	}
 	file = filepath.Clean(file)
-	input, err := ioutil.ReadFile(file) // #nosec G402
+	input, err := ioutil.ReadFile(file) // #nosec G304
 	if err != nil {
 		return nil, err
 	}
