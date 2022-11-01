@@ -39,6 +39,7 @@ func (k Keeper) PostTxProcessing(
 	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, receipt.ContractAddress)
 }
 
+// FIXME: authenticate the emitting contract with foreign_coins
 func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address) error {
 	var event *contracts.ZRC4Withdrawal
 
