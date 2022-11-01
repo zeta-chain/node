@@ -7,8 +7,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) IsValidator(ctx sdk.Context, operatorAddress string) error {
-	valAddress, err := sdk.ValAddressFromBech32(operatorAddress)
+func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
+	valAddress, err := types.GetOperatorAddressFromAccAddress(creator)
 	if err != nil {
 		return err
 	}
@@ -26,14 +26,16 @@ func (k Keeper) IsValidator(ctx sdk.Context, operatorAddress string) error {
 
 func (k Keeper) CheckObserverDelegation(ctx sdk.Context, msg *types.MsgAddObserver) error {
 	delAddr, _ := sdk.AccAddressFromBech32(msg.Creator)
-	valAddress, err := sdk.ValAddressFromBech32(msg.ObserverOperator)
+	valAddress, err := types.GetOperatorAddressFromAccAddress(msg.Creator)
 	if err != nil {
 		return err
 	}
+	fmt.Println(valAddress.String())
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
 	if !found {
 		return types.ErrNotValidator
 	}
+
 	delegation, found := k.stakingKeeper.GetDelegation(ctx, delAddr, valAddress)
 	if !found {
 		return types.ErrSelfDelgation
@@ -49,3 +51,7 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, msg *types.MsgAddObserv
 	}
 	return nil
 }
+
+//func (k Keeper) CheckIfValidatorIsObserver(ctx sdk.Context, valAddress sdk.ValAddress) {
+//
+//}

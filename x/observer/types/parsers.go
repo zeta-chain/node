@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"path/filepath"
@@ -89,4 +90,31 @@ func ParseStringToObserverChain(chain string) ObserverChain {
 func ParseStringToObservationType(observationType string) ObservationType {
 	c := ObservationType_value[observationType]
 	return ObservationType(c)
+}
+
+func GetOperatorAddressFromAccAddress(accAddr string) (sdk.ValAddress, error) {
+	accAddressBech32, err := sdk.AccAddressFromBech32(accAddr)
+	if err != nil {
+		return nil, err
+	}
+	valAddress := sdk.ValAddress(accAddressBech32)
+	valAddressBech32, err := sdk.ValAddressFromBech32(valAddress.String())
+	if err != nil {
+		return nil, err
+	}
+	return valAddressBech32, nil
+}
+
+func GetAccAddressFromOperatorAddress(accAddr string) (sdk.AccAddress, error) {
+	valAddress := sdk.ValAddress(accAddr)
+	valAddressBech32, err := sdk.ValAddressFromBech32(valAddress.String())
+	if err != nil {
+		return nil, err
+	}
+	accAddress := sdk.AccAddress(valAddressBech32)
+	accAddressBech32, err := sdk.AccAddressFromBech32(accAddress.String())
+	if err != nil {
+		return nil, err
+	}
+	return accAddressBech32, nil
 }

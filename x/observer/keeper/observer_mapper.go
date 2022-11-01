@@ -45,7 +45,7 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []*types.Observe
 
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.IsValidator(ctx, msg.ObserverOperator)
+	err := k.IsValidator(ctx, msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +116,11 @@ func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain types.ObserverChain, 
 			ObserverList:    []string{address},
 		})
 		return
+	}
+	for _, addr := range mapper.ObserverList {
+		if addr == address {
+			return
+		}
 	}
 	mapper.ObserverList = append(mapper.ObserverList, address)
 	k.SetObserverMapper(ctx, &mapper)
