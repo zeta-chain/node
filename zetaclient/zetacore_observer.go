@@ -327,21 +327,16 @@ func (co *CoreObserver) startSendScheduler() {
 					offset := send.Index[len(send.Index)-1] % 4
 					sinceBlock -= int64(offset)
 
-					if isScheduled(sinceBlock, idx < 40) {
+					if isScheduled(sinceBlock, idx < 30) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
 							numScheduledSends++
-							num := outTxMan.StartTryProcess(outTxID)
-							// do not schedule more than 160 keysign ceremonies simultaneously
-							if num < 160 {
-								go co.TryProcessOutTx(send, sinceBlock, outTxMan)
-							} else {
-								logger.Warn().Msgf("Too many keysigns in progress: %d", num)
-							}
+							outTxMan.StartTryProcess(outTxID)
+							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 						}
 					}
-					if idx > 60 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
