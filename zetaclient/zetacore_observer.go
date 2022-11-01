@@ -160,13 +160,14 @@ func NewOutTxProcessorManager() *OutTxProcessorManager {
 	}
 }
 
-func (outTxMan *OutTxProcessorManager) StartTryProcess(outTxID string) {
+func (outTxMan *OutTxProcessorManager) StartTryProcess(outTxID string) int64 {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	outTxMan.outTxStartTime[outTxID] = time.Now()
 	outTxMan.outTxActive[outTxID] = struct{}{}
 	outTxMan.numActiveProcessor++
 	outTxMan.logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outTxID, outTxMan.numActiveProcessor)
+	return outTxMan.numActiveProcessor
 }
 
 func (outTxMan *OutTxProcessorManager) EndTryProcess(outTxID string) {
@@ -331,8 +332,13 @@ func (co *CoreObserver) startSendScheduler() {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
 							numScheduledSends++
-							outTxMan.StartTryProcess(outTxID)
-							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+							num := outTxMan.StartTryProcess(outTxID)
+							// do not schedule more than 160 keysign ceremonies simultaneously
+							if num < 160 {
+								go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+							} else {
+								logger.Warn().Msgf("Too many keysigns in progress: %d", num)
+							}
 						}
 					}
 					if idx > 60 { // only look at 50 sends per chain
