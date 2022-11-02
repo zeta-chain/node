@@ -24,13 +24,12 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 
 }
 
-func (k Keeper) CheckObserverDelegation(ctx sdk.Context, msg *types.MsgAddObserver) error {
-	delAddr, _ := sdk.AccAddressFromBech32(msg.Creator)
-	valAddress, err := types.GetOperatorAddressFromAccAddress(msg.Creator)
+func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain types.ObserverChain, observationType types.ObservationType) error {
+	delAddr, _ := sdk.AccAddressFromBech32(accAddress)
+	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {
 		return err
 	}
-	fmt.Println(valAddress.String())
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
 	if !found {
 		return types.ErrNotValidator
@@ -40,18 +39,16 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, msg *types.MsgAddObserv
 	if !found {
 		return types.ErrSelfDelgation
 	}
-	obsParams, found := k.GetParams(ctx).GetParamsForChainAndType(msg.ObserverChain, msg.ObservationType)
+	obsParams, found := k.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
 	if !found {
-		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Params for chain and type do not exists %s , %s", msg.ObserverChain.String(), msg.ObservationType.String()))
+		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Params for chain and type do not exists %s , %s", chain.String(), observationType.String()))
 	}
 
 	tokens := validator.TokensFromShares(delegation.Shares)
-	if tokens.LTE(obsParams.MinObserverDelegation) {
+	fmt.Println("Tokens : ", tokens.String())
+	fmt.Println("MinObserverDelegation : ", obsParams.MinObserverDelegation.String())
+	if tokens.LT(obsParams.MinObserverDelegation) {
 		return types.ErrCheckObserverDelegation
 	}
 	return nil
 }
-
-//func (k Keeper) CheckIfValidatorIsObserver(ctx sdk.Context, valAddress sdk.ValAddress) {
-//
-//}

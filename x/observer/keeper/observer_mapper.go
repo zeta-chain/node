@@ -40,6 +40,25 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []*types.Observe
 	}
 	return
 }
+func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string) (mappers []*types.ObserverMapper) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.ObserverMapper
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		addToList := false
+		for _, addr := range val.ObserverList {
+			if addr == address {
+				addToList = true
+			}
+		}
+		if addToList {
+			mappers = append(mappers, &val)
+		}
+	}
+	return
+}
 
 // Tx
 
@@ -49,7 +68,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if err != nil {
 		return nil, err
 	}
-	err = k.CheckObserverDelegation(ctx, msg)
+	err = k.CheckObserverDelegation(ctx, msg.Creator, msg.ObserverChain, msg.ObservationType)
 	if err != nil {
 		return nil, err
 	}

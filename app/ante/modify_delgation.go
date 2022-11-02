@@ -2,7 +2,6 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 )
@@ -35,12 +34,12 @@ func (vcd ValidateModifyDelegationDecorator) validateMsg(ctx sdk.Context, msg sd
 }
 
 func validateAddress(address string, observerList []string) error {
-	for _, observer := range observerList {
-		if address == observer {
-			return sdkerrors.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"cannot change delegation for observer address %s", address)
-		}
-	}
+	//for _, observer := range observerList {
+	//	if address == observer {
+	//		return sdkerrors.Wrapf(
+	//			sdkerrors.ErrInvalidRequest,
+	//			"cannot change delegation for observer address %s", address)
+	//	}
+	//}
 	return nil
 }

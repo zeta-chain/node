@@ -105,9 +105,8 @@ func GetOperatorAddressFromAccAddress(accAddr string) (sdk.ValAddress, error) {
 	return valAddressBech32, nil
 }
 
-func GetAccAddressFromOperatorAddress(accAddr string) (sdk.AccAddress, error) {
-	valAddress := sdk.ValAddress(accAddr)
-	valAddressBech32, err := sdk.ValAddressFromBech32(valAddress.String())
+func GetAccAddressFromOperatorAddress(valAddress string) (sdk.AccAddress, error) {
+	valAddressBech32, err := sdk.ValAddressFromBech32(valAddress)
 	if err != nil {
 		return nil, err
 	}
