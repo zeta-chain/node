@@ -430,9 +430,6 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 	if send.Status == types.SendStatus_PendingRevert {
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 		toChainID := config.Chains[send.ReceiverChain].ChainID
-		if toChainID.Uint64() == 5 { // FIXME: GOERLI suggested gas often is too low
-			gasprice = gasprice.Mul(gasprice, big.NewInt(2))
-		}
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
 	} else if send.Status == types.SendStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
