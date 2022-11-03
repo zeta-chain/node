@@ -45,8 +45,6 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 	}
 
 	tokens := validator.TokensFromShares(delegation.Shares)
-	fmt.Println("Tokens : ", tokens.String())
-	fmt.Println("MinObserverDelegation : ", obsParams.MinObserverDelegation.String())
 	if tokens.LT(obsParams.MinObserverDelegation) {
 		return types.ErrCheckObserverDelegation
 	}

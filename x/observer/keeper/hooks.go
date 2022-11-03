@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -33,7 +32,12 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 	}
 }
 
-func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec)                {}
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
+	if err != nil {
+		panic(err)
+	}
+}
 func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                            {}
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)          {}
@@ -44,6 +48,35 @@ func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.Va
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress, fraction sdk.Dec) error {
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if !found {
+		return types.ErrNotValidator
+	}
+
+	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
+	if err != nil {
+		return err
+	}
+	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
+	if len(mappers) == 0 {
+		return nil
+	}
+	tokensToBurn := validator.Tokens.ToDec().Mul(fraction)
+	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
+	for _, mapper := range mappers {
+		obsParams, supported := k.GetParams(ctx).GetParamsForChainAndType(mapper.ObserverChain, mapper.ObservationType)
+		if !supported {
+			return types.ErrSupportedChains
+		}
+		if resultingTokens.ToDec().LT(obsParams.MinObserverDelegation) {
+			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
+			k.SetObserverMapper(ctx, mapper)
+		}
+	}
+	return nil
 }
 
 // CleanObservers cleans a observer Mapper without checking delegation amount
@@ -76,7 +109,6 @@ func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.V
 	if err != nil {
 		return err
 	}
-	fmt.Println(accAddress.String(), delAddress.String())
 	if !(accAddress.String() == delAddress.String()) {
 		return nil
 	}
