@@ -32,12 +32,12 @@ zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=t
 
 zetacored gentx zeta 10000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
 
-echo "Collecting genesis txs..."
-zetacored collect-gentxs
-
-echo "Validating genesis file..."
-zetacored validate-genesis
-
-export DUMMY_PRICE=yes
-export DISABLE_TSS_KEYGEN=yes
-export GOERLI_ENDPOINT=https://goerli.infura.io/v3/faf5188f178a4a86b3a63ce9f624eb1b
+#echo "Collecting genesis txs..."
+#zetacored collect-gentxs
+#
+#echo "Validating genesis file..."
+#zetacored validate-genesis
+#
+#export DUMMY_PRICE=yes
+#export DISABLE_TSS_KEYGEN=yes
+#export GOERLI_ENDPOINT=https://goerli.infura.io/v3/faf5188f178a4a86b3a63ce9f624eb1b
