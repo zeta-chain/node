@@ -89,7 +89,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
 		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 		if ok {
-			cctx.InBoundTxParams.InBoundTXBallotIndex = inCctxIndex
+			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
 		}
 		k.UpdateNonce(ctx, receiverChain, &cctx)
 
