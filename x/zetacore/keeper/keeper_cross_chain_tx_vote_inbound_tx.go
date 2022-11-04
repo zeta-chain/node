@@ -103,6 +103,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				}
 				if !tx.Failed() {
 					logs := evmtypes.LogsToEthereum(tx.Logs)
+					ctx.WithValue("inCctxIndex", cctx.Index)
 					err = k.ProcessWithdrawalEvent(ctx, logs, contract)
 					ctx.EventManager().EmitEvent(
 						sdk.NewEvent(sdk.EventTypeMessage,
@@ -110,6 +111,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 							sdk.NewAttribute("action", "depositZRC4AndCallContract"),
 							sdk.NewAttribute("contract", contract.String()),
 							sdk.NewAttribute("data", hex.EncodeToString(data)),
+							sdk.NewAttribute("cctxIndex", cctx.Index),
 						),
 					)
 				}
