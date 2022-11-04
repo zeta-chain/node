@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
-	//s.network.Cleanup()
+	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestAddObserversCmd() {

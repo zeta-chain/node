@@ -38,7 +38,7 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 		cfg = configs[0]
 	}
 	net := network.New(t, cfg)
-	t.Cleanup(net.Cleanup)
+	//t.Cleanup(net.Cleanup)
 	return net
 }
 
