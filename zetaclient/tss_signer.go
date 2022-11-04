@@ -119,6 +119,53 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	return sigbyte, nil
 }
 
+// digest should be Keccak256 Hash of some data
+func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
+	tssPubkey := tss.CurrentPubkey
+	digestBase64 := make([]string, len(digests))
+	for i, digest := range digests {
+		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
+	}
+	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, 10, nil, "0.14.0")
+	ksRes, err := tss.Server.KeySign(keysignReq)
+	if err != nil {
+		log.Warn().Msg("keysign fail")
+	}
+	signatures := ksRes.Signatures
+	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
+	// 32B msg hash, 32B R, 32B S, 1B RC
+
+	if len(signatures) != len(digests) {
+		log.Warn().Err(err).Msgf("signature has length not equal to lenght of digests")
+		return [][65]byte{}, fmt.Errorf("keysign fail: %s", err)
+	}
+
+	if !verifySignatures(tssPubkey, signatures, digests) {
+		log.Error().Err(err).Msgf("signature verification failure")
+		return [][65]byte{}, fmt.Errorf("signuature verification fail")
+	}
+	sigbyte := make([][65]byte, len(digests))
+	for i, signature := range signatures {
+		_, err = base64.StdEncoding.Decode(sigbyte[i][:32], []byte(signature.R))
+		if err != nil {
+			log.Error().Err(err).Msg("decoding signature R")
+			return [][65]byte{}, fmt.Errorf("signuature verification fail")
+		}
+		_, err = base64.StdEncoding.Decode(sigbyte[i][32:64], []byte(signature.S))
+		if err != nil {
+			log.Error().Err(err).Msg("decoding signature S")
+			return [][65]byte{}, fmt.Errorf("signuature verification fail")
+		}
+		_, err = base64.StdEncoding.Decode(sigbyte[i][64:65], []byte(signature.RecoveryID))
+		if err != nil {
+			log.Error().Err(err).Msg("decoding signature RecoveryID")
+			return [][65]byte{}, fmt.Errorf("signuature verification fail")
+		}
+	}
+
+	return sigbyte, nil
+}
+
 func (tss *TSS) Address() ethcommon.Address {
 	addr, err := getKeyAddr(tss.CurrentPubkey)
 	if err != nil {
@@ -331,4 +378,34 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
+}
+
+func verifySignatures(tssPubkey string, signatures []keysign.Signature, H [][]byte) bool {
+	if len(signatures) != len(H) {
+		log.Warn().Msg("verify_signatures: signature array length not equal to hash array length")
+		return false
+	}
+	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		log.Error().Msg("get pubkey from bech32 fail")
+	}
+	// verify the signature of msg.
+	var sigbyte [65]byte
+	for i, signature := range signatures {
+		_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature.R))
+		_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature.S))
+		_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature.RecoveryID))
+		sigPublicKey, err := crypto.SigToPub(H[i], sigbyte[:])
+		if err != nil {
+			log.Error().Err(err).Msg("SigToPub error in verify_signature")
+			return false
+		}
+		compressedPubkey := crypto.CompressPubkey(sigPublicKey)
+		if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
+			return false
+		}
+		log.Info().Msgf("%d-th pubkey %s recovered pubkey %s", i, pubkey.String(), hex.EncodeToString(compressedPubkey))
+	}
+
+	return true
 }
