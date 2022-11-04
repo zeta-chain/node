@@ -194,6 +194,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Error().Err(err).Msg("GetZetaBlockHeight error")
 		return
 	}
+	log.Info().Msgf("zetaclient startup block height %d", bn)
 
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
 	if err != nil {
