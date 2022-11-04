@@ -195,6 +195,8 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		return
 	}
 	log.Info().Msgf("zetaclient startup block height %d", bn)
+	startBn := (bn + 100) / 50 * 50 // make sure that it allows enough time for the TSS to start
+	log.Info().Msgf("start monitoring zetacore scheduled at block %d", startBn)
 
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
 	if err != nil {
@@ -334,8 +336,6 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
 
-	startBn := (bn + 50) / 50 * 50
-	log.Info().Msgf("start monitoring zetacore scheduled at block %d", startBn)
 	for {
 		bn, err := bridge1.GetZetaBlockHeight()
 		if err != nil {
