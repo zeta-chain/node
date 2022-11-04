@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	//"github.com/Meta-Protocol/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // GetBlockHeight returns the current height for metachain blocks
