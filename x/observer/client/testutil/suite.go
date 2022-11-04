@@ -64,5 +64,4 @@ func (s *IntegrationTestSuite) TestAddObserversCmd() {
 	}
 	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
-
 }
