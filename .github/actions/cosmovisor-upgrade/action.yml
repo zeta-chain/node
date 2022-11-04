@@ -24,8 +24,7 @@ inputs:
     default: ""
   CHAIN_ID:  
     description: 'Chain ID for the upgrade'
-    required: false
-    default: "athens-1"
+    required: true
   API_ENDPOINT:  
     description: 'Endpoint to query the active ZetaChain API'
     required: false
@@ -68,7 +67,7 @@ runs:
         echo UPGRADE_HEIGHT: ${{env.UPGRADE_HEIGHT}}
 
         COMMAND_ID=$(aws ssm send-command \
-          --targets Key=tag:Name,Values=node0  Key=tag:Chain,Values=zetachain \
+          --targets Key=tag:Name,Values=validator0 \
           --document-name "AWS-RunShellScript" \
           --parameters "commands=['export HOME=/home/zetachain && \
             /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-proposal software-upgrade $VERSION \
@@ -93,7 +92,7 @@ runs:
         source ${{ github.action_path }}/functions
         
         COMMAND_ID=$(aws ssm send-command \
-          --targets Key=tag:Role,Values=validator  Key=tag:Chain,Values=zetachain \
+          --targets Key=tag:Role,Values=validator \
           --document-name "AWS-RunShellScript" \
           --parameters "commands=['export HOME=/home/zetachain && /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote \$(/home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored q gov proposals --reverse -o json | jq -r .proposals[0].proposal_id) yes --from val --keyring-backend test --chain-id $CHAIN_ID --yes']" | jq .Command.CommandId -r || exit 1)
         

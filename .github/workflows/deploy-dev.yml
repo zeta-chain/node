@@ -27,6 +27,7 @@ env:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
+    # environment: 'development'
     steps:
       - uses: actions/checkout@v3
 
@@ -35,12 +36,12 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-      - name: Build Binaries
-        uses: ./.github/actions/build-binaries
-        with:
-          run-tests: ${{ env.ENVIRONMENT_NAME != 'DEVELOPMENT' }}
-          build-indexer: false
-          go-version: '1.18'
+      # - name: Build Binaries
+      #   uses: ./.github/actions/build-binaries
+      #   with:
+      #     run-tests: ${{ env.ENVIRONMENT_NAME != 'DEVELOPMENT' }}
+      #     build-indexer: false
+      #     go-version: '1.18'
 
       - name: Install AWS CLI
         run: |
@@ -55,16 +56,16 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}          
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: upload-files-to-s3
-        uses: ./.github/actions/upload-to-s3
-        with:
-          bucket-name: ${{ env.S3_BUCKET_NAME }}
-          release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-          git-sha: ${{ github.sha }}
-          files: |
-            zetacored
-            zetaclientd
-            cosmovisor
+      # - name: upload-files-to-s3
+      #   uses: ./.github/actions/upload-to-s3
+      #   with:
+      #     bucket-name: ${{ env.S3_BUCKET_NAME }}
+      #     release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+      #     git-sha: ${{ github.sha }}
+      #     files: |
+      #       zetacored
+      #       zetaclientd
+      #       cosmovisor
 
       ## Not being used anymore / for now
       # - name: Build, tag, and push image to Amazon ECR
@@ -81,16 +82,35 @@ jobs:
       #     TAKE_SNAPSHOTS: false
       #     UPDATE_INDEXER: false
 
-      # NOT READY YET
-      # - name: Cosmovisor Upgrade Proposal and Vote
-      #   uses:  ./.github/actions/cosmovisor-upgrade
+
+      # - name: Require Approval To Create a Release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/athens')
       #   with:
-      #     RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-      #     VERSION: "0.0.1"
-      #     # DESCRIPTION: "description"
-      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-      #     # CHECKSUM_ZETACORED: ""
-      #     # CHECKSUM_ZETACLIENTD: ""
-      #     CHAIN_ID: "athens-1"
-      #     API_ENDPOINT: "https://api.staging.zetachain.com"
+      #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     files: |
+      #       zetacored
+      #       zetaclientd
+
+      # - name: Create GitHub Release for ZetaCore/ZetaClient
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/athens')
+      #   with:
+      #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     files: |
+      #       zetacored
+      #       zetaclientd
+
+      #NOT READY YET
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
+        with:
+          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          VERSION: "0.0.1"
+          # DESCRIPTION: "description"
+          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          # CHECKSUM_ZETACORED: ""
+          # CHECKSUM_ZETACLIENTD: ""
+          CHAIN_ID: "develop_101-1"
+          API_ENDPOINT: "https://archive.development.zetachain.com"
 
