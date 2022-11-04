@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package zetachain.zetacore.observer;
+import "observer/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message SupportedChains{
+  repeated ObserverChain chain_list = 1;
+}

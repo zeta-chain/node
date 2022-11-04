@@ -12,6 +12,9 @@ on:
       - develop
       - feature/zetacore-observer-fixes
       - cosmovisor-action
+      
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
 
 env:
   ENVIRONMENT_NAME: "DEVELOPMENT"

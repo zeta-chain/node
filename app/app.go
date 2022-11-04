@@ -21,6 +21,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/app/ante"
 
 	"io"
 	"net/http"
@@ -99,13 +100,13 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	zetaCoreModule "github.com/zeta-chain/zetacore/x/zetacore"
-	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/zetacore/keeper"
-	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
+	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
-	zetaObserverModule "github.com/zeta-chain/zetacore/x/zetaobserver"
-	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/zetaobserver/keeper"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/zetaobserver/types"
+	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const Name = "zetacore"
@@ -397,6 +398,12 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
+	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaObserverModuleTypes.StoreKey],
+		keys[zetaObserverModuleTypes.MemStoreKey],
+		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+	)
 
 	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
 		appCodec,
@@ -406,13 +413,9 @@ func New(
 		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.ZetaObserverKeeper,
 	)
-	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaObserverModuleTypes.StoreKey],
-		keys[zetaObserverModuleTypes.MemStoreKey],
-		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
-	)
+
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 
 	/****  Module Options ****/
@@ -533,19 +536,19 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := evmante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		IBCKeeper:       app.IBCKeeper,
-
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:  maxGasWanted,
+	options := ante.HandlerOptions{
+		AccountKeeper:      app.AccountKeeper,
+		BankKeeper:         app.BankKeeper,
+		EvmKeeper:          app.EvmKeeper,
+		FeeMarketKeeper:    app.FeeMarketKeeper,
+		IBCKeeper:          app.IBCKeeper,
+		ZetaObserverKeeper: app.ZetaObserverKeeper,
+		SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:     evmante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:     maxGasWanted,
 	}
 
-	anteHandler, err := evmante.NewAnteHandler(options)
+	anteHandler, err := ante.NewAnteHandler(options)
 	if err != nil {
 		panic(err)
 	}

@@ -29,7 +29,7 @@ import (
 	//"strconv"
 	//"strings"
 
-	stypes "github.com/zeta-chain/zetacore/x/zetacore/types"
+	stypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 

@@ -1,8 +1,0 @@
-syntax = "proto3";
-package zetachain.zetacore.zetacore;
-
-option go_package = "github.com/zeta-chain/zetacore/x/zetacore/types";
-
-message SupportedChains{
-  repeated string chain_list = 1;
-}
