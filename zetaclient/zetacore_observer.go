@@ -201,27 +201,43 @@ func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 }
 
 // suicide whole zetaclient if keysign appears deadlocked.
-func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
-	logger := outTxMan.logger
-	logger.Info().Msgf("StartMonitorHealth")
-	ticker := time.NewTicker(60 * time.Second)
+func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
+	logger := co.logger
+	logger.Info().Msg("StartMonitorHealth")
+	ticker := time.NewTicker(20 * time.Second)
 	for range ticker.C {
 		count := 0
 		for outTxID := range outTxMan.outTxActive {
-			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
+			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 5 {
 				count++
 			}
 		}
 		if count > 0 {
-			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
+			logger.Warn().Msgf("Health: %d OutTx are more than 5min in process!", count)
 		} else {
 			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
 		}
-		if count > 10 {
-			// suicide:
-			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
-			logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
-			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		if count > 50 { // suicide condition
+			bn, err := co.bridge.GetZetaBlockHeight()
+			if err != nil {
+				logger.Error().Err(err).Msg("StartMonitorHealth GetZetaBlockHeight")
+				continue
+			}
+			suicideBn := (bn + 100) / 100 * 100 // round to the next multiple of 100 block to suicide in sync with other clients
+			logger.Warn().Msgf("StartMonitorHealth: detected many stuck outTxProcessor at block %d; schedule suicde at block %d", bn, suicideBn)
+			for {
+				bn, err := co.bridge.GetZetaBlockHeight()
+				if err != nil {
+					logger.Error().Err(err).Msg("StartMonitorHealth GetZetaBlockHeight")
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				if bn == suicideBn {
+					logger.Warn().Msgf("StartMonitorHealth: arrived at scheduled suicide block number %d; commence suicide...", suicideBn)
+					_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				}
+				time.Sleep(1 * time.Second)
+			}
 		}
 	}
 }
@@ -231,6 +247,7 @@ func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
 func (co *CoreObserver) startSendScheduler() {
 	logger := co.logger.With().Str("module", "SendScheduler").Logger()
 	outTxMan := NewOutTxProcessorManager()
+	go co.StartMonitorHealth(outTxMan)
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
