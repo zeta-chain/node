@@ -8,9 +8,9 @@ run_ssm_cmds_validators () {
     echo "$COMMAND_ID"
 }
 
-run_ssm_cmds_node0 () {
+run_ssm_cmds_validator0 () {
     COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:Name,Values=node0  Key=tag:Chain,Values=zetachain \
+    --targets Key=tag:Name,Values=validator0  Key=tag:Chain,Values=zetachain \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"
