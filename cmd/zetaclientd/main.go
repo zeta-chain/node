@@ -343,6 +343,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		}
 		if bn == startBn {
 			mo1.MonitorCore()
+			break
 		}
 		time.Sleep(1 * time.Second)
 	}
