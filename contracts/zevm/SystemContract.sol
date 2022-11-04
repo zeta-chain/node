@@ -43,6 +43,7 @@ contract SystemContract is SystemContractErrors{
 
         IZRC4(zrc4).deposit(target, amount);
         zContract(target).onCrossChainCall(zrc4, amount, message);
+
     }
 
 
