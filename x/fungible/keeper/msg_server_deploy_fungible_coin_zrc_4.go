@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 )
 
 func (k msgServer) DeployFungibleCoinZRC4(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC4) (*types.MsgDeployFungibleCoinZRC4Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Creator != types.AdminAddress {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "only admin can deploy fungible coin")
+	}
 
 	addr, err := k.DeployZRC4Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChain, msg.CoinType, msg.ERC20, big.NewInt(int64(msg.GasLimit)))
 	if err != nil {
