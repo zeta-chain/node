@@ -10,20 +10,12 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
 // Msg defines the Msg service.
 service Msg {
-      rpc FungibleTestMsg(MsgFungibleTestMsg) returns (MsgFungibleTestMsgResponse);
   rpc DeployFungibleCoinZRC4(MsgDeployFungibleCoinZRC4) returns (MsgDeployFungibleCoinZRC4Response);
-  rpc DeployGasPriceOracle(MsgDeployGasPriceOracle) returns (MsgDeployGasPriceOracleResponse);
-  rpc SetZetaGasPool(MsgSetZetaGasPool) returns (MsgSetZetaGasPoolResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
-message MsgFungibleTestMsg {
-  string creator = 1;
-  string testType = 2;
-}
 
-message MsgFungibleTestMsgResponse {
-}
+
 
 message MsgDeployFungibleCoinZRC4 {
   string creator = 1;
@@ -39,21 +31,5 @@ message MsgDeployFungibleCoinZRC4 {
 message MsgDeployFungibleCoinZRC4Response {
 }
 
-message MsgDeployGasPriceOracle {
-  string creator = 1;
-}
-
-message MsgDeployGasPriceOracleResponse {
-}
-
-message MsgSetZetaGasPool {
-  string creator = 1;
-  string address = 2;
-  string poolType = 3;
-  string chain = 4;
-}
-
-message MsgSetZetaGasPoolResponse {
-}
 
 // this line is used by starport scaffolding # proto/tx/message
