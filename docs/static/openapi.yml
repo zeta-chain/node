@@ -31964,6 +31964,9 @@ paths:
                         - Gas
                         - ERC20
                       default: Zeta
+                      title: |-
+                        - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                         - ERC20: ERC20 token
               pagination:
                 type: object
                 properties:
@@ -32093,6 +32096,9 @@ paths:
                       - Gas
                       - ERC20
                     default: Zeta
+                    title: |-
+                      - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                       - ERC20: ERC20 token
         default:
           description: An unexpected error response.
           schema:
@@ -55637,6 +55643,9 @@ definitions:
       - Gas
       - ERC20
     default: Zeta
+    title: |-
+      - Gas: Ether, BNB, Matic, Klay, BTC, etc
+       - ERC20: ERC20 token
   zetachain.zetacore.fungible.ForeignCoins:
     type: object
     properties:
@@ -55662,13 +55671,10 @@ definitions:
           - Gas
           - ERC20
         default: Zeta
+        title: |-
+          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+           - ERC20: ERC20 token
   zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC4Response:
-    type: object
-  zetachain.zetacore.fungible.MsgDeployGasPriceOracleResponse:
-    type: object
-  zetachain.zetacore.fungible.MsgFungibleTestMsgResponse:
-    type: object
-  zetachain.zetacore.fungible.MsgSetZetaGasPoolResponse:
     type: object
   zetachain.zetacore.fungible.Params:
     type: object
@@ -55703,6 +55709,9 @@ definitions:
                 - Gas
                 - ERC20
               default: Zeta
+              title: |-
+                - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                 - ERC20: ERC20 token
       pagination:
         type: object
         properties:
@@ -55756,6 +55765,9 @@ definitions:
               - Gas
               - ERC20
             default: Zeta
+            title: |-
+              - Gas: Ether, BNB, Matic, Klay, BTC, etc
+               - ERC20: ERC20 token
   zetachain.zetacore.fungible.QueryGetSystemContractResponse:
     type: object
     properties:
