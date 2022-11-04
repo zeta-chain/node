@@ -319,14 +319,33 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
-	for _, v := range *chainClientMap1 {
-		v.Start()
-	}
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
+	bn, err := bridge1.GetZetaBlockHeight()
+	if err != nil {
+		log.Error().Err(err).Msg("GetZetaBlockHeight error")
+		return
+	}
+	startBn := (bn + 50) / 50 * 50
+	log.Info().Msgf("start monitoring zetacore scheduled at block %d", startBn)
+	for {
+		bn, err := bridge1.GetZetaBlockHeight()
+		if err != nil {
+			log.Error().Err(err).Msg("GetZetaBlockHeight error")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		if bn == startBn {
+			log.Info().Msgf("starting chain cliens at scheduled block %d", bn)
+			for _, v := range *chainClientMap1 {
+				v.Start()
+			}
+		}
+		time.Sleep(1 * time.Second)
+	}
 
 	// report TSS address nonce on ETHish chains
 	for _, chain := range config.ChainsEnabled {
