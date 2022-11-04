@@ -319,11 +319,14 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
+	log.Info().Msgf("starting chain cliens at scheduled block")
+	for _, v := range *chainClientMap1 {
+		v.Start()
+	}
 
 	log.Info().Msg("starting zetacore observer...")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
 
-	mo1.MonitorCore()
 	bn, err := bridge1.GetZetaBlockHeight()
 	if err != nil {
 		log.Error().Err(err).Msg("GetZetaBlockHeight error")
@@ -339,10 +342,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 			continue
 		}
 		if bn == startBn {
-			log.Info().Msgf("starting chain cliens at scheduled block %d", bn)
-			for _, v := range *chainClientMap1 {
-				v.Start()
-			}
+			mo1.MonitorCore()
 		}
 		time.Sleep(1 * time.Second)
 	}
