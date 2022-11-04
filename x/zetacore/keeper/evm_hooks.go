@@ -87,12 +87,10 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		}
 		cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
-		inCctxIndex, ok := (ctx.Value("inCctxIndex")).(string)
-		if !ok {
-			fmt.Printf("inCctxIndex not found\n")
-			return fmt.Errorf("inCctxIndex not found")
+		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
+		if ok {
+			cctx.InBoundTxParams.InBoundTXBallotIndex = inCctxIndex
 		}
-		cctx.InBoundTxParams.InBoundTXBallotIndex = inCctxIndex
 		k.UpdateNonce(ctx, receiverChain, &cctx)
 
 		k.SetCrossChainTx(ctx, cctx)

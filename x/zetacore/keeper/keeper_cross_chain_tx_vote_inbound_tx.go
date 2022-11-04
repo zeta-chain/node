@@ -103,8 +103,14 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				}
 				if !tx.Failed() {
 					logs := evmtypes.LogsToEthereum(tx.Logs)
-					ctx.WithValue("inCctxIndex", cctx.Index)
+					ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 					err = k.ProcessWithdrawalEvent(ctx, logs, contract)
+					if err != nil {
+						errMsg := fmt.Sprintf("cannot process withdrawal event", err.Error())
+						cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
+						k.SetCrossChainTx(ctx, cctx)
+						return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+					}
 					ctx.EventManager().EmitEvent(
 						sdk.NewEvent(sdk.EventTypeMessage,
 							sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
