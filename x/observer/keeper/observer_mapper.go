@@ -79,6 +79,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		msg.ObserverChain,
 		msg.ObservationType,
 		msg.Creator)
+	AddObserverEvent(ctx, msg.Creator, msg.ObserverChain, msg.ObservationType)
 
 	return &types.MsgAddObserverResponse{}, nil
 }
