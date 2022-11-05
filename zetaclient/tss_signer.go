@@ -438,7 +438,7 @@ func verifySignatures(tssPubkey string, signatures []keysign.Signature, H [][]by
 			}
 		}
 		if !found {
-			log.Warn().Msgf("%d-th signature %s missing", j)
+			log.Warn().Msgf("%d-th signature missing", j)
 			return false
 		}
 	}
