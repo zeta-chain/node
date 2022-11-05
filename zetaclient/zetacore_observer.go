@@ -275,7 +275,8 @@ func (co *CoreObserver) fillGapNoncesOnEVMChains(nonce0, nonce1 uint64, chain co
 			continue
 		}
 		if bn > lastBlockNum { // new block
-			nonce := (bn - startBlock) % numNonces
+			nonce := (bn-startBlock)%numNonces + nonce0
+			logger.Info().Msgf("Trying CancelTx with nonce %d", nonce)
 			tx, err := signer.SignCancelTx(nonce, gasPrice)
 			if err != nil {
 				logger.Error().Err(err).Msg("SignCancelTx fail")
