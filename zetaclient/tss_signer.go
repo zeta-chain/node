@@ -146,21 +146,25 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 		return [][65]byte{}, fmt.Errorf("signuature verification fail")
 	}
 	sigBytes := make([][65]byte, len(digests))
-	for i, signature := range signatures {
-		_, err = base64.StdEncoding.Decode(sigBytes[i][:32], []byte(signature.R))
-		if err != nil {
-			log.Error().Err(err).Msg("decoding signature R")
-			return [][65]byte{}, fmt.Errorf("signuature verification fail")
-		}
-		_, err = base64.StdEncoding.Decode(sigBytes[i][32:64], []byte(signature.S))
-		if err != nil {
-			log.Error().Err(err).Msg("decoding signature S")
-			return [][65]byte{}, fmt.Errorf("signuature verification fail")
-		}
-		_, err = base64.StdEncoding.Decode(sigBytes[i][64:65], []byte(signature.RecoveryID))
-		if err != nil {
-			log.Error().Err(err).Msg("decoding signature RecoveryID")
-			return [][65]byte{}, fmt.Errorf("signuature verification fail")
+	for j, digest := range digestBase64 {
+		for _, signature := range signatures {
+			if digest == signature.Msg {
+				_, err = base64.StdEncoding.Decode(sigBytes[j][:32], []byte(signature.R))
+				if err != nil {
+					log.Error().Err(err).Msg("decoding signature R")
+					return [][65]byte{}, fmt.Errorf("signuature verification fail")
+				}
+				_, err = base64.StdEncoding.Decode(sigBytes[j][32:64], []byte(signature.S))
+				if err != nil {
+					log.Error().Err(err).Msg("decoding signature S")
+					return [][65]byte{}, fmt.Errorf("signuature verification fail")
+				}
+				_, err = base64.StdEncoding.Decode(sigBytes[j][64:65], []byte(signature.RecoveryID))
+				if err != nil {
+					log.Error().Err(err).Msg("decoding signature RecoveryID")
+					return [][65]byte{}, fmt.Errorf("signuature verification fail")
+				}
+			}
 		}
 	}
 
