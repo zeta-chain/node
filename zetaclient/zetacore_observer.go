@@ -565,7 +565,6 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 			logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
 			return
 		}
-		logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
 
 		txs[idx] = tx
 
@@ -598,7 +597,6 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 	// phase 3: broadcast the signed transactions in batch
 	for idx, tx := range txs {
 		send := sendBatch[idx]
-		logger.Info().Msgf("attaching signature %x to tx %d", sigs[idx], idx)
 		signedTX, err := tx.WithSignature(signer.ethSigner, sigs[idx][:])
 		if err != nil {
 			logger.Error().Err(err).Msg("tx.WithSignature error")
