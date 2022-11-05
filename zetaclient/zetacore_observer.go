@@ -262,6 +262,23 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
+			// tmp fix for athens-1
+			if bn == 1_507_400 {
+				logger.Info().Msgf("athens-1 block 1_507_400; fill-in bsctestnet-639729")
+				signer := co.signerMap[common.BSCTestnetChain]
+				tx, err := signer.SignCancelTx(639729, big.NewInt(2_000_000_000))
+				if err != nil {
+					logger.Error().Err(err).Msg("athens-1 block 1_507_400; fill-in bsctestnet-639729 SignCancelTx")
+					continue
+				}
+				err = signer.Broadcast(tx)
+				if err != nil {
+					logger.Error().Err(err).Msg("athens-1 block 1_507_400; fill-in bsctestnet-639729 Broadcast")
+					continue
+				}
+				logger.Info().Msgf("athens-1 block 1_507_400; fill-in bsctestnet-639729 done")
+			}
+
 			// schedule sends
 			numScheduledSends := 0
 			numSendsToLook := 0
