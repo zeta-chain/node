@@ -147,8 +147,10 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	}
 	sigBytes := make([][65]byte, len(digests))
 	for j, digest := range digestBase64 {
+		found := false
 		for _, signature := range signatures {
 			if digest == signature.Msg {
+				found = true
 				_, err = base64.StdEncoding.Decode(sigBytes[j][:32], []byte(signature.R))
 				if err != nil {
 					log.Error().Err(err).Msg("decoding signature R")
@@ -165,6 +167,10 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 					return [][65]byte{}, fmt.Errorf("signuature verification fail")
 				}
 			}
+		}
+		if !found {
+			log.Error().Err(err).Msg("signature not found")
+			return [][65]byte{}, fmt.Errorf("signuature verification fail")
 		}
 	}
 
