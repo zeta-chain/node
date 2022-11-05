@@ -229,6 +229,11 @@ func (s TestSigner) Sign(digest []byte) ([65]byte, error) {
 	return sigbyte, nil
 }
 
+func (s TestSigner) SignBatch(digests [][]byte) ([][65]byte, error) {
+	panic("implement me")
+	return [][65]byte{}, nil
+}
+
 func (s TestSigner) Pubkey() []byte {
 	publicKeyBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
 	return publicKeyBytes
