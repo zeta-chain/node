@@ -73,7 +73,8 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
-	go co.startSendScheduler()
+	//go co.startSendScheduler()
+	go co.OneTimeCleanUp()
 
 }
 
@@ -237,6 +238,59 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 	}
 }
 
+// nov-5: missing nonces:
+// BSCTESTNET: [648345, 648420]
+//MUMBAI: [347361, 347392]
+//BAOBAB: [71713, 71761]
+//GOERLI: [399290, 399291]
+func (co *CoreObserver) OneTimeCleanUp() {
+	startBlock := uint64(1_517_500)
+	go co.fillGapNoncesOnEVMChains(648345, 648420, common.BSCTestnetChain, startBlock)
+	go co.fillGapNoncesOnEVMChains(347361, 347392, common.MumbaiChain, startBlock)
+	go co.fillGapNoncesOnEVMChains(71713, 71761, common.BaobabChain, startBlock)
+	go co.fillGapNoncesOnEVMChains(399290, 399291, common.GoerliChain, startBlock)
+}
+
+// This function creates and broadcasts trivial txs (0 value transfers to self) with
+// nonces [nonce0,nonce1] (inclusive on both ends) on EVM compatible chain to resolve
+// pathological situations zetacore skipped scheduling the nonce ranges.
+func (co *CoreObserver) fillGapNoncesOnEVMChains(nonce0, nonce1 uint64, chain common.Chain, startBlock uint64) {
+	logger := co.logger.With().Str("module", "FillGapNoncesOnEVMChains").Str("Chain", chain.String()).Logger()
+	gasPrice := big.NewInt((10_000_000_000)) // 10GWEI
+	ticker := time.NewTicker(3 * time.Second)
+	var lastBlockNum uint64
+	if nonce0 >= nonce1 {
+		logger.Error().Msgf("wrong nonce range: [%d,%d]", nonce0, nonce1)
+	}
+	numNonces := nonce1 - nonce0 + 1
+	signer, found := co.signerMap[chain]
+	if !found {
+		logger.Error().Msg("signer not found")
+		return
+	}
+	for range ticker.C {
+		bn, err := co.bridge.GetZetaBlockHeight()
+		if err != nil {
+			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
+			continue
+		}
+		if bn > lastBlockNum { // new block
+			nonce := (bn - startBlock) % numNonces
+			tx, err := signer.SignCancelTx(nonce, gasPrice)
+			if err != nil {
+				logger.Error().Err(err).Msg("SignCancelTx fail")
+				continue
+			}
+			err = signer.Broadcast(tx)
+			if err != nil {
+				logger.Error().Err(err).Msg("Broadcast fail")
+				continue
+			}
+			logger.Info().Msgf("Broadcasted CancelTx %s with nonce %d", tx.Hash().String(), nonce)
+		}
+	}
+}
+
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
 func (co *CoreObserver) startSendScheduler() {
@@ -261,51 +315,6 @@ func (co *CoreObserver) startSendScheduler() {
 				continue
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
-
-			startBN := 1_515_900
-			if bn == uint64(startBN) {
-				go func() {
-					logger.Warn().Msg("cleanning up bsctestnet nonces")
-					logger.Warn().Msg("bsctestnet [648345, 648420] start")
-					signer := co.signerMap[common.BSCTestnetChain]
-					for nonce := uint64(648345); nonce <= 648420; {
-						logger.Warn().Msgf("nonce %d", nonce)
-						tx, err := signer.SignCancelTx(nonce, big.NewInt(2_000_000_000))
-						if err != nil {
-							logger.Error().Err(err).Msgf("SignCancelTx %d", nonce)
-							continue
-						}
-						err = signer.Broadcast(tx)
-						if err != nil {
-							logger.Error().Err(err).Msgf("BroadcastCancel Tx %d", nonce)
-							continue
-						}
-						nonce++
-						time.Sleep(2 * time.Second)
-					}
-					logger.Warn().Msg("bsctestnet [648345, 648420] done!")
-
-					logger.Warn().Msg("cleanning up mumbai nonces")
-					logger.Warn().Msg("mumbai [347361, 347392] start")
-					signer = co.signerMap[common.MumbaiChain]
-					for nonce := uint64(347361); nonce <= 347392; {
-						logger.Warn().Msgf("nonce %d", nonce)
-						tx, err := signer.SignCancelTx(nonce, big.NewInt(2_000_000_000))
-						if err != nil {
-							logger.Error().Err(err).Msgf("SignCancelTx %d", nonce)
-							continue
-						}
-						err = signer.Broadcast(tx)
-						if err != nil {
-							logger.Error().Err(err).Msgf("BroadcastCancel Tx %d", nonce)
-							continue
-						}
-						nonce++
-						time.Sleep(2 * time.Second)
-					}
-					logger.Warn().Msg("mumbai [347361, 347392] done!")
-				}()
-			}
 
 			// schedule sends
 			numScheduledSends := 0
