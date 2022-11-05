@@ -603,7 +603,7 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 			logger.Error().Err(err).Msg("tx.WithSignature error")
 			return
 		}
-		if tx != nil {
+		if signedTX != nil {
 			outTxHash := tx.Hash().Hex()
 			logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.Nonce, outTxHash, myid)
 			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {

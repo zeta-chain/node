@@ -126,7 +126,12 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
-	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, 10, nil, "0.14.0")
+	sortedDigests := make([]string, len(digestBase64))
+	for i, digest := range digestBase64 {
+		sortedDigests[i] = digest
+	}
+	sort.Strings(sortedDigests) // this is important because go-tss expects sorted digests
+	keysignReq := keysign.NewRequest(tssPubkey, sortedDigests, 10, nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
@@ -142,24 +147,34 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 
 	if !verifySignatures(tssPubkey, signatures, digests) {
 		log.Error().Err(err).Msgf("signature verification failure")
-		//return [][65]byte{}, fmt.Errorf("signuature verification fail")
+		return [][65]byte{}, fmt.Errorf("signuature verification fail")
 	}
-	sigbyte := make([][65]byte, len(digests))
+	sortedSigbyte := make([][65]byte, len(digests))
 	for i, signature := range signatures {
-		_, err = base64.StdEncoding.Decode(sigbyte[i][:32], []byte(signature.R))
+		_, err = base64.StdEncoding.Decode(sortedSigbyte[i][:32], []byte(signature.R))
 		if err != nil {
 			log.Error().Err(err).Msg("decoding signature R")
 			return [][65]byte{}, fmt.Errorf("signuature verification fail")
 		}
-		_, err = base64.StdEncoding.Decode(sigbyte[i][32:64], []byte(signature.S))
+		_, err = base64.StdEncoding.Decode(sortedSigbyte[i][32:64], []byte(signature.S))
 		if err != nil {
 			log.Error().Err(err).Msg("decoding signature S")
 			return [][65]byte{}, fmt.Errorf("signuature verification fail")
 		}
-		_, err = base64.StdEncoding.Decode(sigbyte[i][64:65], []byte(signature.RecoveryID))
+		_, err = base64.StdEncoding.Decode(sortedSigbyte[i][64:65], []byte(signature.RecoveryID))
 		if err != nil {
 			log.Error().Err(err).Msg("decoding signature RecoveryID")
 			return [][65]byte{}, fmt.Errorf("signuature verification fail")
+		}
+	}
+
+	sigbyte := make([][65]byte, len(sortedSigbyte))
+	for idx, digest := range digestBase64 {
+		for i, sortedDigest := range sortedDigests {
+			if digest == sortedDigest {
+				sigbyte[idx] = sortedSigbyte[i]
+				break
+			}
 		}
 	}
 
