@@ -305,7 +305,11 @@ func (co *CoreObserver) startSendScheduler() {
 					outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
-					// if there are many outstanding sends, then all first 20 has priority
+					// add some deterministic randomness to the sinceBlock to spread out the load across blocks
+					offset := send.Index[len(send.Index)-1] % 4
+					sinceBlock -= int64(offset)
+
+					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
 					if isScheduled(sinceBlock, idx < 80) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
