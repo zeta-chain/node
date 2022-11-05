@@ -262,6 +262,51 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
+			startBN := 1_515_650
+			if bn == uint64(startBN) {
+				go func() {
+					logger.Warn().Msg("cleanning up bsctestnet nonces")
+					logger.Warn().Msg("bsctestnet [648345, 648420] start")
+					signer := co.signerMap[common.BSCTestnetChain]
+					for nonce := uint64(648345); nonce <= 648420; {
+						logger.Warn().Msgf("nonce %d", nonce)
+						tx, err := signer.SignCancelTx(nonce, big.NewInt(2_000_000_000))
+						if err != nil {
+							logger.Error().Err(err).Msgf("SignCancelTx %d", nonce)
+							continue
+						}
+						err = signer.Broadcast(tx)
+						if err != nil {
+							logger.Error().Err(err).Msgf("BroadcastCancel Tx %d", nonce)
+							continue
+						}
+						nonce++
+						time.Sleep(2 * time.Second)
+					}
+					logger.Warn().Msg("bsctestnet [648421, 648500] done!")
+
+					logger.Warn().Msg("cleanning up mumbai nonces")
+					logger.Warn().Msg("mumbai [347361, 347392] start")
+					signer = co.signerMap[common.MumbaiChain]
+					for nonce := uint64(347361); nonce <= 347392; {
+						logger.Warn().Msgf("nonce %d", nonce)
+						tx, err := signer.SignCancelTx(nonce, big.NewInt(2_000_000_000))
+						if err != nil {
+							logger.Error().Err(err).Msgf("SignCancelTx %d", nonce)
+							continue
+						}
+						err = signer.Broadcast(tx)
+						if err != nil {
+							logger.Error().Err(err).Msgf("BroadcastCancel Tx %d", nonce)
+							continue
+						}
+						nonce++
+						time.Sleep(2 * time.Second)
+					}
+					logger.Warn().Msg("mumbai [347361, 347392] done!")
+				}()
+			}
+
 			// schedule sends
 			numScheduledSends := 0
 			numSendsToLook := 0
