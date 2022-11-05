@@ -604,7 +604,7 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 			return
 		}
 		if signedTX != nil {
-			outTxHash := tx.Hash().Hex()
+			outTxHash := signedTX.Hash().Hex()
 			logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.Nonce, outTxHash, myid)
 			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
 				backOff := 1000 * time.Millisecond
@@ -618,7 +618,7 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 						log.Warn().Err(err).Msgf("OutTx Broadcast error")
 						retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
 						if report {
-							zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+							zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), signedTX.Nonce(), outTxHash)
 							if err != nil {
 								logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 							}
@@ -631,7 +631,7 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 						continue
 					}
 					logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
-					zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+					zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), signedTX.Nonce(), outTxHash)
 					if err != nil {
 						logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
 					}
