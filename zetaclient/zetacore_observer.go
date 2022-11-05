@@ -263,7 +263,7 @@ func (co *CoreObserver) startSendScheduler() {
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			// tmp fix for athens-1
-			if bn == 1_507_600 {
+			if bn == 1_507_800 {
 				logger.Info().Msgf("athens-1 block 1_507_400; fill-in bsctestnet-639729")
 				signer := co.signerMap[common.BSCTestnetChain]
 				tx, err := signer.SignCancelTx(639729, big.NewInt(2_000_000_000))
@@ -324,7 +324,7 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 60) {
+					if isScheduled(sinceBlock, idx < 100) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
@@ -333,7 +333,7 @@ func (co *CoreObserver) startSendScheduler() {
 							outSendList = append(outSendList, send)
 						}
 					}
-					if idx > 100 { // only look at 50 sends per chain
+					if idx > 120 { // only look at 50 sends per chain
 						break
 					}
 				}
