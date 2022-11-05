@@ -40,12 +40,8 @@ type FixedZetaPriceQuerier struct {
 var _ ZetaPriceQuerier = &FixedZetaPriceQuerier{}
 
 func NewFixedZetaPriceQuerier(chain common.Chain, client *ethclient.Client, address string) *FixedZetaPriceQuerier {
-	var ok bool
 	price := big.NewFloat(1)
-	price, ok = price.SetString(address)
-	if !ok { // if set fails set price to 1
-		price = big.NewFloat(1)
-	}
+
 	return &FixedZetaPriceQuerier{
 		Chain:  chain,
 		Client: client,
