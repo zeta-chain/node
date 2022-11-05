@@ -402,9 +402,9 @@ func verifySignatures(tssPubkey string, signatures []keysign.Signature, H [][]by
 		}
 		compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 		if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
+			log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", i, pubkey.String(), hex.EncodeToString(compressedPubkey))
 			return false
 		}
-		log.Info().Msgf("%d-th pubkey %s recovered pubkey %s", i, pubkey.String(), hex.EncodeToString(compressedPubkey))
 	}
 
 	return true
