@@ -20,6 +20,7 @@ import (
 type TSSSigner interface {
 	Pubkey() []byte
 	Sign(data []byte) ([65]byte, error)
+	SignBatch(data [][]byte) ([][65]byte, error)
 	Address() ethcommon.Address
 }
 
@@ -84,6 +85,14 @@ func (signer *Signer) Sign(data []byte, to ethcommon.Address, gasLimit uint64, g
 	return signedTX, sig[:], hashBytes[:], nil
 }
 
+// given data, and metadata (gas, nonce, etc)
+// returns an  unsigned transaction, hash bytes, and error
+func (signer *Signer) Unsign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, error) {
+	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
+	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	return tx, hashBytes[:], nil
+}
+
 // takes in signed tx, broadcast to external chain node
 func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	ctxt, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -99,6 +108,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 //        bytes calldata message,
 //        bytes32 internalSendHash
 //    ) external virtual {}
+// Create and sign an outboundtx
 func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
@@ -112,6 +122,27 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 	}
 
 	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
+}
+
+// create an unsigned transaction
+func (signer *Signer) UnsignedOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	if len(sendHash) < 32 {
+		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
+	}
+	var data []byte
+	var err error
+
+	data, err = signer.abi.Pack("onReceive", sender.Bytes(), srcChainID, to, amount, message, sendHash)
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, err := signer.Unsign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}
@@ -138,6 +169,23 @@ func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int
 	}
 
 	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) UnsignedRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	var data []byte
+	var err error
+
+	data, err = signer.abi.Pack("onRevert", sender, srcChainID, to, toChainID, amount, message, sendHash)
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, err := signer.Unsign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}

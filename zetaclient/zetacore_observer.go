@@ -278,6 +278,7 @@ func (co *CoreObserver) startSendScheduler() {
 			sort.Strings(keys)
 			for _, chain := range keys {
 				sendList = sendMap[chain]
+				outSendList := make([]*types.Send, 0)
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 				}
@@ -311,24 +312,20 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-
-					// add some deterministic randomness to the sinceBlock to spread out the load across blocks
-					offset := send.Index[len(send.Index)-1] % 4
-					sinceBlock -= int64(offset)
-
 					if isScheduled(sinceBlock, idx < 35) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
 							numScheduledSends++
 							outTxMan.StartTryProcess(outTxID)
-							go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+							outSendList = append(outSendList, send)
 						}
 					}
 					if idx > 60 { // only look at 50 sends per chain
 						break
 					}
 				}
+				go co.TryProcessOutTxBatch(outSendList, outTxMan, chain)
 			}
 			// update last processed block number
 			lastBlockNum = bn
@@ -472,6 +469,180 @@ func (co *CoreObserver) TryProcessOutTx(send *types.Send, sinceBlock int64, outT
 				break // successful broadcast; no need to retry
 			}
 
+		}
+	}
+
+}
+
+func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *OutTxProcessorManager, targetChain string) {
+	nonces := make([]uint64, len(sendBatch))
+	for i, send := range sendBatch {
+		nonces[i] = send.Nonce
+	}
+	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	logger := co.logger.With().
+		Int64("BatchSize", int64(len(sendBatch))).
+		Str("TargetChain", targetChain).
+		Uints64("Nonces", nonces).
+		Logger()
+	txs := make([]*ethtypes.Transaction, len(sendBatch))
+	// phase 1: create unsigned transactions in batch
+	for idx, send := range sendBatch {
+		chain := getTargetChain(send)
+		outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
+		defer func() {
+			outTxMan.EndTryProcess(outTxID)
+		}()
+
+		amount, ok := new(big.Int).SetString(send.ZetaMint, 0)
+		if !ok {
+			logger.Error().Msg("error converting MBurnt to big.Int")
+			return
+		}
+
+		var to ethcommon.Address
+		var err error
+		var toChain common.Chain
+		if send.Status == types.SendStatus_PendingRevert {
+			to = ethcommon.HexToAddress(send.Sender)
+			toChain, err = common.ParseChain(send.SenderChain)
+			logger.Info().Msgf("Abort: reverting inbound")
+		} else if send.Status == types.SendStatus_PendingOutbound {
+			to = ethcommon.HexToAddress(send.Receiver)
+			toChain, err = common.ParseChain(send.ReceiverChain)
+		}
+		if err != nil {
+			logger.Error().Err(err).Msg("ParseChain fail; skip")
+			return
+		}
+
+		// Test if the send is already processed
+		included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.Nonce))
+		if included || confirmed {
+			logger.Info().Msgf("sendHash already processed; ")
+		}
+
+		signer := co.signerMap[toChain]
+		message, err := base64.StdEncoding.DecodeString(send.Message)
+		if err != nil {
+			logger.Err(err).Msgf("decode send.Message %s error", send.Message)
+		}
+
+		gasLimit := send.GasLimit
+		if gasLimit < 50_000 {
+			gasLimit = 50_000
+			logger.Warn().Msgf("gasLimit %d is too low; set to %d", send.GasLimit, gasLimit)
+		}
+		if gasLimit > 1_000_000 {
+			gasLimit = 1_000_000
+			logger.Warn().Msgf("gasLimit %d is too high; set to %d", send.GasLimit, gasLimit)
+		}
+
+		logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, amount, to.Hex(), send.Nonce, send.FinalizedMetaHeight)
+		sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
+		if err != nil || len(sendHash) != 32 {
+			logger.Error().Err(err).Msgf("decode sendHash %s error", send.Index)
+			return
+		}
+		var sendhash [32]byte
+		copy(sendhash[:32], sendHash[:32])
+		gasprice, ok := new(big.Int).SetString(send.GasPrice, 10)
+		if !ok {
+			logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GasPrice)
+			return
+		}
+
+		var tx *ethtypes.Transaction
+
+		srcChainID := config.Chains[send.SenderChain].ChainID
+		if send.Status == types.SendStatus_PendingRevert {
+			logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+			toChainID := config.Chains[send.ReceiverChain].ChainID
+			tx, err = signer.UnsignedRevertTx(ethcommon.HexToAddress(send.Sender), srcChainID, to.Bytes(), toChainID, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+		} else if send.Status == types.SendStatus_PendingOutbound {
+			logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+			tx, err = signer.UnsignedOutboundTx(ethcommon.HexToAddress(send.Sender), srcChainID, to, amount, gasLimit, message, sendhash, send.Nonce, gasprice)
+		}
+
+		if err != nil {
+			logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.Nonce, send.ReceiverChain)
+			return
+		}
+		logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.SenderChain, toChain, send.Nonce)
+
+		txs[idx] = tx
+
+		cnt, err := co.GetPromCounter(OutboundTxSignCount)
+		if err != nil {
+			log.Error().Err(err).Msgf("GetPromCounter error")
+		} else {
+			cnt.Inc()
+		}
+	}
+
+	toChain, err := common.ParseChain(targetChain)
+	if err != nil {
+		logger.Error().Err(err).Msg("ParseChain fail; skip")
+		return
+	}
+	signer := co.signerMap[toChain]
+	// phase 2: sign transactions in batch
+	hashes := make([][]byte, len(txs))
+	for idx, tx := range txs {
+		H := signer.ethSigner.Hash(tx).Bytes()
+		hashes[idx] = H
+	}
+	sigs, err := signer.tssSigner.SignBatch(hashes)
+	if err != nil {
+		logger.Error().Err(err).Msg("tssSigner.SignBatch error")
+		return
+	}
+
+	// phase 3: broadcast the signed transactions in batch
+	for idx, tx := range txs {
+		send := sendBatch[idx]
+		signedTX, err := tx.WithSignature(signer.ethSigner, sigs[idx][:])
+		if err != nil {
+			logger.Error().Err(err).Msg("tx.WithSignature error")
+			return
+		}
+		if tx != nil {
+			outTxHash := tx.Hash().Hex()
+			logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.Nonce, outTxHash, myid)
+			if myid == send.Signers[send.Broadcaster] || myid == send.Signers[int(send.Broadcaster+1)%len(send.Signers)] {
+				backOff := 1000 * time.Millisecond
+				// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
+				for i := 0; i < 5; i++ {
+					logger.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.Nonce, i)
+					// #nosec G404 randomness is not a security issue here
+					time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+					err := signer.Broadcast(signedTX)
+					if err != nil {
+						log.Warn().Err(err).Msgf("OutTx Broadcast error")
+						retry, report := HandleBroadcastError(err, strconv.FormatUint(send.Nonce, 10), toChain.String(), outTxHash)
+						if report {
+							zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+							if err != nil {
+								logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+							}
+							logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+						}
+						if !retry {
+							break
+						}
+						backOff *= 2
+						continue
+					}
+					logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+					zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+					if err != nil {
+						logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.Nonce, toChain, outTxHash)
+					}
+					logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+					break // successful broadcast; no need to retry
+				}
+
+			}
 		}
 	}
 
