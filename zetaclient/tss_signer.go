@@ -141,15 +141,20 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 		return [][65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
 
-	if !verifySignatures(tssPubkey, signatures, digests) {
-		log.Error().Err(err).Msgf("signature verification failure")
-		return [][65]byte{}, fmt.Errorf("signuature verification fail")
+	//if !verifySignatures(tssPubkey, signatures, digests) {
+	//	log.Error().Err(err).Msgf("signature verification failure")
+	//	return [][65]byte{}, fmt.Errorf("signuature verification fail")
+	//}
+	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		log.Error().Msg("get pubkey from bech32 fail")
 	}
 	sigBytes := make([][65]byte, len(digests))
-	for j, digest := range digestBase64 {
+	for j, H := range digests {
 		found := false
+		D := base64.StdEncoding.EncodeToString(H)
 		for _, signature := range signatures {
-			if digest == signature.Msg {
+			if D == signature.Msg {
 				found = true
 				_, err = base64.StdEncoding.Decode(sigBytes[j][:32], []byte(signature.R))
 				if err != nil {
@@ -164,6 +169,16 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 				_, err = base64.StdEncoding.Decode(sigBytes[j][64:65], []byte(signature.RecoveryID))
 				if err != nil {
 					log.Error().Err(err).Msg("decoding signature RecoveryID")
+					return [][65]byte{}, fmt.Errorf("signuature verification fail")
+				}
+				sigPublicKey, err := crypto.SigToPub(H, sigBytes[j][:])
+				if err != nil {
+					log.Error().Err(err).Msg("SigToPub error in verify_signature")
+					return [][65]byte{}, fmt.Errorf("signuature verification fail")
+				}
+				compressedPubkey := crypto.CompressPubkey(sigPublicKey)
+				if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
+					log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", j, pubkey.String(), hex.EncodeToString(compressedPubkey))
 					return [][65]byte{}, fmt.Errorf("signuature verification fail")
 				}
 			}
