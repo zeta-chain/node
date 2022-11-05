@@ -212,7 +212,7 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 		} else {
 			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
 		}
-		if count > 50 { // suicide condition
+		if count > 100 { // suicide condition
 			bn, err := co.bridge.GetZetaBlockHeight()
 			if err != nil {
 				logger.Error().Err(err).Msg("StartMonitorHealth GetZetaBlockHeight")
@@ -316,7 +316,7 @@ func (co *CoreObserver) startSendScheduler() {
 							outSendList = append(outSendList, send)
 						}
 					}
-					if idx > 120 { // only look at 50 sends per chain
+					if idx > 80 { // only look at 50 sends per chain
 						break
 					}
 				}
