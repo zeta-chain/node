@@ -598,6 +598,7 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.Send, outTxMan *
 	// phase 3: broadcast the signed transactions in batch
 	for idx, tx := range txs {
 		send := sendBatch[idx]
+		logger.Info().Msgf("attaching signature %x to tx %d", sigs[idx], idx)
 		signedTX, err := tx.WithSignature(signer.ethSigner, sigs[idx][:])
 		if err != nil {
 			logger.Error().Err(err).Msg("tx.WithSignature error")
