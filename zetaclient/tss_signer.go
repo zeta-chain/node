@@ -396,18 +396,29 @@ func verifySignatures(tssPubkey string, signatures []keysign.Signature, H [][]by
 	}
 	// verify the signature of msg.
 	var sigbyte [65]byte
-	for i, signature := range signatures {
-		_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature.R))
-		_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature.S))
-		_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature.RecoveryID))
-		sigPublicKey, err := crypto.SigToPub(H[i], sigbyte[:])
-		if err != nil {
-			log.Error().Err(err).Msg("SigToPub error in verify_signature")
-			return false
+	for j, digest := range H {
+		digestB64 := base64.StdEncoding.EncodeToString(digest)
+		found := false
+		for _, signature := range signatures {
+			if digestB64 == signature.Msg {
+				found = true
+				_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature.R))
+				_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature.S))
+				_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature.RecoveryID))
+				sigPublicKey, err := crypto.SigToPub(digest, sigbyte[:])
+				if err != nil {
+					log.Error().Err(err).Msg("SigToPub error in verify_signature")
+					return false
+				}
+				compressedPubkey := crypto.CompressPubkey(sigPublicKey)
+				if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
+					log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", j, pubkey.String(), hex.EncodeToString(compressedPubkey))
+					return false
+				}
+			}
 		}
-		compressedPubkey := crypto.CompressPubkey(sigPublicKey)
-		if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
-			log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", i, pubkey.String(), hex.EncodeToString(compressedPubkey))
+		if !found {
+			log.Warn().Msgf("%d-th signature %s missing", j)
 			return false
 		}
 	}
