@@ -262,7 +262,7 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			sendMap := splitAndSortSendListByChain(sendList)
 
-			startBN := 1_515_650
+			startBN := 1_515_900
 			if bn == uint64(startBN) {
 				go func() {
 					logger.Warn().Msg("cleanning up bsctestnet nonces")
@@ -283,7 +283,7 @@ func (co *CoreObserver) startSendScheduler() {
 						nonce++
 						time.Sleep(2 * time.Second)
 					}
-					logger.Warn().Msg("bsctestnet [648421, 648500] done!")
+					logger.Warn().Msg("bsctestnet [648345, 648420] done!")
 
 					logger.Warn().Msg("cleanning up mumbai nonces")
 					logger.Warn().Msg("mumbai [347361, 347392] start")
