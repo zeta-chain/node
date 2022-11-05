@@ -126,7 +126,6 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
-	log.Info().Msgf("digests to sign: %v", digestBase64)
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, 10, nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
