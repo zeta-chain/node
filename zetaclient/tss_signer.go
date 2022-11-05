@@ -129,7 +129,7 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, 10, nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
-		log.Warn().Msg("keysign fail")
+		log.Warn().Err(err).Msg("keysign fail")
 	}
 	signatures := ksRes.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]

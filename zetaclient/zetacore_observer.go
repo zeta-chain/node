@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"math/big"
 	"math/rand"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -76,10 +75,6 @@ func (co *CoreObserver) MonitorCore() {
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 
-	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
-	if noKeygen == "" {
-		go co.keygenObserve()
-	}
 }
 
 func (co *CoreObserver) keygenObserve() {
