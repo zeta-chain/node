@@ -352,12 +352,12 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	mo1.MonitorCore()
 
 	// report TSS address nonce on ETHish chains
-	for _, chain := range config.ChainsEnabled {
-		err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
-		if err != nil {
-			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
-		}
-	}
+	//for _, chain := range config.ChainsEnabled {
+	//	err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
+	//	if err != nil {
+	//		log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+	//	}
+	//}
 
 	// wait....
 	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
