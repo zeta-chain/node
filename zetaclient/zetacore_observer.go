@@ -307,7 +307,7 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 35) {
+					if isScheduled(sinceBlock, idx < 60) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
@@ -316,7 +316,7 @@ func (co *CoreObserver) startSendScheduler() {
 							outSendList = append(outSendList, send)
 						}
 					}
-					if idx > 60 { // only look at 50 sends per chain
+					if idx > 100 { // only look at 50 sends per chain
 						break
 					}
 				}
