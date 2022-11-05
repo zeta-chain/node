@@ -320,7 +320,9 @@ func (co *CoreObserver) startSendScheduler() {
 						break
 					}
 				}
-				go co.TryProcessOutTxBatch(outSendList, outTxMan, chain)
+				if len(outSendList) > 0 {
+					go co.TryProcessOutTxBatch(outSendList, outTxMan, chain)
+				}
 			}
 			// update last processed block number
 			lastBlockNum = bn
