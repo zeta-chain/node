@@ -244,11 +244,9 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 //BAOBAB: [71713, 71761]
 //GOERLI: [399290, 399291]
 func (co *CoreObserver) OneTimeCleanUp() {
-	startBlock := uint64(1_517_500)
-	go co.fillGapNoncesOnEVMChains(648345, 648420, common.BSCTestnetChain, startBlock)
+	startBlock := uint64(1_520_100)
 	go co.fillGapNoncesOnEVMChains(347361, 347392, common.MumbaiChain, startBlock)
 	go co.fillGapNoncesOnEVMChains(71713, 71761, common.BaobabChain, startBlock)
-	go co.fillGapNoncesOnEVMChains(399290, 399291, common.GoerliChain, startBlock)
 }
 
 // This function creates and broadcasts trivial txs (0 value transfers to self) with
@@ -274,7 +272,7 @@ func (co *CoreObserver) fillGapNoncesOnEVMChains(nonce0, nonce1 uint64, chain co
 			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
-		if bn > lastBlockNum { // new block
+		if bn > lastBlockNum && bn >= startBlock { // new block
 			nonce := (bn-startBlock)%numNonces + nonce0
 			logger.Info().Msgf("Trying CancelTx with nonce %d", nonce)
 			tx, err := signer.SignCancelTx(nonce, gasPrice)
