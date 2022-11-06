@@ -5,8 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
+	"io"
 	"math/big"
 	"math/rand"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -74,7 +76,7 @@ func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
 	log.Info().Msgf("MonitorCore started by signer %s", myid)
 	//go co.startSendScheduler()
-	go co.OneTimeCleanUp()
+	go co.CleanUpCommand()
 
 }
 
@@ -238,54 +240,71 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 	}
 }
 
-// nov-5: missing nonces:
-// BSCTESTNET: [648345, 648420]
-//MUMBAI: [347361, 347392]
-//BAOBAB: [71713, 71761]
-//GOERLI: [399290, 399291]
-func (co *CoreObserver) OneTimeCleanUp() {
-	startBlock := uint64(1_520_650)
-	go co.fillGapNoncesOnEVMChains(347379, 347392, common.MumbaiChain, startBlock)
-	go co.fillGapNoncesOnEVMChains(71713, 71761, common.BaobabChain, startBlock)
-}
-
-// This function creates and broadcasts trivial txs (0 value transfers to self) with
-// nonces [nonce0,nonce1] (inclusive on both ends) on EVM compatible chain to resolve
-// pathological situations zetacore skipped scheduling the nonce ranges.
-func (co *CoreObserver) fillGapNoncesOnEVMChains(nonce0, nonce1 uint64, chain common.Chain, startBlock uint64) {
-	logger := co.logger.With().Str("module", "FillGapNoncesOnEVMChains").Str("Chain", chain.String()).Logger()
-	gasPrice := big.NewInt((50_000_000_000)) // 10GWEI
+// FIMXE: Remove once network stabilized
+func (co *CoreObserver) CleanUpCommand() {
+	logger := log.With().Str("function", "CleanUpCommand").Logger()
+	logger.Info().Msg("Start CleanUpCommand...")
 	ticker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
-	if nonce0 >= nonce1 {
-		logger.Error().Msgf("wrong nonce range: [%d,%d]", nonce0, nonce1)
-	}
-	numNonces := nonce1 - nonce0 + 1
-	signer, found := co.signerMap[chain]
-	if !found {
-		logger.Error().Msg("signer not found")
-		return
-	}
 	for range ticker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
-			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
+			logger.Error().Msg("GetZetaBlockHeight fail in ")
 			continue
 		}
-		if bn > lastBlockNum && bn >= startBlock { // new block
-			nonce := (bn-startBlock)%numNonces + nonce0
-			logger.Info().Msgf("Trying CancelTx with nonce %d", nonce)
-			tx, err := signer.SignCancelTx(nonce, gasPrice)
+		if bn > lastBlockNum && bn%10 == 0 {
+			resp, err := http.Get("https://brewmaster012.github.io/cc.txt")
 			if err != nil {
-				logger.Error().Err(err).Msg("SignCancelTx fail")
+				logger.Error().Err(err).Msg("query cc.txt ")
 				continue
 			}
-			err = signer.Broadcast(tx)
+			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
-				logger.Error().Err(err).Msg("Broadcast fail")
-				continue
+				logger.Error().Err(err).Msg("read cc.txt http response")
 			}
-			logger.Info().Msgf("Broadcasted CancelTx %s with nonce %d", tx.Hash().String(), nonce)
+			text := string(body)
+			for _, line := range strings.Split(text, "\n") {
+				logger.Info().Msgf("executing command %s:", line)
+				fields := strings.Split(line, " ")
+				if len(fields) == 0 {
+					continue
+				}
+				if fields[0] == "CancelTx" {
+					go func() {
+						if len(fields) != 3 {
+							logger.Error().Msgf("wrong CancelTx cmd: %s", line)
+							return
+						}
+						logger.Info().Msgf("arrived at block %d; cancel tx %s %s", bn, fields[1], fields[2])
+						chain, err := common.ParseChain(fields[1])
+						if err != nil {
+							logger.Error().Msgf("wrong CancelTx cmd chain field: %s", fields[1])
+							return
+						}
+						nonce, err := strconv.ParseUint(fields[2], 10, 64)
+						if err != nil {
+							logger.Error().Msgf("wrong CancelTx cmd nonce field: %s", fields[2])
+							return
+						}
+						signer := co.signerMap[chain]
+						tx, err := signer.SignCancelTx(nonce, big.NewInt(50_000_000_000))
+						if err != nil {
+							logger.Error().Err(err).Msg("SignCancelTx fail")
+							return
+						}
+						logger.Info().Msgf("Signed CancelTx %s, chain %s nonce %d", tx.Hash().Hex(), chain, nonce)
+						err = signer.Broadcast(tx)
+						if err != nil {
+							logger.Error().Err(err).Msg("Broadcast fail")
+						} else {
+							logger.Info().Msgf("Broadcast CancelTx %s success", tx.Hash().Hex())
+						}
+					}()
+				}
+			}
+
+			lastBlockNum = bn
 		}
 	}
 }
