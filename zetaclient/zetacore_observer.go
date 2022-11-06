@@ -244,8 +244,8 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 //BAOBAB: [71713, 71761]
 //GOERLI: [399290, 399291]
 func (co *CoreObserver) OneTimeCleanUp() {
-	startBlock := uint64(1_520_100)
-	go co.fillGapNoncesOnEVMChains(347361, 347392, common.MumbaiChain, startBlock)
+	startBlock := uint64(1_520_650)
+	go co.fillGapNoncesOnEVMChains(347379, 347392, common.MumbaiChain, startBlock)
 	go co.fillGapNoncesOnEVMChains(71713, 71761, common.BaobabChain, startBlock)
 }
 
@@ -254,7 +254,7 @@ func (co *CoreObserver) OneTimeCleanUp() {
 // pathological situations zetacore skipped scheduling the nonce ranges.
 func (co *CoreObserver) fillGapNoncesOnEVMChains(nonce0, nonce1 uint64, chain common.Chain, startBlock uint64) {
 	logger := co.logger.With().Str("module", "FillGapNoncesOnEVMChains").Str("Chain", chain.String()).Logger()
-	gasPrice := big.NewInt((10_000_000_000)) // 10GWEI
+	gasPrice := big.NewInt((50_000_000_000)) // 10GWEI
 	ticker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
 	if nonce0 >= nonce1 {
