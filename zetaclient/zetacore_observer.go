@@ -752,23 +752,27 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].Nonce < sends[j].Nonce
 		})
-		sends = trimSends(sends)
-		sendMap[chain] = sends
+		start := trimSends(sends)
+		sendMap[chain] = sends[start:]
+		log.Info().Msgf("chain %s, start %d, len %d", chain, start, len(sendMap[chain]))
 	}
 
 	return sendMap
 }
 
 // trim "bogus" pending sends that are not actually pending
-func trimSends(sends []*types.Send) []*types.Send {
+// input sends must be sorted by nonce ascending
+func trimSends(sends []*types.Send) int {
 	start := 0
-	for i := 1; i < len(sends); i++ {
-		if sends[i].Nonce > sends[i-1].Nonce+43200 { // TODO: fix this magic number; 43200 is 1day assuming 2s block time
+	for i := len(sends) - 1; i >= 1; i-- {
+		// from right to left, if there's a big hole, then before the gap are probably
+		// bogus "pending" sends that are already processed but not yet confirmed.
+		if sends[i].Nonce > sends[i-1].Nonce+1000 {
 			start = i
+			break
 		}
 	}
-
-	return sends[start:]
+	return start
 }
 
 func getTargetChain(send *types.Send) string {
