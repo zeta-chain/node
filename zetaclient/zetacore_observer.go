@@ -206,7 +206,7 @@ func (co *CoreObserver) StartMonitorHealth(outTxMan *OutTxProcessorManager) {
 	for range ticker.C {
 		count := 0
 		for outTxID := range outTxMan.outTxActive {
-			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 5 {
+			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 10 {
 				count++
 			}
 		}
