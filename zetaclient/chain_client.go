@@ -287,8 +287,10 @@ func (ob *ChainObserver) observeOutTx() {
 				if err != nil {
 					return
 				}
+				length := len(tracker.HashList)
 			TXHASHLOOP:
-				for _, txHash := range tracker.HashList {
+				for i := length - 1; i >= 0; i-- {
+					txHash := tracker.HashList[i]
 					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
