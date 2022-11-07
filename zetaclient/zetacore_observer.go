@@ -324,7 +324,7 @@ func (co *CoreObserver) startSendScheduler() {
 			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
-		if bn > lastBlockNum { // we have a new block
+		if bn > lastBlockNum && bn%2 == 0 { // we have a new block
 			timeStart := time.Now()
 			sendList, err := co.bridge.GetAllPendingSend()
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
@@ -383,7 +383,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 100) {
+					if isScheduled(sinceBlock, idx < 80) || isScheduled(sinceBlock-1, idx < 80) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
