@@ -392,7 +392,7 @@ func (co *CoreObserver) startSendScheduler() {
 							outSendList = append(outSendList, send)
 						}
 					}
-					if idx > 80 { // only look at 50 sends per chain
+					if idx > 120 { // only look at 50 sends per chain
 						break
 					}
 				}
