@@ -328,7 +328,7 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
-			if bn%10 == 0 {
+			if bn%6 == 0 {
 				sendList, err = co.bridge.GetAllPendingSend()
 				logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 
