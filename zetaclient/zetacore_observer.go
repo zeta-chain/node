@@ -366,7 +366,7 @@ func (co *CoreObserver) startSendScheduler() {
 						if err != nil {
 							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
 						} else {
-							pTxs.Set(float64(len(sendList)))
+							pTxs.Set(float64(len(sl)))
 						}
 					}
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
@@ -387,7 +387,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 150) {
+					if isScheduled(sinceBlock, idx < 100) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
