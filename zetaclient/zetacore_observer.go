@@ -387,7 +387,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 80) {
+					if isScheduled(sinceBlock, idx < 100) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
@@ -771,7 +771,7 @@ func trimSends(sends []*types.Send) int {
 	for i := len(sends) - 1; i >= 1; i-- {
 		// from right to left, if there's a big hole, then before the gap are probably
 		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].Nonce > sends[i-1].Nonce+1000 {
+		if sends[i].Nonce > sends[i-1].Nonce+200 {
 			start = i
 			break
 		}
