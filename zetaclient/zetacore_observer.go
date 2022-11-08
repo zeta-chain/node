@@ -367,7 +367,7 @@ func (co *CoreObserver) startSendScheduler() {
 				if end > numSends {
 					end = numSends
 				}
-				logger.Info().Msgf("round %d, batch %d, numSends %d, nonces [%d,%d]", round, batch, numSends, sendList[start].Nonce, sendList[end-1].Nonce)
+				logger.Info().Msgf("round %d, batch %d, numSends %d, start %d, end %d", round, batch, numSends, start, end)
 				go co.TryProcessOutTxBatch(sendList[start:end], outTxMan, chain)
 			}
 			// update last processed block number
