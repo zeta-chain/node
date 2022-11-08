@@ -326,25 +326,17 @@ func (co *CoreObserver) startSendScheduler() {
 			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
-		timeStart := time.Now()
-		sendList, err = co.bridge.GetAllPendingSend()
-		logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
-
-		if err != nil {
-			logger.Error().Err(err).Msg("error requesting sends from zetacore")
-			continue
-		}
-		break
-	}
-
-	for range observeTicker.C {
-		bn, err := co.bridge.GetZetaBlockHeight()
-		if err != nil {
-			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
-			continue
-		}
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
+			if bn%10 == 0 {
+				sendList, err = co.bridge.GetAllPendingSend()
+				logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
+
+				if err != nil {
+					logger.Error().Err(err).Msg("error requesting sends from zetacore")
+					continue
+				}
+			}
 
 			sendMap := splitAndSortSendListByChain(sendList)
 
