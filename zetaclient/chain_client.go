@@ -277,7 +277,6 @@ func (ob *ChainObserver) observeOutTx() {
 		select {
 		case <-ticker.C:
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
-			logger.Info().Msgf("GetAllOutTxTrackerByChain %s returned %d trackers", ob.chain, len(trackers))
 			if err != nil {
 				return
 			}
@@ -312,8 +311,6 @@ func (ob *ChainObserver) observeOutTx() {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
-						} else {
-							logger.Warn().Err(err).Msgf("observeOutTx error on nonce %d txhash %s", nonceInt, txHash.TxHash)
 						}
 						<-inTimeout
 					}
