@@ -384,7 +384,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 150) {
+					if isScheduled(sinceBlock, idx < 80) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
