@@ -33,6 +33,9 @@ func NewConnectorEvent(amount *big.Float, raw []byte) (*ConnectorEvent, error) {
 	if raw[0] != ZetaMagicNumber {
 		return nil, errors.New(noMagicNumber)
 	}
+	if amount == nil {
+		return nil, errors.New(invalidAmount)
+	}
 	address := common.BytesToAddress(raw[1 : addrLen+1])
 	return &ConnectorEvent{
 		Amount:  amount,
