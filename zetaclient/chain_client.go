@@ -331,7 +331,7 @@ func (ob *ChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Re
 	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil {
 		receipt := ob.outTXConfirmedReceipts[int(nonce)]
-		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded: hash %s, receipt hash %s", txHash, receipt.TxHash.Hex())
+		return nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded:  receipt hash %s", txHash, receipt.TxHash.Hex())
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

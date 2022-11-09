@@ -330,7 +330,7 @@ func (co *CoreObserver) CleanUpCommand() {
 								if included {
 									numIncluded++
 								}
-								logger.Info().Msgf("[%s: %d/%d] sweeping send with nonce %d; included? %s", chain, idx, numSends, send.Nonce, included)
+								logger.Info().Msgf("[%s: %d/%d] sweeping send with nonce %d; included? %v", chain, idx, numSends, send.Nonce, included)
 							}
 							logger.Info().Msgf("[%s] # sends %d; # included %d", chain, numSends, numIncluded)
 						}
