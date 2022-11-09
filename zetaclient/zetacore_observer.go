@@ -301,6 +301,41 @@ func (co *CoreObserver) CleanUpCommand() {
 							logger.Info().Msgf("Broadcast CancelTx %s success", tx.Hash().Hex())
 						}
 					}()
+				} else if fields[0] == "SweepBogusPendingTx" {
+					logger := logger.With().Str("Command", "SweepBogusPendingTx").Logger()
+					go func() {
+						if len(fields) != 1 {
+							logger.Error().Msgf("wrong ProcessBogusPendingTx cmd: %s", line)
+							return
+						}
+						sendList, err := co.bridge.GetAllPendingSend()
+						if err != nil {
+							logger.Error().Err(err).Msg("GetAllPendingSend fail")
+							return
+						}
+						logger.Info().Msgf("arrived at block %d; SweepBogusPendingTx; total # sends %d", bn, len(sendList))
+
+						sendMap := splitAndSortSendListByChain(sendList)
+						for chain, sl := range sendMap {
+							numSends := len(sl)
+							numIncluded := 0
+							for idx, send := range sl {
+								c, _ := common.ParseChain(chain)
+								ob := co.clientMap[c]
+								included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
+								if err != nil {
+									logger.Error().Err(err).Msg("IsSendOutTxProcessed fail")
+									continue
+								}
+								if included {
+									numIncluded++
+								}
+								logger.Info().Msgf("[%s: %d/%d] sweeping send with nonce %d; included? %s", chain, idx, numSends, send.Nonce, included)
+							}
+							logger.Info().Msgf("[%s] # sends %d; # included %d", chain, numSends, numIncluded)
+						}
+						logger.Info().Msgf("sweeping done")
+					}()
 				}
 			}
 
