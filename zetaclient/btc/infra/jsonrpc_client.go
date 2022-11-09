@@ -69,9 +69,8 @@ func (cli *JSONRpcClient) GetBlockHash(block int64) (string, error) {
 	return jsonparser.GetString(data, "result")
 }
 
-func (cli *JSONRpcClient) GetEventsByHash(hash string) ([]*model.Event, error) {
+func (cli *JSONRpcClient) GetEventsByHash(hash string) ([]*model.RawEvent, error) {
 	reqBody := []byte(fmt.Sprintf(`{"jsonrpc": "1.0", "id": "zeta", "method": "getblock", "params": ["%s",%d]}`, hash, verbosity))
-	fmt.Println(string(reqBody))
 	req, err := http.NewRequest(http.MethodPost, cli.endpoint, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
@@ -85,23 +84,29 @@ func (cli *JSONRpcClient) GetEventsByHash(hash string) ([]*model.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	var events []*model.Event
+	var events []*model.RawEvent
 	jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		filter := false
 		jsonparser.ArrayEach(value, func(value2 []byte, dataType jsonparser.ValueType, offset int, err error) {
-			filter := false
 			asm, _ := jsonparser.GetString(value2, "scriptPubKey", "asm")
+			amount, _ := jsonparser.GetFloat(value2, "value")
 			var addresses []string
+			var amounts []float64
 			jsonparser.ArrayEach(value2, func(addressBytes []byte, dataType jsonparser.ValueType, offset int, err error) {
 				address := string(addressBytes)
 				if address == cli.targetAddress {
 					filter = true
+				} else {
+					filter = false
 				}
 				addresses = append(addresses, address)
+				amounts = append(amounts, amount)
 			}, "scriptPubKey", "addresses")
 			if filter {
-				events = append(events, &model.Event{
+				events = append(events, &model.RawEvent{
 					ASM:       asm,
 					Addresses: addresses,
+					Values:    amounts,
 				})
 			}
 		}, "vout")
