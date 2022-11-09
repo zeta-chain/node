@@ -315,7 +315,7 @@ func (co *CoreObserver) CleanUpCommand() {
 						}
 						logger.Info().Msgf("arrived at block %d; SweepBogusPendingTx; total # sends %d", bn, len(sendList))
 
-						sendMap := splitAndSortSendListByChain(sendList)
+						sendMap := splitAndSortSendListByChain(sendList, false)
 						for chain, sl := range sendMap {
 							numSends := len(sl)
 							numIncluded := 0
@@ -369,7 +369,7 @@ func (co *CoreObserver) startSendScheduler() {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
-			sendMap := splitAndSortSendListByChain(sendList)
+			sendMap := splitAndSortSendListByChain(sendList, true)
 
 			// schedule sends
 			numScheduledSends := 0
@@ -772,7 +772,7 @@ func isScheduled(diff int64, priority bool) bool {
 	return false
 }
 
-func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Send {
+func splitAndSortSendListByChain(sendList []*types.Send, trim bool) map[string][]*types.Send {
 	sendMap := make(map[string][]*types.Send)
 	for _, send := range sendList {
 		targetChain := getTargetChain(send)
@@ -788,7 +788,12 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].Nonce < sends[j].Nonce
 		})
-		start := trimSends(sends)
+		var start int
+		if trim {
+			start = trimSends(sends)
+		} else {
+			start = 0
+		}
 		sendMap[chain] = sends[start:]
 		log.Info().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].Nonce)
 	}
