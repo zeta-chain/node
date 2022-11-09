@@ -9,6 +9,8 @@ import (
 	"math/big"
 )
 
+// TODO : wzetaContractAddress and other constant strings , can be declared as a constant string in types
+// TODO Remove repetitive code
 func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	// set the system contract
 	system, found := k.GetSystemContract(ctx)

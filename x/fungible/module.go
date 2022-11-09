@@ -167,6 +167,7 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	//TODO : moved to init-genesis
 	if ctx.BlockHeight() == 1 {
 		am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
 	}

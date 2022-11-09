@@ -24,10 +24,13 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
+//TODO USE string constant
 var (
 	ZERO_VALUE = big.NewInt(0)
 )
 
+//TODO Unit test for these funtions
+//TODO Remove repetitive code
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 func (k Keeper) DeployZRC4Contract(
@@ -362,11 +365,12 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-
+	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil
 	}
+	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {

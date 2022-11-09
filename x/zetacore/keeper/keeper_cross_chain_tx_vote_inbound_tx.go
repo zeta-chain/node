@@ -52,6 +52,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
+	//TODO : move to a separate function
 	toChain, err := common.ParseChain(msg.ReceiverChain)
 	if err != nil {
 		return nil, err
@@ -61,6 +62,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		if msg.CoinType == common.CoinType_Gas {
 			foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
 			found := false
+			//TODO :  Foreign coins to use type-foreign chain , It's not a good idea to iterate here,as this handler might be called frequently
 			var gasCoin fungibletypes.ForeignCoins
 			for _, coin := range foreignCoinList {
 				if coin.CoinType == common.CoinType_Gas && coin.ForeignChain == msg.SenderChain {
@@ -69,6 +71,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 					break
 				}
 			}
+			// TODO Break it into subfunctions, and only call Changestatus to aborted , when the subfunction returns an error
 			if !found {
 				errMsg := fmt.Sprintf("cannot get gas coin on chain %s", msg.SenderChain)
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())

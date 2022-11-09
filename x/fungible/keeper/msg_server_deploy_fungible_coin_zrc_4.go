@@ -19,7 +19,7 @@ func (k msgServer) DeployFungibleCoinZRC4(goCtx context.Context, msg *types.MsgD
 	if err != nil {
 		return nil, err
 	}
-
+	//FIXME : declare the attributes as constants , in x/fungible/types
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
 			sdk.NewAttribute("action", "DeployFungibleCoinZRC4"),
