@@ -328,16 +328,12 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
-			if bn%10 == 0 {
-				sendList, err = co.bridge.GetAllPendingSend()
-				logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
-
-				if err != nil {
-					logger.Error().Err(err).Msg("error requesting sends from zetacore")
-					continue
-				}
+			sendList, err = co.bridge.GetAllPendingSend()
+			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
+			if err != nil {
+				logger.Error().Err(err).Msg("error requesting sends from zetacore")
+				continue
 			}
-
 			sendMap := splitAndSortSendListByChain(sendList)
 
 			// schedule sends
@@ -353,7 +349,7 @@ func (co *CoreObserver) startSendScheduler() {
 				sl := sendMap[chain]
 				outSendList := make([]*types.Send, 0)
 				if bn%10 == 0 {
-					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+					logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sl[0].Nonce, sl[len(sl)-1].Nonce)
 				}
 				for idx, send := range sl {
 					numSendsToLook++
@@ -759,7 +755,7 @@ func splitAndSortSendListByChain(sendList []*types.Send) map[string][]*types.Sen
 		})
 		start := trimSends(sends)
 		sendMap[chain] = sends[start:]
-		log.Info().Msgf("chain %s, start %d, len %d", chain, start, len(sendMap[chain]))
+		log.Info().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].Nonce)
 	}
 
 	return sendMap
