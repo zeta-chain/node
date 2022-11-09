@@ -13,7 +13,7 @@ type JSONRpcClientTestSuite struct {
 
 func (suite *JSONRpcClientTestSuite) SetupTest() {
 	endpoint := "https://nd-456-407-783.p2pify.com/cee81511fd724bdcc75021ae81a9b5c9"
-	targetAddress := "2N1h9PAjFqpeBam35v4pMiTbhgxPFsrJAEe"
+	targetAddress := "tb1q9dlnu5dr254s8xvtzlhk5ttu0c923u623qup39"
 	suite.cli = NewJSONRpcClient(endpoint, targetAddress)
 }
 
