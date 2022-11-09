@@ -10,6 +10,8 @@ import (
 
 // Mint ZETA (gas token) to the given address
 // FIXME: mint to module and then transfer to the given address?
+
+// TODO balanceCoinAfter != expCoin , be replicated in an unit test
 func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount *big.Int) error {
 	balanceCoin := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
 	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
