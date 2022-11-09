@@ -328,7 +328,7 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
-			if bn%6 == 0 {
+			if bn%10 == 0 {
 				sendList, err = co.bridge.GetAllPendingSend()
 				logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 
@@ -376,8 +376,7 @@ func (co *CoreObserver) startSendScheduler() {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 					}
 					if included || confirmed {
-						logger.Info().Msgf("send outTx already included; do not schedule")
-						continue
+						logger.Info().Msgf("send outTx already included")
 					}
 					chain := getTargetChain(send)
 					outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
@@ -389,14 +388,14 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// if there are many outstanding sends, then all first 80 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 100) {
+					if isScheduled(sinceBlock, idx < 80) {
 						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
 							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
 						} else {
 							numScheduledSends++
 							outTxMan.StartTryProcess(outTxID)
-							outSendList = append(outSendList, send)
 						}
+						outSendList = append(outSendList, send)
 					}
 					if idx > 100 { // only look at 50 sends per chain
 						break
@@ -773,7 +772,7 @@ func trimSends(sends []*types.Send) int {
 	for i := len(sends) - 1; i >= 1; i-- {
 		// from right to left, if there's a big hole, then before the gap are probably
 		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].Nonce > sends[i-1].Nonce+10 {
+		if sends[i].Nonce > sends[i-1].Nonce+1 {
 			start = i
 			break
 		}
