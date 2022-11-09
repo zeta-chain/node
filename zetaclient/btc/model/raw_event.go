@@ -1,6 +1,7 @@
 package model
 
-type Event struct {
+type RawEvent struct {
 	ASM       string
 	Addresses []string
+	Values    []float64
 }
