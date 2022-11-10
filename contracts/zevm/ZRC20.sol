@@ -2,13 +2,13 @@
 pragma solidity 0.8.7;
 import "./Interfaces.sol";
 
-interface ZRC4Errors {
+interface ZRC20Errors {
     error CallerIsNotFungibleModule();
 
     error InvalidSender();
 }
 
-contract ZRC4 is Context, IZRC4, IZRC4Metadata, ZRC4Errors {
+contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
@@ -132,19 +132,19 @@ contract ZRC4 is Context, IZRC4, IZRC4Metadata, ZRC4Errors {
     // returns the ZRC4 address for gas on the same chain of this ZRC4,
     // and calculate the gas fee for withdraw()
     function withdrawGasFee() public override view returns (address,uint256) {
-        address gasZRC4 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC4(CHAIN_ID);
-        require(gasZRC4 != address(0), "gas coin not set");
+        address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC4(CHAIN_ID);
+        require(gasZRC20 != address(0), "gas coin not set");
         uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPrice(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");
         uint256 gasFee = gasPrice * GAS_LIMIT;
-        return (gasZRC4, gasFee);
+        return (gasZRC20, gasFee);
     }
 
     // this function causes cctx module to send out outbound tx to the outbound chain
     // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
         (address gasZRC4, uint256 gasFee)= withdrawGasFee();
-        require(IZRC4(gasZRC4).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
+        require(IZRC20(gasZRC20).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
 
         _burn(msg.sender, amount);
         emit Withdrawal(msg.sender, to, amount, gasFee);

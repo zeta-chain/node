@@ -41,7 +41,7 @@ func (k Keeper) PostTxProcessing(
 
 // FIXME: authenticate the emitting contract with foreign_coins
 func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address) error {
-	var event *contracts.ZRC4Withdrawal
+	var event *contracts.ZRC20Withdrawal
 
 	found := false
 	for _, log := range logs {
@@ -63,7 +63,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		receiverChain := ""
 		coinType := common.CoinType_Zeta
 		for _, coin := range foreignCoinList {
-			if coin.ZRC4ContractAddress == event.Raw.Address.Hex() {
+			if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
 				receiverChain = coin.ForeignChain
 				foundCoin = true
 				coinType = coin.CoinType
@@ -100,24 +100,24 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 }
 
 // FIXME: add check for event emitting contracts
-func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC4Withdrawal, error) {
-	zrc4Abi, err := contracts.ZRC4MetaData.GetAbi()
+func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
+	zrc20Abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
 
-	event := new(contracts.ZRC4Withdrawal)
+	event := new(contracts.ZRC20Withdrawal)
 	eventName := "Withdrawal"
-	if log.Topics[0] != zrc4Abi.Events[eventName].ID {
+	if log.Topics[0] != zrc20Abi.Events[eventName].ID {
 		return nil, fmt.Errorf("event signature mismatch")
 	}
 	if len(log.Data) > 0 {
-		if err := zrc4Abi.UnpackIntoInterface(event, eventName, log.Data); err != nil {
+		if err := zrc20Abi.UnpackIntoInterface(event, eventName, log.Data); err != nil {
 			return nil, err
 		}
 	}
 	var indexed abi.Arguments
-	for _, arg := range zrc4Abi.Events[eventName].Inputs {
+	for _, arg := range zrc20Abi.Events[eventName].Inputs {
 		if arg.Indexed {
 			indexed = append(indexed, arg)
 		}

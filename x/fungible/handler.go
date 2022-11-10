@@ -18,8 +18,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 
-		case *types.MsgDeployFungibleCoinZRC4:
-			res, err := msgServer.DeployFungibleCoinZRC4(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgDeployFungibleCoinZRC20:
+			res, err := msgServer.DeployFungibleCoinZRC20(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 			// this line is used by starport scaffolding # 1

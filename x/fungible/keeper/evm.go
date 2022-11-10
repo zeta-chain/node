@@ -33,7 +33,7 @@ var (
 //TODO Remove repetitive code
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
-func (k Keeper) DeployZRC4Contract(
+func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
 	decimals uint8,
@@ -42,7 +42,7 @@ func (k Keeper) DeployZRC4Contract(
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) { // FIXME: geneeralized beyond ETH
-	abi, err := contracts.ZRC4MetaData.GetAbi()
+	abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
@@ -70,9 +70,9 @@ func (k Keeper) DeployZRC4Contract(
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "coin constructor is invalid %s: %s", name, err.Error())
 	}
 
-	data := make([]byte, len(contracts.ZRC4Contract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.ZRC4Contract.Bin)], contracts.ZRC4Contract.Bin)
-	copy(data[len(contracts.ZRC4Contract.Bin):], ctorArgs)
+	data := make([]byte, len(contracts.ZRC20Contract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.ZRC20Contract.Bin)], contracts.ZRC20Contract.Bin)
+	copy(data[len(contracts.ZRC20Contract.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -91,8 +91,8 @@ func (k Keeper) DeployZRC4Contract(
 	coin.Name = name
 	coin.Symbol = symbol
 	coin.Decimals = uint32(decimals)
-	coin.ERC20ContractAddress = erc20Contract
-	coin.ZRC4ContractAddress = contractAddr.String()
+	coin.Erc20ContractAddress = erc20Contract
+	coin.Zrc20ContractAddress = contractAddr.String()
 	coin.Index = coinIndex
 	coin.ForeignChain = chainStr
 	k.SetForeignCoins(ctx, coin)
@@ -137,11 +137,11 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	k.SetSystemContract(ctx, system)
 
 	// go update all addr on ZRC-4 contracts
-	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
+	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
 	coins := k.GetAllForeignCoins(ctx)
 	for _, coin := range coins {
-		if len(coin.ZRC4ContractAddress) != 0 {
-			zrc4Address := common.HexToAddress(coin.ZRC4ContractAddress)
+		if len(coin.Zrc20ContractAddress) != 0 {
+			zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
 			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, ZERO_VALUE, nil, true, "updateSystemContractAddress", contractAddr)
 			if err != nil {
 				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr)
@@ -253,14 +253,14 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 
 // Depoisit ZRC4 tokens into to account;
 // Callable only by the fungible module account
-func (k Keeper) DepositZRC4(
+func (k Keeper) DepositZRC20(
 	ctx sdk.Context,
 	contract common.Address,
 	to common.Address,
 	amount *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
 	//abi, err := contracts.ZRC4MetaData.GetAbi()
-	abi, err := contracts.ZRC4MetaData.GetAbi()
+	abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (k Keeper) DepositZRC4(
 
 // Deposit into ZRC4 and call contract function in a single tx
 // callable from fungible module
-func (k Keeper) DepositZRC4AndCallContract(ctx sdk.Context,
+func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	zrc4Contract common.Address,
 	amount *big.Int,
 	targetContract common.Address,
@@ -311,7 +311,7 @@ func (k Keeper) QueryZRC4Data(
 		decimalRes types.ZRC4Uint8Response
 	)
 
-	zrc4 := contracts.ZRC4Contract.ABI
+	zrc4 := contracts.ZRC20Contract.ABI
 
 	// Name
 	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "name")
@@ -357,7 +357,7 @@ func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
 	contract, account common.Address,
 ) *big.Int {
-	abi, err := contracts.ZRC4MetaData.GetAbi()
+	abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil
 	}

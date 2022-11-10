@@ -16,7 +16,7 @@ var _ = strconv.Itoa(0)
 func CmdDeployFungibleCoinZRC4() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type]",
-		Short: "Broadcast message DeployFungibleCoinZRC4",
+		Short: "Broadcast message DeployFungibleCoinZRC20",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argERC20 := args[0]
@@ -37,7 +37,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgDeployFungibleCoinZRC4(
+			msg := types.NewMsgDeployFungibleCoinZRC20(
 				clientCtx.GetFromAddress().String(),
 				argERC20,
 				argForeignChain,

@@ -8,8 +8,8 @@ import "common/common.proto";
 
 message ForeignCoins {
   string index = 1; 
-  string zRC4ContractAddress = 2;
-  string eRC20ContractAddress = 3;
+  string zrc20ContractAddress = 2;
+  string erc20ContractAddress = 3;
   string foreignChain = 4; 
   uint32 decimals = 5;
   string name = 6; 

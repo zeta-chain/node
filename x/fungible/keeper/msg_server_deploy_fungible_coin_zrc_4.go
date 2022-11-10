@@ -9,20 +9,20 @@ import (
 	"math/big"
 )
 
-func (k msgServer) DeployFungibleCoinZRC4(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC4) (*types.MsgDeployFungibleCoinZRC4Response, error) {
+func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != types.AdminAddress {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "only admin can deploy fungible coin")
 	}
 
-	addr, err := k.DeployZRC4Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChain, msg.CoinType, msg.ERC20, big.NewInt(int64(msg.GasLimit)))
+	addr, err := k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChain, msg.CoinType, msg.ERC20, big.NewInt(int64(msg.GasLimit)))
 	if err != nil {
 		return nil, err
 	}
 	//FIXME : declare the attributes as constants , in x/fungible/types
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("action", "DeployFungibleCoinZRC4"),
+			sdk.NewAttribute("action", "DeployFungibleCoinZRC20"),
 			sdk.NewAttribute("chain", msg.ForeignChain),
 			sdk.NewAttribute("contract", addr.String()),
 			sdk.NewAttribute("name", msg.Name),
@@ -34,5 +34,5 @@ func (k msgServer) DeployFungibleCoinZRC4(goCtx context.Context, msg *types.MsgD
 		),
 	)
 
-	return &types.MsgDeployFungibleCoinZRC4Response{}, nil
+	return &types.MsgDeployFungibleCoinZRC20Response{}, nil
 }

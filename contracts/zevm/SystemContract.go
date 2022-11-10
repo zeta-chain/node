@@ -30,7 +30,7 @@ var (
 
 // SystemContractMetaData contains all meta data concerning the SystemContract contract.
 var SystemContractMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Factory_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Router02_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"CallerIsNotFungibleModule\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CantBeIdenticalAddresses\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CantBeZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidTarget\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasZetaPool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetWZeta\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"SystemContractDeployed\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"DepositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinZRC4\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasZetaPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zrc4\",\"type\":\"address\"}],\"name\":\"setGasCoinZRC4\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"}],\"name\":\"setGasZetaPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setWZETAContractAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenA\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenB\",\"type\":\"address\"}],\"name\":\"uniswapv2PairFor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"pair\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2Router02Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wzetaContractAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Factory_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"uniswapv2Router02_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"CallerIsNotFungibleModule\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CantBeIdenticalAddresses\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CantBeZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidTarget\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasCoin\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"SetGasPrice\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetGasZetaPool\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"SetWZeta\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"SystemContractDeployed\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"depositAndCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasCoinZRC20ByChainId\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasPriceByChainId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"gasZetaPoolByChainId\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"}],\"name\":\"setGasCoinZRC20\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"setGasPrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"}],\"name\":\"setGasZetaPool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setWZETAContractAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenA\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenB\",\"type\":\"address\"}],\"name\":\"uniswapv2PairFor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"pair\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapv2Router02Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wZetaContractAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // SystemContractABI is the input ABI used to generate the binding from.
@@ -210,12 +210,12 @@ func (_SystemContract *SystemContractCallerSession) FUNGIBLEMODULEADDRESS() (com
 	return _SystemContract.Contract.FUNGIBLEMODULEADDRESS(&_SystemContract.CallOpts)
 }
 
-// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
+// GasCoinZRC20ByChainId is a free data retrieval call binding the contract method 0x0be15547.
 //
-// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCaller) GasCoinZRC4(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
+// Solidity: function gasCoinZRC20ByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCaller) GasCoinZRC20ByChainId(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
 	var out []interface{}
-	err := _SystemContract.contract.Call(opts, &out, "gasCoinZRC4", arg0)
+	err := _SystemContract.contract.Call(opts, &out, "gasCoinZRC20ByChainId", arg0)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -227,26 +227,26 @@ func (_SystemContract *SystemContractCaller) GasCoinZRC4(opts *bind.CallOpts, ar
 
 }
 
-// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
+// GasCoinZRC20ByChainId is a free data retrieval call binding the contract method 0x0be15547.
 //
-// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractSession) GasCoinZRC4(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasCoinZRC4(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasCoinZRC20ByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractSession) GasCoinZRC20ByChainId(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasCoinZRC20ByChainId(&_SystemContract.CallOpts, arg0)
 }
 
-// GasCoinZRC4 is a free data retrieval call binding the contract method 0x8d4b6ae3.
+// GasCoinZRC20ByChainId is a free data retrieval call binding the contract method 0x0be15547.
 //
-// Solidity: function gasCoinZRC4(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCallerSession) GasCoinZRC4(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasCoinZRC4(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasCoinZRC20ByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCallerSession) GasCoinZRC20ByChainId(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasCoinZRC20ByChainId(&_SystemContract.CallOpts, arg0)
 }
 
-// GasPrice is a free data retrieval call binding the contract method 0x052c72a4.
+// GasPriceByChainId is a free data retrieval call binding the contract method 0xd7fd7afb.
 //
-// Solidity: function gasPrice(uint256 ) view returns(uint256)
-func (_SystemContract *SystemContractCaller) GasPrice(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
+// Solidity: function gasPriceByChainId(uint256 ) view returns(uint256)
+func (_SystemContract *SystemContractCaller) GasPriceByChainId(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
 	var out []interface{}
-	err := _SystemContract.contract.Call(opts, &out, "gasPrice", arg0)
+	err := _SystemContract.contract.Call(opts, &out, "gasPriceByChainId", arg0)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -258,26 +258,26 @@ func (_SystemContract *SystemContractCaller) GasPrice(opts *bind.CallOpts, arg0 
 
 }
 
-// GasPrice is a free data retrieval call binding the contract method 0x052c72a4.
+// GasPriceByChainId is a free data retrieval call binding the contract method 0xd7fd7afb.
 //
-// Solidity: function gasPrice(uint256 ) view returns(uint256)
-func (_SystemContract *SystemContractSession) GasPrice(arg0 *big.Int) (*big.Int, error) {
-	return _SystemContract.Contract.GasPrice(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasPriceByChainId(uint256 ) view returns(uint256)
+func (_SystemContract *SystemContractSession) GasPriceByChainId(arg0 *big.Int) (*big.Int, error) {
+	return _SystemContract.Contract.GasPriceByChainId(&_SystemContract.CallOpts, arg0)
 }
 
-// GasPrice is a free data retrieval call binding the contract method 0x052c72a4.
+// GasPriceByChainId is a free data retrieval call binding the contract method 0xd7fd7afb.
 //
-// Solidity: function gasPrice(uint256 ) view returns(uint256)
-func (_SystemContract *SystemContractCallerSession) GasPrice(arg0 *big.Int) (*big.Int, error) {
-	return _SystemContract.Contract.GasPrice(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasPriceByChainId(uint256 ) view returns(uint256)
+func (_SystemContract *SystemContractCallerSession) GasPriceByChainId(arg0 *big.Int) (*big.Int, error) {
+	return _SystemContract.Contract.GasPriceByChainId(&_SystemContract.CallOpts, arg0)
 }
 
-// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
+// GasZetaPoolByChainId is a free data retrieval call binding the contract method 0x513a9c05.
 //
-// Solidity: function gasZetaPool(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCaller) GasZetaPool(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
+// Solidity: function gasZetaPoolByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCaller) GasZetaPoolByChainId(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
 	var out []interface{}
-	err := _SystemContract.contract.Call(opts, &out, "gasZetaPool", arg0)
+	err := _SystemContract.contract.Call(opts, &out, "gasZetaPoolByChainId", arg0)
 
 	if err != nil {
 		return *new(common.Address), err
@@ -289,18 +289,18 @@ func (_SystemContract *SystemContractCaller) GasZetaPool(opts *bind.CallOpts, ar
 
 }
 
-// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
+// GasZetaPoolByChainId is a free data retrieval call binding the contract method 0x513a9c05.
 //
-// Solidity: function gasZetaPool(uint256 ) view returns(address)
-func (_SystemContract *SystemContractSession) GasZetaPool(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasZetaPool(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasZetaPoolByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractSession) GasZetaPoolByChainId(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasZetaPoolByChainId(&_SystemContract.CallOpts, arg0)
 }
 
-// GasZetaPool is a free data retrieval call binding the contract method 0x05a6ee8f.
+// GasZetaPoolByChainId is a free data retrieval call binding the contract method 0x513a9c05.
 //
-// Solidity: function gasZetaPool(uint256 ) view returns(address)
-func (_SystemContract *SystemContractCallerSession) GasZetaPool(arg0 *big.Int) (common.Address, error) {
-	return _SystemContract.Contract.GasZetaPool(&_SystemContract.CallOpts, arg0)
+// Solidity: function gasZetaPoolByChainId(uint256 ) view returns(address)
+func (_SystemContract *SystemContractCallerSession) GasZetaPoolByChainId(arg0 *big.Int) (common.Address, error) {
+	return _SystemContract.Contract.GasZetaPoolByChainId(&_SystemContract.CallOpts, arg0)
 }
 
 // Uniswapv2FactoryAddress is a free data retrieval call binding the contract method 0xd936a012.
@@ -396,12 +396,12 @@ func (_SystemContract *SystemContractCallerSession) Uniswapv2Router02Address() (
 	return _SystemContract.Contract.Uniswapv2Router02Address(&_SystemContract.CallOpts)
 }
 
-// WzetaContractAddress is a free data retrieval call binding the contract method 0x6719e404.
+// WZetaContractAddress is a free data retrieval call binding the contract method 0x569541b9.
 //
-// Solidity: function wzetaContractAddress() view returns(address)
-func (_SystemContract *SystemContractCaller) WzetaContractAddress(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function wZetaContractAddress() view returns(address)
+func (_SystemContract *SystemContractCaller) WZetaContractAddress(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _SystemContract.contract.Call(opts, &out, "wzetaContractAddress")
+	err := _SystemContract.contract.Call(opts, &out, "wZetaContractAddress")
 
 	if err != nil {
 		return *new(common.Address), err
@@ -413,60 +413,60 @@ func (_SystemContract *SystemContractCaller) WzetaContractAddress(opts *bind.Cal
 
 }
 
-// WzetaContractAddress is a free data retrieval call binding the contract method 0x6719e404.
+// WZetaContractAddress is a free data retrieval call binding the contract method 0x569541b9.
 //
-// Solidity: function wzetaContractAddress() view returns(address)
-func (_SystemContract *SystemContractSession) WzetaContractAddress() (common.Address, error) {
-	return _SystemContract.Contract.WzetaContractAddress(&_SystemContract.CallOpts)
+// Solidity: function wZetaContractAddress() view returns(address)
+func (_SystemContract *SystemContractSession) WZetaContractAddress() (common.Address, error) {
+	return _SystemContract.Contract.WZetaContractAddress(&_SystemContract.CallOpts)
 }
 
-// WzetaContractAddress is a free data retrieval call binding the contract method 0x6719e404.
+// WZetaContractAddress is a free data retrieval call binding the contract method 0x569541b9.
 //
-// Solidity: function wzetaContractAddress() view returns(address)
-func (_SystemContract *SystemContractCallerSession) WzetaContractAddress() (common.Address, error) {
-	return _SystemContract.Contract.WzetaContractAddress(&_SystemContract.CallOpts)
+// Solidity: function wZetaContractAddress() view returns(address)
+func (_SystemContract *SystemContractCallerSession) WZetaContractAddress() (common.Address, error) {
+	return _SystemContract.Contract.WZetaContractAddress(&_SystemContract.CallOpts)
 }
 
-// DepositAndCall is a paid mutator transaction binding the contract method 0x12cc2a3b.
+// DepositAndCall is a paid mutator transaction binding the contract method 0x8c6f037f.
 //
-// Solidity: function DepositAndCall(address zrc4, uint256 amount, address target, bytes message) returns()
-func (_SystemContract *SystemContractTransactor) DepositAndCall(opts *bind.TransactOpts, zrc4 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
-	return _SystemContract.contract.Transact(opts, "DepositAndCall", zrc4, amount, target, message)
+// Solidity: function depositAndCall(address zrc20, uint256 amount, address target, bytes message) returns()
+func (_SystemContract *SystemContractTransactor) DepositAndCall(opts *bind.TransactOpts, zrc20 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
+	return _SystemContract.contract.Transact(opts, "depositAndCall", zrc20, amount, target, message)
 }
 
-// DepositAndCall is a paid mutator transaction binding the contract method 0x12cc2a3b.
+// DepositAndCall is a paid mutator transaction binding the contract method 0x8c6f037f.
 //
-// Solidity: function DepositAndCall(address zrc4, uint256 amount, address target, bytes message) returns()
-func (_SystemContract *SystemContractSession) DepositAndCall(zrc4 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
-	return _SystemContract.Contract.DepositAndCall(&_SystemContract.TransactOpts, zrc4, amount, target, message)
+// Solidity: function depositAndCall(address zrc20, uint256 amount, address target, bytes message) returns()
+func (_SystemContract *SystemContractSession) DepositAndCall(zrc20 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
+	return _SystemContract.Contract.DepositAndCall(&_SystemContract.TransactOpts, zrc20, amount, target, message)
 }
 
-// DepositAndCall is a paid mutator transaction binding the contract method 0x12cc2a3b.
+// DepositAndCall is a paid mutator transaction binding the contract method 0x8c6f037f.
 //
-// Solidity: function DepositAndCall(address zrc4, uint256 amount, address target, bytes message) returns()
-func (_SystemContract *SystemContractTransactorSession) DepositAndCall(zrc4 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
-	return _SystemContract.Contract.DepositAndCall(&_SystemContract.TransactOpts, zrc4, amount, target, message)
+// Solidity: function depositAndCall(address zrc20, uint256 amount, address target, bytes message) returns()
+func (_SystemContract *SystemContractTransactorSession) DepositAndCall(zrc20 common.Address, amount *big.Int, target common.Address, message []byte) (*types.Transaction, error) {
+	return _SystemContract.Contract.DepositAndCall(&_SystemContract.TransactOpts, zrc20, amount, target, message)
 }
 
-// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
+// SetGasCoinZRC20 is a paid mutator transaction binding the contract method 0xee2815ba.
 //
-// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractTransactor) SetGasCoinZRC4(opts *bind.TransactOpts, chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.contract.Transact(opts, "setGasCoinZRC4", chainID, zrc4)
+// Solidity: function setGasCoinZRC20(uint256 chainID, address zrc20) returns()
+func (_SystemContract *SystemContractTransactor) SetGasCoinZRC20(opts *bind.TransactOpts, chainID *big.Int, zrc20 common.Address) (*types.Transaction, error) {
+	return _SystemContract.contract.Transact(opts, "setGasCoinZRC20", chainID, zrc20)
 }
 
-// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
+// SetGasCoinZRC20 is a paid mutator transaction binding the contract method 0xee2815ba.
 //
-// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractSession) SetGasCoinZRC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.Contract.SetGasCoinZRC4(&_SystemContract.TransactOpts, chainID, zrc4)
+// Solidity: function setGasCoinZRC20(uint256 chainID, address zrc20) returns()
+func (_SystemContract *SystemContractSession) SetGasCoinZRC20(chainID *big.Int, zrc20 common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetGasCoinZRC20(&_SystemContract.TransactOpts, chainID, zrc20)
 }
 
-// SetGasCoinZRC4 is a paid mutator transaction binding the contract method 0xcccaa70a.
+// SetGasCoinZRC20 is a paid mutator transaction binding the contract method 0xee2815ba.
 //
-// Solidity: function setGasCoinZRC4(uint256 chainID, address zrc4) returns()
-func (_SystemContract *SystemContractTransactorSession) SetGasCoinZRC4(chainID *big.Int, zrc4 common.Address) (*types.Transaction, error) {
-	return _SystemContract.Contract.SetGasCoinZRC4(&_SystemContract.TransactOpts, chainID, zrc4)
+// Solidity: function setGasCoinZRC20(uint256 chainID, address zrc20) returns()
+func (_SystemContract *SystemContractTransactorSession) SetGasCoinZRC20(chainID *big.Int, zrc20 common.Address) (*types.Transaction, error) {
+	return _SystemContract.Contract.SetGasCoinZRC20(&_SystemContract.TransactOpts, chainID, zrc20)
 }
 
 // SetGasPrice is a paid mutator transaction binding the contract method 0xa7cb0507.

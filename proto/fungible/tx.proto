@@ -10,14 +10,14 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc DeployFungibleCoinZRC4(MsgDeployFungibleCoinZRC4) returns (MsgDeployFungibleCoinZRC4Response);
+  rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
 
 
 
-message MsgDeployFungibleCoinZRC4 {
+message MsgDeployFungibleCoinZRC20 {
   string creator = 1;
   string ERC20 = 2;
   string foreignChain = 3;
@@ -28,7 +28,7 @@ message MsgDeployFungibleCoinZRC4 {
   uint64 gasLimit = 8;
 }
 
-message MsgDeployFungibleCoinZRC4Response {
+message MsgDeployFungibleCoinZRC20Response {
 }
 
 
