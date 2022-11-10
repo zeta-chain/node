@@ -21,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
-	"github.com/zeta-chain/zetacore/app/ante"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
@@ -424,7 +423,6 @@ func New(
 		app.BankKeeper,
 		//&app.ZetaCoreKeeper,
 	)
-	fungibleModule := fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper)
 
 	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
 		appCodec,
@@ -481,7 +479,7 @@ func New(
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		zetacoreModule,
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
-		fungibleModule,
+		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -570,19 +568,18 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := ante.HandlerOptions{
-		AccountKeeper:      app.AccountKeeper,
-		BankKeeper:         app.BankKeeper,
-		EvmKeeper:          app.EvmKeeper,
-		FeeMarketKeeper:    app.FeeMarketKeeper,
-		IBCKeeper:          app.IBCKeeper,
-		ZetaObserverKeeper: app.ZetaObserverKeeper,
-		SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:     evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:     maxGasWanted,
+	options := evmante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		EvmKeeper:       app.EvmKeeper,
+		FeeMarketKeeper: app.FeeMarketKeeper,
+		IBCKeeper:       app.IBCKeeper,
+		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:  maxGasWanted,
 	}
 
-	anteHandler, err := ante.NewAnteHandler(options)
+	anteHandler, err := evmante.NewAnteHandler(options)
 	if err != nil {
 		panic(err)
 	}

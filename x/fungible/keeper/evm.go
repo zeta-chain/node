@@ -144,7 +144,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 			zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
 			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, BigIntZero, nil, true, "updateSystemContractAddress", contractAddr)
 			if err != nil {
-				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr)
+				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr, err.Error())
 			}
 		}
 	}
