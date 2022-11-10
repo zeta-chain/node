@@ -1,0 +1,139 @@
+syntax = "proto3";
+package zetachain.zetacore.crosschain;
+
+// this line is used by starport scaffolding # proto/tx/import
+import "crosschain/tss_voter.proto";
+import "common/common.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
+  rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
+  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
+  rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
+  rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
+  rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
+  rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
+  rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
+  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
+  rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
+}
+
+message MsgZetaConversionRateVoter {
+  string creator = 1;
+  string chain = 2;
+  string zetaConversionRate = 3;
+  uint64 blockNumber = 4;
+}
+
+message MsgZetaConversionRateVoterResponse {
+}
+
+message MsgAddToOutTxTracker {
+  string creator = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+  string txHash = 4;
+}
+
+message MsgAddToOutTxTrackerResponse {
+}
+
+message MsgRemoveFromOutTxTracker {
+  string creator = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+}
+
+message MsgRemoveFromOutTxTrackerResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message
+message MsgCreateTSSVoter {
+  string creator = 1;
+  string chain = 3;
+  string address = 4;
+  string pubkey = 5;
+}
+
+message MsgCreateTSSVoterResponse { }
+
+
+message MsgGasBalanceVoter {
+  string creator = 1;
+  string chain = 2;
+  string balance = 3;
+  uint64 blockNumber = 4;
+}
+
+message MsgGasBalanceVoterResponse {
+}
+
+message MsgGasPriceVoter {
+  string creator = 1;
+  string chain = 2;
+  uint64 price = 3;
+  uint64 blockNumber = 4;
+  string supply = 5;
+}
+
+message MsgGasPriceVoterResponse {
+}
+
+message MsgNonceVoter {
+  string creator = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+}
+
+message MsgNonceVoterResponse {
+}
+
+message MsgVoteOnObservedOutboundTx {
+  string creator = 1;
+  string cctx_hash = 2;
+  string observed_outTx_hash = 3;
+  uint64 observed_outTx_blockHeight = 4;
+  string zeta_minted = 5[
+  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+  (gogoproto.nullable) = false,
+  (gogoproto.moretags) = "yaml:\"zeta_minted\""
+  ];
+  common.ReceiveStatus status = 6;
+  string outTx_chain = 7;
+  uint64 outTx_tss_nonce = 8;
+  common.CoinType coin_type = 9;
+}
+
+message MsgVoteOnObservedOutboundTxResponse {
+}
+
+message MsgVoteOnObservedInboundTx {
+  string creator = 1;
+  string sender = 2;
+  string senderChain = 3;
+  string receiver = 4;
+  string receiverChain = 5;
+  string zetaBurnt = 6;
+//  string mMint = 7;
+  string message = 8;
+  string inTxHash = 9;
+  uint64 inBlockHeight = 10;
+  uint64 gasLimit = 11;
+  common.CoinType coinType = 12;
+}
+
+message MsgVoteOnObservedInboundTxResponse {
+}
+
+message MsgSetNodeKeys {
+  string creator = 1;
+  common.PubKeySet pubkeySet = 2;
+  string validatorConsensusPubkey = 3;
+}
+
+message MsgSetNodeKeysResponse {
+}

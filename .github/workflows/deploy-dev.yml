@@ -10,6 +10,9 @@ on:
   push:
     branches:
       - develop
+      
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
 
 env:
   ENVIRONMENT_NAME: "DEVELOPMENT"
