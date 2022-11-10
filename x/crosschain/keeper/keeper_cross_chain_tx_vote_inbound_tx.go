@@ -90,7 +90,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			if len(msg.Message) == 0 { // no message; transfer
 				tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
 				if err != nil {
-					errMsg := fmt.Sprintf("cannot DepositZRC20", err.Error())
+					errMsg := fmt.Sprintf("cannot DepositZRC20, %s", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 					k.SetCrossChainTx(ctx, cctx)
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -99,7 +99,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				contract, data, err := parseContractAndData(msg.Message)
 				tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
 				if err != nil { // prepare to revert
-					errMsg := fmt.Sprintf("cannot DepositZRC20", err.Error())
+					errMsg := fmt.Sprintf("cannot DepositZRC20: %s", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 					k.SetCrossChainTx(ctx, cctx)
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -109,7 +109,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 					ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 					err = k.ProcessWithdrawalEvent(ctx, logs, contract)
 					if err != nil {
-						errMsg := fmt.Sprintf("cannot process withdrawal event", err.Error())
+						errMsg := fmt.Sprintf("cannot process withdrawal event: %s", err.Error())
 						cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 						k.SetCrossChainTx(ctx, cctx)
 						return &types.MsgVoteOnObservedInboundTxResponse{}, nil
