@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/tmservice"

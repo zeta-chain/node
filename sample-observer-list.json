@@ -1,8 +1,8 @@
 [
  {
   "index": "",
-  "ObserverChain": 1,
-  "ObservationType": 1,
+  "observerChain": "Eth",
+  "observationType": "InBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
    "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
@@ -10,8 +10,8 @@
  },
  {
   "index": "",
-  "ObserverChain": 6,
-  "ObservationType": 1,
+  "observerChain": "Eth",
+  "observationType": "OutBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
    "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
@@ -19,8 +19,8 @@
  },
  {
   "index": "",
-  "ObserverChain": 6,
-  "ObservationType": 2,
+  "observerChain": "Goerli",
+  "observationType": "InBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
    "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
@@ -28,26 +28,8 @@
  },
  {
   "index": "",
-  "ObserverChain": 1,
-  "ObservationType": 2,
-  "observerList": [
-   "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
-   "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
-  ]
- },
- {
-  "index": "",
-  "ObserverChain": 2,
-  "ObservationType": 1,
-  "observerList": [
-   "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
-   "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
-  ]
- },
- {
-  "index": "",
-  "ObserverChain": 3,
-  "ObservationType": 2,
+  "observerChain": "Goerli",
+  "observationType": "OutBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
    "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
