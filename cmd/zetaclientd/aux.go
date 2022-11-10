@@ -48,8 +48,8 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.ChainObserver)
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.EVMChainObserver, error) {
+	clientMap := make(map[common.Chain]*mc.EVMChainObserver)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		log.Info().Msgf("starting %s observer...", chain)
