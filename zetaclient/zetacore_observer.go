@@ -272,7 +272,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
-					fromOrToZeta := send.InBoundTxParams.SenderChain == "ZETA" || send.OutBoundTxParams.ReceiverChain == "ZETA"
+					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
@@ -340,7 +340,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	}
 
 	// Early return if the send is already processed
-	fromOrToZeta := send.InBoundTxParams.SenderChain == "ZETA" || send.OutBoundTxParams.ReceiverChain == "ZETA"
+	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
 	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")

@@ -97,6 +97,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				}
 			} else { // non-empty message = [contractaddress, calldata]
 				contract, data, err := parseContractAndData(msg.Message)
+				if err != nil {
+					errMsg := fmt.Sprintf("cannot parse contract and data, %s", err.Error())
+					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
+					k.SetCrossChainTx(ctx, cctx)
+					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+				}
 				tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
 				if err != nil { // prepare to revert
 					errMsg := fmt.Sprintf("cannot DepositZRC20: %s", err.Error())
