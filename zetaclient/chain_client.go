@@ -188,9 +188,10 @@ func (ob *ChainObserver) Stop() {
 // If isConfirmed, it also post to ZetaCore
 func (ob *ChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
 	ob.mu.Lock()
-	receipt, found := ob.outTXConfirmedReceipts[nonce]
-	transaction, found := ob.outTXConfirmedTransaction[nonce]
+	receipt, found1 := ob.outTXConfirmedReceipts[nonce]
+	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
 	ob.mu.Unlock()
+	found := found1 && found2
 	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
 	logger := ob.logger.With().Str("sendID", sendID).Logger()
 	if fromOrToZeta {

@@ -26,7 +26,7 @@ import (
 
 //TODO USE string constant
 var (
-	ZERO_VALUE = big.NewInt(0)
+	BigIntZero = big.NewInt(0)
 )
 
 //TODO Unit test for these funtions
@@ -80,7 +80,7 @@ func (k Keeper) DeployZRC20Contract(
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract for %s", name)
 	}
@@ -126,7 +126,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContractContract system contract")
 	}
@@ -142,7 +142,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	for _, coin := range coins {
 		if len(coin.Zrc20ContractAddress) != 0 {
 			zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
-			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, ZERO_VALUE, nil, true, "updateSystemContractAddress", contractAddr)
+			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, BigIntZero, nil, true, "updateSystemContractAddress", contractAddr)
 			if err != nil {
 				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr)
 			}
@@ -175,7 +175,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2FactoryContract contract")
 	}
@@ -183,7 +183,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	//verify that factory is correct--hashOfPairCode must be: 96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f
 	// this is important because router02 needs exactly this build to compute correct pair address
 	// Name
-	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, ZERO_VALUE, nil, false, "hashOfPairCode")
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contractAddr, BigIntZero, nil, false, "hashOfPairCode")
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to call hashOfPairCode() contract")
 	}
@@ -213,7 +213,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2Router02Contract contract")
 	}
@@ -243,7 +243,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, ZERO_VALUE, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy WZETA contract")
 	}
@@ -264,7 +264,7 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, true, "deposit", to, amount)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, ZERO_VALUE, nil, true,
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, true,
 		"DepositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (k Keeper) QueryZRC4Data(
 	zrc4 := contracts.ZRC20Contract.ABI
 
 	// Name
-	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "name")
+	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -326,7 +326,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "symbol")
+	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "symbol")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -338,7 +338,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "decimals")
+	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "decimals")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -361,7 +361,7 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "balanceOf", account)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "balanceOf", account)
 	if err != nil {
 		return nil
 	}
@@ -530,7 +530,7 @@ func (k Keeper) CallEVMWithData(
 		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
 		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
 		k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
-		k.evmKeeper.SetLogSizeTransient(ctx, uint64(k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
+		k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
 	}
 
 	return res, nil
