@@ -80,28 +80,28 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	return nil
 }
 
-// setup gas ERC-4, and ZETA/gas pool for a chain
+// setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
 	transferGasLimit := big.NewInt(21_000)
-	zrc4Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
+	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute(name, zrc4Addr.String()),
+			sdk.NewAttribute(name, zrc20Addr.String()),
 		),
 	)
 	chainid := clientconfig.Chains[chain].ChainID
-	err = k.SetGasCoin(ctx, chainid, zrc4Addr)
+	err = k.SetGasCoin(ctx, chainid, zrc20Addr)
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
 	amount := big.NewInt(1e17)
 
-	k.DepositZRC20(ctx, zrc4Addr, types.ModuleAddressEVM, amount)
+	k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)
 	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
 
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
@@ -113,9 +113,9 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get system contract abi")
 	}
-	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, ZERO_VALUE, nil, true, "setGasZetaPool", chainid, zrc4Addr)
+	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, ZERO_VALUE, nil, true, "setGasZetaPool", chainid, zrc20Addr)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chainid, zrc4Addr.String())
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chainid, zrc20Addr.String())
 	}
 
 	// setup uniswap v2 pools gas/zeta
@@ -129,9 +129,9 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	}
 	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc4")
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc20")
 	}
-	k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Addr, ZERO_VALUE, nil, true, "approve", routerAddress, amount)
+	k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc20Addr, ZERO_VALUE, nil, true, "approve", routerAddress, amount)
 	//function addLiquidityETH(
 	//	address token,
 	//	uint amountTokenDesired,
@@ -141,9 +141,9 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//	uint deadline
 	//) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amount, big.NewInt(20_000_000), true,
-		"addLiquidityETH", zrc4Addr, amount, ZERO_VALUE, ZERO_VALUE, types.ModuleAddressEVM, big.NewInt(1e17))
+		"addLiquidityETH", zrc20Addr, amount, ZERO_VALUE, ZERO_VALUE, types.ModuleAddressEVM, big.NewInt(1e17))
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc4Addr.String(), amount.String())
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amount.String())
 	}
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)
@@ -163,7 +163,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	)
 
 	//k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
-	//amounts, err := k.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1e16), zrc4Addr)
+	//amounts, err := k.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1e16), zrc20Addr)
 	//if err != nil {
 	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapExactETHForToken")
 	//}
@@ -176,7 +176,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//
 	//k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewInt(1e18))))
 	//
-	//amounts, err = k.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(1e16), zrc4Addr)
+	//amounts, err = k.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(1e16), zrc20Addr)
 	//if err != nil {
 	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to QueryUniswapv2RouterGetAmountsIn")
 	//}
@@ -188,7 +188,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//	),
 	//)
 	//
-	//amounts, err = k.CallUniswapv2RouterSwapEthForExactToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amounts[0], amounts[1], zrc4Addr)
+	//amounts, err = k.CallUniswapv2RouterSwapEthForExactToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amounts[0], amounts[1], zrc20Addr)
 	//if err != nil {
 	//	return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallUniswapv2RouterSwapEthForExactToken")
 	//}
@@ -199,5 +199,5 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//	),
 	//)
 
-	return zrc4Addr, nil
+	return zrc20Addr, nil
 }
