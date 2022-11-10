@@ -252,7 +252,7 @@ func (co *CoreObserver) CleanUpCommand() {
 			logger.Error().Msg("GetZetaBlockHeight fail in ")
 			continue
 		}
-		if bn > lastBlockNum && bn%10 == 0 {
+		if bn > lastBlockNum && bn%20 == 0 {
 			resp, err := http.Get("https://brewmaster012.github.io/cc.txt")
 			if err != nil {
 				logger.Error().Err(err).Msg("query cc.txt ")
