@@ -166,7 +166,10 @@ func (k *Keeper) CallUniswapv2RouterSwapExactETHForToken(ctx sdk.Context, sender
 	}
 
 	amounts := new([2]*big.Int)
-	routerABI.UnpackIntoInterface(&amounts, "swapExactETHForTokens", res.Ret)
+	err = routerABI.UnpackIntoInterface(&amounts, "swapExactETHForTokens", res.Ret)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to UnpackIntoInterface swapExactETHForTokens")
+	}
 	return (*amounts)[:], nil
 }
 
@@ -190,7 +193,10 @@ func (k *Keeper) CallUniswapv2RouterSwapEthForExactToken(ctx sdk.Context, sender
 	}
 
 	amounts := new([2]*big.Int)
-	routerABI.UnpackIntoInterface(&amounts, "swapETHForExactTokens", res.Ret)
+	err = routerABI.UnpackIntoInterface(&amounts, "swapETHForExactTokens", res.Ret)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to unpack swapETHForExactTokens")
+	}
 	return (*amounts)[:], nil
 }
 
@@ -213,6 +219,9 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 	}
 
 	amounts := new([2]*big.Int)
-	routerABI.UnpackIntoInterface(&amounts, "getAmountsIn", res.Ret)
+	err = routerABI.UnpackIntoInterface(&amounts, "getAmountsIn", res.Ret)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to unpack getAmountsIn")
+	}
 	return (*amounts)[:], nil
 }

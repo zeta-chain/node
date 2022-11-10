@@ -77,7 +77,10 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		fmt.Println("RegisterQueryHandlerClient err: %w", err)
+	}
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -169,7 +172,10 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	//TODO : moved to init-genesis
 	if ctx.BlockHeight() == 1 {
-		am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
+		err := am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

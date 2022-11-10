@@ -101,8 +101,14 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	}
 	amount := big.NewInt(1e17)
 
-	k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)
+	if err != nil {
+		return ethcommon.Address{}, err
+	}
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+	if err != nil {
+		return ethcommon.Address{}, err
+	}
 
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
@@ -131,7 +137,10 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc20")
 	}
-	k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc20Addr, ZERO_VALUE, nil, true, "approve", routerAddress, amount)
+	_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc20Addr, ZERO_VALUE, nil, true, "approve", routerAddress, amount)
+	if err != nil {
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method approve(%s, %d)", routerAddress.String(), amount)
+	}
 	//function addLiquidityETH(
 	//	address token,
 	//	uint amountTokenDesired,
