@@ -304,11 +304,11 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 func (k Keeper) QueryZRC4Data(
 	ctx sdk.Context,
 	contract common.Address,
-) (types.ZRC4Data, error) {
+) (types.ZRC20Data, error) {
 	var (
-		nameRes    types.ZRC4StringResponse
-		symbolRes  types.ZRC4StringResponse
-		decimalRes types.ZRC4Uint8Response
+		nameRes    types.ZRC20StringResponse
+		symbolRes  types.ZRC20StringResponse
+		decimalRes types.ZRC20Uint8Response
 	)
 
 	zrc4 := contracts.ZRC20Contract.ABI
@@ -316,11 +316,11 @@ func (k Keeper) QueryZRC4Data(
 	// Name
 	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "name")
 	if err != nil {
-		return types.ZRC4Data{}, err
+		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&nameRes, "name", res.Ret); err != nil {
-		return types.ZRC4Data{}, sdkerrors.Wrapf(
+		return types.ZRC20Data{}, sdkerrors.Wrapf(
 			types.ErrABIUnpack, "failed to unpack name: %s", err.Error(),
 		)
 	}
@@ -328,11 +328,11 @@ func (k Keeper) QueryZRC4Data(
 	// Symbol
 	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "symbol")
 	if err != nil {
-		return types.ZRC4Data{}, err
+		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&symbolRes, "symbol", res.Ret); err != nil {
-		return types.ZRC4Data{}, sdkerrors.Wrapf(
+		return types.ZRC20Data{}, sdkerrors.Wrapf(
 			types.ErrABIUnpack, "failed to unpack symbol: %s", err.Error(),
 		)
 	}
@@ -340,16 +340,16 @@ func (k Keeper) QueryZRC4Data(
 	// Decimals
 	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, ZERO_VALUE, nil, false, "decimals")
 	if err != nil {
-		return types.ZRC4Data{}, err
+		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&decimalRes, "decimals", res.Ret); err != nil {
-		return types.ZRC4Data{}, sdkerrors.Wrapf(
+		return types.ZRC20Data{}, sdkerrors.Wrapf(
 			types.ErrABIUnpack, "failed to unpack decimals: %s", err.Error(),
 		)
 	}
 
-	return types.NewZRC4Data(nameRes.Value, symbolRes.Value, decimalRes.Value), nil
+	return types.NewZRC20Data(nameRes.Value, symbolRes.Value, decimalRes.Value), nil
 }
 
 // BalanceOfZRC4 queries an account's balance for a given ZRC4 contract

@@ -27,5 +27,5 @@ interface IZRC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Deposit(bytes from, address indexed to, uint256 value);
-    event Withdrawal(address indexed from, bytes to, uint256 value);
+    event Withdrawal(address indexed from, bytes to, uint256 value, uint256 gasFee, uint256 protocolFlatFee);
 }

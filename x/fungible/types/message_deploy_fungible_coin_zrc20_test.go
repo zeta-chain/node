@@ -11,18 +11,18 @@ import (
 func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgDeployFungibleCoinZRC4
+		msg  MsgDeployFungibleCoinZRC20
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgDeployFungibleCoinZRC4{
+			msg: MsgDeployFungibleCoinZRC20{
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgDeployFungibleCoinZRC4{
+			msg: MsgDeployFungibleCoinZRC20{
 				Creator: sample.AccAddress(),
 			},
 		},

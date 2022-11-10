@@ -14,6 +14,7 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     uint256 public CHAIN_ID;
     CoinType public COIN_TYPE;
     uint256 public GAS_LIMIT;
+    uint256 public PROTOCOL_FLAT_FEE = 0;
 
     mapping(address => uint256) private _balances;
 
@@ -143,11 +144,11 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     // this function causes cctx module to send out outbound tx to the outbound chain
     // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
-        (address gasZRC4, uint256 gasFee)= withdrawGasFee();
-        require(IZRC20(gasZRC20).transferFrom(msg.sender, (FUNGIBLE_MODULE_ADDRESS), gasFee), "transfer gas fee failed");
+        (address gasZRC20, uint256 gasFee)= withdrawGasFee();
+        require(IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE), "transfer gas fee failed");
 
         _burn(msg.sender, amount);
-        emit Withdrawal(msg.sender, to, amount, gasFee);
+        emit Withdrawal(msg.sender, to, amount, gasFee, PROTOCOL_FLAT_FEE);
         return true;
     }
 
@@ -159,5 +160,10 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     function updateGasLimit(uint256 gasLimit) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         GAS_LIMIT = gasLimit;
+    }
+
+    function updateProtocolFlatFee(uint256 protocolFlatFee) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+        PROTOCOL_FLAT_FEE = protocolFlatFee;
     }
 }
