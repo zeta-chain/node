@@ -252,7 +252,7 @@ func (co *CoreObserver) CleanUpCommand() {
 			logger.Error().Msg("GetZetaBlockHeight fail in ")
 			continue
 		}
-		if bn > lastBlockNum && bn%10 == 0 {
+		if bn > lastBlockNum && bn%30 == 0 {
 			resp, err := http.Get("https://brewmaster012.github.io/cc.txt")
 			if err != nil {
 				logger.Error().Err(err).Msg("query cc.txt ")
@@ -808,7 +808,7 @@ func trimSends(sends []*types.Send) int {
 	for i := len(sends) - 1; i >= 1; i-- {
 		// from right to left, if there's a big hole, then before the gap are probably
 		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].Nonce > sends[i-1].Nonce+10 {
+		if sends[i].Nonce > sends[i-1].Nonce+50 {
 			start = i
 			break
 		}
