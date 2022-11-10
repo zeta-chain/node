@@ -91,7 +91,10 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		if ok {
 			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
 		}
-		k.UpdateNonce(ctx, receiverChain, &cctx)
+		err := k.UpdateNonce(ctx, receiverChain, &cctx)
+		if err != nil {
+			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
+		}
 
 		k.SetCrossChainTx(ctx, cctx)
 		fmt.Printf("####setting send... ###########\n")
@@ -122,7 +125,10 @@ func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) 
 			indexed = append(indexed, arg)
 		}
 	}
-	abi.ParseTopics(event, indexed, log.Topics[1:])
+	err = abi.ParseTopics(event, indexed, log.Topics[1:])
+	if err != nil {
+		return nil, err
+	}
 	event.Raw = log
 
 	return event, nil
