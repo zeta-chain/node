@@ -31944,9 +31944,9 @@ paths:
                   properties:
                     index:
                       type: string
-                    zRC4ContractAddress:
+                    zrc20ContractAddress:
                       type: string
-                    eRC20ContractAddress:
+                    erc20ContractAddress:
                       type: string
                     foreignChain:
                       type: string
@@ -32076,9 +32076,9 @@ paths:
                 properties:
                   index:
                     type: string
-                  zRC4ContractAddress:
+                  zrc20ContractAddress:
                     type: string
-                  eRC20ContractAddress:
+                  erc20ContractAddress:
                     type: string
                   foreignChain:
                     type: string
@@ -55651,9 +55651,9 @@ definitions:
     properties:
       index:
         type: string
-      zRC4ContractAddress:
+      zrc20ContractAddress:
         type: string
-      eRC20ContractAddress:
+      erc20ContractAddress:
         type: string
       foreignChain:
         type: string
@@ -55674,7 +55674,7 @@ definitions:
         title: |-
           - Gas: Ether, BNB, Matic, Klay, BTC, etc
            - ERC20: ERC20 token
-  zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC4Response:
+  zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response:
     type: object
   zetachain.zetacore.fungible.Params:
     type: object
@@ -55689,9 +55689,9 @@ definitions:
           properties:
             index:
               type: string
-            zRC4ContractAddress:
+            zrc20ContractAddress:
               type: string
-            eRC20ContractAddress:
+            erc20ContractAddress:
               type: string
             foreignChain:
               type: string
@@ -55745,9 +55745,9 @@ definitions:
         properties:
           index:
             type: string
-          zRC4ContractAddress:
+          zrc20ContractAddress:
             type: string
-          eRC20ContractAddress:
+          erc20ContractAddress:
             type: string
           foreignChain:
             type: string

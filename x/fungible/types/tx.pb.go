@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MsgDeployFungibleCoinZRC4 struct {
+type MsgDeployFungibleCoinZRC20 struct {
 	Creator      string          `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ERC20        string          `protobuf:"bytes,2,opt,name=ERC20,proto3" json:"ERC20,omitempty"`
 	ForeignChain string          `protobuf:"bytes,3,opt,name=foreignChain,proto3" json:"foreignChain,omitempty"`
@@ -39,18 +39,18 @@ type MsgDeployFungibleCoinZRC4 struct {
 	GasLimit     uint64          `protobuf:"varint,8,opt,name=gasLimit,proto3" json:"gasLimit,omitempty"`
 }
 
-func (m *MsgDeployFungibleCoinZRC4) Reset()         { *m = MsgDeployFungibleCoinZRC4{} }
-func (m *MsgDeployFungibleCoinZRC4) String() string { return proto.CompactTextString(m) }
-func (*MsgDeployFungibleCoinZRC4) ProtoMessage()    {}
-func (*MsgDeployFungibleCoinZRC4) Descriptor() ([]byte, []int) {
+func (m *MsgDeployFungibleCoinZRC20) Reset()         { *m = MsgDeployFungibleCoinZRC20{} }
+func (m *MsgDeployFungibleCoinZRC20) String() string { return proto.CompactTextString(m) }
+func (*MsgDeployFungibleCoinZRC20) ProtoMessage()    {}
+func (*MsgDeployFungibleCoinZRC20) Descriptor() ([]byte, []int) {
 	return fileDescriptor_197fdedece277fa0, []int{0}
 }
-func (m *MsgDeployFungibleCoinZRC4) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeployFungibleCoinZRC20) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDeployFungibleCoinZRC4) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeployFungibleCoinZRC20) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDeployFungibleCoinZRC4.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeployFungibleCoinZRC20.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -60,89 +60,89 @@ func (m *MsgDeployFungibleCoinZRC4) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgDeployFungibleCoinZRC4) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDeployFungibleCoinZRC4.Merge(m, src)
+func (m *MsgDeployFungibleCoinZRC20) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeployFungibleCoinZRC20.Merge(m, src)
 }
-func (m *MsgDeployFungibleCoinZRC4) XXX_Size() int {
+func (m *MsgDeployFungibleCoinZRC20) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDeployFungibleCoinZRC4) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDeployFungibleCoinZRC4.DiscardUnknown(m)
+func (m *MsgDeployFungibleCoinZRC20) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeployFungibleCoinZRC20.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDeployFungibleCoinZRC4 proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeployFungibleCoinZRC20 proto.InternalMessageInfo
 
-func (m *MsgDeployFungibleCoinZRC4) GetCreator() string {
+func (m *MsgDeployFungibleCoinZRC20) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetERC20() string {
+func (m *MsgDeployFungibleCoinZRC20) GetERC20() string {
 	if m != nil {
 		return m.ERC20
 	}
 	return ""
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetForeignChain() string {
+func (m *MsgDeployFungibleCoinZRC20) GetForeignChain() string {
 	if m != nil {
 		return m.ForeignChain
 	}
 	return ""
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetDecimals() uint32 {
+func (m *MsgDeployFungibleCoinZRC20) GetDecimals() uint32 {
 	if m != nil {
 		return m.Decimals
 	}
 	return 0
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetName() string {
+func (m *MsgDeployFungibleCoinZRC20) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetSymbol() string {
+func (m *MsgDeployFungibleCoinZRC20) GetSymbol() string {
 	if m != nil {
 		return m.Symbol
 	}
 	return ""
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetCoinType() common.CoinType {
+func (m *MsgDeployFungibleCoinZRC20) GetCoinType() common.CoinType {
 	if m != nil {
 		return m.CoinType
 	}
 	return common.CoinType_Zeta
 }
 
-func (m *MsgDeployFungibleCoinZRC4) GetGasLimit() uint64 {
+func (m *MsgDeployFungibleCoinZRC20) GetGasLimit() uint64 {
 	if m != nil {
 		return m.GasLimit
 	}
 	return 0
 }
 
-type MsgDeployFungibleCoinZRC4Response struct {
+type MsgDeployFungibleCoinZRC20Response struct {
 }
 
-func (m *MsgDeployFungibleCoinZRC4Response) Reset()         { *m = MsgDeployFungibleCoinZRC4Response{} }
-func (m *MsgDeployFungibleCoinZRC4Response) String() string { return proto.CompactTextString(m) }
-func (*MsgDeployFungibleCoinZRC4Response) ProtoMessage()    {}
-func (*MsgDeployFungibleCoinZRC4Response) Descriptor() ([]byte, []int) {
+func (m *MsgDeployFungibleCoinZRC20Response) Reset()         { *m = MsgDeployFungibleCoinZRC20Response{} }
+func (m *MsgDeployFungibleCoinZRC20Response) String() string { return proto.CompactTextString(m) }
+func (*MsgDeployFungibleCoinZRC20Response) ProtoMessage()    {}
+func (*MsgDeployFungibleCoinZRC20Response) Descriptor() ([]byte, []int) {
 	return fileDescriptor_197fdedece277fa0, []int{1}
 }
-func (m *MsgDeployFungibleCoinZRC4Response) XXX_Unmarshal(b []byte) error {
+func (m *MsgDeployFungibleCoinZRC20Response) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDeployFungibleCoinZRC4Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgDeployFungibleCoinZRC20Response) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDeployFungibleCoinZRC4Response.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgDeployFungibleCoinZRC20Response.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -152,49 +152,50 @@ func (m *MsgDeployFungibleCoinZRC4Response) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *MsgDeployFungibleCoinZRC4Response) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDeployFungibleCoinZRC4Response.Merge(m, src)
+func (m *MsgDeployFungibleCoinZRC20Response) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeployFungibleCoinZRC20Response.Merge(m, src)
 }
-func (m *MsgDeployFungibleCoinZRC4Response) XXX_Size() int {
+func (m *MsgDeployFungibleCoinZRC20Response) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDeployFungibleCoinZRC4Response) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDeployFungibleCoinZRC4Response.DiscardUnknown(m)
+func (m *MsgDeployFungibleCoinZRC20Response) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeployFungibleCoinZRC20Response.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDeployFungibleCoinZRC4Response proto.InternalMessageInfo
+var xxx_messageInfo_MsgDeployFungibleCoinZRC20Response proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgDeployFungibleCoinZRC4)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC4")
-	proto.RegisterType((*MsgDeployFungibleCoinZRC4Response)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC4Response")
+	proto.RegisterType((*MsgDeployFungibleCoinZRC20)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20")
+	proto.RegisterType((*MsgDeployFungibleCoinZRC20Response)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response")
 }
 
 func init() { proto.RegisterFile("fungible/tx.proto", fileDescriptor_197fdedece277fa0) }
 
 var fileDescriptor_197fdedece277fa0 = []byte{
-	// 352 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0x3d, 0x4f, 0xc3, 0x30,
-	0x14, 0xac, 0xfb, 0x8d, 0x05, 0x08, 0x0c, 0xaa, 0x4c, 0x91, 0xa2, 0x50, 0x96, 0x0c, 0x10, 0xa3,
-	0x82, 0x18, 0x19, 0x08, 0x20, 0x21, 0xd1, 0xc5, 0x62, 0xea, 0x96, 0x04, 0x37, 0xb5, 0x94, 0xd8,
-	0x51, 0x9c, 0x4a, 0x0d, 0x1b, 0xff, 0xa0, 0x23, 0x3f, 0x89, 0xb1, 0x23, 0x23, 0x6a, 0xff, 0x08,
-	0x8a, 0x9b, 0x14, 0x31, 0x94, 0x81, 0xc9, 0xef, 0xce, 0xef, 0x7c, 0xcf, 0xa7, 0x07, 0xf7, 0x47,
-	0x13, 0x11, 0x70, 0x2f, 0x64, 0x24, 0x9d, 0xda, 0x71, 0x22, 0x53, 0x89, 0x8e, 0x5f, 0x59, 0xea,
-	0xfa, 0x63, 0x97, 0x0b, 0x5b, 0x57, 0x32, 0x61, 0x76, 0xd9, 0xd5, 0x3d, 0xf0, 0x65, 0x14, 0x49,
-	0x41, 0x56, 0xc7, 0x4a, 0xd1, 0x7b, 0xab, 0xc2, 0xa3, 0x81, 0x0a, 0xee, 0x58, 0x1c, 0xca, 0xec,
-	0xa1, 0x68, 0x75, 0x24, 0x17, 0x43, 0xea, 0x5c, 0x21, 0x0c, 0x5b, 0x7e, 0xc2, 0xdc, 0x54, 0x26,
-	0x18, 0x98, 0xc0, 0xda, 0xa2, 0x25, 0x44, 0x87, 0xb0, 0x71, 0x4f, 0x9d, 0xfe, 0x05, 0xae, 0x6a,
-	0x7e, 0x05, 0x50, 0x0f, 0x6e, 0x8f, 0x64, 0xc2, 0x78, 0x20, 0x9c, 0x7c, 0x08, 0x5c, 0xd3, 0x97,
-	0xbf, 0x38, 0xd4, 0x85, 0xed, 0x17, 0xe6, 0xf3, 0xc8, 0x0d, 0x15, 0xae, 0x9b, 0xc0, 0xda, 0xa1,
-	0x6b, 0x8c, 0x10, 0xac, 0x0b, 0x37, 0x62, 0xb8, 0xa1, 0x75, 0xba, 0x46, 0x1d, 0xd8, 0x54, 0x59,
-	0xe4, 0xc9, 0x10, 0x37, 0x35, 0x5b, 0x20, 0x74, 0x06, 0xdb, 0xbe, 0xe4, 0xe2, 0x39, 0x8b, 0x19,
-	0x6e, 0x99, 0xc0, 0xda, 0xed, 0xef, 0xd9, 0xc5, 0xd7, 0x9c, 0x82, 0xa7, 0xeb, 0x8e, 0xdc, 0x35,
-	0x70, 0xd5, 0x13, 0x8f, 0x78, 0x8a, 0xdb, 0x26, 0xb0, 0xea, 0x74, 0x8d, 0x7b, 0xa7, 0xf0, 0x64,
-	0x63, 0x04, 0x94, 0xa9, 0x58, 0x0a, 0xc5, 0xfa, 0xef, 0x00, 0xd6, 0x06, 0x2a, 0x40, 0x33, 0x00,
-	0x3b, 0x1b, 0xd2, 0xba, 0xb6, 0xff, 0x88, 0xdf, 0xde, 0x68, 0xd1, 0xbd, 0xf9, 0x9f, 0xae, 0x1c,
-	0xed, 0xf6, 0xf1, 0x63, 0x61, 0x80, 0xf9, 0xc2, 0x00, 0x5f, 0x0b, 0x03, 0xcc, 0x96, 0x46, 0x65,
-	0xbe, 0x34, 0x2a, 0x9f, 0x4b, 0xa3, 0x32, 0x24, 0x01, 0x4f, 0xc7, 0x13, 0x2f, 0xcf, 0x85, 0xe4,
-	0x2f, 0x9f, 0x6b, 0x13, 0x52, 0x9a, 0x90, 0x29, 0xf9, 0xd9, 0xa1, 0x2c, 0x66, 0xca, 0x6b, 0xea,
-	0xad, 0xb8, 0xfc, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x54, 0x91, 0x96, 0xad, 0x5c, 0x02, 0x00, 0x00,
+	// 354 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0xbd, 0x4e, 0xf3, 0x30,
+	0x14, 0xad, 0xfb, 0xff, 0x59, 0x1f, 0x08, 0x0c, 0x02, 0x2b, 0x48, 0x51, 0x14, 0x31, 0x64, 0x80,
+	0x18, 0x95, 0x81, 0x11, 0x89, 0x00, 0x12, 0x12, 0x5d, 0x22, 0xa6, 0x6e, 0x49, 0x70, 0x53, 0x4b,
+	0x89, 0x1d, 0xc5, 0xae, 0xd4, 0x30, 0xf2, 0x04, 0x48, 0x8c, 0xbc, 0x10, 0x63, 0x47, 0x46, 0xd4,
+	0xbe, 0x08, 0x8a, 0x9b, 0x14, 0x31, 0x94, 0x81, 0x29, 0xf7, 0x9c, 0x9c, 0xeb, 0x73, 0x7d, 0x7c,
+	0xe1, 0xee, 0x78, 0xca, 0x63, 0x16, 0x26, 0x94, 0xa8, 0x99, 0x9b, 0xe5, 0x42, 0x09, 0x74, 0xf4,
+	0x44, 0x55, 0x10, 0x4d, 0x02, 0xc6, 0x5d, 0x5d, 0x89, 0x9c, 0xba, 0xb5, 0xca, 0xd8, 0x8b, 0x44,
+	0x9a, 0x0a, 0x4e, 0x56, 0x9f, 0x55, 0x87, 0xfd, 0xdc, 0x84, 0xc6, 0x50, 0xc6, 0xd7, 0x34, 0x4b,
+	0x44, 0x71, 0x5b, 0x49, 0x3d, 0xc1, 0xf8, 0xc8, 0xf7, 0x06, 0x67, 0x08, 0xc3, 0x5e, 0x94, 0xd3,
+	0x40, 0x89, 0x1c, 0x03, 0x0b, 0x38, 0xff, 0xfc, 0x1a, 0xa2, 0x7d, 0xd8, 0xb9, 0x29, 0x25, 0xb8,
+	0xa9, 0xf9, 0x15, 0x40, 0x36, 0xfc, 0x3f, 0x16, 0x39, 0x65, 0x31, 0xf7, 0xca, 0x29, 0x70, 0x4b,
+	0xff, 0xfc, 0xc1, 0x21, 0x03, 0xf6, 0x1f, 0x69, 0xc4, 0xd2, 0x20, 0x91, 0xb8, 0x6d, 0x01, 0x67,
+	0xcb, 0x5f, 0x63, 0x84, 0x60, 0x9b, 0x07, 0x29, 0xc5, 0x1d, 0xdd, 0xa7, 0x6b, 0x74, 0x00, 0xbb,
+	0xb2, 0x48, 0x43, 0x91, 0xe0, 0xae, 0x66, 0x2b, 0x84, 0x4e, 0x60, 0x3f, 0x12, 0x8c, 0x3f, 0x14,
+	0x19, 0xc5, 0x3d, 0x0b, 0x38, 0xdb, 0x83, 0x1d, 0xb7, 0xba, 0x9b, 0x57, 0xf1, 0xfe, 0x5a, 0x51,
+	0xba, 0xc6, 0x81, 0xbc, 0x67, 0x29, 0x53, 0xb8, 0x6f, 0x01, 0xa7, 0xed, 0xaf, 0xb1, 0x7d, 0x0c,
+	0xed, 0xcd, 0x19, 0xf8, 0x54, 0x66, 0x82, 0x4b, 0x3a, 0x78, 0x03, 0xb0, 0x35, 0x94, 0x31, 0x7a,
+	0x05, 0xf0, 0x70, 0x53, 0x5e, 0x17, 0xee, 0x2f, 0x2f, 0xe0, 0x6e, 0x36, 0x31, 0x2e, 0xff, 0xd8,
+	0x58, 0x4f, 0x77, 0x75, 0xf7, 0xbe, 0x30, 0xc1, 0x7c, 0x61, 0x82, 0xcf, 0x85, 0x09, 0x5e, 0x96,
+	0x66, 0x63, 0xbe, 0x34, 0x1b, 0x1f, 0x4b, 0xb3, 0x31, 0x22, 0x31, 0x53, 0x93, 0x69, 0x58, 0x66,
+	0x43, 0xca, 0xa3, 0x4f, 0xb5, 0x0b, 0xa9, 0x5d, 0xc8, 0x8c, 0x7c, 0x2f, 0x52, 0x91, 0x51, 0x19,
+	0x76, 0xf5, 0x6a, 0x9c, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0xbb, 0xd7, 0x09, 0x07, 0x61, 0x02,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -209,7 +210,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	DeployFungibleCoinZRC4(ctx context.Context, in *MsgDeployFungibleCoinZRC4, opts ...grpc.CallOption) (*MsgDeployFungibleCoinZRC4Response, error)
+	DeployFungibleCoinZRC20(ctx context.Context, in *MsgDeployFungibleCoinZRC20, opts ...grpc.CallOption) (*MsgDeployFungibleCoinZRC20Response, error)
 }
 
 type msgClient struct {
@@ -220,9 +221,9 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) DeployFungibleCoinZRC4(ctx context.Context, in *MsgDeployFungibleCoinZRC4, opts ...grpc.CallOption) (*MsgDeployFungibleCoinZRC4Response, error) {
-	out := new(MsgDeployFungibleCoinZRC4Response)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/DeployFungibleCoinZRC4", in, out, opts...)
+func (c *msgClient) DeployFungibleCoinZRC20(ctx context.Context, in *MsgDeployFungibleCoinZRC20, opts ...grpc.CallOption) (*MsgDeployFungibleCoinZRC20Response, error) {
+	out := new(MsgDeployFungibleCoinZRC20Response)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/DeployFungibleCoinZRC20", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -231,35 +232,35 @@ func (c *msgClient) DeployFungibleCoinZRC4(ctx context.Context, in *MsgDeployFun
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	DeployFungibleCoinZRC4(context.Context, *MsgDeployFungibleCoinZRC4) (*MsgDeployFungibleCoinZRC4Response, error)
+	DeployFungibleCoinZRC20(context.Context, *MsgDeployFungibleCoinZRC20) (*MsgDeployFungibleCoinZRC20Response, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) DeployFungibleCoinZRC4(ctx context.Context, req *MsgDeployFungibleCoinZRC4) (*MsgDeployFungibleCoinZRC4Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeployFungibleCoinZRC4 not implemented")
+func (*UnimplementedMsgServer) DeployFungibleCoinZRC20(ctx context.Context, req *MsgDeployFungibleCoinZRC20) (*MsgDeployFungibleCoinZRC20Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeployFungibleCoinZRC20 not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_DeployFungibleCoinZRC4_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDeployFungibleCoinZRC4)
+func _Msg_DeployFungibleCoinZRC20_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeployFungibleCoinZRC20)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DeployFungibleCoinZRC4(ctx, in)
+		return srv.(MsgServer).DeployFungibleCoinZRC20(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.fungible.Msg/DeployFungibleCoinZRC4",
+		FullMethod: "/zetachain.zetacore.fungible.Msg/DeployFungibleCoinZRC20",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DeployFungibleCoinZRC4(ctx, req.(*MsgDeployFungibleCoinZRC4))
+		return srv.(MsgServer).DeployFungibleCoinZRC20(ctx, req.(*MsgDeployFungibleCoinZRC20))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -269,15 +270,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DeployFungibleCoinZRC4",
-			Handler:    _Msg_DeployFungibleCoinZRC4_Handler,
+			MethodName: "DeployFungibleCoinZRC20",
+			Handler:    _Msg_DeployFungibleCoinZRC20_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "fungible/tx.proto",
 }
 
-func (m *MsgDeployFungibleCoinZRC4) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeployFungibleCoinZRC20) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -287,12 +288,12 @@ func (m *MsgDeployFungibleCoinZRC4) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDeployFungibleCoinZRC4) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeployFungibleCoinZRC20) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDeployFungibleCoinZRC4) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeployFungibleCoinZRC20) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -350,7 +351,7 @@ func (m *MsgDeployFungibleCoinZRC4) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDeployFungibleCoinZRC4Response) Marshal() (dAtA []byte, err error) {
+func (m *MsgDeployFungibleCoinZRC20Response) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -360,12 +361,12 @@ func (m *MsgDeployFungibleCoinZRC4Response) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDeployFungibleCoinZRC4Response) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgDeployFungibleCoinZRC20Response) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDeployFungibleCoinZRC4Response) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgDeployFungibleCoinZRC20Response) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -384,7 +385,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgDeployFungibleCoinZRC4) Size() (n int) {
+func (m *MsgDeployFungibleCoinZRC20) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -422,7 +423,7 @@ func (m *MsgDeployFungibleCoinZRC4) Size() (n int) {
 	return n
 }
 
-func (m *MsgDeployFungibleCoinZRC4Response) Size() (n int) {
+func (m *MsgDeployFungibleCoinZRC20Response) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -437,7 +438,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgDeployFungibleCoinZRC4) Unmarshal(dAtA []byte) error {
+func (m *MsgDeployFungibleCoinZRC20) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -460,10 +461,10 @@ func (m *MsgDeployFungibleCoinZRC4) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC4: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC4: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -704,7 +705,7 @@ func (m *MsgDeployFungibleCoinZRC4) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDeployFungibleCoinZRC4Response) Unmarshal(dAtA []byte) error {
+func (m *MsgDeployFungibleCoinZRC20Response) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -727,10 +728,10 @@ func (m *MsgDeployFungibleCoinZRC4Response) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC4Response: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20Response: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC4Response: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20Response: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

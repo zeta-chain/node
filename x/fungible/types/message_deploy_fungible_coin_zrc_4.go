@@ -6,14 +6,14 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-const TypeMsgDeployFungibleCoinZRC4 = "deploy_fungible_coin_zrc_4"
+const TypeMsgDeployFungibleCoinZRC20 = "deploy_fungible_coin_zrc_20"
 
-var _ sdk.Msg = &MsgDeployFungibleCoinZRC4{}
+var _ sdk.Msg = &MsgDeployFungibleCoinZRC20{}
 
-func NewMsgDeployFungibleCoinZRC4(creator string, eRC20 string, foreignChain string, decimals uint32, name string, symbol string, coinType common.CoinType) *MsgDeployFungibleCoinZRC4 {
-	return &MsgDeployFungibleCoinZRC4{
+func NewMsgDeployFungibleCoinZRC20(creator string, ERC20 string, foreignChain string, decimals uint32, name string, symbol string, coinType common.CoinType) *MsgDeployFungibleCoinZRC20 {
+	return &MsgDeployFungibleCoinZRC20{
 		Creator:      creator,
-		ERC20:        eRC20,
+		ERC20:        ERC20,
 		ForeignChain: foreignChain,
 		Decimals:     decimals,
 		Name:         name,
@@ -22,15 +22,15 @@ func NewMsgDeployFungibleCoinZRC4(creator string, eRC20 string, foreignChain str
 	}
 }
 
-func (msg *MsgDeployFungibleCoinZRC4) Route() string {
+func (msg *MsgDeployFungibleCoinZRC20) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgDeployFungibleCoinZRC4) Type() string {
-	return TypeMsgDeployFungibleCoinZRC4
+func (msg *MsgDeployFungibleCoinZRC20) Type() string {
+	return TypeMsgDeployFungibleCoinZRC20
 }
 
-func (msg *MsgDeployFungibleCoinZRC4) GetSigners() []sdk.AccAddress {
+func (msg *MsgDeployFungibleCoinZRC20) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -38,12 +38,12 @@ func (msg *MsgDeployFungibleCoinZRC4) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgDeployFungibleCoinZRC4) GetSignBytes() []byte {
+func (msg *MsgDeployFungibleCoinZRC20) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgDeployFungibleCoinZRC4) ValidateBasic() error {
+func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

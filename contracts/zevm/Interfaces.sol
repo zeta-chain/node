@@ -9,7 +9,7 @@ interface ISystem {
     function gasCoinZRC4(uint256 chainID) external view returns (address);
 }
 
-interface IZRC4 {
+interface IZRC20 {
     function totalSupply() external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
     function transfer(address recipient, uint256 amount) external returns (bool);
@@ -38,7 +38,7 @@ abstract contract Context {
     }
 }
 
-interface IZRC4Metadata is IZRC4 {
+interface IZRC20Metadata is IZRC20 {
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
@@ -52,5 +52,5 @@ enum CoinType {
 }
 
 interface zContract {
-    function onCrossChainCall(address zrc4, uint256 amount, bytes calldata message) external;
+    function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external;
 }

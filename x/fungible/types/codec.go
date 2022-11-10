@@ -8,14 +8,14 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgDeployFungibleCoinZRC4{}, "fungible/DeployFungibleCoinZRC4", nil)
+	cdc.RegisterConcrete(&MsgDeployFungibleCoinZRC20{}, "fungible/DeployFungibleCoinZRC20", nil)
 	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgDeployFungibleCoinZRC4{},
+		&MsgDeployFungibleCoinZRC20{},
 	)
 
 	// this line is used by starport scaffolding # 3

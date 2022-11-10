@@ -88,18 +88,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			}
 			var tx *evmtypes.MsgEthereumTxResponse
 			if len(msg.Message) == 0 { // no message; transfer
-				tx, err = k.fungibleKeeper.DepositZRC4(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), to, amount)
+				tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
 				if err != nil {
-					errMsg := fmt.Sprintf("cannot DepositZRC4", err.Error())
+					errMsg := fmt.Sprintf("cannot DepositZRC20", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 					k.SetCrossChainTx(ctx, cctx)
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 				}
 			} else { // non-empty message = [contractaddress, calldata]
 				contract, data, err := parseContractAndData(msg.Message)
-				tx, err = k.fungibleKeeper.DepositZRC4AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.ZRC4ContractAddress), amount, contract, data)
+				tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
 				if err != nil { // prepare to revert
-					errMsg := fmt.Sprintf("cannot DepositZRC4", err.Error())
+					errMsg := fmt.Sprintf("cannot DepositZRC20", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 					k.SetCrossChainTx(ctx, cctx)
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil

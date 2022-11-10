@@ -85,9 +85,9 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
 	transferGasLimit := big.NewInt(21_000)
-	zrc4Addr, err := k.DeployZRC4Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
+	zrc4Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC4Contract")
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
@@ -101,7 +101,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	}
 	amount := big.NewInt(1e17)
 
-	k.DepositZRC4(ctx, zrc4Addr, types.ModuleAddressEVM, amount)
+	k.DepositZRC20(ctx, zrc4Addr, types.ModuleAddressEVM, amount)
 	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
 
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
@@ -127,7 +127,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get uniswap router abi")
 	}
-	zrc4ABI, err := contracts.ZRC4MetaData.GetAbi()
+	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc4")
 	}

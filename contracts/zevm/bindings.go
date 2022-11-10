@@ -1,5 +1,5 @@
-//go:generate sh -c "solc ZRC4.sol --combined-json abi,bin | jq '.contracts.\"ZRC4.sol:ZRC4\"'  > ZRC4.json"
-//go:generate sh -c "cat ZRC4.json | jq .abi | abigen --abi - --pkg zevm --type ZRC4 --out ZRC4.go"
+//go:generate sh -c "solc ZRC20.sol --combined-json abi,bin | jq '.contracts.\"ZRC20.sol:ZRC20\"'  > ZRC20.json"
+//go:generate sh -c "cat ZRC20.json | jq .abi | abigen --abi - --pkg zevm --type ZRC20 --out ZRC20.go"
 //go:generate sh -c "cat UniswapV2Factory.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Factory --out UniswapV2Factory.go"
 //go:generate sh -c "cat UniswapV2Router02.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Router02 --out UniswapV2Router02.go"
 //go:generate sh -c "cat WZETA.json | jq .abi | abigen --abi - --pkg zevm --type WZETA --out WZETA.go"
@@ -18,7 +18,7 @@ import (
 )
 
 // test the existence of the generated bindings
-var _ = ZRC4{}
+var _ = ZRC20{}
 var _ = UniswapV2Factory{}
 var _ = SystemContract{}
 var _ = UniswapV2Router02{}
@@ -29,8 +29,8 @@ type CompiledContract struct {
 }
 
 var (
-	//go:embed ZRC4.json
-	ZRC4JSON []byte // nolint: golint
+	//go:embed ZRC20.json
+	ZRC20JSON []byte // nolint: golint
 	//go:embed UniswapV2Factory.json
 	UniswapV2FactoryJSON []byte // nolint: golint
 	//go:embed WZETA.json
@@ -40,20 +40,20 @@ var (
 	//go:embed UniswapV2Router02.json
 	UniswapV2Router02JSON []byte // nolint: golint
 
-	ZRC4Contract              CompiledContract
+	ZRC20Contract             CompiledContract
 	UniswapV2FactoryContract  CompiledContract
 	WZETAContract             CompiledContract
 	SystemContractContract    CompiledContract
 	UniswapV2Router02Contract CompiledContract
 
 	// the module address of zetacore; no private exists.
-	ZRC4AdminAddress ethcommon.Address
+	ZRC20AdminAddress ethcommon.Address
 )
 
 func init() {
-	ZRC4AdminAddress = fungibletypes.ModuleAddressEVM
+	ZRC20AdminAddress = fungibletypes.ModuleAddressEVM
 
-	err := json.Unmarshal(ZRC4JSON, &ZRC4Contract)
+	err := json.Unmarshal(ZRC20JSON, &ZRC20Contract)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +74,7 @@ func init() {
 		panic(err)
 	}
 
-	if len(ZRC4Contract.Bin) == 0 {
+	if len(ZRC20Contract.Bin) == 0 {
 		panic("load contract failed")
 	}
 
