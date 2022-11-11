@@ -813,7 +813,7 @@ func trimSends(sends []*types.Send) int {
 	for i := len(sends) - 1; i >= 1; i-- {
 		// from right to left, if there's a big hole, then before the gap are probably
 		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].Nonce > sends[i-1].Nonce+30 {
+		if sends[i].Nonce > sends[i-1].Nonce+10 {
 			start = i
 			break
 		}
