@@ -363,6 +363,7 @@ func (co *CoreObserver) startSendScheduler() {
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
 	sendLists := make(map[common.Chain][]*types.Send)
+	totals := make(map[common.Chain]int64)
 
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
@@ -375,6 +376,7 @@ func (co *CoreObserver) startSendScheduler() {
 			chain := chains[bn%numChains]
 			sendList, total, err := co.bridge.GetAllPendingSendByChainSorted(chain.String())
 			sendLists[chain] = sendList
+			totals[chain] = total
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msgf("GetAllPendingSend chain %s", chain)
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
@@ -402,9 +404,10 @@ func (co *CoreObserver) startSendScheduler() {
 						if err != nil {
 							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
 						} else {
-							pTxs.Set(float64(len(sendList)))
+							pTxs.Set(float64(totals[chain]))
 						}
 					}
+
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
