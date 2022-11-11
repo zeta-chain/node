@@ -379,11 +379,12 @@ func (co *CoreObserver) startSendScheduler() {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
+			start := trimSends(sendList)
 			outSendList := make([]*types.Send, 0)
 			if bn%10 == 0 {
 				logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 			}
-			for idx, send := range sendList {
+			for idx, send := range sendList[start:] {
 				ob, err := co.getTargetChainOb(send)
 				if err != nil {
 					logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
