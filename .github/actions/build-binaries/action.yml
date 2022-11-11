@@ -19,17 +19,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set Up Go 
-      # Optionally install a specific version of Go
-      # Only use if go has not been installed in a previous step of the calling workflow
-      if : ${{ inputs.go-version != '' }} 
-      uses: actions/setup-go@v3
-      with:
-        go-version: ${{ inputs.go-version }}  
+    # - name: Set Up Go 
+    #   # Optionally install a specific version of Go
+    #   # Only use if go has not been installed in a previous step of the calling workflow
+    #   if : ${{ inputs.go-version != '' }} 
+    #   uses: actions/setup-go@v3
+    #   with:
+    #     go-version: ${{ inputs.go-version }}  
 
-    - run: |
-        echo Running ZetaChain Build Action
-      shell: bash
+    # - run: |
+    #     echo Running ZetaChain Build Action
+    #   shell: bash
+
+    # - name: build zetacored and zetaclientd
+    #   run: ${GITHUB_ACTION_PATH}/build.sh
+    #   shell: bash
 
     - name: build zetacored and zetaclientd
       run: |
@@ -45,14 +49,14 @@ runs:
 
     - name: Cosmovisor
       run: |
-        go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
       shell: bash
 
-    - name: Run Build tests
-      run: ${GITHUB_ACTION_PATH}/test.sh
-      if: ${{ inputs.run-tests == 'true' }}
-      shell: bash
+    # - name: Run Build tests
+    #   run: ${GITHUB_ACTION_PATH}/test.sh
+    #   if: ${{ inputs.run-tests == 'true' }}
+    #   shell: bash
 
 # TODO - Remove - Managed via Ansible
     # - name: Add network_values file
