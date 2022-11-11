@@ -386,7 +386,7 @@ func (co *CoreObserver) startSendScheduler() {
 			for _, chain := range chains {
 				outSendList := make([]*types.Send, 0)
 				sendList = sendLists[chain]
-				if len(sendLists) == 0 {
+				if len(sendList) == 0 {
 					continue
 				}
 				start := trimSends(sendList)
