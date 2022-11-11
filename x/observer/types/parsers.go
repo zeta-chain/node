@@ -59,8 +59,7 @@ func ParseCommonChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_Mumbai
 	case common.BaobabChain, common.Chain(strings.ToUpper(string(common.BaobabChain))):
 		return ObserverChain_Baobab
-	case common.RopstenChain, common.Chain(strings.ToUpper(string(common.RopstenChain))):
-		return ObserverChain_Ropsten
+
 	case common.GoerliChain, common.Chain(strings.ToUpper(string(common.GoerliChain))):
 		return ObserverChain_Goerli
 	case common.BSCTestnetChain, common.Chain(strings.ToUpper(string(common.BSCTestnetChain))):

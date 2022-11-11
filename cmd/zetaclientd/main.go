@@ -332,14 +332,12 @@ func updateConfig() {
 	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
 	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
 	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
 	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
 	updateEndpoint(common.Ganache, "GANACHE_ENDPOINT")
 
 	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
 	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
 	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
 	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
 	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
 
@@ -347,14 +345,12 @@ func updateConfig() {
 	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
 	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
 	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
 	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
 	updatePoolAddress("GANACHE_POOL_ADDRESS", common.Ganache)
 
 	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
 	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
 	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
 	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
 	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
 }

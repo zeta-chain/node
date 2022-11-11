@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func (ob *EVMChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) {
+func (ob *EVMChainClient) GetPromGauge(name string) (prometheus.Gauge, error) {
 	gauge, found := metrics.Gauges[ob.chain.String()+"_"+name]
 	if !found {
 		return nil, errors.New("gauge not found")
@@ -15,7 +15,20 @@ func (ob *EVMChainObserver) GetPromGauge(name string) (prometheus.Gauge, error) 
 	return gauge, nil
 }
 
-func (ob *EVMChainObserver) RegisterPromGauge(name string, help string) error {
+func (ob *EVMChainClient) RegisterPromGauge(name string, help string) error {
+	gaugeName := ob.chain.String() + "_" + name
+	return ob.metrics.RegisterGauge(gaugeName, help)
+}
+
+func (ob *BitcoinChainClient) GetPromGauge(name string) (prometheus.Gauge, error) {
+	gauge, found := metrics.Gauges[ob.chain.String()+"_"+name]
+	if !found {
+		return nil, errors.New("gauge not found")
+	}
+	return gauge, nil
+}
+
+func (ob *BitcoinChainClient) RegisterPromGauge(name string, help string) error {
 	gaugeName := ob.chain.String() + "_" + name
 	return ob.metrics.RegisterGauge(gaugeName, help)
 }
