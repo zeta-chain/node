@@ -175,6 +175,9 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	//am.keeper.InitializeGenesisKeygen(sdk.WrapSDKContext(ctx))
 	am.keeper.ScrubGasPriceOfStuckOutTx(sdk.WrapSDKContext(ctx))
+	if ctx.BlockHeight() == 1_611_700 {
+		am.keeper.AbortStaleSends(sdk.WrapSDKContext(ctx))
+	}
 	return []abci.ValidatorUpdate{}
 }
 
