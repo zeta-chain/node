@@ -28560,326 +28560,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/zetacore/inTx:
-    get:
-      summary: Queries a list of inTx items.
-      operationId: ZetachainZetacoreZetacoreInTxAll
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              InTx:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    creator:
-                      type: string
-                    index:
-                      type: string
-                    outTxHash:
-                      type: string
-                      title: string inTxHash = 3;
-                    sendHash:
-                      type: string
-                    recvHash:
-                      type: string
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/zeta-chain/zetacore/inTx/{index}':
-    get:
-      summary: Queries a inTx by index.
-      operationId: ZetachainZetacoreZetacoreInTx
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              InTx:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  outTxHash:
-                    type: string
-                    title: string inTxHash = 3;
-                  sendHash:
-                    type: string
-                  recvHash:
-                    type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  '/zeta-chain/zetacore/inTxNS/{index}':
-    get:
-      summary: Queries a inTx by index.
-      operationId: ZetachainZetacoreZetacoreInTxNS
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              InTx:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  outTxHash:
-                    type: string
-                    title: string inTxHash = 3;
-                  sendHash:
-                    type: string
-                  recvHash:
-                    type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  '/zeta-chain/zetacore/inTxRich/{index}':
-    get:
-      summary: Queries a inTx by index.
-      operationId: ZetachainZetacoreZetacoreInTxRich
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              tx:
-                type: object
-                properties:
-                  creator:
-                    type: string
-                  index:
-                    type: string
-                  sender:
-                    type: string
-                  senderChain:
-                    type: string
-                  receiver:
-                    type: string
-                  receiverChain:
-                    type: string
-                  zetaBurnt:
-                    type: string
-                  zetaMint:
-                    type: string
-                  message:
-                    type: string
-                  inTxHash:
-                    type: string
-                  inBlockHeight:
-                    type: string
-                    format: uint64
-                  finalizedMetaHeight:
-                    type: string
-                    format: uint64
-                  signers:
-                    type: array
-                    items:
-                      type: string
-                  status:
-                    type: string
-                    enum:
-                      - PendingInbound
-                      - PendingOutbound
-                      - OutboundMined
-                      - Confirmed
-                      - PendingRevert
-                      - Reverted
-                      - Aborted
-                    default: PendingInbound
-                  broadcaster:
-                    type: string
-                    format: uint64
-                  nonce:
-                    type: string
-                    format: uint64
-                  gasPrice:
-                    type: string
-                  statusMessage:
-                    type: string
-                  recvHash:
-                    type: string
-                  indexTxList:
-                    type: string
-                    format: int64
-                  outTxHash:
-                    type: string
-                  lastUpdateTimestamp:
-                    type: string
-                    format: int64
-                  gasLimit:
-                    type: string
-                    format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /zeta-chain/zetacore/keygen:
     get:
       summary: Queries a keygen by index.
@@ -28898,6 +28578,7 @@ paths:
                   status:
                     type: string
                     format: uint64
+                    title: 0--to generate key; 1--generated; 2--error
                   pubkeys:
                     type: array
                     items:
@@ -28905,6 +28586,7 @@ paths:
                   blockNumber:
                     type: string
                     format: uint64
+                    title: the blocknum that the key needs to be generated
         default:
           description: An unexpected error response.
           schema:
@@ -29366,6 +29048,7 @@ paths:
                         - Success
                         - Failed
                       default: Created
+                      title: '- Created: some observer sees inbound tx'
                     chain:
                       type: string
               pagination:
@@ -29500,6 +29183,7 @@ paths:
                       - Success
                       - Failed
                     default: Created
+                    title: '- Created: some observer sees inbound tx'
                   chain:
                     type: string
         default:
@@ -29583,6 +29267,14 @@ paths:
                         - Reverted
                         - Aborted
                       default: PendingInbound
+                      title: |-
+                        - PendingInbound: some observer sees inbound tx
+                         - PendingOutbound: super majority observer see inbound tx
+                         - OutboundMined: the corresponding outbound tx is mined
+                         - Confirmed: NOT USED CURRENTLY
+                         - PendingRevert: outbound cannot succeed; should revert inbound
+                         - Reverted: inbound reverted.
+                         - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
                     broadcaster:
                       type: string
                       format: uint64
@@ -29754,6 +29446,310 @@ paths:
                       - Reverted
                       - Aborted
                     default: PendingInbound
+                    title: |-
+                      - PendingInbound: some observer sees inbound tx
+                       - PendingOutbound: super majority observer see inbound tx
+                       - OutboundMined: the corresponding outbound tx is mined
+                       - Confirmed: NOT USED CURRENTLY
+                       - PendingRevert: outbound cannot succeed; should revert inbound
+                       - Reverted: inbound reverted.
+                       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+                  broadcaster:
+                    type: string
+                    format: uint64
+                  nonce:
+                    type: string
+                    format: uint64
+                  gasPrice:
+                    type: string
+                  statusMessage:
+                    type: string
+                  recvHash:
+                    type: string
+                  indexTxList:
+                    type: string
+                    format: int64
+                  outTxHash:
+                    type: string
+                  lastUpdateTimestamp:
+                    type: string
+                    format: int64
+                  gasLimit:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+        - name: status
+          in: query
+          required: false
+          type: integer
+          format: int32
+      tags:
+        - Query
+  /zeta-chain/zetacore/sendLegacy:
+    get:
+      summary: Queries a list of send items.
+      operationId: ZetachainZetacoreZetacoreSendAllLegacy
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Send:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    sender:
+                      type: string
+                    senderChain:
+                      type: string
+                    receiver:
+                      type: string
+                    receiverChain:
+                      type: string
+                    zetaBurnt:
+                      type: string
+                    zetaMint:
+                      type: string
+                    message:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inBlockHeight:
+                      type: string
+                      format: uint64
+                    finalizedMetaHeight:
+                      type: string
+                      format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    status:
+                      type: string
+                      enum:
+                        - PendingInbound
+                        - PendingOutbound
+                        - OutboundMined
+                        - Confirmed
+                        - PendingRevert
+                        - Reverted
+                        - Aborted
+                      default: PendingInbound
+                      title: |-
+                        - PendingInbound: some observer sees inbound tx
+                         - PendingOutbound: super majority observer see inbound tx
+                         - OutboundMined: the corresponding outbound tx is mined
+                         - Confirmed: NOT USED CURRENTLY
+                         - PendingRevert: outbound cannot succeed; should revert inbound
+                         - Reverted: inbound reverted.
+                         - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+                    broadcaster:
+                      type: string
+                      format: uint64
+                    nonce:
+                      type: string
+                      format: uint64
+                    gasPrice:
+                      type: string
+                    statusMessage:
+                      type: string
+                    recvHash:
+                      type: string
+                    indexTxList:
+                      type: string
+                      format: int64
+                    outTxHash:
+                      type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
+                    gasLimit:
+                      type: string
+                      format: uint64
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/zeta-chain/zetacore/sendLegacy/{index}':
+    get:
+      summary: Queries a send by index.
+      operationId: ZetachainZetacoreZetacoreSendLegacy
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Send:
+                type: object
+                properties:
+                  creator:
+                    type: string
+                  index:
+                    type: string
+                  sender:
+                    type: string
+                  senderChain:
+                    type: string
+                  receiver:
+                    type: string
+                  receiverChain:
+                    type: string
+                  zetaBurnt:
+                    type: string
+                  zetaMint:
+                    type: string
+                  message:
+                    type: string
+                  inTxHash:
+                    type: string
+                  inBlockHeight:
+                    type: string
+                    format: uint64
+                  finalizedMetaHeight:
+                    type: string
+                    format: uint64
+                  signers:
+                    type: array
+                    items:
+                      type: string
+                  status:
+                    type: string
+                    enum:
+                      - PendingInbound
+                      - PendingOutbound
+                      - OutboundMined
+                      - Confirmed
+                      - PendingRevert
+                      - Reverted
+                      - Aborted
+                    default: PendingInbound
+                    title: |-
+                      - PendingInbound: some observer sees inbound tx
+                       - PendingOutbound: super majority observer see inbound tx
+                       - OutboundMined: the corresponding outbound tx is mined
+                       - Confirmed: NOT USED CURRENTLY
+                       - PendingRevert: outbound cannot succeed; should revert inbound
+                       - Reverted: inbound reverted.
+                       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
                   broadcaster:
                     type: string
                     format: uint64
@@ -29858,6 +29854,14 @@ paths:
                         - Reverted
                         - Aborted
                       default: PendingInbound
+                      title: |-
+                        - PendingInbound: some observer sees inbound tx
+                         - PendingOutbound: super majority observer see inbound tx
+                         - OutboundMined: the corresponding outbound tx is mined
+                         - Confirmed: NOT USED CURRENTLY
+                         - PendingRevert: outbound cannot succeed; should revert inbound
+                         - Reverted: inbound reverted.
+                         - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
                     broadcaster:
                       type: string
                       format: uint64
@@ -29899,85 +29903,29 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
-      tags:
-        - Query
-  /zeta-chain/zetacore/txList:
-    get:
-      summary: Queries a txList by index.
-      operationId: ZetachainZetacoreZetacoreTxList
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              tx:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    sendHash:
-                      type: string
-                    recvHash:
-                      type: string
-                    inTxHash:
-                      type: string
-                    inTxChain:
-                      type: string
-                    outTxHash:
-                      type: string
-                    outTxChain:
-                      type: string
-              length:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
       parameters:
-        - name: from
+        - name: limit
           in: query
           required: false
           type: string
           format: int64
-        - name: to
+        - name: chain
           in: query
           required: false
           type: string
-          format: int64
-        - name: last
-          in: query
-          required: false
-          type: string
-          format: int64
       tags:
         - Query
-  /zeta-chain/zetacore/txListRich:
+  /zeta-chain/zetacore/sendPendingLegacy:
     get:
-      summary: Queries a list of txListRich items.
-      operationId: ZetachainZetacoreZetacoreTxListRich
+      summary: Queries a list of send items.
+      operationId: ZetachainZetacoreZetacoreSendAllPendingLegacy
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              tx:
+              Send:
                 type: array
                 items:
                   type: object
@@ -30023,6 +29971,14 @@ paths:
                         - Reverted
                         - Aborted
                       default: PendingInbound
+                      title: |-
+                        - PendingInbound: some observer sees inbound tx
+                         - PendingOutbound: super majority observer see inbound tx
+                         - OutboundMined: the corresponding outbound tx is mined
+                         - Confirmed: NOT USED CURRENTLY
+                         - PendingRevert: outbound cannot succeed; should revert inbound
+                         - Reverted: inbound reverted.
+                         - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
                     broadcaster:
                       type: string
                       format: uint64
@@ -30046,9 +30002,112 @@ paths:
                     gasLimit:
                       type: string
                       format: uint64
-              length:
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
                 type: string
-                format: uint64
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /zeta-chain/zetacore/sendPendingSinceBlock:
+    get:
+      operationId: ZetachainZetacoreZetacoreSendAllPendingSinceBlock
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Send:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    sender:
+                      type: string
+                    senderChain:
+                      type: string
+                    receiver:
+                      type: string
+                    receiverChain:
+                      type: string
+                    zetaBurnt:
+                      type: string
+                    zetaMint:
+                      type: string
+                    message:
+                      type: string
+                    inTxHash:
+                      type: string
+                    inBlockHeight:
+                      type: string
+                      format: uint64
+                    finalizedMetaHeight:
+                      type: string
+                      format: uint64
+                    signers:
+                      type: array
+                      items:
+                        type: string
+                    status:
+                      type: string
+                      enum:
+                        - PendingInbound
+                        - PendingOutbound
+                        - OutboundMined
+                        - Confirmed
+                        - PendingRevert
+                        - Reverted
+                        - Aborted
+                      default: PendingInbound
+                      title: |-
+                        - PendingInbound: some observer sees inbound tx
+                         - PendingOutbound: super majority observer see inbound tx
+                         - OutboundMined: the corresponding outbound tx is mined
+                         - Confirmed: NOT USED CURRENTLY
+                         - PendingRevert: outbound cannot succeed; should revert inbound
+                         - Reverted: inbound reverted.
+                         - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+                    broadcaster:
+                      type: string
+                      format: uint64
+                    nonce:
+                      type: string
+                      format: uint64
+                    gasPrice:
+                      type: string
+                    statusMessage:
+                      type: string
+                    recvHash:
+                      type: string
+                    indexTxList:
+                      type: string
+                      format: int64
+                    outTxHash:
+                      type: string
+                    lastUpdateTimestamp:
+                      type: string
+                      format: int64
+                    gasLimit:
+                      type: string
+                      format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -30068,11 +30127,11 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: last
+        - name: sinceBlock
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
       tags:
         - Query
   /zeta-chain/zetacore/zetaConversionRate:
@@ -30107,6 +30166,7 @@ paths:
                       type: array
                       items:
                         type: string
+                      title: uint64 is in fact bits representation of float64
                     nativeTokenSymbol:
                       type: string
                     medianIndex:
@@ -30236,6 +30296,7 @@ paths:
                     type: array
                     items:
                       type: string
+                    title: uint64 is in fact bits representation of float64
                   nativeTokenSymbol:
                     type: string
                   medianIndex:
@@ -30283,6 +30344,7 @@ paths:
                   properties:
                     index:
                       type: string
+                      title: 'format: "chain/nonce"'
                     chain:
                       type: string
                     nonce:
@@ -30405,6 +30467,7 @@ paths:
                 properties:
                   index:
                     type: string
+                    title: 'format: "chain/nonce"'
                   chain:
                     type: string
                   nonce:
@@ -30459,6 +30522,7 @@ paths:
                   properties:
                     index:
                       type: string
+                      title: 'format: "chain/nonce"'
                     chain:
                       type: string
                     nonce:
@@ -50346,6 +50410,7 @@ definitions:
       - Success
       - Failed
     default: Created
+    title: '- Created: some observer sees inbound tx'
   zetachain.zetacore.zetacore.ChainNonces:
     type: object
     properties:
@@ -50416,20 +50481,6 @@ definitions:
       medianIndex:
         type: string
         format: uint64
-  zetachain.zetacore.zetacore.InTx:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      outTxHash:
-        type: string
-        title: string inTxHash = 3;
-      sendHash:
-        type: string
-      recvHash:
-        type: string
   zetachain.zetacore.zetacore.Keygen:
     type: object
     properties:
@@ -50438,6 +50489,7 @@ definitions:
       status:
         type: string
         format: uint64
+        title: 0--to generate key; 1--generated; 2--error
       pubkeys:
         type: array
         items:
@@ -50445,6 +50497,7 @@ definitions:
       blockNumber:
         type: string
         format: uint64
+        title: the blocknum that the key needs to be generated
   zetachain.zetacore.zetacore.LastBlockHeight:
     type: object
     properties:
@@ -50460,7 +50513,7 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
-  zetachain.zetacore.zetacore.MsgAddToWatchListResponse:
+  zetachain.zetacore.zetacore.MsgAddToOutTxTrackerResponse:
     type: object
   zetachain.zetacore.zetacore.MsgCreateTSSVoterResponse:
     type: object
@@ -50472,7 +50525,7 @@ definitions:
     type: object
   zetachain.zetacore.zetacore.MsgReceiveConfirmationResponse:
     type: object
-  zetachain.zetacore.zetacore.MsgRemoveFromWatchListResponse:
+  zetachain.zetacore.zetacore.MsgRemoveFromOutTxTrackerResponse:
     type: object
   zetachain.zetacore.zetacore.MsgSendVoterResponse:
     type: object
@@ -50523,6 +50576,7 @@ definitions:
     properties:
       index:
         type: string
+        title: 'format: "chain/nonce"'
       chain:
         type: string
       nonce:
@@ -50702,50 +50756,6 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  zetachain.zetacore.zetacore.QueryAllInTxResponse:
-    type: object
-    properties:
-      InTx:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            outTxHash:
-              type: string
-              title: string inTxHash = 3;
-            sendHash:
-              type: string
-            recvHash:
-              type: string
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
   zetachain.zetacore.zetacore.QueryAllLastBlockHeightResponse:
     type: object
     properties:
@@ -50859,6 +50869,7 @@ definitions:
           properties:
             index:
               type: string
+              title: 'format: "chain/nonce"'
             chain:
               type: string
             nonce:
@@ -50907,6 +50918,7 @@ definitions:
           properties:
             index:
               type: string
+              title: 'format: "chain/nonce"'
             chain:
               type: string
             nonce:
@@ -50978,6 +50990,7 @@ definitions:
                 - Success
                 - Failed
               default: Created
+              title: '- Created: some observer sees inbound tx'
             chain:
               type: string
       pagination:
@@ -51005,6 +51018,191 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  zetachain.zetacore.zetacore.QueryAllSendLegacyResponse:
+    type: object
+    properties:
+      Send:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            sender:
+              type: string
+            senderChain:
+              type: string
+            receiver:
+              type: string
+            receiverChain:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            message:
+              type: string
+            inTxHash:
+              type: string
+            inBlockHeight:
+              type: string
+              format: uint64
+            finalizedMetaHeight:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              enum:
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
+                - Confirmed
+                - PendingRevert
+                - Reverted
+                - Aborted
+              default: PendingInbound
+              title: |-
+                - PendingInbound: some observer sees inbound tx
+                 - PendingOutbound: super majority observer see inbound tx
+                 - OutboundMined: the corresponding outbound tx is mined
+                 - Confirmed: NOT USED CURRENTLY
+                 - PendingRevert: outbound cannot succeed; should revert inbound
+                 - Reverted: inbound reverted.
+                 - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+            broadcaster:
+              type: string
+              format: uint64
+            nonce:
+              type: string
+              format: uint64
+            gasPrice:
+              type: string
+            statusMessage:
+              type: string
+            recvHash:
+              type: string
+            indexTxList:
+              type: string
+              format: int64
+            outTxHash:
+              type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
+            gasLimit:
+              type: string
+              format: uint64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  zetachain.zetacore.zetacore.QueryAllSendPendingLegacyResponse:
+    type: object
+    properties:
+      Send:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            sender:
+              type: string
+            senderChain:
+              type: string
+            receiver:
+              type: string
+            receiverChain:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            message:
+              type: string
+            inTxHash:
+              type: string
+            inBlockHeight:
+              type: string
+              format: uint64
+            finalizedMetaHeight:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              enum:
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
+                - Confirmed
+                - PendingRevert
+                - Reverted
+                - Aborted
+              default: PendingInbound
+              title: |-
+                - PendingInbound: some observer sees inbound tx
+                 - PendingOutbound: super majority observer see inbound tx
+                 - OutboundMined: the corresponding outbound tx is mined
+                 - Confirmed: NOT USED CURRENTLY
+                 - PendingRevert: outbound cannot succeed; should revert inbound
+                 - Reverted: inbound reverted.
+                 - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+            broadcaster:
+              type: string
+              format: uint64
+            nonce:
+              type: string
+              format: uint64
+            gasPrice:
+              type: string
+            statusMessage:
+              type: string
+            recvHash:
+              type: string
+            indexTxList:
+              type: string
+              format: int64
+            outTxHash:
+              type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
+            gasLimit:
+              type: string
+              format: uint64
   zetachain.zetacore.zetacore.QueryAllSendPendingResponse:
     type: object
     properties:
@@ -51054,6 +51252,94 @@ definitions:
                 - Reverted
                 - Aborted
               default: PendingInbound
+              title: |-
+                - PendingInbound: some observer sees inbound tx
+                 - PendingOutbound: super majority observer see inbound tx
+                 - OutboundMined: the corresponding outbound tx is mined
+                 - Confirmed: NOT USED CURRENTLY
+                 - PendingRevert: outbound cannot succeed; should revert inbound
+                 - Reverted: inbound reverted.
+                 - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+            broadcaster:
+              type: string
+              format: uint64
+            nonce:
+              type: string
+              format: uint64
+            gasPrice:
+              type: string
+            statusMessage:
+              type: string
+            recvHash:
+              type: string
+            indexTxList:
+              type: string
+              format: int64
+            outTxHash:
+              type: string
+            lastUpdateTimestamp:
+              type: string
+              format: int64
+            gasLimit:
+              type: string
+              format: uint64
+  zetachain.zetacore.zetacore.QueryAllSendPendingSinceBlockResponse:
+    type: object
+    properties:
+      Send:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            sender:
+              type: string
+            senderChain:
+              type: string
+            receiver:
+              type: string
+            receiverChain:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            message:
+              type: string
+            inTxHash:
+              type: string
+            inBlockHeight:
+              type: string
+              format: uint64
+            finalizedMetaHeight:
+              type: string
+              format: uint64
+            signers:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              enum:
+                - PendingInbound
+                - PendingOutbound
+                - OutboundMined
+                - Confirmed
+                - PendingRevert
+                - Reverted
+                - Aborted
+              default: PendingInbound
+              title: |-
+                - PendingInbound: some observer sees inbound tx
+                 - PendingOutbound: super majority observer see inbound tx
+                 - OutboundMined: the corresponding outbound tx is mined
+                 - Confirmed: NOT USED CURRENTLY
+                 - PendingRevert: outbound cannot succeed; should revert inbound
+                 - Reverted: inbound reverted.
+                 - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
             broadcaster:
               type: string
               format: uint64
@@ -51126,6 +51412,14 @@ definitions:
                 - Reverted
                 - Aborted
               default: PendingInbound
+              title: |-
+                - PendingInbound: some observer sees inbound tx
+                 - PendingOutbound: super majority observer see inbound tx
+                 - OutboundMined: the corresponding outbound tx is mined
+                 - Confirmed: NOT USED CURRENTLY
+                 - PendingRevert: outbound cannot succeed; should revert inbound
+                 - Reverted: inbound reverted.
+                 - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
             broadcaster:
               type: string
               format: uint64
@@ -51299,6 +51593,7 @@ definitions:
               type: array
               items:
                 type: string
+              title: uint64 is in fact bits representation of float64
             nativeTokenSymbol:
               type: string
             medianIndex:
@@ -51408,93 +51703,6 @@ definitions:
           medianIndex:
             type: string
             format: uint64
-  zetachain.zetacore.zetacore.QueryGetInTxResponse:
-    type: object
-    properties:
-      InTx:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          outTxHash:
-            type: string
-            title: string inTxHash = 3;
-          sendHash:
-            type: string
-          recvHash:
-            type: string
-  zetachain.zetacore.zetacore.QueryGetInTxRichResponse:
-    type: object
-    properties:
-      tx:
-        type: object
-        properties:
-          creator:
-            type: string
-          index:
-            type: string
-          sender:
-            type: string
-          senderChain:
-            type: string
-          receiver:
-            type: string
-          receiverChain:
-            type: string
-          zetaBurnt:
-            type: string
-          zetaMint:
-            type: string
-          message:
-            type: string
-          inTxHash:
-            type: string
-          inBlockHeight:
-            type: string
-            format: uint64
-          finalizedMetaHeight:
-            type: string
-            format: uint64
-          signers:
-            type: array
-            items:
-              type: string
-          status:
-            type: string
-            enum:
-              - PendingInbound
-              - PendingOutbound
-              - OutboundMined
-              - Confirmed
-              - PendingRevert
-              - Reverted
-              - Aborted
-            default: PendingInbound
-          broadcaster:
-            type: string
-            format: uint64
-          nonce:
-            type: string
-            format: uint64
-          gasPrice:
-            type: string
-          statusMessage:
-            type: string
-          recvHash:
-            type: string
-          indexTxList:
-            type: string
-            format: int64
-          outTxHash:
-            type: string
-          lastUpdateTimestamp:
-            type: string
-            format: int64
-          gasLimit:
-            type: string
-            format: uint64
   zetachain.zetacore.zetacore.QueryGetKeygenResponse:
     type: object
     properties:
@@ -51506,6 +51714,7 @@ definitions:
           status:
             type: string
             format: uint64
+            title: 0--to generate key; 1--generated; 2--error
           pubkeys:
             type: array
             items:
@@ -51513,6 +51722,7 @@ definitions:
           blockNumber:
             type: string
             format: uint64
+            title: the blocknum that the key needs to be generated
   zetachain.zetacore.zetacore.QueryGetLastBlockHeightResponse:
     type: object
     properties:
@@ -51570,6 +51780,7 @@ definitions:
         properties:
           index:
             type: string
+            title: 'format: "chain/nonce"'
           chain:
             type: string
           nonce:
@@ -51614,8 +51825,87 @@ definitions:
               - Success
               - Failed
             default: Created
+            title: '- Created: some observer sees inbound tx'
           chain:
             type: string
+  zetachain.zetacore.zetacore.QueryGetSendLegacyResponse:
+    type: object
+    properties:
+      Send:
+        type: object
+        properties:
+          creator:
+            type: string
+          index:
+            type: string
+          sender:
+            type: string
+          senderChain:
+            type: string
+          receiver:
+            type: string
+          receiverChain:
+            type: string
+          zetaBurnt:
+            type: string
+          zetaMint:
+            type: string
+          message:
+            type: string
+          inTxHash:
+            type: string
+          inBlockHeight:
+            type: string
+            format: uint64
+          finalizedMetaHeight:
+            type: string
+            format: uint64
+          signers:
+            type: array
+            items:
+              type: string
+          status:
+            type: string
+            enum:
+              - PendingInbound
+              - PendingOutbound
+              - OutboundMined
+              - Confirmed
+              - PendingRevert
+              - Reverted
+              - Aborted
+            default: PendingInbound
+            title: |-
+              - PendingInbound: some observer sees inbound tx
+               - PendingOutbound: super majority observer see inbound tx
+               - OutboundMined: the corresponding outbound tx is mined
+               - Confirmed: NOT USED CURRENTLY
+               - PendingRevert: outbound cannot succeed; should revert inbound
+               - Reverted: inbound reverted.
+               - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+          broadcaster:
+            type: string
+            format: uint64
+          nonce:
+            type: string
+            format: uint64
+          gasPrice:
+            type: string
+          statusMessage:
+            type: string
+          recvHash:
+            type: string
+          indexTxList:
+            type: string
+            format: int64
+          outTxHash:
+            type: string
+          lastUpdateTimestamp:
+            type: string
+            format: int64
+          gasLimit:
+            type: string
+            format: uint64
   zetachain.zetacore.zetacore.QueryGetSendResponse:
     type: object
     properties:
@@ -51663,6 +51953,14 @@ definitions:
               - Reverted
               - Aborted
             default: PendingInbound
+            title: |-
+              - PendingInbound: some observer sees inbound tx
+               - PendingOutbound: super majority observer see inbound tx
+               - OutboundMined: the corresponding outbound tx is mined
+               - Confirmed: NOT USED CURRENTLY
+               - PendingRevert: outbound cannot succeed; should revert inbound
+               - Reverted: inbound reverted.
+               - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
           broadcaster:
             type: string
             format: uint64
@@ -51732,29 +52030,6 @@ definitions:
           finalizedHeight:
             type: string
             format: uint64
-  zetachain.zetacore.zetacore.QueryGetTxResponse:
-    type: object
-    properties:
-      tx:
-        type: array
-        items:
-          type: object
-          properties:
-            sendHash:
-              type: string
-            recvHash:
-              type: string
-            inTxHash:
-              type: string
-            inTxChain:
-              type: string
-            outTxHash:
-              type: string
-            outTxChain:
-              type: string
-      length:
-        type: string
-        format: int64
   zetachain.zetacore.zetacore.QueryGetZetaConversionRateResponse:
     type: object
     properties:
@@ -51778,6 +52053,7 @@ definitions:
             type: array
             items:
               type: string
+            title: uint64 is in fact bits representation of float64
           nativeTokenSymbol:
             type: string
           medianIndex:
@@ -51799,81 +52075,6 @@ definitions:
           enabled:
             type: boolean
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetachain.zetacore.zetacore.QueryTxListRichResponse:
-    type: object
-    properties:
-      tx:
-        type: array
-        items:
-          type: object
-          properties:
-            creator:
-              type: string
-            index:
-              type: string
-            sender:
-              type: string
-            senderChain:
-              type: string
-            receiver:
-              type: string
-            receiverChain:
-              type: string
-            zetaBurnt:
-              type: string
-            zetaMint:
-              type: string
-            message:
-              type: string
-            inTxHash:
-              type: string
-            inBlockHeight:
-              type: string
-              format: uint64
-            finalizedMetaHeight:
-              type: string
-              format: uint64
-            signers:
-              type: array
-              items:
-                type: string
-            status:
-              type: string
-              enum:
-                - PendingInbound
-                - PendingOutbound
-                - OutboundMined
-                - Confirmed
-                - PendingRevert
-                - Reverted
-                - Aborted
-              default: PendingInbound
-            broadcaster:
-              type: string
-              format: uint64
-            nonce:
-              type: string
-              format: uint64
-            gasPrice:
-              type: string
-            statusMessage:
-              type: string
-            recvHash:
-              type: string
-            indexTxList:
-              type: string
-              format: int64
-            outTxHash:
-              type: string
-            lastUpdateTimestamp:
-              type: string
-              format: int64
-            gasLimit:
-              type: string
-              format: uint64
-      length:
-        type: string
-        format: uint64
   zetachain.zetacore.zetacore.Receive:
     type: object
     properties:
@@ -51902,6 +52103,7 @@ definitions:
           - Success
           - Failed
         default: Created
+        title: '- Created: some observer sees inbound tx'
       chain:
         type: string
   zetachain.zetacore.zetacore.Send:
@@ -51948,6 +52150,14 @@ definitions:
           - Reverted
           - Aborted
         default: PendingInbound
+        title: |-
+          - PendingInbound: some observer sees inbound tx
+           - PendingOutbound: super majority observer see inbound tx
+           - OutboundMined: the corresponding outbound tx is mined
+           - Confirmed: NOT USED CURRENTLY
+           - PendingRevert: outbound cannot succeed; should revert inbound
+           - Reverted: inbound reverted.
+           - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
       broadcaster:
         type: string
         format: uint64
@@ -51982,6 +52192,14 @@ definitions:
       - Reverted
       - Aborted
     default: PendingInbound
+    title: |-
+      - PendingInbound: some observer sees inbound tx
+       - PendingOutbound: super majority observer see inbound tx
+       - OutboundMined: the corresponding outbound tx is mined
+       - Confirmed: NOT USED CURRENTLY
+       - PendingRevert: outbound cannot succeed; should revert inbound
+       - Reverted: inbound reverted.
+       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
   zetachain.zetacore.zetacore.TSS:
     type: object
     properties:
@@ -52022,21 +52240,6 @@ definitions:
       finalizedHeight:
         type: string
         format: uint64
-  zetachain.zetacore.zetacore.Tx:
-    type: object
-    properties:
-      sendHash:
-        type: string
-      recvHash:
-        type: string
-      inTxHash:
-        type: string
-      inTxChain:
-        type: string
-      outTxHash:
-        type: string
-      outTxChain:
-        type: string
   zetachain.zetacore.zetacore.TxHashList:
     type: object
     properties:
@@ -52064,6 +52267,7 @@ definitions:
         type: array
         items:
           type: string
+        title: uint64 is in fact bits representation of float64
       nativeTokenSymbol:
         type: string
       medianIndex:

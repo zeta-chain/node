@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/zetacore/types"
+	"sort"
 )
 
 var (
@@ -88,6 +89,46 @@ func (k Keeper) RemoveSend(ctx sdk.Context, index string, status types.SendStatu
 }
 
 func (k Keeper) GetAllSend(ctx sdk.Context, status []types.SendStatus) []*types.Send {
+	var sends []*types.Send
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.Send
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			sends = append(sends, &val)
+		}
+	}
+	return sends
+}
+
+func (k Keeper) GetAllSendPendingByChainSorted(ctx sdk.Context, chain string) []*types.Send {
+	var sends []*types.Send
+	status := []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert}
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.Send
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			if (val.Status == types.SendStatus_PendingOutbound && val.ReceiverChain == chain) ||
+				(val.Status == types.SendStatus_PendingRevert && val.SenderChain == chain) {
+				sends = append(sends, &val)
+			}
+		}
+	}
+	sort.SliceStable(sends, func(i, j int) bool {
+		return sends[i].Nonce < sends[j].Nonce
+	})
+
+	return sends
+}
+
+func (k Keeper) GetAllSendSinceBlock(ctx sdk.Context, status []types.SendStatus) []*types.Send {
 	var sends []*types.Send
 	for _, s := range status {
 		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))

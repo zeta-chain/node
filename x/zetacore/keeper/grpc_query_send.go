@@ -59,9 +59,23 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	sends := k.GetAllSend(ctx, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
+	sends := k.GetAllSendPendingByChainSorted(ctx, req.Chain)
+	limit := req.Limit
+	if req.Limit <= 0 || req.Limit >= 1000 {
+		limit = 1000
+	}
 
-	return &types.QueryAllSendPendingResponse{Send: sends}, nil
+	return &types.QueryAllSendPendingResponse{Send: sends[:limit]}, nil
+}
+
+func (k Keeper) SendAllPendingSinceBlock(c context.Context, req *types.QueryAllSendPendingSinceBlockRequest) (*types.QueryAllSendPendingSinceBlockResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	sends := k.GetAllSendSinceBlock(ctx, []types.SendStatus{types.SendStatus_PendingOutbound, types.SendStatus_PendingRevert})
+
+	return &types.QueryAllSendPendingSinceBlockResponse{Send: sends}, nil
 }
 
 //Deprecated:SendAllLegacy

@@ -150,6 +150,10 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/sendPending";
 	}
 
+	rpc SendAllPendingSinceBlock(QueryAllSendPendingSinceBlockRequest) returns (QueryAllSendPendingSinceBlockResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/sendPendingSinceBlock";
+	}
+
 	// Queries a send by index.
 	rpc SendLegacy(QueryGetSendLegacyRequest) returns (QueryGetSendLegacyResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/sendLegacy/{index}";
@@ -401,10 +405,19 @@ message QueryAllSendResponse {
 }
 
 message QueryAllSendPendingRequest {
-
+	int64 limit = 1;
+	string chain = 2;
 }
 
 message QueryAllSendPendingResponse {
+	repeated Send Send = 1;
+}
+
+message QueryAllSendPendingSinceBlockRequest {
+	int64 sinceBlock = 1;
+}
+
+message QueryAllSendPendingSinceBlockResponse {
 	repeated Send Send = 1;
 }
 
