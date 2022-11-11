@@ -111,7 +111,7 @@ var Chains = map[string]*types.ChainETHish{
 	},
 
 	common.BTCTestnetChain.String(): {
-		Name:                     "BTCTestnet",
+		Name:                     "BTCTESTNET",
 		ConnectorContractAddress: "",
 		PoolContractAddress:      "",
 		PoolContract:             types.UniswapV3,
