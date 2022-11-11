@@ -25,6 +25,7 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, send.CctxStatus.Status))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
+	fmt.Println("SET CCTX", send.Index, send.CctxStatus.Status)
 	store.Set(types.KeyPrefix(send.Index), b)
 }
 
@@ -50,11 +51,14 @@ func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string, status types.C
 }
 
 func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status []types.CctxStatus) (val types.CrossChainTx, found bool) {
+	fmt.Println("GET INDEX :", index)
 	for _, s := range status {
 		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		fmt.Println("got store :", store, s)
 		send := store.Get(types.KeyPrefix(index))
 		if send != nil {
+			fmt.Println("got send :", send)
 			k.cdc.MustUnmarshal(send, &val)
 			return val, true
 		}
@@ -87,10 +91,8 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	}
 	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
-
 	store := ctx.KVStore(k.storeKey)
 	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
-
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
 		var send types.CrossChainTx
 		if err := k.cdc.Unmarshal(value, &send); err != nil {
@@ -99,23 +101,21 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 		sends = append(sends, &send)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
 	return &types.QueryAllCctxResponse{CrossChainTx: sends, Pagination: pageRes}, nil
 }
 
 func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.QueryGetCctxResponse, error) {
+	fmt.Println("Executing here ")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-
 	val, found := k.GetCctxByIndexAndStatuses(ctx, req.Index, types.AllStatus())
 	if !found {
-		return nil, status.Error(codes.InvalidArgument, "not found")
+		return &types.QueryGetCctxResponse{CrossChainTx: nil}, nil
 	}
 
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil

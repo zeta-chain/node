@@ -84,10 +84,6 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 // add 0.1gas/0.1wzeta to the pool
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
-	fmt.Println("Gas:", gasAssetName)
-	fmt.Println("Chain:", chain)
-	fmt.Println("Symbol:", symbol)
-	fmt.Println("name:", name)
 	transferGasLimit := big.NewInt(21_000)
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {

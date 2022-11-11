@@ -4,11 +4,10 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -28,10 +27,10 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
 	bankState := banktypes.GenesisState{}
-	evmState := evmtypes.GenesisState{}
+	//evmState := evmtypes.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankState))
-	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[evmtypes.ModuleName], &evmState))
+	//require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[evmtypes.ModuleName], &evmState))
 	amount, _ := sdk.NewIntFromString("100000000000000000000000000000000")
 	bankState.Balances = append(bankState.Balances, banktypes.Balance{
 		Address: fungibleModuleTypes.ModuleAddress.String(),
@@ -44,14 +43,13 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 			sdk.NewCoin("ETH", amount),
 		),
 	})
-	evmState.Accounts = append(evmState.Accounts, evmtypes.GenesisAccount{
-		Address: fungibleModuleTypes.ModuleAddressEVM.String(),
-		Code:    "",
-		Storage: evmtypes.Storage{
-			{Key: common.BytesToHash([]byte("key")).String(), Value: common.BytesToHash([]byte("value")).String()},
-		},
-	})
-	fmt.Println(fungibleModuleTypes.ModuleAddressEVM.String())
+	//evmState.Accounts = append(evmState.Accounts, evmtypes.GenesisAccount{
+	//	Address: fungibleModuleTypes.ModuleAddressEVM.String(),
+	//	Code:    "",
+	//	Storage: evmtypes.Storage{
+	//		{Key: common.BytesToHash([]byte("key")).String(), Value: common.BytesToHash([]byte("value")).String()},
+	//	},
+	//})
 	for i := 0; i < n; i++ {
 		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
 			Creator: "ANY",
@@ -72,15 +70,25 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	buf, err = cfg.Codec.MarshalJSON(&bankState)
 	require.NoError(t, err)
 	cfg.GenesisState[banktypes.ModuleName] = buf
-	buf, err = cfg.Codec.MarshalJSON(&evmState)
-	require.NoError(t, err)
-	cfg.GenesisState[evmtypes.ModuleName] = buf
-	return network.New(t, cfg), state.CrossChainTxs
+	//buf, err = cfg.Codec.MarshalJSON(&evmState)
+	//require.NoError(t, err)
+	//cfg.GenesisState[evmtypes.ModuleName] = buf
+
+	net := network.New(t, cfg)
+	_, err = net.WaitForHeight(1)
+	return net, state.CrossChainTxs
 }
 
 func TestShowSend(t *testing.T) {
 	net, objs := networkWithSendObjects(t, 2)
-
+	h, err := net.WaitForHeightWithTimeout(2, time.Minute*2)
+	//err := net.WaitForNextBlock()
+	//assert.NoError(t, err)
+	//err = net.WaitForNextBlock()
+	//assert.NoError(t, err)
+	//h, err := net.LatestHeight()
+	assert.NoError(t, err)
+	fmt.Println(h)
 	ctx := net.Validators[0].ClientCtx
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),

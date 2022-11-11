@@ -2,19 +2,20 @@ package network
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+
 	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ethhd "github.com/evmos/ethermint/crypto/hd"
-	"github.com/evmos/ethermint/testutil/network"
+
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	tmdb "github.com/tendermint/tm-db"
 
@@ -38,8 +39,9 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 	} else {
 		cfg = configs[0]
 	}
-	net, err := network.New(t, "~/.zetacored", cfg)
-	assert.NoError(t, err)
+	//cfg.KeyringOptions = []keyring.Option{evmhd.EthSecp256k1Option()}
+	//cfg.SigningAlgo = string(evmhd.EthSecp256k1Type)
+	net := network.New(t, cfg)
 	t.Cleanup(net.Cleanup)
 	return net
 }
@@ -74,7 +76,7 @@ func DefaultConfig() network.Config {
 		BondedTokens:    sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		PruningStrategy: storetypes.PruningOptionNothing,
 		CleanupDir:      true,
-		SigningAlgo:     string(ethhd.EthSecp256k1Type),
-		KeyringOptions:  []keyring.Option{ethhd.EthSecp256k1Option()},
+		SigningAlgo:     string(hd.Secp256k1Type),
+		KeyringOptions:  []keyring.Option{},
 	}
 }
