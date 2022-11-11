@@ -54,7 +54,7 @@ type OutTx struct {
 
 // Chain configuration struct
 // Filled with above constants depending on chain
-type EVMChainObserver struct {
+type EVMChainClient struct {
 	chain                     common.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
@@ -82,9 +82,11 @@ type EVMChainObserver struct {
 	logger                    zerolog.Logger
 }
 
+var _ ChainClient = (*EVMChainClient)(nil)
+
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainObserver, error) {
-	ob := EVMChainObserver{}
+func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainClient, error) {
+	ob := EVMChainClient{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
@@ -168,19 +170,19 @@ func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		ob.BuildReceiptsMap()
 
 	}
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlock())
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetBlockHeight())
 
 	return &ob, nil
 }
 
-func (ob *EVMChainObserver) Start() {
+func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
 }
 
-func (ob *EVMChainObserver) Stop() {
+func (ob *EVMChainClient) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
@@ -195,7 +197,7 @@ func (ob *EVMChainObserver) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found1 := ob.outTXConfirmedReceipts[nonce]
 	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
@@ -236,7 +238,7 @@ func (ob *EVMChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fro
 				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
+					if vLog.BlockNumber+ob.confCount < ob.GetBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -263,13 +265,13 @@ func (ob *EVMChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fro
 						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetBlockHeight()), ob.chain, nonce)
 					return true, false, nil
 				}
 				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetLastBlock() {
+					if vLog.BlockNumber+ob.confCount < ob.GetBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -294,7 +296,7 @@ func (ob *EVMChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fro
 						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlock()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetBlockHeight()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
@@ -315,7 +317,7 @@ func (ob *EVMChainObserver) IsSendOutTxProcessed(sendHash string, nonce int, fro
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
-func (ob *EVMChainObserver) observeOutTx() {
+func (ob *EVMChainClient) observeOutTx() {
 	logger := ob.logger
 	ticker := time.NewTicker(30 * time.Second)
 	for {
@@ -371,7 +373,7 @@ func (ob *EVMChainObserver) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *EVMChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
+func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
 	logger := ob.logger.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
 	if ob.outTXConfirmedReceipts[int(nonce)] != nil && ob.outTXConfirmedTransaction[int(nonce)] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
@@ -386,23 +388,23 @@ func (ob *EVMChainObserver) queryTxByHash(txHash string, nonce int64) (*ethtypes
 			logger.Warn().Err(err1).Msg("TransactionReceipt/TransactionByHash error")
 		}
 		return nil, nil, err1
-	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlock() {
-		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlock())
+	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetBlockHeight() {
+		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
 	} else { // confirmed outbound tx
 		return receipt, transaction, nil
 	}
 }
 
-func (ob *EVMChainObserver) setLastBlock(block uint64) {
+func (ob *EVMChainClient) SetBlockHeight(block uint64) {
 	atomic.StoreUint64(&ob.lastBlock, block)
 }
 
-func (ob *EVMChainObserver) GetLastBlock() uint64 {
+func (ob *EVMChainClient) GetBlockHeight() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
 }
 
-func (ob *EVMChainObserver) ExternalChainWatcher() {
+func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
 	for {
 		select {
@@ -419,7 +421,7 @@ func (ob *EVMChainObserver) ExternalChainWatcher() {
 	}
 }
 
-func (ob *EVMChainObserver) observeInTX() error {
+func (ob *EVMChainClient) observeInTX() error {
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
@@ -433,17 +435,17 @@ func (ob *EVMChainObserver) observeInTX() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= ob.GetLastBlock() {
+	if confirmedBlockNum <= ob.GetBlockHeight() {
 		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
-	lastBlock := ob.GetLastBlock()
+	lastBlock := ob.GetBlockHeight()
 	startBlock := lastBlock + 1
 	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlock()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
@@ -550,7 +552,7 @@ func (ob *EVMChainObserver) observeInTX() error {
 	// ============= end of query the incoming tx to TSS address ==============
 
 	//ob.LastBlock = toBlock
-	ob.setLastBlock(toBlock)
+	ob.SetBlockHeight(toBlock)
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
@@ -561,7 +563,7 @@ func (ob *EVMChainObserver) observeInTX() error {
 }
 
 // query the base gas price for the block number bn.
-func (ob *EVMChainObserver) GetBaseGasPrice() *big.Int {
+func (ob *EVMChainClient) GetBaseGasPrice() *big.Int {
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
 		ob.logger.Err(err).Msg("GetBaseGasPrice")
@@ -570,7 +572,7 @@ func (ob *EVMChainObserver) GetBaseGasPrice() *big.Int {
 	return gasPrice
 }
 
-func (ob *EVMChainObserver) PostNonceIfNotRecorded() error {
+func (ob *EVMChainClient) PostNonceIfNotRecorded() error {
 	logger := ob.logger
 	zetaClient := ob.zetaClient
 	evmClient := ob.EvmClient
@@ -607,7 +609,7 @@ func (ob *EVMChainObserver) PostNonceIfNotRecorded() error {
 	return nil
 }
 
-func (ob *EVMChainObserver) WatchGasPrice() {
+func (ob *EVMChainClient) WatchGasPrice() {
 	gasTicker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -624,7 +626,7 @@ func (ob *EVMChainObserver) WatchGasPrice() {
 	}
 }
 
-func (ob *EVMChainObserver) PostGasPrice() error {
+func (ob *EVMChainClient) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
@@ -754,7 +756,7 @@ func (ob *EVMChainObserver) PostGasPrice() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (ob *EVMChainObserver) getLastHeight() uint64 {
+func (ob *EVMChainClient) getLastHeight() uint64 {
 	lastheight, err := ob.zetaClient.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
 		ob.logger.Warn().Err(err).Msgf("getLastHeight")
@@ -763,7 +765,7 @@ func (ob *EVMChainObserver) getLastHeight() uint64 {
 	return lastheight.LastSendHeight
 }
 
-func (ob *EVMChainObserver) WatchExchangeRate() {
+func (ob *EVMChainClient) WatchExchangeRate() {
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -785,7 +787,7 @@ func (ob *EVMChainObserver) WatchExchangeRate() {
 	}
 }
 
-func (ob *EVMChainObserver) BuildBlockIndex(dbpath, chain string) error {
+func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 	logger := ob.logger
 	path := fmt.Sprintf("%s/%s", dbpath, chain) // e.g. ~/.zetaclient/ETH
 	db, err := leveldb.OpenFile(path, nil)
@@ -802,42 +804,42 @@ func (ob *EVMChainObserver) BuildBlockIndex(dbpath, chain string) error {
 			if err != nil {
 				return err
 			}
-			ob.setLastBlock(header.Number.Uint64())
+			ob.SetBlockHeight(header.Number.Uint64())
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return err
 			}
-			ob.setLastBlock(uint64(scanFromBlockInt))
+			ob.SetBlockHeight(uint64(scanFromBlockInt))
 		}
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
-			ob.setLastBlock(ob.getLastHeight())
+			ob.SetBlockHeight(ob.getLastHeight())
 			// if ZetaCore does not have last heard block height, then use current
-			if ob.GetLastBlock() == 0 {
+			if ob.GetBlockHeight() == 0 {
 				header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return err
 				}
-				ob.setLastBlock(header.Number.Uint64())
+				ob.SetBlockHeight(header.Number.Uint64())
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, ob.GetLastBlock())
+			n := binary.PutUvarint(buf2, ob.GetBlockHeight())
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
 			if err != nil {
 				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
 			lastBlock, _ := binary.Uvarint(buf)
-			ob.setLastBlock(lastBlock)
+			ob.SetBlockHeight(lastBlock)
 		}
 	}
 	return nil
 }
 
-func (ob *EVMChainObserver) BuildReceiptsMap() {
+func (ob *EVMChainClient) BuildReceiptsMap() {
 	logger := ob.logger
 	iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
 	for iter.Next() {
@@ -862,7 +864,7 @@ func (ob *EVMChainObserver) BuildReceiptsMap() {
 	}
 }
 
-func (ob *EVMChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *DummyZetaPriceQuerier) {
+func (ob *EVMChainClient) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *DummyZetaPriceQuerier) {
 	uniswapv3querier := &UniswapV3ZetaPriceQuerier{
 		UniswapV3Abi:        &uniswapV3ABI,
 		Client:              ob.EvmClient,
@@ -884,7 +886,7 @@ func (ob *EVMChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswap
 	return uniswapv3querier, uniswapv2querier, dummyQuerier
 }
 
-func (ob *EVMChainObserver) SetChainDetails(chain common.Chain,
+func (ob *EVMChainClient) SetChainDetails(chain common.Chain,
 	uniswapv3querier *UniswapV3ZetaPriceQuerier,
 	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
 	MinObInterval := 24
@@ -909,11 +911,6 @@ func (ob *EVMChainObserver) SetChainDetails(chain common.Chain,
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.RopstenChain:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.RopstenConfirmationCount
-		ob.BlockTime = config.RopstenBlockTime
-
 	case common.BTCTestnetChain:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BtcConfirmationCount
@@ -934,7 +931,7 @@ func (ob *EVMChainObserver) SetChainDetails(chain common.Chain,
 	}
 }
 
-func (ob *EVMChainObserver) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {
+func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv, err := strconv.Atoi(tracker.Nonce)

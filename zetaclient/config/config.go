@@ -110,16 +110,7 @@ var Chains = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://baobab-sh285ns91n5975.athens.zetachain.com",
 	},
-	common.RopstenChain.String(): {
-		Name:                     "ROPSTEN",
-		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
-		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
-		PoolContract:             types.UniswapV2,
-		ZETATokenContractAddress: "0x251685b8A1bC0ed343a016FcF1aB1B1f444E3bf4",
-		ChainID:                  big.NewInt(3),
-		BlockTime:                EthBlockTime,
-		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
-	},
+
 	common.BTCTestnetChain.String(): {
 		Name:                     "BTCTestnet",
 		ConnectorContractAddress: "",

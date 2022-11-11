@@ -48,9 +48,9 @@ func (cl *ChainETHish) Init() {
 
 	cl.context = context.TODO()
 
-	chain, err := zetaclient.NewChainObserver(cl.name, nil, cl.tss, "", nil)
+	chain, err := zetaclient.NewEVMChainClient(cl.name, nil, cl.tss, "", nil)
 	if err != nil {
-		log.Error().Err(err).Msg("NewChainObserver")
+		log.Error().Err(err).Msg("NewEVMChainClient")
 	}
 	cl.client = chain.EvmClient
 
