@@ -45,6 +45,7 @@ func (suite *JSONRpcClientTestSuite) TestBlockByHash() {
 
 	event, err := model.ParseRawEvents(rawEvents)
 	suite.Require().NoError(err)
+	suite.T().Logf("event: %v\n", event)
 
 	suite.Assert().Equal(expected, event.String())
 }
