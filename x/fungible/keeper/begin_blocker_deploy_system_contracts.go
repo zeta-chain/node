@@ -76,6 +76,10 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	_, err = k.setupChainGasCoinAndPool(ctx, "BTCTESTNET", "BTC", "tBTC", 8)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
 
 	return nil
 }
@@ -149,6 +153,9 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//	address to,
 	//	uint deadline
 	//) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+	if chain == "BTCTESTNET" {
+		amount = big.NewInt(1e5)
+	}
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amount, big.NewInt(20_000_000), true,
 		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, big.NewInt(1e17))
 	if err != nil {
