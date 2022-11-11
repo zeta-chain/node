@@ -48,14 +48,20 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.EVMChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.EVMChainObserver)
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]mc.ChainClient, error) {
+	clientMap := make(map[common.Chain]mc.ChainClient)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		log.Info().Msgf("starting %s observer...", chain)
-		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		var co mc.ChainClient
+		var err error
+		if chain.IsEVMChain() {
+			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
+		} else if chain.IsBitcoinChain() {
+			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+		}
 		if err != nil {
-			log.Err(err).Msgf("%s NewChainObserver", chain)
+			log.Err(err).Msgf("%s NewEVMChainClient", chain)
 			return nil, err
 		}
 		clientMap[chain] = co

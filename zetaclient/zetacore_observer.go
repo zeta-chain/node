@@ -40,13 +40,13 @@ const (
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]*Signer
-	clientMap map[common.Chain]*EVMChainObserver
+	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*EVMChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -495,7 +495,7 @@ func getTargetChain(send *types.CrossChainTx) string {
 	return ""
 }
 
-func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (*EVMChainObserver, error) {
+func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr := getTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {
