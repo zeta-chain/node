@@ -131,7 +131,7 @@ func (b *ZetaCoreBridge) GetAllPendingSend() ([]*types.Send, error) {
 	return resp.Send, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingSendByChainSorted(chain string) ([]*types.Send, error) {
+func (b *ZetaCoreBridge) GetAllPendingSendByChainSorted(chain string) ([]*types.Send, int64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 	resp, err := client.SendAllPending(context.Background(), &types.QueryAllSendPendingRequest{
@@ -140,9 +140,9 @@ func (b *ZetaCoreBridge) GetAllPendingSendByChainSorted(chain string) ([]*types.
 	}, maxSizeOption)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query SendAllPending error")
-		return nil, err
+		return nil, 0, err
 	}
-	return resp.Send, nil
+	return resp.Send, resp.Total, nil
 }
 
 func (b *ZetaCoreBridge) GetAllReceive() ([]*types.Receive, error) {

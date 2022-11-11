@@ -362,7 +362,6 @@ func (co *CoreObserver) startSendScheduler() {
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
-	var sendList []*types.Send
 
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
@@ -373,7 +372,7 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
 			chain := chains[bn%numChains]
-			sendList, err = co.bridge.GetAllPendingSendByChainSorted(chain.String())
+			sendList, total, err := co.bridge.GetAllPendingSendByChainSorted(chain.String())
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msgf("GetAllPendingSend chain %s", chain)
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
@@ -381,9 +380,8 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			start := trimSends(sendList)
 			outSendList := make([]*types.Send, 0)
-			if bn%10 == 0 {
-				logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
-			}
+			logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", total, chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+
 			for idx, send := range sendList[start:] {
 				ob, err := co.getTargetChainOb(send)
 				if err != nil {
