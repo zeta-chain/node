@@ -56,16 +56,16 @@ jobs:
           aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
           aws-region: ${{ env.AWS_REGION }}
 
-      # - name: upload-files-to-s3
-      #   uses: ./.github/actions/upload-to-s3
-      #   with:
-      #     bucket-name: ${{ env.S3_BUCKET_NAME }}
-      #     release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-      #     git-sha: ${{ github.sha }}
-      #     files: |
-      #       zetacored
-      #       zetaclientd
-      #       cosmovisor
+      - name: upload-files-to-s3
+        uses: ./.github/actions/upload-to-s3
+        with:
+          bucket-name: ${{ env.S3_BUCKET_NAME }}
+          release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          git-sha: ${{ github.sha }}
+          files: |
+            zetacored
+            zetaclientd
+            cosmovisor
 
       ## Not being used anymore / for now
       # - name: Build, tag, and push image to Amazon ECR
@@ -102,15 +102,15 @@ jobs:
       #       zetaclientd
 
       #NOT READY YET
-      - name: Cosmovisor Upgrade Proposal and Vote
-        uses:  ./.github/actions/cosmovisor-upgrade
-        with:
-          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-          VERSION: "0.0.1"
-          # DESCRIPTION: "description"
-          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          # CHECKSUM_ZETACORED: ""
-          # CHECKSUM_ZETACLIENTD: ""
-          CHAIN_ID: "develop_101-1"
-          API_ENDPOINT: "https://archive.development.zetachain.com"
+      # - name: Cosmovisor Upgrade Proposal and Vote
+      #   uses:  ./.github/actions/cosmovisor-upgrade
+      #   with:
+      #     RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+      #     VERSION: "0.0.1"
+      #     # DESCRIPTION: "description"
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     # CHECKSUM_ZETACORED: ""
+      #     # CHECKSUM_ZETACLIENTD: ""
+      #     CHAIN_ID: "develop_101-1"
+      #     API_ENDPOINT: "https://archive.development.zetachain.com"
 
