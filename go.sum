@@ -269,6 +269,8 @@ github.com/cosmos/iavl v0.19.0/go.mod h1:l5h9pAB3m5fihB3pXVgwYqdY8aBsMagqz7T0MUj
 github.com/cosmos/iavl v0.19.1 h1:3gaq9b6SjiB0KBTygRnAvEGml2pQlu1TH8uma5g63Ys=
 github.com/cosmos/iavl v0.19.1/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
 github.com/cosmos/ibc-go v1.2.2/go.mod h1:XmYjsRFOs6Q9Cz+CSsX21icNoH27vQKb3squgnCOCbs=
+github.com/cosmos/ibc-go/v3 v3.1.0 h1:aVPqkrGBluz6t9+d/sLZIG/zQ9O1KJzVeR4UlL/IFTQ=
+github.com/cosmos/ibc-go/v3 v3.1.0/go.mod h1:DbOlOa4yKumaHGKApKkJN90L88PCjSD9ZBdAfL9tT40=
 github.com/cosmos/ibc-go/v3 v3.1.1 h1:Yodps4ezxbKS8u0TNJkdYsf+MCb0XzUuIuxIkSUMwbA=
 github.com/cosmos/ibc-go/v3 v3.1.1/go.mod h1:IR1bpjywC1i0YcElPa4d2IevNUBZehKoD5bscQlbDyM=
 github.com/cosmos/ibc-go/v3 v3.2.0 h1:Mh+RWo5FHPMM1Xsrar3uwKufdEGdIp5LDkVk9cYKYYA=

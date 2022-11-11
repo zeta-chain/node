@@ -45,7 +45,8 @@ func CmdSetSupportedChains() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			chains := strings.Split(args[0], ",")
-			observerChainList := make([]types.ObserverChain, len(chains))
+			observerChainList := make([]*types.Chain, len(chains))
+			// TODO refactor this to correct format
 			for i, chain := range chains {
 				observerChainList[i] = types.ParseCommonChaintoObservationChain(chain)
 			}

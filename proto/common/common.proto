@@ -28,3 +28,6 @@ enum CoinType {
   Gas = 1; // Ether, BNB, Matic, Klay, BTC, etc
   ERC20 = 2; // ERC20 token
 }
+
+
+

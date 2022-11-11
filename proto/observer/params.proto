@@ -2,11 +2,12 @@ syntax = "proto3";
 package zetachain.zetacore.observer;
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
+import "observer/chain.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message BallotThreshold {
-    ObserverChain Chain =1;
+    Chain Chain =1;
     ObservationType Observation=2;
     string Threshold =3 [
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

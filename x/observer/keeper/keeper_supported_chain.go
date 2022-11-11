@@ -23,13 +23,26 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) (val types.SupportedChains, 
 	return val, false
 }
 
-func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.ObserverChain) bool {
+func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainId int64) (*types.Chain, bool) {
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		return nil, false
+	}
+	for _, chain := range chains.ChainList {
+		if chain.ChainId == chainId {
+			return chain, true
+		}
+	}
+	return nil, false
+}
+
+func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return false
 	}
 	for _, chain := range chains.ChainList {
-		if checkChain == chain {
+		if checkChain.IsEqual(*chain) {
 			return true
 		}
 	}

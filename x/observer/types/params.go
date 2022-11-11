@@ -16,45 +16,39 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams() Params {
-	return Params{
-		BallotThresholds: []*BallotThreshold{
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-		},
-	}
+	return Params{BallotThresholds: DefaultThreshold()}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	return Params{BallotThresholds: DefaultThreshold()}
+}
+
+func DefaultThreshold() []*BallotThreshold {
+	chains := DefaultChainsList()
+	threshold := make([]*BallotThreshold, len(chains)*2)
+	for i, chain := range chains {
+		threshold[i] = &BallotThreshold{
+			Chain:       &Chain{ChainName: chain.ChainName, ChainId: chain.ChainId},
+			Observation: ObservationType_InBoundTx,
+			Threshold:   sdk.MustNewDecFromStr("0.66"),
+		}
+		i++
+		threshold[i] = &BallotThreshold{
+			Chain:       &Chain{ChainName: chain.ChainName, ChainId: chain.ChainId},
+			Observation: ObservationType_OutBoundTx,
+			Threshold:   sdk.MustNewDecFromStr("0.66"),
+		}
+	}
+	return threshold
+}
+func DefaultChainsList() []*Chain {
+	return []*Chain{
+		{
+			ChainName: ChainName_Eth,
+			ChainId:   1,
+		},
+	}
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -88,9 +82,9 @@ func validateVotingThresholds(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (BallotThreshold, bool) {
+func (p Params) GetVotingThreshold(chain Chain, observationType ObservationType) (BallotThreshold, bool) {
 	for _, threshold := range p.GetBallotThresholds() {
-		if threshold.Chain == chain && threshold.Observation == observationType {
+		if threshold.Chain.IsEqual(chain) && threshold.Observation == observationType {
 			return *threshold, true
 		}
 	}

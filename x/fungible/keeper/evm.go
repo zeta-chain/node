@@ -86,7 +86,7 @@ func (k Keeper) DeployZRC20Contract(
 	}
 
 	coinIndex := name
-	coin, _ := k.GetForeignCoins(ctx, coinIndex)
+	coin, _ := k.GetForeignCoins(ctx, coinIndex, chainStr)
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol

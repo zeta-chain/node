@@ -6,6 +6,8 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
+import "observer/chain.proto";
+
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -16,7 +18,7 @@ service Msg {
 
 message MsgSetSupportedChains {
   string creator = 1;
-  repeated ObserverChain Chainlist=2;
+  repeated Chain Chainlist=2;
 }
 
 message MsgSetSupportedChainsResponse{

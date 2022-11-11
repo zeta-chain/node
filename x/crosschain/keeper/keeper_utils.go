@@ -27,11 +27,10 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-// FIXME: the observationType should not be a string; rather it should be properly typed
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
 	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
+		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", senderChain.String(), observationType))
 	}
 	for _, obs := range observerMapper.ObserverList {
 		if obs == address {
@@ -57,13 +56,10 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	}
 	return
 }
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, err error) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, err error) {
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
-			return ballot, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
-		}
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType.String())
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(chain, observationType)
 		if !found {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))

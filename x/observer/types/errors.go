@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	ErrUnableToAddVote = sdkerrors.Register(ModuleName, 1100, "Unable to add vote ")
-	ErrParamsThreshold = sdkerrors.Register(ModuleName, 1101, "Threshold cannot be more than 1")
-	ErrSupportedChains = sdkerrors.Register(ModuleName, 1102, "Err supported Chains")
-	ErrInvalidStatus   = sdkerrors.Register(ModuleName, 1103, "Invalid Voting Status")
+	ErrUnableToAddVote     = sdkerrors.Register(ModuleName, 1100, "Unable to add vote ")
+	ErrParamsThreshold     = sdkerrors.Register(ModuleName, 1101, "Threshold cannot be more than 1")
+	ErrSupportedChains     = sdkerrors.Register(ModuleName, 1102, "Err supported Chains")
+	ErrInvalidStatus       = sdkerrors.Register(ModuleName, 1103, "Invalid Voting Status")
+	ErrUnableToParseMapper = sdkerrors.Register(ModuleName, 1105, "Invalid mapper entry")
 )

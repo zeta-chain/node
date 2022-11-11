@@ -39,19 +39,6 @@ func TestForeignCoinsGet(t *testing.T) {
 		)
 	}
 }
-func TestForeignCoinsRemove(t *testing.T) {
-	keeper, ctx := keepertest.FungibleKeeper(t)
-	items := createNForeignCoins(keeper, ctx, 10)
-	for _, item := range items {
-		keeper.RemoveForeignCoins(ctx,
-			item.Index,
-		)
-		_, found := keeper.GetForeignCoins(ctx,
-			item.Index,
-		)
-		require.False(t, found)
-	}
-}
 
 func TestForeignCoinsGetAll(t *testing.T) {
 	keeper, ctx := keepertest.FungibleKeeper(t)

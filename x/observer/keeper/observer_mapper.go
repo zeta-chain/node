@@ -17,8 +17,8 @@ func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store.Set([]byte(om.Index), b)
 }
 
-func (k Keeper) GetObserverMapper(ctx sdk.Context, chain types.ObserverChain, obsType string) (val types.ObserverMapper, found bool) {
-	index := fmt.Sprintf("%s-%s", chain.String(), obsType)
+func (k Keeper) GetObserverMapper(ctx sdk.Context, chain types.Chain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
+	index := fmt.Sprintf("%s-%s", chain.String(), obsType.String())
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
