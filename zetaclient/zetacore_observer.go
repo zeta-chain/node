@@ -390,7 +390,7 @@ func (co *CoreObserver) startSendScheduler() {
 					continue
 				}
 				start := trimSends(sendList)
-				logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", total, chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+				logger.Info().Msgf("outstanding %d sends on chain %s: nonce starts ", total, chain, sendList[start].Nonce)
 
 				for idx, send := range sendList[start:] {
 					ob, err := co.getTargetChainOb(send)
