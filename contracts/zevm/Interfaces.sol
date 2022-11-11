@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-interface ISystem {
-    function FUNGIBLE_MODULE_ADDRESS() external view returns (address);
-    function wzetaContractAddress() external view returns (address);
-    function uniswapv2FactoryAddress() external view returns (address);
-    function gasPrice(uint256 chainID) external view returns (uint256);
-    function gasCoinZRC4(uint256 chainID) external view returns (address);
-}
-
 interface IZRC20 {
     function totalSupply() external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
