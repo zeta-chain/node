@@ -308,20 +308,17 @@ func (co *CoreObserver) CleanUpCommand() {
 							logger.Error().Msgf("wrong ProcessBogusPendingTx cmd: %s", line)
 							return
 						}
-						sendList, err := co.bridge.GetAllPendingSend()
-						if err != nil {
-							logger.Error().Err(err).Msg("GetAllPendingSend fail")
-							return
-						}
-						logger.Info().Msgf("arrived at block %d; SweepBogusPendingTx; total # sends %d", bn, len(sendList))
-
-						sendMap := splitAndSortSendListByChain(sendList, false)
-						for chain, sl := range sendMap {
-							numSends := len(sl)
+						for chain := range co.clientMap {
+							sendList, total, err := co.bridge.GetAllPendingSendByChainSorted(chain.String())
+							if err != nil {
+								logger.Error().Err(err).Msg("GetAllPendingSend fail")
+								return
+							}
+							logger.Info().Msgf("arrived at block %d; SweepBogusPendingTx; total # sends %d", bn, total)
+							numSends := len(sendList)
 							numIncluded := 0
-							for idx, send := range sl {
-								c, _ := common.ParseChain(chain)
-								ob := co.clientMap[c]
+							for idx, send := range sendList {
+								ob := co.clientMap[chain]
 								included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
 								if err != nil {
 									logger.Error().Err(err).Msg("IsSendOutTxProcessed fail")
