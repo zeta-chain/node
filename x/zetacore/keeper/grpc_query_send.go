@@ -64,8 +64,11 @@ func (k Keeper) SendAllPending(c context.Context, req *types.QueryAllSendPending
 	if req.Limit <= 0 || req.Limit >= 1000 {
 		limit = 1000
 	}
+	if int64(len(sends)) < limit {
+		limit = int64(len(sends))
+	}
 
-	return &types.QueryAllSendPendingResponse{Send: sends[:limit]}, nil
+	return &types.QueryAllSendPendingResponse{Send: sends[:limit], Total: int64(len(sends))}, nil
 }
 
 func (k Keeper) SendAllPendingSinceBlock(c context.Context, req *types.QueryAllSendPendingSinceBlockRequest) (*types.QueryAllSendPendingSinceBlockResponse, error) {

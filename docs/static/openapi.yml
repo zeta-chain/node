@@ -29885,6 +29885,9 @@ paths:
                     gasLimit:
                       type: string
                       format: uint64
+              total:
+                type: string
+                format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -51283,6 +51286,9 @@ definitions:
             gasLimit:
               type: string
               format: uint64
+      total:
+        type: string
+        format: int64
   zetachain.zetacore.zetacore.QueryAllSendPendingSinceBlockResponse:
     type: object
     properties:

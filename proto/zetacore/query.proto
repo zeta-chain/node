@@ -411,6 +411,7 @@ message QueryAllSendPendingRequest {
 
 message QueryAllSendPendingResponse {
 	repeated Send Send = 1;
+	int64 total = 2;
 }
 
 message QueryAllSendPendingSinceBlockRequest {
