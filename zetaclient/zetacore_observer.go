@@ -362,6 +362,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
+	sendLists := make(map[common.Chain][]*types.Send)
 
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
@@ -373,66 +374,73 @@ func (co *CoreObserver) startSendScheduler() {
 			timeStart := time.Now()
 			chain := chains[bn%numChains]
 			sendList, total, err := co.bridge.GetAllPendingSendByChainSorted(chain.String())
+			sendLists[chain] = sendList
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msgf("GetAllPendingSend chain %s", chain)
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
-			start := trimSends(sendList)
-			outSendList := make([]*types.Send, 0)
-			logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", total, chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
 
-			for idx, send := range sendList[start:] {
-				ob, err := co.getTargetChainOb(send)
-				if err != nil {
-					logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+			for _, chain := range chains {
+				outSendList := make([]*types.Send, 0)
+				sendList = sendLists[chain]
+				if len(sendLists) == 0 {
 					continue
 				}
-				// update metrics
-				if idx == 0 {
-					pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
+				start := trimSends(sendList)
+				logger.Info().Msgf("outstanding %d sends on chain %s: range [%d,%d]", total, chain, sendList[0].Nonce, sendList[len(sendList)-1].Nonce)
+
+				for idx, send := range sendList[start:] {
+					ob, err := co.getTargetChainOb(send)
 					if err != nil {
-						co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
-					} else {
-						pTxs.Set(float64(len(sendList)))
+						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						continue
+					}
+					// update metrics
+					if idx == 0 {
+						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
+						if err != nil {
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
+						} else {
+							pTxs.Set(float64(len(sendList)))
+						}
+					}
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
+					if err != nil {
+						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+					}
+					if included || confirmed {
+						logger.Info().Msgf("send outTx already included")
+					}
+					chain := getTargetChain(send)
+					outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
+
+					sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
+					// add some deterministic randomness to the sinceBlock to spread out the load across blocks
+					offset := send.Index[len(send.Index)-1] % 4
+					sinceBlock -= int64(offset)
+
+					// if there are many outstanding sends, then all first 80 has priority
+					// otherwise, only the first one has priority
+					if isScheduled(sinceBlock, idx < 80) {
+						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
+							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
+						} else {
+							outTxMan.StartTryProcess(outTxID)
+						}
+						outSendList = append(outSendList, send)
+					}
+					if idx > 100 { // only look at 50 sends per chain
+						break
 					}
 				}
-				included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.Nonce))
-				if err != nil {
-					logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+				if len(outSendList) > 0 {
+					go co.TryProcessOutTxBatch(outSendList, outTxMan, chain.String())
 				}
-				if included || confirmed {
-					logger.Info().Msgf("send outTx already included")
-				}
-				chain := getTargetChain(send)
-				outTxID := fmt.Sprintf("%s/%d", chain, send.Nonce)
 
-				sinceBlock := int64(bn) - int64(send.FinalizedMetaHeight)
-				// add some deterministic randomness to the sinceBlock to spread out the load across blocks
-				offset := send.Index[len(send.Index)-1] % 4
-				sinceBlock -= int64(offset)
-
-				// if there are many outstanding sends, then all first 80 has priority
-				// otherwise, only the first one has priority
-				if isScheduled(sinceBlock, idx < 80) {
-					if active, duration := outTxMan.IsOutTxActive(outTxID); active {
-						logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
-					} else {
-						outTxMan.StartTryProcess(outTxID)
-					}
-					outSendList = append(outSendList, send)
-				}
-				if idx > 100 { // only look at 50 sends per chain
-					break
-				}
 			}
-			if len(outSendList) > 0 {
-				go co.TryProcessOutTxBatch(outSendList, outTxMan, chain.String())
-			}
-
 			// update last processed block number
 			lastBlockNum = bn
-			logger.Info().Dur("elapsed", time.Since(timeStart)).Int("numScheduledSends", len(outSendList)).Msgf("SendScheduler")
 		}
 
 	}
