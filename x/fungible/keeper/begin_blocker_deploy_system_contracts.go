@@ -84,6 +84,10 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 // add 0.1gas/0.1wzeta to the pool
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
+	fmt.Println("Gas:", gasAssetName)
+	fmt.Println("Chain:", chain)
+	fmt.Println("Symbol:", symbol)
+	fmt.Println("name:", name)
 	transferGasLimit := big.NewInt(21_000)
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
@@ -152,7 +156,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amount, big.NewInt(20_000_000), true,
 		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, big.NewInt(1e17))
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amount.String())
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s,%s, %s)", types.ModuleAddressEVM.String(), zrc20Addr.String(), amount.String())
 	}
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)
