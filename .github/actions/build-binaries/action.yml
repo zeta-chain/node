@@ -19,21 +19,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # - name: Set Up Go 
-    #   # Optionally install a specific version of Go
-    #   # Only use if go has not been installed in a previous step of the calling workflow
-    #   if : ${{ inputs.go-version != '' }} 
-    #   uses: actions/setup-go@v3
-    #   with:
-    #     go-version: ${{ inputs.go-version }}  
-
-    # - run: |
-    #     echo Running ZetaChain Build Action
-    #   shell: bash
-
-    # - name: build zetacored and zetaclientd
-    #   run: ${GITHUB_ACTION_PATH}/build.sh
-    #   shell: bash
+    - name: Set Up Go 
+      # Optionally install a specific version of Go
+      # Only use if go has not been installed in a previous step of the calling workflow
+      if : ${{ inputs.go-version != '' }} 
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{ inputs.go-version }}  
 
     - name: build zetacored and zetaclientd
       run: |
@@ -54,28 +46,11 @@ runs:
       shell: bash
 
     # - name: Run Build tests
-    #   run: ${GITHUB_ACTION_PATH}/test.sh
+    #   run: |
+    #     echo "Running Build Tests"
+    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    #   shell: bash
     #   if: ${{ inputs.run-tests == 'true' }}
-    #   shell: bash
-
-# TODO - Remove - Managed via Ansible
-    # - name: Add network_values file
-    #   run: |        
-    #     INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
-    #     if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
-    #       cp deploy/env_variables.staging network_values
-    #     elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
-    #       cp deploy/env_variables.athens network_values
-    #     fi
-    #   shell: bash
-
-# TODO - Remove - ZIP is no longer needed
-    # - name: Create tar.gz Package
-    #   run: |        
-    #     cp deploy/zetaclientd-start.sh zetaclientd-start.sh
-    #     cp deploy/zetacored-start.sh zetacored-start.sh
-    #     tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
-    #   shell: bash
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash
