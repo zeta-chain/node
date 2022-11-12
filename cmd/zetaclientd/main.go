@@ -255,7 +255,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 			log.Error().Msgf("SetPubKey fail")
 			return
 		}
-		log.Info().Msgf("TSS address in hex: %s", tss.Address().Hex())
+		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
 
@@ -268,11 +268,11 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
+		zetaTx, err := bridge1.SetTSS(chain, tss.EVMAddress().Hex(), tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.EVMAddress().Hex(), zetaTx)
 
 	}
 

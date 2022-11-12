@@ -18,7 +18,7 @@ import (
 type COSuite struct {
 	bridge1      *ZetaCoreBridge
 	bridge2      *ZetaCoreBridge
-	signer       *Signer
+	signer       *EVMSigner
 	coreObserver *CoreObserver
 }
 
@@ -96,10 +96,10 @@ func (s *COSuite) SetUpTest(c *C) {
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
+	signer, err := NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
-	c.Logf("TSS Address %s", tss.Address().Hex())
-	c.Logf("ETH MPI Address: %s", config.ETH_MPI_ADDRESS)
+	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
+	c.Logf("ETH MPI EVMAddress: %s", config.ETH_MPI_ADDRESS)
 
 	s.signer = signer
 
