@@ -45,7 +45,7 @@ func NewConnectorEvent(amount *big.Float, raw []byte) (*ConnectorEvent, error) {
 }
 
 func (evt *ConnectorEvent) String() string {
-	return fmt.Sprintf("Amount: %v, Address: %v, Message: %v", evt.Amount, evt.Address.Hex(), string(evt.Message))
+	return fmt.Sprintf("Amount: %v, EVMAddress: %v, Message: %v", evt.Amount, evt.Address.Hex(), string(evt.Message))
 }
 
 func ParseRawEvents(rawEvents []*RawEvent) (*ConnectorEvent, error) {
