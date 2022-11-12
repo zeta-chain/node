@@ -32,14 +32,14 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	signerMap := make(map[common.Chain]*mc.Signer)
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
+	signerMap := make(map[common.Chain]*mc.EVMSigner)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+		signer, err := mc.NewEVMSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
-			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
+			log.Fatal().Err(err).Msg("NewEVMSigner Ethereum error ")
 			return nil, err
 		}
 		signerMap[chain] = signer

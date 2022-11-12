@@ -28,7 +28,7 @@ func KeyPrefix(p string) []byte {
 
 var (
 	ModuleAddress = authtypes.NewModuleAddress(ModuleName)
-	//ModuleAddressEVM common.Address
+	//ModuleAddressEVM common.EVMAddress
 	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
 	AdminAddress     = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
 )

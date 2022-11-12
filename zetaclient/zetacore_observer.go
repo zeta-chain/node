@@ -39,14 +39,14 @@ const (
 
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
-	signerMap map[common.Chain]*Signer
+	signerMap map[common.Chain]*EVMSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*EVMSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -116,7 +116,7 @@ func (co *CoreObserver) keygenObserve() {
 				co.tss.CurrentPubkey = res.PubKey
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubkey)
+					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}

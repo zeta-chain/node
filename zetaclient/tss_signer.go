@@ -119,13 +119,18 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	return sigbyte, nil
 }
 
-func (tss *TSS) Address() ethcommon.Address {
+func (tss *TSS) EVMAddress() ethcommon.Address {
 	addr, err := getKeyAddr(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ethcommon.Address{}
 	}
 	return addr
+}
+
+// generate a p2pkh address from pubkey
+func (tss *TSS) BTCAddress() string {
+	return ""
 }
 
 // adds a new key to the TSS keys map
@@ -145,7 +150,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 		log.Fatal().Err(err)
 		return keyAddr, err
 	}
-	//keyAddrBytes := pubk.Address().Bytes()
+	//keyAddrBytes := pubk.EVMAddress().Bytes()
 	pubk.Bytes()
 	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
 	if err != nil {
