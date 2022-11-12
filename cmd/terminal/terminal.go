@@ -74,7 +74,7 @@ func (probe *Probe) SendTransaction(sendInput *SendInput) error {
 		return err
 	}
 	log.Info().Msgf("send tx: %s", tx.Hash().Hex())
-	//tx, err := probe.ConnectorABI.Pack("sendTransaction", probe.Address, probe.TokenAddress, big.NewInt(1e18))
+	//tx, err := probe.ConnectorABI.Pack("sendTransaction", probe.EVMAddress, probe.TokenAddress, big.NewInt(1e18))
 	return nil
 }
 

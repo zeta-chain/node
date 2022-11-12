@@ -494,7 +494,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	}
 
 	// ============= query the incoming tx to TSS address ==============
-	tssAddress := ob.Tss.Address()
+	tssAddress := ob.Tss.EVMAddress()
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
@@ -581,12 +581,12 @@ func (ob *EVMChainClient) PostNonceIfNotRecorded() error {
 
 	_, err := zetaClient.GetNonceByChain(chain)
 	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-		nonce, err := evmClient.NonceAt(context.TODO(), tss.Address(), nil)
+		nonce, err := evmClient.NonceAt(context.TODO(), tss.EVMAddress(), nil)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("NonceAt")
 			return err
 		}
-		pendingNonce, err := evmClient.PendingNonceAt(context.TODO(), tss.Address())
+		pendingNonce, err := evmClient.PendingNonceAt(context.TODO(), tss.EVMAddress())
 		if err != nil {
 			logger.Fatal().Err(err).Msg("PendingNonceAt")
 			return err
@@ -741,7 +741,7 @@ func (ob *EVMChainClient) PostGasPrice() error {
 		return err
 	}
 
-	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.Address(), nil)
+	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.EVMAddress(), nil)
 	//if err != nil {
 	//	log.Err(err).Msg("BalanceAt:")
 	//	return err
