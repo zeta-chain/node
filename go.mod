@@ -32,8 +32,7 @@ require (
 require (
 	github.com/99designs/keyring v1.1.6
 	github.com/binance-chain/tss-lib v1.3.2
-	github.com/btcsuite/btcd v0.23.0
-	github.com/btcsuite/btcd/btcutil v1.1.2
+	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/buger/jsonparser v1.1.1
