@@ -36,6 +36,10 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
 	signerMap := make(map[common.Chain]*mc.EVMSigner)
 
 	for _, chain := range mcconfig.ChainsEnabled {
+		if !chain.IsEVMChain() {
+			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain)
+			continue
+		}
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
 		signer, err := mc.NewEVMSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
