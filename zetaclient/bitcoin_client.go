@@ -68,16 +68,16 @@ func (ob *BitcoinChainClient) Start() {
 }
 
 func (ob *BitcoinChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
-	close(ob.stop) // this notifies all goroutines to stop
-
-	ob.logger.Info().Msg("closing ob.db")
-	err := ob.db.Close()
-	if err != nil {
-		ob.logger.Error().Err(err).Msg("error closing db")
-	}
-
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
+	//ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
+	//close(ob.stop) // this notifies all goroutines to stop
+	//
+	//ob.logger.Info().Msg("closing ob.db")
+	//err := ob.db.Close()
+	//if err != nil {
+	//	ob.logger.Error().Err(err).Msg("error closing db")
+	//}
+	//
+	//ob.logger.Info().Msgf("%s observer stopped", ob.chain)
 }
 
 func (ob *BitcoinChainClient) GetBlockHeight() uint64 {
