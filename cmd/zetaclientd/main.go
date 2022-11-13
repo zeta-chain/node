@@ -268,7 +268,13 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.EVMAddress().Hex(), tss.CurrentPubkey)
+		var tssAddr string
+		if chain.IsEVMChain() {
+			tssAddr = tss.EVMAddress().Hex()
+		} else if chain.IsBitcoinChain() {
+			tssAddr = tss.BTCAddress()
+		}
+		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
