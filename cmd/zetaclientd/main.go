@@ -278,7 +278,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.EVMAddress().Hex(), zetaTx)
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tssAddr, zetaTx)
 
 	}
 
