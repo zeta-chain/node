@@ -20,4 +20,6 @@ var (
 	ErrStatusTransitionNotPossible = sdkerrors.Register(ModuleName, 1111, "cannot transition status for CCTX")
 	ErrNotAuthorized               = sdkerrors.Register(ModuleName, 1112, "Err not authorized")
 	ErrGasCoinNotFound             = sdkerrors.Register(ModuleName, 1113, "Err gas coin not found for SenderChain")
+	ErrUnableToDepositZRC20        = sdkerrors.Register(ModuleName, 1114, "Unable to deposit ZRC20 ")
+	ErrUnableToParseContract       = sdkerrors.Register(ModuleName, 1115, "Cannot parse contract and data")
 )

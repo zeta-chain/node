@@ -142,16 +142,16 @@ func (k msgServer)HandleEVMDeposit(ctx sdk.Context , cctx types.CrossChainTx,msg
 	if len(msg.Message) == 0 { // no message; transfer
 		tx, err := k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
 		if err != nil {
-			return errors.Wrap(err,fmt.Sprintf("cannot DepositZRC20, %s"))
+			return errors.Wrap(types.ErrUnableToDepositZRC20,err.Error())
 		}
 	} else { // non-empty message = [contractaddress, calldata]
 		contract, data, err := parseContractAndData(msg.Message)
 		if err != nil {
-			return errors.Wrap(err,fmt.Sprintf("cannot parse contract and data, %s"))
+			return errors.Wrap(types.ErrUnableToParseContract,err.Error())
 		}
 		tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, depositContract, amount, contract, data)
 		if err != nil { // prepare to revert
-			return errors.Wrap(err,fmt.Sprintf("cannot DepositZRC20"))
+			return errors.Wrap(types.ErrUnableToDepositZRC20,err.Error())
 		}
 		if !tx.Failed() {
 			logs := evmtypes.LogsToEthereum(tx.Logs)
@@ -174,9 +174,6 @@ func (k msgServer)HandleEVMDeposit(ctx sdk.Context , cctx types.CrossChainTx,msg
 			)
 		}
 	}
-	fmt.Printf("=======  tx: %s\n", tx.Hash)
-	fmt.Printf("vmerror: %s\n", tx.VmError)
-	fmt.Printf("=======  tx: %s\n", tx.Hash)
 
 	cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
 	cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
