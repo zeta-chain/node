@@ -42,63 +42,62 @@ func (k Keeper) PostTxProcessing(
 // FIXME: authenticate the emitting contract with foreign_coins
 func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address) error {
 	var event *contracts.ZRC20Withdrawal
-
 	found := false
 	for _, log := range logs {
 		e, err := ParseWithdrawalEvent(*log)
 		if err != nil {
-			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			continue
 		} else {
 			found = true
 			event = e
 		}
 	}
-	if found {
-		fmt.Printf("#############################\n")
-		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
-		fmt.Printf("#############################\n")
-		foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
-		foundCoin := false
-		receiverChain := ""
-		coinType := common.CoinType_Zeta
-		for _, coin := range foreignCoinList {
-			if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-				receiverChain = coin.ForeignChain
-				foundCoin = true
-				coinType = coin.CoinType
-			}
-		}
-		if !foundCoin {
-			return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
-		}
-
-		toAddr := "0x" + hex.EncodeToString(event.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
-		sendHash := msg.Digest()
-
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash)
-		cctx.ZetaMint = cctx.ZetaBurnt
-		cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-		gasprice, found := k.GetGasPrice(ctx, receiverChain)
-		if !found {
-			fmt.Printf("gasprice not found for %s\n", receiverChain)
-			return fmt.Errorf("gasprice not found for %s", receiverChain)
-		}
-		cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
-		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
-		if ok {
-			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
-		}
-		err := k.UpdateNonce(ctx, receiverChain, &cctx)
-		if err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
-		}
-
-		k.SetCrossChainTx(ctx, cctx)
-		fmt.Printf("####setting send... ###########\n")
+	if !found {
+		return nil
 	}
+
+	foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
+	foundCoin := false
+	receiverChain := ""
+	coinType := common.CoinType_Zeta
+
+	for _, coin := range foreignCoinList {
+		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
+			receiverChain = coin.ForeignChain
+			foundCoin = true
+			coinType = coin.CoinType
+		}
+	}
+	if !foundCoin {
+		return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+	}
+
+	toAddr := "0x" + hex.EncodeToString(event.To)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+	sendHash := msg.Digest()
+
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash)
+	cctx.ZetaMint = cctx.ZetaBurnt
+	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
+	gasprice, found := k.GetGasPrice(ctx, receiverChain)
+	if !found {
+		fmt.Printf("gasprice not found for %s\n", receiverChain)
+		return fmt.Errorf("gasprice not found for %s", receiverChain)
+	}
+	cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
+	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
+	if ok {
+		cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
+	}
+	err := k.UpdateNonce(ctx, receiverChain, &cctx)
+	if err != nil {
+		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
+	}
+
+	k.SetCrossChainTx(ctx, cctx)
+	fmt.Printf("####setting send... ###########\n")
+
 	return nil
 }
 
@@ -110,6 +109,7 @@ func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) 
 	}
 
 	event := new(contracts.ZRC20Withdrawal)
+	// TODO : Replace with string constant
 	eventName := "Withdrawal"
 	if log.Topics[0] != zrc20Abi.Events[eventName].ID {
 		return nil, fmt.Errorf("event signature mismatch")

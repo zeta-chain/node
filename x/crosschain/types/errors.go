@@ -22,4 +22,5 @@ var (
 	ErrGasCoinNotFound             = sdkerrors.Register(ModuleName, 1113, "Err gas coin not found for SenderChain")
 	ErrUnableToDepositZRC20        = sdkerrors.Register(ModuleName, 1114, "Unable to deposit ZRC20 ")
 	ErrUnableToParseContract       = sdkerrors.Register(ModuleName, 1115, "Cannot parse contract and data")
+	ErrCannotProcessWithdrawal     = sdkerrors.Register(ModuleName, 1116, "Cannot process withdrawal event")
 )

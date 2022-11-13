@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/Workiva/go-datastructures/threadsafe/err"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -12,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 )
@@ -80,7 +78,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	}
 
-
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 
 }
@@ -118,51 +115,53 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 	k.SetLastBlockHeight(ctx, lastblock)
 }
 
-func (k msgServer)HandleEVMDeposit(ctx sdk.Context , cctx types.CrossChainTx,msg types.MsgVoteOnObservedInboundTx,senderChain zetaObserverTypes.Chain) error {
+func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain zetaObserverTypes.Chain) error {
 	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 	k.SetCrossChainTx(ctx, cctx)
 
-	gasCoin,found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx,senderChain.ChainName.String())
-	if !found{
+	gasCoin, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, senderChain.ChainName.String())
+	if !found {
 		return types.ErrGasCoinNotFound
 	}
 	to := ethcommon.HexToAddress(msg.Receiver)
 	amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
 	if !ok {
-		return errors.Wrap(types.ErrFloatParseError,fmt.Sprintf("cannot parse zetaBurnt: %s", msg.ZetaBurnt))
+		return errors.Wrap(types.ErrFloatParseError, fmt.Sprintf("cannot parse zetaBurnt: %s", msg.ZetaBurnt))
 	}
 	depositContract := ethcommon.Address{}
 	switch msg.CoinType {
-		case common.CoinType_Gas:{
-            depositContract = ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress)
+	case common.CoinType_Gas:
+		{
+			depositContract = ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress)
 		}
 
 	}
 	var tx *evmtypes.MsgEthereumTxResponse
 	if len(msg.Message) == 0 { // no message; transfer
-		tx, err := k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
+		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
+		txNoWithdraw, err := k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
 		if err != nil {
-			return errors.Wrap(types.ErrUnableToDepositZRC20,err.Error())
+			return errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
+		tx = txNoWithdraw
 	} else { // non-empty message = [contractaddress, calldata]
+		var txWithWithdraw *evmtypes.MsgEthereumTxResponse
 		contract, data, err := parseContractAndData(msg.Message)
 		if err != nil {
-			return errors.Wrap(types.ErrUnableToParseContract,err.Error())
+			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, depositContract, amount, contract, data)
+		txWithWithdraw, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, depositContract, amount, contract, data)
 		if err != nil { // prepare to revert
-			return errors.Wrap(types.ErrUnableToDepositZRC20,err.Error())
+			return errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
-		if !tx.Failed() {
-			logs := evmtypes.LogsToEthereum(tx.Logs)
+		if !txWithWithdraw.Failed() {
+			logs := evmtypes.LogsToEthereum(txWithWithdraw.Logs)
 			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 			err = k.ProcessWithdrawalEvent(ctx, logs, contract)
 			if err != nil {
-				errMsg := fmt.Sprintf("cannot process withdrawal event: %s", err.Error())
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
-				k.SetCrossChainTx(ctx, cctx)
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 			}
+			// TODO Add Event Types as constants
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
@@ -173,13 +172,12 @@ func (k msgServer)HandleEVMDeposit(ctx sdk.Context , cctx types.CrossChainTx,msg
 				),
 			)
 		}
+		tx = txWithWithdraw
 	}
 
 	cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
 	cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
-	k.SetCrossChainTx(ctx, cctx)
-	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-}
+	return nil
 }
 
 // message is hex encoded byte array
