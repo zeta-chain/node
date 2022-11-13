@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/crypto"
 	. "gopkg.in/check.v1"
 )
@@ -18,21 +19,27 @@ func (s *SignerSuite) SetUpTest(c *C) {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	pkBytes := crypto.FromECDSAPub(&privateKey.PublicKey)
+	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	c.Assert(err, IsNil)
 	c.Logf("pubkey: %d", len(pkBytes))
+	c.Logf("pk: %d", len(pk.SerializeCompressed()))
 	// Uncomment the following code to generate new random private key pairs
 	//privateKey, err := crypto.GenerateKey()
 	//privkeyBytes := crypto.FromECDSA(privateKey)
 	//c.Logf("privatekey %s", hex.EncodeToString(privkeyBytes))
-	c.Assert(err, IsNil)
+	//c.Assert(err, IsNil)
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
 
 	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
 	c.Logf("TSS BTCAddress %s", tss.BTCAddress())
+	c.Logf("TSS BTCSegWitAddress %s", tss.BTCSegWitAddress())
 
 	addr := tss.BTCAddressPubkey()
-	c.Logf("TSS tx script: %x", addr.ScriptAddress())
+	if addr != nil {
+		c.Logf("TSS tx script: %x", addr.ScriptAddress())
+	}
 }
 
 func (s *SignerSuite) Test1(c *C) {

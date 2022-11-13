@@ -48,8 +48,7 @@ func (s *BTCSignerSuite) Test1(c *C) {
 
 	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
-	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash,
-		&chaincfg.MainNetParams)
+	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.TestNet3Params)
 	c.Assert(err, IsNil)
 
 	// For this example, create a fake transaction that represents what
