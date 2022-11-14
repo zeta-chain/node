@@ -27,10 +27,6 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}  
 
-    - run: |
-        echo Running ZetaChain Build Action
-      shell: bash
-
     - name: build zetacored and zetaclientd
       run: |
         make install
@@ -45,33 +41,16 @@ runs:
 
     - name: Cosmovisor
       run: |
-        go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
       shell: bash
 
-    - name: Run Build tests
-      run: ${GITHUB_ACTION_PATH}/test.sh
-      if: ${{ inputs.run-tests == 'true' }}
-      shell: bash
-
-# TODO - Remove - Managed via Ansible
-    # - name: Add network_values file
-    #   run: |        
-    #     INPUT_ENVIRONMENT_NAME=${{ env.ENVIRONMENT_NAME }}
-    #     if [[ $INPUT_ENVIRONMENT_NAME == "STAGING" ]]; then 
-    #       cp deploy/env_variables.staging network_values
-    #     elif [[ $INPUT_ENVIRONMENT_NAME == "ATHENS" ]]; then 
-    #       cp deploy/env_variables.athens network_values
-    #     fi
+    # - name: Run Build tests
+    #   run: |
+    #     echo "Running Build Tests"
+    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
     #   shell: bash
-
-# TODO - Remove - ZIP is no longer needed
-    # - name: Create tar.gz Package
-    #   run: |        
-    #     cp deploy/zetaclientd-start.sh zetaclientd-start.sh
-    #     cp deploy/zetacored-start.sh zetacored-start.sh
-    #     tar -czvf package.tar.gz zetacored zetaclientd zetaclientd-start.sh zetacored-start.sh network_values
-    #   shell: bash
+    #   if: ${{ inputs.run-tests == 'true' }}
 
     - run: echo "Completed ZetaChain Build Action"
       shell: bash
