@@ -174,7 +174,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	if ctx.BlockHeight() == 1 {
 		err := am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
 		if err != nil {
-			panic(err)
+			ctx.Logger().Error("Unable To deploy contracts", err.Error())
 		}
 	}
 }
