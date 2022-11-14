@@ -895,7 +895,7 @@ type MsgVoteOnObservedInboundTx struct {
 	Receiver      string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 	ReceiverChain string `protobuf:"bytes,5,opt,name=receiverChain,proto3" json:"receiverChain,omitempty"`
 	ZetaBurnt     string `protobuf:"bytes,6,opt,name=zetaBurnt,proto3" json:"zetaBurnt,omitempty"`
-	//  string mMint = 7;
+	// string mMint = 7;
 	Message       string          `protobuf:"bytes,8,opt,name=message,proto3" json:"message,omitempty"`
 	InTxHash      string          `protobuf:"bytes,9,opt,name=inTxHash,proto3" json:"inTxHash,omitempty"`
 	InBlockHeight uint64          `protobuf:"varint,10,opt,name=inBlockHeight,proto3" json:"inBlockHeight,omitempty"`
