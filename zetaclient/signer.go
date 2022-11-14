@@ -38,6 +38,16 @@ func (s TestSigner) Pubkey() []byte {
 	return publicKeyBytes
 }
 
+// return 33B compressed pubkey
+func (s TestSigner) PubKeyCompressedBytes() []byte {
+	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
+	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	if err != nil {
+		panic(err)
+	}
+	return pk.SerializeCompressed()
+}
+
 func (s TestSigner) EVMAddress() ethcommon.Address {
 	return crypto.PubkeyToAddress(s.PrivKey.PublicKey)
 }
