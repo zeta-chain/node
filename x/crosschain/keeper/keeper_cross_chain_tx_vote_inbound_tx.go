@@ -63,21 +63,25 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// Aborts is any of the updates fail
 	switch receiverChain.ChainName {
 	case zetaObserverTypes.ChainName_ZetaChain:
+		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
+		if err != nil {
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			k.SetCrossChainTx(ctx, cctx)
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		}
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	default:
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			ctx.Logger().Error(err.Error())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
-		EmitEventInboundFinalized(ctx, &cctx)
-		k.SetCrossChainTx(ctx, cctx)
-
 	}
-
+	EmitEventInboundFinalized(ctx, &cctx)
+	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 
 }
@@ -115,9 +119,7 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 	k.SetLastBlockHeight(ctx, lastblock)
 }
 
-func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain zetaObserverTypes.Chain) error {
-	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
-	k.SetCrossChainTx(ctx, cctx)
+func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *zetaObserverTypes.Chain) error {
 
 	gasCoin, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, senderChain.ChainName.String())
 	if !found {
@@ -130,6 +132,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx types.CrossChainTx, ms
 	}
 	depositContract := ethcommon.Address{}
 	switch msg.CoinType {
+	// We are only using Gas Type right now
 	case common.CoinType_Gas:
 		{
 			depositContract = ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress)
