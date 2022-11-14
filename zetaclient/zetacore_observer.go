@@ -435,7 +435,16 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 				}
 				if len(outSendList) > 0 {
-					go co.TryProcessOutTxBatch(outSendList, outTxMan, chain.String())
+					sizeOutSendList := len(outSendList)
+					numGroups := (sizeOutSendList + 9) / 10
+					sendListGroups := make([][]*types.Send, numGroups)
+					for i := 0; i < sizeOutSendList; i++ {
+						groupID := (i + int(bn)) % numGroups
+						sendListGroups[groupID] = append(sendListGroups[groupID], outSendList[i])
+					}
+					for gi := 0; gi < numGroups; gi++ {
+						go co.TryProcessOutTxBatch(sendListGroups[gi], outTxMan, chain.String())
+					}
 				}
 
 			}
