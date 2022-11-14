@@ -764,9 +764,9 @@ func isScheduled(diff int64, priority bool) bool {
 		return false
 	}
 	if priority {
-		return d%10 == 0
+		return d%20 == 0
 	}
-	if d < 1000 && d%10 == 0 {
+	if d < 1000 && d%20 == 0 {
 		return true
 	} else if d >= 1000 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
