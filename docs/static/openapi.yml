@@ -34577,6 +34577,7 @@ paths:
                         - Ganache
                         - Baobab
                         - BscTestnet
+                        - BTCTestnet
                       default: Empty
                     ObservationType:
                       type: string
@@ -34752,6 +34753,7 @@ paths:
                     - Ganache
                     - Baobab
                     - BscTestnet
+                    - BTCTestnet
                   default: Empty
         default:
           description: An unexpected error response.
@@ -34807,6 +34809,7 @@ paths:
                             - Ganache
                             - Baobab
                             - BscTestnet
+                            - BTCTestnet
                           default: Empty
                         Observation:
                           type: string
@@ -57428,6 +57431,7 @@ definitions:
           - Ganache
           - Baobab
           - BscTestnet
+          - BTCTestnet
         default: Empty
       Observation:
         type: string
@@ -57464,6 +57468,7 @@ definitions:
       - Ganache
       - Baobab
       - BscTestnet
+      - BTCTestnet
     default: Empty
   zetachain.zetacore.observer.ObserverMapper:
     type: object
@@ -57485,6 +57490,7 @@ definitions:
           - Ganache
           - Baobab
           - BscTestnet
+          - BTCTestnet
         default: Empty
       ObservationType:
         type: string
@@ -57521,6 +57527,7 @@ definitions:
                 - Ganache
                 - Baobab
                 - BscTestnet
+                - BTCTestnet
               default: Empty
             Observation:
               type: string
@@ -57558,6 +57565,7 @@ definitions:
                 - Ganache
                 - Baobab
                 - BscTestnet
+                - BTCTestnet
               default: Empty
             ObservationType:
               type: string
@@ -57646,6 +57654,7 @@ definitions:
                     - Ganache
                     - Baobab
                     - BscTestnet
+                    - BTCTestnet
                   default: Empty
                 Observation:
                   type: string
@@ -57678,6 +57687,7 @@ definitions:
             - Ganache
             - Baobab
             - BscTestnet
+            - BTCTestnet
           default: Empty
   zetachain.zetacore.observer.VoteType:
     type: string
