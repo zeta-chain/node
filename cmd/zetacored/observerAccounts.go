@@ -68,6 +68,7 @@ func AddObserverAccountCmd() *cobra.Command {
 					"Ganache"   
 					"Baobap"    
 					"BscTestnet"
+					"BTCTestnet"
 					
             Observation Types : 
 				    "InBoundTx",
