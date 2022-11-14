@@ -103,7 +103,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 					k.SetCrossChainTx(ctx, cctx)
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 				}
-				tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
+				if len(data) > 0 {
+					tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
+				} else { // data = empty
+					tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), contract, amount)
+				}
 				if err != nil { // prepare to revert
 					errMsg := fmt.Sprintf("cannot DepositZRC20: %s", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
@@ -139,7 +143,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-		} else if msg.CoinType == common.CoinType_Gas {
+		} else if msg.CoinType == common.CoinType_Zeta {
 			//toBytes := ethcommon.HexToAddress(send.Receiver).Bytes()
 			//to := sdk.AccAddress(toBytes)
 			//amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)

@@ -170,7 +170,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		ob.BuildReceiptsMap()
 
 	}
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetBlockHeight())
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlockHeight())
 
 	return &ob, nil
 }
@@ -238,7 +238,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetBlockHeight() {
+					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -265,13 +265,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetBlockHeight()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain, nonce)
 					return true, false, nil
 				}
 				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetBlockHeight() {
+					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -296,7 +296,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetBlockHeight()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain, nonce)
 					return true, false, nil
 				}
 			}
@@ -388,19 +388,19 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 			logger.Warn().Err(err1).Msg("TransactionReceipt/TransactionByHash error")
 		}
 		return nil, nil, err1
-	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetBlockHeight() {
-		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetBlockHeight())
+	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlockHeight() {
+		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
 	} else { // confirmed outbound tx
 		return receipt, transaction, nil
 	}
 }
 
-func (ob *EVMChainClient) SetBlockHeight(block uint64) {
+func (ob *EVMChainClient) SetLastBlockHeight(block uint64) {
 	atomic.StoreUint64(&ob.lastBlock, block)
 }
 
-func (ob *EVMChainClient) GetBlockHeight() uint64 {
+func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
 	return atomic.LoadUint64(&ob.lastBlock)
 }
 
@@ -435,17 +435,17 @@ func (ob *EVMChainClient) observeInTX() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= ob.GetBlockHeight() {
+	if confirmedBlockNum <= ob.GetLastBlockHeight() {
 		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
-	lastBlock := ob.GetBlockHeight()
+	lastBlock := ob.GetLastBlockHeight()
 	startBlock := lastBlock + 1
 	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
@@ -552,7 +552,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	// ============= end of query the incoming tx to TSS address ==============
 
 	//ob.LastBlock = toBlock
-	ob.SetBlockHeight(toBlock)
+	ob.SetLastBlockHeight(toBlock)
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutUvarint(buf, toBlock)
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
@@ -804,36 +804,36 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 			if err != nil {
 				return err
 			}
-			ob.SetBlockHeight(header.Number.Uint64())
+			ob.SetLastBlockHeight(header.Number.Uint64())
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return err
 			}
-			ob.SetBlockHeight(uint64(scanFromBlockInt))
+			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
 		}
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
-			ob.SetBlockHeight(ob.getLastHeight())
+			ob.SetLastBlockHeight(ob.getLastHeight())
 			// if ZetaCore does not have last heard block height, then use current
-			if ob.GetBlockHeight() == 0 {
+			if ob.GetLastBlockHeight() == 0 {
 				header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return err
 				}
-				ob.SetBlockHeight(header.Number.Uint64())
+				ob.SetLastBlockHeight(header.Number.Uint64())
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, ob.GetBlockHeight())
+			n := binary.PutUvarint(buf2, ob.GetLastBlockHeight())
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
 			if err != nil {
 				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
 			lastBlock, _ := binary.Uvarint(buf)
-			ob.SetBlockHeight(lastBlock)
+			ob.SetLastBlockHeight(lastBlock)
 		}
 	}
 	return nil
