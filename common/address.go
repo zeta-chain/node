@@ -22,6 +22,8 @@ func NewAddress(address string, chain Chain) (Address, error) {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
+	} else if chain.IsBitcoinChain() {
+
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
