@@ -12,4 +12,5 @@ var (
 	ErrSupportedChains     = sdkerrors.Register(ModuleName, 1102, "Err supported Chains")
 	ErrInvalidStatus       = sdkerrors.Register(ModuleName, 1103, "Invalid Voting Status")
 	ErrUnableToParseMapper = sdkerrors.Register(ModuleName, 1105, "Invalid mapper entry")
+	ErrObserverNotPresent  = sdkerrors.Register(ModuleName, 1106, "Observer for type and observation does not exist")
 )

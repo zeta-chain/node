@@ -48,9 +48,15 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	types.ParseCommonChaintoObservationChain(req.ObservationChain)
-	mapper, _ := k.GetObserverMapper(ctx, types.ParseCommonChaintoObservationChain(req.ObservationChain), req.ObservationType)
+	chainName := types.ParseStringToObserverChain(req.ObservationChain)
+	chain, found := k.GetChainFromChainName(ctx, chainName)
+	if !found {
+		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrSupportedChains
+	}
+	mapper, found := k.GetObserverMapper(ctx, *chain, types.ParseStringToObservationType(req.ObservationType))
+	if !found {
+		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrObserverNotPresent
+	}
 	return &types.QueryObserversByChainAndTypeResponse{Observers: mapper.ObserverList}, nil
 }
 

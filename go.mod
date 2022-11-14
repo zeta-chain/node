@@ -33,8 +33,8 @@ require (
 require (
 	github.com/99designs/keyring v1.1.6
 	github.com/binance-chain/tss-lib v1.3.2
-	github.com/cosmos/ibc-go/v3 v3.1.0
-	github.com/evmos/ethermint v0.19.1
+	github.com/cosmos/ibc-go/v3 v3.2.0
+	github.com/evmos/ethermint v0.19.2
 	github.com/lib/pq v1.10.6
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/pkg/errors v0.9.1

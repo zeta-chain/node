@@ -109,7 +109,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType)
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsReceiver), int64((argsReceiverChain)), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -143,7 +143,10 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 			} else {
 				return fmt.Errorf("wrong status")
 			}
-			chain := args[5]
+			chain, err := strconv.Atoi(args[5])
+			if err != nil {
+				return err
+			}
 			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
 			if err != nil {
 				return err
@@ -154,7 +157,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, chain, uint64(outTxNonce), argsCoinType)
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -18,7 +18,8 @@ service Msg {
 
 message MsgSetSupportedChains {
   string creator = 1;
-  repeated Chain Chainlist=2;
+  int64 ChainId=2;
+  ChainName ChainName=3;
 }
 
 message MsgSetSupportedChainsResponse{

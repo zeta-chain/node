@@ -36,6 +36,19 @@ func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainId int64) (*types.Chai
 	return nil, false
 }
 
+func (k Keeper) GetChainFromChainName(ctx sdk.Context, name types.ChainName) (*types.Chain, bool) {
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		return nil, false
+	}
+	for _, chain := range chains.ChainList {
+		if chain.ChainName == name {
+			return chain, true
+		}
+	}
+	return nil, false
+}
+
 func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
@@ -51,8 +64,19 @@ func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
 
 func (k Keeper) SetSupportedChains(goCtx context.Context, msg *types.MsgSetSupportedChains) (*types.MsgSetSupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	supportedChains := types.SupportedChains{ChainList: msg.GetChainlist()}
-	k.SetSupportedChain(ctx, supportedChains)
+	chain := []*types.Chain{{
+		ChainName: msg.ChainName,
+		ChainId:   msg.ChainId,
+	},
+	}
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		supportedChains := types.SupportedChains{ChainList: chain}
+		k.SetSupportedChain(ctx, supportedChains)
+		return &types.MsgSetSupportedChainsResponse{}, nil
+	}
+	chains.ChainList = append(chains.ChainList, chain...)
+	k.SetSupportedChain(ctx, chains)
 	return &types.MsgSetSupportedChainsResponse{}, nil
 }
 
