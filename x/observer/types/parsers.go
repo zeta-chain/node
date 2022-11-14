@@ -64,7 +64,10 @@ func ParseCommonChaintoObservationChain(chain string) ObserverChain {
 		return ObserverChain_Goerli
 	case common.BSCTestnetChain, common.Chain(strings.ToUpper(string(common.BSCTestnetChain))):
 		return ObserverChain_BscTestnet
+	case common.BTCTestnetChain, common.Chain(strings.ToUpper(string(common.BTCTestnetChain))):
+		return ObserverChain_BtcTestnet
 	}
+
 	return ObserverChain_Empty
 }
 

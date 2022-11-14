@@ -18,6 +18,7 @@ enum ObserverChain {
   Ganache = 9;
   Baobab = 10;
   BscTestnet = 11 ;
+  BtcTestnet = 12 ;
 }
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;
