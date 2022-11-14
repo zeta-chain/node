@@ -43,7 +43,11 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 }
 
 func ParseCommonChaintoObservationChain(chain string) ObserverChain {
-	commonChain := common.Chain(chain)
+	//commonChain := common.Chain(chain)
+	commonChain, err := common.ParseChain(chain)
+	if err != nil {
+		return ObserverChain_Empty
+	}
 	switch commonChain {
 	// Mainnet Chains
 	case common.ZETAChain, common.Chain(strings.ToUpper(string(common.ZETAChain))):
