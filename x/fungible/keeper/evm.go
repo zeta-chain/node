@@ -24,13 +24,13 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-//TODO USE string constant
+// TODO USE string constant
 var (
 	BigIntZero = big.NewInt(0)
 )
 
-//TODO Unit test for these funtions
-//TODO Remove repetitive code
+// TODO Unit test for these funtions
+// TODO Remove repetitive code
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 func (k Keeper) DeployZRC20Contract(
@@ -41,7 +41,8 @@ func (k Keeper) DeployZRC20Contract(
 	coinType zetacommon.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
-) (common.Address, error) { // FIXME: geneeralized beyond ETH
+) (common.Address, error) { // FIXME: generalized beyond ETH
+	// TODO : ADD check for Chain isSupported . Get supported chain list from zetaobserver
 	abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
@@ -138,6 +139,10 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 
 	// go update all addr on ZRC-4 contracts
 	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
+	// TODO : Change to
+	// GET all supported chains
+	// Get all coins for al chains
+
 	coins := k.GetAllForeignCoins(ctx)
 	for _, coin := range coins {
 		if len(coin.Zrc20ContractAddress) != 0 {
