@@ -8,7 +8,8 @@ import (
 // general chain client
 
 type ChainClient interface {
-	GetBlockHeight() uint64 // 0 means error
+	GetLastBlockHeight() uint64 // 0 means error
+	SetLastBlockHeight(uint64)
 	Start()
 	Stop()
 	GetBaseGasPrice() *big.Int

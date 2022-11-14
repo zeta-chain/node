@@ -118,7 +118,7 @@ var Chains = map[string]*types.ChainETHish{
 		ZETATokenContractAddress: "",
 		ChainID:                  big.NewInt(18332),
 		BlockTime:                EthBlockTime,
-		Endpoint:                 "https://nd-456-407-783.p2pify.com/cee81511fd724bdcc75021ae81a9b5c9",
+		Endpoint:                 "107.20.255.203:18332",
 	},
 	common.EmptyChain.String(): {
 		Name:                     "",
