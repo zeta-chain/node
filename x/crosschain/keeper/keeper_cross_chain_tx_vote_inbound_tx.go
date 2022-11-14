@@ -167,7 +167,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			// TODO Add Event Types as constants
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
-					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+					sdk.NewAttribute(sdk.AttributeKeyModule, "crosschain"),
 					sdk.NewAttribute("action", "depositZRC4AndCallContract"),
 					sdk.NewAttribute("contract", contract.String()),
 					sdk.NewAttribute("data", hex.EncodeToString(data)),

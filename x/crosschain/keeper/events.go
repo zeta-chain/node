@@ -60,7 +60,7 @@ func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		sdk.NewAttribute(types.OutTxHash, cctx.OutBoundTxParams.OutBoundTxHash),
 		sdk.NewAttribute(types.ZetaMint, msg.ZetaMinted.String()),
-		sdk.NewAttribute(types.OutTXVotingChain, msg.OutTxChain),
+		sdk.NewAttribute(types.OutTXVotingChain, cctx.OutBoundTxParams.ReceiverChain),
 		sdk.NewAttribute(types.OldStatus, oldStatus),
 		sdk.NewAttribute(types.NewStatus, newStatus),
 		sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
