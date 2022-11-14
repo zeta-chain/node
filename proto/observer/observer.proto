@@ -11,13 +11,14 @@ enum ObserverChain {
   ZetaChain = 2;
   Btc = 3;
   Polygon = 4;
-  BscMainnet = 5 ;
+  BscMainnet = 5;
   Goerli = 6;
   Mumbai = 7;
   Ropsten = 8;
   Ganache = 9;
   Baobab = 10;
-  BscTestnet = 11 ;
+  BscTestnet = 11;
+  BTCTestnet = 12;
 }
 enum ObservationType {
   option (gogoproto.goproto_enum_stringer) = true;
