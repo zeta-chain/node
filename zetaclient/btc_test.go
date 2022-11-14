@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -23,21 +23,26 @@ type BTCSignTestSuite struct {
 }
 
 const (
-	prevOut = "77f3165c91a18c9d72bb28b045282cd2d4c5850a7976ca5f966122bd138052f4"
+	prevOut = "07a84f4bd45a633e93871be5c98d958afd13a37f3cf5010f40eec0840d19f5fa"
 	// tb1q7r6lnqjhvdjuw9uf4ehx7fs0euc6cxnqz7jj50
 	pk = "cQkjdfeMU8vHvE6jErnFVqZYYZnGGYy64jH6zovbSXdfTjte6QgY"
 )
 
 func (suite *BTCSignTestSuite) SetupTest() {
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	pkBytes := crypto.FromECDSAPub(&privateKey.PublicKey)
-	suite.T().Logf("pubkey: %d", len(pkBytes))
-	suite.Require().NoError(err)
+	wif, _ := btcutil.DecodeWIF(pk)
+	privateKey := wif.PrivKey
+	//skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
+	//privateKey, err := crypto.HexToECDSA(skHex)
+	//pkBytes := crypto.FromECDSAPub(&privateKey.PublicKey)
+	//suite.T().Logf("pubkey: %d", len(pkBytes))
+	//suite.Require().NoError(err)
 
-	suite.testSigner = &TestSigner{
-		PrivKey: privateKey,
+	suite.testSigner = &TestSigner{ // fake TSS
+		PrivKey: privateKey.ToECDSA(),
 	}
+	addr := suite.testSigner.BTCSegWitAddress()
+	suite.T().Logf("segwit addr: %s", addr)
+
 }
 
 func (suite *BTCSignTestSuite) TearDownSuite() {
@@ -55,9 +60,10 @@ func (suite *BTCSignTestSuite) TestSign() {
 	suite.T().Logf("wallet signed tx : %v\n", walletSignedTX)
 
 	// sign tx using tss signature
-	tssSignedTX, err := getTSSTX(suite.testSigner, tx, txSigHashes, idx, amt, subscript, txscript.SigHashAll, privKey, compress)
+
+	tssSignedTX, err := getTSSTX(suite.testSigner, tx, txSigHashes, idx, amt, subscript, txscript.SigHashAll)
 	suite.Require().NoError(err)
-	suite.T().Logf("tss signed tx : %v\n", tssSignedTX)
+	suite.T().Logf("tss signed tx :    %v\n", tssSignedTX)
 }
 
 func TestBTCSign(t *testing.T) {
@@ -82,7 +88,7 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}
-	outpoint := wire.NewOutPoint(hash, 1)
+	outpoint := wire.NewOutPoint(hash, 0)
 
 	// build tx
 	tx := wire.NewMsgTx(wire.TxVersion)
@@ -93,14 +99,14 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}
-	txOut := wire.NewTxOut(37000, pkScript)
+	txOut := wire.NewTxOut(47000, pkScript)
 	tx.AddTxOut(txOut)
 
 	txSigHashes := txscript.NewTxSigHashes(tx)
 
 	privKey := btcec.PrivateKey(*wif.PrivKey.ToECDSA())
 
-	return tx, txSigHashes, int(0), int64(67000), pkScript, &privKey, wif.CompressPubKey, nil
+	return tx, txSigHashes, int(0), int64(65236), pkScript, &privKey, wif.CompressPubKey, nil
 }
 
 func getWalletTX(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt int64, subscript []byte, hashType txscript.SigHashType, privKey *btcec.PrivateKey, compress bool) (string, error) {
@@ -119,25 +125,25 @@ func getWalletTX(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt i
 	return walletTx, nil
 }
 
-func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt int64, subscript []byte, hashType txscript.SigHashType, privKey *btcec.PrivateKey, compress bool) (string, error) {
+func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int, amt int64, subscript []byte, hashType txscript.SigHashType) (string, error) {
 	witnessHash, err := txscript.CalcWitnessSigHash(subscript, sigHashes, txscript.SigHashAll, tx, idx, amt)
 	if err != nil {
 		return "", err
 	}
 
-	signed, err := tss.Sign(witnessHash)
+	sig65B, err := tss.Sign(witnessHash)
+	R := big.NewInt(0).SetBytes(sig65B[:32])
+	S := big.NewInt(0).SetBytes(sig65B[32:64])
+	sig := btcec.Signature{
+		R: R,
+		S: S,
+	}
 	if err != nil {
 		return "", err
 	}
 
-	pk := (*btcec.PublicKey)(&privKey.PublicKey)
-	var pkData []byte
-	if compress {
-		pkData = pk.SerializeCompressed()
-	} else {
-		pkData = pk.SerializeUncompressed()
-	}
-	txWitness := wire.TxWitness{signed[:], pkData}
+	pkCompressed := tss.PubKeyCompressedBytes()
+	txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 	tx.TxIn[0].Witness = txWitness
 
 	buf := new(bytes.Buffer)
