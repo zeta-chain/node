@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"os"
 	"strconv"
 	"sync/atomic"
@@ -14,7 +15,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -119,40 +119,35 @@ func (ob *ChainObserver) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2A
 	return uniswapv3querier, uniswapv2querier, dummyQuerier
 }
 
-func (ob *ChainObserver) SetChainDetails(chain common.Chain,
+func (ob *ChainObserver) SetChainDetails(chain zetaObserverTypes.Chain,
 	uniswapv3querier *UniswapV3ZetaPriceQuerier,
 	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
 	MinObInterval := 24
-	switch chain {
-	case common.MumbaiChain:
+	switch chain.ChainName {
+	case zetaObserverTypes.ChainName_Mumbai:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
-	case common.GoerliChain:
+	case zetaObserverTypes.ChainName_Goerli:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.BSCTestnetChain:
+	case zetaObserverTypes.ChainName_BscTestnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
-	case common.BaobabChain:
+	case zetaObserverTypes.ChainName_Baobab:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.RopstenChain:
+	case zetaObserverTypes.ChainName_Ropsten:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.RopstenConfirmationCount
 		ob.BlockTime = config.RopstenBlockTime
-
-	case common.Ganache:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = 0
-		ob.BlockTime = 1
 	}
 	switch config.Chains[chain.String()].PoolContract {
 	case clienttypes.UniswapV2:

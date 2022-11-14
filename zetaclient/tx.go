@@ -68,7 +68,7 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	}
 	return zetaTxHash, nil
 }
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
 	var zetaTxHash string
@@ -250,10 +250,10 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain zetaObserverTypes.Chain) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
-		Chain: chain.String(),
+		Chain: chain.ChainId,
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,

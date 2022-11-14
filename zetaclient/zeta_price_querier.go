@@ -8,7 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math"
@@ -24,14 +24,14 @@ type UniswapV3ZetaPriceQuerier struct {
 	UniswapV3Abi        *abi.ABI
 	Client              *ethclient.Client
 	PoolContractAddress ethcommon.Address
-	Chain               common.Chain
+	Chain               zetaObserverTypes.Chain
 	TokenOrder          types.PoolTokenOrder
 }
 
 var _ ZetaPriceQuerier = &UniswapV3ZetaPriceQuerier{}
 
 type DummyZetaPriceQuerier struct {
-	Chain  common.Chain
+	Chain  zetaObserverTypes.Chain
 	Client *ethclient.Client
 }
 
@@ -41,7 +41,7 @@ type UniswapV2ZetaPriceQuerier struct {
 	UniswapV2Abi        *abi.ABI
 	Client              *ethclient.Client
 	PoolContractAddress ethcommon.Address
-	Chain               common.Chain
+	Chain               zetaObserverTypes.Chain
 	TokenOrder          types.PoolTokenOrder
 }
 

@@ -86,9 +86,15 @@ func CmdCCTXInboundVoter() *cobra.Command {
 		Args:  cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := (args[0])
-			argsSenderChain := (args[1])
+			argsSenderChain, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
 			argsReceiver := (args[2])
-			argsReceiverChain := (args[3])
+			argsReceiverChain, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
 			argsMBurnt := (args[4])
 			argsMMint := (args[5])
 			argsMessage := (args[6])

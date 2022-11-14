@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"os"
 	"strconv"
@@ -22,7 +24,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -46,7 +47,7 @@ type OutTx struct {
 // Chain configuration struct
 // Filled with above constants depending on chain
 type ChainObserver struct {
-	chain                     common.Chain
+	chain                     zetaObserverTypes.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector
@@ -74,7 +75,7 @@ type ChainObserver struct {
 }
 
 // Return configuration based on supplied target chain
-func NewChainObserver(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*ChainObserver, error) {
+func NewChainObserver(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*ChainObserver, error) {
 	ob := ChainObserver{}
 	ob.stop = make(chan struct{})
 	ob.chain = chain

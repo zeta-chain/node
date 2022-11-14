@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
@@ -83,11 +84,16 @@ func (ob *ChainObserver) observeInTX() error {
 		if strings.EqualFold(destAddr, config.Chains[destChain].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
+		destinationChain := GetChainFromChainId(event.DestinationChainId.Int64())
+		if destinationChain == nil {
+			ob.logger.Warn().Msgf("Destination chain not supported : %s destination address is ZETA token contract address %s", destChain, destAddr)
+			continue
+		}
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
-			ob.chain.String(),
+			ob.chain.ChainId,
 			types.BytesToEthHex(event.DestinationAddress),
-			config.FindChainByID(event.DestinationChainId),
+			destinationChain.ChainId,
 			event.ZetaValueAndGas.String(),
 			event.ZetaValueAndGas.String(),
 			base64.StdEncoding.EncodeToString(event.Message),
@@ -140,9 +146,9 @@ func (ob *ChainObserver) observeInTX() error {
 				}
 				zetaHash, err := ob.zetaClient.PostSend(
 					from.Hex(),
-					ob.chain.String(),
+					ob.chain.ChainId,
 					from.Hex(),
-					"ZETA",
+					GetChainIdFromChainName(zetaObserverTypes.ChainName_ZetaChain),
 					tx.Value().String(),
 					tx.Value().String(),
 					message,
