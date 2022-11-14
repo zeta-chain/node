@@ -156,9 +156,11 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
-	bn := uint64(cnt)
+	currentBlock := uint64(cnt)
 	// query incoming gas asset
-	if bn > lastBN {
+	if currentBlock > lastBN {
+		bn := lastBN + 1
+		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, currentBlock, lastBN)
 		hash, err := ob.rpcClient.GetBlockHash(int64(bn))
 		if err != nil {
 			return err
