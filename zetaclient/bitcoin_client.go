@@ -158,8 +158,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	}
 	currentBlock := uint64(cnt)
 	// query incoming gas asset
-	if currentBlock >= lastBN {
-		bn := lastBN
+	if currentBlock > lastBN {
+		bn := lastBN + 1
 		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, currentBlock, lastBN)
 		hash, err := ob.rpcClient.GetBlockHash(int64(bn))
 		if err != nil {
@@ -203,70 +203,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		ob.SetLastBlockHeight((bn))
 	}
 
-	//	block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-	//	if err != nil {
-	//		ob.logger.Error().Err(err).Msg("error getting block")
-	//		continue
-	//	}
-	//	for _, tx := range block.Transactions() {
-	//		if tx.To() == nil {
-	//			continue
-	//		}
-	//		if *tx.To() == tssAddress {
-	//			receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-	//			if receipt.Status != 1 { // 1: successful, 0: failed
-	//				ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-	//				continue
-	//			}
-	//			if err != nil {
-	//				ob.logger.Err(err).Msg("TransactionReceipt")
-	//				continue
-	//			}
-	//			from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-	//			if err != nil {
-	//				ob.logger.Err(err).Msg("TransactionSender")
-	//				continue
-	//			}
-	//			ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
-	//			ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
-	//			ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
-	//			message := ""
-	//			if len(tx.Data()) != 0 {
-	//				message = hex.EncodeToString(tx.Data())
-	//			}
-	//			zetaHash, err := ob.zetaClient.PostSend(
-	//				from.Hex(),
-	//				ob.chain.String(),
-	//				from.Hex(),
-	//				"ZETA",
-	//				tx.Value().String(),
-	//				tx.Value().String(),
-	//				message,
-	//				tx.Hash().Hex(),
-	//				receipt.BlockNumber.Uint64(),
-	//				90_000,
-	//				common.CoinType_Gas,
-	//			)
-	//			if err != nil {
-	//				ob.logger.Error().Err(err).Msg("error posting to zeta core")
-	//				continue
-	//			}
-	//			ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
-	//		}
-	//	}
-	//}
-	//// ============= end of query the incoming tx to TSS address ==============
-	//
-	////ob.LastBlock = toBlock
-	//ob.SetBlockHeight(toBlock)
-	//buf := make([]byte, binary.MaxVarintLen64)
-	//n := binary.PutUvarint(buf, toBlock)
-	//err = ob.db.Put([]byte(PosKey), buf[:n], nil)
-	//if err != nil {
-	//	ob.logger.Error().Err(err).Msg("error writing toBlock to db")
-	//}
 	return nil
-
 }
 
 // TODO
