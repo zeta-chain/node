@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
 	"os"
 	"strconv"
@@ -469,14 +468,14 @@ func (ob *EVMChainClient) observeInTX() error {
 		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 
 		destChain := config.FindChainByID(event.DestinationChainId)
-		destAddr := types.BytesToEthHex(event.DestinationAddress)
+		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 		if strings.EqualFold(destAddr, config.Chains[destChain].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
-			types.BytesToEthHex(event.DestinationAddress),
+			clienttypes.BytesToEthHex(event.DestinationAddress),
 			config.FindChainByID(event.DestinationChainId),
 			event.ZetaValueAndGas.String(),
 			event.ZetaValueAndGas.String(),
