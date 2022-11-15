@@ -9,7 +9,7 @@ message TxHashList {
 }
 message OutTxTracker {
   string index = 1; // format: "chain-nonce"
-  string chain = 2;
+  int64 chain = 2;
   string nonce = 3;
   repeated TxHashList hashList = 4;
 }

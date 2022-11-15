@@ -138,21 +138,21 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	k.SetSystemContract(ctx, system)
 
 	// go update all addr on ZRC-4 contracts
-	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
+
 	// TODO : Change to
 	// GET all supported chains
 	// Get all coins for al chains
-
-	coins := k.GetAllForeignCoins(ctx)
-	for _, coin := range coins {
-		if len(coin.Zrc20ContractAddress) != 0 {
-			zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
-			_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, BigIntZero, nil, true, "updateSystemContractAddress", contractAddr)
-			if err != nil {
-				k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr, err.Error())
-			}
-		}
-	}
+	//zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
+	//coins := k.GetAllForeignCoins(ctx)
+	//for _, coin := range coins {
+	//	if len(coin.Zrc20ContractAddress) != 0 {
+	//		zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
+	//		_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, BigIntZero, nil, true, "updateSystemContractAddress", contractAddr)
+	//		if err != nil {
+	//			k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr, err.Error())
+	//		}
+	//	}
+	//}
 
 	return contractAddr, nil
 }

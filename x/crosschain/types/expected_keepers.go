@@ -45,4 +45,5 @@ type ZetaObserverKeeper interface {
 	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
 	IsChainSupported(ctx sdk.Context, checkChain zetaObserverTypes.Chain) bool
 	GetChainFromChainID(ctx sdk.Context, chainId int64) (*zetaObserverTypes.Chain, bool)
+	GetChainFromChainName(ctx sdk.Context, name zetaObserverTypes.ChainName) (*zetaObserverTypes.Chain, bool)
 }

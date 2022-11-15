@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -12,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}
@@ -58,7 +60,11 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 
 	foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
 	foundCoin := false
-	receiverChain := ""
+	receiverChain := &zetaObserverTypes.Chain{}
+	zetaChain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, zetaObserverTypes.ChainName_ZetaChain)
+	if !found {
+		return errors.Wrap(zetaObserverTypes.ErrSupportedChains, "Tokens cannot be exported from zeta chain right now")
+	}
 	coinType := common.CoinType_Zeta
 
 	for _, coin := range foreignCoinList {
@@ -73,10 +79,10 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	}
 
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), zetaChain.ChainId, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
 	sendHash := msg.Digest()
-
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash)
+	// TODO Refactor CreateNewCCTX to not use msg
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetaChain, receiverChain)
 	cctx.ZetaMint = cctx.ZetaBurnt
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
 	gasprice, found := k.GetGasPrice(ctx, receiverChain)
