@@ -1,9 +1,9 @@
 name: 'Create Cosmovisor Proposal'
 description: 'WIP - Does cosmovisor stuff '
 inputs:
-  RELEASE_NAME:  
-    description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
-    required: true
+  # RELEASE_NAME:  
+  #   description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
+  #   required: true
   VERSION:  
     description: 'Version number for the release (0.0.1)'
     required: true
@@ -11,9 +11,6 @@ inputs:
     description: 'Description of the upgrade'
     required: false
     default: "Description"
-  # S3_BUCKET_NAME:  
-  #   description: 'S3 Bucket Name'
-  #   required: true
   ZETACORED_CHECKSUM:  
     description: 'Hash value of the zetacored binary'
     required: false
@@ -45,19 +42,12 @@ runs:
   using: "composite"
   steps:
 
-    # - name: Configure AWS Credentials
-    #   uses: aws-actions/configure-aws-credentials@v1
-    #   with:
-    #     aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: ${{ env.AWS_REGION }}
-        
     - name: Set ENV Variables
       shell: bash
       run: |
         echo Running Cosmovisor Upgrade Action
-        echo "RELEASE_NAME=${{ inputs.RELEASE_NAME }}" >> $GITHUB_ENV
-        echo "VERSION=${{ inputs.VERSION }}" >> $GITHUB_ENV
+        # echo "RELEASE_NAME=${{ inputs.RELEASE_NAME }}" >> $GITHUB_ENV
+        # echo "VERSION=${{ inputs.VERSION }}" >> $GITHUB_ENV
         echo "DESCRIPTION=${{ inputs.DESCRIPTION }}" >> $GITHUB_ENV
         echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
         echo "ZETACORED_CHECKSUM=${{ inputs.ZETACORED_CHECKSUM }}" >> $GITHUB_ENV
@@ -79,7 +69,6 @@ runs:
         # echo "UPGRADE_HEIGHT=$UPGRADE_HEIGHT" >> $GITHUB_ENV
 
         UPGRADE_HEIGHT=${{ inputs.UPGRADE_BLOCK_HEIGHT }}
-        echo UPGRADE_HEIGHT:$UPGRADE_HEIGHT
         echo "UPGRADE_HEIGHT=$UPGRADE_HEIGHT" >> $GITHUB_ENV
 
 
@@ -94,26 +83,22 @@ runs:
 
         COMMAND_ID=$(run_validators "systemctl restart cosmovisor")
         check_cmd_status $COMMAND_ID
-        # sleep 1
+        sleep 5
 
     - name: Create & Submit Proposal 
+      shell: bash
       run: |
-        source ${{ github.action_path }}/functions
-
-        BUCKET_PATH="https://$S3_BUCKET_NAME.s3.us-east-1.amazonaws.com/$RELEASE_NAME"
-        echo BUCKET_PATH:$BUCKET_PATH
-        echo UPGRADE_HEIGHT: ${{env.UPGRADE_HEIGHT}}
-        aws s3 ls s3://zetachain-deployment-files/cosmovisor
+        source ${{ github.action_path }}/functions        
         COMMAND_ID=$(aws ssm send-command \
           --targets Key=tag:Name,Values=validator0 \
           --document-name "AWS-RunShellScript" \
           --parameters "commands=['export HOME=/home/zetachain && \
-            zetacored tx gov submit-proposal software-upgrade $VERSION \
+            zetacored tx gov submit-proposal software-upgrade ${{ inputs.VERSION }} \
               --from val \
               --deposit 10000000azeta \
-              --upgrade-height $UPGRADE_HEIGHT \
-              --description \"$DESCRIPTION\" \
-              --title \"$RELEASE_NAME\" \
+              --upgrade-height ${{ inputs.UPGRADE_BLOCK_HEIGHT }} \
+              --description \"${{ inputs.DESCRIPTION }}\" \
+              --title \"${{ inputs.VERSION }}\" \
               --keyring-backend test \
               --chain-id \"$CHAIN_ID\" \
               --upgrade-info \'{\"binaries\":{\"linux/arm64\":\"${{ inputs.ZETACLIENTD_URL }}",\"linux/amd64\":\"${{ inputs.ZETACORED_URL }}"}}\' \
@@ -122,8 +107,6 @@ runs:
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
 
-      shell: bash
-
     - name: Vote on Proposal (All Validator Nodes)
       run: |
         source ${{ github.action_path }}/functions
@@ -131,17 +114,16 @@ runs:
         COMMAND_ID=$(aws ssm send-command \
           --targets Key=tag:Role,Values=validator \
           --document-name "AWS-RunShellScript" \
-          --parameters "commands=['export HOME=/home/zetachain && zetacored tx gov vote \$(zetacored q gov proposals --reverse -o json | jq -r .proposals[0].proposal_id) yes --from val --keyring-backend test --chain-id $CHAIN_ID --yes']" | jq .Command.CommandId -r || exit 1)
+          --parameters "commands=['export HOME=/home/zetachain && zetacored tx gov vote \$(zetacored q gov proposals --status voting_period --reverse -o json | jq -r .proposals[0].proposal_id) yes --from val --keyring-backend test --chain-id $CHAIN_ID --yes']" | jq .Command.CommandId -r || exit 1)
         
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
       shell: bash
 
-
-    - name: Resume zetaclientd #Temporary solution until we fix the "account sequence mismatch" issue
+    - name: Resume zetaclientd
       shell: bash
       run: |
         source ${{ github.action_path }}/functions
-
-        COMMAND_ID=$(run_validators "systemctl start zetaclientd")
+        COMMAND_ID=$(run_validators "systemctl restart zetaclientd")
+        echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
