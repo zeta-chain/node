@@ -331,11 +331,14 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
+	int64 limit = 1;
+	string chain = 2;
 
 }
 
 message QueryAllCctxPendingResponse {
 	repeated CrossChainTx CrossChainTx = 1;
+	int64 total = 2;
 }
 
 message QueryGetNodeAccountRequest {

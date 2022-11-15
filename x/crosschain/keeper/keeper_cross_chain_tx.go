@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sort"
 )
 
 func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
@@ -78,6 +79,29 @@ func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus)
 	}
 	return sends
 }
+func (k Keeper) GetAllPendingCctxByChainSorted(ctx sdk.Context, chain string) []*types.CrossChainTx {
+	var sends []*types.CrossChainTx
+	status := []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert}
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.CrossChainTx
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			if (val.CctxStatus.Status == types.CctxStatus_PendingOutbound && val.OutBoundTxParams.ReceiverChain == chain) ||
+				(val.CctxStatus.Status == types.CctxStatus_PendingRevert && val.InBoundTxParams.SenderChain == chain) {
+				sends = append(sends, &val)
+			}
+		}
+	}
+	sort.SliceStable(sends, func(i, j int) bool {
+		return sends[i].OutBoundTxParams.OutBoundTxTSSNonce < sends[j].OutBoundTxParams.OutBoundTxTSSNonce
+	})
+
+	return sends
+}
 
 // Queries
 
@@ -126,8 +150,16 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
+	sends := k.GetAllPendingCctxByChainSorted(ctx, req.Chain)
+	limit := req.Limit
+	if req.Limit <= 0 || req.Limit >= 1000 {
+		limit = 1000
+	}
+	if int64(len(sends)) < limit {
+		limit = int64(len(sends))
+	}
+
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends[:limit], Total: int64(len(sends))}, nil
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {

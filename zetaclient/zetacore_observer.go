@@ -179,11 +179,15 @@ func (outTxMan *OutTxProcessorManager) EndTryProcess(outTxID string) {
 	outTxMan.logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxMan.numActiveProcessor, time.Since(outTxMan.outTxStartTime[outTxID]))
 }
 
-func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
+func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) (bool, time.Duration) {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	_, found := outTxMan.outTxActive[outTxID]
-	return found
+	dur := time.Duration(0)
+	if found {
+		dur = time.Since(outTxMan.outTxStartTime[outTxID])
+	}
+	return found, dur
 }
 
 func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
@@ -223,7 +227,7 @@ func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
 
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
-func (co *CoreObserver) startSendScheduler() {
+func (co *CoreObserver) startSendSchedulerLegacy() {
 	logger := co.logger.With().Str("module", "SendScheduler").Logger()
 	outTxMan := NewOutTxProcessorManager()
 	go outTxMan.StartMonitorHealth()
@@ -287,7 +291,8 @@ func (co *CoreObserver) startSendScheduler() {
 					sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 					// if there are many outstanding sends, then all first 20 has priority
 					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 30) && !outTxMan.IsOutTxActive(outTxID) {
+					active, _ := outTxMan.IsOutTxActive(outTxID)
+					if isScheduled(sinceBlock, idx < 30) && !active {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
 					}
@@ -295,6 +300,117 @@ func (co *CoreObserver) startSendScheduler() {
 						break
 					}
 				}
+			}
+			// update last processed block number
+			lastBlockNum = bn
+		}
+
+	}
+}
+
+func (co *CoreObserver) startSendScheduler() {
+	logger := co.logger.With().Str("module", "SendScheduler").Logger()
+	outTxMan := NewOutTxProcessorManager()
+	var chains []common.Chain
+	for c := range co.clientMap {
+		chains = append(chains, c)
+	}
+	sort.SliceStable(chains, func(i, j int) bool {
+		return chains[i].String() < chains[j].String()
+	})
+	numChains := uint64(len(chains))
+	logger.Info().Msgf("startSendScheduler: chains %v", chains)
+
+	observeTicker := time.NewTicker(3 * time.Second)
+	var lastBlockNum uint64
+	sendLists := make(map[common.Chain][]*types.CrossChainTx)
+	totals := make(map[common.Chain]int64)
+
+	for range observeTicker.C {
+		bn, err := co.bridge.GetZetaBlockHeight()
+		if err != nil {
+			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
+			continue
+		}
+		if bn > lastBlockNum { // we have a new block
+			timeStart := time.Now()
+			chain := chains[bn%numChains]
+			sendList, total, err := co.bridge.GetAllPendingCctxByChainSorted(chain.String())
+			sendLists[chain] = sendList
+			totals[chain] = total
+			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msgf("GetAllPendingSend chain %s", chain)
+			if err != nil {
+				logger.Error().Err(err).Msg("error requesting sends from zetacore")
+				continue
+			}
+
+			for _, chain := range chains {
+				outSendList := make([]*types.CrossChainTx, 0)
+				sendList = sendLists[chain]
+				if len(sendList) == 0 {
+					continue
+				}
+				start := trimSends(sendList)
+				logger.Info().Msgf("outstanding %d sends on chain %s: nonce starts %d; to be processed %d", total, chain, sendList[start].OutBoundTxParams.OutBoundTxTSSNonce, len(sendList[start:]))
+
+				for idx, send := range sendList[start:] {
+					ob, err := co.getTargetChainOb(send)
+					if err != nil {
+						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						continue
+					}
+					// update metrics
+					if idx == 0 {
+						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
+						if err != nil {
+							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
+						} else {
+							pTxs.Set(float64(totals[chain]))
+						}
+					}
+					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
+					if err != nil {
+						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+					}
+					if included || confirmed {
+						logger.Info().Msgf("send outTx already included")
+					}
+					chain := getTargetChain(send)
+					outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+
+					sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
+					// add some deterministic randomness to the sinceBlock to spread out the load across blocks
+					offset := send.Index[len(send.Index)-1] % 4
+					sinceBlock -= int64(offset)
+
+					// if there are many outstanding sends, then all first 80 has priority
+					// otherwise, only the first one has priority
+					if isScheduled(sinceBlock, idx < 80) {
+						if active, duration := outTxMan.IsOutTxActive(outTxID); active {
+							logger.Warn().Dur("active", duration).Msgf("Already active: %s", outTxID)
+						} else {
+							outTxMan.StartTryProcess(outTxID)
+						}
+						outSendList = append(outSendList, send)
+					}
+					if idx > 100 { // only look at 50 sends per chain
+						break
+					}
+				}
+				if len(outSendList) > 0 {
+					sizeOutSendList := len(outSendList)
+					numGroups := (sizeOutSendList + 9) / 10
+					sendListGroups := make([][]*types.CrossChainTx, numGroups)
+					for i := 0; i < sizeOutSendList; i++ {
+						groupID := (i + int(bn)) % numGroups
+						sendListGroups[groupID] = append(sendListGroups[groupID], outSendList[i])
+					}
+					for gi := 0; gi < numGroups; gi++ {
+						go co.TryProcessOutTxBatch(sendListGroups[gi], outTxMan, chain.String())
+					}
+				}
+
 			}
 			// update last processed block number
 			lastBlockNum = bn
@@ -640,6 +756,21 @@ func isScheduled(diff int64, priority bool) bool {
 		return true
 	}
 	return false
+}
+
+// trim "bogus" pending sends that are not actually pending
+// input sends must be sorted by nonce ascending
+func trimSends(sends []*types.CrossChainTx) int {
+	start := 0
+	for i := len(sends) - 1; i >= 1; i-- {
+		// from right to left, if there's a big hole, then before the gap are probably
+		// bogus "pending" sends that are already processed but not yet confirmed.
+		if sends[i].OutBoundTxParams.OutBoundTxTSSNonce > sends[i-1].OutBoundTxParams.OutBoundTxTSSNonce+50 {
+			start = i
+			break
+		}
+	}
+	return start
 }
 
 func splitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
