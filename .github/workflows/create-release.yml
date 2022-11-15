@@ -1,0 +1,38 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - v*
+
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+      ## Disabled for Testnet phase - Approval is required on deployment 
+      # - uses: trstringer/manual-approval@v1
+      #   with:
+      #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     approvers: ZetaChain-Team
+      #     minimum-approvals: 2
+      #     issue-title: "Creating new release ${{ github.ref_name }}"
+      #     exclude-workflow-initiator-as-approver: false
+
+      - name: Create GitHub Release for ZetaCore/ZetaClient
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          files: |
+            zetacored
+            zetaclientd
+            cosmovisor
+

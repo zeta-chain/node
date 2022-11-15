@@ -1,0 +1,87 @@
+name: Deploy To Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      RELEASE_NAME:
+        description: 'Name of the release to deploy'
+        type: string
+        required: true
+      UPGRADE_BLOCK_HEIGHT:
+        description: 'What block height to upgrade at'
+        type: string
+        required: true
+      ENVIRONMENT:
+        description: 'Environment to deploy this release to'
+        type: environment
+        required: true
+      CHAIN_ID: 
+        description: 'Chain ID to deploy this release to'
+        type: string
+        required: true
+
+
+env:
+  S3_BUCKET_NAME: "zetachain-deployment-files"
+  AWS_REGION: "us-east-1"
+  CHAIN_ID: if
+
+jobs:
+  deploy-release:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.ENVIRONMENT }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get release file URL from s3
+        run: |
+          RELEASE_NAME=cosmovisor-action
+          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/zetacored"
+          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/zetaclientd"
+          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/cosmovisor"
+
+      - name: Test Inputs
+        run: |
+          echo  ${{ github.event.inputs.RELEASE_NAME }}
+          echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+          echo  ${{ github.event.inputs.ENVIRONMENT }}
+          echo  ${{ github.event.inputs.CHAIN_ID }}
+
+
+      ## Verification Step 
+      # - Check the URls and other parts of the proposal are valid
+
+      # Approval needed to deploy to environments other than development
+      # - uses: trstringer/manual-approval@v1
+      #   if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
+      #   with:
+      #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     approvers: ZetaChain-Team
+      #     minimum-approvals: 2
+      #     issue-title: "Creating new release ${{ github.ref_name }}"
+      #     exclude-workflow-initiator-as-approver: false
+
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
+        with:
+          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+          VERSION: "0.0.1"
+          # DESCRIPTION: "description"
+          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          # CHECKSUM_ZETACORED: ""
+          # CHECKSUM_ZETACLIENTD: ""
+          CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
+          API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+

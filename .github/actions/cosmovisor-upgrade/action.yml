@@ -33,6 +33,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
     - name: Set ENV Variables
       run: |
         echo Running Cosmovisor Upgrade Action
@@ -65,7 +73,7 @@ runs:
         BUCKET_PATH="https://$S3_BUCKET_NAME.s3.us-east-1.amazonaws.com/$RELEASE_NAME"
         echo BUCKET_PATH:$BUCKET_PATH
         echo UPGRADE_HEIGHT: ${{env.UPGRADE_HEIGHT}}
-
+        aws s3 ls s3://zetachain-deployment-files/cosmovisor
         COMMAND_ID=$(aws ssm send-command \
           --targets Key=tag:Name,Values=validator0 \
           --document-name "AWS-RunShellScript" \
@@ -86,17 +94,17 @@ runs:
 
       shell: bash
 
-    - name: Vote on Proposal (All Validator Nodes)
-      run: |
-        #Get Proposal ID 
-        source ${{ github.action_path }}/functions
+    # - name: Vote on Proposal (All Validator Nodes)
+    #   run: |
+    #     #Get Proposal ID 
+    #     source ${{ github.action_path }}/functions
         
-        COMMAND_ID=$(aws ssm send-command \
-          --targets Key=tag:Role,Values=validator \
-          --document-name "AWS-RunShellScript" \
-          --parameters "commands=['export HOME=/home/zetachain && /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote \$(/home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored q gov proposals --reverse -o json | jq -r .proposals[0].proposal_id) yes --from val --keyring-backend test --chain-id $CHAIN_ID --yes']" | jq .Command.CommandId -r || exit 1)
+    #     COMMAND_ID=$(aws ssm send-command \
+    #       --targets Key=tag:Role,Values=validator \
+    #       --document-name "AWS-RunShellScript" \
+    #       --parameters "commands=['export HOME=/home/zetachain && /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote \$(/home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored q gov proposals --reverse -o json | jq -r .proposals[0].proposal_id) yes --from val --keyring-backend test --chain-id $CHAIN_ID --yes']" | jq .Command.CommandId -r || exit 1)
         
-        echo COMMAND_ID: $COMMAND_ID
-        check_cmd_status $COMMAND_ID
-      shell: bash
+    #     echo COMMAND_ID: $COMMAND_ID
+    #     check_cmd_status $COMMAND_ID
+    #   shell: bash
 
