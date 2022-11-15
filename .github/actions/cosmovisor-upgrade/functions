@@ -1,6 +1,6 @@
 #!/bin/bash
 
-run_ssm_cmds_validators () {
+run_validators () {
     COMMAND_ID=$(aws ssm send-command \
     --targets Key=tag:Role,Values=validator \
     --document-name "AWS-RunShellScript" \
@@ -8,17 +8,9 @@ run_ssm_cmds_validators () {
     echo "$COMMAND_ID"
 }
 
-run_ssm_cmds_validator0 () {
+run_validator0 () {
     COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:Name,Values=validator0  Key=tag:Chain,Values=zetachain \
-    --document-name "AWS-RunShellScript" \
-    --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
-    echo "$COMMAND_ID"
-}
-
-run_ssm_cmds_indexer () {
-    COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:Role,Values=indexer \
+    --targets Key=tag:Name,Values=validator0 \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"

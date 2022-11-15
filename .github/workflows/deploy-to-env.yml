@@ -45,6 +45,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # - name: Set Chain ID Automatically
+      #   run: |
+      #     # IF ENVIRONMENT IS Development, SET CHAIN_ID TO develop_101-1
+      #     if [ ${{ github.event.inputs.ENVIRONMENT }} == "Development" ]; then
+      #       echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
+      #     # IF ENVIRONMENT IS Staging, SET CHAIN_ID TO staging_101-1
+      #     elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
+      #       echo "CHAIN_ID=athens_101-1" >> $GITHUB_ENV
+      #     fi
+      #     echo "CHAIN_ID=${{ github.event.inputs.CHAIN_ID }}" >> $GITHUB_ENV
+          
       - name: Get release file URL from s3
         run: |
           RELEASE_NAME=cosmovisor-action
@@ -53,25 +64,25 @@ jobs:
           echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/cosmovisor"
 
       - name: Test Inputs
+        if: ${{ env.ACT }}
         run: |
           echo  ${{ github.event.inputs.RELEASE_NAME }}
           echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
           echo  ${{ github.event.inputs.ENVIRONMENT }}
           echo  ${{ github.event.inputs.CHAIN_ID }}
 
-
       ## Verification Step 
       # - Check the URls and other parts of the proposal are valid
 
       # Approval needed to deploy to environments other than development
-      # - uses: trstringer/manual-approval@v1
-      #   if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
-      #   with:
-      #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-      #     approvers: ZetaChain-Team
-      #     minimum-approvals: 2
-      #     issue-title: "Creating new release ${{ github.ref_name }}"
-      #     exclude-workflow-initiator-as-approver: false
+      - uses: trstringer/manual-approval@v1
+        if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
+        with:
+          secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          approvers: charliemc0, brewmaster012 , kingpinXD #ZetaChain-Team
+          minimum-approvals: 2
+          issue-title: "Creating new release ${{ github.ref_name }}"
+          exclude-workflow-initiator-as-approver: false
 
       - name: Cosmovisor Upgrade Proposal and Vote
         uses:  ./.github/actions/cosmovisor-upgrade
@@ -80,8 +91,13 @@ jobs:
           VERSION: "0.0.1"
           # DESCRIPTION: "description"
           S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          # CHECKSUM_ZETACORED: ""
-          # CHECKSUM_ZETACLIENTD: ""
+          # ZETACORED_CHECKSUM: ""
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/zetacored"
+          # ZETACLIENTD_CHECKSUM: ""
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.RELEASE_NAME }}/zetaclientd"
+
           CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
           API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+          UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+
 

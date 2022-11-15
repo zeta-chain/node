@@ -3,6 +3,7 @@
 .env
 .idea/
 .secrets
+.actrc
 coverage
 coverage.json
 coverage.out
