@@ -3,7 +3,15 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"math/big"
+	"os"
+	"strconv"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -14,15 +22,11 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"math/big"
-	"os"
-	"strconv"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var _ ChainClient = &BitcoinChainClient{}
+
+const addrLen = 20
 
 // Chain configuration struct
 // Filled with above constants depending on chain
@@ -178,11 +182,15 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			amount := big.NewFloat(inTx.Value)
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)
-			message := hex.EncodeToString(inTx.MemoBytes)
+			if len(inTx.MemoBytes) < addrLen {
+				return errors.New("invalid btc memo length")
+			}
+			toAddr := hex.EncodeToString(inTx.MemoBytes[:addrLen])
+			message := hex.EncodeToString(inTx.MemoBytes[addrLen:])
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
 				ob.chain.String(),
-				inTx.FromAddress,
+				toAddr,
 				"ZETA",
 				amountInt.String(),
 				amountInt.String(),
