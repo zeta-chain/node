@@ -1,10 +1,4 @@
-name: Development - Build & Deploy
-
-## TODO 
-  # Remove static IAM creds and use short lived via Role Assumption
-  # Add Testing Stage
-  # Add Rollback Stage
-  # Setup CosmoVisor Proposal action
+name: Build and Upload
 
 on:
   push:
@@ -12,18 +6,19 @@ on:
       - develop
       - feature/zetacore-observer-fixes
       - cosmovisor-action
-      
   pull_request:
     types: [opened, synchronize, ready_for_review]
+  release:
+    types: [created]
 
 env:
-  ENVIRONMENT_NAME: "DEVELOPMENT"
+  # ENVIRONMENT_NAME: "DEVELOPMENT"
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  deploy-dev:
+  build-and-upload:
     runs-on: ubuntu-latest
     environment: 
       name: development
@@ -39,11 +34,15 @@ jobs:
       - name: Build Binaries
         uses: ./.github/actions/build-binaries
         with:
-          run-tests: ${{ env.ENVIRONMENT_NAME != 'DEVELOPMENT' }}
+          run-tests: false # ${{ env.GITHUB_REF_NAME != 'develop' }}
           build-indexer: false
           go-version: '1.18'
 
-      - name: Install AWS CLI
+      # - name: Test
+      #   if: ${{ env.GITHUB_REF_NAME != 'develop' }}
+      #   run: go test -v -coverprofile coverage.out  ./...
+
+      - name: Install AWS CLI # Used for local testing of Git Actions
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
@@ -67,6 +66,10 @@ jobs:
             zetaclientd
             cosmovisor
 
+
+
+
+#### DELETE THIS SECTION 
       ## Not being used anymore / for now
       # - name: Build, tag, and push image to Amazon ECR
       #   uses:  ./.github/actions/upload-to-ecr
