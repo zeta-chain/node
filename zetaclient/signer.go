@@ -14,6 +14,8 @@ import (
 type TSSSigner interface {
 	Pubkey() []byte
 	Sign(data []byte) ([65]byte, error)
+	SignBatch(digests [][]byte) ([][65]byte, error)
+
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
 }
@@ -31,6 +33,20 @@ func (s TestSigner) Sign(digest []byte) ([65]byte, error) {
 	var sigbyte [65]byte
 	copy(sigbyte[:], sig[:65])
 	return sigbyte, nil
+}
+
+func (s TestSigner) SignBatch(digests [][]byte) ([][65]byte, error) {
+	sigs := make([][65]byte, len(digests))
+	for i, digest := range digests {
+		sig, err := crypto.Sign(digest, s.PrivKey)
+		if err != nil {
+			return nil, err
+		}
+		var sigbyte [65]byte
+		copy(sigbyte[:], sig[:65])
+		sigs[i] = sigbyte
+	}
+	return sigs, nil
 }
 
 func (s TestSigner) Pubkey() []byte {
