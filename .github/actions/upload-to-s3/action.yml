@@ -36,9 +36,9 @@ runs:
         done <<< $(echo "${{ inputs.files }}" | awk NF)
       shell: bash   
       
-    - name: Save Latest Deployment ID to SSM # This is usually the release name
-      run: |
-        RELEASE_NAME=${{ inputs.release-name }}
-        aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value "$RELEASE_NAME" | jq # > /dev/null 2>&1
-      shell: bash
+    # - name: Save Latest Deployment ID to SSM # This is usually the release name
+    #   run: |
+    #     RELEASE_NAME=${{ inputs.release-name }}
+    #     aws ssm put-parameter --overwrite --name '/deployments/latest-deployment-id' --value "$RELEASE_NAME" | jq # > /dev/null 2>&1
+    #   shell: bash
 
