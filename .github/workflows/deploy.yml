@@ -1,5 +1,4 @@
-name: Deploy To Environment
-
+name: Deploy 
 on:
   workflow_dispatch:
     inputs:
@@ -48,24 +47,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # - name: Set Chain ID Automatically
+      # - name: Set Chain ID Automatically based on Environment
       #   run: |
-      #     # IF ENVIRONMENT IS Development, SET CHAIN_ID TO develop_101-1
-      #     if [ ${{ github.event.inputs.ENVIRONMENT }} == "Development" ]; then
+      #     if [ ${{ github.event.inputs.ENVIRONMENT }} == "development" ]; then
       #       echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
-      #     # IF ENVIRONMENT IS Staging, SET CHAIN_ID TO staging_101-1
       #     elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
       #       echo "CHAIN_ID=athens_101-1" >> $GITHUB_ENV
       #     fi
       #     echo "CHAIN_ID=${{ github.event.inputs.CHAIN_ID }}" >> $GITHUB_ENV
           
-      - name: Get release file URL from s3
-        run: |
-          RELEASE_NAME=cosmovisor-action
-          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.event.inputs.RELEASE_NAME }}/zetacored"
-          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.event.inputs.RELEASE_NAME }}zetaclientd"
-          echo "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.event.inputs.RELEASE_NAME }}/cosmovisor"
-
       - name: Test Inputs
         if: ${{ env.ACT }}
         run: |
@@ -83,14 +73,13 @@ jobs:
         with:
           secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           approvers: charliemc0, brewmaster012 , kingpinXD #ZetaChain-Team
-          minimum-approvals: 2
-          issue-title: "Creating new release ${{ github.ref_name }}"
+          minimum-approvals: 1
+          issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
           exclude-workflow-initiator-as-approver: false
 
       - name: Cosmovisor Upgrade Proposal and Vote
         uses:  ./.github/actions/cosmovisor-upgrade
         with:
-          RELEASE_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
           VERSION: ${{ github.event.inputs.VERSION }}
           # DESCRIPTION: ${{ github.event.inputs.VERSION }}
           # ZETACORED_CHECKSUM: ""
