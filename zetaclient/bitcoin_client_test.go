@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
 	"testing"
@@ -30,6 +31,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	client, err := NewBitcoinClient(common.BTCTestnetChain, nil, tss, "", nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
+
 	//suite.BitcoinChainClient.Start()
 }
 
@@ -48,7 +50,6 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("block %d", bn)
 
 	hashStr := "0000000000000032cb372f5d5d99c1ebf4430a3059b67c47a54dd626550fb50d"
-	//expected := "Amount: 0.0002, Address: 0x6162303132333435363738393031323334353637, Message: 89012345678901Hello World!"
 	var hash chainhash.Hash
 	err = chainhash.Decode(&hash, hashStr)
 	suite.Require().NoError(err)
@@ -59,7 +60,7 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
+	inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2", &log.Logger)
 
 	suite.Require().Equal(1, len(inTxs))
 	suite.Require().Equal(inTxs[0].Value, 0.0001)
@@ -73,6 +74,25 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("from: %s", inTxs[0].FromAddress)
 	suite.Require().Equal(inTxs[0].BlockNumber, uint64(2406185))
 	suite.Require().Equal(inTxs[0].TxHash, "889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797")
+}
+
+// a tx with memo around 81B (is this allowed1?)
+func (suite *BitcoinClientTestSuite) Test2() {
+	hashStr := "000000000000002fd8136dbf91708898da9d6ae61d7c354065a052568e2f2888"
+	var hash chainhash.Hash
+	err := chainhash.Decode(&hash, hashStr)
+	suite.Require().NoError(err)
+
+	//:= suite.BitcoinChainClient.rpcClient.GetBlock(&hash)
+	block, err := suite.BitcoinChainClient.rpcClient.GetBlockVerboseTx(&hash)
+	suite.Require().NoError(err)
+	suite.T().Logf("block confirmation %d", block.Confirmations)
+	suite.T().Logf("block height %d", block.Height)
+	suite.T().Logf("block txs len %d", len(block.Tx))
+
+	inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2", &log.Logger)
+
+	suite.Require().Equal(0, len(inTxs))
 }
 
 func TestBitcoinChainClient(t *testing.T) {
