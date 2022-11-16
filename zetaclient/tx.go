@@ -14,9 +14,9 @@ import (
 	"time"
 )
 
-func (b *ZetaCoreBridge) PostZetaConversionRate(chain common.Chain, rate string, blockNum uint64) (string, error) {
+func (b *ZetaCoreBridge) PostZetaConversionRate(chain zetaObserverTypes.Chain, rate string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.String(), rate, blockNum)
+	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.ChainName.String(), rate, blockNum)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostZetaConversionRate broadcast fail")
@@ -36,9 +36,9 @@ func (b *ZetaCoreBridge) PostGasBalance(chain common.Chain, gasBalance string, b
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
+func (b *ZetaCoreBridge) PostGasPrice(chain zetaObserverTypes.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, supply, blockNum)
+	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainName.String(), gasPrice, supply, blockNum)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
@@ -58,9 +58,9 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txH
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
+func (b *ZetaCoreBridge) PostNonce(chain zetaObserverTypes.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
+	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainName.String(), nonce)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")
@@ -85,9 +85,9 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, receiver str
 }
 
 // FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain string, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain zetaObserverTypes.Chain, nonce int, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain, uint64(nonce), coinType)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
@@ -122,9 +122,9 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
+func (b *ZetaCoreBridge) GetObserverList(chain zetaObserverTypes.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.String(), observationType)
+	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.ChainName.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
 		ObservationChain: chain.String(),
 		ObservationType:  observationType,
@@ -166,9 +166,9 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 	return res.Block, nil
 }
 
-func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
+func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain zetaObserverTypes.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
+	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query GetLastBlockHeight error")
 		return nil, err
@@ -186,9 +186,9 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 	return resp.Height, nil
 }
 
-func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
+func (b *ZetaCoreBridge) GetNonceByChain(chain zetaObserverTypes.Chain) (*types.ChainNonces, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
+	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query QueryGetChainNoncesRequest error")
 		return nil, err
@@ -228,9 +228,9 @@ func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 	return resp.Keygen, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey string) (string, error) {
+func (b *ZetaCoreBridge) SetTSS(chain zetaObserverTypes.Chain, address string, pubkey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.String(), address, pubkey)
+	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), address, pubkey)
 	zetaTxHash, err := b.Broadcast(msg)
 	if err != nil {
 		b.logger.Err(err).Msg("SetNodeKey broadcast fail")

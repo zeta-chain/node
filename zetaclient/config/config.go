@@ -1,6 +1,7 @@
 package config
 
 import (
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 
 	"github.com/zeta-chain/zetacore/common"
@@ -56,7 +57,7 @@ const (
 `
 )
 
-var ChainsEnabled = []common.Chain{}
+var ChainsEnabled = []zetaObserverTypes.Chain{}
 
 var Chains = map[string]*types.ChainETHish{
 	common.Ganache.String(): {

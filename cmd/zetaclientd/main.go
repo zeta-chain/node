@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
@@ -62,14 +63,16 @@ func main() {
 	}
 
 	chains := strings.Split(*enabledChains, ",")
+	chainList := []zetaObserverTypes.Chain{}
+	supportedChains := mc.GetSupportedChains()
 	for _, chain := range chains {
-		if c, err := common.ParseChain(chain); err == nil {
-			config.ChainsEnabled = append(config.ChainsEnabled, c)
-		} else {
-			log.Error().Err(err).Msgf("invalid chain %s", chain)
-			return
+		for _, supportedChain := range supportedChains {
+			if supportedChain.ChainName.String() == chain {
+				chainList = append(chainList, *supportedChain)
+			}
 		}
 	}
+	config.ChainsEnabled = chainList
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
 
 	if *logConsole {

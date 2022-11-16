@@ -39,14 +39,14 @@ const (
 
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
-	signerMap map[common.Chain]*Signer
-	clientMap map[common.Chain]*ChainObserver
+	signerMap map[zetaObserverModuleTypes.Chain]*Signer
+	clientMap map[zetaObserverModuleTypes.Chain]*ChainObserver
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[zetaObserverModuleTypes.Chain]*Signer, clientMap map[zetaObserverModuleTypes.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -325,14 +325,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 
 	var to ethcommon.Address
 	var err error
-	var toChain common.Chain
+	var toChain *zetaObserverModuleTypes.Chain
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		toChain = GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(send.InBoundTxParams.SenderChain))
 		to = ethcommon.HexToAddress(send.InBoundTxParams.Sender)
-		toChain, err = common.ParseChain(send.InBoundTxParams.SenderChain)
 		logger.Info().Msgf("Abort: reverting inbound")
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.OutBoundTxParams.Receiver)
-		toChain, err = common.ParseChain(send.OutBoundTxParams.ReceiverChain)
+		toChain = GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(send.OutBoundTxParams.ReceiverChain))
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
@@ -341,13 +341,13 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 
 	// Early return if the send is already processed
 	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
-	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
+	included, confirmed, _ := co.clientMap[*toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
 	}
 
-	signer := co.signerMap[toChain]
+	signer := co.signerMap[*toChain]
 	message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
 	if err != nil {
 		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
@@ -403,7 +403,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	} else {
 		cnt.Inc()
 	}
-	signers, err := co.bridge.GetObserverList(toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	signers, err := co.bridge.GetObserverList(*toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.OutBoundTxParams.OutBoundTxTSSNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 
@@ -497,13 +497,11 @@ func getTargetChain(send *types.CrossChainTx) string {
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (*ChainObserver, error) {
 	chainStr := getTargetChain(send)
-	c, err := common.ParseChain(chainStr)
-	if err != nil {
-		return nil, err
-	}
-	chainOb, found := co.clientMap[c]
+	chain := GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(chainStr))
+
+	chainOb, found := co.clientMap[*chain]
 	if !found {
-		return nil, fmt.Errorf("chain %s not found", c)
+		return nil, fmt.Errorf("chain %s not found", chain.String())
 	}
 	return chainOb, nil
 }

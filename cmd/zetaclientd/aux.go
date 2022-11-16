@@ -3,7 +3,7 @@ package main
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -32,33 +32,33 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	signerMap := make(map[common.Chain]*mc.Signer)
-
-	for _, chain := range mcconfig.ChainsEnabled {
+func CreateSignerMap(tss mc.TSSSigner) (map[zetaObserverTypes.Chain]*mc.Signer, error) {
+	signerMap := make(map[zetaObserverTypes.Chain]*mc.Signer)
+	supportedChains := mc.GetSupportedChains()
+	for _, chain := range supportedChains {
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+		signer, err := mc.NewSigner(*chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
 			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
 			return nil, err
 		}
-		signerMap[chain] = signer
+		signerMap[*chain] = signer
 	}
 
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.ChainObserver)
-
-	for _, chain := range mcconfig.ChainsEnabled {
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[zetaObserverTypes.Chain]*mc.ChainObserver, error) {
+	clientMap := make(map[zetaObserverTypes.Chain]*mc.ChainObserver)
+	supportedChains := mc.GetSupportedChains()
+	for _, chain := range supportedChains {
 		log.Info().Msgf("starting %s observer...", chain)
-		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		co, err := mc.NewChainObserver(*chain, bridge, tss, dbpath, metrics)
 		if err != nil {
 			log.Err(err).Msgf("%s NewChainObserver", chain)
 			return nil, err
 		}
-		clientMap[chain] = co
+		clientMap[*chain] = co
 	}
 
 	return &clientMap, nil

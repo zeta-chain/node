@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"strings"
 	"time"
@@ -25,7 +25,7 @@ type TSSSigner interface {
 
 type Signer struct {
 	client              *ethclient.Client
-	chain               common.Chain
+	chain               zetaObserverTypes.Chain
 	chainID             *big.Int
 	tssSigner           TSSSigner
 	ethSigner           ethtypes.Signer
@@ -34,7 +34,7 @@ type Signer struct {
 	logger              zerolog.Logger
 }
 
-func NewSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
+func NewSigner(chain zetaObserverTypes.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*Signer, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -91,14 +91,16 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
-//    function onReceive(
-//        bytes calldata originSenderAddress,
-//        uint256 originChainId,
-//        address destinationAddress,
-//        uint zetaAmount,
-//        bytes calldata message,
-//        bytes32 internalSendHash
-//    ) external virtual {}
+// function onReceive(
+//
+//	bytes calldata originSenderAddress,
+//	uint256 originChainId,
+//	address destinationAddress,
+//	uint zetaAmount,
+//	bytes calldata message,
+//	bytes32 internalSendHash
+//
+// ) external virtual {}
 func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
@@ -119,15 +121,15 @@ func (signer *Signer) SignOutboundTx(sender ethcommon.Address, srcChainID *big.I
 	return tx, nil
 }
 
-//function onRevert(
-//address originSenderAddress,
-//uint256 originChainId,
-//bytes calldata destinationAddress,
-//uint256 destinationChainId,
-//uint256 zetaAmount,
-//bytes calldata message,
-//bytes32 internalSendHash
-//) external override whenNotPaused onlyTssAddress
+// function onRevert(
+// address originSenderAddress,
+// uint256 originChainId,
+// bytes calldata destinationAddress,
+// uint256 destinationChainId,
+// uint256 zetaAmount,
+// bytes calldata message,
+// bytes32 internalSendHash
+// ) external override whenNotPaused onlyTssAddress
 func (signer *Signer) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error

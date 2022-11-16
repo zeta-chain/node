@@ -13,6 +13,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
@@ -34,14 +36,16 @@ func main() {
 	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN", "enable chains, comma separated list")
 	flag.Parse()
 	chains := strings.Split(*enabledChains, ",")
+	chainList := []zetaObserverTypes.Chain{}
+	supportedChains := zetaclient.GetSupportedChains()
 	for _, chain := range chains {
-		if c, err := common.ParseChain(chain); err == nil {
-			config.ChainsEnabled = append(config.ChainsEnabled, c)
-		} else {
-			log.Error().Err(err).Msgf("invalid chain %s", chain)
-			return
+		for _, supportedChain := range supportedChains {
+			if supportedChain.ChainName.String() == chain {
+				chainList = append(chainList, *supportedChain)
+			}
 		}
 	}
+	config.ChainsEnabled = chainList
 
 	privkey := os.Getenv("PRIVATE_KEY")
 	if privkey == "" {
