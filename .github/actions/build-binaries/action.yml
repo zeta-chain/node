@@ -6,7 +6,8 @@ inputs:
     required: true
   run-tests:  
     description: 'Run Build Tests (true/false)'
-    required: true
+    required: false
+    default: "false"
   go-version:  
     description: 'Optional - Install a specific verion of Go'
     required: false
@@ -28,31 +29,27 @@ runs:
         go-version: ${{ inputs.go-version }}  
 
     - name: build zetacored and zetaclientd
+      shell: bash
       run: |
         make install
         cp "$HOME"/go/bin/* ./
 
-      shell: bash
-
-    # - name: Build Indexer
-    #   run: ${GITHUB_ACTION_PATH}/build-indexer.sh
-    #   if: ${{ inputs.build-indexer == 'true' }}
-    #   shell: bash
 
     - name: Cosmovisor
+      shell: bash
       run: |
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
+
+    - name: Run Build tests
       shell: bash
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+      if: ${{ inputs.run-tests == 'true' }}
 
-    # - name: Run Build tests
-    #   run: |
-    #     echo "Running Build Tests"
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
-    #   shell: bash
-    #   if: ${{ inputs.run-tests == 'true' }}
-
-    - run: echo "Completed ZetaChain Build Action"
+    - run: echo "Completed Build Action"
       shell: bash
 
 

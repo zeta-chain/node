@@ -1,13 +1,26 @@
-name: Build and Unit Test
+name: Build
 
 on:
+  push:
+    branches:
+      - develop
+      - feature/zetacore-observer-fixes
+      - cosmovisor-action
   pull_request:
-    branches: [ main, develop]
+    types: [ready_for_review]
+  release:
+    types: [created]
+
+env:
+  S3_BUCKET_NAME: "zetachain-deployment-files"
+  AWS_REGION: "us-east-1"
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-
-  test:
+  build-and-upload:
     runs-on: ubuntu-latest
+    environment: 
+      name: development
     steps:
     - uses: actions/checkout@v3
 
@@ -16,13 +29,87 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
+    - name: Build Binaries
+      uses: ./.github/actions/build-binaries
       with:
-        go-version: 1.18
-
-    - name: Build
-      run: make install
+        build-indexer: false
+        go-version: '1.18'
 
     - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'develop' }}
       run: go test -v -coverprofile coverage.out  ./...
+
+    - name: Install AWS CLI # Used for local testing of Git Actions
+      run: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install --update 
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: upload-files-to-s3
+      uses: ./.github/actions/upload-to-s3
+      with:
+        bucket-name: ${{ env.S3_BUCKET_NAME }}
+        release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+        git-sha: ${{ github.sha }}
+        files: |
+          zetacored
+          zetaclientd
+          cosmovisor
+
+
+      # ## Not Used At This Time
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v1
+
+      # - name: Build, tag, and push image to Amazon ECR
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     ECR_REPOSITORY: zetachain
+      #     IMAGE_TAG: latest
+      #   run: |
+      #     docker build -f Dockerfile.zetacore_binary -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+#### DELETE THIS SECTION BELOW
+      ## Not being used anymore / for now
+      # - name: Build, tag, and push image to Amazon ECR
+      #   uses:  ./.github/actions/upload-to-ecr
+      #   with:
+      #     DOCKER_FILENAME: Dockerfile.zetacore_binary
+      #     ECR_REPOSITORY: zetachain
+      #     IMAGE_TAG: latest
+
+      # - name: Update Nodes (OLD Method)
+      #   uses:  ./.github/actions/update-nodes
+      #   with:
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     TAKE_SNAPSHOTS: false
+      #     UPDATE_INDEXER: false
+
+
+      # - name: Require Approval To Create a Release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/athens')
+      #   with:
+      #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     files: |
+      #       zetacored
+      #       zetaclientd
+
+      # - name: Create GitHub Release for ZetaCore/ZetaClient
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/athens')
+      #   with:
+      #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     files: |
+      #       zetacored
+      #       zetaclientd
