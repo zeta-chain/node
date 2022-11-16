@@ -21,11 +21,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	observationType := zetaObserverTypes.ObservationType_InBoundTx
 	observationChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.SenderChain)
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %s, Observation %s", msg.SenderChain, observationType.String()))
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.SenderChain, observationType.String()))
 	}
 	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ReceiverChain)
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %s, Observation %s", msg.ReceiverChain, observationType.String()))
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 
 	//Check is msg.Creator is authorized to vote

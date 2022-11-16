@@ -67,7 +67,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	// Remove OutTX tracker and change CCTX prefix store
-	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%d-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil

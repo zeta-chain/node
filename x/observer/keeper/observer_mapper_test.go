@@ -105,7 +105,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 			for _, mapper := range test.mapper {
 				keeper.SetObserverMapper(ctx, mapper)
 			}
-			mapper, found := keeper.GetObserverMapper(ctx, test.assertChain, test.assertObsType.String())
+			mapper, found := keeper.GetObserverMapper(ctx, test.assertChain, test.assertObsType)
 			assert.Equal(t, test.isFound, found)
 			if test.isFound {
 				assert.Equal(t, test.assertObsListLen, len(mapper.ObserverList))

@@ -164,11 +164,11 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	// TODO Change client/tx.go to send int64
 	chainName := zetaObserverTypes.ParseStringToObserverChain(msg.Chain)
 	if chainName == 0 {
-		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %d", msg.Chain))
+		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %s", msg.Chain))
 	}
 	chain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, chainName)
 	if !found {
-		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %d", msg.Chain))
+		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %s", msg.Chain))
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{

@@ -71,27 +71,27 @@ func main() {
 	}
 
 	probeMap := make(map[string]*Probe)
-	for _, name := range config.ChainsEnabled {
-		if name == "" || name.String() == common.RopstenChain.String() {
+	for _, supportedChain := range config.ChainsEnabled {
+		if supportedChain.ChainName.String() == "" || supportedChain.String() == common.RopstenChain.String() {
 			continue
 		}
-		chain := config.Chains[name.String()]
-		if endpoint := os.Getenv(name.String() + "_ENDPOINT"); endpoint != "" {
+		chain := config.Chains[supportedChain.ChainName.String()]
+		if endpoint := os.Getenv(supportedChain.ChainName.String() + "_ENDPOINT"); endpoint != "" {
 			chain.Endpoint = endpoint
 		}
 		client, err := ethclient.Dial(chain.Endpoint)
 		if err != nil {
-			log.Fatal().Err(err).Msgf("connect to chain error %s", name)
+			log.Fatal().Err(err).Msgf("connect to chain error %s", chain)
 			continue
 		}
 		auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chain.ChainID)
 		if err != nil {
-			log.Fatal().Err(err).Msgf("bind keyed transactor error %s", name)
+			log.Fatal().Err(err).Msgf("bind keyed transactor error %s", chain)
 			continue
 		}
 
 		probe := NewProbe(client, &connABI, address, chain.ChainID, chain.ConnectorContractAddress, chain.ZETATokenContractAddress, auth)
-		probeMap[name.String()] = probe
+		probeMap[supportedChain.ChainName.String()] = probe
 
 	}
 
