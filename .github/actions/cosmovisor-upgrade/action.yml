@@ -1,9 +1,6 @@
 name: 'Create Cosmovisor Proposal'
-description: 'WIP - Does cosmovisor stuff '
+description: 'Creates Cosmovisor Upgrade Proposal and Votes On All TestNet Valiators'
 inputs:
-  # RELEASE_NAME:  
-  #   description: 'Name of GitHub tag or release (Usually $GITHUB_REF_NAME)'
-  #   required: true
   VERSION:  
     description: 'Version number for the release (0.0.1)'
     required: true
@@ -46,8 +43,6 @@ runs:
       shell: bash
       run: |
         echo Running Cosmovisor Upgrade Action
-        # echo "RELEASE_NAME=${{ inputs.RELEASE_NAME }}" >> $GITHUB_ENV
-        # echo "VERSION=${{ inputs.VERSION }}" >> $GITHUB_ENV
         echo "DESCRIPTION=${{ inputs.DESCRIPTION }}" >> $GITHUB_ENV
         echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
         echo "ZETACORED_CHECKSUM=${{ inputs.ZETACORED_CHECKSUM }}" >> $GITHUB_ENV
@@ -88,7 +83,8 @@ runs:
     - name: Create & Submit Proposal 
       shell: bash
       run: |
-        source ${{ github.action_path }}/functions        
+        source ${{ github.action_path }}/functions    
+        UPGRADE_INFO="{"binaries":{"linux/arm64":"${{ inputs.ZETACLIENTD_URL }}","linux/amd64":"${{ inputs.ZETACORED_URL }}"}}"   
         COMMAND_ID=$(aws ssm send-command \
           --targets Key=tag:Name,Values=validator0 \
           --document-name "AWS-RunShellScript" \
@@ -101,9 +97,8 @@ runs:
               --title \"${{ inputs.VERSION }}\" \
               --keyring-backend test \
               --chain-id \"$CHAIN_ID\" \
-              --upgrade-info \'{\"binaries\":{\"linux/arm64\":\"${{ inputs.ZETACLIENTD_URL }}",\"linux/amd64\":\"${{ inputs.ZETACORED_URL }}"}}\' \
+             --upgrade-info \'{\"binaries\":{\"zetaclientd-linux/arm64\":\"${{ inputs.ZETACLIENTD_URL }}",\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}"}}\' \
               --yes']" | jq .Command.CommandId -r || exit 1)
-
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
 

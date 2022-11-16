@@ -18,7 +18,8 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-      ## Disabled for Testnet phase - Approval is required on deployment 
+      ## Disabled during Testnet phase - Approval is required on deployment 
+      ## When we are opensourced approval will be required for release creation
       # - uses: trstringer/manual-approval@v1
       #   with:
       #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
