@@ -11,7 +11,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -30,7 +29,6 @@ var _ ChainClient = &BitcoinChainClient{}
 type BitcoinChainClient struct {
 	chain       common.Chain
 	endpoint    string
-	ticker      *time.Ticker
 	rpcClient   *rpcclient.Client
 	zetaClient  *ZetaCoreBridge
 	Tss         TSSSigner
@@ -39,10 +37,10 @@ type BitcoinChainClient struct {
 	BlockTime   uint64 // block time in seconds
 	txWatchList map[ethcommon.Hash]string
 	mu          *sync.Mutex
-	db          *leveldb.DB
-	metrics     *metricsPkg.Metrics
-	stop        chan struct{}
-	logger      zerolog.Logger
+	//db          *leveldb.DB
+	metrics *metricsPkg.Metrics
+	stop    chan struct{}
+	logger  zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
@@ -59,6 +57,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.metrics = metrics
+	ob.confCount = 0
 
 	ob.endpoint = config.Chains[chain.String()].Endpoint
 
@@ -172,7 +171,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
-		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress)
+		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger)
 
 		for _, inTx := range inTxs {
 			//ob.logger.Info().Msgf("incoming tx %v", inTx)
@@ -257,11 +256,11 @@ type BTCInTxEvnet struct {
 // relevant tx must have the following vouts as the first two vouts:
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
-func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string) []*BTCInTxEvnet {
+func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for _, tx := range txs {
 		found := false
-		var value float64 = 0
+		var value float64
 		var memo []byte
 		if len(tx.Vout) >= 2 {
 			// first vout must to addressed to the targetAddress with p2wpkh scriptPubKey
@@ -280,25 +279,34 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					continue
 				}
 				value = out.Value
+				out = tx.Vout[1]
+				script = out.ScriptPubKey.Hex
+				if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
+					memoSize, err := strconv.ParseInt(script[2:4], 16, 32)
+					if err != nil {
+						logger.Warn().Err(err).Msgf("error decoding pubkey hash")
+						continue
+					}
+					if int(memoSize) != (len(script)-4)/2 {
+						logger.Warn().Msgf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
+						continue
+					}
+					memoStr, err := hex.DecodeString(script[4:])
+					if err != nil {
+						logger.Warn().Err(err).Msgf("error hex decoding memo")
+						continue
+					}
+					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
+					if err != nil {
+						logger.Warn().Err(err).Msg("error b64 decoding memo")
+						continue
+					}
+					memo = memoBytes
+					found = true
+
+				}
 			}
-			out = tx.Vout[1]
-			script = out.ScriptPubKey.Hex
-			if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
-				memoSize, err := strconv.ParseInt(script[2:4], 16, 32)
-				if err != nil {
-					continue
-				}
-				if int(memoSize) != len(script)/2-2 {
-					continue
-				}
-				memoStr, err := hex.DecodeString(script[4:])
-				memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
-				if err != nil {
-					continue
-				}
-				memo = memoBytes
-				found = true
-			}
+
 		}
 		if found {
 			var fromAddress string
@@ -309,11 +317,13 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					pk := vin.Witness[1]
 					pkBytes, err := hex.DecodeString(pk)
 					if err != nil {
+						logger.Warn().Msgf("error decoding pubkey: %s", err)
 						break
 					}
 					hash := btcutil.Hash160(pkBytes)
 					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.TestNet3Params)
 					if err != nil {
+						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
 						break
 					}
 					fromAddress = addr.EncodeAddress()

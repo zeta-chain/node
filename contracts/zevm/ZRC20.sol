@@ -133,11 +133,11 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     // returns the ZRC4 address for gas on the same chain of this ZRC4,
     // and calculate the gas fee for withdraw()
     function withdrawGasFee() public override view returns (address,uint256) {
-        address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC4(CHAIN_ID);
+        address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC20ByChainId(CHAIN_ID);
         require(gasZRC20 != address(0), "gas coin not set");
-        uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPrice(CHAIN_ID);
+        uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPriceByChainId(CHAIN_ID);
         require(gasPrice > 0, "gas price not set");
-        uint256 gasFee = gasPrice * GAS_LIMIT;
+        uint256 gasFee = gasPrice * GAS_LIMIT + PROTOCOL_FLAT_FEE;
         return (gasZRC20, gasFee);
     }
 

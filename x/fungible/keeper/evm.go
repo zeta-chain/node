@@ -24,13 +24,13 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-//TODO USE string constant
+// TODO USE string constant
 var (
 	BigIntZero = big.NewInt(0)
 )
 
-//TODO Unit test for these funtions
-//TODO Remove repetitive code
+// TODO Unit test for these funtions
+// TODO Remove repetitive code
 // DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 func (k Keeper) DeployZRC20Contract(
@@ -292,7 +292,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	}
 
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, true,
-		"DepositAndCall", zrc4Contract, amount, targetContract, message)
+		"depositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err
 	}
