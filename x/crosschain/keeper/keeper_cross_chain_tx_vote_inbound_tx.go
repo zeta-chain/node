@@ -29,7 +29,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.IsAuthorized(ctx, msg.Creator, *observationChain, observationType)
+	ok, err := k.IsAuthorizedMapper(ctx, msg.Creator, *observationChain, observationType)
 	if !ok {
 		return nil, err
 	}

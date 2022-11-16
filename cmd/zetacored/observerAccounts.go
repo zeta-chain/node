@@ -9,6 +9,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
+	"strconv"
 	"strings"
 )
 
@@ -52,7 +53,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 func AddObserverAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [chain] [observationType] [comma separate list of address] ",
+		Use:   "add-observer [chainName] [chainID] [observationType] [comma separate list of address] ",
 		Short: "Add a list of observers to the observer mapper",
 		Long: `
            Chain Types :
@@ -80,11 +81,18 @@ func AddObserverAccountCmd() *cobra.Command {
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			chain := types.ParseStringToObserverChain(args[0])
-			obs := types.ParseStringToObservationType(args[1])
+			chainName := types.ParseStringToObserverChain(args[0])
+			chainId, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+			obs := types.ParseStringToObservationType(args[2])
 			observer := &types.ObserverMapper{
-				Index:           "",
-				ObserverChain:   chain,
+				Index: "",
+				ObserverChain: &types.Chain{
+					ChainName: chainName,
+					ChainId:   int64(chainId),
+				},
 				ObservationType: obs,
 				ObserverList:    strings.Split(args[2], ","),
 			}

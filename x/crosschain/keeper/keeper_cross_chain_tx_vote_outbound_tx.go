@@ -15,20 +15,23 @@ import (
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
-	observationChain := zetaObserverTypes.ParseCommonChaintoObservationChain(msg.OutTxChain)
+	observationChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.OutTxChain)
+	if !found {
+		// TODO : revert TX
+	}
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	ok, err := k.IsAuthorizedMapper(ctx, msg.Creator, *observationChain, observationType)
 	if !ok {
 		return nil, err
 	}
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
+	ballot, err := k.GetBallot(ctx, ballotIndex, *observationChain, observationType)
 	if err != nil {
 		return nil, err
 	}

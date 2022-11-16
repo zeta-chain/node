@@ -58,7 +58,10 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		return nil
 	}
 
-	foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
+	foreignCoinList, err := k.GetAllForeignCoins(ctx)
+	if err != nil {
+		return err
+	}
 	foundCoin := false
 	receiverChain := &zetaObserverTypes.Chain{}
 	zetaChain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, zetaObserverTypes.ChainName_ZetaChain)
@@ -69,7 +72,10 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 
 	for _, coin := range foreignCoinList {
 		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			receiverChain = coin.ForeignChain
+			receiverChain, found = k.zetaObserverKeeper.GetChainFromChainName(ctx, zetaObserverTypes.ParseStringToObserverChain(coin.ForeignChain))
+			if !found {
+				return errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Tokens cannot be exported to %s chain right now", coin.ForeignChain))
+			}
 			foundCoin = true
 			coinType = coin.CoinType
 		}
@@ -85,7 +91,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetaChain, receiverChain)
 	cctx.ZetaMint = cctx.ZetaBurnt
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-	gasprice, found := k.GetGasPrice(ctx, receiverChain)
+	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainName.String())
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
@@ -96,7 +102,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	if ok {
 		cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
 	}
-	err := k.UpdateNonce(ctx, receiverChain, &cctx)
+	err = k.UpdateNonce(ctx, receiverChain.ChainName.String(), &cctx)
 	if err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}

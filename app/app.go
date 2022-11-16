@@ -421,7 +421,6 @@ func New(
 		app.AccountKeeper,
 		*app.EvmKeeper,
 		app.BankKeeper,
-		//&app.ZetaCoreKeeper,
 	)
 
 	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(

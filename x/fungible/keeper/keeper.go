@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +32,6 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	evmKeeper evmkeeper.Keeper,
 	bankKeeper types.BankKeeper,
-	//zetacoreKeeper *zetacorekeeper.Keeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -49,7 +47,6 @@ func NewKeeper(
 		authKeeper: authKeeper,
 		evmKeeper:  evmKeeper,
 		bankKeeper: bankKeeper,
-		//zetacoreKeeper: zetacoreKeeper,
 	}
 }
 

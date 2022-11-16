@@ -27,10 +27,10 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
+func (k Keeper) IsAuthorizedMapper(ctx sdk.Context, address string, chain zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
+	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", senderChain.String(), observationType))
+		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", chain.String(), observationType))
 	}
 	for _, obs := range observerMapper.ObserverList {
 		if obs == address {
