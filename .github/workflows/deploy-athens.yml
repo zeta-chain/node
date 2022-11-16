@@ -1,5 +1,5 @@
 name: Athens - Build & Deploy
-## TODO - Replace with Cosmovisor when it is ready
+## TODO - SHOULD BE DELETE WHEN ATHENS1 IS SUNSEY
 on:
   push:
     tags:
@@ -12,9 +12,7 @@ env:
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
   
-
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
