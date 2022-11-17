@@ -130,7 +130,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string) types.CrossChainTx {
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     msg.SenderChain,
@@ -153,7 +153,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutBoundTxObservedExternalHeight: 0,
 	}
 	status := &types.Status{
-		Status:              types.CctxStatus_PendingInbound,
+		Status:              s,
 		StatusMessage:       "",
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 	}
