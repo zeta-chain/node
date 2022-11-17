@@ -507,14 +507,15 @@ func (ob *EVMChainClient) observeInTX() error {
 			}
 			if *tx.To() == tssAddress {
 				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionReceipt error")
+					continue
+				}
 				if receipt.Status != 1 { // 1: successful, 0: failed
 					ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
 					continue
 				}
-				if err != nil {
-					ob.logger.Err(err).Msg("TransactionReceipt")
-					continue
-				}
+
 				from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 				if err != nil {
 					ob.logger.Err(err).Msg("TransactionSender")
