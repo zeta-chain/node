@@ -52,7 +52,7 @@ func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
 			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
 			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),
 	)
