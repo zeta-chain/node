@@ -35,9 +35,9 @@ jobs:
         build-indexer: false
         go-version: '1.18'
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'develop' }}
-      run: go test -v -coverprofile coverage.out  ./...
+    # - name: Test
+    #   if: ${{ env.GITHUB_REF_NAME != 'develop' }}
+    #   run: go test -v -coverprofile coverage.out  ./...
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       run: |
