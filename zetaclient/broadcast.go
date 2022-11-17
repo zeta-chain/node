@@ -47,6 +47,8 @@ func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	factory = factory.WithAccountNumber(b.accountNumber)
 	factory = factory.WithSequence(b.seqNumber)
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+	factory.WithGas(0)
+	factory.WithGasAdjustment(1.5)
 
 	builder, err := clienttx.BuildUnsignedTx(factory, msgs...)
 	if err != nil {
