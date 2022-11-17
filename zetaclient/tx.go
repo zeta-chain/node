@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"math/big"
 	"time"
 )
 
@@ -67,9 +68,9 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	}
 	return zetaTxHash, nil
 }
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
 		zetaTxHash, err := b.Broadcast(msg)
@@ -84,9 +85,9 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver st
 }
 
 // FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint string, status common.ReceiveStatus, chain string, nonce int) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain string, nonce int, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromString(mMint), status, chain, uint64(nonce))
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
@@ -123,6 +124,7 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
 		ObservationChain: chain.String(),
 		ObservationType:  observationType,
@@ -148,7 +150,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
 	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -168,7 +170,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Error().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -178,7 +180,7 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
 	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetBlockHeight error")
 		return 0, err
 	}
 	return resp.Height, nil

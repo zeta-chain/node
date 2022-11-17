@@ -127,7 +127,7 @@ func (cl *ChainETHish) sendTransaction(payload Payload) {
 		return
 	}
 
-	nonce, err := other.client.PendingNonceAt(context.Background(), cl.tss.Address())
+	nonce, err := other.client.PendingNonceAt(context.Background(), cl.tss.EVMAddress())
 	if err != nil {
 		log.Err(err).Msg("sendTransaction() PendingNonceAt error")
 		return
@@ -215,7 +215,7 @@ func (cl *ChainETHish) revertTransaction(payload Payload) {
 		return
 	}
 
-	nonce, err := cl.client.PendingNonceAt(context.Background(), cl.tss.Address())
+	nonce, err := cl.client.PendingNonceAt(context.Background(), cl.tss.EVMAddress())
 	if err != nil {
 		log.Err(err).Msg("revertTransaction() PendingNonceAt error")
 		return

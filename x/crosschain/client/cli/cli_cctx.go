@@ -81,9 +81,9 @@ func CmdShowSend() *cobra.Command {
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChain] [receiver] [receiverChain] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight]",
+		Use:   "inbound-voter [sender] [senderChain] [receiver] [receiverChain] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType]",
 		Short: "Broadcast message sendVoter",
-		Args:  cobra.ExactArgs(9),
+		Args:  cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := (args[0])
 			argsSenderChain := (args[1])
@@ -94,6 +94,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 			argsMessage := (args[6])
 			argsInTxHash := (args[7])
 			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
+			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
 			if err != nil {
 				return err
 			}
@@ -102,7 +103,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000)
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -117,9 +118,9 @@ func CmdCCTXInboundVoter() *cobra.Command {
 
 func CmdCCTXOutboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [ZetaMinted] [Status] [chain] [outTXNonce]",
+		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [ZetaMinted] [Status] [chain] [outTXNonce] [coinType]",
 		Short: "Broadcast message receiveConfirmation",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSendHash := (args[0])
 			argsOutTxHash := (args[1])
@@ -141,12 +142,13 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			argsCoinType := common.CoinType(common.CoinType_value[args[7]])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, chain, uint64(outTxNonce))
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, chain, uint64(outTxNonce), argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
