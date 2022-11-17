@@ -34,7 +34,6 @@ runs:
         make install
         cp "$HOME"/go/bin/* ./
 
-
     - name: Cosmovisor
       shell: bash
       run: |
