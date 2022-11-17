@@ -6,6 +6,7 @@ on:
       - develop
       - feature/zetacore-observer-fixes
       - cosmovisor-action
+      - bitcoin-inbound
   pull_request:
     types: [ready_for_review]
   release:
