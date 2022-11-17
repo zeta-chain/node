@@ -42,6 +42,22 @@ func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	)
 }
 
+func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.ZrcWithdrawCreated,
+			sdk.NewAttribute(types.CctxIndex, cctx.Index),
+			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
+			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
+			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
+			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
+		),
+	)
+}
+
 func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
 	event := sdk.NewEvent(types.OutboundTxSuccessful,
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
