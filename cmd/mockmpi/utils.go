@@ -23,7 +23,7 @@ func GetZetaTestSignature() zetaclient.TestSigner {
 	tss := zetaclient.TestSigner{
 		PrivKey: privateKey,
 	}
-	log.Debug().Msg(fmt.Sprintf("tss key address: %s", tss.Address()))
+	log.Debug().Msg(fmt.Sprintf("tss key address: %s", tss.EVMAddress()))
 
 	return tss
 }

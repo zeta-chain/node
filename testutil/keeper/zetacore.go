@@ -17,6 +17,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	zetaobserverKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -45,6 +46,7 @@ func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	bankkeeper := bankkeeper2.BaseKeeper{}
 	authkeeper := authkeeper2.AccountKeeper{}
 	zetaobserverKeeper := zetaobserverKeeper.Keeper{}
+	fungibleKeeper := fungibleKeeper.Keeper{}
 
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
@@ -55,6 +57,7 @@ func ZetacoreKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		authkeeper,
 		bankkeeper,
 		zetaobserverKeeper,
+		fungibleKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

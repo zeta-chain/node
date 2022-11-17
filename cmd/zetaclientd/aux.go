@@ -32,14 +32,18 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	signerMap := make(map[common.Chain]*mc.Signer)
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
+	signerMap := make(map[common.Chain]*mc.EVMSigner)
 
 	for _, chain := range mcconfig.ChainsEnabled {
+		if !chain.IsEVMChain() {
+			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain)
+			continue
+		}
 		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+		signer, err := mc.NewEVMSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
-			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
+			log.Fatal().Err(err).Msg("NewEVMSigner Ethereum error ")
 			return nil, err
 		}
 		signerMap[chain] = signer
@@ -48,14 +52,20 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.ChainObserver)
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]mc.ChainClient, error) {
+	clientMap := make(map[common.Chain]mc.ChainClient)
 
 	for _, chain := range mcconfig.ChainsEnabled {
 		log.Info().Msgf("starting %s observer...", chain)
-		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		var co mc.ChainClient
+		var err error
+		if chain.IsEVMChain() {
+			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
+		} else if chain.IsBitcoinChain() {
+			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+		}
 		if err != nil {
-			log.Err(err).Msgf("%s NewChainObserver", chain)
+			log.Err(err).Msgf("%s NewEVMChainClient", chain)
 			return nil, err
 		}
 		clientMap[chain] = co
