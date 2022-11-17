@@ -120,6 +120,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 
 	chain := msg.Chain
 	gasPrice, isFound := k.GetGasPrice(ctx, chain)
+	fmt.Println(gasPrice, isFound)
 	if !isFound {
 		gasPrice = types.GasPrice{
 			Creator:     msg.Creator,

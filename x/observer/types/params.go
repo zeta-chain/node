@@ -27,18 +27,20 @@ func DefaultParams() Params {
 func DefaultThreshold() []*BallotThreshold {
 	chains := DefaultChainsList()
 	threshold := make([]*BallotThreshold, len(chains)*2)
-	for i, chain := range chains {
+	i := 0
+	for _, chain := range chains {
 		threshold[i] = &BallotThreshold{
-			Chain:       &Chain{ChainName: chain.ChainName, ChainId: chain.ChainId},
+			Chain:       chain,
 			Observation: ObservationType_InBoundTx,
 			Threshold:   sdk.MustNewDecFromStr("0.66"),
 		}
 		i++
 		threshold[i] = &BallotThreshold{
-			Chain:       &Chain{ChainName: chain.ChainName, ChainId: chain.ChainId},
+			Chain:       chain,
 			Observation: ObservationType_OutBoundTx,
 			Threshold:   sdk.MustNewDecFromStr("0.66"),
 		}
+		i++
 	}
 	return threshold
 }
@@ -47,6 +49,42 @@ func DefaultChainsList() []*Chain {
 		{
 			ChainName: ChainName_Eth,
 			ChainId:   1,
+		},
+		{
+			ChainName: ChainName_Goerli,
+			ChainId:   5,
+		},
+		{
+			ChainName: ChainName_Ropsten,
+			ChainId:   3,
+		},
+		{
+			ChainName: ChainName_BscMainnet,
+			ChainId:   56,
+		},
+		{
+			ChainName: ChainName_BscTestnet,
+			ChainId:   97,
+		},
+		{
+			ChainName: ChainName_Baobab,
+			ChainId:   1001,
+		},
+		{
+			ChainName: ChainName_ZetaChain,
+			ChainId:   2374,
+		},
+		{
+			ChainName: ChainName_Btc,
+			ChainId:   5,
+		},
+		{
+			ChainName: ChainName_Polygon,
+			ChainId:   137,
+		},
+		{
+			ChainName: ChainName_Mumbai,
+			ChainId:   80001,
 		},
 	}
 }

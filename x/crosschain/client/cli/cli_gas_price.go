@@ -79,7 +79,7 @@ func CmdGasPriceVoter() *cobra.Command {
 		Short: "Broadcast message gasPriceVoter",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsChain := (args[0])
+			argsChain := args[0]
 			argsPrice, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -95,7 +95,7 @@ func CmdGasPriceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), (argsChain), uint64(argsPrice), argsSupply, uint64(argsBlockNumber))
+			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), argsChain, uint64(argsPrice), argsSupply, uint64(argsBlockNumber))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

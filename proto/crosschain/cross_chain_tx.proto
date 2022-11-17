@@ -26,7 +26,7 @@ message InBoundTxParams{
 message OutBoundTxParams {
   string receiver = 1;
   string receiverChain = 2;
-  string receiverChainId = 3;
+  int64 receiverChainId = 3;
   uint64 broadcaster = 4; // Can be removed
   string outBoundTxHash = 5;
   uint64 outBoundTxTSSNonce = 6;

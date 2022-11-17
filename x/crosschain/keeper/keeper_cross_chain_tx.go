@@ -136,6 +136,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     senderChain.ChainName.String(),
+		SenderChainID:                   senderChain.ChainId,
 		InBoundTxObservedHash:           msg.InTxHash,
 		InBoundTxObservedExternalHeight: msg.InBlockHeight,
 		InBoundTxFinalizedZetaHeight:    0,
@@ -145,6 +146,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	outBoundParams := &types.OutBoundTxParams{
 		Receiver:                         msg.Receiver,
 		ReceiverChain:                    receiverChain.ChainName.String(),
+		ReceiverChainId:                  receiverChain.ChainId,
 		Broadcaster:                      0,
 		OutBoundTxHash:                   "",
 		OutBoundTxTSSNonce:               0,
