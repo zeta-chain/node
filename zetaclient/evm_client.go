@@ -484,6 +484,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.Raw.BlockNumber,
 			event.DestinationGasLimit.Uint64(),
 			common.CoinType_Zeta,
+			PostSendNonEVMGasLimit,
 		)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -540,6 +541,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					receipt.BlockNumber.Uint64(),
 					90_000,
 					common.CoinType_Gas,
+					PostSendEVMGasLimit,
 				)
 				if err != nil {
 					ob.logger.Error().Err(err).Msg("error posting to zeta core")
