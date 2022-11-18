@@ -9,6 +9,7 @@ on:
       - bitcoin-inbound
   pull_request:
     types: [ready_for_review]
+    branches: [develop, bitcoin-inbound]    
   release:
     types: [created]
 
