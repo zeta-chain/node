@@ -327,12 +327,10 @@ func (co *CoreObserver) startSendScheduler() {
 	sort.SliceStable(chains, func(i, j int) bool {
 		return chains[i].String() < chains[j].String()
 	})
-	numChains := uint64(len(chains))
 	logger.Info().Msgf("startSendScheduler: chains %v", chains)
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
-	sendLists := make(map[common.Chain][]*types.CrossChainTx)
 	totals := make(map[common.Chain]int64)
 
 	for range observeTicker.C {
@@ -343,24 +341,22 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 		if bn > lastBlockNum { // we have a new block
 			timeStart := time.Now()
-			chain := chains[bn%numChains]
-			sendList, total, err := co.bridge.GetAllPendingCctxByChainSorted(chain.String())
-			sendLists[chain] = sendList
-			totals[chain] = total
-			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msgf("GetAllPendingSend chain %s", chain)
+			sendList, err := co.bridge.GetAllPendingCctx()
+			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
+			sendMap := splitAndSortSendListByChain(sendList)
 
 			for _, chain := range chains {
 				outSendList := make([]*types.CrossChainTx, 0)
-				sendList = sendLists[chain]
+				sendList = sendMap[chain.String()]
 				if len(sendList) == 0 {
 					continue
 				}
 				start := trimSends(sendList)
-				logger.Info().Msgf("outstanding %d sends on chain %s: nonce starts %d; to be processed %d", total, chain, sendList[start].OutBoundTxParams.OutBoundTxTSSNonce, len(sendList[start:]))
+				logger.Info().Msgf("outstanding %d sends on chain %s: nonce starts %d; to be processed %d", len(sendList[start:]), chain, sendList[start].OutBoundTxParams.OutBoundTxTSSNonce, len(sendList[start:]))
 
 				for idx, send := range sendList[start:] {
 					ob, err := co.getTargetChainOb(send)

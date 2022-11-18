@@ -150,16 +150,17 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	sends := k.GetAllPendingCctxByChainSorted(ctx, req.Chain)
-	limit := req.Limit
-	if req.Limit <= 0 || req.Limit >= 1000 {
-		limit = 1000
-	}
-	if int64(len(sends)) < limit {
-		limit = int64(len(sends))
-	}
+	//sends := k.GetAllPendingCctxByChainSorted(ctx, req.Chain)
+	//limit := req.Limit
+	//if req.Limit <= 0 || req.Limit >= 1000 {
+	//	limit = 1000
+	//}
+	//if int64(len(sends)) < limit {
+	//	limit = int64(len(sends))
+	//}
+	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
 
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends[:limit], Total: int64(len(sends))}, nil
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends, Total: int64(len(sends))}, nil
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {
