@@ -23,8 +23,9 @@ func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logId
 		m.Status = CctxStatus_Aborted
 		return
 	}
+	oldStatus := m.Status
 	m.Status = newStatus
-	EmitStatusChangeEvent(ctx, m.Status.String(), newStatus.String(), logIdentifier)
+	EmitStatusChangeEvent(ctx, oldStatus.String(), newStatus.String(), logIdentifier)
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
