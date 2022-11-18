@@ -484,6 +484,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.Raw.BlockNumber,
 			event.DestinationGasLimit.Uint64(),
 			common.CoinType_Zeta,
+			PostSendNonEVMGasLimit,
 		)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -507,14 +508,15 @@ func (ob *EVMChainClient) observeInTX() error {
 			}
 			if *tx.To() == tssAddress {
 				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+				if err != nil {
+					ob.logger.Err(err).Msg("TransactionReceipt error")
+					continue
+				}
 				if receipt.Status != 1 { // 1: successful, 0: failed
 					ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
 					continue
 				}
-				if err != nil {
-					ob.logger.Err(err).Msg("TransactionReceipt")
-					continue
-				}
+
 				from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 				if err != nil {
 					ob.logger.Err(err).Msg("TransactionSender")
@@ -539,6 +541,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					receipt.BlockNumber.Uint64(),
 					90_000,
 					common.CoinType_Gas,
+					PostSendEVMGasLimit,
 				)
 				if err != nil {
 					ob.logger.Error().Err(err).Msg("error posting to zeta core")

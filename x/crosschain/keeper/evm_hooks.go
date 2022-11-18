@@ -77,7 +77,8 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
 		sendHash := msg.Digest()
 
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash)
+		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+		EmitZRCWithdrawCreated(ctx, cctx)
 		cctx.ZetaMint = cctx.ZetaBurnt
 		cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
 		gasprice, found := k.GetGasPrice(ctx, receiverChain)

@@ -14,23 +14,23 @@ import (
 	"time"
 )
 
+const (
+	PostZetaConversionRateGasLimit  = 200_000
+	PostGasPriceGasLimit            = 1_500_000
+	AddTxHashToOutTxTrackerGasLimit = 200_000
+	PostNonceGasLimit               = 200_000
+	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
+	PostSendNonEVMGasLimit          = 1_000_000
+	PostReceiveConfirmationGasLimit = 200_000
+	DefaultGasLimit                 = 200_000
+)
+
 func (b *ZetaCoreBridge) PostZetaConversionRate(chain common.Chain, rate string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.String(), rate, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(PostZetaConversionRateGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostZetaConversionRate broadcast fail")
-		return "", err
-	}
-	return zetaTxHash, nil
-}
-
-func (b *ZetaCoreBridge) PostGasBalance(chain common.Chain, gasBalance string, blockNum uint64) (string, error) {
-	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgGasBalanceVoter(signerAddress, chain.String(), gasBalance, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
-	if err != nil {
-		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -39,7 +39,7 @@ func (b *ZetaCoreBridge) PostGasBalance(chain common.Chain, gasBalance string, b
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, supply, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
@@ -50,7 +50,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
@@ -61,19 +61,19 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txH
 func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
 }
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimt uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(msg)
+		zetaTxHash, err := b.Broadcast(zetaGasLimt, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostSend broadcast fail; re-trying...")
 		} else {
@@ -91,7 +91,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(msg)
+		zetaTxHash, err := b.Broadcast(PostReceiveConfirmationGasLimit, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
 		} else {
@@ -199,7 +199,7 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		return "", err
 	}
@@ -231,7 +231,7 @@ func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.String(), address, pubkey)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err

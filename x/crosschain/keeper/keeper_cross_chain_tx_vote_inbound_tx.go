@@ -49,7 +49,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Inbound Ballot has been finalized , Create CCTX
 	// New CCTX can only set either to Aborted or PendingOutbound
-	cctx := k.CreateNewCCTX(ctx, msg, index)
+	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound)
+	EmitEventCCTXCreated(ctx, cctx)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
 	//TODO : move to a separate function
