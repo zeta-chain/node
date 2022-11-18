@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"google.golang.org/grpc"
 	"math/big"
 	"time"
 )
@@ -102,16 +103,6 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
-func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
-	if err != nil {
-		b.logger.Error().Err(err).Msg("query CctxAll error")
-		return nil, err
-	}
-	return resp.CrossChainTx, nil
-}
-
 func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: sendHash})
@@ -138,7 +129,8 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType str
 
 func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{})
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{}, maxSizeOption)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query CctxAllPending error")
 		return nil, err
