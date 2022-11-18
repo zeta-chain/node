@@ -1,0 +1,110 @@
+name: Deploy 
+on:
+  workflow_dispatch:
+    inputs:
+      BRANCH_OR_TAG_NAME:
+        description: 'Name of the release to deploy'
+        type: string
+        required: true
+      VERSION:
+        description: 'Version number for the release (0.0.1)'
+        type: string
+        required: true
+      # UPGRADE_BLOCK_HEIGHT:
+      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
+      #   type: string
+      #   required: false
+      ENVIRONMENT:
+        description: 'What Environment to deploy into (athens2, development)'
+        type: environment
+        required: true
+      # CHAIN_ID: 
+      #   description: 'Chain ID to deploy this release to'
+      #   type: string
+      #   required: true
+      REGENESIS:
+        description: 'Whether to regenesis the chain (Keeping existing keys)'
+        type: boolean
+        required: false
+        default: false
+
+env:
+  S3_BUCKET_NAME: "zetachain-deployment-files"
+  AWS_REGION: "us-east-1"
+
+jobs:
+  deploy-release:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.ENVIRONMENT }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set Chain ID Automatically based on Environment
+        run: |
+          if [ ${{ github.event.inputs.ENVIRONMENT }} == "development" ]; then
+            echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
+          elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
+            echo "CHAIN_ID=athens_7001-1" >> $GITHUB_ENV
+          fi
+          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
+          
+      - name: Test Inputs
+        if: ${{ env.ACT }}
+        run: |
+          echo  ${{ github.event.inputs.BRANCH_OR_TAG_NAME }}
+          echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+          echo  ${{ github.event.inputs.ENVIRONMENT }}
+          # echo  ${{ github.event.inputs.CHAIN_ID }}
+          # echo  ${{ env.CHAIN_ID }}
+
+
+      - name: Verify target files exist 
+        run: |
+          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.event.inputs.BRANCH_OR_TAG_NAME }}/cosmovisor || exit 1
+          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.event.inputs.BRANCH_OR_TAG_NAME }}/zetaclientd || exit 1
+          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.event.inputs.BRANCH_OR_TAG_NAME }}/zetacored || exit 1
+
+      # Approval needed to deploy to environments other than development
+      - uses: trstringer/manual-approval@v1
+        if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
+        with:
+          secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          approvers: charliemc0, brewmaster012 , kingpinXD #ZetaChain-Team
+          minimum-approvals: 1
+          issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
+          exclude-workflow-initiator-as-approver: false
+
+
+      # - name: Cosmovisor Upgrade Proposal and Vote # NEEDS ADDITIONAL TESTING
+      #   uses:  ./.github/actions/cosmovisor-upgrade
+      #   with:
+      #     VERSION: ${{ github.event.inputs.VERSION }}
+      #     # DESCRIPTION: ${{ github.event.inputs.VERSION }}
+      #     # ZETACORED_CHECKSUM: ""
+      #     ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.event.inputs.BRANCH_OR_TAG_NAME }}/zetacored"
+      #     # ZETACLIENTD_CHECKSUM: ""
+      #     ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.event.inputs.BRANCH_OR_TAG_NAME }}/zetaclientd"
+      #     CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
+      #     API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+      #     UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+
+
+      - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor
+        uses:  ./.github/actions/deploy-binaries
+        with:
+          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          TAKE_SNAPSHOTS: true
+          BRANCH_OR_TAG_NAME: ${{ github.event.inputs.BRANCH_OR_TAG_NAME }}
+
