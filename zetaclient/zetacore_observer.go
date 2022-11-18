@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
@@ -331,7 +332,6 @@ func (co *CoreObserver) startSendScheduler() {
 
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
-	totals := make(map[common.Chain]int64)
 
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
@@ -370,7 +370,7 @@ func (co *CoreObserver) startSendScheduler() {
 						if err != nil {
 							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
 						} else {
-							pTxs.Set(float64(totals[chain]))
+							pTxs.Set(float64(len(sendList)))
 						}
 					}
 					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
@@ -581,6 +581,9 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.CrossChainTx, ou
 		Str("TargetChain", targetChain).
 		Uints64("Nonces", nonces).
 		Logger()
+
+	batchID := crypto.Keccak256Hash([]byte(fmt.Sprintf("%v", nonces))).Hex()[:4]
+	logger.Info().Msgf("TryProcessOutTxBatch batch %s", batchID)
 	txs := make([]*ethtypes.Transaction, len(sendBatch))
 	// phase 1: create unsigned transactions in batch
 	for idx, send := range sendBatch {
@@ -685,11 +688,14 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.CrossChainTx, ou
 		H := signer.ethSigner.Hash(tx).Bytes()
 		hashes[idx] = H
 	}
+
+	logger.Info().Msgf("SignBatch %s start", batchID)
 	sigs, err := signer.tssSigner.SignBatch(hashes)
 	if err != nil {
 		logger.Error().Err(err).Msg("tssSigner.SignBatch error")
 		return
 	}
+	logger.Info().Msgf("SignBatch %s end", batchID)
 
 	// phase 3: broadcast the signed transactions in batch
 	signers, err := co.bridge.GetObserverList(toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
@@ -709,12 +715,11 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.CrossChainTx, ou
 			outTxHash := signedTX.Hash().Hex()
 			logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.OutBoundTxParams.OutBoundTxTSSNonce, outTxHash, myid)
 			if myid == signers[send.OutBoundTxParams.Broadcaster] || myid == signers[int(send.OutBoundTxParams.Broadcaster+1)%len(signers)] {
-				backOff := 1000 * time.Millisecond
 				// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
-				for i := 0; i < 5; i++ {
+				for i := 0; i < 3; i++ {
 					logger.Info().Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, i)
 					// #nosec G404 randomness is not a security issue here
-					time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+					time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond) //random delay to avoid sychronized broadcast
 					err := signer.Broadcast(signedTX)
 					if err != nil {
 						log.Warn().Err(err).Msgf("OutTx Broadcast error")
@@ -729,7 +734,6 @@ func (co *CoreObserver) TryProcessOutTxBatch(sendBatch []*types.CrossChainTx, ou
 						if !retry {
 							break
 						}
-						backOff *= 2
 						continue
 					}
 					logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
@@ -755,9 +759,9 @@ func isScheduled(diff int64, priority bool) bool {
 	if priority {
 		return d%20 == 0
 	}
-	if d < 100 && d%20 == 0 {
+	if d < 1000 && d%20 == 0 {
 		return true
-	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
+	} else if d >= 1000 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
 		return true
 	}
 	return false
