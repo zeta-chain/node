@@ -18,7 +18,7 @@ run_ssm_cmds_api_nodes () {
 
 run_ssm_cmds_indexer () {
     COMMAND_ID=$(aws ssm send-command \
-    --targets Key=tag:Name,Values=zetachain-indexer \
+    --targets Key=tag:Role,Values=indexer \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"
