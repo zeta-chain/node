@@ -254,6 +254,17 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 
 			for chain, sendList := range sendMap {
+				c, _ := common.ParseChain(chain)
+				found := false
+				for _, enabledChain := range config.ChainsEnabled {
+					if enabledChain == c {
+						found = true
+						break
+					}
+				}
+				if !found {
+					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
+				}
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
 				}
