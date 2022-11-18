@@ -168,6 +168,5 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
 	}
-	EmitEventCCTXCreated(ctx, newCctx)
 	return newCctx
 }

@@ -29,6 +29,7 @@ const (
 	OutboundTxSuccessful = "crosschain/OutboundTxSuccessful"
 	OutboundTxFailed     = "crosschain/OutboundTxFailed"
 	CctxCreated          = "crosschain/CctxCreated"
+	ZrcWithdrawCreated   = "crosschain/ZrcWithdrawCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"
