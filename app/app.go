@@ -21,7 +21,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
-	"github.com/zeta-chain/zetacore/app/ante"
+	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	"io"
 	"net/http"
@@ -104,12 +105,21 @@ import (
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
+	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
 	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const Name = "zetacore"
+
+func init() {
+	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
+	sdk.DefaultPowerReduction = ethermint.PowerReduction
+	// modify fee market parameter defaults through global
+	//feemarkettypes.DefaultMinGasPrice = v5.MainnetMinGasPrices
+	//feemarkettypes.DefaultMinGasMultiplier = v5.MainnetMinGasMultiplier
+}
 
 var (
 	AccountAddressPrefix = "zeta"
@@ -174,6 +184,7 @@ var (
 		feemarket.AppModuleBasic{},
 		zetaCoreModule.AppModuleBasic{},
 		zetaObserverModule.AppModuleBasic{},
+		fungibleModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -187,6 +198,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		zetaCoreModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		fungibleModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -232,6 +244,7 @@ type App struct {
 	configurator         module.Configurator
 	EvmKeeper            *evmkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
+	FungibleKeeper       fungibleModuleKeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -269,6 +282,7 @@ func New(
 		zetaCoreModuleTypes.StoreKey,
 		zetaObserverModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
+		fungibleModuleTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -398,6 +412,18 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
+
+	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+		appCodec,
+		keys[fungibleModuleTypes.StoreKey],
+		keys[fungibleModuleTypes.MemStoreKey],
+		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		app.AccountKeeper,
+		*app.EvmKeeper,
+		app.BankKeeper,
+		//&app.ZetaCoreKeeper,
+	)
+
 	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
 		appCodec,
 		keys[zetaObserverModuleTypes.StoreKey],
@@ -414,9 +440,11 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
+		app.FungibleKeeper,
 	)
 
 	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
+	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	/****  Module Options ****/
 
@@ -451,6 +479,7 @@ func New(
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		zetacoreModule,
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
+		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -479,6 +508,7 @@ func New(
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -491,6 +521,7 @@ func New(
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -519,6 +550,7 @@ func New(
 		vestingtypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -536,19 +568,18 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := ante.HandlerOptions{
-		AccountKeeper:      app.AccountKeeper,
-		BankKeeper:         app.BankKeeper,
-		EvmKeeper:          app.EvmKeeper,
-		FeeMarketKeeper:    app.FeeMarketKeeper,
-		IBCKeeper:          app.IBCKeeper,
-		ZetaObserverKeeper: app.ZetaObserverKeeper,
-		SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:     evmante.DefaultSigVerificationGasConsumer,
-		MaxTxGasWanted:     maxGasWanted,
+	options := evmante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		EvmKeeper:       app.EvmKeeper,
+		FeeMarketKeeper: app.FeeMarketKeeper,
+		IBCKeeper:       app.IBCKeeper,
+		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
+		MaxTxGasWanted:  maxGasWanted,
 	}
 
-	anteHandler, err := ante.NewAnteHandler(options)
+	anteHandler, err := evmante.NewAnteHandler(options)
 	if err != nil {
 		panic(err)
 	}
@@ -741,6 +772,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
+	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
 	return paramsKeeper
 }
 

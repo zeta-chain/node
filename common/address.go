@@ -22,6 +22,8 @@ func NewAddress(address string, chain Chain) (Address, error) {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
+	} else if chain.IsBitcoinChain() {
+
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
@@ -29,8 +31,8 @@ func NewAddress(address string, chain Chain) (Address, error) {
 
 func IsETHChain(chain Chain) bool {
 	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
-		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain ||
-		chain == GoerliChain || chain == Ganache {
+		chain == BSCTestnetChain || chain == MumbaiChain ||
+		chain == GoerliChain || chain == Ganache || chain == ZETAChain {
 		return true
 	}
 

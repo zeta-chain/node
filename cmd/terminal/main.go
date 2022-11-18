@@ -68,7 +68,7 @@ func main() {
 
 	probeMap := make(map[string]*Probe)
 	for _, name := range config.ChainsEnabled {
-		if name == "" || name.String() == common.RopstenChain.String() {
+		if name == "" {
 			continue
 		}
 		chain := config.Chains[name.String()]

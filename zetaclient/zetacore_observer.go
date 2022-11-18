@@ -39,14 +39,14 @@ const (
 
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
-	signerMap map[common.Chain]*Signer
-	clientMap map[common.Chain]*ChainObserver
+	signerMap map[common.Chain]*EVMSigner
+	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*Signer, clientMap map[common.Chain]*ChainObserver, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]*EVMSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -116,7 +116,7 @@ func (co *CoreObserver) keygenObserve() {
 				co.tss.CurrentPubkey = res.PubKey
 
 				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.Address().Hex(), co.tss.CurrentPubkey)
+					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
 						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
 					}
@@ -254,6 +254,17 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 
 			for chain, sendList := range sendMap {
+				c, _ := common.ParseChain(chain)
+				found := false
+				for _, enabledChain := range config.ChainsEnabled {
+					if enabledChain == c {
+						found = true
+						break
+					}
+				}
+				if !found {
+					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
+				}
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
 				}
@@ -272,7 +283,8 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
-					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce))
+					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 					}
@@ -339,7 +351,8 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	}
 
 	// Early return if the send is already processed
-	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce))
+	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
+	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
@@ -374,17 +387,18 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.OutBoundTxParams.OutBoundTxGasPrice)
 		return
 	}
-	// use 33% higher gas price for timely confirmation
-	gasprice = gasprice.Mul(gasprice, big.NewInt(4))
-	gasprice = gasprice.Div(gasprice, big.NewInt(3))
-	var tx *ethtypes.Transaction
 
-	srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
-	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+	var tx *ethtypes.Transaction
+	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+		tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
 		toChainID := config.Chains[send.OutBoundTxParams.ReceiverChain].ChainID
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to.Bytes(), toChainID, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
 		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
 		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	}
@@ -408,7 +422,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
 		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.OutBoundTxParams.OutBoundTxTSSNonce, outTxHash, myid)
-		if myid == signers[send.OutBoundTxParams.Broadcaster] || myid == signers[int(send.OutBoundTxParams.Broadcaster+1)%len(signers)] {
+		if len(signers) == 0 || myid == signers[send.OutBoundTxParams.Broadcaster] || myid == signers[int(send.OutBoundTxParams.Broadcaster+1)%len(signers)] {
 			backOff := 1000 * time.Millisecond
 			// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 			for i := 0; i < 5; i++ {
@@ -492,7 +506,7 @@ func getTargetChain(send *types.CrossChainTx) string {
 	return ""
 }
 
-func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (*ChainObserver, error) {
+func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr := getTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {

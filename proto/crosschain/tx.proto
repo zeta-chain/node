@@ -105,6 +105,7 @@ message MsgVoteOnObservedOutboundTx {
   common.ReceiveStatus status = 6;
   string outTx_chain = 7;
   uint64 outTx_tss_nonce = 8;
+  common.CoinType coin_type = 9;
 }
 
 message MsgVoteOnObservedOutboundTxResponse {
@@ -122,6 +123,7 @@ message MsgVoteOnObservedInboundTx {
   string inTxHash = 9;
   uint64 inBlockHeight = 10;
   uint64 gasLimit = 11;
+  common.CoinType coinType = 12;
 }
 
 message MsgVoteOnObservedInboundTxResponse {

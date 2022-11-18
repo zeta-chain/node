@@ -17,10 +17,10 @@ type ClientConfiguration struct {
 }
 
 const (
+	BtcConfirmationCount     = 1
 	EthConfirmationCount     = 3
 	BscConfirmationCount     = 5
 	PolygonConfirmationCount = 5
-	RopstenConfirmationCount = 3
 )
 
 const (
@@ -109,15 +109,16 @@ var Chains = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "https://baobab-sh285ns91n5975.athens.zetachain.com",
 	},
-	common.RopstenChain.String(): {
-		Name:                     "ROPSTEN",
-		ConnectorContractAddress: "0x18A276F4ecF6B788F805EF265F89C521401B1815",
-		PoolContractAddress:      "0xaB052Fd2536Cc0630Ffde969E046aDc0743Db679",
-		PoolContract:             types.UniswapV2,
-		ZETATokenContractAddress: "0x251685b8A1bC0ed343a016FcF1aB1B1f444E3bf4",
-		ChainID:                  big.NewInt(3),
+
+	common.BTCTestnetChain.String(): {
+		Name:                     "BTCTESTNET",
+		ConnectorContractAddress: "",
+		PoolContractAddress:      "",
+		PoolContract:             types.UniswapV3,
+		ZETATokenContractAddress: "",
+		ChainID:                  big.NewInt(18332),
 		BlockTime:                EthBlockTime,
-		Endpoint:                 "https://eth-ropsten-sh285ns91n5975.athens.zetachain.com",
+		Endpoint:                 "107.20.255.203:18332",
 	},
 	common.EmptyChain.String(): {
 		Name:                     "",

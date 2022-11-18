@@ -10,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64) *MsgVoteOnObservedInboundTx {
+func NewMsgSendVoter(creator string, sender string, senderChain string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
@@ -22,6 +22,7 @@ func NewMsgSendVoter(creator string, sender string, senderChain string, receiver
 		InTxHash:      inTxHash,
 		InBlockHeight: inBlockHeight,
 		GasLimit:      gasLimit,
+		CoinType:      coinType,
 	}
 }
 
@@ -51,22 +52,24 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
 	}
-	senderChain, err := common.ParseChain(msg.SenderChain)
+	_, err = common.ParseChain(msg.SenderChain)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid sender chain (%s): %s", err, msg.SenderChain)
 	}
-	_, err = common.NewAddress(msg.Sender, senderChain)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
-	}
-	recvChain, err := common.ParseChain(msg.ReceiverChain)
+
+	// FIXME: should we handle validating sender/receiver address here?
+	//_, err = common.NewAddress(msg.Sender, senderChain)
+	//if err != nil {
+	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
+	//}
+	_, err = common.ParseChain(msg.ReceiverChain)
 	if err != nil {
 		return fmt.Errorf("cannot parse receiver chain %s", msg.ReceiverChain)
 	}
-	_, err = common.NewAddress(msg.Receiver, recvChain)
-	if err != nil {
-		return fmt.Errorf("cannot parse receiver addr %s", msg.Receiver)
-	}
+	//_, err = common.NewAddress(msg.Receiver, recvChain)
+	//if err != nil {
+	//	return fmt.Errorf("cannot parse receiver addr %s", msg.Receiver)
+	//}
 
 	// TODO: should parameterize the hardcoded max len
 	// FIXME: should allow this observation and handle errors in the state machine

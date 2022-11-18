@@ -19,22 +19,12 @@ func NewParams() Params {
 	return Params{
 		BallotThresholds: []*BallotThreshold{
 			{
-				Chain:       ObserverChain_Eth,
+				Chain:       ObserverChain_BscTestnet,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Eth,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscMainnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscMainnet,
+				Chain:       ObserverChain_BscTestnet,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
@@ -49,32 +39,22 @@ func NewParams() Params {
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
-				Chain:       ObserverChain_Ropsten,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Ropsten,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
 				Chain:       ObserverChain_Mumbai,
 				Observation: ObservationType_InBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
 			{
 				Chain:       ObserverChain_Mumbai,
+				Observation: ObservationType_OutBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_BTCTestnet,
+				Observation: ObservationType_InBoundTx,
+				Threshold:   sdk.MustNewDecFromStr("0.66"),
+			},
+			{
+				Chain:       ObserverChain_BTCTestnet,
 				Observation: ObservationType_OutBoundTx,
 				Threshold:   sdk.MustNewDecFromStr("0.66"),
 			},
