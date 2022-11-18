@@ -49,14 +49,15 @@ func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	factory.WithGas(0)
 	factory.WithGasAdjustment(1.5)
+	factory.WithGasPrices("0.1azeta")
 
 	builder, err := clienttx.BuildUnsignedTx(factory, msgs...)
 	if err != nil {
 		return "", err
 	}
-	builder.SetGasLimit(10_000_000)
-	fee := stypes.NewCoins(stypes.NewCoin("azeta", stypes.NewInt(40000)))
-	builder.SetFeeAmount(fee)
+	// builder.SetGasLimit(10_000_000)
+	//fee := stypes.NewCoins(stypes.NewCoin("azeta", stypes.NewInt(40000)))
+	//builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
 	if err != nil {
