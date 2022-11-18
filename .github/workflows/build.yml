@@ -7,8 +7,10 @@ on:
       - feature/zetacore-observer-fixes
       - cosmovisor-action
       - bitcoin-inbound
+      - backport-batch-sign
   pull_request:
     types: [ready_for_review]
+    branches: [develop, bitcoin-inbound]    
   release:
     types: [created]
 
