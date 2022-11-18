@@ -79,6 +79,25 @@ func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus)
 	}
 	return sends
 }
+
+// GetAllCrossChainTx returns all cctx
+func (k Keeper) GetAllCctxByStatusesBeforeHeight(ctx sdk.Context, status []types.CctxStatus, height uint64) (list []*types.CrossChainTx) {
+	var sends []*types.CrossChainTx
+	for _, s := range status {
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+		iterator := sdk.KVStorePrefixIterator(store, []byte{})
+		defer iterator.Close()
+		for ; iterator.Valid(); iterator.Next() {
+			var val types.CrossChainTx
+			k.cdc.MustUnmarshal(iterator.Value(), &val)
+			if val.InBoundTxParams.InBoundTxFinalizedZetaHeight < height {
+				sends = append(sends, &val)
+			}
+		}
+	}
+	return sends
+}
 func (k Keeper) GetAllPendingCctxByChainSorted(ctx sdk.Context, chain string) []*types.CrossChainTx {
 	var sends []*types.CrossChainTx
 	status := []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert}
@@ -150,17 +169,10 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	//sends := k.GetAllPendingCctxByChainSorted(ctx, req.Chain)
-	//limit := req.Limit
-	//if req.Limit <= 0 || req.Limit >= 1000 {
-	//	limit = 1000
-	//}
-	//if int64(len(sends)) < limit {
-	//	limit = int64(len(sends))
-	//}
-	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
 
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends, Total: int64(len(sends))}, nil
+	sends := k.GetAllCctxByStatusesBeforeHeight(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert}, req.BlockHeight)
+
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {

@@ -226,98 +226,6 @@ func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
 	}
 }
 
-// ZetaCore block is heart beat; each block we schedule some send according to
-// retry schedule.
-func (co *CoreObserver) startSendSchedulerLegacy() {
-	logger := co.logger.With().Str("module", "SendScheduler").Logger()
-	outTxMan := NewOutTxProcessorManager()
-	go outTxMan.StartMonitorHealth()
-
-	observeTicker := time.NewTicker(3 * time.Second)
-	var lastBlockNum uint64
-	for range observeTicker.C {
-		bn, err := co.bridge.GetZetaBlockHeight()
-		if err != nil {
-			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
-			continue
-		}
-		if bn > lastBlockNum { // we have a new block
-			if bn%10 == 0 {
-				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
-			}
-			tStart := time.Now()
-			sendList, err := co.bridge.GetAllPendingCctx()
-			if err != nil {
-				logger.Error().Err(err).Msg("error requesting sends from zetacore")
-				continue
-			}
-			logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
-			sendMap := splitAndSortSendListByChain(sendList)
-
-			// schedule sends
-
-			for chain, sendList := range sendMap {
-				c, _ := common.ParseChain(chain)
-				found := false
-				for _, enabledChain := range config.ChainsEnabled {
-					if enabledChain == c {
-						found = true
-						break
-					}
-				}
-				if !found {
-					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
-				}
-				if bn%10 == 0 {
-					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
-				}
-				for idx, send := range sendList {
-					ob, err := co.getTargetChainOb(send)
-					if err != nil {
-						logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
-						continue
-					}
-					// update metrics
-					if idx == 0 {
-						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
-						if err != nil {
-							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
-							continue
-						}
-						pTxs.Set(float64(len(sendList)))
-					}
-					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
-					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
-					if err != nil {
-						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
-					}
-					if included || confirmed {
-						logger.Info().Msgf("send outTx already included; do not schedule")
-						continue
-					}
-					chain := getTargetChain(send)
-					outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
-
-					sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
-					// if there are many outstanding sends, then all first 20 has priority
-					// otherwise, only the first one has priority
-					active, _ := outTxMan.IsOutTxActive(outTxID)
-					if isScheduled(sinceBlock, idx < 30) && !active {
-						outTxMan.StartTryProcess(outTxID)
-						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
-					}
-					if idx > 50 { // only look at 50 sends per chain
-						break
-					}
-				}
-			}
-			// update last processed block number
-			lastBlockNum = bn
-		}
-
-	}
-}
-
 func (co *CoreObserver) startSendScheduler() {
 	logger := co.logger.With().Str("module", "SendScheduler").Logger()
 	outTxMan := NewOutTxProcessorManager()
@@ -340,8 +248,9 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
+			lastBlockNum++
 			timeStart := time.Now()
-			sendList, err := co.bridge.GetAllPendingCctx()
+			sendList, err := co.bridge.GetAllPendingCctx(lastBlockNum)
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")

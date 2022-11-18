@@ -32708,9 +32708,6 @@ paths:
                         outBoundTxObservedExternalHeight:
                           type: string
                           format: uint64
-              total:
-                type: string
-                format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -32730,15 +32727,11 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: limit
+        - name: blockHeight
           in: query
           required: false
           type: string
-          format: int64
-        - name: chain
-          in: query
-          required: false
-          type: string
+          format: uint64
       tags:
         - Query
   /zeta-chain/crosschain/chainNonces:
@@ -56156,9 +56149,6 @@ definitions:
                 outBoundTxObservedExternalHeight:
                   type: string
                   format: uint64
-      total:
-        type: string
-        format: int64
   zetachain.zetacore.crosschain.QueryAllCctxResponse:
     type: object
     properties:
