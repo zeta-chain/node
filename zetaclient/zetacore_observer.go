@@ -250,7 +250,7 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1 // process the next block
 			timeStart := time.Now()
-			sendList, err := co.bridge.GetAllPendingCctx(lastBlockNum)
+			sendList, err := co.bridge.GetAllPendingCctx(bn)
 			logger.Info().Int64("block", int64(bn)).Dur("elapsed", time.Since(timeStart)).Int("items", len(sendList)).Msg("GetAllPendingSend")
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
