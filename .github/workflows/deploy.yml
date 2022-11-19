@@ -2,23 +2,23 @@ name: Deploy ZetaChain Update
 on:
   workflow_dispatch:
     inputs:
-      VERSION:
-        description: 'Version number for the release (0.0.1)'
-        type: string
-        required: true
-      # UPGRADE_BLOCK_HEIGHT:
-      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
-      #   type: string
-      #   required: false
       ENVIRONMENT:
         description: 'What Environment to deploy into (athens2, development)'
         type: environment
         required: true
-      REGENESIS:
-        description: 'Whether to regenesis the chain (Keeping existing keys)'
-        type: boolean
-        required: false
-        default: false
+      # VERSION:
+      #   description: 'Version number for the release (0.0.1)'
+      #   type: string
+      #   required: true
+      # UPGRADE_BLOCK_HEIGHT:
+      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
+      #   type: string
+      #   required: false
+      # REGENESIS:
+      #   description: 'Perform Regenesis? (Keeping existing keys)'
+      #   type: boolean
+      #   required: false
+      #   default: false
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
