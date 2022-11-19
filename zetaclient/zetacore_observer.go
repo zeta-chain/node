@@ -262,6 +262,7 @@ func (co *CoreObserver) startSendScheduler() {
 				}
 				if !found {
 					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
+					continue
 				}
 				if bn%10 == 0 {
 					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutBoundTxParams.OutBoundTxTSSNonce, sendList[len(sendList)-1].OutBoundTxParams.OutBoundTxTSSNonce)
