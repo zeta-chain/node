@@ -247,7 +247,7 @@ func (co *CoreObserver) startSendScheduler() {
 				continue
 			}
 			logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
-			sendMap := splitAndSortSendListByChain(sendList)
+			sendMap := SplitAndSortSendListByChain(sendList)
 
 			// schedule sends
 
@@ -475,7 +475,7 @@ func isScheduled(diff int64, priority bool) bool {
 	return false
 }
 
-func splitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
+func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
 	sendMap := make(map[string][]*types.CrossChainTx)
 	for _, send := range sendList {
 		targetChain := getTargetChain(send)
