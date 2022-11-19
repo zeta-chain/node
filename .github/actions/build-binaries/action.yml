@@ -49,7 +49,6 @@ runs:
       if: ${{ inputs.run-tests == 'true' }}
 
     - run: echo "Completed Build Action"
-
       shell: bash
 
 
