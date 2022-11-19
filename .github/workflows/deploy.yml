@@ -65,14 +65,14 @@ jobs:
           aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored || exit 1
 
       # Approval needed to deploy to environments other than development
-      - uses: trstringer/manual-approval@v1
-        if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
-        with:
-          secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          approvers: charliemc0, brewmaster012, kingpinXD, afzeta, chriskzeta, lucas-janon
-          minimum-approvals: 1
-          issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
-          exclude-workflow-initiator-as-approver: false
+      # - uses: trstringer/manual-approval@v1
+      #   if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
+      #   with:
+      #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     approvers: charliemc0, brewmaster012, kingpinXD, afzeta, chriskzeta, lucas-janon
+      #     minimum-approvals: 1
+      #     issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
+      #     exclude-workflow-initiator-as-approver: false
 
       # - name: Cosmovisor Upgrade Proposal and Vote # NEEDS ADDITIONAL TESTING
       #   uses:  ./.github/actions/cosmovisor-upgrade
