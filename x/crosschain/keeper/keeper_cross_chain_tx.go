@@ -62,6 +62,19 @@ func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status 
 	return val, false
 }
 
+func (k Keeper) GetCctxByIndex(ctx sdk.Context, index string) (val types.CrossChainTx, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SendKey))
+
+	b := store.Get(types.KeyPrefix(index))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+
+}
+
 // GetAllCrossChainTx returns all cctx
 func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus) (list []*types.CrossChainTx) {
 	var sends []*types.CrossChainTx
@@ -169,4 +182,81 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutBoundTxParams: outBoundParams,
 	}
 	return newCctx
+}
+
+// Cctx Pending Queue
+// SetCrossChainTx set a specific send in the store from its index
+func (k Keeper) SetCctxPendingQueue(ctx sdk.Context, queue types.CctxPendingQueue) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CctxPendingQueueKeyPrefix))
+	b := k.cdc.MustMarshal(&queue)
+	store.Set(types.KeyPrefix(queue.Index), b)
+}
+
+// GetCrossChainTx returns a send from its index
+func (k Keeper) GetCctxPendingQueue(ctx sdk.Context, index string) (val types.CctxPendingQueue, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CctxPendingQueueKeyPrefix))
+	b := store.Get(types.KeyPrefix(index))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+// RemoveNodeAccount removes a nodeAccount from the store
+func (k Keeper) RemoveCctxPendingQueue(ctx sdk.Context, index string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CctxPendingQueueKeyPrefix))
+	store.Delete(types.KeyPrefix(index))
+}
+
+// GetAllNodeAccount returns all nodeAccount
+func (k Keeper) GetAllCctxPendingQueue(ctx sdk.Context) (list []types.CctxPendingQueue) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CctxPendingQueueKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.CctxPendingQueue
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+// GetAllNodeAccount returns all nodeAccount
+func (k Keeper) GetAllCctxPendingQueueByChain(ctx sdk.Context, chain string, limit int64) (list []*types.CrossChainTx) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CctxPendingQueueKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(chain))
+
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		if i == limit {
+			break
+		}
+		var val types.CctxPendingQueue
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		cctx, found := k.GetCctxByIndex(ctx, val.CctxIndex)
+		if found {
+			list = append(list, &cctx)
+		}
+		i++
+	}
+	return
+}
+
+// gRPC service function
+func (k Keeper) CctxAllPendingQueue(c context.Context, req *types.QueryAllCctxPendingQueueRequest) (*types.QueryAllCctxPendingQueueResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	cctxs := k.GetAllCctxPendingQueueByChain(ctx, req.Chain, req.Limit)
+	return &types.QueryAllCctxPendingQueueResponse{
+		CrossChainTx: cctxs,
+	}, nil
 }

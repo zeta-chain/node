@@ -135,6 +135,12 @@ service Query {
 	rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
 	}
+
+	// Queries a list of send items.
+	rpc CctxAllPendingQueue(QueryAllCctxPendingQueueRequest) returns (QueryAllCctxPendingQueueResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/cctxPendingQueue";
+	}
+
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount/{index}";
@@ -332,6 +338,15 @@ message QueryAllCctxResponse {
 
 message QueryAllCctxPendingRequest {
 
+}
+
+message QueryAllCctxPendingQueueRequest {
+	string chain = 1;
+	int64 limit = 2;
+}
+
+message QueryAllCctxPendingQueueResponse {
+	repeated CrossChainTx CrossChainTx = 1;
 }
 
 message QueryAllCctxPendingResponse {

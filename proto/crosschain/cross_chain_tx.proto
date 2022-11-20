@@ -64,3 +64,10 @@ message CrossChainTx {
   InBoundTxParams  InBoundTxParams = 9;
   OutBoundTxParams OutBoundTxParams = 10;
 }
+
+message CctxPendingQueue {
+  string index = 1;
+  string chain = 2;
+  uint64 nonce = 3;
+  string cctxIndex = 4;
+}

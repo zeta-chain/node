@@ -54,6 +54,7 @@ const (
 	KeygenKey                   = "Keygen-value-"
 	OutTxTrackerKeyPrefix       = "OutTxTracker/value/"
 	ZetaConversionRateKeyPrefix = "ZetaConversionRate/value/"
+	CctxPendingQueueKeyPrefix   = "CctxPendingQueue-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields

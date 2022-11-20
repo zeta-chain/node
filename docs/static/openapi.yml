@@ -32728,6 +32728,135 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /zeta-chain/crosschain/cctxPendingQueue:
+    get:
+      summary: Queries a list of send items.
+      operationId: ZetachainZetacoreCrosschainCctxAllPendingQueue
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              CrossChainTx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    creator:
+                      type: string
+                    index:
+                      type: string
+                    zetaBurnt:
+                      type: string
+                    zetaMint:
+                      type: string
+                    zetaFees:
+                      type: string
+                    relayedMessage:
+                      type: string
+                      title: 'Not used by protocol , just relayed across'
+                    cctx_status:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                            - PendingInbound
+                            - PendingOutbound
+                            - OutboundMined
+                            - PendingRevert
+                            - Reverted
+                            - Aborted
+                          default: PendingInbound
+                          title: |-
+                            - PendingInbound: some observer sees inbound tx
+                             - PendingOutbound: super majority observer see inbound tx
+                             - OutboundMined: the corresponding outbound tx is mined
+                             - PendingRevert: outbound cannot succeed; should revert inbound
+                             - Reverted: inbound reverted.
+                             - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+                        statusMessage:
+                          type: string
+                        lastUpdateTimestamp:
+                          type: string
+                          format: int64
+                    InBoundTxParams:
+                      type: object
+                      properties:
+                        sender:
+                          type: string
+                        senderChain:
+                          type: string
+                        inBoundTxObservedHash:
+                          type: string
+                        inBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+                        inBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        inBoundTXBallotIndex:
+                          type: string
+                    OutBoundTxParams:
+                      type: object
+                      properties:
+                        receiver:
+                          type: string
+                        receiverChain:
+                          type: string
+                        broadcaster:
+                          type: string
+                          format: uint64
+                          title: Can be removed
+                        outBoundTxHash:
+                          type: string
+                        outBoundTxTSSNonce:
+                          type: string
+                          format: uint64
+                        outBoundTxGasLimit:
+                          type: string
+                          format: uint64
+                        outBoundTxGasPrice:
+                          type: string
+                        outBoundTXBallotIndex:
+                          type: string
+                        outBoundTxFinalizedZetaHeight:
+                          type: string
+                          format: uint64
+                        outBoundTxObservedExternalHeight:
+                          type: string
+                          format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: chain
+          in: query
+          required: false
+          type: string
+        - name: limit
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/crosschain/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
@@ -56051,6 +56180,98 @@ definitions:
       enabled:
         type: boolean
     description: Params defines the parameters for the module.
+  zetachain.zetacore.crosschain.QueryAllCctxPendingQueueResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          properties:
+            creator:
+              type: string
+            index:
+              type: string
+            zetaBurnt:
+              type: string
+            zetaMint:
+              type: string
+            zetaFees:
+              type: string
+            relayedMessage:
+              type: string
+              title: 'Not used by protocol , just relayed across'
+            cctx_status:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PendingInbound
+                    - PendingOutbound
+                    - OutboundMined
+                    - PendingRevert
+                    - Reverted
+                    - Aborted
+                  default: PendingInbound
+                  title: |-
+                    - PendingInbound: some observer sees inbound tx
+                     - PendingOutbound: super majority observer see inbound tx
+                     - OutboundMined: the corresponding outbound tx is mined
+                     - PendingRevert: outbound cannot succeed; should revert inbound
+                     - Reverted: inbound reverted.
+                     - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+                statusMessage:
+                  type: string
+                lastUpdateTimestamp:
+                  type: string
+                  format: int64
+            InBoundTxParams:
+              type: object
+              properties:
+                sender:
+                  type: string
+                senderChain:
+                  type: string
+                inBoundTxObservedHash:
+                  type: string
+                inBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
+                inBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                inBoundTXBallotIndex:
+                  type: string
+            OutBoundTxParams:
+              type: object
+              properties:
+                receiver:
+                  type: string
+                receiverChain:
+                  type: string
+                broadcaster:
+                  type: string
+                  format: uint64
+                  title: Can be removed
+                outBoundTxHash:
+                  type: string
+                outBoundTxTSSNonce:
+                  type: string
+                  format: uint64
+                outBoundTxGasLimit:
+                  type: string
+                  format: uint64
+                outBoundTxGasPrice:
+                  type: string
+                outBoundTXBallotIndex:
+                  type: string
+                outBoundTxFinalizedZetaHeight:
+                  type: string
+                  format: uint64
+                outBoundTxObservedExternalHeight:
+                  type: string
+                  format: uint64
   zetachain.zetacore.crosschain.QueryAllCctxPendingResponse:
     type: object
     properties:
