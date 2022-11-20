@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"os"
 	"os/signal"
 	"path"
+	"sort"
 	"strings"
 	"syscall"
 )
@@ -87,7 +89,7 @@ func main() {
 	}
 
 	log.Info().Msgf("pending cctx: %d", len(pendingCctx))
-	sendMap := mc.SplitAndSortSendListByChain(pendingCctx)
+	sendMap := splitAndSortSendListByChain(pendingCctx)
 	for _, c := range chains {
 		list := sendMap[c]
 		var nonces []uint64
@@ -125,6 +127,26 @@ func main() {
 
 	}
 
+}
+
+func splitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
+	sendMap := make(map[string][]*types.CrossChainTx)
+	for _, send := range sendList {
+		targetChain := mc.GetTargetChain(send)
+		if targetChain == "" {
+			continue
+		}
+		if _, found := sendMap[targetChain]; !found {
+			sendMap[targetChain] = make([]*types.CrossChainTx, 0)
+		}
+		sendMap[targetChain] = append(sendMap[targetChain], send)
+	}
+	for _, sends := range sendMap {
+		sort.Slice(sends, func(i, j int) bool {
+			return sends[i].OutBoundTxParams.OutBoundTxTSSNonce < sends[j].OutBoundTxParams.OutBoundTxTSSNonce
+		})
+	}
+	return sendMap
 }
 
 func BreakSortedSequenceIntoIntervals(seq []uint64) [][]uint64 {

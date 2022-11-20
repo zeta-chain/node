@@ -295,7 +295,7 @@ func (co *CoreObserver) startSendScheduler() {
 						logger.Info().Msgf("send outTx already included; do not schedule")
 						continue
 					}
-					chain := getTargetChain(send)
+					chain := GetTargetChain(send)
 					outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
@@ -304,7 +304,7 @@ func (co *CoreObserver) startSendScheduler() {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 					}
-					if idx > 60 { // only look at 50 sends per chain
+					if idx > 80 { // only look at 50 sends per chain
 						break
 					}
 				}
@@ -317,7 +317,7 @@ func (co *CoreObserver) startSendScheduler() {
 }
 
 func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager) {
-	chain := getTargetChain(send)
+	chain := GetTargetChain(send)
 	outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
 
 	logger := co.logger.With().
@@ -496,7 +496,7 @@ func trimSends(sends []*types.CrossChainTx) int {
 func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
 	sendMap := make(map[string][]*types.CrossChainTx)
 	for _, send := range sendList {
-		targetChain := getTargetChain(send)
+		targetChain := GetTargetChain(send)
 		if targetChain == "" {
 			continue
 		}
@@ -516,7 +516,7 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 	return sendMap
 }
 
-func getTargetChain(send *types.CrossChainTx) string {
+func GetTargetChain(send *types.CrossChainTx) string {
 	if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		return send.OutBoundTxParams.ReceiverChain
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
@@ -526,7 +526,7 @@ func getTargetChain(send *types.CrossChainTx) string {
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
-	chainStr := getTargetChain(send)
+	chainStr := GetTargetChain(send)
 	c, err := common.ParseChain(chainStr)
 	if err != nil {
 		return nil, err
