@@ -475,6 +475,21 @@ func isScheduled(diff int64, priority bool) bool {
 	return false
 }
 
+// trim "bogus" pending sends that are not actually pending
+// input sends must be sorted by nonce ascending
+func trimSends(sends []*types.CrossChainTx) int {
+	start := 0
+	for i := len(sends) - 1; i >= 1; i-- {
+		// from right to left, if there's a big hole, then before the gap are probably
+		// bogus "pending" sends that are already processed but not yet confirmed.
+		if sends[i].OutBoundTxParams.OutBoundTxTSSNonce > sends[i-1].OutBoundTxParams.OutBoundTxTSSNonce+1000 {
+			start = i
+			break
+		}
+	}
+	return start
+}
+
 func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
 	sendMap := make(map[string][]*types.CrossChainTx)
 	for _, send := range sendList {
@@ -491,7 +506,9 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 		sort.Slice(sends, func(i, j int) bool {
 			return sends[i].OutBoundTxParams.OutBoundTxTSSNonce < sends[j].OutBoundTxParams.OutBoundTxTSSNonce
 		})
-		sendMap[chain] = sends
+		start := trimSends(sends)
+		sendMap[chain] = sends[start:]
+		log.Info().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].OutBoundTxParams.OutBoundTxTSSNonce)
 	}
 	return sendMap
 }

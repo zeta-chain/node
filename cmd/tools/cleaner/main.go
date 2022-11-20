@@ -118,7 +118,7 @@ func main() {
 					}
 				}
 			} else { // found
-				log.Info().Msgf("  outTxTracker found for nonce %d: %v", interval[0], outTxTracker.HashList)
+				log.Info().Msgf("  outTxTracker found for nonce %d: %s", interval[0], outTxTracker.HashList[0].TxHash)
 			}
 
 		}
