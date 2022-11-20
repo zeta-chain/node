@@ -237,6 +237,7 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn > lastBlockNum { // we have a new block
+			bn = lastBlockNum + 1
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
