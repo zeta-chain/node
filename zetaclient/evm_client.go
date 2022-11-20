@@ -246,7 +246,6 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 						sendhash := vLog.Topics[3].Hex()
 						//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 						mMint := receivedLog.ZetaValue
-						logger.Warn().Msgf("######## chain %s ########", ob.chain.String())
 						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 							sendhash,
 							vLog.TxHash.Hex(),
