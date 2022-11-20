@@ -297,13 +297,12 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					chain := getTargetChain(send)
 					outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
+					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
-					// if there are many outstanding sends, then all first 20 has priority
-					// otherwise, only the first one has priority
-					if isScheduled(sinceBlock, idx < 60) && !outTxMan.IsOutTxActive(outTxID) {
+					if nonce%30 == bn%30 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
-						go co.TryProcessOutTx(send, sinceBlock, outTxMan)
+						go co.TryProcessOutTx(send, outTxMan)
 					}
 					if idx > 60 { // only look at 50 sends per chain
 						break
@@ -317,14 +316,14 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, sinceBlock int64, outTxMan *OutTxProcessorManager) {
+func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager) {
 	chain := getTargetChain(send)
 	outTxID := fmt.Sprintf("%s/%d", chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
 
 	logger := co.logger.With().
 		Str("sendHash", send.Index).
 		Str("outTxID", outTxID).
-		Int64("sinceBlock", sinceBlock).Logger()
+		Logger()
 	logger.Info().Msgf("start processing outTxID %s", outTxID)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
