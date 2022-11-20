@@ -85,3 +85,8 @@ func ZetaConversionRateKey(
 func (cctx CrossChainTx) LogIdentifierForCCTX() string {
 	return fmt.Sprintf("%s-%s-%s-%d", cctx.InBoundTxParams.Sender, cctx.InBoundTxParams.SenderChain, cctx.OutBoundTxParams.ReceiverChain, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
 }
+
+const (
+	// this admin can do some cleanup services like adding/removing outTxTracker entries
+	AdminKey = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
+)
