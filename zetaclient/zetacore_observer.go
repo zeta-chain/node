@@ -236,6 +236,9 @@ func (co *CoreObserver) startSendScheduler() {
 			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
+		if lastBlockNum == 0 {
+			lastBlockNum = bn - 1
+		}
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1
 			if bn%10 == 0 {
