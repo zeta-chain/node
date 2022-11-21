@@ -397,16 +397,16 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 
 	var tx *ethtypes.Transaction
 	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 		tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
-		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 		toChainID := config.Chains[send.OutBoundTxParams.ReceiverChain].ChainID
 		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to.Bytes(), toChainID, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
-		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	}
 
