@@ -498,7 +498,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	for bn := startBlock; bn <= toBlock; bn++ {
 		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 		if err != nil {
-			ob.logger.Error().Err(err).Msg("error getting block")
+			ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
 			continue
 		}
 		for _, tx := range block.Transactions() {
