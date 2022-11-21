@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -22,7 +21,7 @@ const (
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	//log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
