@@ -462,22 +462,6 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 
 }
 
-func isScheduled(diff int64, priority bool) bool {
-	d := diff - 1
-	if d < 0 {
-		return false
-	}
-	if priority {
-		return d%30 == 0
-	}
-	if d < 100 && d%30 == 0 {
-		return true
-	} else if d >= 100 && d%100 == 0 { // after 100 blocks, schedule once per 100 blocks
-		return true
-	}
-	return false
-}
-
 // trim "bogus" pending sends that are not actually pending
 // input sends must be sorted by nonce ascending
 func trimSends(sends []*types.CrossChainTx) int {
