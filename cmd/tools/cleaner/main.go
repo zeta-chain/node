@@ -1,14 +1,21 @@
 package main
 
 import (
+	"context"
+	"encoding/hex"
 	"flag"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"math/big"
 	"os"
 	"os/signal"
 	"path"
@@ -75,7 +82,11 @@ func main() {
 	}
 
 	k := mc.NewKeysWithKeybase(kb, *signerName, signerPass)
-
+	config := cosmos.GetConfig()
+	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
+	cmd.CHAINID = "athens_7001-1"
 	bridge, err := mc.NewZetaCoreBridge(k, *nodeIP, *signerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewZetaCoreBridge")
@@ -88,13 +99,18 @@ func main() {
 		return
 	}
 
+	nonceToCctx := make(map[string]*types.CrossChainTx)
+
 	log.Info().Msgf("pending cctx: %d", len(pendingCctx))
 	sendMap := splitAndSortSendListByChain(pendingCctx)
 	for _, c := range chains {
 		list := sendMap[c]
 		var nonces []uint64
 		for _, cctx := range list {
-			nonces = append(nonces, cctx.OutBoundTxParams.OutBoundTxTSSNonce)
+			nonce := cctx.OutBoundTxParams.OutBoundTxTSSNonce
+			nonces = append(nonces, nonce)
+			outTxID := fmt.Sprintf("%s-%d", c, nonce)
+			nonceToCctx[outTxID] = cctx
 		}
 		chain, err := common.ParseChain(c)
 		if err != nil {
@@ -107,24 +123,72 @@ func main() {
 		log.Info().Msgf("outTxTracker: %d", len(outTxTracker))
 
 		log.Info().Msgf("chain %s has %d pending cctx, divided into %d intervals", c, len(list), len(BreakSortedSequenceIntoIntervals(nonces)))
-		for _, interval := range BreakSortedSequenceIntoIntervals(nonces) {
-			log.Info().Msgf("  interval: %d - %d", interval[0], interval[len(interval)-1])
-			outTxTracker, err := bridge.GetOutTxTracker(chain, interval[0])
-			if err != nil {
-				st, ok := status.FromError(err)
-				if !ok {
-					log.Warn().Err(err).Msg("unknown gRPC error code")
-				} else {
-					if st.Code() == codes.NotFound {
-						log.Info().Msgf("  outTxTracker not found for nonce %d", interval[0])
-					}
-				}
-			} else { // found
-				log.Info().Msgf("  outTxTracker found for nonce %d: %s", interval[0], outTxTracker.HashList[0].TxHash)
-			}
-
+		intervals := BreakSortedSequenceIntoIntervals(nonces)
+		for idx, interval := range intervals {
+			log.Info().Msgf("  interval[%d]: %d - %d", idx, interval[0], interval[len(interval)-1])
 		}
 
+		ethClient, err := ethclient.Dial(os.Getenv(fmt.Sprintf("%s_ENDPOINT", c)))
+		if err != nil {
+			log.Error().Err(err).Msgf("fail to dial %s", c)
+			continue
+		}
+		connectorAddr := ethcommon.HexToAddress(os.Getenv(fmt.Sprintf("%s_CONNECTOR", c)))
+		if connectorAddr == (ethcommon.Address{}) {
+			log.Error().Msgf("envvar %s_CONNECTOR is not set", c)
+			continue
+		}
+		conn, err := evm.NewConnector(connectorAddr, ethClient)
+		if err != nil {
+			log.Error().Err(err).Msgf("fail to create connector %s", c)
+			continue
+		}
+		for idx, interval := range intervals {
+			if idx == 0 {
+				//if idx < len(intervals)-1 {
+				for _, nonce := range interval {
+					outTxID := fmt.Sprintf("%s-%d", c, nonce)
+					log.Info().Msgf("  fixing %s", outTxID)
+					cctx, found := nonceToCctx[outTxID]
+					if !found {
+						log.Error().Msgf("  cctx not found for %s", outTxID)
+						continue
+					}
+					sendHash, err := hex.DecodeString(cctx.Index[2:])
+					if err != nil {
+						log.Error().Err(err).Msgf("  fail to decode sendHash %s", cctx.Index)
+						continue
+					}
+					var sendHashB32 [32]byte
+					copy(sendHashB32[:32], sendHash[:32])
+					bn, err := ethClient.BlockNumber(context.Background())
+					if err != nil {
+						log.Error().Err(err).Msgf("  fail to get block number")
+						continue
+					}
+					logs, err := conn.FilterZetaReceived(&bind.FilterOpts{
+						Start:   0,
+						End:     &bn,
+						Context: context.TODO(),
+					}, []*big.Int{}, []ethcommon.Address{}, [][32]byte{sendHashB32})
+					if err != nil {
+						log.Error().Err(err).Msg("  fail to filter ZetaReceived")
+						continue
+					}
+					for logs.Next() {
+						log.Info().Msgf("  found zeta received: %s", logs.Event.Raw.TxHash.Hex())
+						//txhash := logs.Event.Raw.TxHash.Hex()
+						//
+						//zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, txhash)
+						//if err != nil {
+						//	log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
+						//	continue
+						//}
+						//log.Info().Msgf("  outTxTracker tx: %s", zTxHash)
+					}
+				}
+			}
+		}
 	}
 
 }
