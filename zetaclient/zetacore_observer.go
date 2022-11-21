@@ -389,6 +389,11 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.OutBoundTxParams.OutBoundTxGasPrice)
 		return
 	}
+	// FIXME: remove this hack
+	if toChain == common.GoerliChain {
+		gasprice = gasprice.Mul(gasprice, big.NewInt(3))
+		gasprice = gasprice.Div(gasprice, big.NewInt(2))
+	}
 
 	var tx *ethtypes.Transaction
 	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
