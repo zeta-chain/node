@@ -177,6 +177,14 @@ func main() {
 					}
 					for logs.Next() {
 						log.Info().Msgf("  found zeta received: %s", logs.Event.Raw.TxHash.Hex())
+						txhash := logs.Event.Raw.TxHash
+						tx, _, err := ethClient.TransactionByHash(context.Background(), txhash)
+						if err != nil {
+							log.Error().Err(err).Msgf("  fail to get tx %s", txhash.Hex())
+							continue
+						}
+						log.Info().Msgf("tx size: %f", tx.Size())
+
 						//txhash := logs.Event.Raw.TxHash.Hex()
 						//
 						//zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, txhash)
