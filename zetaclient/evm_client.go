@@ -40,6 +40,8 @@ const (
 	NonceTxKeyPrefix       = "NonceTx-"
 )
 
+var errEmptyBlock = fmt.Errorf("server returned empty transaction list but block header indicates transactions")
+
 type TxHashEnvelope struct {
 	TxHash string
 	Done   chan struct{}
@@ -54,6 +56,8 @@ type OutTx struct {
 // Chain configuration struct
 // Filled with above constants depending on chain
 type EVMChainClient struct {
+	*ChainMetrics
+
 	chain                     common.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
@@ -69,7 +73,6 @@ type EVMChainClient struct {
 	mu                        *sync.Mutex
 	db                        *leveldb.DB
 	sampleLogger              *zerolog.Logger
-	metrics                   *metricsPkg.Metrics
 	outTXConfirmedReceipts    map[int]*ethtypes.Receipt
 	outTXConfirmedTransaction map[int]*ethtypes.Transaction
 	MinNonce                  int64
@@ -85,7 +88,9 @@ var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
 func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainClient, error) {
-	ob := EVMChainClient{}
+	ob := EVMChainClient{
+		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
@@ -95,7 +100,6 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.metrics = metrics
 	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.outTXConfirmedTransaction = make(map[int]*ethtypes.Transaction)
 	ob.OutTxChan = make(chan OutTx, 100)
@@ -496,9 +500,15 @@ func (ob *EVMChainClient) observeInTX() error {
 	tssAddress := ob.Tss.EVMAddress()
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
+		//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 		if err != nil {
-			ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
+			//TODO: this is very hacky becaue klatyn uses different empty tx hash as ethereum:
+			// see: https://github.com/klaytn/klaytn/blob/febce7b01a616a556423704cf9faa7da4bc4753f/client/klay_client.go#L119
+			if ob.chain == common.BaobabChain && strings.Contains(err.Error(), errEmptyBlock.Error()) {
+			} else {
+				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
+			}
 			continue
 		}
 		for _, tx := range block.Transactions() {
