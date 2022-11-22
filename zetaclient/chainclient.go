@@ -16,5 +16,5 @@ type ChainClient interface {
 	IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error)
 	PostNonceIfNotRecorded() error
 	GetPromGauge(name string) (prometheus.Gauge, error)
-	RegisterPromGauge(name string, help string) error
+	GetPromCounter(name string) (prometheus.Counter, error)
 }

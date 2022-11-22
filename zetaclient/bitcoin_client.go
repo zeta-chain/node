@@ -27,6 +27,8 @@ var _ ChainClient = &BitcoinChainClient{}
 // Chain configuration struct
 // Filled with above constants depending on chain
 type BitcoinChainClient struct {
+	*ChainMetrics
+
 	chain       common.Chain
 	endpoint    string
 	rpcClient   *rpcclient.Client
@@ -38,14 +40,15 @@ type BitcoinChainClient struct {
 	txWatchList map[ethcommon.Hash]string
 	mu          *sync.Mutex
 	//db          *leveldb.DB
-	metrics *metricsPkg.Metrics
-	stop    chan struct{}
-	logger  zerolog.Logger
+	stop   chan struct{}
+	logger zerolog.Logger
 }
 
 // Return configuration based on supplied target chain
 func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainClient, error) {
-	ob := BitcoinChainClient{}
+	ob := BitcoinChainClient{
+		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	if !chain.IsBitcoinChain() {
@@ -56,7 +59,6 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.metrics = metrics
 	ob.confCount = 0
 
 	ob.endpoint = config.Chains[chain.String()].Endpoint
