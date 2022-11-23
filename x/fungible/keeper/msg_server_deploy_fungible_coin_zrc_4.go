@@ -17,7 +17,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 
 	addr, err := k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChain, msg.CoinType, msg.ERC20, big.NewInt(int64(msg.GasLimit)))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "failed to deploy fungible coin %s", msg.Name)
+		return nil, err
 	}
 	//FIXME : declare the attributes as constants , in x/fungible/types
 	ctx.EventManager().EmitEvent(
