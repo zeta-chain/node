@@ -877,7 +877,7 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
 		logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == "latest" {
+		if scanFromBlock == clienttypes.EnvVarLatest {
 			header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err

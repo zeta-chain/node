@@ -20,7 +20,7 @@ type RPCHeader struct {
 	Time   *hexutil.Big `json:"timestamp"`
 }
 
-type RpcTransaction struct {
+type RPCTransaction struct {
 	From  *common.Address `json:"from"`
 	Input hexutil.Bytes   `json:"input"`
 	To    *common.Address `json:"to"`
@@ -28,9 +28,9 @@ type RpcTransaction struct {
 	Value *hexutil.Big    `json:"value"`
 }
 
-type RpcBlock struct {
+type RPCBlock struct {
 	Hash         *common.Hash     `json:"hash"`
-	Transactions []RpcTransaction `json:"transactions"`
+	Transactions []RPCTransaction `json:"transactions"`
 }
 
 func Dial(url string) (*KlaytnClient, error) {
@@ -41,11 +41,11 @@ func Dial(url string) (*KlaytnClient, error) {
 	return &KlaytnClient{c}, nil
 }
 
-func (ec *KlaytnClient) BlockByNumber(ctx context.Context, number *big.Int) (*RpcBlock, error) {
+func (ec *KlaytnClient) BlockByNumber(ctx context.Context, number *big.Int) (*RPCBlock, error) {
 	return ec.getBlock(ctx, "klay_getBlockByNumber", toBlockNumArg(number), true)
 }
 
-func (ec *KlaytnClient) getBlock(ctx context.Context, method string, args ...interface{}) (*RpcBlock, error) {
+func (ec *KlaytnClient) getBlock(ctx context.Context, method string, args ...interface{}) (*RPCBlock, error) {
 	var raw json.RawMessage
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
@@ -54,7 +54,7 @@ func (ec *KlaytnClient) getBlock(ctx context.Context, method string, args ...int
 		return nil, errors.New("not found")
 	}
 
-	var block RpcBlock
+	var block RPCBlock
 	if err := json.Unmarshal(raw, &block); err != nil {
 		return nil, err
 	}

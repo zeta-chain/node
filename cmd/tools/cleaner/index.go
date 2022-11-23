@@ -50,6 +50,9 @@ func NewIndexer(chainName string, endpoint string, fromAddress string) (*Indexer
 	}
 
 	db, err := sql.Open("sqlite3", "clean.sqlite3")
+	if err != nil {
+		return nil, err
+	}
 	if db.Ping() != nil {
 		return nil, fmt.Errorf("failed to connect to database")
 	}
@@ -124,6 +127,10 @@ func (i *Indexer) WatchChain() {
 				continue
 			}
 			from, err := i.ethClient.TransactionSender(context.TODO(), tx, block.Hash(), receipt.TransactionIndex)
+			if err != nil {
+				log.Error().Err(err).Msgf("failed to get sender for tx %s", tx.Hash().Hex())
+				continue
+			}
 			if from == i.from {
 				log.Info().Msgf("  %s-%d, hash %s", i.chainName, tx.Nonce(), tx.Hash().Hex())
 				if _, err := i.db.Exec("INSERT INTO txs_from_address (nonce, chain, from_address, to_address, block_number, txhash, status, time, gas_price, gas_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
