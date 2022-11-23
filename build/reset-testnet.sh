@@ -51,6 +51,8 @@ zetacored add-observer Mumbai InBoundTx "$observer_list" #mumbai
 zetacored add-observer Mumbai OutBoundTx "$observer_list"
 zetacored add-observer BTCTestnet InBoundTx "$observer_list" #btctestnet
 zetacored add-observer BTCTestnet OutBoundTx "$observer_list"
+zetacored add-observer Baobab InBoundTx "$observer_list" #baobab klaytn
+zetacored add-observer Baobab OutBoundTx "$observer_list"
  
 for NODE in $NODES; do
 	scp -i ~/.ssh/meta.pem ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/

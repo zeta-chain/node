@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"math/big"
 	"os"
 	"strconv"
@@ -89,7 +90,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
 		ob.logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == "latest" {
+		if scanFromBlock == clienttypes.EnvVarLatest {
 			ob.SetLastBlockHeight(uint64(bn))
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
