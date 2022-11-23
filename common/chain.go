@@ -14,6 +14,7 @@ var (
 	POLYGONChain = Chain("POLYGON")
 	ZETAChain    = Chain("ZETA")
 	BTCChain     = Chain("BTC")
+	KLAYTNChain  = Chain("KLAYTN")
 
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
@@ -128,6 +129,10 @@ func (chain Chain) IsZetaChain() bool {
 func (chain Chain) IsEVMChain() bool {
 	return chain.Equals(ETHChain) || chain.Equals(BSCChain) || chain.Equals(POLYGONChain) || chain.Equals(GoerliChain) ||
 		chain.Equals(MumbaiChain) || chain.Equals(BSCTestnetChain) || chain.Equals(BaobabChain) || chain.Equals(Ganache)
+}
+
+func (chain Chain) IsKlaytnChain() bool {
+	return chain.Equals(BaobabChain) || chain.Equals(KLAYTNChain)
 }
 
 func (chain Chain) IsBitcoinChain() bool {

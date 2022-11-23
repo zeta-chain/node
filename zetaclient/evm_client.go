@@ -64,6 +64,7 @@ type EVMChainClient struct {
 	Connector                 *evm.Connector
 	ConnectorAddress          ethcommon.Address
 	EvmClient                 *ethclient.Client
+	KlaytnClient              *KlaytnClient
 	zetaClient                *ZetaCoreBridge
 	Tss                       TSSSigner
 	lastBlock                 uint64
@@ -126,6 +127,15 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		return nil, err
 	}
 	ob.EvmClient = client
+
+	if chain.IsKlaytnChain() {
+		kclient, err := Dial(ob.endpoint)
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("klaytn Client Dial")
+			return nil, err
+		}
+		ob.KlaytnClient = kclient
+	}
 
 	// initialize the connector
 	connector, err := evm.NewConnector(addr, ob.EvmClient)
@@ -499,64 +509,121 @@ func (ob *EVMChainClient) observeInTX() error {
 	// ============= query the incoming tx to TSS address ==============
 	tssAddress := ob.Tss.EVMAddress()
 	// query incoming gas asset
-	for bn := startBlock; bn <= toBlock; bn++ {
-		//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-		block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-		if err != nil {
-			//TODO: this is very hacky becaue klatyn uses different empty tx hash as ethereum:
-			// see: https://github.com/klaytn/klaytn/blob/febce7b01a616a556423704cf9faa7da4bc4753f/client/klay_client.go#L119
-			if ob.chain == common.BaobabChain && strings.Contains(err.Error(), errEmptyBlock.Error()) {
-			} else {
-				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
-			}
-			continue
-		}
-		for _, tx := range block.Transactions() {
-			if tx.To() == nil {
+	if !ob.chain.IsKlaytnChain() {
+		for bn := startBlock; bn <= toBlock; bn++ {
+			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			if err != nil {
+				//TODO: this is very hacky becaue klatyn uses different empty tx hash as ethereum:
+				// see: https://github.com/klaytn/klaytn/blob/febce7b01a616a556423704cf9faa7da4bc4753f/client/klay_client.go#L119
+				if ob.chain == common.BaobabChain && strings.Contains(err.Error(), errEmptyBlock.Error()) {
+				} else {
+					ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
+				}
 				continue
 			}
-			if *tx.To() == tssAddress {
-				receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-				if err != nil {
-					ob.logger.Err(err).Msg("TransactionReceipt error")
+			for _, tx := range block.Transactions() {
+				if tx.To() == nil {
 					continue
 				}
-				if receipt.Status != 1 { // 1: successful, 0: failed
-					ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-					continue
-				}
+				if *tx.To() == tssAddress {
+					receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+					if err != nil {
+						ob.logger.Err(err).Msg("TransactionReceipt error")
+						continue
+					}
+					if receipt.Status != 1 { // 1: successful, 0: failed
+						ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
+						continue
+					}
 
-				from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-				if err != nil {
-					ob.logger.Err(err).Msg("TransactionSender")
+					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
+					if err != nil {
+						ob.logger.Err(err).Msg("TransactionSender")
+						continue
+					}
+					ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
+					ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
+					ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+					message := ""
+					if len(tx.Data()) != 0 {
+						message = hex.EncodeToString(tx.Data())
+					}
+					zetaHash, err := ob.zetaClient.PostSend(
+						from.Hex(),
+						ob.chain.String(),
+						from.Hex(),
+						"ZETA",
+						tx.Value().String(),
+						tx.Value().String(),
+						message,
+						tx.Hash().Hex(),
+						receipt.BlockNumber.Uint64(),
+						90_000,
+						common.CoinType_Gas,
+						PostSendEVMGasLimit,
+					)
+					if err != nil {
+						ob.logger.Error().Err(err).Msg("error posting to zeta core")
+						continue
+					}
+					ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+				}
+			}
+		}
+	} else { // for Klaytn
+		for bn := startBlock; bn <= toBlock; bn++ {
+			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			block, err := ob.KlaytnClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			if err != nil {
+				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
+				continue
+			}
+			for _, tx := range block.Transactions {
+				if tx.To == nil {
 					continue
 				}
-				ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
-				ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
-				ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
-				message := ""
-				if len(tx.Data()) != 0 {
-					message = hex.EncodeToString(tx.Data())
+				if *tx.To == tssAddress {
+					receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash)
+					if err != nil {
+						ob.logger.Err(err).Msg("TransactionReceipt error")
+						continue
+					}
+					if receipt.Status != 1 { // 1: successful, 0: failed
+						ob.logger.Info().Msgf("tx %s failed; don't act", tx.Hash.Hex())
+						continue
+					}
+
+					from := *tx.From
+					value := tx.Value.ToInt()
+
+					ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash.Hex(), receipt.BlockNumber)
+					ob.logger.Info().Msgf("TSS inTx value: %s", value.String())
+					ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+					message := ""
+					if len(tx.Input) != 0 {
+						message = hex.EncodeToString(tx.Input)
+					}
+					zetaHash, err := ob.zetaClient.PostSend(
+						from.Hex(),
+						ob.chain.String(),
+						from.Hex(),
+						"ZETA",
+						value.String(),
+						value.String(),
+						message,
+						tx.Hash.Hex(),
+						receipt.BlockNumber.Uint64(),
+						90_000,
+						common.CoinType_Gas,
+						PostSendEVMGasLimit,
+					)
+					if err != nil {
+						ob.logger.Error().Err(err).Msg("error posting to zeta core")
+						continue
+					}
+					ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 				}
-				zetaHash, err := ob.zetaClient.PostSend(
-					from.Hex(),
-					ob.chain.String(),
-					from.Hex(),
-					"ZETA",
-					tx.Value().String(),
-					tx.Value().String(),
-					message,
-					tx.Hash().Hex(),
-					receipt.BlockNumber.Uint64(),
-					90_000,
-					common.CoinType_Gas,
-					PostSendEVMGasLimit,
-				)
-				if err != nil {
-					ob.logger.Error().Err(err).Msg("error posting to zeta core")
-					continue
-				}
-				ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 			}
 		}
 	}
