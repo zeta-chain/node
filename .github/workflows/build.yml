@@ -7,6 +7,7 @@ on:
       - feature/zetacore-observer-fixes
       - cosmovisor-action
       - bitcoin-inbound
+      - klaytn-client
   pull_request:
     types: [ready_for_review]
     branches: [develop, bitcoin-inbound]    
