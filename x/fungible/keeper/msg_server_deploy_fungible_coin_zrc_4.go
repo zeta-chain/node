@@ -16,7 +16,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "only admin can deploy fungible coin")
 	}
 	if msg.CoinType == zetacommon.CoinType_Gas {
-		_, err := k.setupChainGasCoinAndPool(ctx, "BTCTESTNET", "BTC", "tBTC", 8)
+		_, err := k.setupChainGasCoinAndPool(ctx, msg.ForeignChain, msg.Name, msg.Symbol, uint8(msg.Decimals))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
