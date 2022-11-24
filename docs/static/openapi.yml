@@ -57256,6 +57256,8 @@ definitions:
            - ERC20: ERC20 token
   zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response:
     type: object
+  zetachain.zetacore.fungible.MsgRemoveForeignCoinResponse:
+    type: object
   zetachain.zetacore.fungible.Params:
     type: object
     description: Params defines the parameters for the module.
