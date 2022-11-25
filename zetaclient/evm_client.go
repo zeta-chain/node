@@ -40,8 +40,6 @@ const (
 	NonceTxKeyPrefix       = "NonceTx-"
 )
 
-var errEmptyBlock = fmt.Errorf("server returned empty transaction list but block header indicates transactions")
-
 type TxHashEnvelope struct {
 	TxHash string
 	Done   chan struct{}
@@ -514,12 +512,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 			if err != nil {
-				//TODO: this is very hacky becaue klatyn uses different empty tx hash as ethereum:
-				// see: https://github.com/klaytn/klaytn/blob/febce7b01a616a556423704cf9faa7da4bc4753f/client/klay_client.go#L119
-				if ob.chain == common.BaobabChain && strings.Contains(err.Error(), errEmptyBlock.Error()) {
-				} else {
-					ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
-				}
+				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
 				continue
 			}
 			for _, tx := range block.Transactions() {
@@ -542,27 +535,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						ob.logger.Err(err).Msg("TransactionSender")
 						continue
 					}
-					ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash().Hex(), receipt.BlockNumber)
-					ob.logger.Info().Msgf("TSS inTx value: %s", tx.Value().String())
-					ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
-					message := ""
-					if len(tx.Data()) != 0 {
-						message = hex.EncodeToString(tx.Data())
-					}
-					zetaHash, err := ob.zetaClient.PostSend(
-						from.Hex(),
-						ob.chain.String(),
-						from.Hex(),
-						"ZETA",
-						tx.Value().String(),
-						tx.Value().String(),
-						message,
-						tx.Hash().Hex(),
-						receipt.BlockNumber.Uint64(),
-						90_000,
-						common.CoinType_Gas,
-						PostSendEVMGasLimit,
-					)
+					zetaHash, err := ob.reportInboundCctx(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 					if err != nil {
 						ob.logger.Error().Err(err).Msg("error posting to zeta core")
 						continue
@@ -597,27 +570,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					from := *tx.From
 					value := tx.Value.ToInt()
 
-					ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", tx.Hash.Hex(), receipt.BlockNumber)
-					ob.logger.Info().Msgf("TSS inTx value: %s", value.String())
-					ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
-					message := ""
-					if len(tx.Input) != 0 {
-						message = hex.EncodeToString(tx.Input)
-					}
-					zetaHash, err := ob.zetaClient.PostSend(
-						from.Hex(),
-						ob.chain.String(),
-						from.Hex(),
-						"ZETA",
-						value.String(),
-						value.String(),
-						message,
-						tx.Hash.Hex(),
-						receipt.BlockNumber.Uint64(),
-						90_000,
-						common.CoinType_Gas,
-						PostSendEVMGasLimit,
-					)
+					zetaHash, err := ob.reportInboundCctx(tx.Hash, value, receipt, from, tx.Input)
 					if err != nil {
 						ob.logger.Error().Err(err).Msg("error posting to zeta core")
 						continue
@@ -638,6 +591,31 @@ func (ob *EVMChainClient) observeInTX() error {
 		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
 	}
 	return nil
+}
+
+func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) (string, error) {
+	ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
+	ob.logger.Info().Msgf("TSS inTx value: %s", value.String())
+	ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
+	message := ""
+	if len(data) != 0 {
+		message = hex.EncodeToString(data)
+	}
+	zetaHash, err := ob.zetaClient.PostSend(
+		from.Hex(),
+		ob.chain.String(),
+		from.Hex(),
+		"ZETA",
+		value.String(),
+		value.String(),
+		message,
+		txhash.Hex(),
+		receipt.BlockNumber.Uint64(),
+		90_000,
+		common.CoinType_Gas,
+		PostSendEVMGasLimit,
+	)
+	return zetaHash, err
 }
 
 // query the base gas price for the block number bn.
