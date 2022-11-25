@@ -26,17 +26,6 @@ const (
 	DefaultGasLimit                 = 200_000
 )
 
-func (b *ZetaCoreBridge) PostZetaConversionRate(chain common.Chain, rate string, blockNum uint64) (string, error) {
-	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.String(), rate, blockNum)
-	zetaTxHash, err := b.Broadcast(PostZetaConversionRateGasLimit, msg)
-	if err != nil {
-		b.logger.Error().Err(err).Msg("PostZetaConversionRate broadcast fail")
-		return "", err
-	}
-	return zetaTxHash, nil
-}
-
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, supply, blockNum)

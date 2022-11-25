@@ -29,7 +29,6 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdZetaConversionRateVoter())
 	cmd.AddCommand(CmdAddToWatchList())
 	cmd.AddCommand(CmdCreateTSSVoter())
 	cmd.AddCommand(CmdGasBalanceVoter())
