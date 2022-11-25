@@ -121,6 +121,10 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	}
 	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
 	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, zrc20, amounts[1])
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
+	}
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
