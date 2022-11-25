@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
@@ -237,15 +238,16 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 	return (*amounts)[0], nil
 }
 
+// FIXME: add burn() to ZRC20 contract. Right now "burn" is really sending to dead address
 func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20 ethcommon.Address, amount *big.Int) error {
 	zrc20ABI, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
 	}
 	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20, big.NewInt(0), big.NewInt(100_000), true,
-		"burn", amount)
+		"transfer", common.DeadAddress, amount)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to CallEVM method burn")
+		return sdkerrors.Wrapf(err, "failed to CallEVM method transfer")
 	}
 	return nil
 }
