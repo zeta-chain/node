@@ -147,6 +147,7 @@ func (k *Keeper) QuerySystemContractGasCoinZRC4(ctx sdk.Context, chainid *big.In
 	return zrc20Res.Value, nil
 }
 
+// returns the amount [in, out]
 func (k *Keeper) CallUniswapv2RouterSwapExactETHForToken(ctx sdk.Context, sender ethcommon.Address, to ethcommon.Address, amountIn *big.Int, outZRC4 ethcommon.Address) ([]*big.Int, error) {
 	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
@@ -234,4 +235,17 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 		return nil, sdkerrors.Wrapf(err, "failed to unpack getAmountsIn")
 	}
 	return (*amounts)[0], nil
+}
+
+func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20 ethcommon.Address, amount *big.Int) error {
+	zrc20ABI, err := contracts.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
+	}
+	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20, big.NewInt(0), big.NewInt(100_000), true,
+		"burn", amount)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to CallEVM method burn")
+	}
+	return nil
 }
