@@ -90,6 +90,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
+	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
 	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
 
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
@@ -102,14 +103,25 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}
-	k.Logger(ctx).Debug("UpdatePrices", "gas coin", zrc20, "out amount", outTxGasFee)
 	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(sdk.NewUintFromBigInt(outTxGasFeeInZeta))
 
-	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
+	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
+	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
+	}
+	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, zrc20)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
+	}
+	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
+	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
 	if cctx.ZetaFees.GT(cctx.ZetaBurnt) {
