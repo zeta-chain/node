@@ -14,7 +14,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
@@ -347,52 +346,11 @@ func updateConfig() {
 	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
 	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
 
-	// pools
-	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
-	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
-	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
-	updatePoolAddress("GANACHE_POOL_ADDRESS", common.Ganache)
-
 	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
 	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
 	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
 	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
 	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
-}
-
-func updatePoolAddress(envvar string, chain common.Chain) {
-	pool := os.Getenv(envvar)
-	if pool == "" {
-		return
-	}
-	parts := strings.Split(pool, ":")
-	if len(parts) != 3 {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if strings.EqualFold(parts[0], "v2") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
-	} else if strings.EqualFold(parts[0], "v3") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
-	} else {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if parts[1] != "" {
-		config.Chains[chain.String()].PoolContractAddress = parts[1]
-		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
-	} else {
-		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
-	}
-	if strings.EqualFold(parts[2], "ZETAETH") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
-	} else if strings.EqualFold(parts[2], "ETHZETA") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
-	} else {
-		log.Error().Msgf("%s is not a valid type:address:order", pool)
-		return
-	}
 }
 
 func updateMPIAddress(chain common.Chain, envvar string) {
