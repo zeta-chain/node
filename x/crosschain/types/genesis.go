@@ -12,8 +12,7 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
-		ZetaConversionRateList: []ZetaConversionRate{},
-		OutTxTrackerList:       []OutTxTracker{},
+		OutTxTrackerList: []OutTxTracker{},
 		// this line is used by starport scaffolding # genesis/types/default
 		Keygen:          nil,
 		TSSVoterList:    []*TSSVoter{},
@@ -31,16 +30,6 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
-	// Check for duplicated index in zetaConversionRate
-	zetaConversionRateIndexMap := make(map[string]struct{})
-
-	for _, elem := range gs.ZetaConversionRateList {
-		index := string(ZetaConversionRateKey(elem.Index))
-		if _, ok := zetaConversionRateIndexMap[index]; ok {
-			return fmt.Errorf("duplicated index for zetaConversionRate")
-		}
-		zetaConversionRateIndexMap[index] = struct{}{}
-	}
 	// Check for duplicated index in outTxTracker
 	outTxTrackerIndexMap := make(map[string]struct{})
 

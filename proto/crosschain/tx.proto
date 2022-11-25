@@ -10,7 +10,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc ZetaConversionRateVoter(MsgZetaConversionRateVoter) returns (MsgZetaConversionRateVoterResponse);
   rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
@@ -22,15 +21,6 @@ service Msg {
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
 }
 
-message MsgZetaConversionRateVoter {
-  string creator = 1;
-  string chain = 2;
-  string zetaConversionRate = 3;
-  uint64 blockNumber = 4;
-}
-
-message MsgZetaConversionRateVoterResponse {
-}
 
 message MsgAddToOutTxTracker {
   string creator = 1;

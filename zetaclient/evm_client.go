@@ -21,7 +21,6 @@ import (
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
@@ -77,7 +76,6 @@ type EVMChainClient struct {
 	MinNonce                  int64
 	MaxNonce                  int64
 	OutTxChan                 chan OutTx // send to this channel if you want something back!
-	ZetaPriceQuerier          ZetaPriceQuerier
 	stop                      chan struct{}
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    zerolog.Logger
@@ -157,21 +155,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		return nil, err
 	}
 
-	uniswapV3ABI, err := abi.JSON(strings.NewReader(config.UNISWAPV3POOL))
-	if err != nil {
-		return nil, err
-	}
-	uniswapV2ABI, err := abi.JSON(strings.NewReader(config.PANCAKEPOOL))
-	if err != nil {
-		return nil, err
-	}
-
-	uniswapv3Querier, uniswapv2Querier, dummyQuerior := ob.GetPriceQueriers(chain.String(), uniswapV3ABI, uniswapV2ABI)
-	ob.SetChainDetails(chain, uniswapv3Querier, uniswapv2Querier)
-	if os.Getenv("DUMMY_PRICE") != "" {
-		ob.logger.Info().Msg("Using dummy price of 1:1")
-		ob.ZetaPriceQuerier = dummyQuerior
-	}
+	ob.SetChainDetails(chain)
 
 	if dbpath != "" {
 		err := ob.BuildBlockIndex(dbpath, chain.String())
@@ -189,7 +173,6 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
-	go ob.WatchExchangeRate()    // Observers ZetaPriceQuerier for Zeta prices and posts to core
 	go ob.observeOutTx()
 }
 
@@ -821,28 +804,6 @@ func (ob *EVMChainClient) getLastHeight() uint64 {
 	return lastheight.LastSendHeight
 }
 
-func (ob *EVMChainClient) WatchExchangeRate() {
-	ticker := time.NewTicker(60 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			price, bn, err := ob.ZetaPriceQuerier.GetZetaPrice()
-			if err != nil {
-				ob.logger.Error().Err(err).Msg("GetZetaExchangeRate error")
-				continue
-			}
-			priceInHex := fmt.Sprintf("0x%x", price)
-			_, err = ob.zetaClient.PostZetaConversionRate(ob.chain, priceInHex, bn)
-			if err != nil {
-				ob.logger.Error().Err(err).Msg("PostZetaConversionRate error")
-			}
-		case <-ob.stop:
-			ob.logger.Info().Msg("WatchExchangeRate stopped")
-			return
-		}
-	}
-}
-
 func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 	logger := ob.logger
 	path := fmt.Sprintf("%s/%s", dbpath, chain) // e.g. ~/.zetaclient/ETH
@@ -920,31 +881,7 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 	}
 }
 
-func (ob *EVMChainClient) GetPriceQueriers(chain string, uniswapV3ABI, uniswapV2ABI abi.ABI) (*UniswapV3ZetaPriceQuerier, *UniswapV2ZetaPriceQuerier, *DummyZetaPriceQuerier) {
-	uniswapv3querier := &UniswapV3ZetaPriceQuerier{
-		UniswapV3Abi:        &uniswapV3ABI,
-		Client:              ob.EvmClient,
-		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
-		Chain:               ob.chain,
-		TokenOrder:          config.Chains[chain].PoolTokenOrder,
-	}
-	uniswapv2querier := &UniswapV2ZetaPriceQuerier{
-		UniswapV2Abi:        &uniswapV2ABI,
-		Client:              ob.EvmClient,
-		PoolContractAddress: ethcommon.HexToAddress(config.Chains[chain].PoolContractAddress),
-		Chain:               ob.chain,
-		TokenOrder:          config.Chains[chain].PoolTokenOrder,
-	}
-	dummyQuerier := &DummyZetaPriceQuerier{
-		Chain:  ob.chain,
-		Client: ob.EvmClient,
-	}
-	return uniswapv3querier, uniswapv2querier, dummyQuerier
-}
-
-func (ob *EVMChainClient) SetChainDetails(chain common.Chain,
-	uniswapv3querier *UniswapV3ZetaPriceQuerier,
-	uniswapv2querier *UniswapV2ZetaPriceQuerier) {
+func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 	MinObInterval := 24
 	switch chain {
 	case common.MumbaiChain:
@@ -976,14 +913,6 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain,
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.RopstenBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = 0
 		ob.BlockTime = 1
-	}
-	switch config.Chains[chain.String()].PoolContract {
-	case clienttypes.UniswapV2:
-		ob.ZetaPriceQuerier = uniswapv2querier
-	case clienttypes.UniswapV3:
-		ob.ZetaPriceQuerier = uniswapv3querier
-	default:
-		ob.logger.Error().Msgf("unknown pool contract type: %d", config.Chains[chain.String()].PoolContract)
 	}
 }
 

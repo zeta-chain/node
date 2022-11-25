@@ -89,13 +89,16 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
 	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
-	rate, isFound := k.GetZetaConversionRate(ctx, receiveChain)
-	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetConversionRate, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
-	}
-	medianRate := rate.ZetaConversionRates[rate.MedianIndex]
-	uintmedianRate := sdk.NewUintFromString(medianRate)
+	//rate, isFound := k.GetZetaConversionRate(ctx, receiveChain)
+	//if !isFound {
+	//	return sdkerrors.Wrap(types.ErrUnableToGetConversionRate, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
+	//}
+	//medianRate := rate.ZetaConversionRates[rate.MedianIndex]
+	//uintmedianRate := sdk.NewUintFromString(medianRate)
 	// Calculate Gas FEE
+
+	// FIXME: use zEVM pool to calculate conversion rate
+	uintmedianRate := sdk.NewUint(1_000_000_000_000_000_000)
 	gasFeeInZeta := CalculateFee(medianGasPrice, gasLimit, uintmedianRate)
 
 	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
