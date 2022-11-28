@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -10,6 +11,10 @@ import (
 
 func (k msgServer) SetBallotThreshold(goCtx context.Context, msg *types.MsgSetBallotThreshold) (*types.MsgSetBallotThresholdResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if msg.Creator != fungibletypes.AdminAddress {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid creator address (%s)", msg.Creator)
+	}
 
 	params := k.GetParams(ctx)
 	thresholds := params.BallotThresholds
