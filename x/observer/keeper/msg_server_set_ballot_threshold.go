@@ -29,11 +29,19 @@ func (k msgServer) SetBallotThreshold(goCtx context.Context, msg *types.MsgSetBa
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid threshold (%s): %s", err, msg.Threshold)
 	}
 
+	found := false
 	for _, v := range thresholds {
 		if v.Chain == obChain {
 			v.Threshold = threshold
+			found = true
 		}
 	}
+	if !found {
+		thresholds = append(thresholds, &types.BallotThreshold{Chain: obChain, Threshold: threshold, Observation: types.ObservationType_InBoundTx})
+		thresholds = append(thresholds, &types.BallotThreshold{Chain: obChain, Threshold: threshold, Observation: types.ObservationType_OutBoundTx})
+	}
+
+	k.SetParams(ctx, types.Params{BallotThresholds: thresholds})
 
 	return &types.MsgSetBallotThresholdResponse{}, nil
 }
