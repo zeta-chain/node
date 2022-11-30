@@ -32944,8 +32944,7 @@ paths:
           in: query
           required: false
           type: string
-        - name: amount
-          description: 'in base unit, decimal encoded'
+        - name: gasLimit
           in: query
           required: false
           type: string
