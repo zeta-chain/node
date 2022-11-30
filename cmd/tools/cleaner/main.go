@@ -37,8 +37,8 @@ func main() {
 	index := flag.String("index", "", "index [TSS address]: collect all txs originating from TSS address and put them into sqlite3 db [chain].sqlite3")
 	newIndex := flag.Bool("new-index", false, "first index")
 	fix := flag.Uint64("fix-nonce", 0, "fix nonce for TSS address")
-	fix_hash := flag.String("fix-hash", "", "fix hash for TSS address")
-	fix_file := flag.String("fix-file", "", "fix file (format: list of line: nonce txahsh)")
+	fixHash := flag.String("fix-hash", "", "fix hash for TSS address")
+	fixFile := flag.String("fix-file", "", "fix file (format: list of line: nonce txahsh)")
 	flag.Parse()
 	chains := strings.Split(*enabledChains, ",")
 	NewIndex = *newIndex
@@ -148,10 +148,10 @@ func main() {
 			log.Error().Err(err).Msgf("fail to create connector %s", c)
 			continue
 		}
-		if *fix_file != "" {
-			f, err := os.Open(*fix_file)
+		if *fixFile != "" {
+			f, err := os.Open(*fixFile)
 			if err != nil {
-				log.Error().Err(err).Msgf("fail to open fix file %s", *fix_file)
+				log.Error().Err(err).Msgf("fail to open fix file %s", *fixFile)
 				return
 			}
 			scanner := bufio.NewScanner(f)
@@ -197,7 +197,7 @@ func main() {
 						log.Error().Err(err).Msgf("  fail to get block number")
 						continue
 					}
-					if *fix_hash == "" {
+					if *fixHash == "" {
 						logs, err := conn.FilterZetaReceived(&bind.FilterOpts{
 							Start:   0,
 							End:     &bn,
@@ -225,8 +225,8 @@ func main() {
 							log.Info().Msgf("  outTxTracker tx: %s", zTxHash)
 						}
 					} else {
-						zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, *fix_hash)
-						log.Info().Msgf("chain %s nonce %d txhash %s", chain.String(), nonce, *fix_hash)
+						zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, *fixHash)
+						log.Info().Msgf("chain %s nonce %d txhash %s", chain.String(), nonce, *fixHash)
 						if err != nil {
 							log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
 							continue
