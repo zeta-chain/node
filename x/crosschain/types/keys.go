@@ -48,14 +48,11 @@ const (
 	ChainNoncesKey       = "ChainNonces-value-"
 	GasPriceKey          = "GasPrice-value-"
 
-	GasBalanceKey               = "GasBalance-value-"
-	TxListKey                   = "TxList-value-"
-	InTxKey                     = "InTx-value-"
-	TSSKey                      = "TSS-value-"
-	TSSVoterKey                 = "TSSVoter-value-"
-	KeygenKey                   = "Keygen-value-"
-	OutTxTrackerKeyPrefix       = "OutTxTracker/value/"
-	ZetaConversionRateKeyPrefix = "ZetaConversionRate/value/"
+	GasBalanceKey         = "GasBalance-value-"
+	TSSKey                = "TSS-value-"
+	TSSVoterKey           = "TSSVoter-value-"
+	KeygenKey             = "Keygen-value-"
+	OutTxTrackerKeyPrefix = "OutTxTracker/value/"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
@@ -97,4 +94,5 @@ var (
 	ModuleAddress = authtypes.NewModuleAddress(ModuleName)
 	//ModuleAddressEVM common.EVMAddress
 	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
+	//0xB73C0Aac4C1E606C6E495d848196355e6CB30381
 )
