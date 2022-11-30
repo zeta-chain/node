@@ -32907,6 +32907,50 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/crosschain/convertGasToZeta:
+    get:
+      operationId: ZetachainZetacoreCrosschainConvertGasToZeta
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              zeta:
+                type: string
+              ZetaBlockHeight:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: chain
+          in: query
+          required: false
+          type: string
+        - name: amount
+          description: 'in base unit, decimal encoded'
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /zeta-chain/crosschain/gasBalance:
     get:
       summary: Queries a list of gasBalance items.
@@ -56526,6 +56570,14 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  zetachain.zetacore.crosschain.QueryConvertGasToZetaResponse:
+    type: object
+    properties:
+      zeta:
+        type: string
+      ZetaBlockHeight:
+        type: string
+        format: uint64
   zetachain.zetacore.crosschain.QueryGetCctxResponse:
     type: object
     properties:

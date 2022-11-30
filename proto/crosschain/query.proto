@@ -91,6 +91,10 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/gasPrice";
 	}
 
+	rpc ConvertGasToZeta(QueryConvertGasToZetaRequest) returns (QueryConvertGasToZetaResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/convertGasToZeta";
+	}
+
 
 	// Queries a chainNonces by index.
 	rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
@@ -333,5 +337,15 @@ message QueryLastMetaHeightRequest {
 
 message QueryLastMetaHeightResponse {
 	uint64 Height = 1;
+}
+
+message QueryConvertGasToZetaRequest {
+	string chain = 1;
+	string amount = 2; // in base unit, decimal encoded
+}
+
+message QueryConvertGasToZetaResponse {
+	string zeta = 1;
+	uint64 ZetaBlockHeight = 2;
 }
 
