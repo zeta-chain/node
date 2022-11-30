@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/hex"
 	"flag"
@@ -20,6 +21,7 @@ import (
 	"os/signal"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -34,6 +36,9 @@ func main() {
 	enabledChains := flag.String("enable-chains", "GOERLI,BSCTESTNET,MUMBAI", "enable chains, comma separated list")
 	index := flag.String("index", "", "index [TSS address]: collect all txs originating from TSS address and put them into sqlite3 db [chain].sqlite3")
 	newIndex := flag.Bool("new-index", false, "first index")
+	fix := flag.Uint64("fix-nonce", 0, "fix nonce for TSS address")
+	fix_hash := flag.String("fix-hash", "", "fix hash for TSS address")
+	fix_file := flag.String("fix-file", "", "fix file (format: list of line: nonce txahsh)")
 	flag.Parse()
 	chains := strings.Split(*enabledChains, ",")
 	NewIndex = *newIndex
@@ -143,10 +148,36 @@ func main() {
 			log.Error().Err(err).Msgf("fail to create connector %s", c)
 			continue
 		}
-		for idx, interval := range intervals {
-			if idx == 0 {
-				//if idx < len(intervals)-1 {
-				for _, nonce := range interval {
+		if *fix_file != "" {
+			f, err := os.Open(*fix_file)
+			if err != nil {
+				log.Error().Err(err).Msgf("fail to open fix file %s", *fix_file)
+				return
+			}
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				line := scanner.Text()
+				fields := strings.Split(line, " ")
+				if len(fields) != 2 {
+					continue
+				}
+				nonce, err := strconv.ParseUint(fields[0], 10, 64)
+				if err != nil {
+					continue
+				}
+				txhash := fields[1]
+				zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, txhash)
+				if err != nil {
+					log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
+					continue
+				}
+				log.Info().Msgf("chain %s nonce %d txhash %s outTxTracker tx: %s", chain.String(), nonce, txhash, zTxHash)
+				fmt.Scanln() // wait for Enter Key
+			}
+		}
+		for _, interval := range intervals {
+			for _, nonce := range interval {
+				if nonce == *fix {
 					outTxID := fmt.Sprintf("%s-%d", c, nonce)
 					log.Info().Msgf("  fixing %s", outTxID)
 					cctx, found := nonceToCctx[outTxID]
@@ -166,36 +197,45 @@ func main() {
 						log.Error().Err(err).Msgf("  fail to get block number")
 						continue
 					}
-					logs, err := conn.FilterZetaReceived(&bind.FilterOpts{
-						Start:   0,
-						End:     &bn,
-						Context: context.TODO(),
-					}, []*big.Int{}, []ethcommon.Address{}, [][32]byte{sendHashB32})
-					if err != nil {
-						log.Error().Err(err).Msg("  fail to filter ZetaReceived")
-						continue
-					}
-					for logs.Next() {
-						log.Info().Msgf("  found zeta received: %s", logs.Event.Raw.TxHash.Hex())
-						txhash := logs.Event.Raw.TxHash
-						tx, _, err := ethClient.TransactionByHash(context.Background(), txhash)
+					if *fix_hash == "" {
+						logs, err := conn.FilterZetaReceived(&bind.FilterOpts{
+							Start:   0,
+							End:     &bn,
+							Context: context.TODO(),
+						}, []*big.Int{}, []ethcommon.Address{}, [][32]byte{sendHashB32})
 						if err != nil {
-							log.Error().Err(err).Msgf("  fail to get tx %s", txhash.Hex())
+							log.Error().Err(err).Msg("  fail to filter ZetaReceived")
 							continue
 						}
-						log.Info().Msgf("tx size: %f", tx.Size())
+						for logs.Next() {
+							log.Info().Msgf("  found zeta received: %s", logs.Event.Raw.TxHash.Hex())
+							txhash := logs.Event.Raw.TxHash
+							tx, _, err := ethClient.TransactionByHash(context.Background(), txhash)
+							if err != nil {
+								log.Error().Err(err).Msgf("  fail to get tx %s", txhash.Hex())
+								continue
+							}
+							log.Info().Msgf("tx size: %f", tx.Size())
 
-						//txhash := logs.Event.Raw.TxHash.Hex()
-						//
-						//zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, txhash)
-						//if err != nil {
-						//	log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
-						//	continue
-						//}
-						//log.Info().Msgf("  outTxTracker tx: %s", zTxHash)
+							zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, txhash.Hex())
+							if err != nil {
+								log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
+								continue
+							}
+							log.Info().Msgf("  outTxTracker tx: %s", zTxHash)
+						}
+					} else {
+						zTxHash, err := bridge.AddTxHashToOutTxTracker(chain.String(), nonce, *fix_hash)
+						log.Info().Msgf("chain %s nonce %d txhash %s", chain.String(), nonce, *fix_hash)
+						if err != nil {
+							log.Error().Err(err).Msgf("  fail to add txhash to outTxTracker")
+							continue
+						}
+						log.Info().Msgf("  outTxTracker tx: %s", zTxHash)
 					}
 				}
 			}
+
 		}
 	}
 
