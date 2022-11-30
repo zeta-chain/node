@@ -34128,6 +34128,37 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /zeta-chain/crosschain/protocolFee:
+    get:
+      operationId: ZetachainZetacoreCrosschainProtocolFee
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              feeInZeta:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
@@ -56889,6 +56920,11 @@ definitions:
       Height:
         type: string
         format: uint64
+  zetachain.zetacore.crosschain.QueryMessagePassingProtocolFeeResponse:
+    type: object
+    properties:
+      feeInZeta:
+        type: string
   zetachain.zetacore.crosschain.QueryParamsResponse:
     type: object
     properties:

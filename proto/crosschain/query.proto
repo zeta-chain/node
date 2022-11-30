@@ -95,6 +95,9 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/convertGasToZeta";
 	}
 
+	rpc ProtocolFee(QueryMessagePassingProtocolFeeRequest) returns (QueryMessagePassingProtocolFeeResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/protocolFee";
+	}
 
 	// Queries a chainNonces by index.
 	rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
@@ -347,5 +350,12 @@ message QueryConvertGasToZetaRequest {
 message QueryConvertGasToZetaResponse {
 	string zeta = 1;
 	uint64 ZetaBlockHeight = 2;
+}
+
+message QueryMessagePassingProtocolFeeRequest {
+}
+
+message QueryMessagePassingProtocolFeeResponse {
+	string feeInZeta = 1;
 }
 
