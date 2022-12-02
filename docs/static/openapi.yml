@@ -32916,7 +32916,9 @@ paths:
           schema:
             type: object
             properties:
-              zeta:
+              outboundGasInZeta:
+                type: string
+              protocolFeeInZeta:
                 type: string
               ZetaBlockHeight:
                 type: string
@@ -56603,7 +56605,9 @@ definitions:
   zetachain.zetacore.crosschain.QueryConvertGasToZetaResponse:
     type: object
     properties:
-      zeta:
+      outboundGasInZeta:
+        type: string
+      protocolFeeInZeta:
         type: string
       ZetaBlockHeight:
         type: string

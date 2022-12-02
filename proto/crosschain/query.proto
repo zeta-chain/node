@@ -348,8 +348,9 @@ message QueryConvertGasToZetaRequest {
 }
 
 message QueryConvertGasToZetaResponse {
-	string zeta = 1;
-	uint64 ZetaBlockHeight = 2;
+	string outboundGasInZeta = 1;
+	string protocolFeeInZeta = 2;
+	uint64 ZetaBlockHeight = 3;
 }
 
 message QueryMessagePassingProtocolFeeRequest {
