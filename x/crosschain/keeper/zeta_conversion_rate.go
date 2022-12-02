@@ -32,10 +32,10 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	if err != nil {
 		return nil, status.Error(codes.Internal, "zQueryUniswapv2RouterGetAmountsIn failed")
 	}
-	feeInZeta := types.GetProtocolFee().Add(sdk.NewUintFromBigInt(outTxGasFeeInZeta))
 	return &types.QueryConvertGasToZetaResponse{
-		Zeta:            feeInZeta.String(),
-		ZetaBlockHeight: uint64(ctx.BlockHeight()),
+		OutboundGasInZeta: outTxGasFeeInZeta.String(),
+		ProtocolFeeInZeta: types.GetProtocolFee().String(),
+		ZetaBlockHeight:   uint64(ctx.BlockHeight()),
 	}, nil
 }
 
