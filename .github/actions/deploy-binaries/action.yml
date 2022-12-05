@@ -27,11 +27,24 @@ runs:
       echo "${{ inputs.BRANCH_OR_TAG_NAME }}" 
       echo "GITHUB_REF_NAME=${{ inputs.BRANCH_OR_TAG_NAME }}" >> $GITHUB_ENV
 
-  - name: Snapshot All Running ZetaChain Instances
+  - name: Stop ZetaChain
+    shell: bash
+    run: |
+      echo "Stopping ZetaChain"
+      source ${{ github.action_path }}/functions
+      COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd && systemctl stop cosmovisor")
+      check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop cosmovisor")
+      check_cmd_status $COMMAND_ID
+      COMMAND_ID=$(run_ssm_cmds_archive_nodes "systemctl stop cosmovisor")
+      check_cmd_status $COMMAND_ID
+      sleep 5
+
+  - name: Snapshot All Running ZetaChain Nodes
     if: ${{ inputs.TAKE_SNAPSHOTS == 'true' }}
     shell: bash
     run: |
-      echo "Taking Snapshots of ZetaChain Instances"
+      echo "Taking Snapshots of ZetaChain Validators"
       INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Role,Values=validator" "Name=instance-state-name,Values=running"| jq -r '.Reservations[].Instances[].InstanceId')
       while IFS= read -r INSTANCE_ID; do
           echo "$INSTANCE_ID"
@@ -40,7 +53,25 @@ runs:
             --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
             --copy-tags-from-source "volume" > jq
       done <<< "$INSTANCE_IDS"
-      sleep 2
+      echo "Taking Snapshots of ZetaChain API nodes"
+      INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Role,Values=api" "Name=instance-state-name,Values=running"| jq -r '.Reservations[].Instances[].InstanceId')
+      while IFS= read -r INSTANCE_ID; do
+          echo "$INSTANCE_ID"
+          aws ec2 create-snapshots \
+            --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
+            --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
+            --copy-tags-from-source "volume" > jq
+      done <<< "$INSTANCE_IDS"
+      echo "Taking Snapshots of ZetaChain Archive nodes"
+      INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Role,Values=archive" "Name=instance-state-name,Values=running"| jq -r '.Reservations[].Instances[].InstanceId')
+      while IFS= read -r INSTANCE_ID; do
+          echo "$INSTANCE_ID"
+          aws ec2 create-snapshots \
+            --instance-specification InstanceId=$INSTANCE_ID,ExcludeBootVolume=true \
+            --description "Snapshot Prior To Deployment ID: ${{ env.GITHUB_REF_NAME }}" \
+            --copy-tags-from-source "volume" > jq
+      done <<< "$INSTANCE_IDS"
+      sleep 10
 
   - name: Copy Package Files
     shell: bash
@@ -52,18 +83,6 @@ runs:
       COMMAND_ID=$(run_ssm_cmds_api_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetacored /deployment-files/${{ env.GITHUB_REF_NAME }} &&  aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetaclientd /deployment-files/${{ env.GITHUB_REF_NAME }}")
       check_cmd_status $COMMAND_ID
       COMMAND_ID=$(run_ssm_cmds_archive_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetacored /deployment-files/${{ env.GITHUB_REF_NAME }} &&  aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetaclientd /deployment-files/${{ env.GITHUB_REF_NAME }}")
-      check_cmd_status $COMMAND_ID
-
-  - name: Stop ZetaChain
-    shell: bash
-    run: |
-      echo "Stopping ZetaChain"
-      source ${{ github.action_path }}/functions
-      COMMAND_ID=$(run_ssm_cmds_validators "systemctl stop zetaclientd && systemctl stop cosmovisor")
-      check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_api_nodes "systemctl stop cosmovisor")
-      check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_archive_nodes "systemctl stop cosmovisor")
       check_cmd_status $COMMAND_ID
 
   - name: Update ZetaNode Binaries
