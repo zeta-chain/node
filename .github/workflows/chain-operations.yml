@@ -45,7 +45,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Chnage Zetacored Status
+      - name: Change Zetacored Status
         run: |
           source .github/actions/deploy-binaries/functions
           COMMAND_ID=$(run_ssm_cmds_validators "systemctl ${{ github.event.inputs.ZETACORED_STATUS }} cosmovisor")
