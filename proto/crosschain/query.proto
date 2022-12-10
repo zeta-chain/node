@@ -26,9 +26,12 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/params";
 	}
 
-	// Queries a OutTxTracker by index.
 	rpc ZEVMGetTransactionReceipt(QueryZEVMGetTransactionReceiptRequest) returns (QueryZEVMGetTransactionReceiptResponse) {
 		option (google.api.http).get = "/zeta-chain/zevm/zevm_getTransactionReceipt/{hash}";
+	}
+
+	rpc ZEVMGetTransaction(QueryZEVMGetTransactionRequest) returns (QueryZEVMGetTransactionResponse) {
+		option (google.api.http).get = "/zeta-chain/zevm/zevm_getTransactionByHash/{hash}";
 	}
 
 // Queries a OutTxTracker by index.
@@ -399,3 +402,26 @@ message Log {
 	bool removed = 9 [ (gogoproto.jsontag) = "removed" ];
 }
 
+message	QueryZEVMGetTransactionRequest {
+	string hash = 1;
+}
+
+message	QueryZEVMGetTransactionResponse {
+	string block_hash = 1 [ (gogoproto.jsontag) = "blockHash" ];
+	string block_number = 2 [ (gogoproto.jsontag) = "blockNumber" ];
+	string from = 3 [ (gogoproto.jsontag) = "from" ];
+	string gas = 4 [ (gogoproto.jsontag) = "gas" ];
+	string gas_price = 5 [ (gogoproto.jsontag) = "gasPrice" ];
+	string hash = 6 [ (gogoproto.jsontag) = "hash" ];
+	string input = 7 [ (gogoproto.jsontag) = "input" ];
+	string nonce = 8 [ (gogoproto.jsontag) = "nonce" ];
+	string to = 9 [ (gogoproto.jsontag) = "to" ];
+	string transaction_index = 10 [ (gogoproto.jsontag) = "transactionIndex" ];
+	string value = 11 [ (gogoproto.jsontag) = "value" ];
+	string type = 12 [ (gogoproto.jsontag) = "type" ];
+	repeated string access_list = 13 [ (gogoproto.jsontag) = "accessList" ];
+	string chain_id = 14 [ (gogoproto.jsontag) = "chainId" ];
+	string v = 15 [ (gogoproto.jsontag) = "v" ];
+	string r = 16 [ (gogoproto.jsontag) = "r" ];
+	string s = 17 [ (gogoproto.jsontag) = "s" ];
+}
