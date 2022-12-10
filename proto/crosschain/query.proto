@@ -382,4 +382,20 @@ message	QueryZEVMGetTransactionReceiptResponse {
 	string to = 9 [ (gogoproto.jsontag) = "to" ];
 	string transaction_hash = 10 [ (gogoproto.jsontag) = "transactionHash" ];
 	string transaction_index = 11 [ (gogoproto.jsontag) = "transactionIndex" ];
+	repeated Log logs = 12;
 }
+
+message Log {
+	string address = 1;
+	repeated string topics = 2;
+	string data = 3;
+
+	// sythetic fields
+	string block_number = 4 [ (gogoproto.jsontag) = "blockNumber" ];
+	string transaction_hash = 5 [ (gogoproto.jsontag) = "transactionHash" ];
+	string transaction_index = 6 [ (gogoproto.jsontag) = "transactionIndex" ];
+	string block_hash = 7 [ (gogoproto.jsontag) = "blockHash" ];
+	string log_index = 8 [ (gogoproto.jsontag) = "logIndex" ];
+	bool removed = 9 [ (gogoproto.jsontag) = "removed" ];
+}
+
