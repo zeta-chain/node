@@ -34250,9 +34250,78 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  '/zeta-chain/zevm/zevm_getTransactionByHash/{hash}':
+    get:
+      operationId: ZetachainZetacoreCrosschainZEVMGetTransaction
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              block_hash:
+                type: string
+              block_number:
+                type: string
+              from:
+                type: string
+              gas:
+                type: string
+              gas_price:
+                type: string
+              hash:
+                type: string
+              input:
+                type: string
+              nonce:
+                type: string
+              to:
+                type: string
+              transaction_index:
+                type: string
+              value:
+                type: string
+              type:
+                type: string
+              access_list:
+                type: array
+                items:
+                  type: string
+              chain_id:
+                type: string
+              v:
+                type: string
+              r:
+                type: string
+              s:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   '/zeta-chain/zevm/zevm_getTransactionReceipt/{hash}':
     get:
-      summary: Queries a OutTxTracker by index.
       operationId: ZetachainZetacoreCrosschainZEVMGetTransactionReceipt
       responses:
         '200':
@@ -57410,6 +57479,45 @@ definitions:
               type: string
             removed:
               type: boolean
+  zetachain.zetacore.crosschain.QueryZEVMGetTransactionResponse:
+    type: object
+    properties:
+      block_hash:
+        type: string
+      block_number:
+        type: string
+      from:
+        type: string
+      gas:
+        type: string
+      gas_price:
+        type: string
+      hash:
+        type: string
+      input:
+        type: string
+      nonce:
+        type: string
+      to:
+        type: string
+      transaction_index:
+        type: string
+      value:
+        type: string
+      type:
+        type: string
+      access_list:
+        type: array
+        items:
+          type: string
+      chain_id:
+        type: string
+      v:
+        type: string
+      r:
+        type: string
+      s:
+        type: string
   zetachain.zetacore.crosschain.Status:
     type: object
     properties:
