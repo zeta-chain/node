@@ -34282,6 +34282,32 @@ paths:
                 type: string
               transaction_index:
                 type: string
+              logs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    topics:
+                      type: array
+                      items:
+                        type: string
+                    data:
+                      type: string
+                    block_number:
+                      type: string
+                      title: sythetic fields
+                    transaction_hash:
+                      type: string
+                    transaction_index:
+                      type: string
+                    block_hash:
+                      type: string
+                    log_index:
+                      type: string
+                    removed:
+                      type: boolean
         default:
           description: An unexpected error response.
           schema:
@@ -56186,6 +56212,30 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  zetachain.zetacore.crosschain.Log:
+    type: object
+    properties:
+      address:
+        type: string
+      topics:
+        type: array
+        items:
+          type: string
+      data:
+        type: string
+      block_number:
+        type: string
+        title: sythetic fields
+      transaction_hash:
+        type: string
+      transaction_index:
+        type: string
+      block_hash:
+        type: string
+      log_index:
+        type: string
+      removed:
+        type: boolean
   zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse:
     type: object
   zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse:
@@ -57334,6 +57384,32 @@ definitions:
         type: string
       transaction_index:
         type: string
+      logs:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            topics:
+              type: array
+              items:
+                type: string
+            data:
+              type: string
+            block_number:
+              type: string
+              title: sythetic fields
+            transaction_hash:
+              type: string
+            transaction_index:
+              type: string
+            block_hash:
+              type: string
+            log_index:
+              type: string
+            removed:
+              type: boolean
   zetachain.zetacore.crosschain.Status:
     type: object
     properties:
