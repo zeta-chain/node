@@ -34250,6 +34250,63 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  '/zeta-chain/zevm/zevm_getTransactionReceipt/{hash}':
+    get:
+      summary: Queries a OutTxTracker by index.
+      operationId: ZetachainZetacoreCrosschainZEVMGetTransactionReceipt
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              block_hash:
+                type: string
+              block_number:
+                type: string
+              contract_address:
+                type: string
+              cumulative_gas_used:
+                type: string
+              from:
+                type: string
+              gas_used:
+                type: string
+              logs_bloom:
+                type: string
+              status:
+                type: string
+              to:
+                type: string
+              transaction_hash:
+                type: string
+              transaction_index:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
@@ -57252,6 +57309,31 @@ definitions:
           enabled:
             type: boolean
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.crosschain.QueryZEVMGetTransactionReceiptResponse:
+    type: object
+    properties:
+      block_hash:
+        type: string
+      block_number:
+        type: string
+      contract_address:
+        type: string
+      cumulative_gas_used:
+        type: string
+      from:
+        type: string
+      gas_used:
+        type: string
+      logs_bloom:
+        type: string
+      status:
+        type: string
+      to:
+        type: string
+      transaction_hash:
+        type: string
+      transaction_index:
+        type: string
   zetachain.zetacore.crosschain.Status:
     type: object
     properties:
