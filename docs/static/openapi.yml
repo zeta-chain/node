@@ -34366,15 +34366,18 @@ paths:
                       type: string
                     block_number:
                       type: string
+                      format: uint64
                       title: sythetic fields
                     transaction_hash:
                       type: string
                     transaction_index:
                       type: string
+                      format: uint64
                     block_hash:
                       type: string
                     log_index:
                       type: string
+                      format: uint64
                     removed:
                       type: boolean
         default:
@@ -56294,15 +56297,18 @@ definitions:
         type: string
       block_number:
         type: string
+        format: uint64
         title: sythetic fields
       transaction_hash:
         type: string
       transaction_index:
         type: string
+        format: uint64
       block_hash:
         type: string
       log_index:
         type: string
+        format: uint64
       removed:
         type: boolean
   zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse:
@@ -57468,15 +57474,18 @@ definitions:
               type: string
             block_number:
               type: string
+              format: uint64
               title: sythetic fields
             transaction_hash:
               type: string
             transaction_index:
               type: string
+              format: uint64
             block_hash:
               type: string
             log_index:
               type: string
+              format: uint64
             removed:
               type: boolean
   zetachain.zetacore.crosschain.QueryZEVMGetTransactionResponse:
