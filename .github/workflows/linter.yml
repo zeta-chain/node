@@ -4,9 +4,13 @@ on:
   push:
     tags:
       - v*
+      - athens2-*
     branches:
       - develop
+      - athens2-develop 
+      - cicd-fix-tests
   pull_request:
+
 
 env: 
   GOPRIVATE: github.com/zeta-chain/*
@@ -23,13 +27,13 @@ jobs:
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
-
+   
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3.2.0
+        uses: golangci/golangci-lint-action@v3.3.1
         with:
-          version: v1.47
+          version: v1.50
