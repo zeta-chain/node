@@ -5,14 +5,19 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-fix-tests
     tags:
       - v*
       - athens2-*
   pull_request:
-    types: [ready_for_review]
-    branches: [develop, athens2-develop]    
+    types: 
+      - ready_for_review
+    branches: 
+      - develop
+      - athens2-develop 
   release:
-    types: [created]
+    types: 
+      - created
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -35,12 +40,12 @@ jobs:
     - name: Build Binaries
       uses: ./.github/actions/build-binaries
       with:
-        build-indexer: false
         go-version: '1.18'
+        run-tests: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: go test -v -coverprofile coverage.out  ./...
+    # - name: Test
+    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+    #   run: go test -v -coverprofile coverage.out  ./...
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
