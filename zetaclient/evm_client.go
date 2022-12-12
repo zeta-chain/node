@@ -455,7 +455,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
