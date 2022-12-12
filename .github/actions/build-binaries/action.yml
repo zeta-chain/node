@@ -4,7 +4,7 @@ inputs:
   run-tests:  
     description: 'Run Build Tests (true/false)'
     required: false
-    default: "true"
+    default: "false"
   go-version:  
     description: 'Optional - Install a specific verion of Go'
     required: false
@@ -25,19 +25,13 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}  
         cache: true
+        cache-dependency-path: go.mod
 
     - name: build zetacored and zetaclientd
       shell: bash
       run: |
         make install
         cp "$HOME"/go/bin/* ./
-
-    - name: Cosmovisor
-      shell: bash
-      run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Run Build tests
       if: ${{ inputs.run-tests == 'true' }}
@@ -46,6 +40,12 @@ runs:
         echo "Running Build Tests"
         go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
+    - name: Cosmovisor
+      shell: bash
+      run: |
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - run: echo "Completed Build Action"
       shell: bash

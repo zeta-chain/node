@@ -41,9 +41,9 @@ jobs:
       uses: ./.github/actions/build-binaries
       with:
         go-version: '1.18'
-        run-tests: false # ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+        run-tests: true # ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
 
-    - name: Test
+    - name: Build Tests
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: make test #go test -v -coverprofile coverage.out  ./...
 
