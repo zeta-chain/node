@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd-fix-tests
     tags:
       - v*
       - athens2-*
@@ -41,60 +40,60 @@ jobs:
       uses: ./.github/actions/build-binaries
       with:
         go-version: '1.18'
-        run-tests: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+        run-tests: false # ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: go test -v -coverprofile coverage.out  ./...
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: make test #go test -v -coverprofile coverage.out  ./...
 
-    - name: Install AWS CLI # Used for local testing of Git Actions
-      if: ${{ env.ACT }}
-      run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install --update 
+    # - name: Install AWS CLI # Used for local testing of Git Actions
+    #   if: ${{ env.ACT }}
+    #   run: |
+    #     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    #     unzip awscliv2.zip
+    #     sudo ./aws/install --update 
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: upload-files-to-s3
-      uses: ./.github/actions/upload-to-s3
-      with:
-        bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-        git-sha: ${{ github.sha }}
-        files: |
-          zetacored
-          zetaclientd
-          cosmovisor
-
-    ## Not being used 
-    # - name: Build, tag, and push image to Amazon ECR
-    #   uses:  ./.github/actions/upload-to-ecr
+    # - name: Configure AWS Credentials
+    #   uses: aws-actions/configure-aws-credentials@v1
     #   with:
-    #     DOCKER_FILENAME: Dockerfile.zetacore_binary
-    #     ECR_REPOSITORY: zetachain
-    #     IMAGE_TAG: latest
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
+    #     aws-region: ${{ env.AWS_REGION }}
 
-    ## Approval will be required closer to mainnet
-    # - name: Require Approval To Create a Release
+    # - name: upload-files-to-s3
+    #   uses: ./.github/actions/upload-to-s3
+    #   with:
+    #     bucket-name: ${{ env.S3_BUCKET_NAME }}
+    #     release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+    #     git-sha: ${{ github.sha }}
+    #     files: |
+    #       zetacored
+    #       zetaclientd
+    #       cosmovisor
+
+    # ## Not being used 
+    # # - name: Build, tag, and push image to Amazon ECR
+    # #   uses:  ./.github/actions/upload-to-ecr
+    # #   with:
+    # #     DOCKER_FILENAME: Dockerfile.zetacore_binary
+    # #     ECR_REPOSITORY: zetachain
+    # #     IMAGE_TAG: latest
+
+    # ## Approval will be required closer to mainnet
+    # # - name: Require Approval To Create a Release
+    # #   uses: softprops/action-gh-release@v1
+    # #   if: startsWith(github.ref, 'refs/tags/athens')
+    # #   with:
+    # #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+    # #     files: |
+    # #       zetacored
+    # #       zetaclientd
+
+    # - name: Create GitHub Release for ZetaCore/ZetaClient
     #   uses: softprops/action-gh-release@v1
-    #   if: startsWith(github.ref, 'refs/tags/athens')
+    #   if: startsWith(github.ref, 'refs/tags/')
     #   with:
     #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
     #     files: |
     #       zetacored
     #       zetaclientd
-
-    - name: Create GitHub Release for ZetaCore/ZetaClient
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-        files: |
-          zetacored
-          zetaclientd
