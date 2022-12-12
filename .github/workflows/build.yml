@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-fix-tests
     tags:
       - v*
       - athens2-*
