@@ -60,7 +60,8 @@ jobs:
 
       - name: Verify target files exist 
         run: |
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/cosmovisor || exit 1
+          # aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/cosmovisor || exit 1
+          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/genesis/cosmovisor || exit 1
           aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd || exit 1
           aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored || exit 1
 

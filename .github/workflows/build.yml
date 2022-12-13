@@ -5,14 +5,19 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-fix-tests
     tags:
       - v*
       - athens2-*
   pull_request:
-    types: [ready_for_review]
-    branches: [develop, athens2-develop]    
+    types: 
+      - ready_for_review
+    branches: 
+      - develop
+      - athens2-develop 
   release:
-    types: [created]
+    types: 
+      - created
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -32,15 +37,33 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-    - name: Build Binaries
-      uses: ./.github/actions/build-binaries
+    - uses: actions/cache@v3
       with:
-        build-indexer: false
-        go-version: '1.18'
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build zetacored and zetaclientd
+      run: |
+        make install
+        cp "$HOME"/go/bin/* ./
 
     - name: Test
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: go test -v -coverprofile coverage.out  ./...
+      run: |
+        echo "Running Build Tests"
+        #make test
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+
+    - name: Build Zetavisor
+      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
+      run: |
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
@@ -65,7 +88,6 @@ jobs:
         files: |
           zetacored
           zetaclientd
-          cosmovisor
 
     ## Not being used 
     # - name: Build, tag, and push image to Amazon ECR
