@@ -14,10 +14,7 @@ on:
     branches: 
       - develop
       - athens2-develop 
-  release:
-    types: 
-      - created
-
+      
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
