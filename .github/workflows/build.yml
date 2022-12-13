@@ -46,16 +46,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    # - uses: actions/cache@v3
-    #   with:
-    #     path: |
-    #       zetacored
-    #       zetaclientd
-    #       cosmovisor
-    #     key: ${{ runner.os }}-build-tests-${{ hashFiles('**/go.sum') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-build-tests-
-
     - name: Build zetacored and zetaclientd
       run: |
         make install

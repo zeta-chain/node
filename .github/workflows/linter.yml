@@ -5,12 +5,10 @@ on:
     tags:
       - v*
       - athens2-*
-    branches:
-      - develop
-      - athens2-develop 
-      - cicd-fix-tests
+    # branches:
+    #   - develop
+    #   - athens2-develop 
   pull_request:
-
 
 env: 
   GOPRIVATE: github.com/zeta-chain/*
