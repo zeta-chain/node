@@ -9,6 +9,8 @@ on:
       - v*
       - athens2-*
   pull_request:
+    types: 
+      - ready_for_review
     branches: 
       - develop
       - athens2-develop 
