@@ -26,15 +26,6 @@ runs:
         go-version: ${{ inputs.go-version }}  
         cache: true
         cache-dependency-path: go.mod
-
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
           
     - name: build zetacored and zetaclientd
       shell: bash
@@ -47,7 +38,7 @@ runs:
       shell: bash
       run: |
         echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+        make test
 
     - name: Cosmovisor
       shell: bash
