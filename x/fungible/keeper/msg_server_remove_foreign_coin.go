@@ -21,6 +21,6 @@ func (k msgServer) RemoveForeignCoin(goCtx context.Context, msg *types.MsgRemove
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "foreign coin not found")
 	}
 	k.RemoveForeignCoins(ctx, index)
-	
+
 	return &types.MsgRemoveForeignCoinResponse{}, nil
 }
