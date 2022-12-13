@@ -32432,8 +32432,6 @@ paths:
                           type: string
                         senderChain:
                           type: string
-                        txOrigin:
-                          type: string
                         inBoundTxObservedHash:
                           type: string
                         inBoundTxObservedExternalHeight:
@@ -32443,6 +32441,8 @@ paths:
                           type: string
                           format: uint64
                         inBoundTXBallotIndex:
+                          type: string
+                        txOrigin:
                           type: string
                     OutBoundTxParams:
                       type: object
@@ -32625,8 +32625,6 @@ paths:
                         type: string
                       senderChain:
                         type: string
-                      txOrigin:
-                        type: string
                       inBoundTxObservedHash:
                         type: string
                       inBoundTxObservedExternalHeight:
@@ -32636,6 +32634,8 @@ paths:
                         type: string
                         format: uint64
                       inBoundTXBallotIndex:
+                        type: string
+                      txOrigin:
                         type: string
                   OutBoundTxParams:
                     type: object
@@ -32756,8 +32756,6 @@ paths:
                           type: string
                         senderChain:
                           type: string
-                        txOrigin:
-                          type: string
                         inBoundTxObservedHash:
                           type: string
                         inBoundTxObservedExternalHeight:
@@ -32767,6 +32765,8 @@ paths:
                           type: string
                           format: uint64
                         inBoundTXBallotIndex:
+                          type: string
+                        txOrigin:
                           type: string
                     OutBoundTxParams:
                       type: object
@@ -55986,8 +55986,6 @@ definitions:
             type: string
           senderChain:
             type: string
-          txOrigin:
-            type: string
           inBoundTxObservedHash:
             type: string
           inBoundTxObservedExternalHeight:
@@ -55997,6 +55995,8 @@ definitions:
             type: string
             format: uint64
           inBoundTXBallotIndex:
+            type: string
+          txOrigin:
             type: string
       OutBoundTxParams:
         type: object
@@ -56085,8 +56085,6 @@ definitions:
         type: string
       senderChain:
         type: string
-      txOrigin:
-        type: string
       inBoundTxObservedHash:
         type: string
       inBoundTxObservedExternalHeight:
@@ -56096,6 +56094,8 @@ definitions:
         type: string
         format: uint64
       inBoundTXBallotIndex:
+        type: string
+      txOrigin:
         type: string
   zetachain.zetacore.crosschain.Keygen:
     type: object
@@ -56292,8 +56292,6 @@ definitions:
                   type: string
                 senderChain:
                   type: string
-                txOrigin:
-                  type: string
                 inBoundTxObservedHash:
                   type: string
                 inBoundTxObservedExternalHeight:
@@ -56303,6 +56301,8 @@ definitions:
                   type: string
                   format: uint64
                 inBoundTXBallotIndex:
+                  type: string
+                txOrigin:
                   type: string
             OutBoundTxParams:
               type: object
@@ -56386,8 +56386,6 @@ definitions:
                   type: string
                 senderChain:
                   type: string
-                txOrigin:
-                  type: string
                 inBoundTxObservedHash:
                   type: string
                 inBoundTxObservedExternalHeight:
@@ -56397,6 +56395,8 @@ definitions:
                   type: string
                   format: uint64
                 inBoundTXBallotIndex:
+                  type: string
+                txOrigin:
                   type: string
             OutBoundTxParams:
               type: object
@@ -56974,8 +56974,6 @@ definitions:
                 type: string
               senderChain:
                 type: string
-              txOrigin:
-                type: string
               inBoundTxObservedHash:
                 type: string
               inBoundTxObservedExternalHeight:
@@ -56985,6 +56983,8 @@ definitions:
                 type: string
                 format: uint64
               inBoundTXBallotIndex:
+                type: string
+              txOrigin:
                 type: string
           OutBoundTxParams:
             type: object
