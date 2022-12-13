@@ -9,12 +9,10 @@ on:
       - v*
       - athens2-*
   pull_request:
-    types: 
-      - ready_for_review
     branches: 
       - develop
       - athens2-develop 
-      
+
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
