@@ -34250,6 +34250,87 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  '/zeta-chain/zevm/zevm_getBlockByNumber/{height}':
+    get:
+      operationId: ZetachainZetacoreCrosschainZEVMGetBlock
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              number:
+                type: string
+              hash:
+                type: string
+              parent_hash:
+                type: string
+              nonce:
+                type: string
+              sha3_uncles:
+                type: string
+              logs_bloom:
+                type: string
+              transactions_root:
+                type: string
+              state_root:
+                type: string
+              receipts_root:
+                type: string
+              miner:
+                type: string
+              difficulty:
+                type: string
+              total_difficulty:
+                type: string
+              extra_data:
+                type: string
+              size:
+                type: string
+              gas_limit:
+                type: string
+              gas_used:
+                type: string
+              timestamp:
+                type: string
+              transactions:
+                type: array
+                items:
+                  type: string
+              uncles:
+                type: array
+                items:
+                  type: string
+              base_fee_per_gas:
+                type: string
+              mix_hash:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   '/zeta-chain/zevm/zevm_getTransactionByHash/{hash}':
     get:
       operationId: ZetachainZetacoreCrosschainZEVMGetTransaction
@@ -57434,6 +57515,55 @@ definitions:
           enabled:
             type: boolean
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.crosschain.QueryZEVMGetBlockByNumberResponse:
+    type: object
+    properties:
+      number:
+        type: string
+      hash:
+        type: string
+      parent_hash:
+        type: string
+      nonce:
+        type: string
+      sha3_uncles:
+        type: string
+      logs_bloom:
+        type: string
+      transactions_root:
+        type: string
+      state_root:
+        type: string
+      receipts_root:
+        type: string
+      miner:
+        type: string
+      difficulty:
+        type: string
+      total_difficulty:
+        type: string
+      extra_data:
+        type: string
+      size:
+        type: string
+      gas_limit:
+        type: string
+      gas_used:
+        type: string
+      timestamp:
+        type: string
+      transactions:
+        type: array
+        items:
+          type: string
+      uncles:
+        type: array
+        items:
+          type: string
+      base_fee_per_gas:
+        type: string
+      mix_hash:
+        type: string
   zetachain.zetacore.crosschain.QueryZEVMGetTransactionReceiptResponse:
     type: object
     properties:
