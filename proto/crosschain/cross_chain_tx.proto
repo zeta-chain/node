@@ -16,10 +16,11 @@ enum CctxStatus {
 message InBoundTxParams{
   string sender = 1;
   string senderChain = 2;
-  string inBoundTxObservedHash = 3;
-  uint64 inBoundTxObservedExternalHeight = 4;
-  uint64 inBoundTxFinalizedZetaHeight = 5;
-  string inBoundTXBallotIndex=6;
+  string txOrigin = 3;
+  string inBoundTxObservedHash = 4;
+  uint64 inBoundTxObservedExternalHeight = 5;
+  uint64 inBoundTxFinalizedZetaHeight = 6;
+  string inBoundTXBallotIndex = 7;
 }
 
 message OutBoundTxParams {
