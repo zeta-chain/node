@@ -7,6 +7,7 @@ const (
 
 	Sender        = "Sender"
 	SenderChain   = "SenderChain"
+	TxOrigin      = "TxOrigin"
 	InTxHash      = "InTxObservedHash"
 	InBlockHeight = "InTxObservedBlockHeight"
 

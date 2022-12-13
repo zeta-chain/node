@@ -186,6 +186,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				inTx.FromAddress,
 				ob.chain.String(),
 				inTx.FromAddress,
+				inTx.FromAddress,
 				"ZETA",
 				amountInt.String(),
 				amountInt.String(),
