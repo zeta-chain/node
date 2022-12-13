@@ -5,8 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd-fix-tests
-      - cicd-update-secrets-and-fix-aws-cli-error
     tags:
       - v*
       - athens2-*
@@ -28,8 +26,6 @@ env:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    # environment: 
-    #   name: development
     steps:
     - uses: actions/checkout@v3
 
