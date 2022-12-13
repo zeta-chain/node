@@ -46,6 +46,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
+    # - uses: actions/cache@v3
+    #   with:
+    #     path: |
+    #       zetacored
+    #       zetaclientd
+    #       cosmovisor
+    #     key: ${{ runner.os }}-build-tests-${{ hashFiles('**/go.sum') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-build-tests-
+
     - name: Build zetacored and zetaclientd
       run: |
         make install
@@ -55,19 +65,15 @@ jobs:
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
         echo "Running Build Tests"
-        make test
+        #make test
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-    - name: Build ZetaCosmovisor
+    - name: Build Zetavisor
+      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
       run: |
         go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
-
-    # - name: Build Binaries
-    #   uses: ./.github/actions/build-binaries
-    #   with:
-    #     go-version: '1.18'
-    #     run-tests: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
