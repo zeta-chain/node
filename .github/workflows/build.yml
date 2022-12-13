@@ -51,7 +51,7 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    - name: Build Tests
+    - name: Test
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
         echo "Running Build Tests"
