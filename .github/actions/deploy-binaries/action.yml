@@ -47,11 +47,11 @@ runs:
     run: |
       echo "Copying Package Files from S3 to local node storage"
       source ${{ github.action_path }}/functions
-      COMMAND_ID=$(run_ssm_cmds_validators "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetacored /deployment-files/${{ env.GITHUB_REF_NAME }} &&  aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetaclientd /deployment-files/${{ env.GITHUB_REF_NAME }}")
+      COMMAND_ID=$(run_ssm_cmds_validators    "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetaclientd -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd")
       check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_api_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetacored /deployment-files/${{ env.GITHUB_REF_NAME }} &&  aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetaclientd /deployment-files/${{ env.GITHUB_REF_NAME }}")
+      COMMAND_ID=$(run_ssm_cmds_api_nodes     "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetaclientd -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd")
       check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_archive_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetacored /deployment-files/${{ env.GITHUB_REF_NAME }} &&  aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ env.GITHUB_REF_NAME }}/zetaclientd /deployment-files/${{ env.GITHUB_REF_NAME }}")
+      COMMAND_ID=$(run_ssm_cmds_archive_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetaclientd -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd")
       check_cmd_status $COMMAND_ID
 
   - name: Stop ZetaChain
