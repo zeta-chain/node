@@ -6,6 +6,7 @@ on:
       - develop
       - athens2-develop
       - cicd-fix-tests
+      - cicd-update-secrets-and-fix-aws-cli-error
     tags:
       - v*
       - athens2-*
