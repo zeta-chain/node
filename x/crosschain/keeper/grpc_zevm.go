@@ -3,6 +3,8 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +15,41 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
 )
+
+func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNumberRequest) (*types.QueryZEVMGetBlockByNumberResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	rpcclient := types.ClientCtx.Client
+	if rpcclient == nil {
+		return nil, status.Error(codes.Internal, "rpc client is not initialized")
+	}
+
+	blockResults, err := GetTendermintBlockResultsByNumber(ctx, int64(req.Height))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	block, err := GetTendermintBlockByNumber(ctx, int64(req.Height))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	transactionHashes := make([]string, 0)
+	for idx, txResult := range blockResults.TxsResults {
+		logs, err := GetEthLogsFromEvents(txResult.Events)
+		if err != nil || len(logs) == 0 {
+			continue
+		}
+		transactionHashes = append(transactionHashes, fmt.Sprintf("0x%x", block.Block.Txs[idx].Hash()))
+	}
+	return &types.QueryZEVMGetBlockByNumberResponse{
+		Number:       fmt.Sprintf("0x%x", req.Height),
+		Transactions: transactionHashes,
+	}, nil
+}
 
 func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEVMGetTransactionReceiptRequest) (*types.QueryZEVMGetTransactionReceiptResponse, error) {
 	if req == nil {
@@ -25,7 +61,13 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		return nil, status.Error(codes.Internal, "rpc client is not initialized")
 	}
 
-	query := fmt.Sprintf("ethereum_tx.txHash='%s'", req.Hash)
+	var hash string
+	if len(req.Hash) == 66 && req.Hash[:2] == "0x" { // eth format
+		hash = strings.ToUpper(req.Hash[2:])
+	} else {
+		hash = req.Hash
+	}
+	query := fmt.Sprintf("ethereum_tx.txHash='%s'", hash)
 	res, err := rpcclient.TxSearch(c, query, false, nil, nil, "asc")
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -56,7 +98,7 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		status0 = "0x1" // 1 = success in ethereum;
 	}
 	H := ethcommon.BytesToHash(txRaw.Hash.Bytes())
-	hash := H.Hex()
+	hash = H.Hex()
 
 	logs, err := GetEthLogsFromEvents(txRaw.TxResult.Events)
 	if err != nil {
@@ -91,7 +133,13 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	if rpcclient == nil {
 		return nil, status.Error(codes.Internal, "rpc client is not initialized")
 	}
-	query := fmt.Sprintf("ethereum_tx.txHash='%s'", req.Hash)
+	var hash string
+	if len(req.Hash) == 66 && req.Hash[:2] == "0x" { // eth format
+		hash = strings.ToUpper(req.Hash[2:])
+	} else {
+		hash = req.Hash
+	}
+	query := fmt.Sprintf("ethereum_tx.txHash='%s'", hash)
 	res, err := rpcclient.TxSearch(c, query, false, nil, nil, "asc")
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -114,7 +162,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 
 	var blockNumber string
 	H := ethcommon.BytesToHash(txRaw.Hash.Bytes())
-	hash := H.Hex()
+	hash = H.Hex()
 	blockNumber = fmt.Sprintf("0x%x", txRaw.Height)
 	blockHash := ethcommon.BytesToHash(block.BlockID.Hash.Bytes())
 
@@ -160,6 +208,27 @@ func GetTendermintBlockByNumber(ctx sdk.Context, blockNum int64) (*tmrpctypes.Re
 	return resBlock, nil
 }
 
+func GetTendermintBlockResultsByNumber(ctx sdk.Context, blockNum int64) (*tmrpctypes.ResultBlockResults, error) {
+	rpcclient := types.ClientCtx.Client
+	if rpcclient == nil {
+		return nil, fmt.Errorf("rpc client is not initialized")
+	}
+	height := blockNum
+	if height <= 0 {
+		height = ctx.BlockHeight()
+	}
+	resBlock, err := rpcclient.BlockResults(sdk.WrapSDKContext(ctx), &height)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get block by height %d: %w", height, err)
+	}
+
+	if resBlock == nil {
+		return nil, nil
+	}
+
+	return resBlock, nil
+}
+
 func GetEthLogsFromEvents(events []abci.Event) ([]*types.Log, error) {
 	logs := make([]*types.Log, 0)
 	for _, event := range events {
@@ -173,6 +242,10 @@ func GetEthLogsFromEvents(events []abci.Event) ([]*types.Log, error) {
 				err := json.Unmarshal(attr.Value, &log)
 				if err != nil {
 					return nil, err
+				}
+				data, err := base64.StdEncoding.DecodeString(log.Data)
+				if err == nil {
+					log.Data = "0x" + hex.EncodeToString(data)
 				}
 				logs = append(logs, &log)
 

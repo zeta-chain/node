@@ -34,6 +34,10 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zevm/zevm_getTransactionByHash/{hash}";
 	}
 
+	rpc ZEVMGetBlock(QueryZEVMGetBlockByNumberRequest) returns (QueryZEVMGetBlockByNumberResponse) {
+		option (google.api.http).get = "/zeta-chain/zevm/zevm_getBlockByNumber/{height}";
+	}
+
 // Queries a OutTxTracker by index.
 	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{index}";
@@ -424,4 +428,32 @@ message	QueryZEVMGetTransactionResponse {
 	string v = 15 [ (gogoproto.jsontag) = "v" ];
 	string r = 16 [ (gogoproto.jsontag) = "r" ];
 	string s = 17 [ (gogoproto.jsontag) = "s" ];
+}
+
+message QueryZEVMGetBlockByNumberRequest {
+	uint64 height = 1;
+}
+
+message QueryZEVMGetBlockByNumberResponse {
+	string number = 1  [ (gogoproto.jsontag) = "number" ];
+	string hash = 2  [ (gogoproto.jsontag) = "hash" ];
+	string parent_hash = 3  [ (gogoproto.jsontag) = "parentHash" ];
+	string nonce = 4  [ (gogoproto.jsontag) = "nonce" ];
+	string sha3_uncles = 5  [ (gogoproto.jsontag) = "sha3Uncles" ];
+	string logs_bloom = 6  [ (gogoproto.jsontag) = "logsBloom" ];
+	string transactions_root = 7  [ (gogoproto.jsontag) = "transactionsRoot" ];
+	string state_root = 8  [ (gogoproto.jsontag) = "stateRoot" ];
+	string receipts_root = 9  [ (gogoproto.jsontag) = "receiptsRoot" ];
+	string miner = 10  [ (gogoproto.jsontag) = "miner" ];
+	string difficulty = 11  [ (gogoproto.jsontag) = "difficulty" ];
+	string total_difficulty = 12  [ (gogoproto.jsontag) = "totalDifficulty" ];
+	string extra_data = 13  [ (gogoproto.jsontag) = "extraData" ];
+	string size = 14  [ (gogoproto.jsontag) = "size" ];
+	string gas_limit = 15  [ (gogoproto.jsontag) = "gasLimit" ];
+	string gas_used = 16  [ (gogoproto.jsontag) = "gasUsed" ];
+	string timestamp = 17  [ (gogoproto.jsontag) = "timestamp" ];
+	repeated string transactions = 18  [ (gogoproto.jsontag) = "transactions" ];
+	repeated string uncles = 19  [ (gogoproto.jsontag) = "uncles" ];
+	string base_fee_per_gas = 20  [ (gogoproto.jsontag) = "baseFeePerGas" ];
+	string mix_hash = 21  [ (gogoproto.jsontag) = "mixHash" ];
 }
