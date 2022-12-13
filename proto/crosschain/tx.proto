@@ -105,15 +105,16 @@ message MsgVoteOnObservedInboundTx {
   string creator = 1;
   string sender = 2;
   string senderChain = 3;
-  string receiver = 4;
-  string receiverChain = 5;
-  string zetaBurnt = 6;
-//  string mMint = 7;
-  string message = 8;
-  string inTxHash = 9;
-  uint64 inBlockHeight = 10;
-  uint64 gasLimit = 11;
-  common.CoinType coinType = 12;
+  string txOrigin = 4;
+  string receiver = 5;
+  string receiverChain = 6;
+  string zetaBurnt = 7;
+//  string mMint = 8;
+  string message = 9;
+  string inTxHash = 10;
+  uint64 inBlockHeight = 11;
+  uint64 gasLimit = 12;
+  common.CoinType coinType = 13;
 }
 
 message MsgVoteOnObservedInboundTxResponse {
