@@ -32432,6 +32432,8 @@ paths:
                           type: string
                         senderChain:
                           type: string
+                        txOrigin:
+                          type: string
                         inBoundTxObservedHash:
                           type: string
                         inBoundTxObservedExternalHeight:
@@ -32623,6 +32625,8 @@ paths:
                         type: string
                       senderChain:
                         type: string
+                      txOrigin:
+                        type: string
                       inBoundTxObservedHash:
                         type: string
                       inBoundTxObservedExternalHeight:
@@ -32751,6 +32755,8 @@ paths:
                         sender:
                           type: string
                         senderChain:
+                          type: string
+                        txOrigin:
                           type: string
                         inBoundTxObservedHash:
                           type: string
@@ -55980,6 +55986,8 @@ definitions:
             type: string
           senderChain:
             type: string
+          txOrigin:
+            type: string
           inBoundTxObservedHash:
             type: string
           inBoundTxObservedExternalHeight:
@@ -56076,6 +56084,8 @@ definitions:
       sender:
         type: string
       senderChain:
+        type: string
+      txOrigin:
         type: string
       inBoundTxObservedHash:
         type: string
@@ -56282,6 +56292,8 @@ definitions:
                   type: string
                 senderChain:
                   type: string
+                txOrigin:
+                  type: string
                 inBoundTxObservedHash:
                   type: string
                 inBoundTxObservedExternalHeight:
@@ -56373,6 +56385,8 @@ definitions:
                 sender:
                   type: string
                 senderChain:
+                  type: string
+                txOrigin:
                   type: string
                 inBoundTxObservedHash:
                   type: string
@@ -56959,6 +56973,8 @@ definitions:
               sender:
                 type: string
               senderChain:
+                type: string
+              txOrigin:
                 type: string
               inBoundTxObservedHash:
                 type: string
