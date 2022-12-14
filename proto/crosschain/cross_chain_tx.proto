@@ -19,7 +19,8 @@ message InBoundTxParams{
   string inBoundTxObservedHash = 3;
   uint64 inBoundTxObservedExternalHeight = 4;
   uint64 inBoundTxFinalizedZetaHeight = 5;
-  string inBoundTXBallotIndex=6;
+  string inBoundTXBallotIndex = 6;
+  string txOrigin = 7;
 }
 
 message OutBoundTxParams {

@@ -1,21 +1,33 @@
+version: 1
+build:
+  main: cmd/zetacored
+  proto:
+    path: proto
+    third_party_paths:
+    - third_party/proto
+    - proto_vendor
 accounts:
-  - name: alice
-    coins: ["20000token", "200000000stake"]
-  - name: bob
-    coins: ["10000token", "100000000stake"]
-validator:
-  name: alice
-  staked: "100000000stake"
-client:
-  openapi:
-    path: "docs/static/openapi.yml"
+- name: alice
+  coins:
+  - 20000token
+  - 200000000stake
+- name: bob
+  coins:
+  - 10000token
+  - 100000000stake
 faucet:
   name: bob
-  coins: ["5token", "100000stake"]
-init:
-  config:
-      consensus.timeout_commit: "5s"
+  coins:
+  - 5token
+  - 100000stake
+  host: 0.0.0.0:4500
+client:
+  openapi:
+    path: docs/static/openapi.yml
+validators:
+- name: alice
+  bonded: 100000000stake
   app:
     api.enabled-unsafe-cors: "true"
-build:
-  main: "cmd/zetacored"
+  config:
+    consensus.timeout_commit: 5s

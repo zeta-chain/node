@@ -469,6 +469,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
+			event.SourceTxOriginAddress.Hex(),
 			clienttypes.BytesToEthHex(event.DestinationAddress),
 			config.FindChainByID(event.DestinationChainId),
 			event.ZetaValueAndGas.String(),
@@ -587,6 +588,7 @@ func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.In
 	zetaHash, err := ob.zetaClient.PostSend(
 		from.Hex(),
 		ob.chain.String(),
+		from.Hex(),
 		from.Hex(),
 		"ZETA",
 		value.String(),
