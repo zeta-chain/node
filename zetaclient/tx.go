@@ -22,7 +22,7 @@ const (
 	PostNonceGasLimit               = 200_000
 	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_500_000
-	PostReceiveConfirmationGasLimit = 300_000
+	PostReceiveConfirmationGasLimit = 00_000
 	DefaultGasLimit                 = 200_000
 )
 
@@ -80,8 +80,12 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
+	var gasLimit uint64 = PostReceiveConfirmationGasLimit
+	if status == common.ReceiveStatus_Failed {
+		gasLimit = PostSendEVMGasLimit
+	}
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(PostReceiveConfirmationGasLimit, msg)
+		zetaTxHash, err := b.Broadcast(gasLimit, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
 		} else {
