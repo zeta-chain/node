@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 import "./Interfaces.sol";
 
 interface ZRC20Errors {
@@ -79,6 +79,14 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
 
         _approve(sender, _msgSender(), currentAllowance - amount);
 
+        return true;
+    }
+
+    function burn(address account, uint256 amount) external returns (bool) {
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) {
+            revert InvalidSender();
+        }
+        _burn(account, amount);
         return true;
     }
 
