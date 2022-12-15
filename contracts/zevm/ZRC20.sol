@@ -82,11 +82,8 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return true;
     }
 
-    function burn(address account, uint256 amount) external returns (bool) {
-        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) {
-            revert InvalidSender();
-        }
-        _burn(account, amount);
+    function burn(uint256 amount) external returns (bool) {
+        _burn(msg.sender, amount);
         return true;
     }
 

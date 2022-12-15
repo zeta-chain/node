@@ -243,7 +243,7 @@ func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20 
 		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
 	}
 	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20, big.NewInt(0), big.NewInt(100_000), true,
-		"burn", sender, amount)
+		"burn", amount)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to CallEVM method burn")
 	}
