@@ -22,7 +22,7 @@ const (
 	PostNonceGasLimit               = 200_000
 	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_500_000
-	PostReceiveConfirmationGasLimit = 00_000
+	PostReceiveConfirmationGasLimit = 200_000
 	DefaultGasLimit                 = 200_000
 )
 
