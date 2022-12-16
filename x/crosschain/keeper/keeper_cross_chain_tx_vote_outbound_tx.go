@@ -64,12 +64,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 		ctx.Logger().Error(err.Error())
 		k.SetCrossChainTx(ctx, cctx)
+		// Remove OutTX tracker and change CCTX prefix store
+		k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
