@@ -185,7 +185,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 		BlockHash:        blockHash.Hex(),
 		BlockNumber:      blockNumber,
 		From:             fromAddress.Hex(), // FIXME: this should be the EOA on external chain?
-		Gas:              "",
+		Gas:              fmt.Sprintf("0x%x", txRaw.TxResult.GasWanted),
 		GasPrice:         "",
 		Hash:             hash, // Note: This is the cosmos tx hash, in ethereum format (0x prefixed)
 		Input:            "",
