@@ -9,6 +9,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -102,7 +103,7 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	msg0 := tx.GetMsgs()[0]
-	from := msg0.GetSigners()[0].String()
+	fromAddress := ethcommon.BytesToAddress(msg0.GetSigners()[0].Bytes())
 
 	status0 := "0x0"
 	if txRaw.TxResult.Code == 0 { // code 0 means success for cosmos tx; ref https://docs.cosmos.network/main/core/baseapp#delivertx
@@ -121,7 +122,7 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		BlockNumber:       blockNumber,
 		ContractAddress:   "", // this is the contract created by the transaction, if any
 		CumulativeGasUsed: "0x0",
-		From:              from,
+		From:              fromAddress.Hex(),
 		GasUsed:           fmt.Sprintf("0x%x", txRaw.TxResult.GasUsed),
 		LogsBloom:         "", //FIXME: add proper bloom filter
 		Status:            status0,
@@ -167,8 +168,12 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	}
 
 	tx, err := types.ClientCtx.TxConfig.TxDecoder()(txRaw.Tx)
-	m := tx.GetMsgs()[0]
-	from := m.GetSigners()[0].String()
+	msg0 := tx.GetMsgs()[0]
+	fromAddress := ethcommon.BytesToAddress(msg0.GetSigners()[0].Bytes())
+	chainID, err := ethermint.ParseChainID(ctx.ChainID())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	var blockNumber string
 	H := ethcommon.BytesToHash(txRaw.Hash.Bytes())
@@ -179,7 +184,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	return &types.QueryZEVMGetTransactionResponse{
 		BlockHash:        blockHash.Hex(),
 		BlockNumber:      blockNumber,
-		From:             from, // FIXME: this should be the EOA on external chain?
+		From:             fromAddress.Hex(), // FIXME: this should be the EOA on external chain?
 		Gas:              "",
 		GasPrice:         "",
 		Hash:             hash, // Note: This is the cosmos tx hash, in ethereum format (0x prefixed)
@@ -190,7 +195,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 		Value:            "0",
 		Type:             "0x88",
 		AccessList:       nil,
-		ChainId:          ctx.ChainID(),
+		ChainId:          chainID.String(),
 		V:                "",
 		R:                "",
 		S:                "",
