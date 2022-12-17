@@ -37,12 +37,23 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	txDecoder := types.ClientCtx.TxConfig.TxDecoder()
 	transactionHashes := make([]string, 0)
 	for idx, txResult := range blockResults.TxsResults {
 		logs, err := GetEthLogsFromEvents(txResult.Events)
 		if err != nil || len(logs) == 0 {
 			continue
 		}
+		txBytes := block.Block.Txs[idx]
+		tx, err := txDecoder(txBytes)
+		if err != nil {
+			continue
+		}
+		_, ok := tx.GetMsgs()[0].(*evmtypes.MsgEthereumTx)
+		if ok { // skip MsgEthereumTx; these txs are handled by ethermint JSON-RPC server
+			continue
+		}
+
 		transactionHashes = append(transactionHashes, fmt.Sprintf("0x%x", block.Block.Txs[idx].Hash()))
 	}
 	return &types.QueryZEVMGetBlockByNumberResponse{
@@ -112,7 +123,7 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		CumulativeGasUsed: "0x0",
 		From:              from,
 		GasUsed:           fmt.Sprintf("0x%x", txRaw.TxResult.GasUsed),
-		LogsBloom:         "",
+		LogsBloom:         "", //FIXME: add proper bloom filter
 		Status:            status0,
 		To:                "",
 		TransactionHash:   hash,
