@@ -90,15 +90,14 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	m := tx.GetMsgs()[0]
-	from := m.GetSigners()[0].String()
+	msg0 := tx.GetMsgs()[0]
+	from := msg0.GetSigners()[0].String()
 
 	status0 := "0x0"
 	if txRaw.TxResult.Code == 0 { // code 0 means success for cosmos tx; ref https://docs.cosmos.network/main/core/baseapp#delivertx
 		status0 = "0x1" // 1 = success in ethereum;
 	}
-	H := ethcommon.BytesToHash(txRaw.Hash.Bytes())
-	hash = H.Hex()
+	hash = ethcommon.BytesToHash(txRaw.Hash.Bytes()).Hex()
 
 	logs, err := GetEthLogsFromEvents(txRaw.TxResult.Events)
 	if err != nil {
