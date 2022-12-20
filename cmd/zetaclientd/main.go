@@ -17,6 +17,8 @@ import (
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
+	etherminttypes "github.com/evmos/ethermint/types"
+
 	"io/ioutil"
 	"strings"
 	"syscall"
@@ -55,6 +57,12 @@ func main() {
 
 	flag.Parse()
 	cmd.CHAINID = *chainID
+	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
+	if err != nil {
+		panic(err)
+	}
+	log.Info().Msgf("ZEVM Chain ID: %s", ZEVMChainID.String())
+	config.Chains[common.ZETAChain.String()].ChainID = ZEVMChainID
 	keygenBlock = *keygen
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
