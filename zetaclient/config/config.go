@@ -105,6 +105,12 @@ var Chains = map[string]*types.ChainETHish{
 		ConnectorContractAddress: "",
 		ChainID:                  big.NewInt(0),
 	},
+
+	common.ZETAChain.String(): {
+		Name:      "ZETA",
+		ChainID:   big.NewInt(100),
+		BlockTime: 6,
+	},
 }
 
 func FindChainByID(id *big.Int) string {
