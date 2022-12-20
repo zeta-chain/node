@@ -59,6 +59,10 @@ install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
+install-btc_consolidator: go.sum
+		@echo "--> Installing btc_consolidator"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/btc_consolidator
+
 # running with race detector on will be slow
 install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
