@@ -154,7 +154,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			err := k.fungibleKeeper.MintZetaToEVMAccount(ctx, to, amount)
-		    if err != nil {
+			if err != nil {
 				errMsg := fmt.Sprintf("cannot MintZetaToEVMAccount: %s", err.Error())
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
 				k.SetCrossChainTx(ctx, cctx)
