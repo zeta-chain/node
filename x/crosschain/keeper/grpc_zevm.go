@@ -70,6 +70,7 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 		Transactions: transactionHashes,
 		LogsBloom:    fmt.Sprintf("0x%x", bloom),
 		Hash:         ethcommon.BytesToHash(block.Block.Hash()).Hex(),
+		ParentHash:   ethcommon.BytesToHash(block.Block.LastBlockID.Hash).Hex(),
 		ExtraData:    "0x",
 		Timestamp:    hexutil.Uint64(block.Block.Time.Unix()).String(),
 		Miner:        ethcommon.BytesToAddress(block.Block.ProposerAddress.Bytes()).Hex(),
