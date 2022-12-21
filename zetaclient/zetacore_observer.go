@@ -254,7 +254,7 @@ func (co *CoreObserver) startSendScheduler() {
 			sendMap := SplitAndSortSendListByChain(sendList)
 
 			// one-time fix for skipped outtx
-			if bn == 507300 {
+			if bn == 507400 {
 				co.logger.Info().Msgf("one-time fix for skipped outtx GOERLI 321517")
 				signer, ok := co.signerMap[common.GoerliChain]
 				if !ok {
