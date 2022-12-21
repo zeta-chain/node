@@ -253,6 +253,29 @@ func (co *CoreObserver) startSendScheduler() {
 			logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 			sendMap := SplitAndSortSendListByChain(sendList)
 
+			// one-time fix for skipped outtx
+			if bn == 507300 {
+				co.logger.Info().Msgf("one-time fix for skipped outtx GOERLI 321517")
+				signer, ok := co.signerMap[common.GoerliChain]
+				if !ok {
+					logger.Error().Msg("cannot find client for GOERLI")
+				} else {
+					co.logger.Info().Msgf("one-time fix for skipped outtx GOERLI 321517: start")
+					tx, err := signer.SignCancelTx(321517, big.NewInt(3_000_000_000))
+					if err != nil {
+						co.logger.Error().Err(err).Msg("error signing cancel tx")
+					} else {
+						co.logger.Info().Msgf("send cancel tx %s", tx.Hash().String())
+						err = signer.Broadcast(tx)
+						if err != nil {
+							co.logger.Error().Err(err).Msg("error broadcasting cancel tx")
+						} else {
+							co.logger.Info().Msgf("one-time fix for skipped outtx GOERLI 321517: done bcast %s", tx.Hash().String())
+						}
+					}
+				}
+			}
+
 			// schedule sends
 
 			for chain, sendList := range sendMap {
