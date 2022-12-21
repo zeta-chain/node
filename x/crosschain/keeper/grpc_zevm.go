@@ -129,7 +129,10 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	//logs := make([]*types.Log, )
+	for _, log := range logs {
+		log.TransactionHash = hash
+	}
+
 	return &types.QueryZEVMGetTransactionReceiptResponse{
 		BlockHash:         blockHash.Hex(),
 		BlockNumber:       blockNumber,
