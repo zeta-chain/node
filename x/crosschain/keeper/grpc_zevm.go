@@ -6,9 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -57,9 +60,19 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 
 		transactionHashes = append(transactionHashes, fmt.Sprintf("0x%x", block.Block.Txs[idx].Hash()))
 	}
+	bloom, err := BlockBloom(blockResults)
+	if err != nil {
+		k.Logger(ctx).Debug("failed to query BlockBloom", "height", block.Block.Height, "error", err.Error())
+	}
+
 	return &types.QueryZEVMGetBlockByNumberResponse{
 		Number:       fmt.Sprintf("0x%x", req.Height),
 		Transactions: transactionHashes,
+		LogsBloom:    fmt.Sprintf("0x%x", bloom),
+		Hash:         ethcommon.BytesToHash(block.Block.Hash()).Hex(),
+		ExtraData:    "0x",
+		Timestamp:    hexutil.Uint64(block.Block.Time.Unix()).String(),
+		Miner:        ethcommon.BytesToAddress(block.Block.ProposerAddress.Bytes()).Hex(),
 	}, nil
 }
 
@@ -268,4 +281,23 @@ func GetEthLogsFromEvents(events []abci.Event) ([]*types.Log, error) {
 		}
 	}
 	return logs, nil
+}
+
+var bAttributeKeyEthereumBloom = []byte(evmtypes.AttributeKeyEthereumBloom)
+
+// BlockBloom query block bloom filter from block results
+// FIXME: does this work?
+func BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error) {
+	for _, event := range blockRes.EndBlockEvents {
+		if event.Type != evmtypes.EventTypeBlockBloom {
+			continue
+		}
+
+		for _, attr := range event.Attributes {
+			if bytes.Equal(attr.Key, bAttributeKeyEthereumBloom) {
+				return ethtypes.BytesToBloom(attr.Value), nil
+			}
+		}
+	}
+	return ethtypes.Bloom{}, errors.New("block bloom event is not found")
 }
