@@ -22,6 +22,10 @@ import (
 	"strings"
 )
 
+const (
+	NonEthTransactionType = "0x88"
+)
+
 func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNumberRequest) (*types.QueryZEVMGetBlockByNumberResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -51,6 +55,9 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 		txBytes := block.Block.Txs[idx]
 		tx, err := txDecoder(txBytes)
 		if err != nil {
+			continue
+		}
+		if len(tx.GetMsgs()) == 0 { // should not happen; but just in case
 			continue
 		}
 		_, ok := tx.GetMsgs()[0].(*evmtypes.MsgEthereumTx)
@@ -94,12 +101,8 @@ func (k Keeper) ZEVMGetTransactionReceipt(c context.Context, req *types.QueryZEV
 		return nil, status.Error(codes.Internal, "rpc client is not initialized")
 	}
 
-	var hash string
-	if len(req.Hash) == 66 && req.Hash[:2] == "0x" { // eth format
-		hash = strings.ToUpper(req.Hash[2:])
-	} else {
-		hash = req.Hash
-	}
+	hash := NormalizeHash(req.Hash)
+
 	query := fmt.Sprintf("ethereum_tx.txHash='%s'", hash)
 	res, err := rpcclient.TxSearch(c, query, false, nil, nil, "asc")
 	if err != nil {
@@ -168,12 +171,8 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	if rpcclient == nil {
 		return nil, status.Error(codes.Internal, "rpc client is not initialized")
 	}
-	var hash string
-	if len(req.Hash) == 66 && req.Hash[:2] == "0x" { // eth format
-		hash = strings.ToUpper(req.Hash[2:])
-	} else {
-		hash = req.Hash
-	}
+	hash := NormalizeHash(req.Hash)
+
 	query := fmt.Sprintf("ethereum_tx.txHash='%s'", hash)
 	res, err := rpcclient.TxSearch(c, query, false, nil, nil, "asc")
 	if err != nil {
@@ -192,6 +191,12 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	}
 
 	tx, err := types.ClientCtx.TxConfig.TxDecoder()(txRaw.Tx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if len(tx.GetMsgs()) == 0 { // should not happen, just in case
+		return nil, status.Error(codes.Internal, "transaction has no messages")
+	}
 	msg0 := tx.GetMsgs()[0]
 	fromAddress := ethcommon.BytesToAddress(msg0.GetSigners()[0].Bytes())
 	chainID, err := ethermint.ParseChainID(ctx.ChainID())
@@ -200,8 +205,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 	}
 
 	var blockNumber string
-	H := ethcommon.BytesToHash(txRaw.Hash.Bytes())
-	hash = H.Hex()
+	hash = ethcommon.BytesToHash(txRaw.Hash.Bytes()).Hex()
 	blockNumber = fmt.Sprintf("0x%x", txRaw.Height)
 	blockHash := ethcommon.BytesToHash(block.BlockID.Hash.Bytes())
 
@@ -217,7 +221,7 @@ func (k Keeper) ZEVMGetTransaction(c context.Context, req *types.QueryZEVMGetTra
 		To:               "",
 		TransactionIndex: "0",
 		Value:            "0",
-		Type:             "0x88",
+		Type:             NonEthTransactionType,
 		AccessList:       nil,
 		ChainId:          chainID.String(),
 		V:                "",
@@ -311,4 +315,14 @@ func BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 		}
 	}
 	return ethtypes.Bloom{}, errors.New("block bloom event is not found")
+}
+
+// convert an eth hash (0x prefixed hex) or a cosmos hash (no 0x prefix, uppercase hex)
+// into a cosmos hash
+func NormalizeHash(hashEthOrCosmos string) string {
+	if len(hashEthOrCosmos) == 66 && hashEthOrCosmos[:2] == "0x" { // eth format
+		return strings.ToUpper(hashEthOrCosmos[2:])
+	} else {
+		return hashEthOrCosmos
+	}
 }
