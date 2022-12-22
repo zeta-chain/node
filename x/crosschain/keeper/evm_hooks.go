@@ -36,7 +36,11 @@ func (k Keeper) PostTxProcessing(
 	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
-	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, receipt.ContractAddress, "")
+	target := receipt.ContractAddress
+	if msg.To() != nil {
+		target = *msg.To()
+	}
+	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, target, "")
 }
 
 // FIXME: authenticate the emitting contract with foreign_coins
