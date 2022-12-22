@@ -322,7 +322,6 @@ func BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 func NormalizeHash(hashEthOrCosmos string) string {
 	if len(hashEthOrCosmos) == 66 && hashEthOrCosmos[:2] == "0x" { // eth format
 		return strings.ToUpper(hashEthOrCosmos[2:])
-	} else {
-		return hashEthOrCosmos
 	}
+	return hashEthOrCosmos
 }
