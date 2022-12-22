@@ -118,7 +118,15 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				if !tx.Failed() {
 					logs := evmtypes.LogsToEthereum(tx.Logs)
 					ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-					err = k.ProcessWithdrawalEvent(ctx, logs, contract, msg.TxOrigin)
+					creator := msg.Creator
+					if creator == "" {
+						if msg.TxOrigin == "" {
+							creator = msg.Sender
+						} else {
+							creator = msg.TxOrigin
+						}
+					}
+					err = k.ProcessWithdrawalEvent(ctx, logs, contract, creator)
 					if err != nil {
 						errMsg := fmt.Sprintf("cannot process withdrawal event: %s", err.Error())
 						cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
