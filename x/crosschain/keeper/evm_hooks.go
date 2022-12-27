@@ -36,11 +36,15 @@ func (k Keeper) PostTxProcessing(
 	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
-	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, receipt.ContractAddress)
+	target := receipt.ContractAddress
+	if msg.To() != nil {
+		target = *msg.To()
+	}
+	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, target, "")
 }
 
 // FIXME: authenticate the emitting contract with foreign_coins
-func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address) error {
+func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
 	var event *contracts.ZRC20Withdrawal
 
 	found := false
@@ -74,7 +78,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		}
 
 		toAddr := "0x" + hex.EncodeToString(event.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), "", toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
 		sendHash := msg.Digest()
 
 		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)

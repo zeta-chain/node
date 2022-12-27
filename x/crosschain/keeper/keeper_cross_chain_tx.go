@@ -131,6 +131,9 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {
+	if msg.TxOrigin == "" {
+		msg.TxOrigin = msg.Sender
+	}
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     msg.SenderChain,
