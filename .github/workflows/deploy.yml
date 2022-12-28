@@ -2,8 +2,8 @@ name: Deploy ZetaChain Update
 on:
   workflow_dispatch:
     inputs:
-      VERSION:
-        description: 'Version number for the release (0.0.1)'
+      UPGRADE_NAME:
+        description: 'Name of the upgrade (0.0.1)'
         type: string
         required: true
       UPGRADE_BLOCK_HEIGHT:
@@ -82,7 +82,7 @@ jobs:
       - name: Cosmovisor Upgrade Proposal and Vote
         uses:  ./.github/actions/cosmovisor-upgrade
         with:
-          VERSION: ${{ github.event.inputs.VERSION }}
+          UPGRADE_NAME: ${{ github.event.inputs.UPGRADE_NAME }}
           CHAIN_ID: ${{ env.CHAIN_ID }}
 
           DESCRIPTION: "Testing description" # ${{ github.event.inputs.VERSION }}
@@ -92,8 +92,6 @@ jobs:
           ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
           API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
           UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
-
-
 
 
       # - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor

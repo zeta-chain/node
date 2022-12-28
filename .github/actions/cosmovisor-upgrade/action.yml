@@ -107,12 +107,12 @@ runs:
           --targets Key=tag:Name,Values=validator0 \
           --document-name "AWS-RunShellScript" \
           --parameters "commands=['export HOME=/home/zetachain && \
-            zetacored tx gov submit-proposal software-upgrade ${{ inputs.VERSION }} \
+            zetacored tx gov submit-proposal software-upgrade ${{ inputs.UPGRADE_NAME }} \
               --from val \
               --deposit 10000000azeta \
               --upgrade-height ${{ inputs.UPGRADE_BLOCK_HEIGHT }} \
               --description \"${{ inputs.DESCRIPTION }}\" \
-              --title \"${{ inputs.VERSION }}\" \
+              --title \"${{ inputs.UPGRADE_NAME }}\" \
               --keyring-backend test \
               --chain-id \"${{ env.CHAIN_ID }}\" \
               --upgrade-info \'{\"binaries\":{\"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}\",\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}\"}}\' \
