@@ -91,30 +91,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 
 		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
 		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZRC20Withdrawal.Value.String(), "", "", eventZRC20Withdrawal.Raw.TxHash.String(), eventZRC20Withdrawal.Raw.BlockNumber, 90000, coinType)
-		sendHash := msg.Digest()
-
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
-		EmitZRCWithdrawCreated(ctx, cctx)
-		cctx.ZetaMint = cctx.ZetaBurnt
-		cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-		gasprice, found := k.GetGasPrice(ctx, receiverChain)
-		if !found {
-			fmt.Printf("gasprice not found for %s\n", receiverChain)
-			return fmt.Errorf("gasprice not found for %s", receiverChain)
-		}
-		cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
-		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
-		if ok {
-			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
-		}
-		err := k.UpdateNonce(ctx, receiverChain, &cctx)
-		if err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
-		}
-
-		k.SetCrossChainTx(ctx, cctx)
-		fmt.Printf("####setting send... ###########\n")
+		return k.ProcessCCTX(ctx, msg, receiverChain)
 	}
 
 	if foundZetaSent {
@@ -129,34 +106,37 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 			return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from ZETABridge contract: %s", err.Error())
 		}
 
-		receiverChain := "BSCTESTNET"
-		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
+		receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
+		toAddr := "0x" + hex.EncodeToString(eventZetaSent.To)
 		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZetaSent.Value.String(), "", "", eventZetaSent.Raw.TxHash.String(), eventZetaSent.Raw.BlockNumber, 90000, common.CoinType_Zeta)
-		sendHash := msg.Digest()
-
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
-		EmitZetaWithdrawCreated(ctx, cctx)
-		cctx.ZetaMint = cctx.ZetaBurnt
-		cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-		gasprice, found := k.GetGasPrice(ctx, receiverChain)
-		if !found {
-			fmt.Printf("gasprice not found for %s\n", receiverChain)
-			return fmt.Errorf("gasprice not found for %s", receiverChain)
-		}
-		cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
-		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
-		if ok {
-			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
-		}
-		err := k.UpdateNonce(ctx, receiverChain, &cctx)
-		if err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
-		}
-
-		k.SetCrossChainTx(ctx, cctx)
-		fmt.Printf("####setting send... ###########\n")
+		return k.ProcessCCTX(ctx, msg, receiverChain)
 	}
+	return nil
+}
+
+func (k Keeper) ProcessCCTX(ctx sdk.Context, msg *zetacoretypes.MsgVoteOnObservedInboundTx, receiverChain string) error {
+	sendHash := msg.Digest()
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+	EmitZetaWithdrawCreated(ctx, cctx)
+	cctx.ZetaMint = cctx.ZetaBurnt
+	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
+	gasprice, found := k.GetGasPrice(ctx, receiverChain)
+	if !found {
+		fmt.Printf("gasprice not found for %s\n", receiverChain)
+		return fmt.Errorf("gasprice not found for %s", receiverChain)
+	}
+	cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
+	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
+	if ok {
+		cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
+	}
+	err := k.UpdateNonce(ctx, receiverChain, &cctx)
+	if err != nil {
+		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
+	}
+	k.SetCrossChainTx(ctx, cctx)
+	fmt.Printf("####setting send... ###########\n")
 	return nil
 }
 
