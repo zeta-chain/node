@@ -95,7 +95,7 @@ runs:
               --title \"${{ inputs.UPGRADE_NAME }}\" \
               --keyring-backend test \
               --chain-id \"${{ env.CHAIN_ID }}\" \
-              --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\", \"zetaclientd-linux/amd64\":\"${{ env.ZETACLIENTD_URL }}?checksum=sha256:${{ inputs.ZETACLIENTD_CHECKSUM }}\" }}\' \
+              --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\", \"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\" }}\' \
               --yes']" | jq .Command.CommandId -r || exit 1)
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
