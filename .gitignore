@@ -15,6 +15,7 @@ vue/dist
 vue/node_modules
 vue/node_modules
 yarn-error.log
+.github/workflows/local-testing.yml
 
 # Hardhat files
 cache

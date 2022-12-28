@@ -2,14 +2,14 @@ name: Deploy ZetaChain Update
 on:
   workflow_dispatch:
     inputs:
-      # VERSION:
-      #   description: 'Version number for the release (0.0.1)'
-      #   type: string
-      #   required: true
-      # UPGRADE_BLOCK_HEIGHT:
-      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
-      #   type: string
-      #   required: false
+      VERSION:
+        description: 'Version number for the release (0.0.1)'
+        type: string
+        required: true
+      UPGRADE_BLOCK_HEIGHT:
+        description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
+        type: string
+        required: false
       ENVIRONMENT:
         description: 'What Environment to deploy into (athens2, development)'
         type: environment
@@ -46,17 +46,12 @@ jobs:
       - name: Set Chain ID Automatically based on Environment
         run: |
           if [ ${{ github.event.inputs.ENVIRONMENT }} == "development" ]; then
+            echo "using development chain id"
             echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
           elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
+            echo "using athens2 chain id"
             echo "CHAIN_ID=athens_7001-1" >> $GITHUB_ENV
           fi
-          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
-          
-      - name: Test Inputs
-        if: ${{ env.ACT }}
-        run: |
-          echo  ${{ github.ref_name }}
-          echo  ${{ github.event.inputs.ENVIRONMENT }}
 
       - name: Verify target files exist 
         run: |
@@ -75,46 +70,59 @@ jobs:
       #     issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
       #     exclude-workflow-initiator-as-approver: false
 
-      # - name: Cosmovisor Upgrade Proposal and Vote # NEEDS ADDITIONAL TESTING
-      #   uses:  ./.github/actions/cosmovisor-upgrade
+      - name: Test Inputs
+        if: ${{ env.ACT }}
+        run: |
+          echo  ${{ github.ref_name }}
+          echo  ${{ github.event.inputs.ENVIRONMENT }}
+          echo  ${{ env.CHAIN_ID }}
+          echo  ${{ github.event.inputs.VERSION }}
+          echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
+        with:
+          VERSION: ${{ github.event.inputs.VERSION }}
+          CHAIN_ID: ${{ env.CHAIN_ID }}
+
+          DESCRIPTION: "Testing description" # ${{ github.event.inputs.VERSION }}
+          # ZETACORED_CHECKSUM: ""
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
+          # ZETACLIENTD_CHECKSUM: ""
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
+          API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+          UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+
+
+
+
+      # - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor
+      #   uses:  ./.github/actions/deploy-binaries
       #   with:
-      #     VERSION: ${{ github.event.inputs.VERSION }}
-      #     # DESCRIPTION: ${{ github.event.inputs.VERSION }}
-      #     # ZETACORED_CHECKSUM: ""
-      #     ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
-      #     # ZETACLIENTD_CHECKSUM: ""
-      #     ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
-      #     CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
-      #     API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
-      #     UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+      #     S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      #     TAKE_SNAPSHOTS: true
+      #     BRANCH_OR_TAG_NAME: ${{ github.ref_name }}
 
-      - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor
-        uses:  ./.github/actions/deploy-binaries
-        with:
-          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          TAKE_SNAPSHOTS: true
-          BRANCH_OR_TAG_NAME: ${{ github.ref_name }}
-
-      - name: Send Message To Slack
-        id: slack
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: |
-            {
-              "text": "${{ github.ref_name }} deployed via GitHub Actions to ${{ github.event.inputs.ENVIRONMENT }} \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.ref_name }} deployed via GitHub Actions to the ${{ github.event.inputs.ENVIRONMENT }} environment \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      # - name: Send Message To Slack
+      #   id: slack
+      #   uses: slackapi/slack-github-action@v1.23.0
+      #   with:
+      #     payload: |
+      #       {
+      #         "text": "${{ github.ref_name }} deployed via GitHub Actions to ${{ github.event.inputs.ENVIRONMENT }} \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+      #         "blocks": [
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "${{ github.ref_name }} deployed via GitHub Actions to the ${{ github.event.inputs.ENVIRONMENT }} environment \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+      #             }
+      #           }
+      #         ]
+      #       }
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
 
 
