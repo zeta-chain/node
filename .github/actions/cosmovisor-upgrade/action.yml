@@ -10,16 +10,14 @@ inputs:
     default: "Description"
   ZETACORED_CHECKSUM:  
     description: 'Hash value of the zetacored binary'
-    required: false
-    default: ""
+    required: true
   ZETACORED_URL:  
     description: 'URL to download the zetacored binary'
     required: false
     default: ""
   ZETACLIENTD_CHECKSUM:  
     description: 'Hash value of the zetaclientd binary'
-    required: false
-    default: ""
+    required: true
   ZETACLIENTD_URL:  
     description: 'URL to download the zetaclientd binary'
     required: false
@@ -43,29 +41,12 @@ runs:
       shell: bash
       run: |
         echo Running Cosmovisor Upgrade Action
-        echo "${{ inputs.CHAIN_ID }}"
-        echo "${{ env.CHAIN_ID }}"
-        # echo "CHAIN_ID=${{ inputs.CHAIN_ID }}" >> $GITHUB_ENV
-
-
-        echo "DESCRIPTION=${{ inputs.DESCRIPTION }}" >> $GITHUB_ENV
-        echo "ZETACORED_CHECKSUM=${{ inputs.ZETACORED_CHECKSUM }}" >> $GITHUB_ENV
-        echo "ZETACLIENTD_CHECKSUM=${{ inputs.ZETACLIENTD_CHECKSUM }}" >> $GITHUB_ENV
         echo "API_ENDPOINT=${{ inputs.API_ENDPOINT }}" >> $GITHUB_ENV
         echo PATH="$PATH:$(pwd)" >> $GITHUB_ENV
 
     - name: Get Upgrade Height 
       shell: bash
       run: |
-        # API_ENDPOINT=${{ inputs.API_ENDPOINT }}
-        # BLOCKS_TO_WAIT=150
-        # CURRENT_HEIGHT=$(curl -X GET "$API_ENDPOINT/cosmos/base/tendermint/v1beta1/blocks/latest" -s | jq -r .block.last_commit.height)
-        # UPGRADE_HEIGHT=$(($CURRENT_HEIGHT+$BLOCKS_TO_WAIT))
-        # echo API_ENDPOINT:${{ inputs.API_ENDPOINT }}
-        # echo CURRENT_HEIGHT:$CURRENT_HEIGHT
-        # echo UPGRADE_HEIGHT:$UPGRADE_HEIGHT
-        # echo "UPGRADE_HEIGHT=$UPGRADE_HEIGHT" >> $GITHUB_ENV
-
         UPGRADE_HEIGHT=${{ inputs.UPGRADE_BLOCK_HEIGHT }}
         echo "UPGRADE_HEIGHT=$UPGRADE_HEIGHT" >> $GITHUB_ENV
         echo "Proposed Upgrade Height: ${UPGRADE_HEIGHT}"
@@ -77,9 +58,8 @@ runs:
         echo  "github.ref_name = ${{ github.ref_name }}"
         echo  "github.event.inputs.ENVIRONMENT = ${{ github.event.inputs.ENVIRONMENT }}"
         echo "DESCRIPTION=${{ inputs.DESCRIPTION }}"
-        echo "ZETACORED_CHECKSUM=${{ inputs.ZETACORED_CHECKSUM }}"
-        echo "ZETACLIENTD_CHECKSUM=${{ inputs.ZETACLIENTD_CHECKSUM }}"
-        echo "CHAIN_ID=${{ inputs.CHAIN_ID }}"
+        echo "ZETACORED_CHECKSUM=${{ env.ZETACORED_CHECKSUM }}"
+        echo "ZETACLIENTD_CHECKSUM=${{ env.ZETACLIENTD_CHECKSUM }}"
         echo "CHAIN_ID=${{ env.CHAIN_ID }}"
         echo "API_ENDPOINT=${{ inputs.API_ENDPOINT }}"
         echo "ZETACORED_URL=${{ inputs.ZETACORED_URL }}"
@@ -115,7 +95,7 @@ runs:
               --title \"${{ inputs.UPGRADE_NAME }}\" \
               --keyring-backend test \
               --chain-id \"${{ env.CHAIN_ID }}\" \
-              --upgrade-info \'{\"binaries\":{\"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}\",\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}\"}}\' \
+              --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\", \"zetaclientd-linux/amd64\":\"${{ env.ZETACLIENTD_URL }}?checksum=sha256:${{ inputs.ZETACLIENTD_CHECKSUM }}\" }}\' \
               --yes']" | jq .Command.CommandId -r || exit 1)
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
