@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-add-cosmovisor
     tags:
       - v*
       - athens2-*
