@@ -39,9 +39,11 @@ jobs:
       id: set-branch-name
       run: |
         if [ ${{ github.event_name }} == "pull_request" ]; then
-           "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+          echo "Using source branch of the PR as Branch Name"
+           echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
         else
-           "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+          echo "Setting The Branch Name"
+           echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
         fi
 
     - uses: actions/cache@v3
@@ -90,7 +92,7 @@ jobs:
       uses: ./.github/actions/upload-to-s3
       with:
         bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: "$(echo ${{ env.RELEASE_NAME }} | tr '//' '-')"
+        release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
           zetacored
