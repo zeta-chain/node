@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd-add-cosmovisor
+      # - cicd-add-cosmovisor
     tags:
       - v*
       - athens2-*
@@ -29,6 +29,20 @@ jobs:
       uses: de-vri-es/setup-git-credentials@v2.0.8
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+
+    - name: Set branch name
+      id: set-branch-name
+      run: |
+        if [ ${{ github.event_name }} == "pull_request" ]; then
+           "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+        else
+           "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+        fi
 
     - uses: actions/cache@v3
       with:
@@ -76,7 +90,7 @@ jobs:
       uses: ./.github/actions/upload-to-s3
       with:
         bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+        release-name: "$(echo ${{ env.RELEASE_NAME }} | tr '//' '-')"
         git-sha: ${{ github.sha }}
         files: |
           zetacored
