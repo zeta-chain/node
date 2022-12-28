@@ -39,11 +39,10 @@ jobs:
       id: set-branch-name
       run: |
         if [ ${{ github.event_name }} == "pull_request" ]; then
-          echo "Using source branch of the PR as Branch Name"
-           echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+          echo "Setting the current branch name to same as the source branch of the PR"
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
         else
-          echo "Setting The Branch Name"
-           echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
         fi
 
     - uses: actions/cache@v3
