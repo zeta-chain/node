@@ -3,9 +3,11 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -45,40 +47,50 @@ func (k Keeper) PostTxProcessing(
 
 // FIXME: authenticate the emitting contract with foreign_coins
 func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
-	var event *contracts.ZRC20Withdrawal
+	var eventZRC20Withdrawal *contracts.ZRC20Withdrawal
+	var eventZetaSent *contracts.ZETABridgeZetaSent
 
-	found := false
+	foundZRC20Withdrawal := false
+	foundZetaSent := false
 	for _, log := range logs {
-		e, err := ParseWithdrawalEvent(*log)
+		var eZeta *contracts.ZETABridgeZetaSent
+		var eZRC20 *contracts.ZRC20Withdrawal
+		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
-			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
-			continue
+			eZeta, err = ParseZetaSentEvent(*log)
+			if err != nil {
+				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
+			} else {
+				foundZetaSent = true
+				eventZetaSent = eZeta
+			}
 		} else {
-			found = true
-			event = e
+			foundZRC20Withdrawal = true
+			eventZRC20Withdrawal = eZRC20
 		}
 	}
-	if found {
+
+	if foundZRC20Withdrawal {
 		fmt.Printf("#############################\n")
-		fmt.Printf("withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
+		fmt.Printf("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(eventZRC20Withdrawal.To), eventZRC20Withdrawal.Value)
 		fmt.Printf("#############################\n")
 		foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
 		foundCoin := false
 		receiverChain := ""
 		coinType := common.CoinType_Zeta
 		for _, coin := range foreignCoinList {
-			if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
+			if coin.Zrc20ContractAddress == eventZRC20Withdrawal.Raw.Address.Hex() {
 				receiverChain = coin.ForeignChain
 				foundCoin = true
 				coinType = coin.CoinType
 			}
 		}
 		if !foundCoin {
-			return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+			return fmt.Errorf("cannot find foreign coin with contract address %s", eventZRC20Withdrawal.Raw.Address.Hex())
 		}
 
-		toAddr := "0x" + hex.EncodeToString(event.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
+		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZRC20Withdrawal.Value.String(), "", "", eventZRC20Withdrawal.Raw.TxHash.String(), eventZRC20Withdrawal.Raw.BlockNumber, 90000, coinType)
 		sendHash := msg.Digest()
 
 		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
@@ -104,11 +116,52 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		k.SetCrossChainTx(ctx, cctx)
 		fmt.Printf("####setting send... ###########\n")
 	}
+
+	if foundZetaSent {
+		fmt.Printf("#############################\n")
+		fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(eventZetaSent.To), eventZetaSent.Value, eventZetaSent.ToChainID)
+		fmt.Printf("#############################\n")
+
+		toBytes := eventZetaSent.Raw.Address.Bytes()
+		contractAddr := sdk.AccAddress(toBytes)
+		balanceCoin := k.bankKeeper.GetBalance(ctx, contractAddr, config.BaseDenom)
+		if err := k.bankKeeper.BurnCoins(ctx, contractAddr.String(), sdk.NewCoins(balanceCoin)); err != nil {
+			return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from ZETABridge contract: %s", err.Error())
+		}
+
+		receiverChain := "BSCTESTNET"
+		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
+		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZetaSent.Value.String(), "", "", eventZetaSent.Raw.TxHash.String(), eventZetaSent.Raw.BlockNumber, 90000, common.CoinType_Zeta)
+		sendHash := msg.Digest()
+
+		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+		EmitZetaWithdrawCreated(ctx, cctx)
+		cctx.ZetaMint = cctx.ZetaBurnt
+		cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
+		gasprice, found := k.GetGasPrice(ctx, receiverChain)
+		if !found {
+			fmt.Printf("gasprice not found for %s\n", receiverChain)
+			return fmt.Errorf("gasprice not found for %s", receiverChain)
+		}
+		cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+		cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
+		inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
+		if ok {
+			cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
+		}
+		err := k.UpdateNonce(ctx, receiverChain, &cctx)
+		if err != nil {
+			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
+		}
+
+		k.SetCrossChainTx(ctx, cctx)
+		fmt.Printf("####setting send... ###########\n")
+	}
 	return nil
 }
 
 // FIXME: add check for event emitting contracts
-func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
+func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
 	zrc20Abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, err
@@ -126,6 +179,38 @@ func ParseWithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) 
 	}
 	var indexed abi.Arguments
 	for _, arg := range zrc20Abi.Events[eventName].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	err = abi.ParseTopics(event, indexed, log.Topics[1:])
+	if err != nil {
+		return nil, err
+	}
+	event.Raw = log
+
+	return event, nil
+}
+
+// FIXME: add check for event emitting contracts
+func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZETABridgeZetaSent, error) {
+	zetaBridgeABI, err := contracts.ZETABridgeMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	event := new(contracts.ZETABridgeZetaSent)
+	eventName := "ZetaSent"
+	if log.Topics[0] != zetaBridgeABI.Events[eventName].ID {
+		return nil, fmt.Errorf("event signature mismatch")
+	}
+	if len(log.Data) > 0 {
+		if err := zetaBridgeABI.UnpackIntoInterface(event, eventName, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range zetaBridgeABI.Events[eventName].Inputs {
 		if arg.Indexed {
 			indexed = append(indexed, arg)
 		}
