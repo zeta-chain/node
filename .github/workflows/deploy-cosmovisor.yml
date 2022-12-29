@@ -48,11 +48,6 @@ jobs:
             echo "CHAIN_ID=athens_7001-1" >> $GITHUB_ENV
           fi
 
-      - name: Verify target files exist 
-        run: |
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored || exit 1
-
       - name: Get Checksum
         run: |
           aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored ./ || exit 1
@@ -78,7 +73,6 @@ jobs:
           echo  ${{ github.ref_name }}
           echo  ${{ github.event.inputs.ENVIRONMENT }}
           echo  ${{ env.CHAIN_ID }}
-          echo  ${{ github.event.inputs.VERSION }}
           echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
           echo  ${{ env.ZETACORED_CHECKSUM }}
           echo  ${{ env.ZETACLIENTD_CHECKSUM }}
@@ -88,7 +82,7 @@ jobs:
         with:
           UPGRADE_NAME: ${{ github.event.inputs.UPGRADE_NAME }}
           CHAIN_ID: ${{ env.CHAIN_ID }}
-          DESCRIPTION: "Testing description" # ${{ github.event.inputs.VERSION }}
+          DESCRIPTION: "Description Goes Here"
           ZETACORED_CHECKSUM: ${{ env.ZETACORED_CHECKSUM }}
           ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
           ZETACLIENTD_CHECKSUM: ${{ env.ZETACLIENTD_CHECKSUM }}

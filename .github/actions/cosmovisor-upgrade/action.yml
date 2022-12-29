@@ -42,7 +42,7 @@ runs:
       run: |
         echo Running Cosmovisor Upgrade Action
         echo "API_ENDPOINT=${{ inputs.API_ENDPOINT }}" >> $GITHUB_ENV
-        echo PATH="$PATH:$(pwd)" >> $GITHUB_ENV
+        echo "PATH=$PATH:$(pwd)" >> $GITHUB_ENV
 
     - name: Get Upgrade Height 
       shell: bash
@@ -78,30 +78,7 @@ runs:
         check_cmd_status $COMMAND_ID
         sleep 20
 
-    # - name: Create & Submit Proposal 
-    #   shell: bash
-    #   run: |
-    #     source ${{ github.action_path }}/functions    
-    #     UPGRADE_INFO="{"binaries":{"linux/arm64":"${{ inputs.ZETACLIENTD_URL }}","linux/amd64":"${{ inputs.ZETACORED_URL }}"}}"   
-    #     COMMAND_ID=$(aws ssm send-command \
-    #       --targets Key=tag:Name,Values=validator0 \
-    #       --document-name "AWS-RunShellScript" \
-    #       --parameters "commands=['export HOME=/home/zetachain && \
-    #         zetacored tx gov submit-proposal software-upgrade ${{ inputs.UPGRADE_NAME }} \
-    #           --from val \
-    #           --deposit 10000000azeta \
-    #           --upgrade-height ${{ inputs.UPGRADE_BLOCK_HEIGHT }} \
-    #           --description \"${{ inputs.DESCRIPTION }}\" \
-    #           --title \"${{ inputs.UPGRADE_NAME }}\" \
-    #           --keyring-backend test \
-    #           --chain-id \"${{ env.CHAIN_ID }}\" \
-    #           --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\", \"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\" }}\' \
-    #           --yes']" | jq .Command.CommandId -r || exit 1)
-    #     echo COMMAND_ID: $COMMAND_ID
-    #     check_cmd_status $COMMAND_ID
-    #     sleep 20
-
-  - name: Create & Submit Proposal 
+    - name: Create & Submit Proposal 
       shell: bash
       run: |
         source ${{ github.action_path }}/functions    
@@ -118,13 +95,17 @@ runs:
               --title \"${{ inputs.UPGRADE_NAME }}\" \
               --keyring-backend test \
               --chain-id \"${{ env.CHAIN_ID }}\" \
-              --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}\", \"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}\" }}\' \
+              --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}\",\"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}\"}}\' \
               --yes']" | jq .Command.CommandId -r || exit 1)
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
         sleep 20
 
+        # upgrade-info With Checksum data 
+        # --upgrade-info \'{\"binaries\":{\"zetacored-linux/amd64\":\"${{ inputs.ZETACORED_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\",\"zetaclientd-linux/amd64\":\"${{ inputs.ZETACLIENTD_URL }}?checksum=sha256:${{ env.ZETACLIENTD_CHECKSUM }}\"}}\' \
+
     - name: Vote on Proposal (All Validator Nodes)
+      shell: bash
       run: |
         source ${{ github.action_path }}/functions
         COMMAND_ID=$(aws ssm send-command \
@@ -134,7 +115,6 @@ runs:
         
         echo COMMAND_ID: $COMMAND_ID
         check_cmd_status $COMMAND_ID
-      shell: bash
 
     - name: Resume zetaclientd
       shell: bash
