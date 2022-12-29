@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,9 +13,12 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"strings"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}
+
+const ZETA_BRIDGE_ADDRESS = "0x90f2b1ae50e6018230e90a33f98c7844a0ab635a"
 
 type Hooks struct {
 	k Keeper
@@ -58,7 +60,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
-			if err != nil {
+			if err != nil || strings.ToLower(eZeta.Raw.Address.String()) != ZETA_BRIDGE_ADDRESS {
 				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			} else {
 				foundZetaSent = true
