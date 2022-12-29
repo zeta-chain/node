@@ -171,6 +171,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		CctxStatus:       status,
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
+		CoinType:         msg.CoinType,
 	}
 	return newCctx
 }
