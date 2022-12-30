@@ -17,8 +17,6 @@ import (
 
 var _ evmtypes.EvmHooks = Hooks{}
 
-const ZetaBridgeAddress = "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea"
-
 type Hooks struct {
 	k Keeper
 }
@@ -43,77 +41,82 @@ func (k Keeper) PostTxProcessing(
 	if msg.To() != nil {
 		target = *msg.To()
 	}
-	return k.ProcessWithdrawalEvent(ctx, receipt.Logs, target, "")
-}
-
-// FIXME: authenticate the emitting contract with foreign_coins
-func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
-	var eventZRC20Withdrawal *contracts.ZRC20Withdrawal
-	var eventZetaSent *contracts.ZETABridgeZetaSent
-
-	foundZRC20Withdrawal := false
-	foundZetaSent := false
-	for _, log := range logs {
+	for _, log := range receipt.Logs {
 		var eZeta *contracts.ZETABridgeZetaSent
 		var eZRC20 *contracts.ZRC20Withdrawal
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
 			if err == nil {
-				foundZetaSent = true
-				eventZetaSent = eZeta
+				k.ProcessZetaSentEvent(ctx, eZeta, target, "")
+			} else {
+				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			}
 		} else {
-			foundZRC20Withdrawal = true
-			eventZRC20Withdrawal = eZRC20
+			k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, "")
 		}
-	}
-
-	if foundZRC20Withdrawal {
-		fmt.Printf("#############################\n")
-		fmt.Printf("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(eventZRC20Withdrawal.To), eventZRC20Withdrawal.Value)
-		fmt.Printf("#############################\n")
-		foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
-		foundCoin := false
-		receiverChain := ""
-		coinType := common.CoinType_Zeta
-		for _, coin := range foreignCoinList {
-			if coin.Zrc20ContractAddress == eventZRC20Withdrawal.Raw.Address.Hex() {
-				receiverChain = coin.ForeignChain
-				foundCoin = true
-				coinType = coin.CoinType
-			}
-		}
-		if !foundCoin {
-			return fmt.Errorf("cannot find foreign coin with contract address %s", eventZRC20Withdrawal.Raw.Address.Hex())
-		}
-
-		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
-		msg := zetacoretypes.NewMsgSendVoter("", eventZRC20Withdrawal.Raw.Address.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZRC20Withdrawal.Value.String(), "", "", eventZRC20Withdrawal.Raw.TxHash.String(), eventZRC20Withdrawal.Raw.BlockNumber, 90000, coinType)
-		sendHash := msg.Digest()
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
-		EmitZRCWithdrawCreated(ctx, cctx)
-		return k.ProcessCCTX(ctx, cctx, receiverChain)
-	}
-
-	if foundZetaSent {
-		fmt.Printf("#############################\n")
-		fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(eventZetaSent.To), eventZetaSent.Value, eventZetaSent.ToChainID)
-		fmt.Printf("#############################\n")
-
-		if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(eventZetaSent.Value)))); err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
-		}
-
-		receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
-		toAddr := "0x" + hex.EncodeToString(eventZetaSent.To)
-		msg := zetacoretypes.NewMsgSendVoter("", eventZetaSent.Raw.Address.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZetaSent.Value.String(), "", "", eventZetaSent.Raw.TxHash.String(), eventZetaSent.Raw.BlockNumber, 90000, common.CoinType_Zeta)
-		sendHash := msg.Digest()
-		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
-		EmitZetaWithdrawCreated(ctx, cctx)
-		return k.ProcessCCTX(ctx, cctx, receiverChain)
 	}
 	return nil
+}
+
+func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
+	for _, log := range logs {
+		var event *contracts.ZRC20Withdrawal
+		event, err := ParseZRC20WithdrawalEvent(*log)
+		if err != nil {
+			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
+		} else {
+			k.ProcessZRC20WithdrawalEvent(ctx, event, contract, txOrigin)
+		}
+	}
+	return nil
+}
+
+// FIXME: authenticate the emitting contract with foreign_coins
+func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
+	fmt.Printf("#############################\n")
+	fmt.Printf("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
+	fmt.Printf("#############################\n")
+
+	foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
+	foundCoin := false
+	receiverChain := ""
+	coinType := common.CoinType_Zeta
+	for _, coin := range foreignCoinList {
+		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
+			receiverChain = coin.ForeignChain
+			foundCoin = true
+			coinType = coin.CoinType
+		}
+	}
+	if !foundCoin {
+		return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+	}
+
+	toAddr := "0x" + hex.EncodeToString(event.To)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+	sendHash := msg.Digest()
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+	EmitZRCWithdrawCreated(ctx, cctx)
+	return k.ProcessCCTX(ctx, cctx, receiverChain)
+}
+
+func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZETABridgeZetaSent, contract ethcommon.Address, txOrigin string) error {
+	fmt.Printf("#############################\n")
+	fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.To), event.Value, event.ToChainID)
+	fmt.Printf("#############################\n")
+
+	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.Value)))); err != nil {
+		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
+	}
+
+	receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
+	toAddr := "0x" + hex.EncodeToString(event.To)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta)
+	sendHash := msg.Digest()
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+	EmitZetaWithdrawCreated(ctx, cctx)
+	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain string) error {

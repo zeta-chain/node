@@ -32473,16 +32473,16 @@ paths:
                         outBoundTxObservedExternalHeight:
                           type: string
                           format: uint64
-                    coinType:
-                      type: string
-                      enum:
-                        - Zeta
-                        - Gas
-                        - ERC20
-                      default: Zeta
-                      title: |-
-                        - Gas: Ether, BNB, Matic, Klay, BTC, etc
-                         - ERC20: ERC20 token
+                        coinType:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
               pagination:
                 type: object
                 properties:
@@ -32676,16 +32676,16 @@ paths:
                       outBoundTxObservedExternalHeight:
                         type: string
                         format: uint64
-                  coinType:
-                    type: string
-                    enum:
-                      - Zeta
-                      - Gas
-                      - ERC20
-                    default: Zeta
-                    title: |-
-                      - Gas: Ether, BNB, Matic, Klay, BTC, etc
-                       - ERC20: ERC20 token
+                      coinType:
+                        type: string
+                        enum:
+                          - Zeta
+                          - Gas
+                          - ERC20
+                        default: Zeta
+                        title: |-
+                          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                           - ERC20: ERC20 token
         default:
           description: An unexpected error response.
           schema:
@@ -32817,16 +32817,16 @@ paths:
                         outBoundTxObservedExternalHeight:
                           type: string
                           format: uint64
-                    coinType:
-                      type: string
-                      enum:
-                        - Zeta
-                        - Gas
-                        - ERC20
-                      default: Zeta
-                      title: |-
-                        - Gas: Ether, BNB, Matic, Klay, BTC, etc
-                         - ERC20: ERC20 token
+                        coinType:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
         default:
           description: An unexpected error response.
           schema:
@@ -56293,16 +56293,16 @@ definitions:
           outBoundTxObservedExternalHeight:
             type: string
             format: uint64
-      coinType:
-        type: string
-        enum:
-          - Zeta
-          - Gas
-          - ERC20
-        default: Zeta
-        title: |-
-          - Gas: Ether, BNB, Matic, Klay, BTC, etc
-           - ERC20: ERC20 token
+          coinType:
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
+            title: |-
+              - Gas: Ether, BNB, Matic, Klay, BTC, etc
+               - ERC20: ERC20 token
   zetachain.zetacore.crosschain.GasBalance:
     type: object
     properties:
@@ -56517,6 +56517,16 @@ definitions:
       outBoundTxObservedExternalHeight:
         type: string
         format: uint64
+      coinType:
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
+        title: |-
+          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+           - ERC20: ERC20 token
   zetachain.zetacore.crosschain.OutTxTracker:
     type: object
     properties:
@@ -56636,16 +56646,16 @@ definitions:
                 outBoundTxObservedExternalHeight:
                   type: string
                   format: uint64
-            coinType:
-              type: string
-              enum:
-                - Zeta
-                - Gas
-                - ERC20
-              default: Zeta
-              title: |-
-                - Gas: Ether, BNB, Matic, Klay, BTC, etc
-                 - ERC20: ERC20 token
+                coinType:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
   zetachain.zetacore.crosschain.QueryAllCctxResponse:
     type: object
     properties:
@@ -56740,16 +56750,16 @@ definitions:
                 outBoundTxObservedExternalHeight:
                   type: string
                   format: uint64
-            coinType:
-              type: string
-              enum:
-                - Zeta
-                - Gas
-                - ERC20
-              default: Zeta
-              title: |-
-                - Gas: Ether, BNB, Matic, Klay, BTC, etc
-                 - ERC20: ERC20 token
+                coinType:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
       pagination:
         type: object
         properties:
@@ -57338,16 +57348,16 @@ definitions:
               outBoundTxObservedExternalHeight:
                 type: string
                 format: uint64
-          coinType:
-            type: string
-            enum:
-              - Zeta
-              - Gas
-              - ERC20
-            default: Zeta
-            title: |-
-              - Gas: Ether, BNB, Matic, Klay, BTC, etc
-               - ERC20: ERC20 token
+              coinType:
+                type: string
+                enum:
+                  - Zeta
+                  - Gas
+                  - ERC20
+                default: Zeta
+                title: |-
+                  - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                   - ERC20: ERC20 token
   zetachain.zetacore.crosschain.QueryGetChainNoncesResponse:
     type: object
     properties:
