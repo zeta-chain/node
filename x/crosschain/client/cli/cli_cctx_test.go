@@ -36,8 +36,7 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 			},
 			ZetaMint:  sdk.OneUint(),
 			ZetaBurnt: sdk.OneUint(),
-			ZetaFees:  sdk.OneUint(),
-			CoinType:  0},
+			ZetaFees:  sdk.OneUint()},
 		)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)

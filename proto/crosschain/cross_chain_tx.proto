@@ -35,6 +35,7 @@ message OutBoundTxParams {
   string outBoundTXBallotIndex = 8;
   uint64 outBoundTxFinalizedZetaHeight = 9;
   uint64 outBoundTxObservedExternalHeight = 10;
+  common.CoinType coinType = 11;
 }
 
 message Status {
@@ -65,5 +66,4 @@ message CrossChainTx {
   Status cctx_status = 8;
   InBoundTxParams  InBoundTxParams = 9;
   OutBoundTxParams OutBoundTxParams = 10;
-  common.CoinType coinType = 11;
 }
