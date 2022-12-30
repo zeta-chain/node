@@ -30,7 +30,7 @@ var (
 
 // ZETABridgeMetaData contains all meta data concerning the ZETABridge contract.
 var ZETABridgeMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"toChainID\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"toChainID\",\"type\":\"uint256\"}],\"name\":\"sendZeta\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"toChainID\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"to\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"toChainID\",\"type\":\"uint256\"}],\"name\":\"sendZeta\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
 }
 
 // ZETABridgeABI is the input ABI used to generate the binding from.
@@ -177,6 +177,37 @@ func (_ZETABridge *ZETABridgeTransactorRaw) Transfer(opts *bind.TransactOpts) (*
 // Transact invokes the (paid) contract method with params as input values.
 func (_ZETABridge *ZETABridgeTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _ZETABridge.Contract.contract.Transact(opts, method, params...)
+}
+
+// FUNGIBLEMODULEADDRESS is a free data retrieval call binding the contract method 0x3ce4a5bc.
+//
+// Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
+func (_ZETABridge *ZETABridgeCaller) FUNGIBLEMODULEADDRESS(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _ZETABridge.contract.Call(opts, &out, "FUNGIBLE_MODULE_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// FUNGIBLEMODULEADDRESS is a free data retrieval call binding the contract method 0x3ce4a5bc.
+//
+// Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
+func (_ZETABridge *ZETABridgeSession) FUNGIBLEMODULEADDRESS() (common.Address, error) {
+	return _ZETABridge.Contract.FUNGIBLEMODULEADDRESS(&_ZETABridge.CallOpts)
+}
+
+// FUNGIBLEMODULEADDRESS is a free data retrieval call binding the contract method 0x3ce4a5bc.
+//
+// Solidity: function FUNGIBLE_MODULE_ADDRESS() view returns(address)
+func (_ZETABridge *ZETABridgeCallerSession) FUNGIBLEMODULEADDRESS() (common.Address, error) {
+	return _ZETABridge.Contract.FUNGIBLEMODULEADDRESS(&_ZETABridge.CallOpts)
 }
 
 // SendZeta is a paid mutator transaction binding the contract method 0x1b2a853e.

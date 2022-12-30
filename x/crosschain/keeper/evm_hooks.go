@@ -13,12 +13,11 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"strings"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}
 
-const ZetaBridgeAddress = "0x90f2b1ae50e6018230e90a33f98c7844a0ab635a"
+const ZetaBridgeAddress = "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea"
 
 type Hooks struct {
 	k Keeper
@@ -60,7 +59,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
-			if err != nil || strings.ToLower(eZeta.Raw.Address.String()) != ZetaBridgeAddress {
+			if err != nil || eZeta.Raw.Address.Hex() != ZetaBridgeAddress {
 				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			} else {
 				foundZetaSent = true
@@ -104,11 +103,8 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(eventZetaSent.To), eventZetaSent.Value, eventZetaSent.ToChainID)
 		fmt.Printf("#############################\n")
 
-		toBytes := eventZetaSent.Raw.Address.Bytes()
-		contractAddr := sdk.AccAddress(toBytes)
-		balanceCoin := k.bankKeeper.GetBalance(ctx, contractAddr, config.BaseDenom)
-		if err := k.bankKeeper.BurnCoins(ctx, contractAddr.String(), sdk.NewCoins(balanceCoin)); err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from ZETABridge contract: %s", err.Error())
+		if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(eventZetaSent.Value)))); err != nil {
+			return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 		}
 
 		receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
