@@ -59,9 +59,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
-			if err != nil || eZeta.Raw.Address.Hex() != ZetaBridgeAddress {
-				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
-			} else {
+			if err == nil {
 				foundZetaSent = true
 				eventZetaSent = eZeta
 			}
