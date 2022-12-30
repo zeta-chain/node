@@ -18,7 +18,7 @@ import (
 
 var _ evmtypes.EvmHooks = Hooks{}
 
-const ZETA_BRIDGE_ADDRESS = "0x90f2b1ae50e6018230e90a33f98c7844a0ab635a"
+const ZetaBridgeAddress = "0x90f2b1ae50e6018230e90a33f98c7844a0ab635a"
 
 type Hooks struct {
 	k Keeper
@@ -60,7 +60,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
-			if err != nil || strings.ToLower(eZeta.Raw.Address.String()) != ZETA_BRIDGE_ADDRESS {
+			if err != nil || strings.ToLower(eZeta.Raw.Address.String()) != ZetaBridgeAddress {
 				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			} else {
 				foundZetaSent = true
@@ -92,8 +92,11 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		}
 
 		toAddr := "0x" + hex.EncodeToString(eventZRC20Withdrawal.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZRC20Withdrawal.Value.String(), "", "", eventZRC20Withdrawal.Raw.TxHash.String(), eventZRC20Withdrawal.Raw.BlockNumber, 90000, coinType)
-		return k.ProcessCCTX(ctx, msg, receiverChain)
+		msg := zetacoretypes.NewMsgSendVoter("", eventZRC20Withdrawal.Raw.Address.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZRC20Withdrawal.Value.String(), "", "", eventZRC20Withdrawal.Raw.TxHash.String(), eventZRC20Withdrawal.Raw.BlockNumber, 90000, coinType)
+		sendHash := msg.Digest()
+		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+		EmitZRCWithdrawCreated(ctx, cctx)
+		return k.ProcessCCTX(ctx, cctx, receiverChain)
 	}
 
 	if foundZetaSent {
@@ -110,16 +113,16 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 
 		receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
 		toAddr := "0x" + hex.EncodeToString(eventZetaSent.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZetaSent.Value.String(), "", "", eventZetaSent.Raw.TxHash.String(), eventZetaSent.Raw.BlockNumber, 90000, common.CoinType_Zeta)
-		return k.ProcessCCTX(ctx, msg, receiverChain)
+		msg := zetacoretypes.NewMsgSendVoter("", eventZetaSent.Raw.Address.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, eventZetaSent.Value.String(), "", "", eventZetaSent.Raw.TxHash.String(), eventZetaSent.Raw.BlockNumber, 90000, common.CoinType_Zeta)
+		sendHash := msg.Digest()
+		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+		EmitZetaWithdrawCreated(ctx, cctx)
+		return k.ProcessCCTX(ctx, cctx, receiverChain)
 	}
 	return nil
 }
 
-func (k Keeper) ProcessCCTX(ctx sdk.Context, msg *zetacoretypes.MsgVoteOnObservedInboundTx, receiverChain string) error {
-	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
-	EmitZetaWithdrawCreated(ctx, cctx)
+func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain string) error {
 	cctx.ZetaMint = cctx.ZetaBurnt
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
 	gasprice, found := k.GetGasPrice(ctx, receiverChain)
