@@ -48,12 +48,16 @@ func (k Keeper) PostTxProcessing(
 		if err != nil {
 			eZeta, err = ParseZetaSentEvent(*log)
 			if err == nil {
-				k.ProcessZetaSentEvent(ctx, eZeta, target, "")
+				if err = k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
+					continue
+				}
 			} else {
 				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 			}
 		} else {
-			k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, "")
+			if err = k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
+				continue
+			}
 		}
 	}
 	return nil
@@ -66,7 +70,9 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 		if err != nil {
 			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
 		} else {
-			k.ProcessZRC20WithdrawalEvent(ctx, event, contract, txOrigin)
+			if err = k.ProcessZRC20WithdrawalEvent(ctx, event, contract, txOrigin); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
