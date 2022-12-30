@@ -28,7 +28,6 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 		items[i].ZetaBurnt = sdk.OneUint()
 		items[i].ZetaMint = sdk.OneUint()
 		items[i].ZetaFees = sdk.OneUint()
-		items[i].CoinType = 0
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
 	return items
@@ -58,6 +57,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			OutBoundTXBallotIndex:            fmt.Sprintf("%d", i),
 			OutBoundTxObservedExternalHeight: uint64(i),
 			OutBoundTxFinalizedZetaHeight:    uint64(i),
+			CoinType:                         0,
 		}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
@@ -68,7 +68,6 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 		items[i].ZetaMint = sdk.OneUint()
 		items[i].ZetaFees = sdk.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
-		items[i].CoinType = 0
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
 	return items
