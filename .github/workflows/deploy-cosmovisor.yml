@@ -3,11 +3,11 @@ on:
   workflow_dispatch:
     inputs:
       UPGRADE_NAME:
-        description: 'Name of the upgrade (0.0.1)'
+        description: 'Name of the upgrade (0.0.1) - In most cases it will match the tag name'
         type: string
         required: true
       UPGRADE_BLOCK_HEIGHT:
-        description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
+        description: 'What block height to stop and upgrade'
         type: string
         required: false
       ENVIRONMENT:
