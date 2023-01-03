@@ -102,8 +102,8 @@ chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
 chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
 chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
 
-#contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
-#echo "${contents}" > $DAEMON_HOME/config/genesis.json
+contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
+echo "${contents}" > $DAEMON_HOME/config/genesis.json
 
 # Add state data here if required
 
