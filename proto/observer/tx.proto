@@ -13,7 +13,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Msg {
   rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
-  rpc SetBallotThreshold(MsgSetBallotThreshold) returns (MsgSetBallotThresholdResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 
 }
@@ -22,16 +21,6 @@ message MsgSetSupportedChains {
   string creator = 1;
   repeated ObserverChain Chainlist=2;
 }
-
-message MsgSetBallotThreshold {
-  string creator = 1;
-  string chain = 2;
-  string threshold = 3;
-}
-
-message MsgSetBallotThresholdResponse {
-}
-
 // this line is used by starport scaffolding # proto/tx/message
 
 message MsgSetSupportedChainsResponse{

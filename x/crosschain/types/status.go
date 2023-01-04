@@ -19,7 +19,6 @@ func AllStatus() []CctxStatus {
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	oldStatus := m.Status
 	m.StatusMessage = msg
-	oldStatus := m.Status
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
 		m.Status = CctxStatus_Aborted
