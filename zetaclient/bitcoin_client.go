@@ -237,14 +237,23 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	//
-	//
-	//_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
-	//if err != nil {
-	//	ob.logger.Err(err).Msg("PostGasPrice:")
-	//	return err
-	//}
-
+	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	if err != nil {
+		return err
+	}
+	gasPrice := big.NewFloat(0)
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
+	bn, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return err
+	}
+	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	if err != nil {
+		ob.logger.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	_ = feeResult
 	return nil
 }
 

@@ -2,11 +2,13 @@ package zetaclient
 
 import (
 	"encoding/hex"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
+	"math/big"
 	"testing"
 )
 
@@ -95,6 +97,21 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.Require().Equal(0, len(inTxs))
 }
 
+func (suite *BitcoinClientTestSuite) Test3() {
+	client := suite.BitcoinChainClient.rpcClient
+	res, err := client.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	suite.Require().NoError(err)
+	suite.T().Logf("fee: %f", *res.FeeRate)
+	suite.T().Logf("blocks: %d", res.Blocks)
+	suite.T().Logf("errors: %s", res.Errors)
+	gasPrice := big.NewFloat(0)
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*res.FeeRate), big.NewFloat(1e8)).Uint64()
+	suite.T().Logf("gas price: %d", gasPriceU64)
+
+	bn, err := client.GetBlockCount()
+	suite.Require().NoError(err)
+	suite.T().Logf("block number %d", bn)
+}
 func TestBitcoinChainClient(t *testing.T) {
 	suite.Run(t, new(BitcoinClientTestSuite))
 }
