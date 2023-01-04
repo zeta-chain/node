@@ -2,30 +2,25 @@ name: Deploy ZetaChain Update
 on:
   workflow_dispatch:
     inputs:
-      # VERSION:
-      #   description: 'Version number for the release (0.0.1)'
-      #   type: string
-      #   required: true
-      # UPGRADE_BLOCK_HEIGHT:
-      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
-      #   type: string
-      #   required: false
+      UPGRADE_NAME:
+        description: 'Name of the upgrade (0.0.1) - In most cases it will match the tag name'
+        type: string
+        required: true
+      UPGRADE_BLOCK_HEIGHT:
+        description: 'What block height to stop and upgrade'
+        type: string
+        required: false
       ENVIRONMENT:
         description: 'What Environment to deploy into (athens2, development)'
         type: environment
         required: true
-      # REGENESIS:
-      #   description: 'Whether to regenesis the chain (Keeping existing keys)'
-      #   type: boolean
-      #   required: false
-      #   default: false
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
 
 jobs:
-  deploy-release:
+  deploy-cosmovisor-upgrade:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.ENVIRONMENT }}
     steps:
@@ -46,24 +41,21 @@ jobs:
       - name: Set Chain ID Automatically based on Environment
         run: |
           if [ ${{ github.event.inputs.ENVIRONMENT }} == "development" ]; then
+            echo "using development chain id: develop_101-1"
             echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
           elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
+            echo "using athens2 chain id"
             echo "CHAIN_ID=athens_7001-1" >> $GITHUB_ENV
           fi
-          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
-          
-      - name: Test Inputs
-        if: ${{ env.ACT }}
-        run: |
-          echo  ${{ github.ref_name }}
-          echo  ${{ github.event.inputs.ENVIRONMENT }}
 
-      - name: Verify target files exist 
+      - name: Get Checksum
         run: |
-          # aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/cosmovisor || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/genesis/cosmovisor || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored || exit 1
+          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored ./ || exit 1
+          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd ./ || exit 1
+          ZETACORED_CHECKSUM=$(shasum -b -a 256 zetacored | cut -d ' ' -f 1)
+          ZETACLIENTD_CHECKSUM=$(shasum -b -a 256 zetaclientd | cut -d ' ' -f 1)
+          echo "ZETACORED_CHECKSUM=$ZETACORED_CHECKSUM" >> $GITHUB_ENV
+          echo "ZETACLIENTD_CHECKSUM=$ZETACLIENTD_CHECKSUM" >> $GITHUB_ENV
 
       # Approval needed to deploy to environments other than development
       # - uses: trstringer/manual-approval@v1
@@ -75,46 +67,26 @@ jobs:
       #     issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
       #     exclude-workflow-initiator-as-approver: false
 
-      # - name: Cosmovisor Upgrade Proposal and Vote # NEEDS ADDITIONAL TESTING
-      #   uses:  ./.github/actions/cosmovisor-upgrade
-      #   with:
-      #     VERSION: ${{ github.event.inputs.VERSION }}
-      #     # DESCRIPTION: ${{ github.event.inputs.VERSION }}
-      #     # ZETACORED_CHECKSUM: ""
-      #     ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
-      #     # ZETACLIENTD_CHECKSUM: ""
-      #     ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
-      #     CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
-      #     API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
-      #     UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+      - name: Test Inputs
+        if: ${{ env.ACT }}
+        run: |
+          echo  ${{ github.ref_name }}
+          echo  ${{ github.event.inputs.ENVIRONMENT }}
+          echo  ${{ env.CHAIN_ID }}
+          echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+          echo  ${{ env.ZETACORED_CHECKSUM }}
+          echo  ${{ env.ZETACLIENTD_CHECKSUM }}
 
-      - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor
-        uses:  ./.github/actions/deploy-binaries
+      - name: Cosmovisor Upgrade Proposal and Vote
+        uses:  ./.github/actions/cosmovisor-upgrade
         with:
-          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
-          TAKE_SNAPSHOTS: true
-          BRANCH_OR_TAG_NAME: ${{ github.ref_name }}
-
-      - name: Send Message To Slack
-        id: slack
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: |
-            {
-              "text": "${{ github.ref_name }} deployed via GitHub Actions to ${{ github.event.inputs.ENVIRONMENT }} \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.ref_name }} deployed via GitHub Actions to the ${{ github.event.inputs.ENVIRONMENT }} environment \n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
-
+          UPGRADE_NAME: ${{ github.event.inputs.UPGRADE_NAME }}
+          CHAIN_ID: ${{ env.CHAIN_ID }}
+          DESCRIPTION: "Description Goes Here"
+          ZETACORED_CHECKSUM: ${{ env.ZETACORED_CHECKSUM }}
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
+          ZETACLIENTD_CHECKSUM: ${{ env.ZETACLIENTD_CHECKSUM }}
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
+          API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+          UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
 
