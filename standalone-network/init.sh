@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
+CHAINID="localnet_101-1"
+KEYRING="test"
 ### chain init script for development purposes only ###
 rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
+zetacored config keyring-backend $KEYRING --home ~/.zetacored
+zetacored config chain-id $CHAINID --home ~/.zetacored
 zetacored init test --chain-id=localnet_101-1 -o
 
 #Set config to use azeta
@@ -32,11 +36,11 @@ zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=t
 
 zetacored gentx zeta 10000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
 
-#echo "Collecting genesis txs..."
-#zetacored collect-gentxs
-#
-#echo "Validating genesis file..."
-#zetacored validate-genesis
+echo "Collecting genesis txs..."
+zetacored collect-gentxs
+
+echo "Validating genesis file..."
+zetacored validate-genesis
 #
 #export DUMMY_PRICE=yes
 #export DISABLE_TSS_KEYGEN=yes

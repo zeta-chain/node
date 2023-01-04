@@ -136,6 +136,7 @@ func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain types.ObserverChain, 
 		})
 		return
 	}
+	// Return if duplicate
 	for _, addr := range mapper.ObserverList {
 		if addr == address {
 			return

@@ -12,31 +12,31 @@ type Hooks struct {
 }
 
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
-	err := h.k.CleanObservers(ctx, valAddr)
-	if err != nil {
-		panic(err)
-	}
+	//err := h.k.CleanObservers(ctx, valAddr)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
-	err := h.k.CheckAndCleanObserver(ctx, valAddr)
-	if err != nil {
-		panic(err)
-	}
+	//err := h.k.CheckAndCleanObserver(ctx, valAddr)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	err := h.k.CheckAndCleanObserverDelegator(ctx, valAddr, delAddr)
-	if err != nil {
-		panic(err)
-	}
+	//err := h.k.CheckAndCleanObserverDelegator(ctx, valAddr, delAddr)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
-	if err != nil {
-		panic(err)
-	}
+	//err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                            {}
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
@@ -103,7 +103,8 @@ func (k Keeper) CheckAndCleanObserver(ctx sdk.Context, valAddress sdk.ValAddress
 	return nil
 }
 
-// CleanObservers cleans a observer Mapper checking delegation amount for a speficific delagator
+// CleanObservers cleans a observer Mapper checking delegation amount for a speficific delagator. It is used when delgator is the validator .
+// That is when when the validator is trying to remove self delgation
 func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.ValAddress, delAddress sdk.AccAddress) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
