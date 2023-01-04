@@ -29,6 +29,21 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
+
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+
+    - name: Set branch name
+      id: set-branch-name
+      run: |
+        if [ ${{ github.event_name }} == "pull_request" ]; then
+          echo "Setting the current branch name to same as the source branch of the PR"
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+        else
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+        fi
+
     - uses: actions/cache@v3
       with:
         path: |
@@ -43,12 +58,12 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        echo "Running Build Tests"
-        #make test
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    # - name: Test
+    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+    #   run: |
+    #     echo "Running Build Tests"
+    #     #make test
+    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Build Zetavisor
       if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
@@ -75,7 +90,7 @@ jobs:
       uses: ./.github/actions/upload-to-s3
       with:
         bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+        release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
           zetacored

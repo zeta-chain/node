@@ -16,6 +16,11 @@ vue/node_modules
 vue/node_modules
 yarn-error.log
 
+# GitHub Actions
+dispatch_payload.json
+.github/workflows/local-testing.yml
+
+
 # Hardhat files
 cache
 localnet/artifacts
