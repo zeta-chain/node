@@ -18,7 +18,7 @@ import (
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
+func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
@@ -52,7 +52,7 @@ func (b *ZetaCoreBridge) Broadcast(msgs ...stypes.Msg) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	builder.SetGasLimit(10000000)
+	builder.SetGasLimit(gaslimit)
 	fee := stypes.NewCoins(stypes.NewCoin("azeta", stypes.NewInt(40000)))
 	builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())

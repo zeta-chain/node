@@ -45,7 +45,10 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 }
 
 func ParseCommonChaintoObservationChain(chain string) ObserverChain {
-	commonChain := common.Chain(chain)
+	commonChain, err := common.ParseChain(chain)
+	if err != nil {
+		return ObserverChain_Empty
+	}
 	switch commonChain {
 	// Mainnet Chains
 	case common.ZETAChain, common.Chain(strings.ToUpper(string(common.ZETAChain))):
@@ -60,13 +63,15 @@ func ParseCommonChaintoObservationChain(chain string) ObserverChain {
 	case common.MumbaiChain, common.Chain(strings.ToUpper(string(common.MumbaiChain))):
 		return ObserverChain_Mumbai
 	case common.BaobabChain, common.Chain(strings.ToUpper(string(common.BaobabChain))):
-		return ObserverChain_Baobap
-	case common.RopstenChain, common.Chain(strings.ToUpper(string(common.RopstenChain))):
-		return ObserverChain_Ropsten
+		return ObserverChain_Baobab
+
 	case common.GoerliChain, common.Chain(strings.ToUpper(string(common.GoerliChain))):
 		return ObserverChain_Goerli
 	case common.BSCTestnetChain, common.Chain(strings.ToUpper(string(common.BSCTestnetChain))):
 		return ObserverChain_BscTestnet
+
+	case common.BTCTestnetChain, common.Chain(strings.ToUpper(string(common.BTCTestnetChain))):
+		return ObserverChain_BTCTestnet
 	}
 	return ObserverChain_Empty
 }

@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 	}
 	cmd.AddCommand(CmdSetSupportedChains())
 	cmd.AddCommand(CmdAddObserver())
+	cmd.AddCommand(CmdSetBallotThreshold())
 	// this line is used by starport scaffolding # 1
 
 	return cmd

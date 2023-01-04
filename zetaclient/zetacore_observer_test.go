@@ -18,7 +18,7 @@ import (
 type COSuite struct {
 	bridge1      *ZetaCoreBridge
 	bridge2      *ZetaCoreBridge
-	signer       *Signer
+	signer       *EVMSigner
 	coreObserver *CoreObserver
 }
 
@@ -96,10 +96,10 @@ func (s *COSuite) SetUpTest(c *C) {
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	signer, err := NewSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.Address(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
+	signer, err := NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
-	c.Logf("TSS Address %s", tss.Address().Hex())
-	c.Logf("ETH MPI Address: %s", config.ETH_MPI_ADDRESS)
+	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
+	c.Logf("ETH MPI EVMAddress: %s", config.ETH_MPI_ADDRESS)
 
 	s.signer = signer
 
@@ -115,7 +115,7 @@ func (s *COSuite) SetUpTest(c *C) {
 func (s *COSuite) TestSendFlow(c *C) {
 	b1 := s.bridge1
 	b2 := s.bridge2
-	metaHash, err := b1.PostSend(TEST_SENDER, "Ethereum", TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
+	metaHash, err := b1.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
 		"0xtxhash", 123123)
 	c.Assert(err, IsNil)
 	c.Logf("PostSend metaHash %s", metaHash)
@@ -123,7 +123,7 @@ func (s *COSuite) TestSendFlow(c *C) {
 	timer1 := time.NewTimer(2 * time.Second)
 	<-timer1.C
 
-	metaHash, err = b2.PostSend(TEST_SENDER, "Ethereum", TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
+	metaHash, err = b2.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
 		"0xtxhash", 123123)
 	c.Assert(err, IsNil)
 	c.Logf("Second PostSend metaHash %s", metaHash)

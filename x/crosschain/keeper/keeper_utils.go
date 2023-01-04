@@ -5,8 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
@@ -88,25 +90,48 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
-	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
-	rate, isFound := k.GetZetaConversionRate(ctx, receiveChain)
-	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetConversionRate, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
-	}
-	medianRate := rate.ZetaConversionRates[rate.MedianIndex]
-	uintmedianRate := sdk.NewUintFromString(medianRate)
-	// Calculate Gas FEE
-	gasFeeInZeta := CalculateFee(medianGasPrice, gasLimit, uintmedianRate)
-
 	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
+	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
 
-	// Set ZetaBurnt and ZetaMint
-	zetaBurnt := cctx.ZetaBurnt
-	if gasFeeInZeta.GT(zetaBurnt) {
-		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than mBurnt (%s) | Identifiers : %s ", gasFeeInZeta, zetaBurnt, cctx.LogIdentifierForCCTX()))
+	outTxGasFee := gasLimit.Mul(medianGasPrice)
+	recvChain, err := common.ParseChain(receiveChain)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to parse chain")
 	}
-	cctx.ZetaFees = cctx.ZetaFees.Add(gasFeeInZeta)
-	cctx.ZetaMint = zetaBurnt.Sub(gasFeeInZeta)
+	chainID := config.Chains[recvChain.String()].ChainID
+	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, chainID)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
+	}
+	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
+	}
+	feeInZeta := types.GetProtocolFee().Add(sdk.NewUintFromBigInt(outTxGasFeeInZeta))
+
+	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
+	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
+	}
+	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, zrc20)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
+	}
+	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
+	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, zrc20, amounts[1])
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
+	}
+
+	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
+
+	if cctx.ZetaFees.GT(cctx.ZetaBurnt) {
+		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.ZetaBurnt, cctx.LogIdentifierForCCTX()))
+	}
+	cctx.ZetaMint = cctx.ZetaBurnt.Sub(cctx.ZetaFees)
 
 	return nil
 }

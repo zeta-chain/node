@@ -13,6 +13,7 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 			sdk.NewAttribute(types.CctxIndex, cctx.Index),
 			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
 			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.TxOrigin, cctx.InBoundTxParams.TxOrigin),
 			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
 			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InBoundTxParams.InBoundTxObservedExternalHeight)),
 			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
@@ -33,11 +34,28 @@ func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 			sdk.NewAttribute(types.CctxIndex, cctx.Index),
 			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
 			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.TxOrigin, cctx.InBoundTxParams.TxOrigin),
 			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
 			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
 			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.String()),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
+			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
+		),
+	)
+}
+
+func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.ZrcWithdrawCreated,
+			sdk.NewAttribute(types.CctxIndex, cctx.Index),
+			sdk.NewAttribute(types.Sender, cctx.InBoundTxParams.Sender),
+			sdk.NewAttribute(types.SenderChain, cctx.InBoundTxParams.SenderChain),
+			sdk.NewAttribute(types.InTxHash, cctx.InBoundTxParams.InBoundTxObservedHash),
+			sdk.NewAttribute(types.Receiver, cctx.OutBoundTxParams.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, cctx.OutBoundTxParams.ReceiverChain),
+			sdk.NewAttribute(types.ZetaBurnt, cctx.ZetaBurnt.String()),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
 			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),
 	)

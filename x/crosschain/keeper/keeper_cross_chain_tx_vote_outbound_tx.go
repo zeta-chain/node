@@ -64,12 +64,17 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		return nil, err
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		ctx.Logger().Error(err.Error())
+		k.SetCrossChainTx(ctx, cctx)
+		// Remove OutTX tracker and change CCTX prefix store
+		k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 

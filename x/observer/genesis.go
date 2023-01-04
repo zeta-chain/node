@@ -21,9 +21,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		types.ObserverChain_BscMainnet,
 		types.ObserverChain_Goerli,
 		types.ObserverChain_Ropsten,
-		types.ObserverChain_Baobap,
+		types.ObserverChain_Baobab,
 		types.ObserverChain_BscTestnet,
 		types.ObserverChain_Mumbai,
+		types.ObserverChain_BTCTestnet,
 	}})
 }
 

@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
@@ -119,11 +121,21 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	return sigbyte, nil
 }
 
-func (tss *TSS) Address() ethcommon.Address {
+func (tss *TSS) EVMAddress() ethcommon.Address {
 	addr, err := getKeyAddr(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ethcommon.Address{}
+	}
+	return addr
+}
+
+// generate a bech32 p2wpkh address from pubkey
+func (tss *TSS) BTCAddress() string {
+	addr, err := getKeyAddrBTC(tss.CurrentPubkey)
+	if err != nil {
+		log.Error().Err(err).Msg("getKeyAddr error")
+		return ""
 	}
 	return addr
 }
@@ -145,7 +157,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 		log.Fatal().Err(err)
 		return keyAddr, err
 	}
-	//keyAddrBytes := pubk.Address().Bytes()
+	//keyAddrBytes := pubk.EVMAddress().Bytes()
 	pubk.Bytes()
 	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
 	if err != nil {
@@ -157,6 +169,22 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	//keyAddr = ethcommon.BytesToAddress(keyAddrBytes)
 
 	return keyAddr, nil
+}
+
+// FIXME: mainnet/testnet
+func getKeyAddrBTC(tssPubkey string) (string, error) {
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		log.Fatal().Err(err)
+		return "", err
+	}
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), &chaincfg.TestNet3Params)
+	if err != nil {
+		log.Fatal().Err(err)
+		return "", err
+	}
+
+	return addr.EncodeAddress(), nil
 }
 
 func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
