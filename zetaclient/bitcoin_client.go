@@ -4,9 +4,17 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"os"
+	"strconv"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -15,12 +23,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	"math/big"
-	"os"
-	"strconv"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var _ ChainClient = &BitcoinChainClient{}
@@ -354,4 +356,13 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 		}
 	}
 	return inTxs
+}
+
+func (ob *BitcoinChainClient) Broadcast(signedTx *wire.MsgTx) error {
+	hash, err := ob.rpcClient.SendRawTransaction(signedTx, true)
+	if err != nil {
+		return err
+	}
+	ob.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
+	return err
 }
