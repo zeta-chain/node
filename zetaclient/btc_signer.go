@@ -50,11 +50,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if total < amount {
 		return nil, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
 	}
+	remaining := total - amount
 	// build tx with selected unspents
-	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
-	if err != nil {
-		return nil, err
-	}
 	tx := wire.NewMsgTx(wire.TxVersion)
 	for _, prevOut := range prevOuts {
 		hash, err := chainhash.NewHashFromStr(prevOut.TxID)
@@ -70,10 +67,29 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if err != nil {
 		return nil, err
 	}
+	// add txout with remaining btc
+	if remaining > btcFees {
+		tssAddr := signer.tssSigner.BTCSegWitAddress()
+		pkScript2, err := payToWitnessPubKeyHashScript(tssAddr.WitnessProgram())
+		if err != nil {
+			return nil, err
+		}
+		remainingSatoshis, err := getSatoshis(remaining)
+		if err != nil {
+			return nil, err
+		}
+		txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
+		tx.AddTxOut(txOut)
+	}
 	// add txout
+	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
+	if err != nil {
+		return nil, err
+	}
 	txOut := wire.NewTxOut(amountSatoshis, pkScript)
 	// get fees
-	fees, err := getSatoshis(float64(tx.SerializeSize()) * feeRate / 1024)
+	btcFees := float64(tx.SerializeSize()) * feeRate / 1024
+	fees, err := getSatoshis(btcFees)
 	if err != nil {
 		return nil, err
 	}
