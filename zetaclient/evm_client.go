@@ -180,10 +180,10 @@ func (ob *EVMChainClient) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 
-	ob.logger.Info().Msg("closing ob.db")
+	ob.logger.Info().Msg("closing ob.pendingUtxos")
 	err := ob.db.Close()
 	if err != nil {
-		ob.logger.Error().Err(err).Msg("error closing db")
+		ob.logger.Error().Err(err).Msg("error closing pendingUtxos")
 	}
 
 	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
@@ -347,7 +347,7 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.mu.Unlock()
 							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
 							if err != nil {
-								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to pendingUtxos", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
 						}
@@ -573,7 +573,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	n := binary.PutUvarint(buf, toBlock)
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
 	if err != nil {
-		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
+		ob.logger.Error().Err(err).Msg("error writing toBlock to pendingUtxos")
 	}
 	return nil
 }
@@ -835,7 +835,7 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
 		if err != nil {
-			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
+			logger.Info().Msg("pendingUtxos PosKey does not exist; read from ZetaCore")
 			ob.SetLastBlockHeight(ob.getLastHeight())
 			// if ZetaCore does not have last heard block height, then use current
 			if ob.GetLastBlockHeight() == 0 {
@@ -849,7 +849,7 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 			n := binary.PutUvarint(buf2, ob.GetLastBlockHeight())
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
 			if err != nil {
-				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
+				logger.Error().Err(err).Msg("error writing ob.LastBlock to pendingUtxos: ")
 			}
 		} else {
 			lastBlock, _ := binary.Uvarint(buf)
@@ -880,7 +880,7 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 	}
 	iter.Release()
 	if err := iter.Error(); err != nil {
-		logger.Error().Err(err).Msg("error iterating over db")
+		logger.Error().Err(err).Msg("error iterating over pendingUtxos")
 	}
 }
 

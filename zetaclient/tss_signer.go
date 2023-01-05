@@ -45,8 +45,8 @@ import (
 //}
 
 type TSSKey struct {
-	PubkeyInBytes  []byte
-	PubkeyInBech32 string
+	PubkeyInBytes  []byte // FIXME: compressed pubkey?
+	PubkeyInBech32 string // FIXME: same above
 	AddressInHex   string
 }
 
@@ -75,6 +75,9 @@ type TSS struct {
 	logger        zerolog.Logger
 }
 
+var _ TSSSigner = (*TSS)(nil)
+
+// FIXME: does it return pubkey in compressed form or uncompressed?
 func (tss *TSS) Pubkey() []byte {
 	return tss.Keys[tss.CurrentPubkey].PubkeyInBytes
 }
@@ -142,9 +145,22 @@ func (tss *TSS) BTCAddress() string {
 	return addr
 }
 
-func (tss *TSS) BTCSegWitAddress() string {
-	// TODO: implement
-	return ""
+func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey)
+	if err != nil {
+		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
+		return nil
+	}
+	return addrWPKH
+}
+
+func (tss *TSS) PubKeyCompressedBytes() []byte {
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tss.CurrentPubkey)
+	if err != nil {
+		log.Error().Err(err).Msg("PubKeyCompressedBytes error")
+		return nil
+	}
+	return pubk.Bytes()
 }
 
 // adds a new key to the TSS keys map
@@ -180,18 +196,25 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 
 // FIXME: mainnet/testnet
 func getKeyAddrBTC(tssPubkey string) (string, error) {
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		log.Fatal().Err(err)
-		return "", err
-	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), &chaincfg.TestNet3Params)
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)
 		return "", err
 	}
 
-	return addr.EncodeAddress(), nil
+	return addrWPKH.EncodeAddress(), nil
+}
+
+func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), &chaincfg.TestNet3Params)
+	if err != nil {
+		return nil, err
+	}
+	return addr, nil
 }
 
 func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {

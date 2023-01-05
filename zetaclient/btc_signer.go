@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/rpcclient"
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -17,13 +18,15 @@ import (
 )
 
 type BTCSigner struct {
-	tssSigner *TestSigner
+	tssSigner TSSSigner
+	rpcClient *rpcclient.Client
 	logger    zerolog.Logger
 }
 
-func NewBTCSigner(tssSigner *TestSigner) (*BTCSigner, error) {
+func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client) (*BTCSigner, error) {
 	return &BTCSigner{
 		tssSigner: tssSigner,
+		rpcClient: rpcClient,
 		logger:    log.With().Str("module", "BTCSigner").Logger(),
 	}, nil
 }
@@ -33,13 +36,15 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	var total float64
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
+	//estimateFee := size (100 inputs + 2 output) * feeRate
 	for _, utxo := range utxos {
 		// check for pending utxBos
 		if _, err := pendingUTXOs.Get([]byte(utxoKey(utxo)), nil); err != nil {
 			if err == leveldb.ErrNotFound {
 				total = total + utxo.Amount
 				prevOuts = append(prevOuts, utxo)
-				if total >= amount {
+
+				if total >= amount+estimateFee {
 					break
 				}
 			} else {
@@ -68,33 +73,32 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	// add txout with remaining btc
-	if remaining > btcFees {
-		tssAddr := signer.tssSigner.BTCSegWitAddress()
-		pkScript2, err := payToWitnessPubKeyHashScript(tssAddr.WitnessProgram())
-		if err != nil {
-			return nil, err
-		}
-		remainingSatoshis, err := getSatoshis(remaining)
-		if err != nil {
-			return nil, err
-		}
-		txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
-		tx.AddTxOut(txOut)
+	btcFees := float64(tx.SerializeSize()) * feeRate / 1024 //FIXME: feeRate KB is 1000B or 1024B?
+	fees, err := getSatoshis(btcFees)
+	if err != nil {
+		return nil, err
 	}
+
+	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
+	pkScript2, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
+	if err != nil {
+		return nil, err
+	}
+	remainingSatoshis, err := getSatoshis(remaining)
+	if err != nil {
+		return nil, err
+	}
+	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
+	txOut.Value = remainingSatoshis - fees
+	tx.AddTxOut(txOut)
+
 	// add txout
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
 	if err != nil {
 		return nil, err
 	}
-	txOut := wire.NewTxOut(amountSatoshis, pkScript)
-	// get fees
-	btcFees := float64(tx.SerializeSize()) * feeRate / 1024
-	fees, err := getSatoshis(btcFees)
-	if err != nil {
-		return nil, err
-	}
-	txOut.Value = amountSatoshis - fees
-	tx.AddTxOut(txOut)
+	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+	tx.AddTxOut(txOut2)
 
 	// sign the tx
 	sigHashes := txscript.NewTxSigHashes(tx)
@@ -125,12 +129,21 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		tx.TxIn[ix].Witness = txWitness
 	}
 
-	// update pending utxos db
+	// update pending utxos pendingUtxos
 	err = signer.updatePendingUTXOs(pendingUTXOs, prevOuts)
 	if err != nil {
 		return nil, err
 	}
 	return tx, nil
+}
+
+func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
+	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
+	if err != nil {
+		return err
+	}
+	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
+	return err
 }
 
 func (signer *BTCSigner) updatePendingUTXOs(pendingDB *leveldb.DB, utxos []btcjson.ListUnspentResult) error {

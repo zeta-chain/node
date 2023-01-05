@@ -15,7 +15,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -34,20 +33,20 @@ var _ ChainClient = &BitcoinChainClient{}
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain       common.Chain
-	endpoint    string
-	rpcClient   *rpcclient.Client
-	zetaClient  *ZetaCoreBridge
-	Tss         TSSSigner
-	lastBlock   uint64
-	confCount   uint64 // must wait this many blocks to be considered "confirmed"
-	BlockTime   uint64 // block time in seconds
-	txWatchList map[ethcommon.Hash]string
-	mu          *sync.Mutex
-	utxos       []btcjson.ListUnspentResult
-	db          *leveldb.DB
-	stop        chan struct{}
-	logger      zerolog.Logger
+	chain        common.Chain
+	endpoint     string
+	rpcClient    *rpcclient.Client
+	zetaClient   *ZetaCoreBridge
+	Tss          TSSSigner
+	lastBlock    uint64
+	confCount    uint64 // must wait this many blocks to be considered "confirmed"
+	BlockTime    uint64 // block time in seconds
+	txWatchList  map[ethcommon.Hash]string
+	mu           *sync.Mutex
+	utxos        []btcjson.ListUnspentResult
+	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
+	stop         chan struct{}
+	logger       zerolog.Logger
 }
 
 const (
@@ -73,12 +72,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.Tss = tss
 	ob.confCount = 0
 
-	path := fmt.Sprintf("%s/btc_utxos.db", dbpath)
+	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
 	db, err := leveldb.OpenFile(path, nil)
 	if err != nil {
 		return nil, err
 	}
-	ob.db = db
+	ob.pendingUtxos = db
 	ob.endpoint = config.Chains[chain.String()].Endpoint
 
 	// initialize the Client
@@ -130,10 +129,10 @@ func (ob *BitcoinChainClient) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
 	close(ob.stop) // this notifies all goroutines to stop
 	//
-	//ob.logger.Info().Msg("closing ob.db")
-	//err := ob.db.Close()
+	//ob.logger.Info().Msg("closing ob.pendingUtxos")
+	//err := ob.pendingUtxos.Close()
 	//if err != nil {
-	//	ob.logger.Error().Err(err).Msg("error closing db")
+	//	ob.logger.Error().Err(err).Msg("error closing pendingUtxos")
 	//}
 	//
 	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
@@ -374,15 +373,6 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 	return inTxs
 }
 
-func (ob *BitcoinChainClient) Broadcast(signedTx *wire.MsgTx) error {
-	hash, err := ob.rpcClient.SendRawTransaction(signedTx, true)
-	if err != nil {
-		return err
-	}
-	ob.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
-	return err
-}
-
 func (ob *BitcoinChainClient) WatchUTXOS() {
 	ticker := time.NewTicker(10 * time.Minute)
 	for {
@@ -409,7 +399,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	maxConfirmations := int(bh - firstBlock)
 
 	// List unspent.
-	tssAddr := ob.Tss.BTCSegWitAddress()
+	tssAddr := ob.Tss.BTCAddress()
 	address, err := btcutil.DecodeAddress(tssAddr, &chaincfg.TestNet3Params)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
@@ -430,7 +420,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	for _, utxo := range utxos {
 		pending, err := ob.isPending(utxoKey(utxo))
 		if err != nil {
-			return fmt.Errorf("btc: error accessing pending utxos db: %v", err.Error())
+			return fmt.Errorf("btc: error accessing pending utxos pendingUtxos: %v", err.Error())
 		}
 		if !pending {
 			filtered = append(filtered, utxo)
@@ -441,8 +431,8 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		return filtered[i].Amount < filtered[j].Amount
 	})
 	ob.utxos = filtered
-	// remove completed from pending db
-	go ob.housekeepPending()
+	// remove completed from pending pendingUtxos
+	ob.housekeepPending()
 	return nil
 }
 
@@ -453,15 +443,15 @@ func (ob *BitcoinChainClient) housekeepPending() {
 		utxosMap[utxoKey(utxo)] = true
 	}
 
-	// traverse pending db
+	// traverse pending pendingUtxos
 	var removed int64
-	iter := ob.db.NewIterator(nil, nil)
+	iter := ob.pendingUtxos.NewIterator(nil, nil)
 	for iter.Next() {
 		key := iter.Key()
-		// if key not in utxos map, remove from db
+		// if key not in utxos map, remove from pendingUtxos
 		if !utxosMap[string(key)] {
-			if err := ob.db.Delete(key, nil); err != nil {
-				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos db", key)
+			if err := ob.pendingUtxos.Delete(key, nil); err != nil {
+				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
 			}
 		}
 	}
@@ -471,12 +461,12 @@ func (ob *BitcoinChainClient) housekeepPending() {
 		ob.logger.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
 	}
 	if removed > 0 {
-		ob.logger.Info().Msgf("btc : %d txs purged from pending db", removed)
+		ob.logger.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
 	}
 }
 
 func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
-	if _, err := ob.db.Get([]byte(utxoKey), nil); err != nil {
+	if _, err := ob.pendingUtxos.Get([]byte(utxoKey), nil); err != nil {
 		if err == leveldb.ErrNotFound {
 			return false, nil
 		}
