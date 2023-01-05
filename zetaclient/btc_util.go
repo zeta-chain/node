@@ -2,8 +2,10 @@ package zetaclient
 
 import (
 	"errors"
+	"fmt"
 	"math"
 
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/txscript"
 )
 
@@ -34,4 +36,8 @@ func round(f float64) int64 {
 
 func payToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
+}
+
+func utxoKey(utxo btcjson.ListUnspentResult) string {
+	return fmt.Sprintf("%s_%d", utxo.TxID, utxo.Vout)
 }

@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"crypto/ecdsa"
 	"fmt"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -16,6 +17,7 @@ type TSSSigner interface {
 	Sign(data []byte) ([65]byte, error)
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
+	BTCSegWitAddress() string
 }
 
 // a fake signer for testing

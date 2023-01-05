@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -28,19 +29,26 @@ func NewBTCSigner(tssSigner *TestSigner) (*BTCSigner, error) {
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, pendingUtxos *leveldb.DB) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, pendingUTXOs *leveldb.DB) (*wire.MsgTx, error) {
 	var total float64
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	for _, utxo := range utxos {
-		total = total + utxo.Amount
-		prevOuts = append(prevOuts, utxo)
-		if total >= amount {
-			break
+		// check for pending utxBos
+		if _, err := pendingUTXOs.Get([]byte(utxoKey(utxo)), nil); err != nil {
+			if err == leveldb.ErrNotFound {
+				total = total + utxo.Amount
+				prevOuts = append(prevOuts, utxo)
+				if total >= amount {
+					break
+				}
+			} else {
+				return nil, err
+			}
 		}
 	}
 	if total < amount {
-		return nil, fmt.Errorf("not enough BTC in reserve - available : %v , tx amount : %v\n", total, amount)
+		return nil, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
 	}
 	// build tx with selected unspents
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
@@ -101,5 +109,24 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		tx.TxIn[ix].Witness = txWitness
 	}
 
+	// update pending utxos db
+	err = signer.updatePendingUTXOs(pendingUTXOs, prevOuts)
+	if err != nil {
+		return nil, err
+	}
 	return tx, nil
+}
+
+func (signer *BTCSigner) updatePendingUTXOs(pendingDB *leveldb.DB, utxos []btcjson.ListUnspentResult) error {
+	for _, utxo := range utxos {
+		bytes, err := json.Marshal(utxo)
+		if err != nil {
+			return err
+		}
+		err = pendingDB.Put([]byte(utxoKey(utxo)), bytes, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

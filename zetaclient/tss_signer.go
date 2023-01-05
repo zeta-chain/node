@@ -5,6 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"path"
+	"path/filepath"
+	"sort"
+	"strings"
+
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
@@ -12,18 +17,15 @@ import (
 	"github.com/rs/zerolog"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
+
+	"os"
+	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p-peerstore/addr"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
-	"os"
-	"time"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
@@ -138,6 +140,11 @@ func (tss *TSS) BTCAddress() string {
 		return ""
 	}
 	return addr
+}
+
+func (tss *TSS) BTCSegWitAddress() string {
+	// TODO: implement
+	return ""
 }
 
 // adds a new key to the TSS keys map

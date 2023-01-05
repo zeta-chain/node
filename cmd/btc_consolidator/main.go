@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error getting wallet data: %v\n", err)
 	}
-	privKey := btcec.PrivateKey(*wif.PrivKey)
+	privKey := *wif.PrivKey
 
 	// get the current block height.
 	blockCount, err := client.GetBlockCount()
