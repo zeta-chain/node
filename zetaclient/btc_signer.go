@@ -27,14 +27,14 @@ func NewBTCSigner(tssSigner *TestSigner) (*BTCSigner, error) {
 	}, nil
 }
 
-// SignWithdrawTx receives utxos sorted by value
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amountBTC float64, feeRateBTCPerKB float64, utxos []btcjson.ListUnspentResult, pendingUtxos *leveldb.DB) (*wire.MsgTx, error) {
+// SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, pendingUtxos *leveldb.DB) (*wire.MsgTx, error) {
 	var total float64
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	for _, utxo := range utxos {
 		total = total + utxo.Amount
-		unspents = append(prevOuts, utxo)
+		prevOuts = append(prevOuts, utxo)
 		if total >= amount {
 			break
 		}
@@ -48,7 +48,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	tx := wire.NewMsgTx(wire.TxVersion)
-	for ix, prevOut := range prevOuts {
+	for _, prevOut := range prevOuts {
 		hash, err := chainhash.NewHashFromStr(prevOut.TxID)
 		if err != nil {
 			return nil, err
@@ -56,20 +56,9 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		outpoint := wire.NewOutPoint(hash, prevOut.Vout)
 		txIn := wire.NewTxIn(outpoint, nil, nil)
 		tx.AddTxIn(txIn)
-
-		sigHashes := txscript.NewTxSigHashes(tx)
-		satoshis, err := getSatoshis(prevOut.Amount)
-		if err != nil {
-			return nil, err
-		}
-		txWitness, err := txscript.WitnessSignature(tx, sigHashes, ix, satoshis, pkScript, txscript.SigHashAll, &privKey, compress)
-		if err != nil {
-			return nil, err
-		}
-		tx.TxIn[ix].Witness = txWitness
 	}
 
-	amountSatoshis, err := getSatoshis(Amount)
+	amountSatoshis, err := getSatoshis(amount)
 	if err != nil {
 		return nil, err
 	}
@@ -84,17 +73,18 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	tx.AddTxOut(txOut)
 
 	// sign the tx
+	sigHashes := txscript.NewTxSigHashes(tx)
 	for ix := range tx.TxIn {
 		amt, err := getSatoshis(prevOuts[ix].Amount)
 		if err != nil {
 			return nil, err
 		}
-		witnessHash, err := txscript.CalcWitnessSigHash(subscript, sigHashes, txscript.SigHashAll, tx, ix, amt)
+		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, sigHashes, txscript.SigHashAll, tx, ix, amt)
 		if err != nil {
 			return nil, err
 		}
 
-		sig65B, err := tss.Sign(witnessHash)
+		sig65B, err := signer.tssSigner.Sign(witnessHash)
 		R := big.NewInt(0).SetBytes(sig65B[:32])
 		S := big.NewInt(0).SetBytes(sig65B[32:64])
 		sig := btcec.Signature{
@@ -105,7 +95,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 			return nil, err
 		}
 
-		pkCompressed := tss.PubKeyCompressedBytes()
+		pkCompressed := signer.tssSigner.PubKeyCompressedBytes()
+		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
 	}

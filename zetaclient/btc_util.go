@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"errors"
 	"math"
+
+	"github.com/btcsuite/btcd/txscript"
 )
 
 const (
@@ -28,4 +30,8 @@ func round(f float64) int64 {
 		return int64(f - 0.5)
 	}
 	return int64(f + 0.5)
+}
+
+func payToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
+	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
 }
