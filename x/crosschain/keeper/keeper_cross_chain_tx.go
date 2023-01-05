@@ -132,11 +132,14 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, senderChain, receiverChain *zetaObserverTypes.Chain) types.CrossChainTx {
-
+	if msg.TxOrigin == "" {
+		msg.TxOrigin = msg.Sender
+	}
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
 		SenderChain:                     senderChain.ChainName.String(),
 		SenderChainID:                   senderChain.ChainId,
+		TxOrigin:                        msg.TxOrigin,
 		InBoundTxObservedHash:           msg.InTxHash,
 		InBoundTxObservedExternalHeight: msg.InBlockHeight,
 		InBoundTxFinalizedZetaHeight:    0,
@@ -157,7 +160,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutBoundTxObservedExternalHeight: 0,
 	}
 	status := &types.Status{
-		Status:              types.CctxStatus_PendingInbound,
+		Status:              s,
 		StatusMessage:       "",
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 	}
@@ -172,6 +175,5 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		InBoundTxParams:  inboundParams,
 		OutBoundTxParams: outBoundParams,
 	}
-	EmitEventCCTXCreated(ctx, newCctx)
 	return newCctx
 }

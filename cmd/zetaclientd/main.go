@@ -15,9 +15,10 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
+
+	etherminttypes "github.com/evmos/ethermint/types"
 
 	"io/ioutil"
 	"strings"
@@ -57,6 +58,12 @@ func main() {
 
 	flag.Parse()
 	cmd.CHAINID = *chainID
+	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
+	if err != nil {
+		panic(err)
+	}
+	log.Info().Msgf("ZEVM Chain ID: %s", ZEVMChainID.String())
+	config.Chains[common.ZETAChain.String()].ChainID = ZEVMChainID
 	keygenBlock = *keygen
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -258,7 +265,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 			log.Error().Msgf("SetPubKey fail")
 			return
 		}
-		log.Info().Msgf("TSS address in hex: %s", tss.Address().Hex())
+		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
 
@@ -271,11 +278,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
+		var tssAddr string
+		if chain.IsEVMChain() {
+			tssAddr = tss.EVMAddress().Hex()
+		} else if chain.IsBitcoinChain() {
+			tssAddr = tss.BTCAddress()
+		}
+		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tssAddr, zetaTx)
 
 	}
 
@@ -335,65 +348,20 @@ func updateConfig() {
 	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
 	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
 	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
 	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
 	updateEndpoint(common.Ganache, "GANACHE_ENDPOINT")
 
 	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
 	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
 	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
 	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
 	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
-
-	// pools
-	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
-	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
-	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
-	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
-	updatePoolAddress("GANACHE_POOL_ADDRESS", common.Ganache)
 
 	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
 	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
 	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
 	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
 	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
-}
-
-func updatePoolAddress(envvar string, chain common.Chain) {
-	pool := os.Getenv(envvar)
-	if pool == "" {
-		return
-	}
-	parts := strings.Split(pool, ":")
-	if len(parts) != 3 {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if strings.EqualFold(parts[0], "v2") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
-	} else if strings.EqualFold(parts[0], "v3") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
-	} else {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if parts[1] != "" {
-		config.Chains[chain.String()].PoolContractAddress = parts[1]
-		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
-	} else {
-		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
-	}
-	if strings.EqualFold(parts[2], "ZETAETH") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
-	} else if strings.EqualFold(parts[2], "ETHZETA") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
-	} else {
-		log.Error().Msgf("%s is not a valid type:address:order", pool)
-		return
-	}
 }
 
 func updateMPIAddress(chain common.Chain, envvar string) {

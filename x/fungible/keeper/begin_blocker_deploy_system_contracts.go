@@ -76,6 +76,10 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	_, err = k.setupChainGasCoinAndPool(ctx, "BTCTESTNET", "BTC", "tBTC", 8)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
 
 	return nil
 }
@@ -99,13 +103,15 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
-	amount := big.NewInt(1e17)
+	amount := big.NewInt(10)
+	amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
+	amountAZeta := big.NewInt(1e17)
 
 	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountAZeta))))
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
@@ -150,9 +156,9 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	//	uint deadline
 	//) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amount, big.NewInt(20_000_000), true,
-		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, big.NewInt(1e17))
+		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, amountAZeta)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amount.String())
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amountAZeta.String())
 	}
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)

@@ -10,10 +10,6 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 
-	// Set all the zetaConversionRate
-	for _, elem := range genState.ZetaConversionRateList {
-		k.SetZetaConversionRate(ctx, elem)
-	}
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
@@ -70,7 +66,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
-	genesis.ZetaConversionRateList = k.GetAllZetaConversionRate(ctx)
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen

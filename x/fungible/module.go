@@ -172,10 +172,10 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	//TODO : moved to init-genesis
 	if ctx.BlockHeight() == 1 {
-		_ = am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
-		//if err != nil {
-		//	panic(err)
-		//}
+		err := am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
+		if err != nil {
+			ctx.Logger().Error("Unable To deploy contracts", err.Error())
+		}
 	}
 }
 

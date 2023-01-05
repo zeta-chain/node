@@ -150,7 +150,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) && msg.Creator != types.AdminKey {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 	nonceString := strconv.Itoa(int(msg.Nonce))
@@ -197,11 +197,11 @@ func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) && msg.Creator != types.AdminKey {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 	nonceString := strconv.Itoa(int(msg.Nonce))
-	index := fmt.Sprintf("%s/%s", msg.Chain, nonceString)
+	index := fmt.Sprintf("%s-%s", msg.Chain, nonceString)
 
 	k.RemoveOutTxTracker(ctx, index)
 	return &types.MsgRemoveFromOutTxTrackerResponse{}, nil

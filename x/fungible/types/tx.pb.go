@@ -164,38 +164,131 @@ func (m *MsgDeployFungibleCoinZRC20Response) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeployFungibleCoinZRC20Response proto.InternalMessageInfo
 
+type MsgRemoveForeignCoin struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Name    string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *MsgRemoveForeignCoin) Reset()         { *m = MsgRemoveForeignCoin{} }
+func (m *MsgRemoveForeignCoin) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveForeignCoin) ProtoMessage()    {}
+func (*MsgRemoveForeignCoin) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{2}
+}
+func (m *MsgRemoveForeignCoin) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveForeignCoin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveForeignCoin.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveForeignCoin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveForeignCoin.Merge(m, src)
+}
+func (m *MsgRemoveForeignCoin) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveForeignCoin) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveForeignCoin.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveForeignCoin proto.InternalMessageInfo
+
+func (m *MsgRemoveForeignCoin) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgRemoveForeignCoin) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type MsgRemoveForeignCoinResponse struct {
+}
+
+func (m *MsgRemoveForeignCoinResponse) Reset()         { *m = MsgRemoveForeignCoinResponse{} }
+func (m *MsgRemoveForeignCoinResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveForeignCoinResponse) ProtoMessage()    {}
+func (*MsgRemoveForeignCoinResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{3}
+}
+func (m *MsgRemoveForeignCoinResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveForeignCoinResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveForeignCoinResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveForeignCoinResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveForeignCoinResponse.Merge(m, src)
+}
+func (m *MsgRemoveForeignCoinResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveForeignCoinResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveForeignCoinResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveForeignCoinResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgDeployFungibleCoinZRC20)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20")
 	proto.RegisterType((*MsgDeployFungibleCoinZRC20Response)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response")
+	proto.RegisterType((*MsgRemoveForeignCoin)(nil), "zetachain.zetacore.fungible.MsgRemoveForeignCoin")
+	proto.RegisterType((*MsgRemoveForeignCoinResponse)(nil), "zetachain.zetacore.fungible.MsgRemoveForeignCoinResponse")
 }
 
 func init() { proto.RegisterFile("fungible/tx.proto", fileDescriptor_197fdedece277fa0) }
 
 var fileDescriptor_197fdedece277fa0 = []byte{
-	// 354 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0xbd, 0x4e, 0xf3, 0x30,
-	0x14, 0xad, 0xfb, 0xff, 0x59, 0x1f, 0x08, 0x0c, 0x02, 0x2b, 0x48, 0x51, 0x14, 0x31, 0x64, 0x80,
-	0x18, 0x95, 0x81, 0x11, 0x89, 0x00, 0x12, 0x12, 0x5d, 0x22, 0xa6, 0x6e, 0x49, 0x70, 0x53, 0x4b,
-	0x89, 0x1d, 0xc5, 0xae, 0xd4, 0x30, 0xf2, 0x04, 0x48, 0x8c, 0xbc, 0x10, 0x63, 0x47, 0x46, 0xd4,
-	0xbe, 0x08, 0x8a, 0x9b, 0x14, 0x31, 0x94, 0x81, 0x29, 0xf7, 0x9c, 0x9c, 0xeb, 0x73, 0x7d, 0x7c,
-	0xe1, 0xee, 0x78, 0xca, 0x63, 0x16, 0x26, 0x94, 0xa8, 0x99, 0x9b, 0xe5, 0x42, 0x09, 0x74, 0xf4,
-	0x44, 0x55, 0x10, 0x4d, 0x02, 0xc6, 0x5d, 0x5d, 0x89, 0x9c, 0xba, 0xb5, 0xca, 0xd8, 0x8b, 0x44,
-	0x9a, 0x0a, 0x4e, 0x56, 0x9f, 0x55, 0x87, 0xfd, 0xdc, 0x84, 0xc6, 0x50, 0xc6, 0xd7, 0x34, 0x4b,
-	0x44, 0x71, 0x5b, 0x49, 0x3d, 0xc1, 0xf8, 0xc8, 0xf7, 0x06, 0x67, 0x08, 0xc3, 0x5e, 0x94, 0xd3,
-	0x40, 0x89, 0x1c, 0x03, 0x0b, 0x38, 0xff, 0xfc, 0x1a, 0xa2, 0x7d, 0xd8, 0xb9, 0x29, 0x25, 0xb8,
-	0xa9, 0xf9, 0x15, 0x40, 0x36, 0xfc, 0x3f, 0x16, 0x39, 0x65, 0x31, 0xf7, 0xca, 0x29, 0x70, 0x4b,
-	0xff, 0xfc, 0xc1, 0x21, 0x03, 0xf6, 0x1f, 0x69, 0xc4, 0xd2, 0x20, 0x91, 0xb8, 0x6d, 0x01, 0x67,
-	0xcb, 0x5f, 0x63, 0x84, 0x60, 0x9b, 0x07, 0x29, 0xc5, 0x1d, 0xdd, 0xa7, 0x6b, 0x74, 0x00, 0xbb,
-	0xb2, 0x48, 0x43, 0x91, 0xe0, 0xae, 0x66, 0x2b, 0x84, 0x4e, 0x60, 0x3f, 0x12, 0x8c, 0x3f, 0x14,
-	0x19, 0xc5, 0x3d, 0x0b, 0x38, 0xdb, 0x83, 0x1d, 0xb7, 0xba, 0x9b, 0x57, 0xf1, 0xfe, 0x5a, 0x51,
-	0xba, 0xc6, 0x81, 0xbc, 0x67, 0x29, 0x53, 0xb8, 0x6f, 0x01, 0xa7, 0xed, 0xaf, 0xb1, 0x7d, 0x0c,
-	0xed, 0xcd, 0x19, 0xf8, 0x54, 0x66, 0x82, 0x4b, 0x3a, 0x78, 0x03, 0xb0, 0x35, 0x94, 0x31, 0x7a,
-	0x05, 0xf0, 0x70, 0x53, 0x5e, 0x17, 0xee, 0x2f, 0x2f, 0xe0, 0x6e, 0x36, 0x31, 0x2e, 0xff, 0xd8,
-	0x58, 0x4f, 0x77, 0x75, 0xf7, 0xbe, 0x30, 0xc1, 0x7c, 0x61, 0x82, 0xcf, 0x85, 0x09, 0x5e, 0x96,
-	0x66, 0x63, 0xbe, 0x34, 0x1b, 0x1f, 0x4b, 0xb3, 0x31, 0x22, 0x31, 0x53, 0x93, 0x69, 0x58, 0x66,
-	0x43, 0xca, 0xa3, 0x4f, 0xb5, 0x0b, 0xa9, 0x5d, 0xc8, 0x8c, 0x7c, 0x2f, 0x52, 0x91, 0x51, 0x19,
-	0x76, 0xf5, 0x6a, 0x9c, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0xbb, 0xd7, 0x09, 0x07, 0x61, 0x02,
-	0x00, 0x00,
+	// 411 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x4f, 0x6b, 0xdb, 0x30,
+	0x1c, 0x8d, 0x9c, 0xbf, 0x13, 0xdb, 0x58, 0xb4, 0xb0, 0x09, 0x6f, 0x18, 0x63, 0x76, 0xf0, 0x61,
+	0xb3, 0xb7, 0xec, 0x30, 0x76, 0x1a, 0xcc, 0x59, 0x60, 0xd0, 0x5c, 0x4c, 0x4f, 0xb9, 0xd9, 0xae,
+	0xe2, 0x08, 0x6c, 0xc9, 0x58, 0x4e, 0x89, 0x7b, 0x6b, 0x3f, 0x41, 0xa1, 0x1f, 0xa0, 0x5f, 0xa7,
+	0xc7, 0x1c, 0x7b, 0x2c, 0xc9, 0x17, 0x29, 0x56, 0xec, 0x84, 0x92, 0x26, 0xa5, 0x3d, 0x59, 0xef,
+	0xe7, 0xf7, 0x9e, 0x7e, 0xef, 0x27, 0x09, 0x76, 0x27, 0x33, 0x16, 0x52, 0x3f, 0x22, 0x76, 0x36,
+	0xb7, 0x92, 0x94, 0x67, 0x1c, 0x7d, 0x3a, 0x23, 0x99, 0x17, 0x4c, 0x3d, 0xca, 0x2c, 0xb9, 0xe2,
+	0x29, 0xb1, 0x2a, 0x96, 0xfa, 0x3e, 0xe0, 0x71, 0xcc, 0x99, 0xbd, 0xfe, 0xac, 0x15, 0xc6, 0x85,
+	0x02, 0xd5, 0x91, 0x08, 0x07, 0x24, 0x89, 0x78, 0x3e, 0x2c, 0xa9, 0x0e, 0xa7, 0x6c, 0xec, 0x3a,
+	0xfd, 0xef, 0x08, 0xc3, 0x76, 0x90, 0x12, 0x2f, 0xe3, 0x29, 0x06, 0x3a, 0x30, 0x5f, 0xb9, 0x15,
+	0x44, 0x3d, 0xd8, 0xfc, 0x57, 0x50, 0xb0, 0x22, 0xeb, 0x6b, 0x80, 0x0c, 0xf8, 0x7a, 0xc2, 0x53,
+	0x42, 0x43, 0xe6, 0x14, 0x5d, 0xe0, 0xba, 0xfc, 0xf9, 0xa0, 0x86, 0x54, 0xd8, 0x39, 0x21, 0x01,
+	0x8d, 0xbd, 0x48, 0xe0, 0x86, 0x0e, 0xcc, 0x37, 0xee, 0x06, 0x23, 0x04, 0x1b, 0xcc, 0x8b, 0x09,
+	0x6e, 0x4a, 0x9d, 0x5c, 0xa3, 0x0f, 0xb0, 0x25, 0xf2, 0xd8, 0xe7, 0x11, 0x6e, 0xc9, 0x6a, 0x89,
+	0xd0, 0x57, 0xd8, 0x09, 0x38, 0x65, 0xc7, 0x79, 0x42, 0x70, 0x5b, 0x07, 0xe6, 0xdb, 0xfe, 0x3b,
+	0xab, 0xcc, 0xe6, 0x94, 0x75, 0x77, 0xc3, 0x28, 0x76, 0x0d, 0x3d, 0x71, 0x44, 0x63, 0x9a, 0xe1,
+	0x8e, 0x0e, 0xcc, 0x86, 0xbb, 0xc1, 0xc6, 0x17, 0x68, 0xec, 0x9f, 0x81, 0x4b, 0x44, 0xc2, 0x99,
+	0x20, 0xc6, 0x00, 0xf6, 0x46, 0x22, 0x74, 0x49, 0xcc, 0x4f, 0xc9, 0xb0, 0x0c, 0xc4, 0x29, 0x3b,
+	0x30, 0xa3, 0x2a, 0x8d, 0xb2, 0x4d, 0x63, 0x68, 0xf0, 0xf3, 0x63, 0x2e, 0xd5, 0x2e, 0xfd, 0x6b,
+	0x05, 0xd6, 0x47, 0x22, 0x44, 0x57, 0x00, 0x7e, 0xdc, 0x77, 0x2a, 0xbf, 0xac, 0x03, 0xe7, 0x6c,
+	0xed, 0x8f, 0xa2, 0xfe, 0x79, 0xa1, 0xb0, 0xea, 0x0e, 0x9d, 0x03, 0xd8, 0xdd, 0x9d, 0xc0, 0x8f,
+	0xa7, 0x6c, 0x77, 0x24, 0xea, 0xef, 0x67, 0x4b, 0xaa, 0x1e, 0xfe, 0xfe, 0xbf, 0x59, 0x6a, 0x60,
+	0xb1, 0xd4, 0xc0, 0xdd, 0x52, 0x03, 0x97, 0x2b, 0xad, 0xb6, 0x58, 0x69, 0xb5, 0xdb, 0x95, 0x56,
+	0x1b, 0xdb, 0x21, 0xcd, 0xa6, 0x33, 0xbf, 0xb8, 0x05, 0x76, 0x61, 0xfa, 0x4d, 0xfa, 0xdb, 0x95,
+	0xbf, 0x3d, 0xb7, 0xb7, 0x4f, 0x26, 0x4f, 0x88, 0xf0, 0x5b, 0xf2, 0x11, 0xfc, 0xbc, 0x0f, 0x00,
+	0x00, 0xff, 0xff, 0x41, 0x64, 0xb0, 0xd3, 0x4b, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -211,6 +304,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	DeployFungibleCoinZRC20(ctx context.Context, in *MsgDeployFungibleCoinZRC20, opts ...grpc.CallOption) (*MsgDeployFungibleCoinZRC20Response, error)
+	RemoveForeignCoin(ctx context.Context, in *MsgRemoveForeignCoin, opts ...grpc.CallOption) (*MsgRemoveForeignCoinResponse, error)
 }
 
 type msgClient struct {
@@ -230,9 +324,19 @@ func (c *msgClient) DeployFungibleCoinZRC20(ctx context.Context, in *MsgDeployFu
 	return out, nil
 }
 
+func (c *msgClient) RemoveForeignCoin(ctx context.Context, in *MsgRemoveForeignCoin, opts ...grpc.CallOption) (*MsgRemoveForeignCoinResponse, error) {
+	out := new(MsgRemoveForeignCoinResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/RemoveForeignCoin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	DeployFungibleCoinZRC20(context.Context, *MsgDeployFungibleCoinZRC20) (*MsgDeployFungibleCoinZRC20Response, error)
+	RemoveForeignCoin(context.Context, *MsgRemoveForeignCoin) (*MsgRemoveForeignCoinResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -241,6 +345,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) DeployFungibleCoinZRC20(ctx context.Context, req *MsgDeployFungibleCoinZRC20) (*MsgDeployFungibleCoinZRC20Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployFungibleCoinZRC20 not implemented")
+}
+func (*UnimplementedMsgServer) RemoveForeignCoin(ctx context.Context, req *MsgRemoveForeignCoin) (*MsgRemoveForeignCoinResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveForeignCoin not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -265,6 +372,24 @@ func _Msg_DeployFungibleCoinZRC20_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RemoveForeignCoin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveForeignCoin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveForeignCoin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Msg/RemoveForeignCoin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveForeignCoin(ctx, req.(*MsgRemoveForeignCoin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.fungible.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -272,6 +397,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeployFungibleCoinZRC20",
 			Handler:    _Msg_DeployFungibleCoinZRC20_Handler,
+		},
+		{
+			MethodName: "RemoveForeignCoin",
+			Handler:    _Msg_RemoveForeignCoin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -374,6 +503,66 @@ func (m *MsgDeployFungibleCoinZRC20Response) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRemoveForeignCoin) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveForeignCoin) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveForeignCoin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveForeignCoinResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveForeignCoinResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveForeignCoinResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -424,6 +613,32 @@ func (m *MsgDeployFungibleCoinZRC20) Size() (n int) {
 }
 
 func (m *MsgDeployFungibleCoinZRC20Response) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveForeignCoin) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveForeignCoinResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -732,6 +947,170 @@ func (m *MsgDeployFungibleCoinZRC20Response) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20Response: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveForeignCoin) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveForeignCoin: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveForeignCoin: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveForeignCoinResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveForeignCoinResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveForeignCoinResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

@@ -21,6 +21,7 @@ message InBoundTxParams{
   uint64 inBoundTxObservedExternalHeight = 5;
   uint64 inBoundTxFinalizedZetaHeight = 6;
   string inBoundTXBallotIndex=7;
+  string txOrigin = 8;
 }
 
 message OutBoundTxParams {

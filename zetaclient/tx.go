@@ -10,36 +10,26 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"google.golang.org/grpc"
 	"math/big"
 	"time"
 )
 
-func (b *ZetaCoreBridge) PostZetaConversionRate(chain zetaObserverTypes.Chain, rate string, blockNum uint64) (string, error) {
-	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgZetaConversionRateVoter(signerAddress, chain.ChainName.String(), rate, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
-	if err != nil {
-		b.logger.Error().Err(err).Msg("PostZetaConversionRate broadcast fail")
-		return "", err
-	}
-	return zetaTxHash, nil
-}
-
-func (b *ZetaCoreBridge) PostGasBalance(chain common.Chain, gasBalance string, blockNum uint64) (string, error) {
-	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgGasBalanceVoter(signerAddress, chain.String(), gasBalance, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
-	if err != nil {
-		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
-		return "", err
-	}
-	return zetaTxHash, nil
-}
+const (
+	PostZetaConversionRateGasLimit  = 200_000
+	PostGasPriceGasLimit            = 1_500_000
+	AddTxHashToOutTxTrackerGasLimit = 200_000
+	PostNonceGasLimit               = 200_000
+	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
+	PostSendNonEVMGasLimit          = 1_500_000
+	PostReceiveConfirmationGasLimit = 200_000
+	DefaultGasLimit                 = 200_000
+)
 
 func (b *ZetaCoreBridge) PostGasPrice(chain zetaObserverTypes.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainName.String(), gasPrice, supply, blockNum)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
@@ -50,7 +40,7 @@ func (b *ZetaCoreBridge) PostGasPrice(chain zetaObserverTypes.Chain, gasPrice ui
 func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
@@ -61,19 +51,19 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txH
 func (b *ZetaCoreBridge) PostNonce(chain zetaObserverTypes.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainName.String(), nonce)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
 }
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string,receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(msg)
+		zetaTxHash, err := b.Broadcast(zetaGasLimt, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostSend broadcast fail; re-trying...")
 		} else {
@@ -90,8 +80,12 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
+	var gasLimit uint64 = PostReceiveConfirmationGasLimit
+	if status == common.ReceiveStatus_Failed {
+		gasLimit = PostSendEVMGasLimit
+	}
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(msg)
+		zetaTxHash, err := b.Broadcast(gasLimit, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
 		} else {
@@ -138,7 +132,8 @@ func (b *ZetaCoreBridge) GetObserverList(chain zetaObserverTypes.Chain, observat
 
 func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{})
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{}, maxSizeOption)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query CctxAllPending error")
 		return nil, err
@@ -150,7 +145,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})
 	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -170,7 +165,7 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain zetaObserverTypes.Chain
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Error().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
 	}
 	return resp.LastBlockHeight, nil
@@ -180,7 +175,7 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
 	if err != nil {
-		b.logger.Warn().Err(err).Msg("query GetLastBlockHeight error")
+		b.logger.Warn().Err(err).Msg("query GetBlockHeight error")
 		return 0, err
 	}
 	return resp.Height, nil
@@ -199,7 +194,7 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain zetaObserverTypes.Chain) (*types.
 func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgSetNodeKeys(signerAddress, pubkeyset, conskey)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		return "", err
 	}
@@ -231,7 +226,7 @@ func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 func (b *ZetaCoreBridge) SetTSS(chain zetaObserverTypes.Chain, address string, pubkey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), address, pubkey)
-	zetaTxHash, err := b.Broadcast(msg)
+	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
 		return "", err

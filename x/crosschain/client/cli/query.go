@@ -24,8 +24,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdListZetaConversionRate())
-	cmd.AddCommand(CmdShowZetaConversionRate())
 	cmd.AddCommand(CmdListOutTxTracker())
 	cmd.AddCommand(CmdShowOutTxTracker())
 	cmd.AddCommand(CmdShowKeygen())

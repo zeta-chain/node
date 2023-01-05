@@ -14,6 +14,9 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 // Msg defines the Msg service.
 service Msg {
   rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+  rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+
 }
 
 message MsgSetSupportedChains {
@@ -21,7 +24,17 @@ message MsgSetSupportedChains {
   int64 ChainId=2;
   ChainName ChainName=3;
 }
+// this line is used by starport scaffolding # proto/tx/message
 
 message MsgSetSupportedChainsResponse{
-
 }
+message MsgAddObserver {
+  string creator = 1;
+  ObserverChain observerChain = 2;
+  ObservationType observationType = 3;
+}
+
+message MsgAddObserverResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message

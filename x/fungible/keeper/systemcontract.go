@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
@@ -33,16 +34,16 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
 
-	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "wzetaContractAddress")
+	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "wZetaContractAddress")
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to call wzetaContractAddress")
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to call wZetaContractAddress")
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
 	var wzetaResponse AddressResponse
-	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "wzetaContractAddress", res.Ret); err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrABIUnpack, "failed to unpack wzetaContractAddress: %s", err.Error())
+	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "wZetaContractAddress", res.Ret); err != nil {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrABIUnpack, "failed to unpack wZetaContractAddress: %s", err.Error())
 	}
 	return wzetaResponse.Value, nil
 }
@@ -133,20 +134,21 @@ func (k *Keeper) QuerySystemContractGasCoinZRC4(ctx sdk.Context, chainid *big.In
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
 
-	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "uniswapv2Router02Address")
+	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "gasCoinZRC20ByChainId", chainid)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to call uniswapv2Router02Address")
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to call gasCoinZRC20ByChainId")
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
-	var routerResponse AddressResponse
-	if err := sysABI.UnpackIntoInterface(&routerResponse, "uniswapv2Router02Address", res.Ret); err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2Router02Address: %s", err.Error())
+	var zrc20Res AddressResponse
+	if err := sysABI.UnpackIntoInterface(&zrc20Res, "gasCoinZRC20ByChainId", res.Ret); err != nil {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrABIUnpack, "failed to unpack gasCoinZRC20ByChainId: %s", err.Error())
 	}
-	return routerResponse.Value, nil
+	return zrc20Res.Value, nil
 }
 
+// returns the amount [in, out]
 func (k *Keeper) CallUniswapv2RouterSwapExactETHForToken(ctx sdk.Context, sender ethcommon.Address, to ethcommon.Address, amountIn *big.Int, outZRC4 ethcommon.Address) ([]*big.Int, error) {
 	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
@@ -206,7 +208,7 @@ func (k *Keeper) CallUniswapv2RouterSwapEthForExactToken(ctx sdk.Context, sender
 	return (*amounts)[:], nil
 }
 
-func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 ethcommon.Address) ([]*big.Int, error) {
+func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 ethcommon.Address) (*big.Int, error) {
 	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to get router abi")
@@ -221,6 +223,7 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 		return nil, sdkerrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
 	}
 	//function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts);
+	k.Logger(ctx).Info("getAmountsIn", "outZRC20", outZRC4.Hex(), "amountOut", amountOut, "wzeta", wzeta.Hex())
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, BigIntZero, nil, false,
 		"getAmountsIn", amountOut, []ethcommon.Address{wzeta, outZRC4})
 	if err != nil {
@@ -232,5 +235,19 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to unpack getAmountsIn")
 	}
-	return (*amounts)[:], nil
+	return (*amounts)[0], nil
+}
+
+// FIXME: add burn() to ZRC20 contract. Right now "burn" is really sending to dead address
+func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20 ethcommon.Address, amount *big.Int) error {
+	zrc20ABI, err := contracts.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
+	}
+	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20, big.NewInt(0), big.NewInt(100_000), true,
+		"transfer", common.DeadAddress, amount)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to CallEVM method transfer")
+	}
+	return nil
 }

@@ -43,12 +43,16 @@ for NODE in $NODES; do
 done
 
 observer_list=$(echo $observer | rev | cut -c2- | rev)
-zetacored add-observer 6 1 "$observer_list" #goerli
-zetacored add-observer 6 2 "$observer_list"
-zetacored add-observer 11 1 "$observer_list" #bsctestnet
-zetacored add-observer 11 2 "$observer_list"
-zetacored add-observer 7 1 "$observer_list" #mumbai
-zetacored add-observer 7 2 "$observer_list"
+zetacored add-observer Goerli InBoundTx "$observer_list" #goerli
+zetacored add-observer Goerli OutBoundTx "$observer_list"
+zetacored add-observer BscTestnet InBoundTx "$observer_list" #bsctestnet
+zetacored add-observer BscTestnet OutBoundTx "$observer_list"
+zetacored add-observer Mumbai InBoundTx "$observer_list" #mumbai
+zetacored add-observer Mumbai OutBoundTx "$observer_list"
+zetacored add-observer BTCTestnet InBoundTx "$observer_list" #btctestnet
+zetacored add-observer BTCTestnet OutBoundTx "$observer_list"
+zetacored add-observer Baobab InBoundTx "$observer_list" #baobab klaytn
+zetacored add-observer Baobab OutBoundTx "$observer_list"
  
 for NODE in $NODES; do
 	scp -i ~/.ssh/meta.pem ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/

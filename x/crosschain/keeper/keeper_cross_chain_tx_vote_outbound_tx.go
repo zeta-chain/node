@@ -31,9 +31,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, err := k.GetBallot(ctx, ballotIndex, *observationChain, observationType)
+	ballot, isNew, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
 	if err != nil {
 		return nil, err
+	}
+	if isNew {
+		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
@@ -64,12 +67,17 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		return nil, err
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		ctx.Logger().Error(err.Error())
+		k.SetCrossChainTx(ctx, cctx)
+		// Remove OutTX tracker and change CCTX prefix store
+		k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%d-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 

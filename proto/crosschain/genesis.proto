@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-import "crosschain/zeta_conversion_rate.proto";
 import "crosschain/out_tx_tracker.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 import "gogoproto/gogo.proto";
@@ -20,7 +19,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-    repeated ZetaConversionRate zetaConversionRateList = 1 [(gogoproto.nullable) = false];
 		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
 		Keygen keygen = 3;
 		repeated TSSVoter tSSVoterList = 4;

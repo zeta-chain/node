@@ -6,10 +6,14 @@ import "observer/chain.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
-message BallotThreshold {
+message ObserverParams {
     Chain Chain =1;
     ObservationType Observation=2;
-    string Threshold =3 [
+    string BallotThreshold =3 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable) = false
+    ];
+    string MinObserverDelegation = 4 [
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
       (gogoproto.nullable) = false
     ];
@@ -18,5 +22,5 @@ message BallotThreshold {
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated BallotThreshold BallotThresholds =1;
+  repeated ObserverParams ObserverParams =1;
 }

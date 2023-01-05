@@ -9,11 +9,12 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain int64, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) *MsgVoteOnObservedInboundTx {
+func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
 		SenderChain:   senderChain,
+		TxOrigin:      txOrigin,
 		Receiver:      receiver,
 		ReceiverChain: receiverChain,
 		ZetaBurnt:     mBurnt,
@@ -30,7 +31,7 @@ func (msg *MsgVoteOnObservedInboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedInboundTx) Type() string {
-	return "SendVoter"
+	return "InBoundTXVoter"
 }
 
 func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {

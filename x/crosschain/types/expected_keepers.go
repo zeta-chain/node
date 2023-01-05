@@ -9,6 +9,7 @@ import (
 
 type StakingKeeper interface {
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)

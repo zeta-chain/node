@@ -16,18 +16,10 @@ Closes: <PD-XXXX>
 Please describe the tests that you ran to verify your changes. Include instructions and any relevant details so others can reproduce. 
 
 - [ ] Tested CCTX in localnet
+- [ ] Tested in development environment
 - [ ] Go unit tests
 - [ ] Go integration tests
 
 # Checklist:
 
-- [ ] I have performed a self-review of my code
-- [ ] My changes generate no new warnings
 - [ ] I have added unit tests that prove my fix feature works
-- [ ] I included code comments (if needed)
-- [ ] Upgrade Handler (if needed)
-- [ ] I have made corresponding changes to the documentation (if needed)
-
-[comment]: <## Env variables>
-
-[comment]: <## Screenshots>

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,6 +39,48 @@ func (k Keeper) GetAllObserverMappers(ctx sdk.Context) (mappers []*types.Observe
 		mappers = append(mappers, &val)
 	}
 	return
+}
+func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string) (mappers []*types.ObserverMapper) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.ObserverMapper
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		addToList := false
+		for _, addr := range val.ObserverList {
+			if addr == address {
+				addToList = true
+			}
+		}
+		if addToList {
+			mappers = append(mappers, &val)
+		}
+	}
+	return
+}
+
+// Tx
+
+func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := k.IsValidator(ctx, msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+	err = k.CheckObserverDelegation(ctx, msg.Creator, msg.ObserverChain, msg.ObservationType)
+	if err != nil {
+		return nil, err
+	}
+	if !k.IsChainSupported(ctx, msg.ObserverChain) {
+		return nil, errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("chain %s", msg.ObserverChain.String()))
+	}
+	k.AddObserverToMapper(ctx,
+		msg.ObserverChain,
+		msg.ObservationType,
+		msg.Creator)
+
+	return &types.MsgAddObserverResponse{}, nil
 }
 
 //Queries
@@ -88,4 +131,25 @@ func (k Keeper) GetAllObserverAddresses(ctx sdk.Context) []string {
 		}
 	}
 	return dedupedList
+}
+
+func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain types.ObserverChain, obsType types.ObservationType, address string) {
+	mapper, found := k.GetObserverMapper(ctx, chain, obsType)
+	if !found {
+		k.SetObserverMapper(ctx, &types.ObserverMapper{
+			Index:           "",
+			ObserverChain:   chain,
+			ObservationType: obsType,
+			ObserverList:    []string{address},
+		})
+		return
+	}
+	// Return if duplicate
+	for _, addr := range mapper.ObserverList {
+		if addr == address {
+			return
+		}
+	}
+	mapper.ObserverList = append(mapper.ObserverList, address)
+	k.SetObserverMapper(ctx, &mapper)
 }

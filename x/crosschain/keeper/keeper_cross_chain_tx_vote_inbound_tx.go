@@ -33,12 +33,20 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !ok {
 		return nil, err
 	}
+	// keep one is Authorized
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType)
+	if !ok {
+		return nil, err
+	}
 
 	index := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, err := k.GetBallot(ctx, index, *observationChain, observationType)
+	ballot, isNew, err := k.GetBallot(ctx, index, observationChain, observationType)
 	if err != nil {
 		return nil, err
+	}
+	if isNew {
+		EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
@@ -83,7 +91,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	EmitEventInboundFinalized(ctx, &cctx)
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-
 }
 
 func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain zetaObserverTypes.Chain, numberofobservers int) error {
