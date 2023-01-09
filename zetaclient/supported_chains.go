@@ -45,3 +45,7 @@ func GetChainFromChainId(chainId int64) *zetaObserverTypes.Chain {
 	}
 	return nil
 }
+
+func GetZetaChainId() int64 {
+	return 123
+}

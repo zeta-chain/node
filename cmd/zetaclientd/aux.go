@@ -33,10 +33,10 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 }
 
 func CreateSignerMap(tss mc.TSSSigner) (map[zetaObserverTypes.Chain]*mc.EVMSigner, error) {
-	signerMap := make(map[common.Chain]*mc.EVMSigner)
+	signerMap := make(map[zetaObserverTypes.Chain]*mc.EVMSigner)
 	supportedChains := mc.GetSupportedChains()
 	for _, chain := range supportedChains {
-		if !chain.IsEVMChain() {
+		if !chain.IsEvmChain() {
 			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain)
 			continue
 		}
@@ -52,17 +52,17 @@ func CreateSignerMap(tss mc.TSSSigner) (map[zetaObserverTypes.Chain]*mc.EVMSigne
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]mc.ChainClient, error) {
-	clientMap := make(map[common.Chain]mc.ChainClient)
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[zetaObserverTypes.Chain]mc.ChainClient, error) {
+	clientMap := make(map[zetaObserverTypes.Chain]mc.ChainClient)
 	supportedChains := mc.GetSupportedChains()
 	for _, chain := range supportedChains {
 		log.Info().Msgf("starting %s observer...", chain)
 		var co mc.ChainClient
 		var err error
-		if chain.IsEVMChain() {
-			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
-		} else if chain.IsBitcoinChain() {
-			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+		if chain.IsEvmChain() {
+			co, err = mc.NewEVMChainClient(*chain, bridge, tss, dbpath, metrics)
+		} else {
+			co, err = mc.NewBitcoinClient(*chain, bridge, tss, dbpath, metrics)
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain)
@@ -71,5 +71,5 @@ func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath st
 		clientMap[*chain] = co
 	}
 
-	return &clientMap, nil
+	return clientMap, nil
 }

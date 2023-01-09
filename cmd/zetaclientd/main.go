@@ -279,9 +279,9 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 	for _, chain := range config.ChainsEnabled {
 		var tssAddr string
-		if chain.IsEVMChain() {
+		if chain.IsEvmChain() {
 			tssAddr = tss.EVMAddress().Hex()
-		} else if chain.IsBitcoinChain() {
+		} else {
 			tssAddr = tss.BTCAddress()
 		}
 		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
@@ -312,18 +312,18 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
-	for _, v := range *chainClientMap1 {
+	for _, v := range chainClientMap1 {
 		v.Start()
 	}
 
 	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
 
 	// report TSS address nonce on ETHish chains
 	for _, chain := range config.ChainsEnabled {
-		err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
+		err = (chainClientMap1)[chain].PostNonceIfNotRecorded()
 		if err != nil {
 			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
 		}
@@ -338,7 +338,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 	// stop zetacore observer
 	for _, chain := range config.ChainsEnabled {
-		(*chainClientMap1)[chain].Stop()
+		(chainClientMap1)[chain].Stop()
 	}
 
 }

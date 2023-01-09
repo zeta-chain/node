@@ -40,13 +40,13 @@ const (
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[zetaObserverModuleTypes.Chain]*EVMSigner
-	clientMap map[zetaObserverModuleTypes.Chain]*ChainClient
+	clientMap map[zetaObserverModuleTypes.Chain]ChainClient
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    zerolog.Logger
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[zetaObserverModuleTypes.Chain]*EVMSigner, clientMap map[zetaObserverModuleTypes.Chain]*ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[zetaObserverModuleTypes.Chain]*EVMSigner, clientMap map[zetaObserverModuleTypes.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS) *CoreObserver {
 	co := CoreObserver{}
 	co.logger = log.With().Str("module", "CoreObserver").Logger()
 	co.tss = tss
@@ -256,9 +256,12 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 
 			for chain, sendList := range sendMap {
-				c, _ := common.ParseChain(chain)
+
+				chainName := zetaObserverModuleTypes.ParseStringToObserverChain(chain)
+				c := GetChainFromChainName(chainName)
+				//c, _ := common.ParseChain(chain)
 				found := false
-				for _, enabledChain := range config.ChainsEnabled {
+				for _, enabledChain := range GetSupportedChains() {
 					if enabledChain == c {
 						found = true
 						break
@@ -390,7 +393,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 		return
 	}
 	// FIXME: remove this hack
-	if toChain == common.GoerliChain {
+	if toChain.ChainName == zetaObserverModuleTypes.ChainName_Goerli {
 		gasprice = gasprice.Mul(gasprice, big.NewInt(3))
 		gasprice = gasprice.Div(gasprice, big.NewInt(2))
 	}
@@ -514,16 +517,31 @@ func GetTargetChain(send *types.CrossChainTx) string {
 	return ""
 }
 
-func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (*ChainObserver, error) {
-	chainStr := getTargetChain(send)
-	chain := GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(chainStr))
-
-	chainOb, found := co.clientMap[*chain]
+func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
+	chainStr := GetTargetChain(send)
+	chainName := zetaObserverModuleTypes.ParseStringToObserverChain(chainStr)
+	c := GetChainFromChainName(chainName)
+	//c, err := common.ParseChain(chainStr)
+	//if err != nil {
+	//	return nil, err
+	//}
+	chainOb, found := co.clientMap[*c]
 	if !found {
-		return nil, fmt.Errorf("chain %s not found", chain.String())
+		return nil, fmt.Errorf("chain %s not found", c)
 	}
 	return chainOb, nil
 }
+
+//func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
+//	chainStr := getTargetChain(send)
+//	chain := GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(chainStr))
+//
+//	chainOb, found := co.clientMap[*chain]
+//	if !found {
+//		return nil, fmt.Errorf("chain %s not found", chain.String())
+//	}
+//	return chainOb, nil
+//}
 
 // returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {

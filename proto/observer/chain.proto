@@ -18,6 +18,8 @@ enum ChainName {
   Ganache = 9;
   Baobab = 10;
   BscTestnet = 11 ;
+  ZetaChainTestNet = 12;
+  BtcTestNet = 13 ;
 }
 
 message Chain {

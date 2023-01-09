@@ -3,12 +3,11 @@ package keeper
 import (
 	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math/big"
 )
 
 func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
@@ -22,12 +21,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 
 	gasLimit := sdk.NewUintFromString(request.GasLimit)
 	outTxGasFee := medianGasPrice.Mul(gasLimit)
-	recvChain, err := common.ParseChain(request.Chain)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")
-	}
-	chainID := config.Chains[recvChain.String()].ChainID
-	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, chainID)
+	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "zrc20 not found")
 	}

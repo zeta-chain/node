@@ -6,3 +6,17 @@ func (m Chain) IsEqual(chain *Chain) bool {
 	}
 	return false
 }
+
+func (m Chain) IsEvmChain() bool {
+	if m.ChainId == 55555 {
+		return false
+	}
+	return true
+}
+
+func (m Chain) IsKlaytonChain() bool {
+	if m.ChainId == 1001 {
+		return false
+	}
+	return true
+}
