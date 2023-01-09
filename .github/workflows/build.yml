@@ -55,16 +55,14 @@ jobs:
 
     - name: Build zetacored and zetaclientd
       run: |
-        # make install
-        # cp "$HOME"/go/bin/* ./
-        touch zetacored
-        touch zetaclientd
+        make install
+        cp "$HOME"/go/bin/* ./
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: |
-    #     echo "Running Build Tests"
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Build Zetavisor
       if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
@@ -87,15 +85,15 @@ jobs:
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
 
-    # - name: upload-files-to-s3
-    #   uses: ./.github/actions/upload-to-s3
-    #   with:
-    #     bucket-name: ${{ env.S3_BUCKET_NAME }}
-    #     release-name: ${{ env.RELEASE_NAME }}
-    #     git-sha: ${{ github.sha }}
-    #     files: |
-    #       zetacored
-    #       zetaclientd
+    - name: upload-files-to-s3
+      uses: ./.github/actions/upload-to-s3
+      with:
+        bucket-name: ${{ env.S3_BUCKET_NAME }}
+        release-name: ${{ env.RELEASE_NAME }}
+        git-sha: ${{ github.sha }}
+        files: |
+          zetacored
+          zetaclientd
 
     - name: Build, tag, and push docker images
       uses:  ./.github/actions/build-docker-images
@@ -105,7 +103,6 @@ jobs:
         IMAGE_TAG: test # ${{ env.RELEASE_NAME }}
         GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
         GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
 
     # # Approval will be required closer to mainnet
     # - name: Require Approval To Create a Release
