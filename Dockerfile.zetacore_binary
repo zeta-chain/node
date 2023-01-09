@@ -9,7 +9,9 @@ COPY ./zetacored /usr/bin/
 COPY ./build ./zeta-node/build
 COPY ./deploy ./zeta-node/deploy
 
+# RUN chown -R zetachain:zetachain  /go/delivery
+#USER zetachain
+
 ENV SHELL /bin/bash
 EXPOSE 8400
-
 ENTRYPOINT ["bash"]

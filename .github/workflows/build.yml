@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-enable-docker-build
     tags:
       - v*
       - athens2-*
@@ -55,21 +56,22 @@ jobs:
 
     - name: Build zetacored and zetaclientd
       run: |
-        make install
-        cp "$HOME"/go/bin/* ./
+        # make install
+        # cp "$HOME"/go/bin/* ./
+        touch zetacored
+        touch zetaclientd
 
     # - name: Test
     #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
     #   run: |
     #     echo "Running Build Tests"
-    #     #make test
     #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Build Zetavisor
       if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
       run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
@@ -86,25 +88,25 @@ jobs:
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: upload-files-to-s3
-      uses: ./.github/actions/upload-to-s3
-      with:
-        bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: ${{ env.RELEASE_NAME }}
-        git-sha: ${{ github.sha }}
-        files: |
-          zetacored
-          zetaclientd
-
-    ## Not being used 
-    # - name: Build, tag, and push image to Amazon ECR
-    #   uses:  ./.github/actions/upload-to-ecr
+    # - name: upload-files-to-s3
+    #   uses: ./.github/actions/upload-to-s3
     #   with:
-    #     DOCKER_FILENAME: Dockerfile.zetacore_binary
-    #     ECR_REPOSITORY: zetachain
-    #     IMAGE_TAG: latest
+    #     bucket-name: ${{ env.S3_BUCKET_NAME }}
+    #     release-name: ${{ env.RELEASE_NAME }}
+    #     git-sha: ${{ github.sha }}
+    #     files: |
+    #       zetacored
+    #       zetaclientd
 
-    ## Approval will be required closer to mainnet
+    - name: Build, tag, and push docker images
+      uses:  ./.github/actions/build-docker-images
+      with:
+        DOCKER_FILENAME: Dockerfile.zetacore_binary
+        REPOSITORY_NAME: zetanode
+        IMAGE_TAG: test #${{ env.RELEASE_NAME }}
+
+
+    # # Approval will be required closer to mainnet
     # - name: Require Approval To Create a Release
     #   uses: softprops/action-gh-release@v1
     #   if: startsWith(github.ref, 'refs/tags/athens')
@@ -114,11 +116,11 @@ jobs:
     #       zetacored
     #       zetaclientd
 
-    - name: Create GitHub Release for ZetaCore/ZetaClient
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-        files: |
-          zetacored
-          zetaclientd
+    # - name: Create GitHub Release for ZetaCore/ZetaClient
+    #   uses: softprops/action-gh-release@v1
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   with:
+    #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+    #     files: |
+    #       zetacored
+    #       zetaclientd
