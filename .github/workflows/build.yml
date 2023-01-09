@@ -44,14 +44,14 @@ jobs:
           echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
         fi
 
-    # - uses: actions/cache@v3
-    #   with:
-    #     path: |
-    #       ~/.cache/go-build
-    #       ~/go/pkg/mod
-    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-go-
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
 
     - name: Build zetacored and zetaclientd
       run: |
@@ -103,12 +103,8 @@ jobs:
         DOCKER_FILENAME: Dockerfile.zetacore_binary
         REPOSITORY_NAME: zetanode
         IMAGE_TAG: test # ${{ env.RELEASE_NAME }}
-        GHCR_USERNAME: ${{ github.actor }}
+        GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
         GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-        # GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-        # GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-        
-        # GHCR_TOKEN: ${{ if [ -z env.ACT ]; then; secrets.GITHUB_TOKEN ; else secrets.GHCR_TOKEN; fi }}
 
 
     # # Approval will be required closer to mainnet
@@ -121,11 +117,11 @@ jobs:
     #       zetacored
     #       zetaclientd
 
-    # - name: Create GitHub Release for ZetaCore/ZetaClient
-    #   uses: softprops/action-gh-release@v1
-    #   if: startsWith(github.ref, 'refs/tags/')
-    #   with:
-    #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-    #     files: |
-    #       zetacored
-    #       zetaclientd
+    - name: Create GitHub Release for ZetaCore/ZetaClient
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+        files: |
+          zetacored
+          zetaclientd
