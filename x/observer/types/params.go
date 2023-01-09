@@ -14,34 +14,30 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams() Params {
-	return Params{BallotThresholds: DefaultThreshold()}
+func NewParams(observerParams []*ObserverParams) Params {
+	return Params{ObserverParams: observerParams}
 }
-
-// DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return Params{BallotThresholds: DefaultThreshold()}
-}
-
-func DefaultThreshold() []*BallotThreshold {
 	chains := DefaultChainsList()
-	threshold := make([]*BallotThreshold, len(chains)*2)
+	observerParams := make([]*ObserverParams, len(chains)*2)
 	i := 0
 	for _, chain := range chains {
-		threshold[i] = &BallotThreshold{
-			Chain:       chain,
-			Observation: ObservationType_InBoundTx,
-			Threshold:   sdk.MustNewDecFromStr("0.66"),
+		observerParams[i] = &ObserverParams{
+			Chain:                 chain,
+			Observation:           ObservationType_InBoundTx,
+			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 		i++
-		threshold[i] = &BallotThreshold{
-			Chain:       chain,
-			Observation: ObservationType_OutBoundTx,
-			Threshold:   sdk.MustNewDecFromStr("0.66"),
+		observerParams[i] = &ObserverParams{
+			Chain:                 chain,
+			Observation:           ObservationType_OutBoundTx,
+			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 		i++
 	}
-	return threshold
+	return NewParams(observerParams)
 }
 
 func DefaultChainsList() []*Chain {
@@ -120,10 +116,10 @@ func validateVotingThresholds(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetParamsForChainAndType(chain ObserverChain, observationType ObservationType) (ObserverParams, bool) {
-	for _, threshold := range p.GetObserverParams() {
-		if threshold.Chain == chain && threshold.Observation == observationType {
-			return *threshold, true
+func (p Params) GetParamsForChainAndType(chain *Chain, observationType ObservationType) (ObserverParams, bool) {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain == chain && ObserverParam.Observation == observationType {
+			return *ObserverParam, true
 		}
 	}
 	return ObserverParams{}, false

@@ -11,7 +11,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 	tt := []struct {
 		name             string
 		mapper           []*types.ObserverMapper
-		assertChain      types.Chain
+		assertChain      *types.Chain
 		assertObsType    types.ObservationType
 		assertObsListLen int
 		isFound          bool
@@ -22,7 +22,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			}, types.ObservationType_InBoundTx),
-			assertChain: types.Chain{
+			assertChain: &types.Chain{
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			},
@@ -44,7 +44,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 					ChainName: types.ChainName_BscMainnet,
 					ChainId:   2,
 				}, types.ObservationType_OutBoundTx)...),
-			assertChain: types.Chain{
+			assertChain: &types.Chain{
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			},
@@ -66,7 +66,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 					ChainName: types.ChainName_BscMainnet,
 					ChainId:   5,
 				}, types.ObservationType_OutBoundTx)...),
-			assertChain: types.Chain{
+			assertChain: &types.Chain{
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			},
@@ -88,7 +88,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 					ChainName: types.ChainName_BscMainnet,
 					ChainId:   5,
 				}, types.ObservationType_OutBoundTx)...),
-			assertChain: types.Chain{
+			assertChain: &types.Chain{
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			},

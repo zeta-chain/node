@@ -24,7 +24,7 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 
 }
 
-func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain types.ObserverChain, observationType types.ObservationType) error {
+func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *types.Chain, observationType types.ObservationType) error {
 	selfdelAddr, _ := sdk.AccAddressFromBech32(accAddress)
 	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {

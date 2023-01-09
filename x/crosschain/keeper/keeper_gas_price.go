@@ -23,9 +23,9 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 }
 
 // GetGasPrice returns a gasPrice from its index
-func (k Keeper) GetGasPrice(ctx sdk.Context, index string) (val types.GasPrice, found bool) {
+func (k Keeper) GetGasPrice(ctx sdk.Context, chainName string) (val types.GasPrice, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := store.Get(types.KeyPrefix(index))
+	b := store.Get(types.KeyPrefix(chainName))
 	if b == nil {
 		return val, false
 	}
@@ -117,7 +117,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
-
+	// TODO : change msg.Chain to use chainID , and use ChainID in index
 	chain := msg.Chain
 	gasPrice, isFound := k.GetGasPrice(ctx, chain)
 	fmt.Println(gasPrice, isFound)

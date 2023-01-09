@@ -28,12 +28,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 
-	//Check is msg.Creator is authorized to vote
-	ok, err := k.IsAuthorizedMapper(ctx, msg.Creator, *observationChain, observationType)
-	if !ok {
-		return nil, err
-	}
-	// keep one is Authorized
 	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType)
 	if !ok {
 		return nil, err
@@ -66,7 +60,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Inbound Ballot has been finalized , Create CCTX
 	// New CCTX can only set either to Aborted or PendingOutbound
-	cctx := k.CreateNewCCTX(ctx, msg, index, observationChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingOutbound, observationChain, receiverChain)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
 	switch receiverChain.ChainName {
@@ -167,7 +161,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if !txWithWithdraw.Failed() {
 			logs := evmtypes.LogsToEthereum(txWithWithdraw.Logs)
 			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-			err = k.ProcessWithdrawalEvent(ctx, logs, contract)
+			err = k.ProcessWithdrawalEvent(ctx, logs, contract, msg.TxOrigin)
 			if err != nil {
 				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 			}

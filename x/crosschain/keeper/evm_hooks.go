@@ -89,14 +89,14 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	}
 
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), zetaChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
 	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, zetaChain, receiverChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
 	cctx.ZetaMint = cctx.ZetaBurnt
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-	gasprice, found := k.GetGasPrice(ctx, receiverChain)
+	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainName.String())
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
@@ -107,7 +107,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	if ok {
 		cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
 	}
-	err := k.UpdateNonce(ctx, receiverChain, &cctx)
+	err = k.UpdateNonce(ctx, receiverChain.ChainName.String(), &cctx)
 	if err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}

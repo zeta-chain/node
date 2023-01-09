@@ -30,7 +30,7 @@ message MsgSetSupportedChainsResponse{
 }
 message MsgAddObserver {
   string creator = 1;
-  ObserverChain observerChain = 2;
+  int64 chainId = 2;
   ObservationType observationType = 3;
 }
 

@@ -29,20 +29,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
-	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
-	}
-	for _, obs := range observerMapper.ObserverList {
-		if obs == address {
-			return true, nil
-		}
-	}
-	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
-}
-
-func (k Keeper) IsAuthorizedMapper(ctx sdk.Context, address string, chain zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
 		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", chain.String(), observationType))
@@ -71,11 +58,11 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	}
 	return
 }
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
+		if !k.zetaObserverKeeper.IsChainSupported(ctx, *chain) {
 			return ballot, isNew, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
 		}
 		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
