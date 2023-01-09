@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"os"
 	"sort"
@@ -14,9 +15,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -39,9 +40,9 @@ type BitcoinChainClient struct {
 	zetaClient   *ZetaCoreBridge
 	Tss          TSSSigner
 	lastBlock    uint64
-	confCount    uint64 // must wait this many blocks to be considered "confirmed"
-	BlockTime    uint64 // block time in seconds
-	txWatchList  map[ethcommon.Hash]string
+	confCount    uint64                                  // must wait this many blocks to be considered "confirmed"
+	BlockTime    uint64                                  // block time in seconds
+	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
 	mu           *sync.Mutex
 	utxos        []btcjson.ListUnspentResult
 	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
@@ -68,7 +69,6 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.mu = &sync.Mutex{}
 	ob.logger = log.With().Str("chain", chain.String()).Logger()
 	ob.zetaClient = bridge
-	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
 	ob.confCount = 0
 
@@ -227,8 +227,37 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	return nil
 }
 
-// TODO
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+// returns isIncluded, isConfirmed, Error
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(send *cctxtypes.CrossChainTx) (bool, bool, error) {
+	sendHash := send.Index
+	nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
+	chain := ob.chain.String()
+	outTxID := fmt.Sprintf("%s-%d", chain, nonce)
+	res, found := ob.submittedTx[outTxID]
+	if !found {
+		return false, false, nil
+	}
+	if res.Confirmations == 0 {
+		return true, false, nil
+	} else if res.Confirmations > 0 { // FIXME: use configured block confirmation
+		amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
+		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+			sendHash,
+			res.TxID,
+			uint64(res.BlockIndex),
+			amountInSat,
+			common.ReceiveStatus_Success,
+			ob.chain.String(),
+			int(nonce),
+			common.CoinType_Gas,
+		)
+		if err != nil {
+			ob.logger.Error().Err(err).Msgf("error posting to zeta core")
+		} else {
+			ob.logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+		}
+		return true, true, nil
+	}
 	return false, false, nil
 }
 
@@ -473,4 +502,38 @@ func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (ob *BitcoinChainClient) observeOutTx() {
+	ticker := time.NewTicker(10 * time.Minute)
+	for {
+		select {
+		case <-ticker.C:
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			if err != nil {
+				ob.logger.Error().Err(err).Msg("error GetAllOutTxTrackerByChain")
+				continue
+			}
+			for _, tracker := range trackers {
+				outTxID := fmt.Sprintf("%s-%s", tracker.Chain, tracker.Nonce)
+				for _, txHash := range tracker.HashList {
+					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
+					if err != nil {
+						ob.logger.Error().Err(err).Msg("error NewHashFromStr")
+						continue
+					}
+					getTxResult, err := ob.rpcClient.GetTransaction(hash)
+					if err != nil {
+						continue
+					}
+					if getTxResult.Confirmations >= 0 {
+						ob.submittedTx[outTxID] = *getTxResult
+					}
+				}
+			}
+		case <-ob.stop:
+			ob.logger.Info().Msg("observeOutTx stopped")
+			return
+		}
+	}
 }

@@ -3,18 +3,23 @@ package zetaclient
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/chaincfg"
 	"math/big"
+	"math/rand"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type BTCSigner struct {
@@ -37,6 +42,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
+	estimateFee := 0.0
 	for _, utxo := range utxos {
 		// check for pending utxBos
 		if _, err := pendingUTXOs.Get([]byte(utxoKey(utxo)), nil); err != nil {
@@ -144,6 +150,73 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	}
 	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
 	return err
+}
+
+func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, btcClient *BitcoinChainClient, zetaBridge *ZetaCoreBridge) {
+
+	logger := signer.logger.With().
+		Str("sendHash", send.Index).
+		Logger()
+
+	myid := zetaBridge.keys.GetSignerInfo().GetAddress().String()
+
+	// Early return if the send is already processed
+	// FIXME: handle revert case
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send)
+	if included || confirmed {
+		logger.Info().Msgf("CCTX already processed; exit signer")
+		return
+	}
+
+	gasprice, ok := new(big.Int).SetString(send.OutBoundTxParams.OutBoundTxGasPrice, 10)
+	if !ok {
+		logger.Error().Msgf("cannot convert gas price  %s ", send.OutBoundTxParams.OutBoundTxGasPrice)
+		return
+	}
+	// FIXME: config chain params
+	addr, err := btcutil.DecodeAddress(send.OutBoundTxParams.Receiver, &chaincfg.TestNet3Params)
+	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
+	if !ok {
+		logger.Error().Msgf("cannot decode address %s ", send.OutBoundTxParams.Receiver)
+		return
+	}
+
+	tx, err := signer.SignWithdrawTx(to, float64(send.ZetaMint.Uint64())/1e8, float64(gasprice.Int64())/1e8, btcClient.utxos, btcClient.pendingUtxos)
+	if err != nil {
+		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.OutBoundTxParams.OutBoundTxTSSNonce, send.OutBoundTxParams.ReceiverChain)
+		return
+	}
+	logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.InBoundTxParams.SenderChain, btcClient.chain, send.OutBoundTxParams.OutBoundTxTSSNonce)
+	// FIXME: add prometheus metrics
+	signers, err := zetaBridge.GetObserverList(btcClient.chain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	if err != nil {
+		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.OutBoundTxParams.OutBoundTxTSSNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	}
+	if tx != nil {
+		outTxHash := tx.TxHash().String()
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcClient.chain, send.OutBoundTxParams.OutBoundTxTSSNonce, outTxHash, myid)
+		if len(signers) == 0 || myid == signers[send.OutBoundTxParams.Broadcaster] || myid == signers[int(send.OutBoundTxParams.Broadcaster+1)%len(signers)] {
+			// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
+			for i := 0; i < 5; i++ {
+				// #nosec G404 randomness is not a security issue here
+				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
+				err := signer.Broadcast(tx)
+				if err != nil {
+					logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, btcClient.chain, send.OutBoundTxParams.OutBoundTxTSSNonce, i)
+					continue
+				}
+				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, btcClient.chain.String(), outTxHash)
+				zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(btcClient.chain.String(), send.OutBoundTxParams.OutBoundTxTSSNonce, outTxHash)
+				if err != nil {
+					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, btcClient.chain, outTxHash)
+				}
+				logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+				break // successful broadcast; no need to retry
+			}
+
+		}
+	}
+
 }
 
 func (signer *BTCSigner) updatePendingUTXOs(pendingDB *leveldb.DB, utxos []btcjson.ListUnspentResult) error {

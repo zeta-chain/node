@@ -191,18 +191,22 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(send *cctxtypes.CrossChainTx) (bool, bool, error) {
+	nonce := int(send.OutBoundTxParams.OutBoundTxTSSNonce)
+	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
+	sendHash := send.Index
+
 	ob.mu.Lock()
 	receipt, found1 := ob.outTXConfirmedReceipts[nonce]
 	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
 	ob.mu.Unlock()
 	found := found1 && found2
-	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
+	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger := ob.logger.With().Str("sendID", sendID).Logger()
 	if fromOrToZeta {
 		if found && receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
-				sendHash,
+				send.Index,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
 				transaction.Value(),
@@ -318,14 +322,14 @@ func (ob *EVMChainClient) observeOutTx() {
 		case <-ticker.C:
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
 			if err != nil {
-				return
+				continue
 			}
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt, err := strconv.Atoi(tracker.Nonce)
 				if err != nil {
-					return
+					continue
 				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
