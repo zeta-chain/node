@@ -30,7 +30,6 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-
     - name: Get branch name
       id: branch-name
       uses: tj-actions/branch-names@v6
@@ -45,14 +44,14 @@ jobs:
           echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
         fi
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+    # - uses: actions/cache@v3
+    #   with:
+    #     path: |
+    #       ~/.cache/go-build
+    #       ~/go/pkg/mod
+    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-go-
 
     - name: Build zetacored and zetaclientd
       run: |
@@ -103,7 +102,13 @@ jobs:
       with:
         DOCKER_FILENAME: Dockerfile.zetacore_binary
         REPOSITORY_NAME: zetanode
-        IMAGE_TAG: test #${{ env.RELEASE_NAME }}
+        IMAGE_TAG: test # ${{ env.RELEASE_NAME }}
+        GHCR_USERNAME: ${{ github.actor }}
+        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        # GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        
+        # GHCR_TOKEN: ${{ if [ env.ACT ]; then; secrets.GHCR_TOKEN ; else secrets.GITHUB_TOKEN; fi }}
 
 
     # # Approval will be required closer to mainnet

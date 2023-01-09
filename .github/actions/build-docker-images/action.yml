@@ -10,6 +10,12 @@ inputs:
   IMAGE_TAG:  
     description: 'Image Tag'
     required: true
+  GHCR_USERNAME: 
+    description: 'Username for GitHub Container Registry'
+    required: true
+  GHCR_TOKEN:
+    description: 'Token for GitHub Container Registry'
+    required: true
 
 runs:
   using: "composite"
@@ -17,10 +23,11 @@ runs:
   steps:
     - name: Set Environment Variables"
       run: |
-        echo "Running Upload-To-ECR Action"
         echo "DOCKER_FILENAME=${{ inputs.DOCKER_FILENAME }}" >> $GITHUB_ENV
         echo "REPOSITORY_NAME=${{ inputs.REPOSITORY_NAME }}" >> $GITHUB_ENV
         echo "IMAGE_TAG=${{ inputs.IMAGE_TAG }}" >> $GITHUB_ENV
+        echo "GHCR_USERNAME=${{ inputs.GHCR_USERNAME }}" >> $GITHUB_ENV
+        echo "GHCR_TOKEN=${{ inputs.GHCR_TOKEN }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Log in to the GitHub Container Registry 
@@ -28,8 +35,8 @@ runs:
       uses: docker/login-action@v2
       with:
         registry: ghcr.io 
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ env.GHCR_USERNAME }}
+        password: ${{ env.GHCR_TOKEN }}
 
     - name: Login to Amazon ECR
       id: login-ecr
