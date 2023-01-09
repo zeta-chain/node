@@ -104,11 +104,11 @@ jobs:
         REPOSITORY_NAME: zetanode
         IMAGE_TAG: test # ${{ env.RELEASE_NAME }}
         GHCR_USERNAME: ${{ github.actor }}
-        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
         # GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
         # GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         
-        # GHCR_TOKEN: ${{ if [ env.ACT ]; then; secrets.GHCR_TOKEN ; else secrets.GITHUB_TOKEN; fi }}
+        # GHCR_TOKEN: ${{ if [ -z env.ACT ]; then; secrets.GITHUB_TOKEN ; else secrets.GHCR_TOKEN; fi }}
 
 
     # # Approval will be required closer to mainnet
