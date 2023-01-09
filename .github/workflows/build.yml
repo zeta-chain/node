@@ -13,6 +13,11 @@ on:
     branches: 
       - develop
       - athens2-develop 
+    types: 
+      - synchronize
+      - opened
+      - reopened
+      - ready_for_review
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -99,7 +104,7 @@ jobs:
       uses:  ./.github/actions/build-docker-images
       with:
         DOCKER_FILENAME: Dockerfile.zetacore_binary
-        REPOSITORY_NAME: zetanode
+        REPOSITORY_NAME: zeta-node
         IMAGE_TAG: ${{ env.RELEASE_NAME }}
         GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
         GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
