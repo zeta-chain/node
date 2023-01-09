@@ -5,10 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"math/big"
 )
 
 func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
@@ -85,8 +84,9 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *zetaObserverType
 	return
 }
 
-func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, receiveChain)
+func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
+	chain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, chainID)
+	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
@@ -94,12 +94,8 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
 
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
-	recvChain, err := common.ParseChain(receiveChain)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to parse chain")
-	}
-	chainID := config.Chains[recvChain.String()].ChainID
-	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, chainID)
+
+	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}
@@ -135,6 +131,8 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 
 	return nil
 }
+
+// TODO : USE CHAIN ID
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
 	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {

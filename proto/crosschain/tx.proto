@@ -64,7 +64,7 @@ message MsgGasBalanceVoterResponse {
 
 message MsgGasPriceVoter {
   string creator = 1;
-  string chain = 2;
+  int64 chainID = 2;
   uint64 price = 3;
   uint64 blockNumber = 4;
   string supply = 5;

@@ -121,12 +121,11 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
-			chain := cctx.InBoundTxParams.SenderChain
-			err := k.UpdatePrices(ctx, chain, cctx)
+			err := k.UpdatePrices(ctx, cctx.InBoundTxParams.SenderChainID, cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, chain, cctx)
+			err = k.UpdateNonce(ctx, cctx.InBoundTxParams.SenderChain, cctx)
 			if err != nil {
 				return err
 			}

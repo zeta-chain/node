@@ -96,7 +96,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	EmitZRCWithdrawCreated(ctx, cctx)
 	cctx.ZetaMint = cctx.ZetaBurnt
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
-	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainName.String())
+	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)

@@ -60,7 +60,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Inbound Ballot has been finalized , Create CCTX
 	// New CCTX can only set either to Aborted or PendingOutbound
-	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingOutbound, observationChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
 	switch receiverChain.ChainName {
@@ -93,7 +93,7 @@ func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, re
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
 	cctx.OutBoundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % numberofobservers)
 
-	err := k.UpdatePrices(ctx, receiveChain.ChainName.String(), cctx)
+	err := k.UpdatePrices(ctx, receiveChain.ChainId, cctx)
 	if err != nil {
 		return err
 	}

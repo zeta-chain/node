@@ -55,7 +55,7 @@ func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
 		return false
 	}
 	for _, chain := range chains.ChainList {
-		if checkChain.IsEqual(*chain) {
+		if checkChain.IsEqual(chain) {
 			return true
 		}
 	}

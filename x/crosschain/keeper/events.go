@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"strconv"
 )
 
 func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
@@ -98,12 +99,12 @@ func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 	ctx.EventManager().EmitEvent(event)
 }
 
-func EmitCCTXScrubbed(ctx sdk.Context, cctx types.CrossChainTx, oldGasPrice, newGasPrice, chain string) {
+func EmitCCTXScrubbed(ctx sdk.Context, cctx types.CrossChainTx, chainID int64, oldGasPrice, newGasPrice string) {
 	event := sdk.NewEvent(types.CctxScrubbed,
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		sdk.NewAttribute("OldGasPrice", oldGasPrice),
 		sdk.NewAttribute("NewGasPrice", newGasPrice),
-		sdk.NewAttribute("Chain", chain),
+		sdk.NewAttribute("Chain ID", strconv.FormatInt(chainID, 10)),
 		sdk.NewAttribute("Nonce", fmt.Sprintf("%d", cctx.OutBoundTxParams.OutBoundTxTSSNonce)),
 	)
 	ctx.EventManager().EmitEvent(event)

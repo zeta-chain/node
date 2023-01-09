@@ -72,7 +72,7 @@ func DefaultChainsList() []*Chain {
 		},
 		{
 			ChainName: ChainName_Btc,
-			ChainId:   5,
+			ChainId:   55555,
 		},
 		{
 			ChainName: ChainName_Polygon,
@@ -118,7 +118,8 @@ func validateVotingThresholds(i interface{}) error {
 
 func (p Params) GetParamsForChainAndType(chain *Chain, observationType ObservationType) (ObserverParams, bool) {
 	for _, ObserverParam := range p.GetObserverParams() {
-		if ObserverParam.Chain == chain && ObserverParam.Observation == observationType {
+		fmt.Println(ObserverParam.String())
+		if ObserverParam.Chain.IsEqual(chain) && ObserverParam.Observation == observationType {
 			return *ObserverParam, true
 		}
 	}
