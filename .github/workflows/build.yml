@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd-enable-docker-build
     tags:
       - v*
       - athens2-*
@@ -63,11 +62,11 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: |
-    #     echo "Running Build Tests"
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Build Zetavisor
       if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
