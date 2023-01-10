@@ -11,6 +11,7 @@ import (
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
 func NewMsgSendVoter(creator string, sender string, senderChain string, txOrigin string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType) *MsgVoteOnObservedInboundTx {
+
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
