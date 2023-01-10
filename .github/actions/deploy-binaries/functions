@@ -18,11 +18,7 @@ run_ssm_cmds_api_nodes () {
 
 run_ssm_cmds_archive_nodes () {
     COMMAND_ID=$(aws ssm send-command \
-<<<<<<<< HEAD:.github/actions/deploy-binaries/functions
     --targets Key=tag:Role,Values=archive \
-========
-    --targets Key=tag:Role,Values=indexer \
->>>>>>>> develop:.github/actions/update-nodes/functions
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[$1]" | jq .Command.CommandId -r || exit 1)
     echo "$COMMAND_ID"
