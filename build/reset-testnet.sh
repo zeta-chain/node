@@ -2,7 +2,7 @@
 set -x
 ZETACORED=/home/ubuntu/go/bin/zetacored
 # AWS EC2: testnet1, testnet2, testnet3, testnet5
-NODES="3.137.46.147 3.20.194.40 3.19.64.252"
+NODES="10.0.0.22 10.0.0.34 10.0.0.57"
 
 observer=()
 
