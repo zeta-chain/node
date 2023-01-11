@@ -122,7 +122,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 					if txOrigin == "" {
 						txOrigin = msg.Sender
 					}
-					err = k.ProcessWithdrawalEvent(ctx, logs, contract, txOrigin)
+					err = k.ProcessWithdrawalLogs(ctx, logs, contract, txOrigin)
 					if err != nil {
 						errMsg := fmt.Sprintf("cannot process withdrawal event: %s", err.Error())
 						cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
