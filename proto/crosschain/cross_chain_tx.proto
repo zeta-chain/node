@@ -1,6 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 import "gogoproto/gogo.proto";
+import "common/common.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 enum CctxStatus {
@@ -21,6 +22,8 @@ message InBoundTxParams{
   uint64 inBoundTxFinalizedZetaHeight = 5;
   string inBoundTXBallotIndex = 6;
   string txOrigin = 7;
+  common.CoinType coinType = 8;
+  string asset = 9;
 }
 
 message OutBoundTxParams {

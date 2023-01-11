@@ -115,6 +115,7 @@ message MsgVoteOnObservedInboundTx {
   uint64 gasLimit = 11;
   common.CoinType coinType = 12;
   string txOrigin = 13;
+  string asset = 14;
 }
 
 message MsgVoteOnObservedInboundTxResponse {

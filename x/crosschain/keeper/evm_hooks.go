@@ -66,11 +66,13 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		foundCoin := false
 		receiverChain := ""
 		coinType := common.CoinType_Zeta
+		asset := ""
 		for _, coin := range foreignCoinList {
 			if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
 				receiverChain = coin.ForeignChain
 				foundCoin = true
 				coinType = coin.CoinType
+				asset = coin.Zrc20ContractAddress
 			}
 		}
 		if !foundCoin {
@@ -78,7 +80,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		}
 
 		toAddr := "0x" + hex.EncodeToString(event.To)
-		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+		msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), common.ZETAChain.String(), txOrigin, toAddr, receiverChain, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
 		sendHash := msg.Digest()
 
 		cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound)

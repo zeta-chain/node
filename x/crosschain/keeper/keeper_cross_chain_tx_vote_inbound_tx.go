@@ -60,15 +60,15 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 	if toChain == common.ZETAChain {
 		cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-		if msg.CoinType == common.CoinType_Gas {
+		if msg.CoinType != common.CoinType_Zeta {
 			foreignCoinList := k.fungibleKeeper.GetAllForeignCoins(ctx)
 			found := false
 			//TODO :  Foreign coins to use type-foreign chain , It's not a good idea to iterate here,as this handler might be called frequently
-			var gasCoin fungibletypes.ForeignCoins
-			for _, coin := range foreignCoinList {
-				if coin.CoinType == common.CoinType_Gas && coin.ForeignChain == msg.SenderChain {
+			var coin fungibletypes.ForeignCoins
+			for _, foreignCoin := range foreignCoinList {
+				if (coin.CoinType == common.CoinType_Gas || foreignCoin.Erc20ContractAddress == cctx.InBoundTxParams.Asset) && foreignCoin.ForeignChain == msg.SenderChain {
 					found = true
-					gasCoin = coin
+					coin = foreignCoin
 					break
 				}
 			}
@@ -89,7 +89,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			}
 			var tx *evmtypes.MsgEthereumTxResponse
 			if len(msg.Message) == 0 { // no message; transfer
-				tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
+				tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(coin.Zrc20ContractAddress), to, amount)
 				if err != nil {
 					errMsg := fmt.Sprintf("cannot DepositZRC20, %s", err.Error())
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
@@ -105,9 +105,9 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 					return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 				}
 				if len(data) > 0 {
-					tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), amount, contract, data)
+					tx, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, ethcommon.HexToAddress(coin.Zrc20ContractAddress), amount, contract, data)
 				} else { // data = empty
-					tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), contract, amount)
+					tx, err = k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(coin.Zrc20ContractAddress), contract, amount)
 				}
 				if err != nil { // prepare to revert
 					errMsg := fmt.Sprintf("cannot DepositZRC20: %s", err.Error())
@@ -147,7 +147,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
 			cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, cctx)
-		} else if msg.CoinType == common.CoinType_Zeta {
+		} else {
 			toBytes := ethcommon.HexToAddress(msg.Receiver).Bytes()
 			to := sdk.AccAddress(toBytes)
 			amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)

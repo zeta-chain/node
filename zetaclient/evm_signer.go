@@ -17,17 +17,19 @@ import (
 )
 
 type EVMSigner struct {
-	client              *ethclient.Client
-	chain               common.Chain
-	chainID             *big.Int
-	tssSigner           TSSSigner
-	ethSigner           ethtypes.Signer
-	abi                 abi.ABI
-	metaContractAddress ethcommon.Address
-	logger              zerolog.Logger
+	client                      *ethclient.Client
+	chain                       common.Chain
+	chainID                     *big.Int
+	tssSigner                   TSSSigner
+	ethSigner                   ethtypes.Signer
+	abi                         abi.ABI
+	erc20CustodyABI             abi.ABI
+	metaContractAddress         ethcommon.Address
+	erc20CustodyContractAddress ethcommon.Address
+	logger                      zerolog.Logger
 }
 
-func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*EVMSigner, error) {
+func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, erc20CustodyABIString string, metaContract ethcommon.Address, erc20CustodyContract ethcommon.Address) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -38,20 +40,26 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 		return nil, err
 	}
 	ethSigner := ethtypes.LatestSignerForChainID(chainID)
-	abi, err := abi.JSON(strings.NewReader(abiString))
+	connectorABI, err := abi.JSON(strings.NewReader(abiString))
+	if err != nil {
+		return nil, err
+	}
+	erc20CustodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABIString))
 	if err != nil {
 		return nil, err
 	}
 
 	return &EVMSigner{
-		client:              client,
-		chain:               chain,
-		tssSigner:           tssSigner,
-		chainID:             chainID,
-		ethSigner:           ethSigner,
-		abi:                 abi,
-		metaContractAddress: metaContract,
-		logger:              log.With().Str("module", "EVMSigner").Logger(),
+		client:                      client,
+		chain:                       chain,
+		tssSigner:                   tssSigner,
+		chainID:                     chainID,
+		ethSigner:                   ethSigner,
+		abi:                         connectorABI,
+		erc20CustodyABI:             erc20CustodyABI,
+		metaContractAddress:         metaContract,
+		erc20CustodyContractAddress: erc20CustodyContract,
+		logger:                      log.With().Str("module", "EVMSigner").Logger(),
 	}, nil
 }
 
@@ -180,4 +188,51 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	}
 
 	return signedTX, nil
+}
+
+// function withdraw(
+// address recipient,
+// address asset,
+// uint256 amount,
+// ) external onlyTssAddress
+func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset ethcommon.Address, amount *big.Int, gasLimit uint64, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	var data []byte
+
+	var err error
+
+	data, err = signer.erc20CustodyABI.Pack("withdraw", recipient, asset, amount)
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
+}
+
+// function whitelist(
+// address asset,
+// ) external onlyTssAddress
+// function unwhitelist(
+// address asset,
+// ) external onlyTssAddress
+func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+	var data []byte
+
+	var err error
+
+	data, err = signer.erc20CustodyABI.Pack(action, asset)
+	if err != nil {
+		return nil, fmt.Errorf("pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce)
+	if err != nil {
+		return nil, fmt.Errorf("Sign error: %w", err)
+	}
+
+	return tx, nil
 }

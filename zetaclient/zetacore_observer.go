@@ -397,8 +397,15 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 
 	var tx *ethtypes.Transaction
 	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
-		tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+		if send.InBoundTxParams.CoinType == common.CoinType_Zeta {
+			logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+			tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+		}
+		if send.InBoundTxParams.CoinType == common.CoinType_ERC20 {
+			asset := ethcommon.HexToAddress(send.InBoundTxParams.Asset)
+			logger.Info().Msgf("SignERC20WithdrawTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+			tx, err = signer.SignERC20WithdrawTx(to, asset, send.ZetaMint.BigInt(), gasLimit, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)

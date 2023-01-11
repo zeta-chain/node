@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -42,6 +43,8 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			Sender:                          fmt.Sprintf("%d", i),
 			SenderChain:                     fmt.Sprintf("%d", i),
 			TxOrigin:                        fmt.Sprintf("%d", i),
+			Asset:                           fmt.Sprintf("%d", i),
+			CoinType:                        common.CoinType_Zeta,
 			InBoundTxObservedHash:           fmt.Sprintf("%d", i),
 			InBoundTxObservedExternalHeight: uint64(i),
 			InBoundTxFinalizedZetaHeight:    uint64(i),

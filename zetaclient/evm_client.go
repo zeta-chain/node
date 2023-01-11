@@ -60,6 +60,8 @@ type EVMChainClient struct {
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector
 	ConnectorAddress          ethcommon.Address
+	ERC20Custody              *evm.ERC20Custody
+	ERC20CustodyAddress       ethcommon.Address
 	EvmClient                 *ethclient.Client
 	KlaytnClient              *KlaytnClient
 	zetaClient                *ZetaCoreBridge
@@ -101,6 +103,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	ob.outTXConfirmedTransaction = make(map[int]*ethtypes.Transaction)
 	ob.OutTxChan = make(chan OutTx, 100)
 	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
+	erc20CustodyAddress := ethcommon.HexToAddress(config.Chains[chain.String()].ERC20CustodyContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
 		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
 	}
@@ -140,6 +143,14 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		return nil, err
 	}
 	ob.Connector = connector
+
+	// initialize erc20 custody
+	erc20Custody, err := evm.NewERC20Custody(erc20CustodyAddress, ob.EvmClient)
+	if err != nil {
+		ob.logger.Error().Err(err).Msg("ERC20Custody")
+		return nil, err
+	}
+	ob.ERC20Custody = erc20Custody
 
 	// create metric counters
 	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
@@ -440,7 +451,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	}
 	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
-	// Finally query the for the logs
+	// Query evm chain for zeta sent logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
 		Start:   startBlock,
 		End:     &toBlock,
@@ -481,6 +492,51 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.DestinationGasLimit.Uint64(),
 			common.CoinType_Zeta,
 			PostSendNonEVMGasLimit,
+			"",
+		)
+		if err != nil {
+			ob.logger.Error().Err(err).Msg("error posting to zeta core")
+			continue
+		}
+		ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+	}
+
+	// Query evm chain for deposited logs
+	depositedLogs, err := ob.ERC20Custody.FilterDeposited(&bind.FilterOpts{
+		Start:   startBlock,
+		End:     &toBlock,
+		Context: context.TODO(),
+	})
+
+	if err != nil {
+		return err
+	}
+	cnt, err = ob.GetPromCounter("rpc_getLogs_count")
+	if err != nil {
+		return err
+	}
+	cnt.Inc()
+
+	// Pull out arguments from logs
+	for depositedLogs.Next() {
+		event := depositedLogs.Event
+		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
+
+		zetaHash, err := ob.zetaClient.PostSend(
+			"",
+			ob.chain.String(),
+			"",
+			clienttypes.BytesToEthHex(event.Recipient),
+			"ZETA",
+			event.Amount.String(),
+			event.Amount.String(),
+			base64.StdEncoding.EncodeToString(event.Message),
+			event.Raw.TxHash.Hex(),
+			event.Raw.BlockNumber,
+			1_000_000,
+			common.CoinType_ERC20,
+			PostSendNonEVMGasLimit,
+			event.Asset.String(),
 		)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -600,6 +656,7 @@ func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.In
 		90_000,
 		common.CoinType_Gas,
 		PostSendEVMGasLimit,
+		"",
 	)
 	return zetaHash, err
 }

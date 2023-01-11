@@ -196,6 +196,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				0,
 				common.CoinType_Gas,
 				PostSendEVMGasLimit,
+				"",
 			)
 			if err != nil {
 				ob.logger.Error().Err(err).Msg("error posting to zeta core")

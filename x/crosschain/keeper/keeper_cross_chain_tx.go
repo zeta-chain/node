@@ -138,6 +138,8 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		Sender:                          msg.Sender,
 		SenderChain:                     msg.SenderChain,
 		TxOrigin:                        msg.TxOrigin,
+		Asset:                           msg.Asset,
+		CoinType:                        msg.CoinType,
 		InBoundTxObservedHash:           msg.InTxHash,
 		InBoundTxObservedExternalHeight: msg.InBlockHeight,
 		InBoundTxFinalizedZetaHeight:    0,

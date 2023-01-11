@@ -32444,6 +32444,18 @@ paths:
                           type: string
                         txOrigin:
                           type: string
+                        coinType:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
+                        asset:
+                          type: string
                     OutBoundTxParams:
                       type: object
                       properties:
@@ -32454,7 +32466,7 @@ paths:
                         broadcaster:
                           type: string
                           format: uint64
-                          title: Can be removed
+                          title: 'FIXME: remove this'
                         outBoundTxHash:
                           type: string
                         outBoundTxTSSNonce:
@@ -32637,6 +32649,18 @@ paths:
                         type: string
                       txOrigin:
                         type: string
+                      coinType:
+                        type: string
+                        enum:
+                          - Zeta
+                          - Gas
+                          - ERC20
+                        default: Zeta
+                        title: |-
+                          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                           - ERC20: ERC20 token
+                      asset:
+                        type: string
                   OutBoundTxParams:
                     type: object
                     properties:
@@ -32647,7 +32671,7 @@ paths:
                       broadcaster:
                         type: string
                         format: uint64
-                        title: Can be removed
+                        title: 'FIXME: remove this'
                       outBoundTxHash:
                         type: string
                       outBoundTxTSSNonce:
@@ -32768,6 +32792,18 @@ paths:
                           type: string
                         txOrigin:
                           type: string
+                        coinType:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
+                        asset:
+                          type: string
                     OutBoundTxParams:
                       type: object
                       properties:
@@ -32778,7 +32814,7 @@ paths:
                         broadcaster:
                           type: string
                           format: uint64
-                          title: Can be removed
+                          title: 'FIXME: remove this'
                         outBoundTxHash:
                           type: string
                         outBoundTxTSSNonce:
@@ -34250,7 +34286,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  '/zeta-chain/zevm/zevm_getBlockByNumber/{height}':
+  /zeta-chain/zevm/zevm_getBlockByNumber/{height}:
     get:
       operationId: ZetachainZetacoreCrosschainZEVMGetBlock
       responses:
@@ -34331,7 +34367,7 @@ paths:
           format: uint64
       tags:
         - Query
-  '/zeta-chain/zevm/zevm_getTransactionByHash/{hash}':
+  /zeta-chain/zevm/zevm_getTransactionByHash/{hash}:
     get:
       operationId: ZetachainZetacoreCrosschainZEVMGetTransaction
       responses:
@@ -34401,7 +34437,7 @@ paths:
           type: string
       tags:
         - Query
-  '/zeta-chain/zevm/zevm_getTransactionReceipt/{hash}':
+  /zeta-chain/zevm/zevm_getTransactionReceipt/{hash}:
     get:
       operationId: ZetachainZetacoreCrosschainZEVMGetTransactionReceipt
       responses:
@@ -56234,6 +56270,18 @@ definitions:
             type: string
           txOrigin:
             type: string
+          coinType:
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
+            title: |-
+              - Gas: Ether, BNB, Matic, Klay, BTC, etc
+               - ERC20: ERC20 token
+          asset:
+            type: string
       OutBoundTxParams:
         type: object
         properties:
@@ -56244,7 +56292,7 @@ definitions:
           broadcaster:
             type: string
             format: uint64
-            title: Can be removed
+            title: 'FIXME: remove this'
           outBoundTxHash:
             type: string
           outBoundTxTSSNonce:
@@ -56332,6 +56380,18 @@ definitions:
       inBoundTXBallotIndex:
         type: string
       txOrigin:
+        type: string
+      coinType:
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
+        title: |-
+          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+           - ERC20: ERC20 token
+      asset:
         type: string
   zetachain.zetacore.crosschain.Keygen:
     type: object
@@ -56458,7 +56518,7 @@ definitions:
       broadcaster:
         type: string
         format: uint64
-        title: Can be removed
+        title: 'FIXME: remove this'
       outBoundTxHash:
         type: string
       outBoundTxTSSNonce:
@@ -56567,6 +56627,18 @@ definitions:
                   type: string
                 txOrigin:
                   type: string
+                coinType:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
+                asset:
+                  type: string
             OutBoundTxParams:
               type: object
               properties:
@@ -56577,7 +56649,7 @@ definitions:
                 broadcaster:
                   type: string
                   format: uint64
-                  title: Can be removed
+                  title: 'FIXME: remove this'
                 outBoundTxHash:
                   type: string
                 outBoundTxTSSNonce:
@@ -56661,6 +56733,18 @@ definitions:
                   type: string
                 txOrigin:
                   type: string
+                coinType:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
+                asset:
+                  type: string
             OutBoundTxParams:
               type: object
               properties:
@@ -56671,7 +56755,7 @@ definitions:
                 broadcaster:
                   type: string
                   format: uint64
-                  title: Can be removed
+                  title: 'FIXME: remove this'
                 outBoundTxHash:
                   type: string
                 outBoundTxTSSNonce:
@@ -57249,6 +57333,18 @@ definitions:
                 type: string
               txOrigin:
                 type: string
+              coinType:
+                type: string
+                enum:
+                  - Zeta
+                  - Gas
+                  - ERC20
+                default: Zeta
+                title: |-
+                  - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                   - ERC20: ERC20 token
+              asset:
+                type: string
           OutBoundTxParams:
             type: object
             properties:
@@ -57259,7 +57355,7 @@ definitions:
               broadcaster:
                 type: string
                 format: uint64
-                title: Can be removed
+                title: 'FIXME: remove this'
               outBoundTxHash:
                 type: string
               outBoundTxTSSNonce:
