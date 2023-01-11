@@ -72,16 +72,16 @@ runs:
       echo "Updating ZetaNode Binaries"
       source ${{ github.action_path }}/functions
       COMMAND_ID=$(run_ssm_cmds_validators "\
-          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetaclientd && \
-          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored")
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd /home/zetachain/.zetacored/cosmovisor/current/bin/zetaclientd && \
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/current/bin/zetacored")
       check_cmd_status $COMMAND_ID
 
       COMMAND_ID=$(run_ssm_cmds_api_nodes "\
-          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored")
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/current/bin/zetacored")
           check_cmd_status $COMMAND_ID
 
       COMMAND_ID=$(run_ssm_cmds_archive_nodes "\
-          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/genesis/bin/zetacored")
+          cp /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored /home/zetachain/.zetacored/cosmovisor/current/bin/zetacored")
           check_cmd_status $COMMAND_ID
 
   - name: Restart ZetaChain
