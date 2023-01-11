@@ -123,6 +123,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 func (ob *BitcoinChainClient) Start() {
 	go ob.WatchInTx()
 	go ob.WatchUTXOS()
+	go ob.WatchGasPrice()
 }
 
 func (ob *BitcoinChainClient) Stop() {
