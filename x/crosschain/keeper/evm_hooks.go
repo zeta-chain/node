@@ -98,7 +98,6 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
-		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
 	}
 	cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
