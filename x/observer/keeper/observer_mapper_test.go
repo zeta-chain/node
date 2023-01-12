@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"testing"
 )
@@ -11,19 +12,19 @@ func TestKeeper_GetObserver(t *testing.T) {
 	tt := []struct {
 		name             string
 		mapper           []*types.ObserverMapper
-		assertChain      *types.Chain
+		assertChain      *common.Chain
 		assertObsType    types.ObservationType
 		assertObsListLen int
 		isFound          bool
 	}{
 		{
 			name: "4 eth Observers",
-			mapper: types.CreateObserverMapperList(1, types.Chain{
-				ChainName: types.ChainName_Eth,
+			mapper: types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_Eth,
 				ChainId:   1,
 			}, types.ObservationType_InBoundTx),
-			assertChain: &types.Chain{
-				ChainName: types.ChainName_Eth,
+			assertChain: &common.Chain{
+				ChainName: common.ChainName_Eth,
 				ChainId:   1,
 			},
 			assertObsType:    types.ObservationType_InBoundTx,
@@ -32,19 +33,19 @@ func TestKeeper_GetObserver(t *testing.T) {
 		},
 		{
 			name: "Filter out from multiple mappers",
-			mapper: append(append(types.CreateObserverMapperList(1, types.Chain{
-				ChainName: types.ChainName_Eth,
+			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_Eth,
 				ChainId:   1,
 			}, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.Chain{
-					ChainName: types.ChainName_Eth,
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_Eth,
 					ChainId:   1,
 				}, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.Chain{
+				types.CreateObserverMapperList(1, common.Chain{
 					ChainName: types.ChainName_BscMainnet,
 					ChainId:   2,
 				}, types.ObservationType_OutBoundTx)...),
-			assertChain: &types.Chain{
+			assertChain: &common.Chain{
 				ChainName: types.ChainName_Eth,
 				ChainId:   1,
 			},

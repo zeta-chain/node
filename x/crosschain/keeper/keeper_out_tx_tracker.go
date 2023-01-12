@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -162,7 +163,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 	// TODO Change msg.CHain to int64
 	// TODO Change client/tx.go to send int64
-	chainName := zetaObserverTypes.ParseStringToObserverChain(msg.Chain)
+	chainName := common.ParseStringToObserverChain(msg.Chain)
 	if chainName == 0 {
 		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %s", msg.Chain))
 	}

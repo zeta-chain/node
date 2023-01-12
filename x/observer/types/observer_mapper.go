@@ -5,7 +5,7 @@ import (
 )
 
 func (m *ObserverMapper) Validate() bool {
-	chains := DefaultChainsList()
+	chains := common.DefaultChainsList()
 	for _, chain := range chains {
 		if m.ObserverChain == chain {
 			return true

@@ -36,8 +36,8 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 
 	observerMappers := make([]*ObserverMapper, len(observers))
 	for i, readerValue := range observers {
-		chain := &Chain{
-			ChainName: ParseStringToObserverChain(readerValue.ObserverChainName),
+		chain := &common.Chain{
+			ChainName: common.ParseStringToObserverChain(readerValue.ObserverChainName),
 			ChainId:   readerValue.ObserverChainId,
 		}
 		observationType := ParseStringToObservationType(readerValue.ObservationType)
@@ -54,35 +54,6 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	return observerMappers, nil
 }
 
-// This should not be needed after removing common.Chain
-func ParseCommonChaintoObservationChain(chain string) Chain {
-	return Chain{}
-	//commonChain := common.Chain(chain)
-	//switch commonChain {
-	//// Mainnet Chains
-	//case common.ZETAChain, common.Chain(strings.ToUpper(string(common.ZETAChain))):
-	//	return ObserverChain_ZetaChain
-	//case common.ETHChain, common.Chain(strings.ToUpper(string(common.ETHChain))):
-	//	return ObserverChain_Eth
-	//case common.BSCChain, common.Chain(strings.ToUpper(string(common.BSCChain))):
-	//	return ObserverChain_BscMainnet
-	//case common.POLYGONChain, common.Chain(strings.ToUpper(string(common.POLYGONChain))):
-	//	return ObserverChain_Polygon
-	//// Testnet Chains
-	//case common.MumbaiChain, common.Chain(strings.ToUpper(string(common.MumbaiChain))):
-	//	return ObserverChain_Mumbai
-	//case common.BaobabChain, common.Chain(strings.ToUpper(string(common.BaobabChain))):
-	//	return ObserverChain_Baobab
-	//case common.RopstenChain, common.Chain(strings.ToUpper(string(common.RopstenChain))):
-	//	return ObserverChain_Ropsten
-	//case common.GoerliChain, common.Chain(strings.ToUpper(string(common.GoerliChain))):
-	//	return ObserverChain_Goerli
-	//case common.BSCTestnetChain, common.Chain(strings.ToUpper(string(common.BSCTestnetChain))):
-	//	return ObserverChain_BscTestnet
-	//}
-	//return ObserverChain_Empty
-}
-
 func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {
 	switch status {
 	case common.ReceiveStatus_Success:
@@ -92,11 +63,6 @@ func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {
 	default:
 		return VoteType_NotYetVoted
 	}
-}
-
-func ParseStringToObserverChain(chain string) ChainName {
-	c := ChainName_value[chain]
-	return ChainName(c)
 }
 
 func ParseStringToObservationType(observationType string) ObservationType {

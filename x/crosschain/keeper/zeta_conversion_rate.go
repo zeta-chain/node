@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	types2 "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"math/big"
@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
-	chainName := types2.ParseStringToObserverChain(request.Chain)
+	chainName := common.ParseStringToObserverChain(request.Chain)
 	chain, _ := k.zetaObserverKeeper.GetChainFromChainName(ctx, chainName)
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {

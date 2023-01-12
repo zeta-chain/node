@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -23,7 +24,7 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) (val types.SupportedChains, 
 	return val, false
 }
 
-func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainId int64) (*types.Chain, bool) {
+func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainId int64) (*common.Chain, bool) {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return nil, false
@@ -36,7 +37,7 @@ func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainId int64) (*types.Chai
 	return nil, false
 }
 
-func (k Keeper) GetChainFromChainName(ctx sdk.Context, name types.ChainName) (*types.Chain, bool) {
+func (k Keeper) GetChainFromChainName(ctx sdk.Context, name common.ChainName) (*common.Chain, bool) {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return nil, false
@@ -49,13 +50,13 @@ func (k Keeper) GetChainFromChainName(ctx sdk.Context, name types.ChainName) (*t
 	return nil, false
 }
 
-func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
+func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain common.Chain) bool {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return false
 	}
 	for _, chain := range chains.ChainList {
-		if checkChain.IsEqual(chain) {
+		if checkChain.IsEqual(*chain) {
 			return true
 		}
 	}
@@ -64,7 +65,7 @@ func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.Chain) bool {
 
 func (k Keeper) SetSupportedChains(goCtx context.Context, msg *types.MsgSetSupportedChains) (*types.MsgSetSupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := []*types.Chain{{
+	chain := []*common.Chain{{
 		ChainName: msg.ChainName,
 		ChainId:   msg.ChainId,
 	},

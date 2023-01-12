@@ -3,10 +3,11 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 )
 
-func CreateObserverMapperList(items int, chain Chain, observationType ObservationType) (list []*ObserverMapper) {
+func CreateObserverMapperList(items int, chain common.Chain, observationType ObservationType) (list []*ObserverMapper) {
 	SetConfig(false)
 	for i := 0; i < items; i++ {
 		mapper := &ObserverMapper{

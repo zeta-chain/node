@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/zeta-chain/zetacore/common"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,7 +19,7 @@ func NewParams(observerParams []*ObserverParams) Params {
 	return Params{ObserverParams: observerParams}
 }
 func DefaultParams() Params {
-	chains := DefaultChainsList()
+	chains := common.DefaultChainsList()
 	observerParams := make([]*ObserverParams, len(chains)*2)
 	i := 0
 	for _, chain := range chains {
@@ -38,51 +39,6 @@ func DefaultParams() Params {
 		i++
 	}
 	return NewParams(observerParams)
-}
-
-func DefaultChainsList() []*Chain {
-	return []*Chain{
-		{
-			ChainName: ChainName_Eth,
-			ChainId:   1,
-		},
-		{
-			ChainName: ChainName_Goerli,
-			ChainId:   5,
-		},
-		{
-			ChainName: ChainName_Ropsten,
-			ChainId:   3,
-		},
-		{
-			ChainName: ChainName_BscMainnet,
-			ChainId:   56,
-		},
-		{
-			ChainName: ChainName_BscTestnet,
-			ChainId:   97,
-		},
-		{
-			ChainName: ChainName_Baobab,
-			ChainId:   1001,
-		},
-		{
-			ChainName: ChainName_ZetaChain,
-			ChainId:   2374,
-		},
-		{
-			ChainName: ChainName_Btc,
-			ChainId:   55555,
-		},
-		{
-			ChainName: ChainName_Polygon,
-			ChainId:   137,
-		},
-		{
-			ChainName: ChainName_Mumbai,
-			ChainId:   80001,
-		},
-	}
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -116,10 +72,10 @@ func validateVotingThresholds(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetParamsForChainAndType(chain *Chain, observationType ObservationType) (ObserverParams, bool) {
+func (p Params) GetParamsForChainAndType(chain *common.Chain, observationType ObservationType) (ObserverParams, bool) {
 	for _, ObserverParam := range p.GetObserverParams() {
 		fmt.Println(ObserverParam.String())
-		if ObserverParam.Chain.IsEqual(chain) && ObserverParam.Observation == observationType {
+		if ObserverParam.Chain.IsEqual(*chain) && ObserverParam.Observation == observationType {
 			return *ObserverParam, true
 		}
 	}

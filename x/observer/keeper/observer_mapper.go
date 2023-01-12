@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +19,7 @@ func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store.Set([]byte(om.Index), b)
 }
 
-func (k Keeper) GetObserverMapper(ctx sdk.Context, chain *types.Chain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
+func (k Keeper) GetObserverMapper(ctx sdk.Context, chain *common.Chain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
 	index := fmt.Sprintf("%s-%s", chain.String(), obsType.String())
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
@@ -92,7 +93,7 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chainName := types.ParseStringToObserverChain(req.ObservationChain)
+	chainName := common.ParseStringToObserverChain(req.ObservationChain)
 	chain, found := k.GetChainFromChainName(ctx, chainName)
 	if !found {
 		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrSupportedChains
@@ -134,7 +135,7 @@ func (k Keeper) GetAllObserverAddresses(ctx sdk.Context) []string {
 	return dedupedList
 }
 
-func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain *types.Chain, obsType types.ObservationType, address string) {
+func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain *common.Chain, obsType types.ObservationType, address string) {
 	mapper, found := k.GetObserverMapper(ctx, chain, obsType)
 	if !found {
 		k.SetObserverMapper(ctx, &types.ObserverMapper{

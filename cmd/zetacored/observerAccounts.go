@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"strconv"
 	"strings"
@@ -82,7 +83,7 @@ func AddObserverAccountCmd() *cobra.Command {
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			chainName := types.ParseStringToObserverChain(args[0])
+			chainName := common.ParseStringToObserverChain(args[0])
 			chainId, err := strconv.Atoi(args[1])
 			if err != nil {
 				return err
@@ -90,7 +91,7 @@ func AddObserverAccountCmd() *cobra.Command {
 			obs := types.ParseStringToObservationType(args[2])
 			observer := &types.ObserverMapper{
 				Index: "",
-				ObserverChain: &types.Chain{
+				ObserverChain: &common.Chain{
 					ChainName: chainName,
 					ChainId:   int64(chainId),
 				},

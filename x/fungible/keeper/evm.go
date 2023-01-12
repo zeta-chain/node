@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"strconv"
 
@@ -17,11 +18,9 @@ import (
 	"github.com/evmos/ethermint/server/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
-
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 // TODO USE string constant
@@ -42,12 +41,16 @@ func (k Keeper) DeployZRC20Contract(
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) { // FIXME: generalized beyond ETH
-	// TODO : ADD check for Chain isSupported . Get supported chain list from zetaobserver
+	chainName := zetacommon.ParseStringToObserverChain(chainStr)
+	chain, found := k.zetaobserverKeeper.GetChainFromChainName(ctx, chainName)
+	if !found {
+		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
+	}
 	abi, err := contracts.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
-	chain, found := clientconfig.Chains[chainStr]
+
 	if !found {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrChainNotFound, "chain %s not found", chainStr)
 	}
@@ -61,7 +64,7 @@ func (k Keeper) DeployZRC20Contract(
 		name,            // name
 		symbol,          // symbol
 		decimals,        // decimals
-		chain.ChainID,   // chainID
+		chain.ChainId,   // chainID  // TODO : Check if this needs bigINT?
 		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
 		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),

@@ -441,6 +441,7 @@ func New(
 		app.AccountKeeper,
 		*app.EvmKeeper,
 		app.BankKeeper,
+		app.ZetaObserverKeeper,
 	)
 
 	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())

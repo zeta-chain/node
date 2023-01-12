@@ -4,6 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -25,4 +27,18 @@ type BankKeeper interface {
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 	HasSupply(ctx sdk.Context, denom string) bool
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+}
+
+type ZetaObserverKeeper interface {
+	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
+	GetObserverMapper(ctx sdk.Context, chain *common.Chain, obsType zetaObserverTypes.ObservationType) (val zetaObserverTypes.ObserverMapper, found bool)
+	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
+	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
+	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
+	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
+	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
+	IsChainSupported(ctx sdk.Context, checkChain common.Chain) bool
+	GetChainFromChainID(ctx sdk.Context, chainId int64) (*common.Chain, bool)
+	GetChainFromChainName(ctx sdk.Context, name common.ChainName) (*common.Chain, bool)
+	GetSupportedChains(ctx sdk.Context) (val zetaObserverTypes.SupportedChains, found bool)
 }

@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgNonceVoter{}
@@ -42,7 +42,7 @@ func (msg *MsgNonceVoter) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	chainName := zetaObserverTypes.ParseStringToObserverChain(msg.Chain)
+	chainName := common.ParseStringToObserverChain(msg.Chain)
 	if chainName.String() == "Empty" {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain string (%s): %s", err, msg.Chain)
 	}

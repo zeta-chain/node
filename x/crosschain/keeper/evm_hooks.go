@@ -67,8 +67,8 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 		return err
 	}
 	foundCoin := false
-	receiverChain := &zetaObserverTypes.Chain{}
-	zetaChain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, zetaObserverTypes.ChainName_ZetaChain)
+	receiverChain := &common.Chain{}
+	zetaChain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, common.ChainName_ZetaChain)
 	if !found {
 		return errors.Wrap(zetaObserverTypes.ErrSupportedChains, "Tokens cannot be exported from zeta chain right now")
 	}
@@ -76,7 +76,7 @@ func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, co
 
 	for _, coin := range foreignCoinList {
 		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			receiverChain, found = k.zetaObserverKeeper.GetChainFromChainName(ctx, zetaObserverTypes.ParseStringToObserverChain(coin.ForeignChain))
+			receiverChain, found = k.zetaObserverKeeper.GetChainFromChainName(ctx, common.ParseStringToObserverChain(coin.ForeignChain))
 			if !found {
 				return errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Tokens cannot be exported to %s chain right now", coin.ForeignChain))
 			}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -24,7 +25,7 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 
 }
 
-func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *types.Chain, observationType types.ObservationType) error {
+func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain, observationType types.ObservationType) error {
 	selfdelAddr, _ := sdk.AccAddressFromBech32(accAddress)
 	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {

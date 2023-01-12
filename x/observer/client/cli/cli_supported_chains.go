@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"strconv"
 )
@@ -46,7 +47,7 @@ func CmdSetSupportedChains() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			chainName := types.ParseStringToObserverChain(args[1])
+			chainName := common.ParseStringToObserverChain(args[1])
 			if chainName == 0 {
 				return errors.New("ChainName type not supported\"")
 			}

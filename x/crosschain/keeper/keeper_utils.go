@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
@@ -28,7 +29,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
 		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", chain.String(), observationType))
@@ -57,7 +58,7 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	}
 	return
 }
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *zetaObserverTypes.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {

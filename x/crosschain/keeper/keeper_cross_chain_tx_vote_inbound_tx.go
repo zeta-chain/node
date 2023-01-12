@@ -64,7 +64,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
 	switch receiverChain.ChainName {
-	case zetaObserverTypes.ChainName_ZetaChain:
+	case common.ChainName_ZetaChain:
 		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
@@ -87,7 +87,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
-func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain zetaObserverTypes.Chain, numberofobservers int) error {
+func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain common.Chain, numberofobservers int) error {
 	cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	k.UpdateLastBlockHeight(ctx, cctx)
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
@@ -120,7 +120,7 @@ func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainT
 	k.SetLastBlockHeight(ctx, lastblock)
 }
 
-func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *zetaObserverTypes.Chain) error {
+func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
 
 	gasCoin, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, senderChain.ChainName.String())
 	if !found {
