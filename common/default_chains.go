@@ -117,5 +117,9 @@ func DefaultChainsList() []*Chain {
 			ChainName: ChainName_Mumbai,
 			ChainId:   80001,
 		},
+		{
+			ChainName: ChainName_BtcTestNet,
+			ChainId:   1212312,
+		},
 	}
 }

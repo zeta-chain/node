@@ -50,30 +50,24 @@ func (k Keeper) DeployZRC20Contract(
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
-
-	if !found {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrChainNotFound, "chain %s not found", chainStr)
-	}
-
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
 	}
 	ctorArgs, err := abi.Pack(
-		"",              // function--empty string for constructor
-		name,            // name
-		symbol,          // symbol
-		decimals,        // decimals
-		chain.ChainId,   // chainID  // TODO : Check if this needs bigINT?
-		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
-		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
+		"",                        // function--empty string for constructor
+		name,                      // name
+		symbol,                    // symbol
+		decimals,                  // decimals
+		big.NewInt(chain.ChainId), // chainID
+		uint8(coinType),           // coinType: 0: Zeta 1: gas 2 ERC20
+		gasLimit,                  //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),
 	)
 
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "coin constructor is invalid %s: %s", name, err.Error())
 	}
-
 	data := make([]byte, len(contracts.ZRC20Contract.Bin)+len(ctorArgs))
 	copy(data[:len(contracts.ZRC20Contract.Bin)], contracts.ZRC20Contract.Bin)
 	copy(data[len(contracts.ZRC20Contract.Bin):], ctorArgs)

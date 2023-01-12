@@ -63,24 +63,23 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	system, _ := k.GetSystemContract(ctx)
 	system.SystemContract = SystemContractAddress.String()
 	k.SetSystemContract(ctx, system)
-
-	_, err = k.setupChainGasCoinAndPool(ctx, "GOERLI", "ETH", "gETH", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_Goerli.String(), "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "BSCTESTNET", "BNB", "tBNB", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_BscTestnet.String(), "BNB", "tBNB", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "MUMBAI", "MATIC", "tMATIC", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_Mumbai.String(), "MATIC", "tMATIC", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "BTCTESTNET", "BTC", "tBTC", 8)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_BtcTestNet.String(), "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-
+	fmt.Println("Successfully deployed contracts")
 	return nil
 }
 
@@ -119,12 +118,10 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
-
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
 	}
-
 	systemABI, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get system contract abi")

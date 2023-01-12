@@ -74,7 +74,6 @@ func validateVotingThresholds(i interface{}) error {
 
 func (p Params) GetParamsForChainAndType(chain *common.Chain, observationType ObservationType) (ObserverParams, bool) {
 	for _, ObserverParam := range p.GetObserverParams() {
-		fmt.Println(ObserverParam.String())
 		if ObserverParam.Chain.IsEqual(*chain) && ObserverParam.Observation == observationType {
 			return *ObserverParam, true
 		}

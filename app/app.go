@@ -349,18 +349,6 @@ func New(
 		&stakingKeeper,
 	)
 
-	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaCoreModuleTypes.StoreKey],
-		keys[zetaCoreModuleTypes.MemStoreKey],
-		&stakingKeeper,
-		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.ZetaObserverKeeper,
-		app.FungibleKeeper,
-	)
-
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
@@ -377,6 +365,29 @@ func New(
 		app.AccountKeeper, app.BankKeeper, stakingKeeper,
 		&app.FeeMarketKeeper,
 		tracer,
+	)
+
+	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+		appCodec,
+		keys[fungibleModuleTypes.StoreKey],
+		keys[fungibleModuleTypes.MemStoreKey],
+		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		app.AccountKeeper,
+		*app.EvmKeeper,
+		app.BankKeeper,
+		app.ZetaObserverKeeper,
+	)
+
+	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaCoreModuleTypes.StoreKey],
+		keys[zetaCoreModuleTypes.MemStoreKey],
+		&stakingKeeper,
+		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.ZetaObserverKeeper,
+		app.FungibleKeeper,
 	)
 
 	// Create IBC Keeper
@@ -431,17 +442,6 @@ func New(
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
-	)
-
-	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
-		appCodec,
-		keys[fungibleModuleTypes.StoreKey],
-		keys[fungibleModuleTypes.MemStoreKey],
-		app.GetSubspace(fungibleModuleTypes.ModuleName),
-		app.AccountKeeper,
-		*app.EvmKeeper,
-		app.BankKeeper,
-		app.ZetaObserverKeeper,
 	)
 
 	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
