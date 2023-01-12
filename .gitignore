@@ -39,14 +39,5 @@ localnet/chains/zetachain/config/node*/*
 localnet/chains/zetachain/storage
 localnet/ganache/storage
 localnet/zetachain-monorepo
-/x/crosschain/types/cross_chain_tx.pb.go
-/x/crosschain/types/node_account.pb.go
-/x/crosschain/types/out_tx_tracker.pb.go
-/x/crosschain/types/params.pb.go
-/x/crosschain/types/query.pb.go
-/x/crosschain/types/query.pb.gw.go
-/x/crosschain/types/tss.pb.go
-/x/crosschain/types/tss_voter.pb.go
 /tx.json
-/x/crosschain/types/tx.pb.go
 /zetanode.log

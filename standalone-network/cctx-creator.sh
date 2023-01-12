@@ -9,8 +9,8 @@ zetacored tx crosschain nonce-voter Goerli 1  --from=zeta --keyring-backend=test
 
 zetacored tx crosschain inbound-voter 0x96B05C238b99768F349135de0653b687f9c13fEE 5 0x96B05C238b99768F349135de0653b687f9c13fEE 5 1000000000000000000 0 message hash 100 1 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1 --broadcast-mode=block --gas=auto --gas-adjustment=2 --gas-prices=0.1azeta
 
-exit 0
 zetacored q crosschain list-cctx
+
 zetacored tx crosschain outbound-voter 0x18b11d2eccd0601e3c0ffaef981892d579e74ed7eb36e7ab159f5c410c829a57 hashout 1 0 0 5 1 1 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1 --broadcast-mode=block --gas=auto --gas-adjustment=2 --gas-prices=0.1azeta
 
 
