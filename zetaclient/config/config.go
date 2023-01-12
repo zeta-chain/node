@@ -107,9 +107,10 @@ var Chains = map[string]*types.ChainETHish{
 	},
 
 	common.ZETAChain.String(): {
-		Name:      "ZETA",
-		ChainID:   big.NewInt(100),
-		BlockTime: 6,
+		Name:                     "ZETA",
+		ChainID:                  big.NewInt(100),
+		BlockTime:                6,
+		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
 }
 
