@@ -26,7 +26,7 @@ const (
 	DefaultGasLimit                 = 200_000
 )
 
-func (b *ZetaCoreBridge) PostGasPrice(chain zetaObserverTypes.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
+func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 	zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, msg)
@@ -48,7 +48,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txH
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostNonce(chain zetaObserverTypes.Chain, nonce uint64) (string, error) {
+func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainName.String(), nonce)
 	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, msg)
@@ -75,7 +75,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 }
 
 // FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain zetaObserverTypes.Chain, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
@@ -116,7 +116,7 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetObserverList(chain zetaObserverTypes.Chain, observationType string) ([]string, error) {
+func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.ChainName.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
@@ -161,7 +161,7 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 	return res.Block, nil
 }
 
-func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain zetaObserverTypes.Chain) (*types.LastBlockHeight, error) {
+func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
@@ -181,7 +181,7 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 	return resp.Height, nil
 }
 
-func (b *ZetaCoreBridge) GetNonceByChain(chain zetaObserverTypes.Chain) (*types.ChainNonces, error) {
+func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
 	if err != nil {
@@ -223,7 +223,7 @@ func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 	return resp.Keygen, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(chain zetaObserverTypes.Chain, address string, pubkey string) (string, error) {
+func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), address, pubkey)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
@@ -245,7 +245,7 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain zetaObserverTypes.Chain) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.ChainId,

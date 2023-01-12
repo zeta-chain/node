@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -62,15 +60,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Info().Msgf("ZEVM Chain ID: %s", ZEVMChainID.String())
-	config.Chains[common.ZETAChain.String()].ChainID = ZEVMChainID
+	log.Info().Msgf("ZEVM Chain ID: %s ", ZEVMChainID.String())
+	// TODO Check this parsing to int64
+	config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId = ZEVMChainID.Int64()
 	keygenBlock = *keygen
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	chains := strings.Split(*enabledChains, ",")
-	chainList := []zetaObserverTypes.Chain{}
+	chainList := []common.Chain{}
 	supportedChains := mc.GetSupportedChains()
 	for _, chain := range chains {
 		for _, supportedChain := range supportedChains {
@@ -279,7 +278,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 	for _, chain := range config.ChainsEnabled {
 		var tssAddr string
-		if chain.IsEvmChain() {
+		if chain.IsEVMChain() {
 			tssAddr = tss.EVMAddress().Hex()
 		} else {
 			tssAddr = tss.BTCAddress()
@@ -345,29 +344,26 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 func updateConfig() {
 
-	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
-	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
-	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
-	updateEndpoint(common.Ganache, "GANACHE_ENDPOINT")
+	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
+	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")
+	updateEndpoint(common.MumbaiChain(), "MUMBAI_ENDPOINT")
+	updateEndpoint(common.BaobabChain(), "BAOBAB_ENDPOINT")
 
-	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
-	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
-	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
-	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
+	updateMPIAddress(common.GoerliChain(), "GOERLI_MPI_ADDRESS")
+	updateMPIAddress(common.BscTestnetChain(), "BSCTESTNET_MPI_ADDRESS")
+	updateMPIAddress(common.MumbaiChain(), "MUMBAI_MPI_ADDRESS")
+	updateMPIAddress(common.BaobabChain(), "BAOBAB_MPI_ADDRESS")
 
-	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
-	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
-	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
-	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
+	updateTokenAddress(common.GoerliChain(), "GOERLI_ZETA_ADDRESS")
+	updateTokenAddress(common.BscTestnetChain(), "BSCTESTNET_ZETA_ADDRESS")
+	updateTokenAddress(common.MumbaiChain(), "MUMBAI_ZETA_ADDRESS")
+	updateTokenAddress(common.BaobabChain(), "BAOBAB_ZETA_ADDRESS")
 }
 
 func updateMPIAddress(chain common.Chain, envvar string) {
 	mpi := os.Getenv(envvar)
 	if mpi != "" {
-		config.Chains[chain.String()].ConnectorContractAddress = mpi
+		config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress = mpi
 		log.Info().Msgf("MPI: %s", mpi)
 	}
 }
@@ -375,7 +371,7 @@ func updateMPIAddress(chain common.Chain, envvar string) {
 func updateEndpoint(chain common.Chain, envvar string) {
 	endpoint := os.Getenv(envvar)
 	if endpoint != "" {
-		config.Chains[chain.String()].Endpoint = endpoint
+		config.ChainConfigs[chain.ChainName.String()].Endpoint = endpoint
 		log.Info().Msgf("ENDPOINT: %s", endpoint)
 	}
 }
@@ -383,7 +379,7 @@ func updateEndpoint(chain common.Chain, envvar string) {
 func updateTokenAddress(chain common.Chain, envvar string) {
 	token := os.Getenv(envvar)
 	if token != "" {
-		config.Chains[chain.String()].ZETATokenContractAddress = token
+		config.ChainConfigs[chain.String()].ZETATokenContractAddress = token
 		log.Info().Msgf("TOKEN: %s", token)
 	}
 }

@@ -2,23 +2,24 @@ package keeper
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"testing"
 )
 
 func TestKeeper_SupportedChains(t *testing.T) {
 	keeper, ctx := SetupKeeper(t)
-	list := []*types.Chain{
+	list := []*common.Chain{
 		{
-			ChainName: types.ChainName_Eth,
+			ChainName: common.ChainName_Eth,
 			ChainId:   1,
 		},
 		{
-			ChainName: types.ChainName_Btc,
+			ChainName: common.ChainName_Btc,
 			ChainId:   2,
 		},
 		{
-			ChainName: types.ChainName_BscMainnet,
+			ChainName: common.ChainName_BscMainnet,
 			ChainId:   3,
 		},
 	}

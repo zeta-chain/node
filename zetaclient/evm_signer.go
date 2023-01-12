@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"strings"
 	"time"
@@ -18,7 +18,7 @@ import (
 
 type EVMSigner struct {
 	client              *ethclient.Client
-	chain               *zetaObserverTypes.Chain
+	chain               *common.Chain
 	chainID             *big.Int
 	tssSigner           TSSSigner
 	ethSigner           ethtypes.Signer
@@ -27,7 +27,7 @@ type EVMSigner struct {
 	logger              zerolog.Logger
 }
 
-func NewEVMSigner(chain *zetaObserverTypes.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*EVMSigner, error) {
+func NewEVMSigner(chain *common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err

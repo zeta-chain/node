@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -31,7 +30,7 @@ var _ ChainClient = &BitcoinChainClient{}
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain       zetaObserverTypes.Chain
+	chain       common.Chain
 	endpoint    string
 	rpcClient   *rpcclient.Client
 	zetaClient  *ZetaCoreBridge
@@ -47,13 +46,13 @@ type BitcoinChainClient struct {
 }
 
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
-	if chain.IsEvmChain() {
+	if chain.IsEVMChain() {
 		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain)
 	}
 	ob.mu = &sync.Mutex{}
@@ -63,7 +62,7 @@ func NewBitcoinClient(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, tss
 	ob.Tss = tss
 	ob.confCount = 0
 
-	ob.endpoint = config.Chains[chain.String()].Endpoint
+	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
 
 	// initialize the Client
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)

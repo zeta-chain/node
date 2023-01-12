@@ -4,80 +4,14 @@ import (
 	"strings"
 )
 
-func testChain() Chain {
-	return Chain{ChainId: 1}
-}
-
 var (
-	// mainnets
-	EmptyChain   = testChain()
-	BSCChain     = testChain()
-	ETHChain     = testChain()
-	POLYGONChain = testChain()
-	ZETAChain    = testChain()
-	BTCChain     = testChain()
-	KLAYTNChain  = testChain()
-
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
-
-	// testnets
-	BSCTestnetChain = testChain()
-	GoerliChain     = testChain()
-	MumbaiChain     = testChain()
-	BaobabChain     = testChain()
-	Ganache         = testChain()
-	BTCTestnetChain = testChain()
 )
 
 func ParseStringToObserverChain(chain string) ChainName {
 	c := ChainName_value[chain]
 	return ChainName(c)
-}
-
-func DefaultChainsList() []*Chain {
-	return []*Chain{
-		{
-			ChainName: ChainName_Eth,
-			ChainId:   1,
-		},
-		{
-			ChainName: ChainName_Goerli,
-			ChainId:   5,
-		},
-		{
-			ChainName: ChainName_Ropsten,
-			ChainId:   3,
-		},
-		{
-			ChainName: ChainName_BscMainnet,
-			ChainId:   56,
-		},
-		{
-			ChainName: ChainName_BscTestnet,
-			ChainId:   97,
-		},
-		{
-			ChainName: ChainName_Baobab,
-			ChainId:   1001,
-		},
-		{
-			ChainName: ChainName_ZetaChain,
-			ChainId:   2374,
-		},
-		{
-			ChainName: ChainName_Btc,
-			ChainId:   55555,
-		},
-		{
-			ChainName: ChainName_Polygon,
-			ChainId:   137,
-		},
-		{
-			ChainName: ChainName_Mumbai,
-			ChainId:   80001,
-		},
-	}
 }
 
 type SigninAlgo string
@@ -122,20 +56,20 @@ func (chain Chain) IsEqual(c Chain) bool {
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.IsEqual(ZETAChain)
+	return chain.IsEqual(ZetaChain())
 }
 
 func (chain Chain) IsEVMChain() bool {
-	return chain.IsEqual(ETHChain) || chain.IsEqual(BSCChain) || chain.IsEqual(POLYGONChain) || chain.IsEqual(GoerliChain) ||
-		chain.IsEqual(MumbaiChain) || chain.IsEqual(BSCTestnetChain) || chain.IsEqual(BaobabChain) || chain.IsEqual(Ganache)
+	return chain.IsEqual(EthChain()) || chain.IsEqual(BscMainnetChain()) || chain.IsEqual(PolygonChain()) || chain.IsEqual(GoerliChain()) ||
+		chain.IsEqual(MumbaiChain()) || chain.IsEqual(BscTestnetChain()) || chain.IsEqual(BaobabChain())
 }
 
 func (chain Chain) IsKlaytnChain() bool {
-	return chain.IsEqual(BaobabChain) || chain.IsEqual(KLAYTNChain)
+	return chain.IsEqual(BaobabChain())
 }
 
 func (chain Chain) IsBitcoinChain() bool {
-	return chain.IsEqual(BTCChain) || chain.IsEqual(BTCTestnetChain)
+	return chain.IsEqual(BtcMainnetChain()) || chain.IsEqual(BtcTestNetChain())
 }
 
 // IsEmpty is to determinate whether the chain is empty
@@ -146,7 +80,7 @@ func (chain Chain) IsEmpty() bool {
 // GetSigningAlgo get the signing algorithm for the given chain
 func (chain Chain) GetSigningAlgo() SigninAlgo {
 	switch chain {
-	case ETHChain, POLYGONChain, BSCChain, Ganache, BTCChain, BTCTestnetChain:
+	case EthChain(), PolygonChain(), BscMainnetChain(), BtcMainnetChain(), BtcTestNetChain():
 		return SigningAlgoSecp256k1
 	default:
 		return SigningAlgoSecp256k1

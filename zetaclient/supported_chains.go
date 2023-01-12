@@ -1,13 +1,15 @@
 package zetaclient
 
-import zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+import (
+	"github.com/zeta-chain/zetacore/common"
+)
 
 // Modify to update this from the core later
-func GetSupportedChains() []*zetaObserverTypes.Chain {
-	return zetaObserverTypes.DefaultChainsList()
+func GetSupportedChains() []*common.Chain {
+	return common.DefaultChainsList()
 }
 
-func GetChainIdFromChainName(chainName zetaObserverTypes.ChainName) int64 {
+func GetChainIdFromChainName(chainName common.ChainName) int64 {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
 		if chainName == chain.ChainName {
@@ -16,7 +18,7 @@ func GetChainIdFromChainName(chainName zetaObserverTypes.ChainName) int64 {
 	}
 	return -1
 }
-func GetChainFromChainName(chainName zetaObserverTypes.ChainName) *zetaObserverTypes.Chain {
+func GetChainFromChainName(chainName common.ChainName) *common.Chain {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
 		if chainName == chain.ChainName {
@@ -26,17 +28,17 @@ func GetChainFromChainName(chainName zetaObserverTypes.ChainName) *zetaObserverT
 	return nil
 }
 
-func GetChainNameFromChainId(chainId int64) zetaObserverTypes.ChainName {
+func GetChainNameFromChainId(chainId int64) common.ChainName {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
 		if chainId == chain.ChainId {
 			return chain.ChainName
 		}
 	}
-	return zetaObserverTypes.ChainName_Empty
+	return common.ChainName_Empty
 }
 
-func GetChainFromChainId(chainId int64) *zetaObserverTypes.Chain {
+func GetChainFromChainId(chainId int64) *common.Chain {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
 		if chainId == chain.ChainId {

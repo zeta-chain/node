@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"os"
 	"strconv"
@@ -56,7 +55,7 @@ type OutTx struct {
 type EVMChainClient struct {
 	*ChainMetrics
 
-	chain                     zetaObserverTypes.Chain
+	chain                     common.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector
@@ -85,7 +84,7 @@ type EVMChainClient struct {
 var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
-func NewEVMChainClient(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainClient, error) {
+func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
 	}
@@ -101,13 +100,13 @@ func NewEVMChainClient(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, ts
 	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
 	ob.outTXConfirmedTransaction = make(map[int]*ethtypes.Transaction)
 	ob.OutTxChan = make(chan OutTx, 100)
-	addr := ethcommon.HexToAddress(config.Chains[chain.String()].ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
 	if addr == ethcommon.HexToAddress("0x0") {
-		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.Chains[chain.String()].ConnectorContractAddress, chain.String())
+		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.ChainConfigs[chain.String()].ConnectorContractAddress, chain.String())
 	}
 	ob.ConnectorAddress = addr
-	ob.endpoint = config.Chains[chain.String()].Endpoint
-	logFile, err := os.OpenFile(ob.chain.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
+	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 
 	if err != nil {
 		// Can we log an error before we have our logger? :)
@@ -125,7 +124,7 @@ func NewEVMChainClient(chain zetaObserverTypes.Chain, bridge *ZetaCoreBridge, ts
 	}
 	ob.EvmClient = client
 
-	if chain.IsEvmChain() {
+	if chain.IsEVMChain() {
 		kclient, err := Dial(ob.endpoint)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("klaytn Client Dial")
@@ -466,7 +465,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 		// TODO : Refactor this comparison
-		if strings.EqualFold(destAddr, config.Chains[destChain.ChainName.String()].ZETATokenContractAddress) {
+		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 		zetaHash, err := ob.zetaClient.PostSend(
@@ -494,7 +493,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	// ============= query the incoming tx to TSS address ==============
 	tssAddress := ob.Tss.EVMAddress()
 	// query incoming gas asset
-	if !ob.chain.IsKlaytonChain() {
+	if !ob.chain.IsKlaytnChain() {
 		for bn := startBlock; bn <= toBlock; bn++ {
 			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
@@ -886,30 +885,30 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 	}
 }
 
-func (ob *EVMChainClient) SetChainDetails(chain zetaObserverTypes.Chain) {
+func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 	MinObInterval := 24
 	switch chain.ChainName {
-	case zetaObserverTypes.ChainName_Mumbai:
+	case common.ChainName_Mumbai:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
-	case zetaObserverTypes.ChainName_Goerli:
+	case common.ChainName_Goerli:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case zetaObserverTypes.ChainName_BscTestnet:
+	case common.ChainName_BscTestnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
-	case zetaObserverTypes.ChainName_Baobab:
+	case common.ChainName_Baobab:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case zetaObserverTypes.ChainName_Btc:
+	case common.ChainName_Btc:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BtcConfirmationCount
 		ob.BlockTime = config.EthBlockTime
