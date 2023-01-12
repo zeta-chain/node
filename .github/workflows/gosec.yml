@@ -1,10 +1,13 @@
 name: Gosec
 on:
-  push:
-    branches: [main, develop]
-
+  # push:
+  #   branches: 
+  #     - develop
+  #     - athens2-develop
   pull_request:
-    branches: [main, develop]
+    branches: 
+      - develop
+      - athens2-develop
 
 env: 
   GOPRIVATE: "github.com/zeta-chain/*"

@@ -41,6 +41,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 		items[i].InBoundTxParams = &types.InBoundTxParams{
 			Sender:                          fmt.Sprintf("%d", i),
 			SenderChain:                     fmt.Sprintf("%d", i),
+			TxOrigin:                        fmt.Sprintf("%d", i),
 			InBoundTxObservedHash:           fmt.Sprintf("%d", i),
 			InBoundTxObservedExternalHeight: uint64(i),
 			InBoundTxFinalizedZetaHeight:    uint64(i),
@@ -56,6 +57,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			OutBoundTXBallotIndex:            fmt.Sprintf("%d", i),
 			OutBoundTxObservedExternalHeight: uint64(i),
 			OutBoundTxFinalizedZetaHeight:    uint64(i),
+			CoinType:                         0,
 		}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,

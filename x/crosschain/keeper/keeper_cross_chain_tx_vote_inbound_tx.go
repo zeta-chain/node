@@ -118,7 +118,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				if !tx.Failed() {
 					logs := evmtypes.LogsToEthereum(tx.Logs)
 					ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-					err = k.ProcessWithdrawalEvent(ctx, logs, contract)
+					txOrigin := msg.TxOrigin
+					if txOrigin == "" {
+						txOrigin = msg.Sender
+					}
+					err = k.ProcessWithdrawalLogs(ctx, logs, contract, txOrigin)
 					if err != nil {
 						errMsg := fmt.Sprintf("cannot process withdrawal event: %s", err.Error())
 						cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
@@ -143,23 +147,25 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
 			cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, cctx)
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if msg.CoinType == common.CoinType_Zeta {
-			//toBytes := ethcommon.HexToAddress(send.Receiver).Bytes()
-			//to := sdk.AccAddress(toBytes)
-			//amount, ok := big.NewInt(0).SetString(send.ZetaBurnt, 10)
-			//if !ok {
-			//	send.StatusMessage = fmt.Sprintf("cannot parse zetaBurnt: %s", send.ZetaBurnt)
-			//	send.Status = types.SendStatus_Aborted
-			//	goto EPILOGUE
-			//}
-			//err := k.fungibleKeeper.MintZetaToEVMAccount(ctx, to, amount)
-			//if err != nil {
-			//	send.StatusMessage = fmt.Sprintf("cannot MintZetaToEVMAccount: %s", err.Error())
-			//	send.Status = types.SendStatus_Aborted
-			//	goto EPILOGUE
-			//}
-			//send.Status = types.SendStatus_OutboundMined
+			toBytes := ethcommon.HexToAddress(msg.Receiver).Bytes()
+			to := sdk.AccAddress(toBytes)
+			amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
+			if !ok {
+				errMsg := fmt.Sprintf("cannot parse zetaBurnt: %s", msg.ZetaBurnt)
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
+				k.SetCrossChainTx(ctx, cctx)
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			err := k.fungibleKeeper.MintZetaToEVMAccount(ctx, to, amount)
+			if err != nil {
+				errMsg := fmt.Sprintf("cannot MintZetaToEVMAccount: %s", err.Error())
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, errMsg, cctx.LogIdentifierForCCTX())
+				k.SetCrossChainTx(ctx, cctx)
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
+			k.SetCrossChainTx(ctx, cctx)
 		}
 	} else {
 		err = k.FinalizeInbound(ctx, &cctx, msg.ReceiverChain, len(ballot.VoterList))
@@ -175,7 +181,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		k.SetCrossChainTx(ctx, cctx)
 	}
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-
 }
 
 func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain string, numberofobservers int) error {

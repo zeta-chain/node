@@ -115,7 +115,7 @@ func (s *COSuite) SetUpTest(c *C) {
 func (s *COSuite) TestSendFlow(c *C) {
 	b1 := s.bridge1
 	b2 := s.bridge2
-	metaHash, err := b1.PostSend(TEST_SENDER, "Ethereum", TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
+	metaHash, err := b1.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
 		"0xtxhash", 123123)
 	c.Assert(err, IsNil)
 	c.Logf("PostSend metaHash %s", metaHash)
@@ -123,7 +123,7 @@ func (s *COSuite) TestSendFlow(c *C) {
 	timer1 := time.NewTimer(2 * time.Second)
 	<-timer1.C
 
-	metaHash, err = b2.PostSend(TEST_SENDER, "Ethereum", TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
+	metaHash, err = b2.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
 		"0xtxhash", 123123)
 	c.Assert(err, IsNil)
 	c.Logf("Second PostSend metaHash %s", metaHash)

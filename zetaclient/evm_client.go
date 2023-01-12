@@ -463,12 +463,14 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		destChain := config.FindChainByID(event.DestinationChainId)
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
+
 		if strings.EqualFold(destAddr, config.Chains[destChain].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 		zetaHash, err := ob.zetaClient.PostSend(
 			event.ZetaTxSenderAddress.Hex(),
 			ob.chain.String(),
+			event.SourceTxOriginAddress.Hex(),
 			clienttypes.BytesToEthHex(event.DestinationAddress),
 			config.FindChainByID(event.DestinationChainId),
 			event.ZetaValueAndGas.String(),
@@ -515,8 +517,18 @@ func (ob *EVMChainClient) observeInTX() error {
 
 					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 					if err != nil {
-						ob.logger.Err(err).Msg("TransactionSender")
-						continue
+						ob.logger.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
+						chainConf, found := config.Chains[ob.chain.String()]
+						if !found || chainConf == nil {
+							ob.logger.Error().Msgf("chain %s not found in config", ob.chain.String())
+							continue
+						}
+						signer := ethtypes.NewLondonSigner(chainConf.ChainID)
+						from, err = signer.Sender(tx)
+						if err != nil {
+							ob.logger.Err(err).Msg("local recovery of sender address failed")
+							continue
+						}
 					}
 					zetaHash, err := ob.reportInboundCctx(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 					if err != nil {
@@ -587,6 +599,7 @@ func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.In
 	zetaHash, err := ob.zetaClient.PostSend(
 		from.Hex(),
 		ob.chain.String(),
+		from.Hex(),
 		from.Hex(),
 		"ZETA",
 		value.String(),

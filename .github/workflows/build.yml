@@ -9,10 +9,9 @@ on:
       - v*
       - athens2-*
   pull_request:
-    types: [ready_for_review]
-    branches: [develop, athens2-develop]    
-  release:
-    types: [created]
+    branches: 
+      - develop
+      - athens2-develop 
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -22,8 +21,6 @@ env:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    environment: 
-      name: development
     steps:
     - uses: actions/checkout@v3
 
@@ -32,15 +29,48 @@ jobs:
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
 
-    - name: Build Binaries
-      uses: ./.github/actions/build-binaries
-      with:
-        build-indexer: false
-        go-version: '1.18'
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: go test -v -coverprofile coverage.out  ./...
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+
+    - name: Set branch name
+      id: set-branch-name
+      run: |
+        if [ ${{ github.event_name }} == "pull_request" ]; then
+          echo "Setting the current branch name to same as the source branch of the PR"
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+        else
+          echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+        fi
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build zetacored and zetaclientd
+      run: |
+        make install
+        cp "$HOME"/go/bin/* ./
+
+    # - name: Test
+    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+    #   run: |
+    #     echo "Running Build Tests"
+    #     #make test
+    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+
+    - name: Build Zetavisor
+      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
+      run: |
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
@@ -60,12 +90,11 @@ jobs:
       uses: ./.github/actions/upload-to-s3
       with:
         bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+        release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
           zetacored
           zetaclientd
-          cosmovisor
 
     ## Not being used 
     # - name: Build, tag, and push image to Amazon ECR

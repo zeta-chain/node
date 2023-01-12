@@ -7,6 +7,7 @@ const (
 
 	Sender        = "Sender"
 	SenderChain   = "SenderChain"
+	TxOrigin      = "TxOrigin"
 	InTxHash      = "InTxObservedHash"
 	InBlockHeight = "InTxObservedBlockHeight"
 
@@ -30,6 +31,7 @@ const (
 	OutboundTxFailed     = "crosschain/OutboundTxFailed"
 	CctxCreated          = "crosschain/CctxCreated"
 	ZrcWithdrawCreated   = "crosschain/ZrcWithdrawCreated"
+	ZetaWithdrawCreated  = "crosschain/ZetaWithdrawCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"
