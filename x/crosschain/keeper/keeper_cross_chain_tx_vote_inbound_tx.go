@@ -71,7 +71,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	default:
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
@@ -126,6 +126,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 	if !found {
 		return types.ErrGasCoinNotFound
 	}
+	fmt.Println("USING GAS COIN :", gasCoin.String())
 	to := ethcommon.HexToAddress(msg.Receiver)
 	amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
 	if !ok {
@@ -143,6 +144,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 	var tx *evmtypes.MsgEthereumTxResponse
 	if len(msg.Message) == 0 { // no message; transfer
 		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
+		fmt.Println("TX NO WITHDRAW , --------", gasCoin.Zrc20ContractAddress)
 		txNoWithdraw, err := k.fungibleKeeper.DepositZRC20(ctx, ethcommon.HexToAddress(gasCoin.Zrc20ContractAddress), to, amount)
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
@@ -154,6 +156,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
+		fmt.Println("TX With WITHDRAW , --------")
 		txWithWithdraw, err = k.fungibleKeeper.DepositZRC20AndCallContract(ctx, depositContract, amount, contract, data)
 		if err != nil { // prepare to revert
 			return errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
@@ -180,7 +183,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 	}
 
 	cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
-	cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
+	//cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
 	return nil
 }
 

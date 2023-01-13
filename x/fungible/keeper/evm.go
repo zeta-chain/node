@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -266,6 +267,7 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("DEPOSTING TO ", to.String(), amount.String(), "==========------------===========")
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
 	if err != nil {
 		return nil, err
