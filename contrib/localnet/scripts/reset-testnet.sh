@@ -101,9 +101,5 @@ for NODE in $NODES; do
 done
 
 
-nodes="zetaclient0 zetaclient1"
-for client in $nodes; do
-    scp  ~/preparams/PreParams_$client.json $client:~/preparam.json
-done
 
 zetacored validate-genesis

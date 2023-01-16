@@ -26,6 +26,7 @@ COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams
 COPY contrib/localnet/ssh_config /root/.ssh/config
 COPY contrib/localnet/zetacored /root/zetacored
+COPY contrib/localnet/tss /root/tss
 
 RUN chmod 755 /root/reset-testnet.sh
 RUN chmod 755 /root/start-zetacored.sh
