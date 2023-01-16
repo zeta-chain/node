@@ -46,6 +46,7 @@ func (k Keeper) PostTxProcessing(
 }
 
 // FIXME: authenticate the emitting contract with foreign_coins
+// TODO : refactor this function to break into 2 functions , to separate out logic from crosschain and fungible modules
 func (k Keeper) ProcessWithdrawalEvent(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
 	var event *contracts.ZRC20Withdrawal
 	found := false

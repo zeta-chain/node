@@ -23,4 +23,5 @@ var (
 	ErrUnableToDepositZRC20        = sdkerrors.Register(ModuleName, 1114, "Unable to deposit ZRC20 ")
 	ErrUnableToParseContract       = sdkerrors.Register(ModuleName, 1115, "Cannot parse contract and data")
 	ErrCannotProcessWithdrawal     = sdkerrors.Register(ModuleName, 1116, "Cannot process withdrawal event")
+	ErrCoinTypeNotSupported        = sdkerrors.Register(ModuleName, 1117, "Err coin type not supported")
 )
