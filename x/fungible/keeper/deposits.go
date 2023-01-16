@@ -35,7 +35,7 @@ func (k Keeper) DepositCoinGas(ctx sdk.Context, to eth.Address, amount *big.Int,
 		if len(data) == 0 {
 			txWithWithdraw, err = k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
 		} else {
-			txWithWithdraw, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, amount, contract, data)
+			txWithWithdraw, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
 		}
 		if err != nil {
 			return tx, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())

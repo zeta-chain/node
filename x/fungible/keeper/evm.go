@@ -280,8 +280,8 @@ func (k Keeper) DepositZRC20(
 // callable from fungible module
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	zrc4Contract common.Address,
-	amount *big.Int,
 	targetContract common.Address,
+	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 
 	system, found := k.GetSystemContract(ctx)
