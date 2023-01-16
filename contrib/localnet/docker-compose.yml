@@ -35,8 +35,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.21
     entrypoint: /root/start-zetaclientd.sh
-#    entrypoint: /root/keygen.sh 10
-
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
 
   zetaclient1:
     image: zetanode:latest
@@ -45,7 +45,19 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.22
     entrypoint: /root/start-zetaclientd.sh
-#    entrypoint: /root/keygen.sh 10
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
+
+  eth:
+    image: ethereum/client-go:latest
+    hostname: eth
+    ports:
+      - "8545:8545"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.100
+    entrypoint: ["geth", "--dev", "--http", "--http.api", "eth,web3,net", "--http.corsdomain", "http://remix.ethereum.org"]
+
 
 
   orchestrator:
