@@ -26,6 +26,9 @@ var (
 	BaobabChain     = Chain("Baobab")
 	Ganache         = Chain("Ganache")
 	BTCTestnetChain = Chain("BTCTestnet")
+
+	// devnets
+	EthDevChain = Chain("ETHDEV")
 )
 
 type SigninAlgo string
@@ -85,6 +88,8 @@ func ParseChain(chainName string) (Chain, error) {
 		return BTCTestnetChain, nil
 	case "BTC":
 		return BTCChain, nil
+	case "ETHDEV":
+		return EthDevChain, nil
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}
@@ -112,6 +117,8 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "BTC"
 	case BTCTestnetChain:
 		return "tBTC"
+	case EthDevChain:
+		return "dETH"
 	default:
 		return "" // should not happen
 	}
@@ -128,7 +135,8 @@ func (chain Chain) IsZetaChain() bool {
 
 func (chain Chain) IsEVMChain() bool {
 	return chain.Equals(ETHChain) || chain.Equals(BSCChain) || chain.Equals(POLYGONChain) || chain.Equals(GoerliChain) ||
-		chain.Equals(MumbaiChain) || chain.Equals(BSCTestnetChain) || chain.Equals(BaobabChain) || chain.Equals(Ganache)
+		chain.Equals(MumbaiChain) || chain.Equals(BSCTestnetChain) || chain.Equals(BaobabChain) || chain.Equals(Ganache) ||
+		chain.Equals(EthDevChain)
 }
 
 func (chain Chain) IsKlaytnChain() bool {
