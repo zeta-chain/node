@@ -42,6 +42,7 @@ import (
 var (
 	preParams   *ecdsakeygen.LocalPreParams
 	keygenBlock int64
+	zetacoreURL *string
 )
 
 func main() {
@@ -54,6 +55,7 @@ func main() {
 	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 	chainID := flag.String("chain-id", "athens-1", "chain id")
+	zetacoreURL = flag.String("zetacore-url", "127.0.0.1", "zetacore node URL")
 
 	flag.Parse()
 	cmd.CHAINID = *chainID
@@ -135,17 +137,13 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	chainIP := os.Getenv("CHAIN_IP")
-	if chainIP == "" {
-		chainIP = "127.0.0.1"
-	}
 	updateConfig()
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("%s:9090", chainIP),
+			fmt.Sprintf("%s:9090", *zetacoreURL),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -168,7 +166,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	// first signer & bridge
 	signerName := validatorName
 	signerPass := "password"
-	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass)
+	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass, *zetacoreURL)
 	if done {
 		return
 	}
@@ -196,12 +194,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
-	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetNodeKey error : %s", err.Error())
-		return
+	for {
+		ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+		if err != nil {
+			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
+			time.Sleep(2 * time.Second)
+		} else {
+			log.Info().Msgf("SetNodeKey success: %s", ztx)
+			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
+			break
+		}
 	}
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 
