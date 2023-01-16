@@ -13,7 +13,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/address_book.seed
     export TSSPATH=~/.tss
-    exec zetaclientd -val val -log-console -enable-chains GOERLI \
+    exec zetaclientd -val val -log-console -enable-chains ETHDEV \
       -pre-params ~/preParams.json  -zetacore-url zetacore0 \
       -chain-id athens_101-1
 else
