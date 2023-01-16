@@ -1,0 +1,66 @@
+version: "3"
+
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+
+services:
+  zetacore0:
+    image: zetanode:latest
+    hostname: zetacore0
+    ports:
+      - "1317:1317"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.11
+    entrypoint: /root/start-zetacored.sh
+
+
+  zetacore1:
+    image: zetanode:latest
+    hostname: zetacore1
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.12
+    entrypoint: /root/start-zetacored.sh
+
+
+  zetaclient0:
+    image: zetanode:latest
+    hostname: zetaclient0
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.21
+
+
+
+  zetaclient1:
+    image: zetanode:latest
+    hostname: zetaclient1
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.22
+
+
+  orchestrator:
+    image: zetanode:latest
+    hostname: orchestrator
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.2
+
+
+#  node1:
+#    image: zetanode:latest
+#    hostname: node1
+#    ports:
+#      - "7021:22"
+#      - "1317"
+#      - "6060"
+#      - "6668"
+#      - "8123"
+#      - "9090-9091"
+#      - "26656-26657"
