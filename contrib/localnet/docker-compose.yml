@@ -56,7 +56,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "5"]
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "3"]
 
   orchestrator:
     image: orchestrator:latest
