@@ -9,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/contracts/evm/ZetaConnectorEth"
 	"github.com/zeta-chain/zetacore/contracts/evm/ZetaEth"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"google.golang.org/grpc"
 	"math/big"
 	"time"
 )
@@ -49,6 +51,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("Step 0: Check the nonce of deployer address\n")
+	nonce, err := ethclient.PendingNonceAt(context.Background(), DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	if nonce != 0 {
+		panic(fmt.Sprintf("nonce of deployer address should be 0, but got %d", nonce))
+	}
 	fmt.Printf("Step 1: Deploying ZetaEth contract\n")
 	zetaEthAddr, tx, ZetaEth, err := ZetaEth.DeployZetaEth(auth, ethclient, big.NewInt(21_000_000_000))
 	if err != nil {
@@ -81,6 +92,7 @@ func main() {
 	_ = ConnectorEth
 
 	// ==================== Interacting with contracts ====================
+	time.Sleep(10 * time.Second)
 	fmt.Printf("Step 2: Interacting with ZetaEth contract\n")
 	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
 	amount := big.NewInt(1e18)
@@ -93,7 +105,7 @@ func main() {
 	time.Sleep(BLOCK)
 	fmt.Printf("Calling ConnectorEth.Send\n")
 	tx, err = ConnectorEth.Send(auth, ZetaConnectorEth.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(5),
+		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
@@ -114,10 +126,35 @@ func main() {
 	for _, log := range receipt.Logs {
 		sentLog, err := ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			fmt.Printf("    Dest Addr: %s\n", sentLog.DestinationAddress)
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
 			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
 			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
 			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
 		}
+	}
+
+	grpcConn, err := grpc.Dial(
+		"zetacore0:9090",
+		grpc.WithInsecure(),
+	)
+	cctxClient := types.NewQueryClient(grpcConn)
+
+	for {
+		time.Sleep(5 * time.Second)
+		res, err := cctxClient.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			continue
+		}
+		if len(res.CrossChainTx) != 1 {
+			fmt.Printf("Waiting for CrossChainTx to appear...len cctx %d\n", len(res.CrossChainTx))
+			continue
+		}
+		if res.CrossChainTx[0].CctxStatus.Status != types.CctxStatus_OutboundMined {
+			fmt.Printf("Waiting for CrossChainTx to be mined...status %s\n", res.CrossChainTx[0].CctxStatus.Status)
+			continue
+		}
+		fmt.Printf("CrossChainTx found: %v\n", res.CrossChainTx[0])
+		break
 	}
 }
