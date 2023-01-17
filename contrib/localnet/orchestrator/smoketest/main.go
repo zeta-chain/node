@@ -42,6 +42,7 @@ func main() {
 	}
 	fmt.Printf("Deployer address: %s, balance: %d Ether\n", DeployerAddress.Hex(), bal.Div(bal, big.NewInt(1e18)))
 
+	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
 	if err != nil {
@@ -157,4 +158,6 @@ func main() {
 		fmt.Printf("CrossChainTx found: %v\n", res.CrossChainTx[0])
 		break
 	}
+
+	// ==================== Add your tests here ====================
 }
