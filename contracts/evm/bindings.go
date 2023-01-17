@@ -18,8 +18,4 @@
 
 package evm
 
-import (
-	_ "embed"
-)
-
 var _ = Connector{}
