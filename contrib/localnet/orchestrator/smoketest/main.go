@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 	"math/big"
+	"sync"
 	"time"
 )
 
@@ -20,23 +21,24 @@ var (
 	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
 	BLOCK              = 6 * time.Second // should be 2x block time
+	BigZero            = big.NewInt(0)
 )
 
 func main() {
-	ethclient, err := ethclient.Dial("http://eth:8545")
+	goerliClient, err := ethclient.Dial("http://eth:8545")
 	if err != nil {
 		panic(err)
 	}
-	bn, err := ethclient.BlockNumber(context.Background())
+	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	chainID, err := ethclient.ChainID(context.Background())
+	chainID, err := goerliClient.ChainID(context.Background())
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("ChainID: %d, Current block number: %d\n", chainID, bn)
-	bal, err := ethclient.BalanceAt(context.TODO(), DeployerAddress, nil)
+	bal, err := goerliClient.BalanceAt(context.TODO(), DeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +56,7 @@ func main() {
 	}
 
 	fmt.Printf("Step 0: Check the nonce of deployer address\n")
-	nonce, err := ethclient.PendingNonceAt(context.Background(), DeployerAddress)
+	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -62,13 +64,13 @@ func main() {
 		panic(fmt.Sprintf("nonce of deployer address should be 0, but got %d", nonce))
 	}
 	fmt.Printf("Step 1: Deploying ZetaEth contract\n")
-	zetaEthAddr, tx, ZetaEth, err := ZetaEth.DeployZetaEth(auth, ethclient, big.NewInt(21_000_000_000))
+	zetaEthAddr, tx, ZetaEth, err := ZetaEth.DeployZetaEth(auth, goerliClient, big.NewInt(21_000_000_000))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("ZetaEth contract address: %s, tx hash: %s\n", zetaEthAddr.Hex(), tx.Hash().Hex())
 	time.Sleep(BLOCK)
-	receipt, err := ethclient.TransactionReceipt(context.Background(), tx.Hash())
+	receipt, err := goerliClient.TransactionReceipt(context.Background(), tx.Hash())
 	if err != nil {
 		panic(err)
 	}
@@ -78,13 +80,13 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Deployer address: %s, balance: %d ZetaEth\n", DeployerAddress.Hex(), bal2.Div(bal2, big.NewInt(1e18)))
-	connectorEthAddr, tx, ConnectorEth, err := ZetaConnectorEth.DeployZetaConnectorEth(auth, ethclient, zetaEthAddr,
+	connectorEthAddr, tx, ConnectorEth, err := ZetaConnectorEth.DeployZetaConnectorEth(auth, goerliClient, zetaEthAddr,
 		TSSAddress, DeployerAddress, DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	time.Sleep(BLOCK)
-	receipt, err = ethclient.TransactionReceipt(context.Background(), tx.Hash())
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +120,7 @@ func main() {
 	}
 	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
 	time.Sleep(BLOCK)
-	receipt, err = ethclient.TransactionReceipt(context.Background(), tx.Hash())
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
 	if err != nil {
 		panic(err)
 	}
@@ -140,24 +142,90 @@ func main() {
 	)
 	cctxClient := types.NewQueryClient(grpcConn)
 
-	for {
-		time.Sleep(5 * time.Second)
-		res, err := cctxClient.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-			continue
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			time.Sleep(5 * time.Second)
+			res, err := cctxClient.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				continue
+			}
+			if len(res.CrossChainTx) != 1 {
+				fmt.Printf("Waiting for CrossChainTx to appear...len cctx %d\n", len(res.CrossChainTx))
+				continue
+			}
+			if res.CrossChainTx[0].CctxStatus.Status != types.CctxStatus_OutboundMined {
+				fmt.Printf("Waiting for CrossChainTx to be mined...status %s\n", res.CrossChainTx[0].CctxStatus.Status)
+				continue
+			}
+			fmt.Printf("CrossChainTx found: %v\n", res.CrossChainTx[0])
+			break
 		}
-		if len(res.CrossChainTx) != 1 {
-			fmt.Printf("Waiting for CrossChainTx to appear...len cctx %d\n", len(res.CrossChainTx))
-			continue
-		}
-		if res.CrossChainTx[0].CctxStatus.Status != types.CctxStatus_OutboundMined {
-			fmt.Printf("Waiting for CrossChainTx to be mined...status %s\n", res.CrossChainTx[0].CctxStatus.Status)
-			continue
-		}
-		fmt.Printf("CrossChainTx found: %v\n", res.CrossChainTx[0])
-		break
-	}
+	}()
+	wg.Wait()
 
+	// ==================== Sending ZETA to ZetaChain ===================
+	amount = big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
+	fmt.Printf("Step 3: Sending ZETA to ZetaChain\n")
+	tx, err = ZetaEth.Approve(auth, connectorEthAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	tx, err = ConnectorEth.Send(auth, ZetaConnectorEth.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     amount,
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("  Logs:\n")
+	for _, log := range receipt.Logs {
+		sentLog, err := ConnectorEth.ParseZetaSent(*log)
+		if err == nil {
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
+			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
+			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+		}
+	}
+	zevmClient, err := ethclient.Dial("http://zetacore0:8545")
+	if err != nil {
+		panic(err)
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			time.Sleep(5 * time.Second)
+			bn, _ := zevmClient.BlockNumber(context.Background())
+			bal, _ := zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
+
+			if bal.Int64() > 0 {
+				fmt.Printf("Positve zeta balance; success!\n")
+				break
+			}
+		}
+	}()
+	wg.Wait()
 	// ==================== Add your tests here ====================
+
+	wg.Wait()
 }
