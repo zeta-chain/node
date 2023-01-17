@@ -7,8 +7,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/contracts/evm/ZetaConnectorEth"
-	"github.com/zeta-chain/zetacore/contracts/evm/ZetaEth"
+	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
+	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 	"math/big"
@@ -64,7 +64,7 @@ func main() {
 		panic(fmt.Sprintf("nonce of deployer address should be 0, but got %d", nonce))
 	}
 	fmt.Printf("Step 1: Deploying ZetaEth contract\n")
-	zetaEthAddr, tx, ZetaEth, err := ZetaEth.DeployZetaEth(auth, goerliClient, big.NewInt(21_000_000_000))
+	zetaEthAddr, tx, ZetaEth, err := zetaeth.DeployZetaEth(auth, goerliClient, big.NewInt(21_000_000_000))
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +80,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Deployer address: %s, balance: %d ZetaEth\n", DeployerAddress.Hex(), bal2.Div(bal2, big.NewInt(1e18)))
-	connectorEthAddr, tx, ConnectorEth, err := ZetaConnectorEth.DeployZetaConnectorEth(auth, goerliClient, zetaEthAddr,
+	connectorEthAddr, tx, ConnectorEth, err := zetaconnectoreth.DeployZetaConnectorEth(auth, goerliClient, zetaEthAddr,
 		TSSAddress, DeployerAddress, DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -107,7 +107,7 @@ func main() {
 	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
 	time.Sleep(BLOCK)
 	fmt.Printf("Calling ConnectorEth.Send\n")
-	tx, err = ConnectorEth.Send(auth, ZetaConnectorEth.ZetaInterfacesSendInput{
+	tx, err = ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
@@ -140,6 +140,9 @@ func main() {
 		"zetacore0:9090",
 		grpc.WithInsecure(),
 	)
+	if err != nil {
+		panic(err)
+	}
 	cctxClient := types.NewQueryClient(grpcConn)
 
 	var wg sync.WaitGroup
@@ -177,7 +180,7 @@ func main() {
 	}
 	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
 	time.Sleep(BLOCK)
-	tx, err = ConnectorEth.Send(auth, ZetaConnectorEth.ZetaInterfacesSendInput{
+	tx, err = ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
@@ -219,13 +222,13 @@ func main() {
 			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
 
 			if bal.Int64() > 0 {
-				fmt.Printf("Positve zeta balance; success!\n")
+				fmt.Printf("Positive zeta balance; success!\n")
 				break
 			}
 		}
 	}()
 	wg.Wait()
 	// ==================== Add your tests here ====================
+	test1()
 
-	wg.Wait()
 }
