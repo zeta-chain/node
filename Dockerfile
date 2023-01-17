@@ -10,6 +10,7 @@ RUN go mod download
 COPY . .
 
 RUN make install
+RUN make install-smoketest
 
 
 FROM alpine
@@ -20,6 +21,7 @@ RUN mkdir /root/.ssh
 
 COPY --from=builder /go/bin/zetaclientd /usr/local/bin
 COPY --from=builder /go/bin/zetacored /usr/local/bin
+COPY --from=builder /go/bin/smoketest /usr/local/bin
 COPY contrib/localnet/meta.pem.pub /root/.ssh/authorized_keys
 COPY contrib/localnet/meta.pem /root/.ssh/meta.pem
 COPY contrib/localnet/scripts /root

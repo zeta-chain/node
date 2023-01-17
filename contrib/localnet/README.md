@@ -9,8 +9,8 @@ as Ubuntu 22.04 LTS.
 
 The docker-compose.yml file defines a network with:
 
-* 4 zetacore nodes
-* 4 zetaclient nodes
+* 2 zetacore nodes
+* 2 zetaclient nodes
 * 1 go-ethereum private net node
 * 1 bitcoin core private node
 
@@ -21,123 +21,37 @@ The docker-compose.yml file defines a network with:
 - [Go](https://golang.org/doc/install)
 - [jq](https://stedolan.github.io/jq/download/)
 
-## Create a local testnet of ZetaChain
+## Steps
 
-### To setup the network nodes
-
-### Create .pem file
-
-```
-ssh-keygen -P "" -t rsa -b 4096 -m pem -f z.pem
-```
-
-### Clone zeta-node repo
-
-```
-git clone git@github.com:zeta-chain/zeta-node.git
+### Build zetanode & smoketest docker image
+```bash
+# in zeta-node/
+$ docker build -t zetanode .
+$ docker build -t smoketest -f Dockerfile.smoketest .
 ```
 
+### Smoke Test Dev & Test Cyccle
+The smoke test is in the directory /contrib/localnet/orchestrator/smoketest. 
+It's a Go program that performs various operations on the localnet.
 
-### Create docker image
+When you update/add tests to the smoke test, you need to rebuild the smoketest
+image: 
 
-```
-docker build -t zetanode .
-```
-
-### Launch nodes
-
-```
-docker compose up
-```
-
-### Terminals
-
-At this point you should launch one terminal per node, can be [tmux](https://github.com/tmux/tmux/wiki), or whatever you prefer.
-Available nodes are `node0`,`node1`,`node2` and `node3`.
-All the scripts into the containers are prepared to detect in which node are
-executing, so for example if you launch the reset script on all nodes, it will only work on node0. This is useful on tmux because you can safely run the commands below in order on all the terminals at the same time.
-
-
-### Connect to nodes 
-
-```
-./node.sh <Node number>
+```bash
+# in zeta-node/
+$ docker build -t smoketest -f Dockerfile.smoketest .
 ```
 
-E.g.
-```
-./node.sh 0
-./node.sh 1
-./node.sh 2
-./node.sh 3
+and then rebuild the orchestrator image:
+
+```bash
+# in zeta-node/contrib/localnet/orchestrator
+$ docker build -t orchestrator .
 ```
 
 
-### Reset (node0)
-
-```
-./reset-testnet.sh 
-```
-
-### Start zetacored
-
-```
-./start.sh (all nodes)
-```
-
-## Zetaclientd
-
-### Seed tss (all nodes)
-```
-./seed.sh
-```
-
-### Keygen (all nodes)
-
-You need to pass a block number in the future as a parameter.
-
-Usually 10-15 blocks are enough ( depends on how fast you're to launch the next step on all the virtuals )
-
-First check the current height on zetacored:
-
-In the screenshot current height is 1660. 
-![height](docs/height.png)
 
 
-e.g. using 1700. ( wait until it reachs that block number)
-
-```
-./keygen.sh 1700
-```
-
-At the end of this step you will have a TSS address, remember to write it down somewhere, because you will need it when deploying contracts.
-
-You should run keygen only one time per testnet initialization.
-
-### Env vars
-
-Customize env vars as you like...
-
-```
-./env.sh
-```
-
-### Launch clients
-
-```
-./start_client.sh
-```
-
-### Notes
-
-* From now you can stop the services on each container and start again with :
-
-`start.sh` for zetacored
-`start_client.sh` for zetaclientd
-
-* If you want to persist the configuration you can backup `/home/alpine` folder on each node.
-
-
-### Now you need to deploy contracts 
+## References
 [Setup testnet reference](https://www.notion.so/zetachain/Set-up-athens-1-like-testnet-to-test-your-PRs-ac523eb5dd5d4e73902072ab7d85fa2f)
 

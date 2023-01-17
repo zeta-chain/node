@@ -49,33 +49,20 @@ services:
       - ETHDEV_ENDPOINT=http://eth:8545
 
   eth:
-    image: ethereum/client-go:latest
+    image: ethereum/client-go:v1.10.26
     hostname: eth
     ports:
       - "8545:8545"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "http://remix.ethereum.org"]
-
-
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "5"]
 
   orchestrator:
-    image: zetanode:latest
+    image: orchestrator:latest
     hostname: orchestrator
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
+    entrypoint: /work/start.sh
 
-
-#  node1:
-#    image: zetanode:latest
-#    hostname: node1
-#    ports:
-#      - "7021:22"
-#      - "1317"
-#      - "6060"
-#      - "6668"
-#      - "8123"
-#      - "9090-9091"
-#      - "26656-26657"
