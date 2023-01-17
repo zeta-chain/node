@@ -72,10 +72,9 @@ install-indexer: go.sum
 		@echo "--> Installing indexer"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
 
-install-mockmpi:
-	@echo "--> Installing MockMPI"
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/mockmpi
-
+install-smoketest: go.sum
+		@echo "--> Installing orchestrator"
+		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
