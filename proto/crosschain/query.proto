@@ -40,7 +40,7 @@ service Query {
 
 // Queries a OutTxTracker by index.
 	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{index}";
+		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}";
 	}
 
 	// Queries a list of OutTxTracker items.
@@ -173,8 +173,8 @@ message QueryParamsResponse {
 
 
 message QueryGetOutTxTrackerRequest {
-	  string index = 1;
-
+	  int64 chainID = 1;
+		uint64 nonce = 2;
 }
 
 message QueryGetOutTxTrackerResponse {

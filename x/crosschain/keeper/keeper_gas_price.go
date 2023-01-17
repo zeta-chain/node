@@ -18,13 +18,14 @@ import (
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
 	b := k.cdc.MustMarshal(&gasPrice)
+	gasPrice.Index = strconv.FormatInt(gasPrice.ChainID, 10)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 
 // GetGasPrice returns a gasPrice from its index
-func (k Keeper) GetGasPrice(ctx sdk.Context, chainId int64) (val types.GasPrice, found bool) {
+func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (val types.GasPrice, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainId, 10)))
+	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
 	if b == nil {
 		return val, false
 	}
@@ -32,8 +33,8 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, chainId int64) (val types.GasPrice,
 	return val, true
 }
 
-func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainId int64) (sdk.Uint, bool) {
-	gasPrice, isFound := k.GetGasPrice(ctx, chainId)
+func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (sdk.Uint, bool) {
+	gasPrice, isFound := k.GetGasPrice(ctx, chainID)
 	if !isFound {
 		return sdk.ZeroUint(), isFound
 	}
@@ -98,6 +99,7 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
+	fmt.Println(req.Index)
 	chainID, err := strconv.Atoi(req.Index)
 	if err != nil {
 		return nil, err
@@ -128,7 +130,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !isFound {
 		gasPrice = types.GasPrice{
 			Creator:     msg.Creator,
-			Index:       strconv.FormatInt(chain.ChainId, 10),
+			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
 			ChainID:     chain.ChainId,
 			Prices:      []uint64{msg.Price},
 			BlockNums:   []uint64{msg.BlockNumber},

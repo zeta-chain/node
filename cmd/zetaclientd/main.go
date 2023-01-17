@@ -285,9 +285,9 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		}
 		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
 		if err != nil {
-			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+			log.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tssAddr, zetaTx)
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 
 	}
 
@@ -324,7 +324,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	for _, chain := range config.ChainsEnabled {
 		err = (chainClientMap1)[chain].PostNonceIfNotRecorded()
 		if err != nil {
-			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 		}
 	}
 

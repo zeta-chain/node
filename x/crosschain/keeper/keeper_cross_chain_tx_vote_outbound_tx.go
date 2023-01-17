@@ -9,7 +9,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
@@ -72,12 +71,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		ctx.Logger().Error(err.Error())
 		k.SetCrossChainTx(ctx, cctx)
 		// Remove OutTX tracker and change CCTX prefix store
-		k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
-	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%d-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }

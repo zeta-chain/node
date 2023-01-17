@@ -37,12 +37,12 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, msg)
 	if err != nil {
-		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
+		b.logger.Error().Err(err).Msg("AddTxHashToOutTxTracker broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -237,7 +237,8 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s-%d", chain.String(), nonce),
+		ChainID: chain.ChainId,
+		Nonce:   nonce,
 	})
 	if err != nil {
 		return nil, err

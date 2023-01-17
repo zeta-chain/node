@@ -9,7 +9,7 @@ func GetSupportedChains() []*common.Chain {
 	return common.DefaultChainsList()
 }
 
-func GetChainIdFromChainName(chainName common.ChainName) int64 {
+func GetChainIDFromChainName(chainName common.ChainName) int64 {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
 		if chainName == chain.ChainName {
@@ -28,26 +28,22 @@ func GetChainFromChainName(chainName common.ChainName) *common.Chain {
 	return nil
 }
 
-func GetChainNameFromChainId(chainId int64) common.ChainName {
+func GetChainNameFromChainID(chainID int64) common.ChainName {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
-		if chainId == chain.ChainId {
+		if chainID == chain.ChainId {
 			return chain.ChainName
 		}
 	}
 	return common.ChainName_Empty
 }
 
-func GetChainFromChainId(chainId int64) *common.Chain {
+func GetChainFromChainID(chainID int64) *common.Chain {
 	chains := GetSupportedChains()
 	for _, chain := range chains {
-		if chainId == chain.ChainId {
+		if chainID == chain.ChainId {
 			return chain
 		}
 	}
 	return nil
-}
-
-func GetZetaChainId() int64 {
-	return 123
 }

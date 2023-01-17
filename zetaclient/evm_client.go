@@ -116,7 +116,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	ob.fileLogger = &fileLogger
 
 	// initialize the Client
-	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 	client, err := ethclient.Dial(ob.endpoint)
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("eth Client Dial")
@@ -165,7 +165,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		ob.BuildReceiptsMap()
 
 	}
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, ob.GetLastBlockHeight())
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain.String(), ob.GetLastBlockHeight())
 
 	return &ob, nil
 }
@@ -177,7 +177,7 @@ func (ob *EVMChainClient) Start() {
 }
 
 func (ob *EVMChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
+	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
 	ob.logger.Info().Msg("closing ob.db")
@@ -186,7 +186,7 @@ func (ob *EVMChainClient) Stop() {
 		ob.logger.Error().Err(err).Msg("error closing db")
 	}
 
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
+	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
 // returns: isIncluded, isConfirmed, Error
@@ -217,7 +217,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 			logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 			return true, true, nil
 		} else if found && receipt.Status == 0 { // the same as below events flow
-			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
+			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
 			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Gas)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
@@ -231,7 +231,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 			for _, vLog := range logs {
 				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
-					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
+					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
@@ -258,12 +258,12 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
-					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, vLog.TxHash.Hex())
+					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
@@ -289,13 +289,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain, nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
 		} else if found && receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
-			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain, receipt.TxHash.Hex())
+			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
 			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Zeta)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
@@ -323,10 +323,7 @@ func (ob *EVMChainClient) observeOutTx() {
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
-				nonceInt, err := strconv.Atoi(tracker.Nonce)
-				if err != nil {
-					return
-				}
+				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
 					inTimeout := time.After(3000 * time.Millisecond)
@@ -338,8 +335,8 @@ func (ob *EVMChainClient) observeOutTx() {
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							ob.outTXConfirmedReceipts[nonceInt] = receipt
-							ob.outTXConfirmedTransaction[nonceInt] = transaction
+							ob.outTXConfirmedReceipts[int(nonceInt)] = receipt
+							ob.outTXConfirmedTransaction[int(nonceInt)] = transaction
 							value, err := receipt.MarshalJSON()
 							if err != nil {
 								logger.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
@@ -438,7 +435,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain, header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Finally query the for the logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
@@ -461,7 +458,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		event := logs.Event
 		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 
-		destChain := GetChainFromChainId(event.DestinationChainId.Int64())
+		destChain := GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 		// TODO : Refactor this comparison
@@ -592,7 +589,7 @@ func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.In
 		ob.chain.ChainId,
 		from.Hex(),
 		from.Hex(),
-		GetZetaChainId(),
+		common.ZetaChain().ChainId,
 		value.String(),
 		value.String(),
 		message,
@@ -919,10 +916,7 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
-		conv, err := strconv.Atoi(tracker.Nonce)
-		if err != nil {
-			return err
-		}
+		conv := tracker.Nonce
 		intNonce := int64(conv)
 		if minNonce == -1 {
 			minNonce = intNonce

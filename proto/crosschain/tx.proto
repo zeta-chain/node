@@ -24,7 +24,7 @@ service Msg {
 
 message MsgAddToOutTxTracker {
   string creator = 1;
-  string chain = 2;
+  int64 chainId = 2;
   uint64 nonce = 3;
   string txHash = 4;
 }
@@ -34,7 +34,7 @@ message MsgAddToOutTxTrackerResponse {
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
-  string chain = 2;
+  int64 chainId = 2;
   uint64 nonce = 3;
 }
 

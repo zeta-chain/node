@@ -51,7 +51,10 @@ func CmdSetSupportedChains() *cobra.Command {
 			if chainName == 0 {
 				return errors.New("ChainName type not supported\"")
 			}
-			chainId, err := strconv.Atoi(args[0])
+			chainID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -59,7 +62,7 @@ func CmdSetSupportedChains() *cobra.Command {
 
 			msg := &types.MsgSetSupportedChains{
 				Creator:   clientCtx.GetFromAddress().String(),
-				ChainId:   int64(chainId),
+				ChainId:   int64(chainID),
 				ChainName: chainName,
 			}
 			if err := msg.ValidateBasic(); err != nil {

@@ -118,7 +118,7 @@ func (co *CoreObserver) keygenObserve() {
 				for _, chain := range config.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
+						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 					}
 				}
 
@@ -130,7 +130,7 @@ func (co *CoreObserver) keygenObserve() {
 				for _, chain := range config.ChainsEnabled {
 					err = co.clientMap[chain].PostNonceIfNotRecorded()
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 					}
 				}
 
@@ -444,7 +444,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 					log.Warn().Err(err).Msgf("OutTx Broadcast error")
 					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.OutBoundTxParams.OutBoundTxTSSNonce, 10), toChain.String(), outTxHash)
 					if report {
-						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash)
 						if err != nil {
 							logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
 						}
@@ -457,7 +457,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
-				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash)
 				if err != nil {
 					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
 				}

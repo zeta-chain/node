@@ -13,7 +13,7 @@ import (
 type ObserverMapperReader struct {
 	Index             string   `json:"index"`
 	ObserverChainName string   `json:"observerChainName"`
-	ObserverChainId   int64    `json:"observerChainId"`
+	ObserverChainID   int64    `json:"observerChainId"`
 	ObservationType   string   `json:"observationType"`
 	ObserverList      []string `json:"observerList"`
 }
@@ -38,7 +38,7 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	for i, readerValue := range observers {
 		chain := &common.Chain{
 			ChainName: common.ParseStringToObserverChain(readerValue.ObserverChainName),
-			ChainId:   readerValue.ObserverChainId,
+			ChainId:   readerValue.ObserverChainID,
 		}
 		observationType := ParseStringToObservationType(readerValue.ObservationType)
 		if observationType == 0 || chain.ChainName == 0 {

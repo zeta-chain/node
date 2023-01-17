@@ -46,7 +46,7 @@ type ZetaObserverKeeper interface {
 	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
 	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
 	IsChainSupported(ctx sdk.Context, checkChain common.Chain) bool
-	GetChainFromChainID(ctx sdk.Context, chainId int64) (*common.Chain, bool)
+	GetChainFromChainID(ctx sdk.Context, chainID int64) (*common.Chain, bool)
 	GetChainFromChainName(ctx sdk.Context, name common.ChainName) (*common.Chain, bool)
 	GetSupportedChains(ctx sdk.Context) (val zetaObserverTypes.SupportedChains, found bool)
 }

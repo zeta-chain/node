@@ -222,15 +222,26 @@ func request_Query_OutTxTracker_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["index"]
+	val, ok = pathParams["chainID"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainID")
 	}
 
-	protoReq.Index, err = runtime.String(val)
+	protoReq.ChainID, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainID", err)
+	}
+
+	val, ok = pathParams["nonce"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nonce")
+	}
+
+	protoReq.Nonce, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nonce", err)
 	}
 
 	msg, err := client.OutTxTracker(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -249,15 +260,26 @@ func local_request_Query_OutTxTracker_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["index"]
+	val, ok = pathParams["chainID"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainID")
 	}
 
-	protoReq.Index, err = runtime.String(val)
+	protoReq.ChainID, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainID", err)
+	}
+
+	val, ok = pathParams["nonce"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "nonce")
+	}
+
+	protoReq.Nonce, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "nonce", err)
 	}
 
 	msg, err := server.OutTxTracker(ctx, &protoReq)
@@ -2362,7 +2384,7 @@ var (
 
 	pattern_Query_ZEVMGetBlock_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "zevm", "zevm_getBlockByNumber", "height"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_OutTxTracker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "outTxTracker", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_OutTxTracker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "crosschain", "outTxTracker", "chainID", "nonce"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_OutTxTrackerAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "outTxTracker"}, "", runtime.AssumeColonVerbOpt(true)))
 

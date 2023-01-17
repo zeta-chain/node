@@ -84,7 +84,7 @@ func AddObserverAccountCmd() *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 			chainName := common.ParseStringToObserverChain(args[0])
-			chainId, err := strconv.Atoi(args[1])
+			chainID, err := strconv.Atoi(args[1])
 			if err != nil {
 				return err
 			}
@@ -93,7 +93,7 @@ func AddObserverAccountCmd() *cobra.Command {
 				Index: "",
 				ObserverChain: &common.Chain{
 					ChainName: chainName,
-					ChainId:   int64(chainId),
+					ChainId:   int64(chainID),
 				},
 				ObservationType: obs,
 				ObserverList:    strings.Split(args[2], ","),
