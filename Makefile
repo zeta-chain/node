@@ -136,3 +136,17 @@ proto-check-breaking:
 	# we should turn this back on after our first release
 	# $(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking
+
+###############################################################################
+###                                Docker Images                             ###
+###############################################################################
+zetanode:
+	@echo "Building zetanode"
+	@docker build -t zetanode -f ./Dockerfile .
+.PHONY: zetanode
+
+smoketest:
+	@echo "--> Building smoketest image"
+	$(DOCKER) build -t smoketest -f Dockerfile.smoketest .
+	cd contrib/localnet/orchestrator && $(DOCKER) build -t orchestrator -f Dockerfile .
+.PHONY: smoketest
