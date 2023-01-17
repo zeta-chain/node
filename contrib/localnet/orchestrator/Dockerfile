@@ -13,7 +13,6 @@ COPY --from=smoketest /go/bin/smoketest /usr/local/bin/
 
 WORKDIR /work
 
-COPY setup.js /work/
 COPY start.sh /work/
 
 RUN chmod +x /work/start.sh
