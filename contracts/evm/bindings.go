@@ -20,28 +20,6 @@ package evm
 
 import (
 	_ "embed"
-	"encoding/json"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 var _ = Connector{}
-
-type CompiledContract struct {
-	ABI      abi.ABI
-	Bytecode evmtypes.HexString
-}
-
-var (
-	//go:embed ZetaEth.json
-	ZETAETHJSON []byte // nolint: golint
-
-	ZetaEthContract CompiledContract
-)
-
-func init() {
-	err := json.Unmarshal(ZETAETHJSON, &ZetaEthContract)
-	if err != nil {
-		panic(err)
-	}
-}
