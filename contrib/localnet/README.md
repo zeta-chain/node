@@ -49,8 +49,15 @@ and then rebuild the orchestrator image:
 $ docker build -t orchestrator .
 ```
 
+Now we have built all the docker images; we can run the smoke test
+```bash
+# in zeta-node/contrib/localnet/orchestrator
+$ docker compose up
+```
 
-
+The most straightforward log to observe is the orchestrator log.
+If everything works fine, it should finish without panic, and with
+a message "smoketest done". 
 
 ## References
 [Setup testnet reference](https://www.notion.so/zetachain/Set-up-athens-1-like-testnet-to-test-your-PRs-ac523eb5dd5d4e73902072ab7d85fa2f)

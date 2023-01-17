@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/big"
 
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/rs/zerolog"
@@ -56,7 +57,7 @@ func main() {
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 	chainID := flag.String("chain-id", "athens-1", "chain id")
 	zetacoreURL = flag.String("zetacore-url", "127.0.0.1", "zetacore node URL")
-
+	devMode := flag.Bool("dev", false, "dev mode: geth private network as goerli testnet")
 	flag.Parse()
 	cmd.CHAINID = *chainID
 	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
@@ -80,6 +81,14 @@ func main() {
 		}
 	}
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
+	log.Info().Msgf("DEV mode: %v", *devMode)
+	if *devMode {
+		config.Chains[common.GoerliChain.String()].ChainID = big.NewInt(1337)
+		config.Chains[common.GoerliChain.String()].Endpoint = "http://eth:8545"
+		config.Chains[common.GoerliChain.String()].BlockTime = 3
+		config.Chains[common.GoerliChain.String()].ZETATokenContractAddress = "0xA8D5060feb6B456e886F023709A2795373691E63"
+		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	}
 
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
