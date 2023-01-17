@@ -13,7 +13,7 @@ flexible, close to real world, and with fast turnaround
 between edit code -> compile -> test results. 
 
 This is primarily tested on a recent Linux distribution such
-as Ubuntu 22.04 LTS. 
+as Ubuntu 22.04 LTS, though macOS should also work (not tested). 
 
 The docker-compose.yml file defines a network with:
 
@@ -32,11 +32,15 @@ The docker-compose.yml file defines a network with:
 
 ## Steps
 
-### Build zetanode & smoketest docker image
+### Build zetanode 
+```bash
+$ make zetanode
+```
+
+This Makefile rule builds the zetanode image. **Rebuild if zetacored/zetaclientd code is updated**.  
 ```bash
 # in zeta-node/
 $ docker build -t zetanode .
-$ docker build -t smoketest -f Dockerfile.smoketest .
 ```
 
 ### Smoke Test Dev & Test Cyccle
@@ -45,23 +49,23 @@ It's a Go program that performs various operations on the localnet.
 
 When you update/add tests to the smoke test, you need to rebuild the smoketest
 image: 
+```bash
+$ make smoketest
+```
 
+This Makefile rule builds the following two images: **Rebuild if you add/update test cases in zeta-node/contrib/localnet/orchestrator/smoketest**
 ```bash
 # in zeta-node/
 $ docker build -t smoketest -f Dockerfile.smoketest .
-```
-
-and then rebuild the orchestrator image:
-
-```bash
 # in zeta-node/contrib/localnet/orchestrator
 $ docker build -t orchestrator .
 ```
+### Run smoke test
 
 Now we have built all the docker images; we can run the smoke test
 ```bash
 # in zeta-node/contrib/localnet/orchestrator
-$ docker compose up
+$ docker compose up -d
 ```
 
 The most straightforward log to observe is the orchestrator log.
@@ -73,6 +77,14 @@ To stop the tests,
 # in zeta-node/contrib/localnet/orchestrator
 $ docker compose down --remove-orphans
 ```
+
+## Useful data
+
+- On GOERLI (private ETH net), the deployer account is pre-funded with Ether. 
+[Deployer Address and Private Key](orchestrator/smoketest/main.go)
+
+- TSS Address (on ETH): 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2
+
 
 
 ## Add more smoke tests
