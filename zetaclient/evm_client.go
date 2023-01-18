@@ -515,8 +515,18 @@ func (ob *EVMChainClient) observeInTX() error {
 
 					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 					if err != nil {
-						ob.logger.Err(err).Msg("TransactionSender")
-						continue
+						ob.logger.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
+						chainConf, found := config.Chains[ob.chain.String()]
+						if !found || chainConf == nil {
+							ob.logger.Error().Msgf("chain %s not found in config", ob.chain.String())
+							continue
+						}
+						signer := ethtypes.NewLondonSigner(chainConf.ChainID)
+						from, err = signer.Sender(tx)
+						if err != nil {
+							ob.logger.Err(err).Msg("local recovery of sender address failed")
+							continue
+						}
 					}
 					zetaHash, err := ob.reportInboundCctx(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 					if err != nil {
@@ -650,6 +660,10 @@ func (ob *EVMChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *EVMChainClient) WatchGasPrice() {
+	err := ob.PostGasPrice()
+	if err != nil {
+		ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+	}
 	gasTicker := time.NewTicker(60 * time.Second)
 	for {
 		select {

@@ -85,10 +85,17 @@ var ChainConfigs = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "107.20.255.203:18332",
 	},
+	common.EmptyChain.String(): {
+		Name:                     "",
+		ConnectorContractAddress: "",
+		ChainID:                  big.NewInt(0),
+	},
 
-	common.ZetaChain().ChainName.String(): {
-		Chain:     common.ZetaChain(),
-		BlockTime: 6,
+	common.ZETAChain.String(): {
+		Name:                     "ZETA",
+		ChainID:                  big.NewInt(100),
+		BlockTime:                6,
+		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
 }
 

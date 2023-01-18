@@ -41,6 +41,7 @@ import (
 var (
 	preParams   *ecdsakeygen.LocalPreParams
 	keygenBlock int64
+	zetacoreURL *string
 )
 
 func main() {
@@ -53,7 +54,8 @@ func main() {
 	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 	chainID := flag.String("chain-id", "athens-1", "chain id")
-
+	zetacoreURL = flag.String("zetacore-url", "127.0.0.1", "zetacore node URL")
+	devMode := flag.Bool("dev", false, "dev mode: geth private network as goerli testnet")
 	flag.Parse()
 	cmd.CHAINID = *chainID
 	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
@@ -80,6 +82,14 @@ func main() {
 	}
 	config.ChainsEnabled = chainList
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
+	log.Info().Msgf("DEV mode: %v", *devMode)
+	if *devMode {
+		config.Chains[common.GoerliChain.String()].ChainID = big.NewInt(1337)
+		config.Chains[common.GoerliChain.String()].Endpoint = "http://eth:8545"
+		config.Chains[common.GoerliChain.String()].BlockTime = 3
+		config.Chains[common.GoerliChain.String()].ZETATokenContractAddress = "0xA8D5060feb6B456e886F023709A2795373691E63"
+		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	}
 
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -147,7 +157,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("%s:9090", chainIP),
+			fmt.Sprintf("%s:9090", *zetacoreURL),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -170,7 +180,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	// first signer & bridge
 	signerName := validatorName
 	signerPass := "password"
-	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass)
+	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass, *zetacoreURL)
 	if done {
 		return
 	}
@@ -198,12 +208,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
-	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetNodeKey error : %s", err.Error())
-		return
+	for {
+		ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+		if err != nil {
+			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
+			time.Sleep(2 * time.Second)
+		} else {
+			log.Info().Msgf("SetNodeKey success: %s", ztx)
+			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
+			break
+		}
 	}
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 

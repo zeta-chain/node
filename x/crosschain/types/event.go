@@ -37,6 +37,7 @@ const (
 	CctxCreated          = "crosschain/CctxCreated"
 	ZrcWithdrawCreated   = "crosschain/ZrcWithdrawCreated"
 	BallotCreated        = "crosschain/BallotCreated"
+	ZetaWithdrawCreated  = "crosschain/ZetaWithdrawCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"

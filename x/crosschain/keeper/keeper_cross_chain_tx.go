@@ -158,6 +158,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutBoundTXBallotIndex:            "",
 		OutBoundTxFinalizedZetaHeight:    0,
 		OutBoundTxObservedExternalHeight: 0,
+		CoinType:                         msg.CoinType,
 	}
 	status := &types.Status{
 		Status:              s,

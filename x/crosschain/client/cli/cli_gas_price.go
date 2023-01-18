@@ -75,7 +75,7 @@ func CmdShowGasPrice() *cobra.Command {
 
 func CmdGasPriceVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gas-price-voter [chain] [price] [blockNumber]",
+		Use:   "gas-price-voter [chain] [price] [supply] [blockNumber]",
 		Short: "Broadcast message gasPriceVoter",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
