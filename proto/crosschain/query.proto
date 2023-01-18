@@ -55,12 +55,12 @@ service Query {
 
 // Queries a InTxHashToCctx by index.
 	rpc InTxHashToCctx(QueryGetInTxHashToCctxRequest) returns (QueryGetInTxHashToCctxResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/in_tx_hash_to_cctx/{inTxHash}";
+		option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx/{inTxHash}";
 	}
 
 	// Queries a list of InTxHashToCctx items.
 	rpc InTxHashToCctxAll(QueryAllInTxHashToCctxRequest) returns (QueryAllInTxHashToCctxResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/in_tx_hash_to_cctx";
+		option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
 	}
 
 // this line is used by starport scaffolding # 2
