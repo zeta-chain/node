@@ -102,7 +102,7 @@ jobs:
     - name: Build, tag, and push docker images
       uses:  ./.github/actions/build-docker-images
       with:
-        DOCKER_FILENAME: Dockerfile.zetacore_binary
+        DOCKER_FILENAME: Dockerfile
         REPOSITORY_NAME: zeta-node
         IMAGE_TAG: ${{ env.RELEASE_NAME }}
         GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
