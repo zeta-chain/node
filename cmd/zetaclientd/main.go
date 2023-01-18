@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
+	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/cmd"
@@ -13,10 +14,9 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	types2 "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
-
-	etherminttypes "github.com/evmos/ethermint/types"
 
 	"io/ioutil"
 	"strings"
@@ -84,11 +84,13 @@ func main() {
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
 	log.Info().Msgf("DEV mode: %v", *devMode)
 	if *devMode {
-		config.Chains[common.GoerliChain.String()].ChainID = big.NewInt(1337)
-		config.Chains[common.GoerliChain.String()].Endpoint = "http://eth:8545"
-		config.Chains[common.GoerliChain.String()].BlockTime = 3
-		config.Chains[common.GoerliChain.String()].ZETATokenContractAddress = "0xA8D5060feb6B456e886F023709A2795373691E63"
-		config.Chains[common.GoerliChain.String()].ConnectorContractAddress = "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+		config.ChainConfigs[common.GoerliChain().ChainName.String()] = &types2.ChainETHish{
+			Chain:                    common.Chain{ChainName: common.ChainName_Goerli, ChainId: 1337},
+			Endpoint:                 "http://eth:8545",
+			BlockTime:                3,
+			ZETATokenContractAddress: "0xA8D5060feb6B456e886F023709A2795373691E63",
+			ConnectorContractAddress: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+		}
 	}
 
 	if *logConsole {
@@ -147,10 +149,10 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	chainIP := os.Getenv("CHAIN_IP")
-	if chainIP == "" {
-		chainIP = "127.0.0.1"
-	}
+	//chainIP := os.Getenv("CHAIN_IP")
+	//if chainIP == "" {
+	//	chainIP = "127.0.0.1"
+	//}
 	updateConfig()
 
 	// wait until zetacore is up

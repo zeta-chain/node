@@ -11,7 +11,7 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) ([]fungibleModuleTypes.Forei
 	if !found {
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
-	fCoins := []fungibleModuleTypes.ForeignCoins{}
+	var fCoins []fungibleModuleTypes.ForeignCoins
 	for _, chain := range chains.ChainList {
 		fCoins = append(fCoins, k.fungibleKeeper.GetAllForeignCoinsForChain(ctx, chain.ChainName.String())...)
 	}

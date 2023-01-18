@@ -516,12 +516,12 @@ func (ob *EVMChainClient) observeInTX() error {
 					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 					if err != nil {
 						ob.logger.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-						chainConf, found := config.Chains[ob.chain.String()]
+						chainConf, found := config.ChainConfigs[ob.chain.String()]
 						if !found || chainConf == nil {
 							ob.logger.Error().Msgf("chain %s not found in config", ob.chain.String())
 							continue
 						}
-						signer := ethtypes.NewLondonSigner(chainConf.ChainID)
+						signer := ethtypes.NewLondonSigner(big.NewInt(chainConf.Chain.ChainId))
 						from, err = signer.Sender(tx)
 						if err != nil {
 							ob.logger.Err(err).Msg("local recovery of sender address failed")

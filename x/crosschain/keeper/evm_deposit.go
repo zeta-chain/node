@@ -45,7 +45,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 				if txOrigin == "" {
 					txOrigin = msg.Sender
 				}
-				err = k.ProcessWithdrawalEvent(ctx, logs, contract, txOrigin)
+				err = k.ProcessWithdrawalLogs(ctx, logs, contract, txOrigin)
 				if err != nil {
 					return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 				}
