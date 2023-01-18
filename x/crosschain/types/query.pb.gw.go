@@ -2630,9 +2630,9 @@ var (
 
 	pattern_Query_OutTxTrackerAllByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "outTxTrackerByChain"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InTxHashToCctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "crosschain", "in_tx_hash_to_cctx", "inTxHash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InTxHashToCctx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "inTxHashToCctx", "inTxHash"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InTxHashToCctxAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "crosschain", "in_tx_hash_to_cctx"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InTxHashToCctxAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "inTxHashToCctx"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Keygen_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "keygen"}, "", runtime.AssumeColonVerbOpt(true)))
 
