@@ -719,6 +719,10 @@ func (ob *EVMChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *EVMChainClient) WatchGasPrice() {
+	err := ob.PostGasPrice()
+	if err != nil {
+		ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+	}
 	gasTicker := time.NewTicker(60 * time.Second)
 	for {
 		select {

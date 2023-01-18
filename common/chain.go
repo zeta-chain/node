@@ -85,6 +85,7 @@ func ParseChain(chainName string) (Chain, error) {
 		return BTCTestnetChain, nil
 	case "BTC":
 		return BTCChain, nil
+
 	default:
 		return EmptyChain, fmt.Errorf("unsupported chain %s", chainName)
 	}
@@ -112,6 +113,7 @@ func (chain Chain) GetNativeTokenSymbol() string {
 		return "BTC"
 	case BTCTestnetChain:
 		return "tBTC"
+
 	default:
 		return "" // should not happen
 	}
@@ -129,6 +131,7 @@ func (chain Chain) IsZetaChain() bool {
 func (chain Chain) IsEVMChain() bool {
 	return chain.Equals(ETHChain) || chain.Equals(BSCChain) || chain.Equals(POLYGONChain) || chain.Equals(GoerliChain) ||
 		chain.Equals(MumbaiChain) || chain.Equals(BSCTestnetChain) || chain.Equals(BaobabChain) || chain.Equals(Ganache)
+
 }
 
 func (chain Chain) IsKlaytnChain() bool {

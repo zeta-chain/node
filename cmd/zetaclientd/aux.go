@@ -7,10 +7,9 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"os"
 )
 
-func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
+func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string, chainIP string) (*mc.ZetaCoreBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
@@ -18,11 +17,6 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	}
 
 	k := mc.NewKeysWithKeybase(kb, signerName, signerPass)
-
-	chainIP := os.Getenv("CHAIN_IP")
-	if chainIP == "" {
-		chainIP = "127.0.0.1"
-	}
 
 	bridge, err := mc.NewZetaCoreBridge(k, chainIP, signerName)
 	if err != nil {
