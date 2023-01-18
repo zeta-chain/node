@@ -149,26 +149,40 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		var index string
 		for {
 			time.Sleep(5 * time.Second)
-			res, err := cctxClient.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
+			res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{
+				InTxHash: tx.Hash().Hex(),
+			})
 			if err != nil {
-				fmt.Printf("Error: %s\n", err)
+				fmt.Printf("No CCTX found for inTxHash %s\n", tx.Hash().Hex())
 				continue
 			}
-			if len(res.CrossChainTx) != 1 {
-				fmt.Printf("Waiting for CrossChainTx to appear...len cctx %d\n", len(res.CrossChainTx))
-				continue
-			}
-			if res.CrossChainTx[0].CctxStatus.Status != types.CctxStatus_OutboundMined {
-				fmt.Printf("Waiting for CrossChainTx to be mined...status %s\n", res.CrossChainTx[0].CctxStatus.Status)
-				continue
-			}
-			fmt.Printf("CrossChainTx found: %v\n", res.CrossChainTx[0])
+			index = res.InTxHashToCctx.CctxIndex
+			fmt.Printf("Found CCTX for inTxHash %s: %s\n", tx.Hash().Hex(), index)
 			break
 		}
+		for {
+			time.Sleep(5 * time.Second)
+			res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{
+				Index: index,
+			})
+			if err != nil {
+				fmt.Printf("No CCTX found for index %s\n", index)
+				continue
+			}
+			if res.CrossChainTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+				fmt.Printf("Found CCTX for index %s: status %s\n", index, res.CrossChainTx.CctxStatus.Status)
+				continue
+			}
+			if res.CrossChainTx.CctxStatus.Status == types.CctxStatus_OutboundMined {
+				fmt.Printf("Found CCTX for index %s: status %s; success\n", index, res.CrossChainTx.CctxStatus.Status)
+				break
+			}
+		}
 	}()
-	wg.Wait()
+	//wg.Wait() // allow the tests to run in parallel
 
 	// ==================== Sending ZETA to ZetaChain ===================
 	amount = big.NewInt(1e18)
