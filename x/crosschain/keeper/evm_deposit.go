@@ -33,12 +33,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			if err != nil {
 				return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 			}
-			tx, err := k.fungibleKeeper.DepositCoinGas(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data)
+			tx, err, withdrawMessage := k.fungibleKeeper.DepositCoinGas(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data)
 			if err != nil {
 				return err
 			}
 			// TODO : Return error if TX failed ?
-			if !tx.Failed() {
+			if !tx.Failed() && withdrawMessage {
 				logs := evmtypes.LogsToEthereum(tx.Logs)
 				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 				txOrigin := msg.TxOrigin
@@ -59,7 +59,9 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 					),
 				)
 			}
-			cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
+			if tx != nil {
+				cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
+			}
 		}
 	default:
 		return types.ErrCoinTypeNotSupported
