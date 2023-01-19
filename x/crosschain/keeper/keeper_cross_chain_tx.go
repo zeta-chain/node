@@ -27,6 +27,12 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
+
+	// set mapping inTxHash -> cctxIndex
+	k.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
+		InTxHash:  send.InBoundTxParams.InBoundTxObservedHash,
+		CctxIndex: send.Index,
+	})
 }
 
 // GetCrossChainTx returns a send from its index

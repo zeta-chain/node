@@ -12,6 +12,11 @@ on:
     branches: 
       - develop
       - athens2-develop 
+    types: 
+      - synchronize
+      - opened
+      - reopened
+      - ready_for_review
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -28,7 +33,6 @@ jobs:
       uses: de-vri-es/setup-git-credentials@v2.0.8
       with:
         credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
-
 
     - name: Get branch name
       id: branch-name
@@ -58,18 +62,17 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: |
-    #     echo "Running Build Tests"
-    #     #make test
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Build Zetavisor
       if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
       run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
         cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
@@ -96,15 +99,16 @@ jobs:
           zetacored
           zetaclientd
 
-    ## Not being used 
-    # - name: Build, tag, and push image to Amazon ECR
-    #   uses:  ./.github/actions/upload-to-ecr
-    #   with:
-    #     DOCKER_FILENAME: Dockerfile.zetacore_binary
-    #     ECR_REPOSITORY: zetachain
-    #     IMAGE_TAG: latest
+    - name: Build, tag, and push docker images
+      uses:  ./.github/actions/build-docker-images
+      with:
+        DOCKER_FILENAME: Dockerfile.zetacore_binary
+        REPOSITORY_NAME: zeta-node
+        IMAGE_TAG: ${{ env.RELEASE_NAME }}
+        GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+        GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-    ## Approval will be required closer to mainnet
+    # # Approval will be required closer to mainnet
     # - name: Require Approval To Create a Release
     #   uses: softprops/action-gh-release@v1
     #   if: startsWith(github.ref, 'refs/tags/athens')
