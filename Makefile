@@ -149,3 +149,11 @@ smoketest:
 	@echo "--> Building smoketest image"
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
 .PHONY: smoketest
+
+start-smoketest:
+	@echo "--> Starting smoketest"
+	cd contrib/localnet/ && $(DOCKER) compose up -d
+
+stop-smoketest:
+	@echo "--> Stopping smoketest"
+	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
