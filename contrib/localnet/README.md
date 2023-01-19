@@ -55,8 +55,6 @@ $ make smoketest
 
 This Makefile rule builds the following two images: **Rebuild if you add/update test cases in zeta-node/contrib/localnet/orchestrator/smoketest**
 ```bash
-# in zeta-node/
-$ docker build -t smoketest -f Dockerfile.smoketest .
 # in zeta-node/contrib/localnet/orchestrator
 $ docker build -t orchestrator .
 ```

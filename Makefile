@@ -147,6 +147,5 @@ zetanode:
 
 smoketest:
 	@echo "--> Building smoketest image"
-	# $(DOCKER) build -t smoketest -f Dockerfile.smoketest .
 	cd contrib/localnet/orchestrator && $(DOCKER) build -t orchestrator -f Dockerfile .
 .PHONY: smoketest
