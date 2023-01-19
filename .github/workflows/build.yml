@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd-private-net-integration
     tags:
       - v*
       - athens2-*
@@ -24,8 +25,86 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  build-and-upload:
+  build-and-test:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: setup-git-credentials
+      uses: de-vri-es/setup-git-credentials@v2.0.8
+      with:
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+    # - name: Get branch name
+    #   id: branch-name
+    #   uses: tj-actions/branch-names@v6
+
+    # - name: Set branch name
+    #   id: set-branch-name
+    #   run: |
+    #     if [ ${{ github.event_name }} == "pull_request" ]; then
+    #       echo "Setting the current branch name to same as the source branch of the PR"
+    #       echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+    #     else
+    #       echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+    #     fi
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build zetacored and zetaclientd
+      run: |
+        make install
+        cp "$HOME"/go/bin/* ./
+
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+  
+    # Need to Test This out 
+    - name: Upload binaries artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: |
+            zetacored
+            zetaclientd 
+        
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Docker Compose
+      if: ${{ env.ACT }}
+      run: |
+        sudo apt-get install docker-compose-plugin
+
+    - name: Run Smoke Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        cd contrib/localnet
+        docker compose build zetacore0 eth && docker compose build orchestrator
+        docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth
+        docker compose up orchestrator --exit-code-from orchestrator
+        if [ $? -ne 0 ]; then
+          echo "Smoke Test Failed"
+          exit 1
+        fi
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: 
+      - build-and-test
+      - smoke-test
     steps:
     - uses: actions/checkout@v3
 
@@ -57,23 +136,22 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Build zetacored and zetaclientd
-      run: |
-        make install
-        cp "$HOME"/go/bin/* ./
+    - uses: actions/download-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: ./
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    # - name: Build zetacored and zetaclientd
+    #   run: |
+    #     make install
+    #     cp "$HOME"/go/bin/* ./
 
-    - name: Build Zetavisor
-      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
-      run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
+    # - name: Build Zetavisor
+    #   if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
+    #   run: |
+    #     go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+    #     go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+    #     cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
