@@ -1,7 +1,6 @@
 package observer
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -14,7 +13,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	genesisObservers := genState.Observers
 	types.VerifyObserverMapper(genesisObservers)
 	for _, mapper := range genesisObservers {
-		fmt.Println("Setting Genesis Observer :", mapper)
 		k.SetObserverMapper(ctx, mapper)
 	}
 	k.SetParams(ctx, types.DefaultParams())

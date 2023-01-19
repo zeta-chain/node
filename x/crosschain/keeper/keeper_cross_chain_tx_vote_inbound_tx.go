@@ -22,7 +22,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !found {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
-
+	// IsAuthorized does various checks against the list of observer mappers
 	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType)
 	if !ok {
 		return nil, err
@@ -30,6 +30,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	index := msg.Digest()
 	// Add votes and Set Ballot
+	// GetBallot checks against the supported chains list before querying for Ballot
 	ballot, isNew, err := k.GetBallot(ctx, index, observationChain, observationType)
 	if err != nil {
 		return nil, err
