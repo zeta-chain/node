@@ -54,6 +54,13 @@ func BtcMainnetChain() Chain {
 	}
 }
 
+func BtcTestNetChain() Chain {
+	return Chain{
+		ChainName: ChainName_BtcTestNet,
+		ChainId:   80001,
+	}
+}
+
 func PolygonChain() Chain {
 	return Chain{
 		ChainName: ChainName_Polygon,
@@ -68,62 +75,23 @@ func MumbaiChain() Chain {
 	}
 }
 
-func BtcTestNetChain() Chain {
-	return Chain{
-		ChainName: ChainName_BtcTestNet,
-		ChainId:   80001,
-	}
-}
-
 func DefaultChainsList() []*Chain {
-	return []*Chain{
-		{
-			ChainName: ChainName_Goerli,
-			ChainId:   1337,
-		},
-		{
-			ChainName: ChainName_Eth,
-			ChainId:   1,
-		},
-		//{
-		//	ChainName: ChainName_Goerli,
-		//	ChainId:   5,
-		//},
-		{
-			ChainName: ChainName_Ropsten,
-			ChainId:   3,
-		},
-		{
-			ChainName: ChainName_BscMainnet,
-			ChainId:   56,
-		},
-		{
-			ChainName: ChainName_BscTestnet,
-			ChainId:   97,
-		},
-		{
-			ChainName: ChainName_Baobab,
-			ChainId:   1001,
-		},
-		{
-			ChainName: ChainName_ZetaChain,
-			ChainId:   101,
-		},
-		{
-			ChainName: ChainName_Btc,
-			ChainId:   55555,
-		},
-		{
-			ChainName: ChainName_Polygon,
-			ChainId:   137,
-		},
-		{
-			ChainName: ChainName_Mumbai,
-			ChainId:   80001,
-		},
-		{
-			ChainName: ChainName_BtcTestNet,
-			ChainId:   1212312,
-		},
+	chains := []Chain{
+		BtcTestNetChain(),
+		BtcMainnetChain(),
+		MumbaiChain(),
+		PolygonChain(),
+		BaobabChain(),
+		BscTestnetChain(),
+		BscMainnetChain(),
+		GoerliChain(),
+		RopstenChain(),
+		EthChain(),
+		ZetaChain(),
 	}
+	var c []*Chain
+	for i := 0; i < len(chains); i++ {
+		c = append(c, &chains[i])
+	}
+	return c
 }
