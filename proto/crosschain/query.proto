@@ -4,6 +4,7 @@ package zetachain.zetacore.crosschain;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crosschain/out_tx_tracker.proto";
+import "crosschain/in_tx_hash_to_cctx.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
@@ -50,6 +51,16 @@ service Query {
 
 	rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain";
+	}
+
+// Queries a InTxHashToCctx by index.
+	rpc InTxHashToCctx(QueryGetInTxHashToCctxRequest) returns (QueryGetInTxHashToCctxResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx/{inTxHash}";
+	}
+
+	// Queries a list of InTxHashToCctx items.
+	rpc InTxHashToCctxAll(QueryAllInTxHashToCctxRequest) returns (QueryAllInTxHashToCctxResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -197,6 +208,24 @@ message QueryAllOutTxTrackerByChainRequest {
 
 message QueryAllOutTxTrackerByChainResponse {
 	repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetInTxHashToCctxRequest {
+	  string inTxHash = 1;
+
+}
+
+message QueryGetInTxHashToCctxResponse {
+	InTxHashToCctx inTxHashToCctx = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllInTxHashToCctxRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInTxHashToCctxResponse {
+	repeated InTxHashToCctx inTxHashToCctx = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
