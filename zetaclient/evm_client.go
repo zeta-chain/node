@@ -460,11 +460,6 @@ func (ob *EVMChainClient) observeInTX() error {
 		destChain := GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
-		fmt.Println("DestChain", destChain, event.DestinationChainId.Int64(), event.DestinationAddress)
-		for k, v := range config.ChainConfigs {
-			fmt.Println("Chain Config", k, v)
-		}
-
 		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
