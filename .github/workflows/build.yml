@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd-private-net-integration
     tags:
       - v*
       - athens2-*
@@ -95,7 +94,6 @@ jobs:
     - name: Run Smoke Test
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
-        pwd
         cd contrib/localnet
         docker compose up orchestrator --exit-code-from orchestrator
         if [ $? -ne 0 ]; then
