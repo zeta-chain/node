@@ -79,6 +79,8 @@ func (CoinType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_8f954d82c0b891f6, []int{1}
 }
 
+// TODO : remove ropsten and ganache
+// TODO : rename BtcTestNet
 type ChainName int32
 
 const (
