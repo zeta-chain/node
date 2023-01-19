@@ -307,7 +307,6 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 
 	}
-
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")

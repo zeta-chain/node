@@ -11,12 +11,10 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	fmt.Println("Genesis Account : ")
 	genesisObservers := genState.Observers
-	fmt.Println("genesisObservers : ", genesisObservers)
 	types.VerifyObserverMapper(genesisObservers)
 	for _, mapper := range genesisObservers {
-		fmt.Println("SetObserverMapper : ", mapper)
+		fmt.Println("Setting Genesis Observer :", mapper)
 		k.SetObserverMapper(ctx, mapper)
 	}
 	k.SetParams(ctx, types.DefaultParams())

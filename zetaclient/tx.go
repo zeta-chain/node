@@ -120,7 +120,7 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType str
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.ChainName.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
-		ObservationChain: chain.String(),
+		ObservationChain: chain.ChainName.String(),
 		ObservationType:  observationType,
 	})
 	if err != nil {

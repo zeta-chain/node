@@ -262,13 +262,13 @@ func (co *CoreObserver) startSendScheduler() {
 				//c, _ := common.ParseChain(chain)
 				found := false
 				for _, enabledChain := range GetSupportedChains() {
-					if enabledChain == c {
+					if enabledChain.ChainId == c.ChainId {
 						found = true
 						break
 					}
 				}
 				if !found {
-					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
+					log.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
 					continue
 				}
 				if bn%10 == 0 {

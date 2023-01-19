@@ -10,7 +10,7 @@ func EthChain() Chain {
 func GoerliChain() Chain {
 	return Chain{
 		ChainName: ChainName_Goerli,
-		ChainId:   5,
+		ChainId:   1337,
 	}
 }
 
@@ -44,7 +44,7 @@ func BaobabChain() Chain {
 func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_ZetaChain,
-		ChainId:   2374,
+		ChainId:   101,
 	}
 }
 func BtcMainnetChain() Chain {
@@ -78,13 +78,17 @@ func BtcTestNetChain() Chain {
 func DefaultChainsList() []*Chain {
 	return []*Chain{
 		{
+			ChainName: ChainName_Goerli,
+			ChainId:   1337,
+		},
+		{
 			ChainName: ChainName_Eth,
 			ChainId:   1,
 		},
-		{
-			ChainName: ChainName_Goerli,
-			ChainId:   5,
-		},
+		//{
+		//	ChainName: ChainName_Goerli,
+		//	ChainId:   5,
+		//},
 		{
 			ChainName: ChainName_Ropsten,
 			ChainId:   3,
@@ -103,7 +107,7 @@ func DefaultChainsList() []*Chain {
 		},
 		{
 			ChainName: ChainName_ZetaChain,
-			ChainId:   2374,
+			ChainId:   101,
 		},
 		{
 			ChainName: ChainName_Btc,

@@ -86,14 +86,14 @@ var _ ChainClient = (*EVMChainClient)(nil)
 // Return configuration based on supplied target chain
 func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*EVMChainClient, error) {
 	ob := EVMChainClient{
-		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	ob.mu = &sync.Mutex{}
 	sampled := log.Sample(&zerolog.BasicSampler{N: 10})
 	ob.sampleLogger = &sampled
-	ob.logger = log.With().Str("chain", chain.String()).Logger()
+	ob.logger = log.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
@@ -457,11 +457,14 @@ func (ob *EVMChainClient) observeInTX() error {
 	for logs.Next() {
 		event := logs.Event
 		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-
 		destChain := GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
-		// TODO : Refactor this comparison
+		fmt.Println("DestChain", destChain, event.DestinationChainId.Int64(), event.DestinationAddress)
+		for k, v := range config.ChainConfigs {
+			fmt.Println("Chain Config", k, v)
+		}
+
 		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].ZETATokenContractAddress) {
 			ob.logger.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
