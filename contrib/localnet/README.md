@@ -43,7 +43,7 @@ This Makefile rule builds the zetanode image. **Rebuild if zetacored/zetaclientd
 $ docker build -t zetanode .
 ```
 
-### Smoke Test Dev & Test Cyccle
+### Smoke Test Dev & Test Cycle
 The smoke test is in the directory /contrib/localnet/orchestrator/smoketest. 
 It's a Go program that performs various operations on the localnet.
 

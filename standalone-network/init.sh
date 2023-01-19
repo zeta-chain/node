@@ -30,6 +30,34 @@ zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=te
 zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show zetaeth -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
+
+ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
+observer+=$ADDR1
+observer+=","
+ADDR2=$(zetacored keys show mario -a --keyring-backend=test)
+observer+=$ADDR2
+observer+=","
+
+
+observer_list=$(echo $observer | rev | cut -c2- | rev)
+
+echo $observer_list
+
+
+zetacored add-observer Goerli 5 InBoundTx "$observer_list" #goerli
+zetacored add-observer Goerli 5 OutBoundTx "$observer_list"
+zetacored add-observer BscTestnet 97 InBoundTx "$observer_list" #bsctestnet
+zetacored add-observer BscTestnet 97 OutBoundTx "$observer_list"
+zetacored add-observer Mumbai 80001 InBoundTx "$observer_list" #mumbai
+zetacored add-observer Mumbai 80001 OutBoundTx "$observer_list"
+zetacored add-observer BtcTestNet 8001 InBoundTx "$observer_list" #btctestnet
+zetacored add-observer BtcTestNet 8001 OutBoundTx "$observer_list"
+zetacored add-observer Baobab 1001 InBoundTx "$observer_list" #baobab klaytn
+zetacored add-observer Baobab 1001 OutBoundTx "$observer_list"
+
+
+
+
 zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
 
 echo "Collecting genesis txs..."

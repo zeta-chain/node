@@ -77,7 +77,7 @@ func AddObserverAccountCmd() *cobra.Command {
 				    "OutBoundTx",
 				    "GasPrice",
 			`,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
@@ -96,7 +96,7 @@ func AddObserverAccountCmd() *cobra.Command {
 					ChainId:   int64(chainID),
 				},
 				ObservationType: obs,
-				ObserverList:    strings.Split(args[2], ","),
+				ObserverList:    strings.Split(args[3], ","),
 			}
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)

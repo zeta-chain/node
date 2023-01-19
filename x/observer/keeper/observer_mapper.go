@@ -12,15 +12,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func GetObserverMapperIndex(chain *common.Chain, obs types.ObservationType) string {
+	return fmt.Sprintf("%d-%s", chain.ChainId, obs.String())
+}
+
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
-	om.Index = fmt.Sprintf("%s-%s", om.ObserverChain.String(), om.ObservationType.String())
+	om.Index = GetObserverMapperIndex(om.ObserverChain, om.ObservationType)
 	b := k.cdc.MustMarshal(om)
 	store.Set([]byte(om.Index), b)
 }
 
 func (k Keeper) GetObserverMapper(ctx sdk.Context, chain *common.Chain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
-	index := fmt.Sprintf("%s-%s", chain.String(), obsType.String())
+	index := GetObserverMapperIndex(chain, obsType)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
