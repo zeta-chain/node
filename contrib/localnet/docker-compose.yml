@@ -73,8 +73,8 @@ services:
   orchestrator:
     image: orchestrator:latest
     build:
-      context: ./orchestrator/.
-      dockerfile: Dockerfile
+      context: ../../.
+      dockerfile: contrib/localnet/orchestrator/Dockerfile
     depends_on:
       - zetacore0
       - eth

@@ -1,20 +1,24 @@
 FROM zetanode:latest as zeta
 FROM ethereum/client-go:v1.10.26 as geth
+FROM golang:alpine as orchestrator
 
+RUN apk --no-cache add jq curl bash make git build-base
 
-
-FROM alpine
-
-RUN apk --no-cache add jq curl bash
 COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetaclientd /usr/local/bin/
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/
-COPY --from=zeta /usr/local/bin/smoketest /usr/local/bin/
 
-WORKDIR /work
-
-COPY start.sh /work/
-
+COPY contrib/localnet/orchestrator/start.sh /work/
 RUN chmod +x /work/start.sh
+
+ENV GOPATH /go
+WORKDIR /go/delivery/zeta-node
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+COPY . .
+RUN make install-smoketest
+RUN mv /go/bin/smoketest /usr/local/bin/smoketest
 RUN chmod +x /usr/local/bin/smoketest
 
+WORKDIR /work
