@@ -27,7 +27,7 @@ type EVMSigner struct {
 	logger              zerolog.Logger
 }
 
-func NewEVMSigner(chain *common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*EVMSigner, error) {
+func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, metaContract ethcommon.Address) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func NewEVMSigner(chain *common.Chain, endpoint string, tssSigner TSSSigner, abi
 
 	return &EVMSigner{
 		client:              client,
-		chain:               chain,
+		chain:               &chain,
 		tssSigner:           tssSigner,
 		chainID:             chainID,
 		ethSigner:           ethSigner,

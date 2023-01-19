@@ -33,7 +33,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			if err != nil {
 				return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 			}
-			tx, err, withdrawMessage := k.fungibleKeeper.DepositCoinGas(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data)
+			tx, withdrawMessage, err := k.fungibleKeeper.DepositCoinGas(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data)
 			if err != nil {
 				return err
 			}

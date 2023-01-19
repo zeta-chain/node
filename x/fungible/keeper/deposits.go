@@ -14,12 +14,12 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoinGas(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain string, message string, contract eth.Address, data []byte) (*evmtypes.MsgEthereumTxResponse, error, bool) {
+func (k Keeper) DepositCoinGas(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain string, message string, contract eth.Address, data []byte) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var tx *evmtypes.MsgEthereumTxResponse
 	withdrawMessage := false
 	gasCoin, found := k.GetGasCoinForForeignCoin(ctx, senderChain)
 	if !found {
-		return tx, types.ErrGasCoinNotFound, withdrawMessage
+		return tx, false, types.ErrGasCoinNotFound
 	}
 	Zrc20Contract := eth.HexToAddress(gasCoin.Zrc20ContractAddress)
 
@@ -27,7 +27,7 @@ func (k Keeper) DepositCoinGas(ctx sdk.Context, to eth.Address, amount *big.Int,
 		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
 		txNoWithdraw, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
 		if err != nil {
-			return tx, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error()), withdrawMessage
+			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
 		tx = txNoWithdraw
 	} else { // non-empty message = [contractaddress, calldata]
@@ -39,10 +39,10 @@ func (k Keeper) DepositCoinGas(ctx sdk.Context, to eth.Address, amount *big.Int,
 			txWithWithdraw, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
 		}
 		if err != nil {
-			return tx, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error()), withdrawMessage
+			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
 		withdrawMessage = true
 		tx = txWithWithdraw
 	}
-	return tx, nil, withdrawMessage
+	return tx, withdrawMessage, nil
 }
