@@ -1,13 +1,9 @@
 name: Linter
-
 on:
   push:
     tags:
       - v*
       - athens2-*
-    # branches:
-    #   - develop
-    #   - athens2-develop 
   pull_request:
 
 env: 
@@ -16,7 +12,8 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
-
+    env:
+      GO111MODULE: on
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
