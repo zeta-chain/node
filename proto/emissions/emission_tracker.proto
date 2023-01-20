@@ -11,3 +11,12 @@ enum EmissionCategory {
   ValidatorEmission = 1;
   TssSignerEmission = 2;
 }
+
+message EmissionTracker {
+    EmissionCategory Type =1;
+    string AmountLeft = 2 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+      (gogoproto.nullable) = false,
+      (gogoproto.moretags) = "yaml:\"amountLeft\""
+    ];
+}
