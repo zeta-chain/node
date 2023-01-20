@@ -12,7 +12,6 @@ COPY . .
 RUN make install
 RUN make install-smoketest
 
-
 FROM alpine
 
 RUN apk --no-cache add openssh jq tmux vim curl bash
