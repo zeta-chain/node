@@ -26,6 +26,7 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v3
 
@@ -64,6 +65,7 @@ jobs:
         
   smoke-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v3
 
@@ -103,8 +105,9 @@ jobs:
 
   upload:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: 
-      - build-and-test
+      # - build-and-test
       - smoke-test
     steps:
     - uses: actions/checkout@v3
@@ -137,10 +140,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: binaries-${{ github.sha }}
-        path: ./
+    ## TODO - Once build-step is fixed, this can be enabled and the following build-step can be removed 
+    # - uses: actions/download-artifact@v3
+    #   with:
+    #     name: binaries-${{ github.sha }}
+    #     path: ./
+
+    ## TODO - Once build-step is fixed, this can be removed 
+    - name: Build zetacored and zetaclientd
+      run: |
+        make install
+        cp "$HOME"/go/bin/* ./
 
     # - name: Build Zetavisor
     #   if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
