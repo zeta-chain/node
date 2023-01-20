@@ -1,5 +1,5 @@
 syntax = "proto3";
-package emissions;
+package zetachain.zetacore.emissions;;
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 

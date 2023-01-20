@@ -57760,6 +57760,8 @@ definitions:
         type: string
       signer:
         type: string
+  zetachain.zetacore.emissions.MsgAddTokenEmissionResponse:
+    type: object
   zetachain.zetacore.emissions.Params:
     type: object
     description: Params defines the parameters for the module.

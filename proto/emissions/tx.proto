@@ -3,11 +3,29 @@ package zetachain.zetacore.emissions;
 
 // this line is used by starport scaffolding # proto/tx/import
 
+import 'emissions/emission_tracker.proto';
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc AddTokenEmission(MsgAddTokenEmission) returns (MsgAddTokenEmissionResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgAddTokenEmission {
+  string creator = 1;
+  EmissionCategory category = 2;
+  string Amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"amount\""
+  ];
+}
+
+
+message MsgAddTokenEmissionResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
