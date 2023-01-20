@@ -1,0 +1,12 @@
+syntax = "proto3";
+package zetachain.zetacore.emissions;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+}

@@ -21,6 +21,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	emissionsModuleKeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
+	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
@@ -105,7 +107,9 @@ import (
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
+	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
+
 	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -185,6 +189,7 @@ var (
 		zetaCoreModule.AppModuleBasic{},
 		zetaObserverModule.AppModuleBasic{},
 		fungibleModule.AppModuleBasic{},
+		emissionsModule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -245,6 +250,7 @@ type App struct {
 	EvmKeeper            *evmkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
 	FungibleKeeper       fungibleModuleKeeper.Keeper
+	EmissionsKeeper      emissionsModuleKeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -283,6 +289,7 @@ func New(
 		zetaObserverModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
 		fungibleModuleTypes.StoreKey,
+		emissionsModuleTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -413,6 +420,13 @@ func New(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
 
+	app.EmissionsKeeper = *emissionsModuleKeeper.NewKeeper(
+		appCodec,
+		keys[emissionsModuleTypes.StoreKey],
+		keys[emissionsModuleTypes.MemStoreKey],
+		app.GetSubspace(emissionsModuleTypes.ModuleName),
+	)
+
 	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
 		appCodec,
 		keys[fungibleModuleTypes.StoreKey],
@@ -443,7 +457,6 @@ func New(
 		app.FungibleKeeper,
 	)
 
-	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	/****  Module Options ****/
@@ -477,9 +490,10 @@ func New(
 		transferModule,
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
-		zetacoreModule,
+		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper),
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
+		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -509,6 +523,7 @@ func New(
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
+		emissionsModuleTypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -521,7 +536,7 @@ func New(
 		crisistypes.ModuleName, ibctransfertypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
-		fungibleModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName, emissionsModuleTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -551,6 +566,7 @@ func New(
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
+		emissionsModuleTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -773,6 +789,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
 	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
+	paramsKeeper.Subspace(emissionsModuleTypes.ModuleName)
 	return paramsKeeper
 }
 

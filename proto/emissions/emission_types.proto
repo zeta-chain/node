@@ -1,0 +1,13 @@
+syntax = "proto3";
+package emissions;
+
+option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+
+import "gogoproto/gogo.proto";
+
+enum EmissionCategory {
+  option (gogoproto.goproto_enum_stringer) = true;
+  ObserverEmission = 0;
+  ValidatorEmission = 1;
+  TssSignerEmission = 2;
+}
