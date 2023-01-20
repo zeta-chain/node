@@ -46,6 +46,9 @@ enum ChainName {
   BscTestnet = 11 ;
   ZetaChainTestNet = 12;
   BtcTestNet = 13 ;
+  ZetaLocalNet=14;
+  GoeriliLocalNet=16;
+  ZetaAthensNet=17;
 }
 
 message Chain {

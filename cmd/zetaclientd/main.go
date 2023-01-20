@@ -14,7 +14,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	types2 "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
@@ -76,23 +75,16 @@ func main() {
 	for _, chain := range chains {
 		for _, supportedChain := range supportedChains {
 			if supportedChain.ChainName.String() == chain {
+				if !*devMode && chain == common.GoeriliLocalNetChain().ChainName.String() {
+					log.Error().Msgf("GoeriliLocalNetChain can only be enabled in Dev Mode ")
+					return
+				}
 				chainList = append(chainList, *supportedChain)
 			}
 		}
 	}
 	config.ChainsEnabled = chainList
 	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
-	log.Info().Msgf("DEV mode: %v", *devMode)
-	if *devMode {
-		config.ChainConfigs[common.GoerliChain().ChainName.String()] = &types2.ChainETHish{
-			Chain:                    common.Chain{ChainName: common.ChainName_Goerli, ChainId: 1337},
-			Endpoint:                 "http://eth:8545",
-			BlockTime:                3,
-			ZETATokenContractAddress: "0xA8D5060feb6B456e886F023709A2795373691E63",
-			ConnectorContractAddress: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
-		}
-	}
-
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
@@ -331,7 +323,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		v.Start()
 	}
 
-	log.Info().Msg("starting zetacore observer...")
+	log.Info().Msg("starting zetacore observer")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
@@ -361,16 +353,19 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 func updateConfig() {
 
 	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_ENDPOINT")
 	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")
 	updateEndpoint(common.MumbaiChain(), "MUMBAI_ENDPOINT")
 	updateEndpoint(common.BaobabChain(), "BAOBAB_ENDPOINT")
 
 	updateMPIAddress(common.GoerliChain(), "GOERLI_MPI_ADDRESS")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_MPI_ENDPOINT")
 	updateMPIAddress(common.BscTestnetChain(), "BSCTESTNET_MPI_ADDRESS")
 	updateMPIAddress(common.MumbaiChain(), "MUMBAI_MPI_ADDRESS")
 	updateMPIAddress(common.BaobabChain(), "BAOBAB_MPI_ADDRESS")
 
 	updateTokenAddress(common.GoerliChain(), "GOERLI_ZETA_ADDRESS")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_ZETA_ENDPOINT")
 	updateTokenAddress(common.BscTestnetChain(), "BSCTESTNET_ZETA_ADDRESS")
 	updateTokenAddress(common.MumbaiChain(), "MUMBAI_ZETA_ADDRESS")
 	updateTokenAddress(common.BaobabChain(), "BAOBAB_ZETA_ADDRESS")

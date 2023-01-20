@@ -59,8 +59,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-	switch receiverChain.ChainName {
-	case common.ChainName_ZetaChain:
+
+	if receiverChain.IsZetaChain() {
 		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
@@ -68,7 +68,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
-	default: // Cross Chain SWAP
+	} else { // Cross Chain SWAP
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())

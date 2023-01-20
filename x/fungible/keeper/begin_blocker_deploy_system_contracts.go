@@ -67,6 +67,10 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_GoeriliLocalNet.String(), "ETH", "gETH", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
 	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_BscTestnet.String(), "BNB", "tBNB", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")

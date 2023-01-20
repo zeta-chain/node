@@ -396,6 +396,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
+	fmt.Println("starting watcher")
 	for {
 		select {
 		case <-ob.ticker.C:
@@ -903,6 +904,11 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 		ob.BlockTime = config.PolygonBlockTime
 
 	case common.ChainName_Goerli:
+		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+		ob.confCount = config.EthConfirmationCount
+		ob.BlockTime = config.EthBlockTime
+
+	case common.ChainName_GoeriliLocalNet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime

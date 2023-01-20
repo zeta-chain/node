@@ -395,7 +395,6 @@
       "Observers": [
         {
           "ObserverChain": {
-            "ChainName": 6,
             "ChainId": 1337
           },
           "ObservationType": 1,
@@ -406,7 +405,6 @@
         },
         {
           "ObserverChain": {
-            "ChainName": 6,
             "ChainId": 1337
           },
           "ObservationType": 2,
@@ -417,8 +415,7 @@
         },
         {
           "ObserverChain": {
-            "ChainName": 11,
-            "ChainId": 97
+            "ChainId": 101
           },
           "ObservationType": 1,
           "observerList": [
@@ -428,74 +425,7 @@
         },
         {
           "ObserverChain": {
-            "ChainName": 11,
-            "ChainId": 97
-          },
-          "ObservationType": 2,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 7,
-            "ChainId": 80001
-          },
-          "ObservationType": 1,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 7,
-            "ChainId": 80001
-          },
-          "ObservationType": 2,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 13,
-            "ChainId": 8001
-          },
-          "ObservationType": 1,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 13,
-            "ChainId": 8001
-          },
-          "ObservationType": 2,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 10,
-            "ChainId": 1001
-          },
-          "ObservationType": 1,
-          "observerList": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
-          ]
-        },
-        {
-          "ObserverChain": {
-            "ChainName": 10,
-            "ChainId": 1001
+            "ChainId": 101
           },
           "ObservationType": 2,
           "observerList": [
@@ -527,7 +457,7 @@
           {
             "Chain": {
               "ChainName": 6,
-              "ChainId": 1337
+              "ChainId": 5
             },
             "Observation": 1,
             "BallotThreshold": "0.660000000000000000",
@@ -536,7 +466,7 @@
           {
             "Chain": {
               "ChainName": 6,
-              "ChainId": 1337
+              "ChainId": 5
             },
             "Observation": 2,
             "BallotThreshold": "0.660000000000000000",
