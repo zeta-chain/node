@@ -55,14 +55,17 @@ $ make smoketest
 
 This Makefile rule builds the following two images: **Rebuild if you add/update test cases in zeta-node/contrib/localnet/orchestrator/smoketest**
 ```bash
-# in zeta-node/
-$ docker build -t smoketest -f Dockerfile.smoketest .
 # in zeta-node/contrib/localnet/orchestrator
 $ docker build -t orchestrator .
 ```
 ### Run smoke test
 
-Now we have built all the docker images; we can run the smoke test
+Now we have built all the docker images; we can run the smoke test with make command:
+```bash
+# in zeta-node/
+make start-smoketest
+```
+which does the following docker compose command:
 ```bash
 # in zeta-node/contrib/localnet/orchestrator
 $ docker compose up -d
@@ -73,6 +76,11 @@ If everything works fine, it should finish without panic, and with
 a message "smoketest done". 
 
 To stop the tests, 
+```bash
+# in zeta-node/
+make stop-smoketest
+```
+which does the following docker compose command:
 ```bash
 # in zeta-node/contrib/localnet/orchestrator
 $ docker compose down --remove-orphans
