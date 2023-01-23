@@ -14,12 +14,24 @@ func (k Keeper) SetEmissionTracker(ctx sdk.Context, tracker *types.EmissionTrack
 	store.Set([]byte(key), b)
 }
 
-func (k Keeper) GetEmissionTracker(ctx sdk.Context, category types.EmissionCategory) (val *types.EmissionTracker, found bool) {
+func (k Keeper) GetEmissionTracker(ctx sdk.Context, category types.EmissionCategory) (val types.EmissionTracker, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EmissionsTrackerKey))
 	b := store.Get(types.KeyPrefix(category.String()))
 	if b == nil {
 		return val, false
 	}
-	k.cdc.MustUnmarshal(b, val)
+
+	k.cdc.MustUnmarshal(b, &val)
 	return val, true
+}
+
+func (k Keeper) GetAllEmissionTrackers(ctx sdk.Context) (trackers []*types.EmissionTracker) {
+	categories := types.GetAllCategories()
+	for _, cat := range categories {
+		tracker, found := k.GetEmissionTracker(ctx, cat)
+		if found {
+			trackers = append(trackers, &tracker)
+		}
+	}
+	return
 }

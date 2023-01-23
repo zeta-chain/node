@@ -3,7 +3,7 @@ module github.com/zeta-chain/zetacore
 go 1.18
 
 require (
-	github.com/cosmos/cosmos-sdk v0.45.5-0.20220523154235-2921a1c3c918
+	github.com/cosmos/cosmos-sdk v0.45.9
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
@@ -35,11 +35,8 @@ require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
-	github.com/buger/jsonparser v1.1.1
-	github.com/cosmos/ibc-go/v3 v3.1.0
-	github.com/evmos/ethermint v0.19.1
-	github.com/lib/pq v1.10.6
-	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/cosmos/ibc-go/v3 v3.2.0
+	github.com/evmos/ethermint v0.19.3
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/tendermint/spm v0.1.9
@@ -71,7 +68,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
-	github.com/cosmos/iavl v0.19.0 // indirect
+	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -138,6 +135,7 @@ require (
 	github.com/koron/go-ssdp v0.0.0-20191105050749-2e1c40ed0b5d // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/libp2p/go-addr-util v0.0.2 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-cidranger v1.1.0 // indirect

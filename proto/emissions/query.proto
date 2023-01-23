@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";
+import "emissions/emission_tracker.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
@@ -15,7 +16,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/emissions/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a list of ListBalances items.
+	rpc ListBalances(QueryListBalancesRequest) returns (QueryListBalancesResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_balances";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -25,6 +31,13 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryListBalancesRequest {
+}
+
+message QueryListBalancesResponse {
+  repeated EmissionTracker trackers =1 ;
 }
 
 // this line is used by starport scaffolding # 3

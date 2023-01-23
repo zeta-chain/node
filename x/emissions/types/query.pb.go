@@ -113,35 +113,123 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+type QueryListBalancesRequest struct {
+}
+
+func (m *QueryListBalancesRequest) Reset()         { *m = QueryListBalancesRequest{} }
+func (m *QueryListBalancesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryListBalancesRequest) ProtoMessage()    {}
+func (*QueryListBalancesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6e578782beb6ef82, []int{2}
+}
+func (m *QueryListBalancesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryListBalancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryListBalancesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryListBalancesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryListBalancesRequest.Merge(m, src)
+}
+func (m *QueryListBalancesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryListBalancesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryListBalancesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryListBalancesRequest proto.InternalMessageInfo
+
+type QueryListBalancesResponse struct {
+	Trackers []*EmissionTracker `protobuf:"bytes,1,rep,name=trackers,proto3" json:"trackers,omitempty"`
+}
+
+func (m *QueryListBalancesResponse) Reset()         { *m = QueryListBalancesResponse{} }
+func (m *QueryListBalancesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryListBalancesResponse) ProtoMessage()    {}
+func (*QueryListBalancesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6e578782beb6ef82, []int{3}
+}
+func (m *QueryListBalancesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryListBalancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryListBalancesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryListBalancesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryListBalancesResponse.Merge(m, src)
+}
+func (m *QueryListBalancesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryListBalancesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryListBalancesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryListBalancesResponse proto.InternalMessageInfo
+
+func (m *QueryListBalancesResponse) GetTrackers() []*EmissionTracker {
+	if m != nil {
+		return m.Trackers
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "zetachain.zetacore.emissions.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.emissions.QueryParamsResponse")
+	proto.RegisterType((*QueryListBalancesRequest)(nil), "zetachain.zetacore.emissions.QueryListBalancesRequest")
+	proto.RegisterType((*QueryListBalancesResponse)(nil), "zetachain.zetacore.emissions.QueryListBalancesResponse")
 }
 
 func init() { proto.RegisterFile("emissions/query.proto", fileDescriptor_6e578782beb6ef82) }
 
 var fileDescriptor_6e578782beb6ef82 = []byte{
-	// 309 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x90, 0xcd, 0x4a, 0x33, 0x31,
-	0x14, 0x86, 0x27, 0x1f, 0x9f, 0x5d, 0xc4, 0x5d, 0xac, 0x22, 0xa5, 0x44, 0x29, 0x8a, 0x22, 0x34,
-	0x69, 0xeb, 0x1d, 0x74, 0xe9, 0x4a, 0xbb, 0xd3, 0x5d, 0xa6, 0x84, 0x34, 0xe0, 0xe4, 0xa4, 0x93,
-	0x54, 0xac, 0x4b, 0xaf, 0x40, 0x70, 0xeb, 0xda, 0x6b, 0xe9, 0xb2, 0xe0, 0xc6, 0x95, 0x48, 0xc7,
-	0x0b, 0x91, 0x49, 0xc6, 0x7f, 0x29, 0xb8, 0x3b, 0x9c, 0x79, 0x9e, 0x77, 0xde, 0x1c, 0xbc, 0x2e,
-	0x33, 0xed, 0x9c, 0x06, 0xe3, 0xf8, 0x78, 0x22, 0xf3, 0x29, 0xb3, 0x39, 0x78, 0x20, 0xcd, 0x2b,
-	0xe9, 0xc5, 0x70, 0x24, 0xb4, 0x61, 0x61, 0x82, 0x5c, 0xb2, 0x77, 0xb2, 0x51, 0x57, 0xa0, 0x20,
-	0x80, 0xbc, 0x9c, 0xa2, 0xd3, 0x68, 0x2a, 0x00, 0x75, 0x2e, 0xb9, 0xb0, 0x9a, 0x0b, 0x63, 0xc0,
-	0x0b, 0x5f, 0xd2, 0xd5, 0xd7, 0x83, 0x21, 0xb8, 0x0c, 0x1c, 0x4f, 0x85, 0x93, 0xf1, 0x57, 0xfc,
-	0xa2, 0x9b, 0x4a, 0x2f, 0xba, 0xdc, 0x0a, 0xa5, 0x4d, 0x80, 0x2b, 0x76, 0xe3, 0xa3, 0x94, 0x15,
-	0xb9, 0xc8, 0xaa, 0x8c, 0x56, 0x1d, 0x93, 0x93, 0xd2, 0x3c, 0x0e, 0xcb, 0x81, 0x1c, 0x4f, 0xa4,
-	0xf3, 0xad, 0x53, 0xbc, 0xf6, 0x65, 0xeb, 0x2c, 0x18, 0x27, 0x49, 0x1f, 0xd7, 0xa2, 0xbc, 0x89,
-	0xb6, 0xd1, 0xfe, 0x6a, 0x6f, 0x87, 0x2d, 0x7b, 0x13, 0x8b, 0x76, 0xff, 0xff, 0xec, 0x69, 0x2b,
-	0x19, 0x54, 0x66, 0xef, 0x1e, 0xe1, 0x95, 0x90, 0x4d, 0xee, 0x10, 0xae, 0x45, 0x84, 0x74, 0x96,
-	0x07, 0xfd, 0x6c, 0xd8, 0xe8, 0xfe, 0xc1, 0x88, 0xed, 0x5b, 0xed, 0xeb, 0x87, 0x97, 0xdb, 0x7f,
-	0x7b, 0x64, 0x97, 0x97, 0x42, 0x3b, 0xb8, 0xfc, 0xcd, 0xe5, 0xdf, 0xef, 0xd3, 0x3f, 0x9a, 0x2d,
-	0x28, 0x9a, 0x2f, 0x28, 0x7a, 0x5e, 0x50, 0x74, 0x53, 0xd0, 0x64, 0x5e, 0xd0, 0xe4, 0xb1, 0xa0,
-	0xc9, 0x59, 0x47, 0x69, 0x3f, 0x9a, 0xa4, 0x6c, 0x08, 0xd9, 0xaf, 0x51, 0x97, 0x9f, 0xc2, 0xfc,
-	0xd4, 0x4a, 0x97, 0xd6, 0xc2, 0xb1, 0x0f, 0x5f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x25, 0xe5, 0x4d,
-	0x48, 0x1b, 0x02, 0x00, 0x00,
+	// 412 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x4f, 0x4f, 0xdb, 0x30,
+	0x18, 0xc6, 0x93, 0x6e, 0xab, 0x26, 0x77, 0x27, 0xaf, 0x9b, 0xba, 0xa8, 0xca, 0xaa, 0x68, 0xd3,
+	0xaa, 0x69, 0x8d, 0xdb, 0x6e, 0xda, 0xee, 0x91, 0x76, 0x00, 0x71, 0x80, 0x8a, 0x0b, 0x5c, 0x2a,
+	0x27, 0x32, 0xa9, 0x45, 0x13, 0xa7, 0xb1, 0x8b, 0x28, 0x47, 0x3e, 0x01, 0x12, 0x57, 0xbe, 0x06,
+	0xdf, 0xa1, 0xc7, 0x4a, 0x5c, 0x38, 0x55, 0xa8, 0xe5, 0x83, 0xa0, 0xd8, 0xee, 0x1f, 0xa0, 0x2a,
+	0xf4, 0xf6, 0xca, 0x7e, 0x7e, 0xcf, 0xf3, 0xf8, 0x4d, 0xc0, 0x27, 0x12, 0x51, 0xce, 0x29, 0x8b,
+	0x39, 0xea, 0xf5, 0x49, 0x3a, 0x70, 0x93, 0x94, 0x09, 0x06, 0xcb, 0x67, 0x44, 0xe0, 0xa0, 0x83,
+	0x69, 0xec, 0xca, 0x89, 0xa5, 0xc4, 0x9d, 0x2b, 0xad, 0x62, 0xc8, 0x42, 0x26, 0x85, 0x28, 0x9b,
+	0x14, 0x63, 0x95, 0x43, 0xc6, 0xc2, 0x2e, 0x41, 0x38, 0xa1, 0x08, 0xc7, 0x31, 0x13, 0x58, 0x64,
+	0x6a, 0x7d, 0xfb, 0x33, 0x60, 0x3c, 0x62, 0x1c, 0xf9, 0x98, 0x13, 0x15, 0x85, 0x4e, 0x1a, 0x3e,
+	0x11, 0xb8, 0x81, 0x12, 0x1c, 0xd2, 0x58, 0x8a, 0xb5, 0xf6, 0xf3, 0xa2, 0x54, 0x82, 0x53, 0x1c,
+	0xcd, 0x3c, 0x2a, 0x8b, 0xf3, 0xd9, 0xd4, 0x16, 0x29, 0x0e, 0x8e, 0x49, 0xaa, 0x14, 0x4e, 0x11,
+	0xc0, 0xbd, 0xcc, 0x7b, 0x57, 0x62, 0x2d, 0xd2, 0xeb, 0x13, 0x2e, 0x9c, 0x03, 0xf0, 0xf1, 0xd1,
+	0x29, 0x4f, 0x58, 0xcc, 0x09, 0xf4, 0x40, 0x5e, 0xd9, 0x97, 0xcc, 0x8a, 0x59, 0x2d, 0x34, 0xbf,
+	0xb9, 0xeb, 0x5e, 0xed, 0x2a, 0xda, 0x7b, 0x3b, 0x1c, 0x7f, 0x35, 0x5a, 0x9a, 0x74, 0x2c, 0x50,
+	0x92, 0xd6, 0x3b, 0x94, 0x0b, 0x0f, 0x77, 0x71, 0x1c, 0x90, 0x79, 0xec, 0x11, 0xf8, 0xb2, 0xe2,
+	0x4e, 0x87, 0x6f, 0x81, 0xf7, 0xba, 0x7a, 0x16, 0xff, 0xa6, 0x5a, 0x68, 0xd6, 0xd6, 0xc7, 0xff,
+	0xd7, 0xd3, 0xbe, 0xa2, 0x5a, 0x73, 0xbc, 0x39, 0xce, 0x81, 0x77, 0x32, 0x08, 0x5e, 0x99, 0x20,
+	0xaf, 0x6a, 0xc2, 0xfa, 0x7a, 0xb7, 0xe7, 0x5b, 0xb2, 0x1a, 0x1b, 0x10, 0xea, 0x11, 0x4e, 0xed,
+	0xfc, 0xe6, 0xfe, 0x32, 0xf7, 0x03, 0x7e, 0x47, 0x19, 0x50, 0x93, 0x2c, 0x9a, 0xb1, 0xe8, 0xe9,
+	0x57, 0x84, 0xd7, 0x26, 0xf8, 0xb0, 0xbc, 0x0c, 0xf8, 0xf7, 0x15, 0x91, 0x2b, 0x36, 0x6b, 0xfd,
+	0xdb, 0x98, 0xd3, 0x85, 0xff, 0xc8, 0xc2, 0x2e, 0xfc, 0xf5, 0x42, 0xe1, 0x2e, 0xe5, 0xa2, 0xed,
+	0x6b, 0xda, 0xdb, 0x1e, 0x4e, 0x6c, 0x73, 0x34, 0xb1, 0xcd, 0xbb, 0x89, 0x6d, 0x5e, 0x4c, 0x6d,
+	0x63, 0x34, 0xb5, 0x8d, 0xdb, 0xa9, 0x6d, 0x1c, 0xd6, 0x43, 0x2a, 0x3a, 0x7d, 0xdf, 0x0d, 0x58,
+	0xb4, 0xd2, 0xf1, 0x74, 0xc9, 0x53, 0x0c, 0x12, 0xc2, 0xfd, 0xbc, 0xfc, 0x51, 0x7f, 0x3f, 0x04,
+	0x00, 0x00, 0xff, 0xff, 0xf6, 0x24, 0xd7, 0x4a, 0x79, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -158,6 +246,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Queries a list of ListBalances items.
+	ListBalances(ctx context.Context, in *QueryListBalancesRequest, opts ...grpc.CallOption) (*QueryListBalancesResponse, error)
 }
 
 type queryClient struct {
@@ -177,10 +267,21 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) ListBalances(ctx context.Context, in *QueryListBalancesRequest, opts ...grpc.CallOption) (*QueryListBalancesResponse, error) {
+	out := new(QueryListBalancesResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.emissions.Query/ListBalances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Queries a list of ListBalances items.
+	ListBalances(context.Context, *QueryListBalancesRequest) (*QueryListBalancesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -189,6 +290,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) ListBalances(ctx context.Context, req *QueryListBalancesRequest) (*QueryListBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBalances not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -213,6 +317,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ListBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryListBalancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ListBalances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.emissions.Query/ListBalances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ListBalances(ctx, req.(*QueryListBalancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.emissions.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -220,6 +342,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "ListBalances",
+			Handler:    _Query_ListBalances_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -282,6 +408,66 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryListBalancesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryListBalancesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryListBalancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryListBalancesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryListBalancesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryListBalancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Trackers) > 0 {
+		for iNdEx := len(m.Trackers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Trackers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -310,6 +496,30 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryListBalancesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryListBalancesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Trackers) > 0 {
+		for _, e := range m.Trackers {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -428,6 +638,140 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryListBalancesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryListBalancesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryListBalancesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryListBalancesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryListBalancesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryListBalancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Trackers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Trackers = append(m.Trackers, &EmissionTracker{})
+			if err := m.Trackers[len(m.Trackers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
