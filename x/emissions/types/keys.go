@@ -1,5 +1,9 @@
 package types
 
+import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "emissions"
@@ -23,4 +27,8 @@ func KeyPrefix(p string) []byte {
 
 const (
 	EmissionsTrackerKey = "EmissionsTracker-value-"
+)
+
+var (
+	EmissionsModuleAddress = authtypes.NewModuleAddress(ModuleName)
 )

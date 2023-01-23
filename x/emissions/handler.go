@@ -10,8 +10,8 @@ import (
 )
 
 // NewHandler ...
-func NewHandler(k keeper.Keeper) sdk.Handler {
-	msgServer := keeper.NewMsgServerImpl(k)
+func NewHandler(k keeper.Keeper, bk types.BankKeeper) sdk.Handler {
+	msgServer := keeper.NewMsgServerImpl(k, bk)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

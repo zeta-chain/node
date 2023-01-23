@@ -9,7 +9,7 @@ const TypeMsgAddTokenEmission = "add_token_emission"
 
 var _ sdk.Msg = &MsgAddTokenEmission{}
 
-func NewMsgAddTokenEmission(creator string, category EmissionCategory, amount sdk.Dec) *MsgAddTokenEmission {
+func NewMsgAddTokenEmission(creator string, category EmissionCategory, amount sdk.Int) *MsgAddTokenEmission {
 	return &MsgAddTokenEmission{
 		Creator:  creator,
 		Category: category,

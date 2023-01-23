@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 
@@ -20,11 +21,10 @@ func CmdAddTokenEmission() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argCategory := types.ParseStringToEmissionCategory(args[0])
-			argAmount, err := sdk.NewDecFromStr(args[1])
-			if err != nil {
-				return err
+			argAmount, ok := sdk.NewIntFromString(args[1])
+			if !ok {
+				return errors.New("Unable to parse INT")
 			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
