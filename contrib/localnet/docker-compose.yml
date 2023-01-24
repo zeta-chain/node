@@ -10,6 +10,9 @@ networks:
 services:
   zetacore0:
     image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
     hostname: zetacore0
     ports:
       - "1317:1317"
@@ -23,6 +26,9 @@ services:
 
   zetacore1:
     image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
     hostname: zetacore1
     networks:
       mynetwork:
@@ -32,6 +38,9 @@ services:
 
   zetaclient0:
     image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
     hostname: zetaclient0
     networks:
       mynetwork:
@@ -42,6 +51,9 @@ services:
 
   zetaclient1:
     image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
     hostname: zetaclient1
     networks:
       mynetwork:
@@ -62,9 +74,16 @@ services:
 
   orchestrator:
     image: orchestrator:latest
+    build:
+      context: ../../.
+      dockerfile: contrib/localnet/orchestrator/Dockerfile
+    depends_on:
+      - zetacore0
+      - eth
     hostname: orchestrator
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: /work/start.sh
+
 

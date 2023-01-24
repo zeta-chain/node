@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"os"
 	"sync"
 	"time"
 
@@ -25,9 +26,19 @@ var (
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
 	BLOCK              = 6 * time.Second // should be 2x block time
 	BigZero            = big.NewInt(0)
+	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
 )
 
 func main() {
+	testStartTime := time.Now()
+	defer func() {
+		fmt.Println("Smoke test took", time.Since(testStartTime))
+	}()
+	go func() {
+		time.Sleep(SmokeTestTimeout)
+		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
+		os.Exit(1)
+	}()
 	goerliClient, err := ethclient.Dial("http://eth:8545")
 	if err != nil {
 		panic(err)
