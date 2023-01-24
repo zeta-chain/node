@@ -44,12 +44,15 @@ var (
 	SystemContractJSON []byte // nolint: golint
 	//go:embed UniswapV2Router02.json
 	UniswapV2Router02JSON []byte // nolint: golint
+	//go:embed ConnectorZEVM.json
+	ConnectorZEVMJSON []byte // nolint: golint
 
 	ZRC20Contract             CompiledContract
 	UniswapV2FactoryContract  CompiledContract
 	WZETAContract             CompiledContract
 	SystemContractContract    CompiledContract
 	UniswapV2Router02Contract CompiledContract
+	ConnectorZEVMContract     CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC20AdminAddress ethcommon.Address
@@ -78,6 +81,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = json.Unmarshal(ConnectorZEVMJSON, &ConnectorZEVMContract)
+	if err != nil {
+		panic(err)
+	}
 
 	if len(ZRC20Contract.Bin) == 0 {
 		panic("load contract failed")
@@ -96,6 +103,10 @@ func init() {
 	}
 
 	if len(UniswapV2Router02Contract.Bin) == 0 {
+		panic("load contract failed")
+	}
+
+	if len(ConnectorZEVMContract.Bin) == 0 {
 		panic("load contract failed")
 	}
 }

@@ -50,6 +50,17 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		),
 	)
 
+	connector, err := k.DeployConnectorZEVM(ctx, wzeta)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to DeployConnectorZEVM")
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("DeployConnectorZEVM", connector.String()),
+		),
+	)
+	ctx.Logger().Info("Deployed Connector ZEVM at " + connector.String())
+
 	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, router)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to SystemContractAddress")

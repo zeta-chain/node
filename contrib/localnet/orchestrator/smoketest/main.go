@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
+	"github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 )
@@ -265,8 +266,40 @@ func main() {
 	TestDepositEtherIntoZRC20(goerliClient, zevmClient, cctxClient, fungibleClient)
 	TestERC20Withdraw(goerliClient, zevmClient, cctxClient, fungibleClient)
 	// ==================== Add your tests here ====================
-	test1()
 
+	// ==================== Sending ZETA to Ethereum ===================
+	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
+	ConnectorZEVM, err := zevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	_ = ConnectorZEVM
+	//SystemContractAddr := ethcommon.HexToAddress("0x91d18e54DAf4F677cB28167158d6dd21F6aB3921")
+	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
+	wzeta, err := zevm.NewWZETA(wzetaAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	zchainid, err := zevmClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("zevm chainid: %d\n", zchainid)
+	zauth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, zchainid)
+
+	zauth.Value = big.NewInt(1e18)
+	tx, err = wzeta.Deposit(zauth)
+	zauth.Value = BigZero
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Deposit tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(12 * time.Second)
+	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Deposit tx receipt: status %d\n", receipt.Status)
 }
 
 // wait until cctx is mined; returns the cctxIndex
