@@ -19,6 +19,8 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_emissions"
+
+	SecsInMonth = 30 * 24 * 60 * 60
 )
 
 func KeyPrefix(p string) []byte {
@@ -26,7 +28,11 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	EmissionsTrackerKey = "EmissionsTracker-value-"
+	EmissionsTrackerKey  = "EmissionsTracker-value-"
+	ParamMaxBondFactor   = "MaxBondFactor"
+	ParamMinBondFactor   = "MinBondFactor"
+	ParamAvgBlockTime    = "AvgBlockTime"
+	ParamTargetBondRatio = "TargetBondRation"
 )
 
 var (

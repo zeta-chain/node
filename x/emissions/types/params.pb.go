@@ -25,6 +25,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the parameters for the module.
 type Params struct {
+	MaxBondFactor   string `protobuf:"bytes,1,opt,name=max_bond_factor,json=maxBondFactor,proto3" json:"max_bond_factor,omitempty"`
+	MinBondFactor   string `protobuf:"bytes,2,opt,name=min_bond_factor,json=minBondFactor,proto3" json:"min_bond_factor,omitempty"`
+	AvgBlockTime    string `protobuf:"bytes,3,opt,name=avg_block_time,json=avgBlockTime,proto3" json:"avg_block_time,omitempty"`
+	TargetBondRatio string `protobuf:"bytes,4,opt,name=target_bond_ratio,json=targetBondRatio,proto3" json:"target_bond_ratio,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -59,6 +63,34 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
+func (m *Params) GetMaxBondFactor() string {
+	if m != nil {
+		return m.MaxBondFactor
+	}
+	return ""
+}
+
+func (m *Params) GetMinBondFactor() string {
+	if m != nil {
+		return m.MinBondFactor
+	}
+	return ""
+}
+
+func (m *Params) GetAvgBlockTime() string {
+	if m != nil {
+		return m.AvgBlockTime
+	}
+	return ""
+}
+
+func (m *Params) GetTargetBondRatio() string {
+	if m != nil {
+		return m.TargetBondRatio
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Params)(nil), "zetachain.zetacore.emissions.Params")
 }
@@ -66,17 +98,24 @@ func init() {
 func init() { proto.RegisterFile("emissions/params.proto", fileDescriptor_74b1fd2414ebb64a) }
 
 var fileDescriptor_74b1fd2414ebb64a = []byte{
-	// 158 bytes of a gzipped FileDescriptorProto
+	// 271 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4b, 0xcd, 0xcd, 0x2c,
 	0x2e, 0xce, 0xcc, 0xcf, 0x2b, 0xd6, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28, 0xca,
 	0x2f, 0xc9, 0x17, 0x92, 0xa9, 0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3,
 	0xf2, 0x8b, 0x52, 0xf5, 0xe0, 0x4a, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x0a, 0xf5, 0x41,
-	0x2c, 0x88, 0x1e, 0x25, 0x3e, 0x2e, 0xb6, 0x00, 0xb0, 0x19, 0x56, 0x2c, 0x33, 0x16, 0xc8, 0x33,
-	0x38, 0x79, 0x9d, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13,
-	0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x41, 0x7a, 0x66,
-	0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0xc8, 0x78, 0x5d, 0xb0, 0x4d, 0xfa, 0x30,
-	0x9b, 0xf4, 0x2b, 0xf4, 0x11, 0xce, 0x2a, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x5b, 0x61,
-	0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x45, 0x5d, 0xbc, 0x1a, 0xb0, 0x00, 0x00, 0x00,
+	0x2c, 0x88, 0x1e, 0xa5, 0x0d, 0x8c, 0x5c, 0x6c, 0x01, 0x60, 0x43, 0x84, 0xd4, 0xb8, 0xf8, 0x73,
+	0x13, 0x2b, 0xe2, 0x93, 0xf2, 0xf3, 0x52, 0xe2, 0xd3, 0x12, 0x93, 0x4b, 0xf2, 0x8b, 0x24, 0x18,
+	0x15, 0x18, 0x35, 0x38, 0x83, 0x78, 0x73, 0x13, 0x2b, 0x9c, 0xf2, 0xf3, 0x52, 0xdc, 0xc0, 0x82,
+	0x60, 0x75, 0x99, 0x79, 0x28, 0xea, 0x98, 0xa0, 0xea, 0x32, 0xf3, 0x90, 0xd4, 0xa9, 0x70, 0xf1,
+	0x25, 0x96, 0xa5, 0xc7, 0x27, 0xe5, 0xe4, 0x27, 0x67, 0xc7, 0x97, 0x64, 0xe6, 0xa6, 0x4a, 0x30,
+	0x83, 0x95, 0xf1, 0x24, 0x96, 0xa5, 0x3b, 0x81, 0x04, 0x43, 0x32, 0x73, 0x53, 0x85, 0xb4, 0xb8,
+	0x04, 0x4b, 0x12, 0x8b, 0xd2, 0x53, 0x4b, 0x20, 0x06, 0x16, 0x25, 0x96, 0x64, 0xe6, 0x4b, 0xb0,
+	0x80, 0x15, 0xf2, 0x43, 0x24, 0x40, 0x46, 0x06, 0x81, 0x84, 0xad, 0x58, 0x66, 0x2c, 0x90, 0x67,
+	0x70, 0xf2, 0x3a, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27,
+	0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x83, 0xf4, 0xcc,
+	0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x50, 0x08, 0xe8, 0x82, 0x03, 0x43, 0x1f,
+	0x16, 0x18, 0xfa, 0x15, 0xfa, 0x88, 0x90, 0x2b, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0x87,
+	0x82, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xd0, 0x5b, 0x9c, 0x8e, 0x53, 0x01, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -99,6 +138,34 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.TargetBondRatio) > 0 {
+		i -= len(m.TargetBondRatio)
+		copy(dAtA[i:], m.TargetBondRatio)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.TargetBondRatio)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.AvgBlockTime) > 0 {
+		i -= len(m.AvgBlockTime)
+		copy(dAtA[i:], m.AvgBlockTime)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.AvgBlockTime)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MinBondFactor) > 0 {
+		i -= len(m.MinBondFactor)
+		copy(dAtA[i:], m.MinBondFactor)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.MinBondFactor)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MaxBondFactor) > 0 {
+		i -= len(m.MaxBondFactor)
+		copy(dAtA[i:], m.MaxBondFactor)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.MaxBondFactor)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -119,6 +186,22 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.MaxBondFactor)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
+	l = len(m.MinBondFactor)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
+	l = len(m.AvgBlockTime)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
+	l = len(m.TargetBondRatio)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
 	return n
 }
 
@@ -157,6 +240,134 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxBondFactor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MaxBondFactor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinBondFactor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinBondFactor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AvgBlockTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AvgBlockTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetBondRatio", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TargetBondRatio = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

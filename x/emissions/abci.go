@@ -11,7 +11,9 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-	blockRewards := GetReserservesFactor(ctx, keeper).Mul(GetBondFactor(ctx, stakingKeeper)).Mul(GetDurationFactor(ctx))
+	blockRewards := GetReservesFactor(ctx, keeper).
+		Mul(GetBondFactor(ctx, stakingKeeper, keeper)).
+		Mul(GetDurationFactor(ctx, keeper))
 
 	blockRewardsInt := blockRewards.TruncateInt()
 	blockRewardsCoins := sdk.NewCoin(config.BaseDenom, blockRewardsInt)
@@ -28,48 +30,42 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 	fmt.Println("blockRewards", blockRewards, blockRewardsInt)
 }
 
-func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper) sdk.Dec {
-
-	targetBondRatio, err := sdk.NewDecFromStr("67.00")
-	if err != nil {
-		fmt.Println(err)
-	}
-	maxBondFactor, _ := sdk.NewDecFromStr("1.25")
-	minBondFactor, _ := sdk.NewDecFromStr("0.75")
+func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper, keeper keeper.Keeper) sdk.Dec {
+	targetBondRatio := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TargetBondRatio)
+	maxBondFactor := sdk.MustNewDecFromStr(keeper.GetParams(ctx).MaxBondFactor)
+	minBondFactor := sdk.MustNewDecFromStr(keeper.GetParams(ctx).MinBondFactor)
 
 	currentBondedRatio := stakingKeeper.BondedRatio(ctx)
-	fmt.Println("currentBondedRatio : ", currentBondedRatio)
+	// Bond factor ranges between minBondFactor (0.75) to maxBondFactor (1.25)
 	bondFactor := targetBondRatio.Quo(currentBondedRatio)
 	if bondFactor.GT(maxBondFactor) {
-		bondFactor = maxBondFactor
+		return maxBondFactor
 	}
 	if bondFactor.LT(minBondFactor) {
-		bondFactor = minBondFactor
+		return minBondFactor
 	}
 	return bondFactor
 }
 
-func GetDurationFactor(ctx sdk.Context) sdk.Dec {
-	avgBlockTime, _ := sdk.NewDecFromStr("6.0")
-
-	NumberOfBlocksInAMonth := sdk.NewDec(30 * 24 * 60 * 60).Quo(avgBlockTime)
-	months := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
-	numConstant := 0.02
-	denomConstant := 12.00
-	fractionConstant := numConstant / denomConstant
-
+func GetDurationFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
+	avgBlockTime := sdk.MustNewDecFromStr(keeper.GetParams(ctx).AvgBlockTime)
+	NumberOfBlocksInAMonth := sdk.NewDec(types.SecsInMonth).Quo(avgBlockTime)
+	monthFactor := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
+	//log(1 + 0.02 / 12)
+	fractionConstant := 0.02 / 12.00
 	logValue := math.Log(1.0 + fractionConstant)
 	logValueDec, _ := sdk.NewDecFromStr(big.NewFloat(logValue).String())
-
-	fractionNumerator := months.Mul(logValueDec)
+	// month * log(1 + 0.02 / 12)
+	fractionNumerator := monthFactor.Mul(logValueDec)
+	// (month * log(1 + 0.02 / 12) ) + 1
 	fractionDenominator := fractionNumerator.Add(sdk.OneDec())
-
+	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
 	durationFactor := fractionNumerator.Quo(fractionDenominator)
 
 	return durationFactor
 }
 
-func GetReserservesFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
+func GetReservesFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
 	reserveAmount, _ := keeper.GetEmissionTracker(ctx, types.EmissionCategory_ValidatorEmission)
 	return reserveAmount.AmountLeft.ToDec()
 }
