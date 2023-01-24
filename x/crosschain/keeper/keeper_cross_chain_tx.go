@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -136,15 +137,14 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {
-
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
-
 	inboundParams := &types.InBoundTxParams{
 		Sender:                          msg.Sender,
-		SenderChain:                     msg.SenderChain,
+		SenderChain:                     senderChain.ChainName.String(),
+		SenderChainID:                   senderChain.ChainId,
 		TxOrigin:                        msg.TxOrigin,
 		InBoundTxObservedHash:           msg.InTxHash,
 		InBoundTxObservedExternalHeight: msg.InBlockHeight,
@@ -154,7 +154,8 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 
 	outBoundParams := &types.OutBoundTxParams{
 		Receiver:                         msg.Receiver,
-		ReceiverChain:                    msg.ReceiverChain,
+		ReceiverChain:                    receiverChain.ChainName.String(),
+		ReceiverChainId:                  receiverChain.ChainId,
 		Broadcaster:                      0,
 		OutBoundTxHash:                   "",
 		OutBoundTxTSSNonce:               0,

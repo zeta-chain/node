@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"math/big"
 )
 
 func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
@@ -29,11 +29,10 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
-// FIXME: the observationType should not be a string; rather it should be properly typed
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, senderChain zetaObserverTypes.ObserverChain, observationType string) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, senderChain, observationType)
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
+	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Chain/Observation type not supported Chain : %s , Observation type : %s", senderChain, observationType))
+		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", chain.String(), observationType))
 	}
 	for _, obs := range observerMapper.ObserverList {
 		if obs == address {
@@ -59,34 +58,36 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	}
 	return
 }
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain zetaObserverTypes.ObserverChain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, err error) {
+func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
+	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		if !k.zetaObserverKeeper.IsChainSupported(ctx, chain) {
-			return ballot, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
+		if !k.zetaObserverKeeper.IsChainSupported(ctx, *chain) {
+			return ballot, isNew, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
 		}
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType.String())
-		threshohold, found := k.zetaObserverKeeper.GetParams(ctx).GetVotingThreshold(chain, observationType)
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
+		obsParams, found := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
 		if !found {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
 			return
 		}
-
 		ballot = zetaObserverTypes.Ballot{
 			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        observerMapper.ObserverList,
 			Votes:            zetaObserverTypes.CreateVotes(len(observerMapper.ObserverList)),
 			ObservationType:  observationType,
-			BallotThreshold:  threshohold.Threshold,
+			BallotThreshold:  obsParams.BallotThreshold,
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
 		}
+		isNew = true
 	}
 	return
 }
 
-func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, receiveChain)
+func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
+	chain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, chainID)
+	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
@@ -94,12 +95,8 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
 
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
-	recvChain, err := common.ParseChain(receiveChain)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to parse chain")
-	}
-	chainID := config.Chains[recvChain.String()].ChainID
-	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, chainID)
+
+	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}
@@ -135,6 +132,8 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 
 	return nil
 }
+
+// TODO : USE CHAIN ID
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
 	nonce, found := k.GetChainNonces(ctx, receiveChain)
 	if !found {

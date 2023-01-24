@@ -20,7 +20,9 @@ var _ = strconv.IntSize
 func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.OutTxTracker {
 	items := make([]types.OutTxTracker, n)
 	for i := range items {
-		items[i].Index = fmt.Sprintf("testchain-%d", i)
+		items[i].ChainId = int64(i)
+		items[i].Nonce = uint64(i)
+		items[i].Index = fmt.Sprintf("%d-%d", items[i].ChainId, items[i].Nonce)
 
 		keeper.SetOutTxTracker(ctx, items[i])
 	}
@@ -32,7 +34,8 @@ func TestOutTxTrackerGet(t *testing.T) {
 	items := createNOutTxTracker(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetOutTxTracker(ctx,
-			item.Index,
+			item.ChainId,
+			item.Nonce,
 		)
 		require.True(t, found)
 		require.Equal(t,
@@ -42,14 +45,16 @@ func TestOutTxTrackerGet(t *testing.T) {
 	}
 }
 func TestOutTxTrackerRemove(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
-	items := createNOutTxTracker(keeper, ctx, 10)
+	k, ctx := keepertest.ZetacoreKeeper(t)
+	items := createNOutTxTracker(k, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveOutTxTracker(ctx,
-			item.Index,
+		k.RemoveOutTxTracker(ctx,
+			item.ChainId,
+			item.Nonce,
 		)
-		_, found := keeper.GetOutTxTracker(ctx,
-			item.Index,
+		_, found := k.GetOutTxTracker(ctx,
+			item.ChainId,
+			item.Nonce,
 		)
 		require.False(t, found)
 	}

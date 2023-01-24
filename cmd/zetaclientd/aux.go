@@ -30,12 +30,13 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
 	signerMap := make(map[common.Chain]*mc.EVMSigner)
 
 	for _, chain := range mcconfig.ChainsEnabled {
-		if !chain.IsEVMChain() {
-			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain)
+
+		if !(chain).IsEVMChain() {
+			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain.String())
 			continue
 		}
-		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewEVMSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+		mpiAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
+		signer, err := mc.NewEVMSigner(chain, mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
 			log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 			return nil, err
@@ -46,24 +47,23 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]mc.ChainClient, error) {
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]mc.ChainClient, error) {
 	clientMap := make(map[common.Chain]mc.ChainClient)
-
 	for _, chain := range mcconfig.ChainsEnabled {
-		log.Info().Msgf("starting %s observer...", chain)
+		log.Info().Msgf("starting observer for %s ", chain.String())
 		var co mc.ChainClient
 		var err error
 		if chain.IsEVMChain() {
 			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
-		} else if chain.IsBitcoinChain() {
+		} else {
 			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
 		}
 		if err != nil {
-			log.Err(err).Msgf("%s NewEVMChainClient", chain)
+			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())
 			return nil, err
 		}
 		clientMap[chain] = co
 	}
 
-	return &clientMap, nil
+	return clientMap, nil
 }

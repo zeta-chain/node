@@ -17,25 +17,27 @@ enum CctxStatus {
 message InBoundTxParams{
   string sender = 1;
   string senderChain = 2;
-  string inBoundTxObservedHash = 3;
-  uint64 inBoundTxObservedExternalHeight = 4;
-  uint64 inBoundTxFinalizedZetaHeight = 5;
-  string inBoundTXBallotIndex = 6;
-  string txOrigin = 7;
+  int64 senderChainID = 3;
+  string inBoundTxObservedHash = 4;
+  uint64 inBoundTxObservedExternalHeight = 5;
+  uint64 inBoundTxFinalizedZetaHeight = 6;
+  string inBoundTXBallotIndex=7;
+  string txOrigin = 8;
 }
 
 message OutBoundTxParams {
   string receiver = 1;
   string receiverChain = 2;
-  uint64 broadcaster = 3; // FIXME: remove this
-  string outBoundTxHash = 4;
-  uint64 outBoundTxTSSNonce = 5;
-  uint64 outBoundTxGasLimit = 6;
-  string outBoundTxGasPrice = 7;
-  string outBoundTXBallotIndex = 8;
-  uint64 outBoundTxFinalizedZetaHeight = 9;
-  uint64 outBoundTxObservedExternalHeight = 10;
-  common.CoinType coinType = 11;
+  int64 receiverChainId = 3;
+  uint64 broadcaster = 4; // Can be removed
+  string outBoundTxHash = 5;
+  uint64 outBoundTxTSSNonce = 6;
+  uint64 outBoundTxGasLimit = 7;
+  string outBoundTxGasPrice = 8;
+  string outBoundTXBallotIndex = 9;
+  uint64 outBoundTxFinalizedZetaHeight = 10;
+  uint64 outBoundTxObservedExternalHeight = 11;
+  common.CoinType coinType = 12;
 }
 
 message Status {

@@ -11,7 +11,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetSupportedChains{}, "observer/SetSupportedChains", nil)
-	cdc.RegisterConcrete(&MsgSetBallotThreshold{}, "observer/SetBallotThreshold", nil)
+	cdc.RegisterConcrete(&MsgAddObserver{}, "observer/AddObserver", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -20,7 +20,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetSupportedChains{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgSetBallotThreshold{},
+		&MsgAddObserver{},
 	)
 	// this line is used by starport scaffolding # 3
 

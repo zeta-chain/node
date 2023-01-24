@@ -7,32 +7,34 @@ import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
 
+
+
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {
   rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
-    rpc SetBallotThreshold(MsgSetBallotThreshold) returns (MsgSetBallotThresholdResponse);
+  rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 
 }
 
 message MsgSetSupportedChains {
   string creator = 1;
-  repeated ObserverChain Chainlist=2;
+  int64 ChainId=2;
+  common.ChainName ChainName=3;
 }
-
-message MsgSetBallotThreshold {
-  string creator = 1;
-  string chain = 2;
-  string threshold = 3;
-}
-
-message MsgSetBallotThresholdResponse {
-}
-
 // this line is used by starport scaffolding # proto/tx/message
 
 message MsgSetSupportedChainsResponse{
-
 }
+message MsgAddObserver {
+  string creator = 1;
+  int64 chainId = 2;
+  ObservationType observationType = 3;
+}
+
+message MsgAddObserverResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message

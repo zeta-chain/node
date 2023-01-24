@@ -91,7 +91,7 @@ func TestStatus_StatusTransition(t *testing.T) {
 			Msg:          "Got super majority and finalized Inbound",
 			NonErrStatus: types.CctxStatus_OutboundMined,
 			ErrStatus:    types.CctxStatus_Aborted,
-			IsErr:        true,
+			IsErr:        false,
 		},
 	}
 	_, ctx := setupKeeper(t)
