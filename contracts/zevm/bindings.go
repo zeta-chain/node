@@ -8,6 +8,9 @@
 //go:generate sh -c "solc SystemContract.sol --combined-json abi,bin | jq '.contracts.\"SystemContract.sol:SystemContract\"'  > SystemContract.json"
 //go:generate sh -c "cat SystemContract.json | jq .abi | abigen --abi - --pkg zevm --type SystemContract --out SystemContract.go"
 //go:generate sh -c "cat UniswapV2Pair.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Pair --out UniswapV2Pair.go"
+//go:generate sh -c "solc ConnectorZEVM.sol --combined-json abi,bin | jq '.contracts.\"ConnectorZEVM.sol:ZetaConnectorZEVM\"'  > ConnectorZEVM.json"
+//go:generate sh -c "cat ConnectorZEVM.json | jq .abi | abigen --abi - --pkg zevm --type ZetaConnectorZEVM --out ConnectorZEVM.go"
+
 package zevm
 
 import (
