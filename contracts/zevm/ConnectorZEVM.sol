@@ -52,6 +52,7 @@ interface WZETA {
 
 contract ZetaConnectorZEVM is ZetaInterfaces{
     address public wzeta;
+    address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
 
     event ZetaSent(
         address sourceTxOriginAddress,
@@ -69,8 +70,9 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
     }
 
     function send(ZetaInterfaces.SendInput calldata input) external {
-        // transfer wzeta to this contract, which will be burnt by the protocol post processing via hooks.
-        require(WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
+        // transfer wzeta to "fungible" module, which will be burnt by the protocol post processing via hooks.
+        require(WZETA(wzeta).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
+
         emit ZetaSent(
             tx.origin,
             msg.sender,
