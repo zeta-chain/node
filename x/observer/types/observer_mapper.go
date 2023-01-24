@@ -4,8 +4,14 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func (*ObserverMapper) Validate() bool {
-	return true
+func (m *ObserverMapper) Validate() bool {
+	chains := common.DefaultChainsList()
+	for _, chain := range chains {
+		if m.ObserverChain == chain {
+			return true
+		}
+	}
+	return false
 }
 
 func VerifyObserverMapper(obs []*ObserverMapper) bool {

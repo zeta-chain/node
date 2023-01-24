@@ -394,7 +394,10 @@
     "observer": {
       "Observers": [
         {
-          "ObserverChain": 6,
+          "ObserverChain": {
+            "ChainName": 6,
+            "ChainId": 1337
+          },
           "ObservationType": 1,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -402,7 +405,10 @@
           ]
         },
         {
-          "ObserverChain": 6,
+          "ObserverChain": {
+            "ChainName": 6,
+            "ChainId": 1337
+          },
           "ObservationType": 2,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -410,7 +416,10 @@
           ]
         },
         {
-          "ObserverChain": 11,
+          "ObserverChain": {
+            "ChainName": 11,
+            "ChainId": 97
+          },
           "ObservationType": 1,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -418,7 +427,10 @@
           ]
         },
         {
-          "ObserverChain": 11,
+          "ObserverChain": {
+            "ChainName": 11,
+            "ChainId": 97
+          },
           "ObservationType": 2,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -426,7 +438,10 @@
           ]
         },
         {
-          "ObserverChain": 7,
+          "ObserverChain": {
+            "ChainName": 7,
+            "ChainId": 80001
+          },
           "ObservationType": 1,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -434,7 +449,10 @@
           ]
         },
         {
-          "ObserverChain": 7,
+          "ObserverChain": {
+            "ChainName": 7,
+            "ChainId": 80001
+          },
           "ObservationType": 2,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -442,7 +460,10 @@
           ]
         },
         {
-          "ObserverChain": 12,
+          "ObserverChain": {
+            "ChainName": 13,
+            "ChainId": 8001
+          },
           "ObservationType": 1,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -450,7 +471,10 @@
           ]
         },
         {
-          "ObserverChain": 12,
+          "ObserverChain": {
+            "ChainName": 13,
+            "ChainId": 8001
+          },
           "ObservationType": 2,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -458,7 +482,10 @@
           ]
         },
         {
-          "ObserverChain": 10,
+          "ObserverChain": {
+            "ChainName": 10,
+            "ChainId": 1001
+          },
           "ObservationType": 1,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -466,7 +493,10 @@
           ]
         },
         {
-          "ObserverChain": 10,
+          "ObserverChain": {
+            "ChainName": 10,
+            "ChainId": 1001
+          },
           "ObservationType": 2,
           "observerList": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
@@ -475,56 +505,204 @@
         }
       ],
       "Params": {
-        "BallotThresholds": [
+        "ObserverParams": [
           {
-            "Chain": 11,
+            "Chain": {
+              "ChainName": 1,
+              "ChainId": 1
+            },
             "Observation": 1,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 11,
+            "Chain": {
+              "ChainName": 1,
+              "ChainId": 1
+            },
             "Observation": 2,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 6,
+            "Chain": {
+              "ChainName": 6,
+              "ChainId": 1337
+            },
             "Observation": 1,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 6,
+            "Chain": {
+              "ChainName": 6,
+              "ChainId": 1337
+            },
             "Observation": 2,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 7,
+            "Chain": {
+              "ChainName": 8,
+              "ChainId": 3
+            },
             "Observation": 1,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 7,
+            "Chain": {
+              "ChainName": 8,
+              "ChainId": 3
+            },
             "Observation": 2,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 12,
+            "Chain": {
+              "ChainName": 5,
+              "ChainId": 56
+            },
             "Observation": 1,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 12,
+            "Chain": {
+              "ChainName": 5,
+              "ChainId": 56
+            },
             "Observation": 2,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 10,
+            "Chain": {
+              "ChainName": 11,
+              "ChainId": 97
+            },
             "Observation": 1,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           },
           {
-            "Chain": 10,
+            "Chain": {
+              "ChainName": 11,
+              "ChainId": 97
+            },
             "Observation": 2,
-            "Threshold": "0.660000000000000000"
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 10,
+              "ChainId": 1001
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 10,
+              "ChainId": 1001
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 2,
+              "ChainId": 2374
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 2,
+              "ChainId": 2374
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 3,
+              "ChainId": 55555
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 3,
+              "ChainId": 55555
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 4,
+              "ChainId": 137
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 4,
+              "ChainId": 137
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 7,
+              "ChainId": 80001
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 7,
+              "ChainId": 80001
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 13,
+              "ChainId": 1212312
+            },
+            "Observation": 1,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
+          },
+          {
+            "Chain": {
+              "ChainName": 13,
+              "ChainId": 1212312
+            },
+            "Observation": 2,
+            "BallotThreshold": "0.660000000000000000",
+            "MinObserverDelegation": "10000000000.000000000000000000"
           }
         ]
       }

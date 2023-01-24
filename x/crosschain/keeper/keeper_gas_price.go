@@ -8,24 +8,24 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/big"
 	"sort"
+	"strconv"
 )
 
 // SetGasPrice set a specific gasPrice in the store from its index
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
 	b := k.cdc.MustMarshal(&gasPrice)
+	gasPrice.Index = strconv.FormatInt(gasPrice.ChainID, 10)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 
 // GetGasPrice returns a gasPrice from its index
-func (k Keeper) GetGasPrice(ctx sdk.Context, index string) (val types.GasPrice, found bool) {
+func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (val types.GasPrice, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	b := store.Get(types.KeyPrefix(index))
+	b := store.Get(types.KeyPrefix(strconv.FormatInt(chainID, 10)))
 	if b == nil {
 		return val, false
 	}
@@ -33,8 +33,8 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, index string) (val types.GasPrice, 
 	return val, true
 }
 
-func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, index string) (sdk.Uint, bool) {
-	gasPrice, isFound := k.GetGasPrice(ctx, index)
+func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (sdk.Uint, bool) {
+	gasPrice, isFound := k.GetGasPrice(ctx, chainID)
 	if !isFound {
 		return sdk.ZeroUint(), isFound
 	}
@@ -99,8 +99,12 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-
-	val, found := k.GetGasPrice(ctx, req.Index)
+	fmt.Println(req.Index)
+	chainID, err := strconv.Atoi(req.Index)
+	if err != nil {
+		return nil, err
+	}
+	val, found := k.GetGasPrice(ctx, int64(chainID))
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
@@ -117,14 +121,17 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
+	chain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ChainID)
+	if !found {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainID))
+	}
 
-	chain := msg.Chain
-	gasPrice, isFound := k.GetGasPrice(ctx, chain)
+	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)
 	if !isFound {
 		gasPrice = types.GasPrice{
 			Creator:     msg.Creator,
-			Index:       chain,
-			Chain:       chain,
+			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
+			ChainID:     chain.ChainId,
 			Prices:      []uint64{msg.Price},
 			BlockNums:   []uint64{msg.BlockNumber},
 			Signers:     []string{msg.Creator},
@@ -151,17 +158,11 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)
-
-	// set gas price on the System Contract on zEVM as well
-	chainid := clientconfig.Chains[chain].ChainID
-	if chainid != nil {
-		if err := k.fungibleKeeper.SetGasPrice(ctx, chainid, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex]))); err != nil {
-			return nil, err
-		}
-	} else {
-		k.Logger(ctx).Error("chainid not found", "chain", chain)
-	}
-
+	//chainIDBigINT := big.NewInt(chain.ChainId)
+	//err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
+	//if err!=nil{
+	//	return nil,err
+	//}
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
 

@@ -9,6 +9,7 @@ import "gogoproto/gogo.proto";
 import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
+import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -74,7 +75,7 @@ message QuerySupportedChains {
 }
 
 message QuerySupportedChainsResponse {
-	repeated ObserverChain Chains = 1;
+	repeated common.Chain Chains = 1;
 }
 
 

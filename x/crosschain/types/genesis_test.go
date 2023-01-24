@@ -51,20 +51,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid: true,
 		},
 		{
-			desc:     "duplicated zetaConversionRate",
-			genState: &types.GenesisState{
-				//ZetaConversionRateList: []types.ZetaConversionRate{
-				//	{
-				//		Index: "0",
-				//	},
-				//	{
-				//		Index: "0",
-				//	},
-				//},
-			},
-			valid: false,
-		},
-		{
 			desc: "duplicated outTxTracker",
 			genState: &types.GenesisState{
 				OutTxTrackerList: []types.OutTxTracker{

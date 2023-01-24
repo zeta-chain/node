@@ -18,7 +18,7 @@ import (
 
 type EVMSigner struct {
 	client              *ethclient.Client
-	chain               common.Chain
+	chain               *common.Chain
 	chainID             *big.Int
 	tssSigner           TSSSigner
 	ethSigner           ethtypes.Signer
@@ -45,7 +45,7 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 
 	return &EVMSigner{
 		client:              client,
-		chain:               chain,
+		chain:               &chain,
 		tssSigner:           tssSigner,
 		chainID:             chainID,
 		ethSigner:           ethSigner,

@@ -2,6 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -15,17 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetObserverMapper(ctx, mapper)
 	}
 	k.SetParams(ctx, types.DefaultParams())
-	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: []types.ObserverChain{
-		types.ObserverChain_Eth,
-		types.ObserverChain_Polygon,
-		types.ObserverChain_BscMainnet,
-		types.ObserverChain_Goerli,
-		types.ObserverChain_Ropsten,
-		types.ObserverChain_Baobab,
-		types.ObserverChain_BscTestnet,
-		types.ObserverChain_Mumbai,
-		types.ObserverChain_BTCTestnet,
-	}})
+	k.SetSupportedChain(ctx, types.SupportedChains{ChainList: common.DefaultChainsList()})
 }
 
 // ExportGenesis returns the capability module's exported genesis.
