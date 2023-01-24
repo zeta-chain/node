@@ -273,7 +273,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_ = ConnectorZEVM
 	//SystemContractAddr := ethcommon.HexToAddress("0x91d18e54DAf4F677cB28167158d6dd21F6aB3921")
 	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
 	wzeta, err := zevm.NewWZETA(wzetaAddr, zevmClient)
@@ -300,6 +299,45 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Deposit tx receipt: status %d\n", receipt.Status)
+	tx, err = wzeta.Approve(zauth, ConnectorZEVMAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("wzeta.approve tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(12 * time.Second)
+	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("approve tx receipt: status %d\n", receipt.Status)
+	tx, err = ConnectorZEVM.Send(zauth, zevm.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(1337),
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     big.NewInt(1e17),
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("send tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(12 * time.Second)
+	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("  Logs:\n")
+	for _, log := range receipt.Logs {
+		sentLog, err := ConnectorZEVM.ParseZetaSent(*log)
+		if err == nil {
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
+			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
+			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+		}
+	}
 }
 
 // wait until cctx is mined; returns the cctxIndex
