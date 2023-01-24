@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -11,7 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 // FIXME: use more specific error types & codes
@@ -67,7 +68,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			//TODO :  Foreign coins to use type-foreign chain , It's not a good idea to iterate here,as this handler might be called frequently
 			var coin fungibletypes.ForeignCoins
 			for _, foreignCoin := range foreignCoinList {
-				if (coin.CoinType == common.CoinType_Gas || foreignCoin.Erc20ContractAddress == cctx.InBoundTxParams.Asset) && foreignCoin.ForeignChain == msg.SenderChain {
+				fmt.Printf("%s %s %s %s\n", cctx.InBoundTxParams.Asset, msg.SenderChain, foreignCoin.Erc20ContractAddress, foreignCoin.ForeignChain)
+				if (msg.CoinType == common.CoinType_Gas || foreignCoin.Erc20ContractAddress == cctx.InBoundTxParams.Asset) && foreignCoin.ForeignChain == msg.SenderChain {
 					found = true
 					coin = foreignCoin
 					break

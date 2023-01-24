@@ -13,6 +13,8 @@ services:
     hostname: zetacore0
     ports:
       - "1317:1317"
+      - "9545:9545"
+      - "9546:9546"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11

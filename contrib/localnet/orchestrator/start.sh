@@ -3,9 +3,8 @@ echo "waiting for geth RPC to start..."
 sleep 6
 echo "funding deployer address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", value: web3.toWei(100,"ether")})' attach http://eth:8545
-echo "funding TSS address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 1 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(1,"ether")})' attach http://eth:8545
-
+echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 1 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 echo "waiting for 3s for the transaction to be mined"
 sleep 6

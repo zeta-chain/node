@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"encoding/json"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"strconv"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -423,7 +424,6 @@ func (k Keeper) CallEVMWithData(
 	if err != nil {
 		return nil, err
 	}
-
 	gasCap := config.DefaultGasCap
 	if commit && gasLimit == nil {
 		args, err := json.Marshal(evmtypes.TransactionArgs{

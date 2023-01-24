@@ -6,8 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/syndtr/goleveldb/leveldb/util"
 	"math/big"
 	"os"
 	"strconv"
@@ -16,8 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/syndtr/goleveldb/leveldb/util"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/contracts/evm"
+	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
@@ -60,7 +62,7 @@ type EVMChainClient struct {
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector
 	ConnectorAddress          ethcommon.Address
-	ERC20Custody              *evm.ERC20Custody
+	ERC20Custody              *erc20custody.ERC20Custody
 	ERC20CustodyAddress       ethcommon.Address
 	EvmClient                 *ethclient.Client
 	KlaytnClient              *KlaytnClient
@@ -145,12 +147,12 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	ob.Connector = connector
 
 	// initialize erc20 custody
-	erc20Custody, err := evm.NewERC20Custody(erc20CustodyAddress, ob.EvmClient)
+	erc20CustodyContract, err := erc20custody.NewERC20Custody(erc20CustodyAddress, ob.EvmClient)
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("ERC20Custody")
 		return nil, err
 	}
-	ob.ERC20Custody = erc20Custody
+	ob.ERC20Custody = erc20CustodyContract
 
 	// create metric counters
 	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
@@ -535,7 +537,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.Raw.BlockNumber,
 			1_000_000,
 			common.CoinType_ERC20,
-			PostSendNonEVMGasLimit,
+			PostSendEVMGasLimit,
 			event.Asset.String(),
 		)
 		if err != nil {

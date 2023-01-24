@@ -3,17 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"sync"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
+	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
-	"math/big"
-	"sync"
-	"time"
 )
 
 var (
@@ -222,7 +225,8 @@ func main() {
 			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
 		}
 	}
-	zevmClient, err := ethclient.Dial("http://zetacore0:8545")
+
+	zevmClient, err := ethclient.Dial("http://zetacore0:9545")
 	if err != nil {
 		panic(err)
 	}
@@ -242,6 +246,55 @@ func main() {
 		}
 	}()
 	wg.Wait()
+
+	fmt.Printf("Step 4: Deploying ERC20Custody contract\n")
+	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ERC20Custody contract address: %s, tx hash: %s\n", erc20CustodyAddr.Hex(), tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ERC20Custody contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
+	fmt.Printf("Step 5: Deploying USDT contract\n")
+	usdtAddr, tx, _, err := erc20.DeployUSDT(auth, goerliClient, "USDT", "USDT", 6)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("USDT contract address: %s, tx hash: %s\n", usdtAddr.Hex(), tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("USDT contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
+	fmt.Printf("Step 6: Whitelist USDT\n")
+	tx, err = ERC20Custody.Whitelist(auth, usdtAddr)
+	if err != nil {
+		panic(err)
+	}
+	time.Sleep(BLOCK)
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Whitelist receipt tx hash: %s\n", tx.Hash().Hex())
+
+	fmt.Printf("Step 7: Set TSS address\n")
+	tx, err = ERC20Custody.UpdateTSSAddress(auth, TSSAddress)
+	if err != nil {
+		panic(err)
+	}
+	time.Sleep(BLOCK)
+	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TSS set receipt tx hash: %s\n", tx.Hash().Hex())
+
 	// ==================== Add your tests here ====================
 	test1()
 
