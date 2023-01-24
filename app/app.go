@@ -415,6 +415,7 @@ func New(
 		keys[emissionsModuleTypes.StoreKey],
 		keys[emissionsModuleTypes.MemStoreKey],
 		app.GetSubspace(emissionsModuleTypes.ModuleName),
+		authtypes.FeeCollectorName,
 	)
 
 	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
@@ -482,7 +483,7 @@ func New(
 		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper),
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
-		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper, app.BankKeeper),
+		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

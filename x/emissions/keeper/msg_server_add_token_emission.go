@@ -27,7 +27,7 @@ func (k msgServer) AddTokenEmission(goCtx context.Context, msg *types.MsgAddToke
 	if err != nil {
 		return &types.MsgAddTokenEmissionResponse{}, errors.Wrap(types.ErrAddingCoinstoTracker, err.Error())
 	}
-	tracker.AmountLeft = tracker.AmountLeft.Add(msg.Amount.ToDec())
+	tracker.AmountLeft = tracker.AmountLeft.Add(msg.Amount)
 	k.SetEmissionTracker(ctx, &tracker)
 	return &types.MsgAddTokenEmissionResponse{}, nil
 }

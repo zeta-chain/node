@@ -15,7 +15,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, cat := range categories {
 		k.SetEmissionTracker(ctx, &types.EmissionTracker{
 			Type:       cat,
-			AmountLeft: sdk.ZeroDec(),
+			AmountLeft: sdk.ZeroInt(),
 		})
 	}
 }

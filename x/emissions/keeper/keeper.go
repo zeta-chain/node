@@ -12,10 +12,11 @@ import (
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		paramstore paramtypes.Subspace
+		cdc              codec.BinaryCodec
+		storeKey         sdk.StoreKey
+		memKey           sdk.StoreKey
+		paramstore       paramtypes.Subspace
+		feeCollectorName string
 	}
 )
 
@@ -24,6 +25,7 @@ func NewKeeper(
 	storeKey,
 	memKey sdk.StoreKey,
 	ps paramtypes.Subspace,
+	feeCollectorName string,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -33,13 +35,18 @@ func NewKeeper(
 
 	return &Keeper{
 
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
+		cdc:              cdc,
+		storeKey:         storeKey,
+		memKey:           memKey,
+		paramstore:       ps,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetFeeCollector() string {
+	return k.feeCollectorName
 }
