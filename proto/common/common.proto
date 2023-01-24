@@ -29,7 +29,8 @@ enum CoinType {
   ERC20 = 2; // ERC20 token
 }
 
-
+// TODO : remove ropsten and ganache
+// TODO : rename BtcTestNet
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
   Empty = 0;
