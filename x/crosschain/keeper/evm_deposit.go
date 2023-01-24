@@ -40,6 +40,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			// TODO : Return error if TX failed ?
 			if !tx.Failed() && withdrawMessage {
 				logs := evmtypes.LogsToEthereum(tx.Logs)
+				// TODO: is passing by ctx KV a good choice?
 				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 				txOrigin := msg.TxOrigin
 				if txOrigin == "" {
