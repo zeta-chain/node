@@ -63,23 +63,23 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	system, _ := k.GetSystemContract(ctx)
 	system.SystemContract = SystemContractAddress.String()
 	k.SetSystemContract(ctx, system)
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_Goerli.String(), "ETH", "gETH", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerili_testnet.String(), "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_GoeriliLocalNet.String(), "ETH", "gETH", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerili_localnet.String(), "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_BscTestnet.String(), "BNB", "tBNB", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_bsc_testnet.String(), "BNB", "tBNB", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_Mumbai.String(), "MATIC", "tMATIC", 18)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_mumbai_testnet.String(), "MATIC", "tMATIC", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_BtcTestNet.String(), "BTC", "tBTC", 8)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_testnet.String(), "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}

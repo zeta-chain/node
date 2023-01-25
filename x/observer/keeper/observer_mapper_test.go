@@ -20,11 +20,11 @@ func TestKeeper_GetObserver(t *testing.T) {
 		{
 			name: "4 eth Observers",
 			mapper: types.CreateObserverMapperList(1, common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			}, types.ObservationType_InBoundTx),
 			assertChain: &common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			},
 			assertObsType:    types.ObservationType_InBoundTx,
@@ -34,19 +34,19 @@ func TestKeeper_GetObserver(t *testing.T) {
 		{
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			}, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_Eth,
+					ChainName: common.ChainName_eth_mainnet,
 					ChainId:   1,
 				}, types.ObservationType_OutBoundTx)...),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_BscMainnet,
+					ChainName: common.ChainName_bsc_mainnet,
 					ChainId:   2,
 				}, types.ObservationType_OutBoundTx)...),
 			assertChain: &common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			},
 			assertObsType:    types.ObservationType_InBoundTx,
@@ -56,19 +56,19 @@ func TestKeeper_GetObserver(t *testing.T) {
 		{
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
-				ChainName: common.ChainName_Btc,
+				ChainName: common.ChainName_btc_mainnet,
 				ChainId:   3,
 			}, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_Polygon,
+					ChainName: common.ChainName_polygon_mainnet,
 					ChainId:   4,
 				}, types.ObservationType_OutBoundTx)...),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_BscMainnet,
+					ChainName: common.ChainName_bsc_mainnet,
 					ChainId:   5,
 				}, types.ObservationType_OutBoundTx)...),
 			assertChain: &common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			},
 			assertObsType:    types.ObservationType_InBoundTx,
@@ -78,19 +78,19 @@ func TestKeeper_GetObserver(t *testing.T) {
 		{
 			name: "No Observers of expected Observation Type",
 			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
-				ChainName: common.ChainName_Btc,
+				ChainName: common.ChainName_btc_mainnet,
 				ChainId:   3,
 			}, types.ObservationType_InBoundTx),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_Polygon,
+					ChainName: common.ChainName_polygon_mainnet,
 					ChainId:   4,
 				}, types.ObservationType_OutBoundTx)...),
 				types.CreateObserverMapperList(1, common.Chain{
-					ChainName: common.ChainName_BscMainnet,
+					ChainName: common.ChainName_bsc_mainnet,
 					ChainId:   5,
 				}, types.ObservationType_OutBoundTx)...),
 			assertChain: &common.Chain{
-				ChainName: common.ChainName_Eth,
+				ChainName: common.ChainName_eth_mainnet,
 				ChainId:   1,
 			},
 			assertObsType:    types.ObservationType_GasPrice,
@@ -207,15 +207,15 @@ func TestKeeper_GetObserver(t *testing.T) {
 
 func TestKeeper_GetAllObserverAddresses(t *testing.T) {
 	mappers := append(append(types.CreateObserverMapperList(1, common.Chain{
-		ChainName: common.ChainName_Btc,
+		ChainName: common.ChainName_btc_mainnet,
 		ChainId:   3,
 	}, types.ObservationType_InBoundTx),
 		types.CreateObserverMapperList(1, common.Chain{
-			ChainName: common.ChainName_Polygon,
+			ChainName: common.ChainName_polygon_mainnet,
 			ChainId:   4,
 		}, types.ObservationType_OutBoundTx)...),
 		types.CreateObserverMapperList(1, common.Chain{
-			ChainName: common.ChainName_BscMainnet,
+			ChainName: common.ChainName_bsc_mainnet,
 			ChainId:   5,
 		}, types.ObservationType_OutBoundTx)...)
 	keeper, ctx := SetupKeeper(t)

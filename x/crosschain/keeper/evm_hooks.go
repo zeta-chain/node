@@ -143,17 +143,17 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZETABridg
 
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain *common.Chain) error {
 	cctx.ZetaMint = cctx.ZetaBurnt
-	cctx.OutBoundTxParams.OutBoundTxGasLimit = 90_000
+	cctx.OutboundTxParams.OutboundTxGasLimit = 90_000
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
 	}
-	cctx.OutBoundTxParams.OutBoundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.OutboundTxParams.OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
 	cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
-		cctx.InBoundTxParams.InBoundTxObservedHash = inCctxIndex
+		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
 	}
 	err := k.UpdateNonce(ctx, receiverChain.ChainName.String(), &cctx)
 	if err != nil {

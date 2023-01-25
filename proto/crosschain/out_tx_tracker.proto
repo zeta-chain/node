@@ -4,14 +4,14 @@ package zetachain.zetacore.crosschain;
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 message TxHashList {
-  string txHash = 1;
-  string signer = 2;
+  string tx_hash = 1;
+  string tx_signer = 2;
 }
 message OutTxTracker {
   string index = 1; // format: "chain-nonce"
-  int64 chainId = 2;
+  int64 chain_id = 2;
   uint64 nonce = 3;
-  repeated TxHashList hashList = 4;
+  repeated TxHashList hash_list = 4;
 }
 
 

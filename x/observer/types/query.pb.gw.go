@@ -60,15 +60,15 @@ func request_Query_BallotByIdentifier_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["ballotIdentifier"]
+	val, ok = pathParams["ballot_identifier"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ballotIdentifier")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ballot_identifier")
 	}
 
 	protoReq.BallotIdentifier, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ballotIdentifier", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ballot_identifier", err)
 	}
 
 	msg, err := client.BallotByIdentifier(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -87,15 +87,15 @@ func local_request_Query_BallotByIdentifier_0(ctx context.Context, marshaler run
 		_   = err
 	)
 
-	val, ok = pathParams["ballotIdentifier"]
+	val, ok = pathParams["ballot_identifier"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ballotIdentifier")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ballot_identifier")
 	}
 
 	protoReq.BallotIdentifier, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ballotIdentifier", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ballot_identifier", err)
 	}
 
 	msg, err := server.BallotByIdentifier(ctx, &protoReq)
@@ -114,26 +114,26 @@ func request_Query_ObserversByChainAndType_0(ctx context.Context, marshaler runt
 		_   = err
 	)
 
-	val, ok = pathParams["observationChain"]
+	val, ok = pathParams["observation_chain"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observationChain")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_chain")
 	}
 
 	protoReq.ObservationChain, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observationChain", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_chain", err)
 	}
 
-	val, ok = pathParams["observationType"]
+	val, ok = pathParams["observation_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observationType")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_type")
 	}
 
 	protoReq.ObservationType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observationType", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_type", err)
 	}
 
 	msg, err := client.ObserversByChainAndType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -152,26 +152,26 @@ func local_request_Query_ObserversByChainAndType_0(ctx context.Context, marshale
 		_   = err
 	)
 
-	val, ok = pathParams["observationChain"]
+	val, ok = pathParams["observation_chain"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observationChain")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_chain")
 	}
 
 	protoReq.ObservationChain, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observationChain", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_chain", err)
 	}
 
-	val, ok = pathParams["observationType"]
+	val, ok = pathParams["observation_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observationType")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_type")
 	}
 
 	protoReq.ObservationType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observationType", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_type", err)
 	}
 
 	msg, err := server.ObserversByChainAndType(ctx, &protoReq)
@@ -468,9 +468,9 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zetachain", "observer", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "ballot_by_identifier", "ballotIdentifier"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "ballot_by_identifier", "ballot_identifier"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ObserversByChainAndType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "observer", "observers_by_chain_and_type", "observationChain", "observationType"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ObserversByChainAndType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "observer", "observers_by_chain_and_type", "observation_chain", "observation_type"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_AllObserverMappers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "all_observer_mappers"}, "", runtime.AssumeColonVerbOpt(true)))
 

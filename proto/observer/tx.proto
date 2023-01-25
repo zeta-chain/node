@@ -21,7 +21,7 @@ service Msg {
 
 message MsgSetSupportedChains {
   string creator = 1;
-  int64 ChainId=2;
+  int64 chain_id=2;
   common.ChainName ChainName=3;
 }
 // this line is used by starport scaffolding # proto/tx/message
@@ -30,7 +30,7 @@ message MsgSetSupportedChainsResponse{
 }
 message MsgAddObserver {
   string creator = 1;
-  int64 chainId = 2;
+  int64 chain_id = 2;
   ObservationType observationType = 3;
 }
 

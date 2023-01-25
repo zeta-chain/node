@@ -25,7 +25,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			if err != nil {
 				return err
 			}
-			cctx.OutBoundTxParams.OutBoundTxHash = "Mined directly to ZetaEVM without TX"
+			cctx.OutboundTxParams.OutboundTxHash = "Mined directly to ZetaEVM without TX"
 		}
 	case common.CoinType_Gas:
 		{
@@ -60,7 +60,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 				)
 			}
 			if tx != nil {
-				cctx.OutBoundTxParams.OutBoundTxHash = tx.Hash
+				cctx.OutboundTxParams.OutboundTxHash = tx.Hash
 			}
 		}
 	default:

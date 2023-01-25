@@ -898,32 +898,32 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 	MinObInterval := 24
 	switch chain.ChainName {
-	case common.ChainName_Mumbai:
+	case common.ChainName_mumbai_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
-	case common.ChainName_Goerli:
+	case common.ChainName_goerili_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.ChainName_GoeriliLocalNet:
+	case common.ChainName_goerili_localnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.ChainName_BscTestnet:
+	case common.ChainName_bsc_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BscConfirmationCount
 		ob.BlockTime = config.BscBlockTime
 
-	case common.ChainName_Baobab:
+	case common.ChainName_baobab_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.ChainName_Btc:
+	case common.ChainName_btc_mainnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.BtcConfirmationCount
 		ob.BlockTime = config.EthBlockTime

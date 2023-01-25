@@ -28,16 +28,6 @@ func GetChainFromChainName(chainName common.ChainName) *common.Chain {
 	return nil
 }
 
-func GetChainNameFromChainID(chainID int64) common.ChainName {
-	chains := GetSupportedChains()
-	for _, chain := range chains {
-		if chainID == chain.ChainId {
-			return chain.ChainName
-		}
-	}
-	return common.ChainName_Empty
-}
-
 func GetChainFromChainID(chainID int64) *common.Chain {
 	chains := GetSupportedChains()
 	for _, chain := range chains {

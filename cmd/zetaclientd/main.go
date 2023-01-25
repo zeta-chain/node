@@ -84,11 +84,10 @@ func main() {
 		}
 	}
 	config.ChainsEnabled = chainList
-	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
-
+	fmt.Println(config.ChainsEnabled)
 	if *preParamsPath != "" {
 		log.Info().Msgf("pre-params file path %s", *preParamsPath)
 		preParamsFile, err := os.Open(*preParamsPath)
@@ -109,7 +108,6 @@ func main() {
 	}
 
 	var peers addr.AddrList
-	fmt.Println("peer", *peer)
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {
@@ -163,18 +161,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	}
 	log.Info().Msgf("ZetaCore to open 9090 port...")
 
-	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Err(err).Msg("UserHomeDir error")
 		return
 	}
-	chainHomeFoler := filepath.Join(homeDir, zetacoreHome)
+	chainHomeFolder := filepath.Join(homeDir, zetacoreHome)
 
 	// first signer & bridge
 	signerName := validatorName
 	signerPass := "password"
-	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass, *zetacoreURL)
+	bridge1, done := CreateZetaBridge(chainHomeFolder, signerName, signerPass, *zetacoreURL)
 	if done {
 		return
 	}
@@ -323,7 +320,6 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		v.Start()
 	}
 
-	log.Info().Msg("starting zetacore observer")
 	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()

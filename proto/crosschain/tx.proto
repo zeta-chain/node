@@ -24,9 +24,9 @@ service Msg {
 
 message MsgAddToOutTxTracker {
   string creator = 1;
-  int64 chainId = 2;
+  int64 chain_id = 2;
   uint64 nonce = 3;
-  string txHash = 4;
+  string tx_hash = 4;
 }
 
 message MsgAddToOutTxTrackerResponse {
@@ -34,7 +34,7 @@ message MsgAddToOutTxTrackerResponse {
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
-  int64 chainId = 2;
+  int64 chain_id = 2;
   uint64 nonce = 3;
 }
 
@@ -64,9 +64,9 @@ message MsgGasBalanceVoterResponse {
 
 message MsgGasPriceVoter {
   string creator = 1;
-  int64 chainID = 2;
+  int64 chain_id = 2;
   uint64 price = 3;
-  uint64 blockNumber = 4;
+  uint64 block_number = 4;
   string supply = 5;
 }
 
@@ -104,17 +104,17 @@ message MsgVoteOnObservedOutboundTxResponse {
 message MsgVoteOnObservedInboundTx {
   string creator = 1;
   string sender = 2;
-  int64 senderChain = 3;
+  int64 sender_chain_id = 3;
   string receiver = 4;
-  int64 receiverChain = 5;
-  string zetaBurnt = 6;
+  int64 receiver_chain = 5;
+  string zeta_burnt = 6;
 //  string mMint = 7;
   string message = 8;
-  string inTxHash = 9;
-  uint64 inBlockHeight = 10;
-  uint64 gasLimit = 11;
-  common.CoinType coinType = 12;
-  string txOrigin = 13;
+  string in_tx_hash = 9;
+  uint64 in_block_height = 10;
+  uint64 gas_limit = 11;
+  common.CoinType coin_type = 12;
+  string tx_origin = 13;
 }
 
 message MsgVoteOnObservedInboundTxResponse {

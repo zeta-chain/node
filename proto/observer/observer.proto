@@ -16,7 +16,7 @@ enum ObservationType {
 
 message ObserverMapper {
   string index = 1;
-  common.Chain  ObserverChain =2 ;
-  ObservationType ObservationType =3;
-  repeated string observerList =4;
+  common.Chain  observer_chain =2 ;
+  ObservationType observation_type =3;
+  repeated string observer_list =4;
 }

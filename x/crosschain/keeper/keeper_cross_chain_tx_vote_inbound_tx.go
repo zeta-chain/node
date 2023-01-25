@@ -14,9 +14,9 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_InBoundTx
-	observationChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.SenderChain)
+	observationChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.SenderChainId)
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.SenderChain, observationType.String()))
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.SenderChainId, observationType.String()))
 	}
 	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ReceiverChain)
 	if !found {
@@ -84,10 +84,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 }
 
 func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain common.Chain, numberofobservers int) error {
-	cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	k.UpdateLastBlockHeight(ctx, cctx)
 	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
-	cctx.OutBoundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % numberofobservers)
+	cctx.OutboundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % numberofobservers)
 
 	err := k.UpdatePrices(ctx, receiveChain.ChainId, cctx)
 	if err != nil {
@@ -101,17 +101,17 @@ func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, re
 }
 
 func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainTx) {
-	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InBoundTxParams.SenderChain)
+	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InboundTxParams.SenderChain)
 	if !isFound {
 		lastblock = types.LastBlockHeight{
 			Creator:           msg.Creator,
-			Index:             msg.InBoundTxParams.SenderChain, // ?
-			Chain:             msg.InBoundTxParams.SenderChain,
-			LastSendHeight:    msg.InBoundTxParams.InBoundTxObservedExternalHeight,
+			Index:             msg.InboundTxParams.SenderChain, // ?
+			Chain:             msg.InboundTxParams.SenderChain,
+			LastSendHeight:    msg.InboundTxParams.InboundTxObservedExternalHeight,
 			LastReceiveHeight: 0,
 		}
 	} else {
-		lastblock.LastSendHeight = msg.InBoundTxParams.InBoundTxObservedExternalHeight
+		lastblock.LastSendHeight = msg.InboundTxParams.InboundTxObservedExternalHeight
 	}
 	k.SetLastBlockHeight(ctx, lastblock)
 }
