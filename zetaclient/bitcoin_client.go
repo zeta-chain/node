@@ -52,8 +52,8 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
-	if !chain.IsBitcoinChain() {
-		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain)
+	if chain.IsEVMChain() {
+		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.String())
 	}
 	ob.mu = &sync.Mutex{}
 	ob.logger = log.With().Str("chain", chain.String()).Logger()
@@ -62,10 +62,10 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.Tss = tss
 	ob.confCount = 0
 
-	ob.endpoint = config.Chains[chain.String()].Endpoint
+	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
 
 	// initialize the Client
-	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
@@ -84,7 +84,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("error getting block count: %s", err)
 	}
 
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, bn)
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
 
 	envvar := ob.chain.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
@@ -109,7 +109,7 @@ func (ob *BitcoinChainClient) Start() {
 }
 
 func (ob *BitcoinChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
+	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	//
 	//ob.logger.Info().Msg("closing ob.db")
@@ -118,7 +118,7 @@ func (ob *BitcoinChainClient) Stop() {
 	//	ob.logger.Error().Err(err).Msg("error closing db")
 	//}
 	//
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
+	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
 func (ob *BitcoinChainClient) SetLastBlockHeight(block uint64) {
@@ -184,10 +184,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			message := hex.EncodeToString(inTx.MemoBytes)
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
-				ob.chain.String(),
+				ob.chain.ChainId,
 				inTx.FromAddress,
 				inTx.FromAddress,
-				"ZETA",
+				common.ZetaChain().ChainId,
 				amountInt.String(),
 				amountInt.String(),
 				message,

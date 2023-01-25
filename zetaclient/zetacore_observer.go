@@ -118,7 +118,7 @@ func (co *CoreObserver) keygenObserve() {
 				for _, chain := range config.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain)
+						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 					}
 				}
 
@@ -130,7 +130,7 @@ func (co *CoreObserver) keygenObserve() {
 				for _, chain := range config.ChainsEnabled {
 					err = co.clientMap[chain].PostNonceIfNotRecorded()
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 					}
 				}
 
@@ -256,16 +256,19 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 
 			for chain, sendList := range sendMap {
-				c, _ := common.ParseChain(chain)
+
+				chainName := common.ParseStringToObserverChain(chain)
+				c := GetChainFromChainName(chainName)
+				//c, _ := common.ParseChain(chain)
 				found := false
-				for _, enabledChain := range config.ChainsEnabled {
-					if enabledChain == c {
+				for _, enabledChain := range GetSupportedChains() {
+					if enabledChain.ChainId == c.ChainId {
 						found = true
 						break
 					}
 				}
 				if !found {
-					log.Warn().Msgf("chain %s is not enabled; skip scheduling", chain)
+					log.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
 					continue
 				}
 				if bn%10 == 0 {
@@ -286,7 +289,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
-					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
+					fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZetaChain().ChainName.String() || send.OutBoundTxParams.ReceiverChain == common.ZetaChain().ChainName.String()
 					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
@@ -338,14 +341,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 
 	var to ethcommon.Address
 	var err error
-	var toChain common.Chain
+	var toChain *common.Chain
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		toChain = GetChainFromChainName(common.ParseStringToObserverChain(send.InBoundTxParams.SenderChain))
 		to = ethcommon.HexToAddress(send.InBoundTxParams.Sender)
-		toChain, err = common.ParseChain(send.InBoundTxParams.SenderChain)
 		logger.Info().Msgf("Abort: reverting inbound")
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.OutBoundTxParams.Receiver)
-		toChain, err = common.ParseChain(send.OutBoundTxParams.ReceiverChain)
+		toChain = GetChainFromChainName(common.ParseStringToObserverChain(send.OutBoundTxParams.ReceiverChain))
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
@@ -353,14 +356,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}
 
 	// Early return if the send is already processed
-	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZETAChain.String() || send.OutBoundTxParams.ReceiverChain == common.ZETAChain.String()
-	included, confirmed, _ := co.clientMap[toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
+	fromOrToZeta := send.InBoundTxParams.SenderChain == common.ZetaChain().ChainName.String() || send.OutBoundTxParams.ReceiverChain == common.ZetaChain().ChainName.String()
+	included, confirmed, _ := co.clientMap[*toChain].IsSendOutTxProcessed(send.Index, int(send.OutBoundTxParams.OutBoundTxTSSNonce), fromOrToZeta)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
 	}
 
-	signer := co.signerMap[toChain]
+	signer := co.signerMap[*toChain]
 	message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
 	if err != nil {
 		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
@@ -390,7 +393,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 		return
 	}
 	// FIXME: remove this hack
-	if toChain == common.GoerliChain {
+	if toChain.ChainName == common.ChainName_Goerli {
 		gasprice = gasprice.Mul(gasprice, big.NewInt(3))
 		gasprice = gasprice.Div(gasprice, big.NewInt(2))
 	}
@@ -407,14 +410,14 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 			tx, err = signer.SignERC20WithdrawTx(to, asset, send.ZetaMint.BigInt(), gasLimit, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
+		srcChainID := config.ChainConfigs[send.InBoundTxParams.SenderChain].Chain.ChainId
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
-		toChainID := config.Chains[send.OutBoundTxParams.ReceiverChain].ChainID
-		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to.Bytes(), toChainID, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+		toChainID := config.ChainConfigs[send.OutBoundTxParams.ReceiverChain].Chain.ChainId
+		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), big.NewInt(srcChainID), to.Bytes(), big.NewInt(toChainID), send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		srcChainID := config.Chains[send.InBoundTxParams.SenderChain].ChainID
+		srcChainID := config.ChainConfigs[send.InBoundTxParams.SenderChain].Chain.ChainId
 		logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
-		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), srcChainID, to, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
+		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InBoundTxParams.Sender), big.NewInt(srcChainID), to, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 	}
 
 	if err != nil {
@@ -428,7 +431,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	} else {
 		cnt.Inc()
 	}
-	signers, err := co.bridge.GetObserverList(toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	signers, err := co.bridge.GetObserverList(*toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.OutBoundTxParams.OutBoundTxTSSNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 
@@ -448,7 +451,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 					log.Warn().Err(err).Msgf("OutTx Broadcast error")
 					retry, report := HandleBroadcastError(err, strconv.FormatUint(send.OutBoundTxParams.OutBoundTxTSSNonce, 10), toChain.String(), outTxHash)
 					if report {
-						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+						zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash)
 						if err != nil {
 							logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
 						}
@@ -461,7 +464,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
-				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.String(), tx.Nonce(), outTxHash)
+				zetaHash, err := co.bridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash)
 				if err != nil {
 					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutBoundTxParams.OutBoundTxTSSNonce, toChain, outTxHash)
 				}
@@ -523,16 +526,29 @@ func GetTargetChain(send *types.CrossChainTx) string {
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr := GetTargetChain(send)
-	c, err := common.ParseChain(chainStr)
-	if err != nil {
-		return nil, err
-	}
-	chainOb, found := co.clientMap[c]
+	chainName := common.ParseStringToObserverChain(chainStr)
+	c := GetChainFromChainName(chainName)
+	//c, err := common.ParseChain(chainStr)
+	//if err != nil {
+	//	return nil, err
+	//}
+	chainOb, found := co.clientMap[*c]
 	if !found {
 		return nil, fmt.Errorf("chain %s not found", c)
 	}
 	return chainOb, nil
 }
+
+//func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
+//	chainStr := getTargetChain(send)
+//	chain := GetChainFromChainName(zetaObserverModuleTypes.ParseStringToObserverChain(chainStr))
+//
+//	chainOb, found := co.clientMap[*chain]
+//	if !found {
+//		return nil, fmt.Errorf("chain %s not found", chain.String())
+//	}
+//	return chainOb, nil
+//}
 
 // returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {

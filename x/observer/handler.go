@@ -20,8 +20,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgSetSupportedChains:
 			res, err := msgServer.SetSupportedChains(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgSetBallotThreshold:
-			res, err := msgServer.SetBallotThreshold(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgAddObserver:
+			res, err := msgServer.AddObserver(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 			// this line is used by starport scaffolding # 1
 		default:

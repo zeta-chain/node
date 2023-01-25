@@ -35,6 +35,7 @@ var (
 
 func init() {
 	//fmt.Printf("ModuleAddressEVM of %s: %s\n", ModuleName, ModuleAddressEVM.String())
+	// 0x735b14BB79463307AAcBED86DAf3322B1e6226aB
 }
 
 const (

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"strconv"
 )
 
 func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
@@ -62,6 +64,17 @@ func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	)
 }
 
+func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, observationHash string, obserVationChain string) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.BallotCreated,
+			sdk.NewAttribute(types.BallotIdentifier, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.CCTXIndex, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.BallotObservationHash, observationHash),
+			sdk.NewAttribute(types.BallotObservationChain, obserVationChain),
+		),
+	)
+}
+
 func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.ZetaWithdrawCreated,
@@ -83,7 +96,7 @@ func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		sdk.NewAttribute(types.OutTxHash, cctx.OutBoundTxParams.OutBoundTxHash),
 		sdk.NewAttribute(types.ZetaMint, msg.ZetaMinted.String()),
-		sdk.NewAttribute(types.OutTXVotingChain, msg.OutTxChain),
+		sdk.NewAttribute(types.OutTXVotingChain, cctx.OutBoundTxParams.ReceiverChain),
 		sdk.NewAttribute(types.OldStatus, oldStatus),
 		sdk.NewAttribute(types.NewStatus, newStatus),
 		sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
@@ -96,7 +109,7 @@ func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		sdk.NewAttribute(types.OutTxHash, cctx.OutBoundTxParams.OutBoundTxHash),
 		sdk.NewAttribute(types.ZetaMint, msg.ZetaMinted.String()),
-		sdk.NewAttribute(types.OutTXVotingChain, msg.OutTxChain),
+		sdk.NewAttribute(types.OutTXVotingChain, cctx.OutBoundTxParams.ReceiverChain),
 		sdk.NewAttribute(types.OldStatus, oldStatus),
 		sdk.NewAttribute(types.NewStatus, newStatus),
 		sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
@@ -104,12 +117,12 @@ func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 	ctx.EventManager().EmitEvent(event)
 }
 
-func EmitCCTXScrubbed(ctx sdk.Context, cctx types.CrossChainTx, oldGasPrice, newGasPrice, chain string) {
+func EmitCCTXScrubbed(ctx sdk.Context, cctx types.CrossChainTx, chainID int64, oldGasPrice, newGasPrice string) {
 	event := sdk.NewEvent(types.CctxScrubbed,
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		sdk.NewAttribute("OldGasPrice", oldGasPrice),
 		sdk.NewAttribute("NewGasPrice", newGasPrice),
-		sdk.NewAttribute("Chain", chain),
+		sdk.NewAttribute("Chain ID", strconv.FormatInt(chainID, 10)),
 		sdk.NewAttribute("Nonce", fmt.Sprintf("%d", cctx.OutBoundTxParams.OutBoundTxTSSNonce)),
 	)
 	ctx.EventManager().EmitEvent(event)

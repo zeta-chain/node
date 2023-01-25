@@ -42,8 +42,8 @@ func (msg *MsgNonceVoter) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	_, err = common.ParseChain(msg.Chain)
-	if err != nil {
+	chainName := common.ParseStringToObserverChain(msg.Chain)
+	if chainName.String() == "Empty" {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain string (%s): %s", err, msg.Chain)
 	}
 

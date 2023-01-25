@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 message GasPrice {
   string creator = 1;
   string index = 2;
-  string chain = 3;
+  int64 chainID = 3;
   repeated string signers = 4 ;
   repeated uint64 blockNums = 5;
   repeated uint64 prices = 6;

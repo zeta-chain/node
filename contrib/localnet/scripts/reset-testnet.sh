@@ -47,16 +47,16 @@ for NODE in $NODES; do
 done
 
 observer_list=$(echo $observer | rev | cut -c2- | rev)
-zetacored add-observer Goerli InBoundTx "$observer_list" #goerli
-zetacored add-observer Goerli OutBoundTx "$observer_list"
-zetacored add-observer BscTestnet InBoundTx "$observer_list" #bsctestnet
-zetacored add-observer BscTestnet OutBoundTx "$observer_list"
-zetacored add-observer Mumbai InBoundTx "$observer_list" #mumbai
-zetacored add-observer Mumbai OutBoundTx "$observer_list"
-zetacored add-observer BTCTestnet InBoundTx "$observer_list" #btctestnet
-zetacored add-observer BTCTestnet OutBoundTx "$observer_list"
-zetacored add-observer Baobab InBoundTx "$observer_list" #baobab klaytn
-zetacored add-observer Baobab OutBoundTx "$observer_list"
+zetacored add-observer Goerli 1337 InBoundTx "$observer_list" #goerli
+zetacored add-observer Goerli 1337 OutBoundTx "$observer_list"
+zetacored add-observer BscTestnet 97 InBoundTx "$observer_list" #bsctestnet
+zetacored add-observer BscTestnet 97 OutBoundTx "$observer_list"
+zetacored add-observer Mumbai 80001 InBoundTx "$observer_list" #mumbai
+zetacored add-observer Mumbai 80001 OutBoundTx "$observer_list"
+zetacored add-observer BtcTestNet 8001 InBoundTx "$observer_list" #btctestnet
+zetacored add-observer BtcTestNet 8001 OutBoundTx "$observer_list"
+zetacored add-observer Baobab 1001 InBoundTx "$observer_list" #baobab klaytn
+zetacored add-observer Baobab 1001 OutBoundTx "$observer_list"
 
 for NODE in $NODES; do
 	scp  ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/

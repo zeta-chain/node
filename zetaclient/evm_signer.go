@@ -3,6 +3,10 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -11,14 +15,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
-	"strings"
-	"time"
 )
 
 type EVMSigner struct {
 	client                      *ethclient.Client
-	chain                       common.Chain
+	chain                       *common.Chain
 	chainID                     *big.Int
 	tssSigner                   TSSSigner
 	ethSigner                   ethtypes.Signer
@@ -51,7 +52,7 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 
 	return &EVMSigner{
 		client:                      client,
-		chain:                       chain,
+		chain:                       &chain,
 		tssSigner:                   tssSigner,
 		chainID:                     chainID,
 		ethSigner:                   ethSigner,

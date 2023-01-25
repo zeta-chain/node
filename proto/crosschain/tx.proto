@@ -24,7 +24,7 @@ service Msg {
 
 message MsgAddToOutTxTracker {
   string creator = 1;
-  string chain = 2;
+  int64 chainId = 2;
   uint64 nonce = 3;
   string txHash = 4;
 }
@@ -34,7 +34,7 @@ message MsgAddToOutTxTrackerResponse {
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
-  string chain = 2;
+  int64 chainId = 2;
   uint64 nonce = 3;
 }
 
@@ -64,7 +64,7 @@ message MsgGasBalanceVoterResponse {
 
 message MsgGasPriceVoter {
   string creator = 1;
-  string chain = 2;
+  int64 chainID = 2;
   uint64 price = 3;
   uint64 blockNumber = 4;
   string supply = 5;
@@ -93,7 +93,7 @@ message MsgVoteOnObservedOutboundTx {
   (gogoproto.moretags) = "yaml:\"zeta_minted\""
   ];
   common.ReceiveStatus status = 6;
-  string outTx_chain = 7;
+  int64 outTx_chain = 7;
   uint64 outTx_tss_nonce = 8;
   common.CoinType coin_type = 9;
 }
@@ -104,9 +104,9 @@ message MsgVoteOnObservedOutboundTxResponse {
 message MsgVoteOnObservedInboundTx {
   string creator = 1;
   string sender = 2;
-  string senderChain = 3;
+  int64 senderChain = 3;
   string receiver = 4;
-  string receiverChain = 5;
+  int64 receiverChain = 5;
   string zetaBurnt = 6;
 //  string mMint = 7;
   string message = 8;

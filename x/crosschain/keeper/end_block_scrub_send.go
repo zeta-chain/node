@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/big"
 )
 
 // ScrubGasPriceOfStuckOutTx change (increase) the gas price of a scheduled Send which has been stuck.
@@ -37,13 +38,13 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 		// if the status of send is pending, which means Finalized/Revert
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 			if ctx.BlockHeight()-int64(cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight) > 100 { // stuck send
-				var chain string
+				var chainID int64
 				if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-					chain = cctx.OutBoundTxParams.ReceiverChain
+					chainID = cctx.OutBoundTxParams.ReceiverChainId
 				} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-					chain = cctx.InBoundTxParams.SenderChain
+					chainID = cctx.InBoundTxParams.SenderChainID
 				}
-				gasPrice, isFound := k.GetGasPrice(ctx, chain)
+				gasPrice, isFound := k.GetGasPrice(ctx, chainID)
 				if !isFound {
 					continue
 				}
@@ -68,7 +69,7 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 				cctx.OutBoundTxParams.OutBoundTxGasPrice = newGasPrice.String()
 				// No need to migrate as this function does not change the status of Send
 				k.SetCrossChainTx(ctx, cctx)
-				EmitCCTXScrubbed(ctx, cctx, oldGasPrice.String(), newGasPrice.String(), chain)
+				EmitCCTXScrubbed(ctx, cctx, chainID, oldGasPrice.String(), newGasPrice.String())
 			}
 		}
 	}

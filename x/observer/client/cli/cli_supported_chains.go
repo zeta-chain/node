@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"strings"
+	"strconv"
 )
 
 func CmdGetSupportedChains() *cobra.Command {
@@ -40,14 +42,18 @@ func CmdGetSupportedChains() *cobra.Command {
 
 func CmdSetSupportedChains() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-supported-chains [chains separated by comma] ",
-		Short: "Broadcast message gasPriceVoter",
-		Args:  cobra.ExactArgs(1),
+		Use:   "add-supported-chains chainID chainName ",
+		Short: "Broadcast message set-supported-chains",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			chains := strings.Split(args[0], ",")
-			observerChainList := make([]types.ObserverChain, len(chains))
-			for i, chain := range chains {
-				observerChainList[i] = types.ParseCommonChaintoObservationChain(chain)
+
+			chainName := common.ParseStringToObserverChain(args[1])
+			if chainName == 0 {
+				return errors.New("ChainName type not supported\"")
+			}
+			chainID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
 			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -56,7 +62,8 @@ func CmdSetSupportedChains() *cobra.Command {
 
 			msg := &types.MsgSetSupportedChains{
 				Creator:   clientCtx.GetFromAddress().String(),
-				Chainlist: observerChainList,
+				ChainId:   int64(chainID),
+				ChainName: chainName,
 			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err

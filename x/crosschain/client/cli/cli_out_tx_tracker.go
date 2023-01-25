@@ -45,7 +45,7 @@ func CmdListOutTxTracker() *cobra.Command {
 
 func CmdShowOutTxTracker() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-out-tx-tracker [index]",
+		Use:   "show-out-tx-tracker [chainId] [nonce]",
 		Short: "shows a OutTxTracker",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -53,10 +53,18 @@ func CmdShowOutTxTracker() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			argIndex := args[0]
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			params := &types.QueryGetOutTxTrackerRequest{
-				Index: argIndex,
+				ChainID: argChain,
+				Nonce:   uint64(argNonce),
 			}
 
 			res, err := queryClient.OutTxTracker(context.Background(), params)
@@ -81,8 +89,14 @@ func CmdAddToWatchList() *cobra.Command {
 		Short: "Add a out-tx-tracker",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argChain := args[0]
-			argNonce, _ := strconv.ParseInt(args[1], 10, 64)
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 			argTxHash := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -114,8 +128,14 @@ func CmdRemoveFromWatchList() *cobra.Command {
 		Short: "Remove a out-tx-tracker",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argChain := args[0]
-			argNonce, _ := strconv.ParseInt(args[1], 10, 64)
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
