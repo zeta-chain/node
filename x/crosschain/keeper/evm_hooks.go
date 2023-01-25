@@ -122,15 +122,15 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConne
 		fmt.Printf("burn coins failed: %s\n", err.Error())
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 	}
-	receiverChainID := event.ToChainID
+	receiverChainID := event.DestinationChainId
 	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, receiverChainID.Int64())
 	if !found {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
-	toAddr := "0x" + hex.EncodeToString(event.To)
+	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.ZetaValueAndGas.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta)
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
