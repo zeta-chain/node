@@ -19,9 +19,6 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-#    command: "-f /dev/null"
-#    entrypoint: /usr/bin/tail
-#    tty: true
     entrypoint: /root/start-zetacored.sh
 
 
