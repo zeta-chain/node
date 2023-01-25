@@ -124,7 +124,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	}
 	ob.EvmClient = client
 
-	if chain.IsEVMChain() {
+	if chain.IsKlaytnChain() {
 		kclient, err := Dial(ob.endpoint)
 		if err != nil {
 			ob.logger.Error().Err(err).Msg("klaytn Client Dial")

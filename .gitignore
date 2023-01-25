@@ -4,6 +4,8 @@
 .idea/
 .secrets
 .actrc
+.zetacored/
+.zetaclientd/
 coverage
 coverage.json
 coverage.out
