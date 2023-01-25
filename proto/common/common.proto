@@ -29,29 +29,33 @@ enum CoinType {
   ERC20 = 2; // ERC20 token
 }
 
-// TODO : remove ropsten and ganache
-// TODO : rename BtcTestNet
+
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
-  Empty = 0;
-  Eth = 1;
-  ZetaChain = 2;
-  Btc = 3;
-  Polygon = 4;
-  BscMainnet = 5 ;
-  Goerli = 6;
-  Mumbai = 7;
-  Ropsten = 8;
-  Ganache = 9;
-  Baobab = 10;
-  BscTestnet = 11 ;
-  ZetaChainTestNet = 12;
-  BtcTestNet = 13 ;
+  empty = 0;
+  eth_mainnet = 1;
+  zeta_mainnet = 2;
+  btc_mainnet = 3;
+  polygon_mainnet = 4;
+  bsc_mainnet = 5 ;
+//  Testnet
+  goerili_testnet = 6;
+  mumbai_testnet = 7;
+  ganache_testnet = 8;
+  baobab_testnet = 9;
+  bsc_testnet = 10 ;
+  zeta_testnet = 11;
+  btc_testnet = 12 ;
+//  LocalNet
+  zeta_localnet=13;
+  goerili_localnet=14;
+// Athens
+  zeta_athensnet=15;
 }
 
 message Chain {
-  ChainName ChainName = 1;
-  int64 ChainId = 2;
+  ChainName chain_name = 1;
+  int64 chain_id = 2;
 }
 
 

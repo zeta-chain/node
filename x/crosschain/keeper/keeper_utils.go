@@ -52,8 +52,8 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	if !isFound {
 		return cctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find cctx hash %s", cctxIdentifier))
 	}
-	if cctx.OutBoundTxParams.OutBoundTXBallotIndex == "" {
-		cctx.OutBoundTxParams.OutBoundTXBallotIndex = ballotIdentifier
+	if cctx.OutboundTxParams.OutboundTxBallotIndex == "" {
+		cctx.OutboundTxParams.OutboundTxBallotIndex = ballotIdentifier
 		k.SetCrossChainTx(ctx, cctx)
 	}
 	return
@@ -89,10 +89,10 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	chain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, chainID)
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutBoundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
+		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutboundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
 	}
-	cctx.OutBoundTxParams.OutBoundTxGasPrice = medianGasPrice.String()
-	gasLimit := sdk.NewUint(cctx.OutBoundTxParams.OutBoundTxGasLimit)
+	cctx.OutboundTxParams.OutboundTxGasPrice = medianGasPrice.String()
+	gasLimit := sdk.NewUint(cctx.OutboundTxParams.OutboundTxGasLimit)
 
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
 
@@ -141,7 +141,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.Cr
 	}
 
 	// SET nonce
-	cctx.OutBoundTxParams.OutBoundTxTSSNonce = nonce.Nonce
+	cctx.OutboundTxParams.OutboundTxTssNonce = nonce.Nonce
 	nonce.Nonce++
 	k.SetChainNonces(ctx, nonce)
 	return nil

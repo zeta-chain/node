@@ -85,24 +85,21 @@ var ChainConfigs = map[string]*types.ChainETHish{
 		BlockTime:                EthBlockTime,
 		Endpoint:                 "107.20.255.203:18332",
 	},
-	//common.EmptyChain.String(): {
-	//	Name:                     "",
-	//	ConnectorContractAddress: "",
-	//	ChainID:                  big.NewInt(0),
-	//},
-
+	common.GoeriliLocalNetChain().ChainName.String(): {
+		Chain:                    common.GoeriliLocalNetChain(),
+		Endpoint:                 "http://eth:8545",
+		BlockTime:                3,
+		ZETATokenContractAddress: "0xA8D5060feb6B456e886F023709A2795373691E63",
+		ConnectorContractAddress: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+	},
 	common.ZetaChain().ChainName.String(): {
 		Chain:                    common.ZetaChain(),
 		BlockTime:                6,
 		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
-}
-
-func FindChainByID(id int64) string {
-	for _, v := range ChainConfigs {
-		if v.Chain.ChainId == id {
-			return v.Chain.ChainName.String()
-		}
-	}
-	return ""
+	common.ZetaLocalNetChain().ChainName.String(): {
+		Chain:                    common.ZetaChain(),
+		BlockTime:                6,
+		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
+	},
 }

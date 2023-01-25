@@ -59,7 +59,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.ZetaMint))
 		}
 	}
-	cctx.OutBoundTxParams.OutBoundTxHash = msg.ObservedOutTxHash
+	cctx.OutboundTxParams.OutboundTxHash = msg.ObservedOutTxHash
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	oldStatus := cctx.CctxStatus.Status
@@ -91,8 +91,8 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 }
 
 func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
-	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
+	cctx.OutboundTxParams.OutboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+	cctx.OutboundTxParams.OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
 	oldStatus := cctx.CctxStatus.Status
@@ -120,11 +120,11 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
-			err := k.UpdatePrices(ctx, cctx.InBoundTxParams.SenderChainID, cctx)
+			err := k.UpdatePrices(ctx, cctx.InboundTxParams.SenderChainId, cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, cctx.InBoundTxParams.SenderChain, cctx)
+			err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChain, cctx)
 			if err != nil {
 				return err
 			}

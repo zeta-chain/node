@@ -10,7 +10,7 @@ var _ sdk.Msg = &MsgGasPriceVoter{}
 func NewMsgGasPriceVoter(creator string, chain int64, price uint64, supply string, blockNumber uint64) *MsgGasPriceVoter {
 	return &MsgGasPriceVoter{
 		Creator:     creator,
-		ChainID:     chain,
+		ChainId:     chain,
 		Price:       price,
 		BlockNumber: blockNumber,
 		Supply:      supply,
