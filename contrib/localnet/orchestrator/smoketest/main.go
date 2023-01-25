@@ -338,6 +338,44 @@ func main() {
 			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
 		}
 	}
+	fmt.Printf("waiting for cctx status to change to final...\n")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var index string
+		for {
+			time.Sleep(5 * time.Second)
+			res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{
+				InTxHash: tx.Hash().Hex(),
+			})
+			if err != nil {
+				fmt.Printf("No CCTX found for inTxHash %s\n", tx.Hash().Hex())
+				continue
+			}
+			index = res.InTxHashToCctx.CctxIndex
+			fmt.Printf("Found CCTX for inTxHash %s: %s\n", tx.Hash().Hex(), index)
+			break
+		}
+		for {
+			time.Sleep(5 * time.Second)
+			res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{
+				Index: index,
+			})
+			if err != nil {
+				fmt.Printf("No CCTX found for index %s\n", index)
+				continue
+			}
+			if res.CrossChainTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+				fmt.Printf("Found CCTX for index %s: status %s\n", index, res.CrossChainTx.CctxStatus.Status)
+				continue
+			}
+			if res.CrossChainTx.CctxStatus.Status == types.CctxStatus_OutboundMined {
+				fmt.Printf("Found CCTX for index %s: status %s; success\n", index, res.CrossChainTx.CctxStatus.Status)
+				break
+			}
+		}
+	}()
+	wg.Wait()
 }
 
 // wait until cctx is mined; returns the cctxIndex

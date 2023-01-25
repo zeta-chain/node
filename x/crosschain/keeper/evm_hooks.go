@@ -119,6 +119,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConne
 	fmt.Printf("#############################\n")
 
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
+		fmt.Printf("burn coins failed: %s\n", err.Error())
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 	}
 	receiverChainID := event.ToChainID
@@ -192,6 +193,7 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, er
 }
 
 // FIXME: add check for event emitting contracts
+// TODO: use the abigen'd filter instead of manual parsing for other events above
 func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZetaConnectorZEVMZetaSent, error) {
 	zetaConnectorZEVM, err := contracts.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {

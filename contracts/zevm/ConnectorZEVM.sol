@@ -48,11 +48,12 @@ interface ZetaInterfaces {
 
 interface WZETA {
     function transferFrom(address src, address dst, uint wad) external returns (bool);
+    function withdraw(uint wad) external;
 }
 
 contract ZetaConnectorZEVM is ZetaInterfaces{
     address public wzeta;
-    address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
+    address public constant FUNGIBLE_MODULE_ADDRESS = payable(0x735b14BB79463307AAcBED86DAf3322B1e6226aB);
 
     event ZetaSent(
         address sourceTxOriginAddress,
@@ -69,10 +70,15 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
         wzeta = _wzeta;
     }
 
+    // the contract will receive ZETA from WETH9.withdraw()
+    receive() external payable {}
+
     function send(ZetaInterfaces.SendInput calldata input) external {
         // transfer wzeta to "fungible" module, which will be burnt by the protocol post processing via hooks.
-        require(WZETA(wzeta).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
-
+        require(WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
+        WZETA(wzeta).withdraw(input.zetaValueAndGas);
+        (bool sent,) = FUNGIBLE_MODULE_ADDRESS.call{value: input.zetaValueAndGas}("");
+        require(sent, "Failed to send Ether");
         emit ZetaSent(
             tx.origin,
             msg.sender,
