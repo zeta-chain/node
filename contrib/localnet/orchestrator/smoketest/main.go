@@ -267,7 +267,7 @@ func main() {
 	TestERC20Withdraw(goerliClient, zevmClient, cctxClient, fungibleClient)
 	// ==================== Add your tests here ====================
 
-	// ==================== Sending ZETA to Ethereum ===================
+	// ==================== Sending ZETA from ZEVM to Ethereum ===================
 	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
 	ConnectorZEVM, err := zevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
 	if err != nil {
@@ -376,6 +376,9 @@ func main() {
 		}
 	}()
 	wg.Wait()
+
+	// custom tests
+	test1(zevmClient, goerliClient, cctxClient, fungibleClient)
 }
 
 // wait until cctx is mined; returns the cctxIndex
