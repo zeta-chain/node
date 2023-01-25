@@ -1,5 +1,6 @@
 # these are the connector (MPI) contract addresses
 export GOERLI_MPI_ADDRESS=0x00007d0BA516a2bA02D77907d3a1348C1187Ae62
+export GOERLILOCALNET_MPI_ADDRESS=0x00007d0BA516a2bA02D77907d3a1348C1187Ae62
 export BSCTESTNET_MPI_ADDRESS=0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c
 export MUMBAI_MPI_ADDRESS=0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c
 export ROPSTEN_MPI_ADDRESS=0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c
@@ -19,6 +20,7 @@ export DISABLE_TSS_KEYGEN=yes
 # use your own quicknode API links please; free plan is more than enough
 export BSCTESTNET_ENDPOINT=https://data-seed-prebsc-1-s1.binance.org:8545
 export GOERLI_ENDPOINT=https://goerli.infura.io/v3/50b6673dc48443e59047246df462902c
+export GOERLILOCALNET_ENDPOINT=https://goerli.infura.io/v3/50b6673dc48443e59047246df462902c
 export ROPSTEN_ENDPOINT=https://ropsten.infura.io/v3/50b6673dc48443e59047246df462902c
 export MUMBAI_ENDPOINT=https://polygon-mumbai.infura.io/v3/50b6673dc48443e59047246df462902c
 export BAOBAB_ENDPOINT=https://klaytn-baobab-rpc.allthatnode.com:8551

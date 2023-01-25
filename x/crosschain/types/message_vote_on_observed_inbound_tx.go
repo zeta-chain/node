@@ -13,7 +13,7 @@ func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin 
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
-		SenderChain:   senderChain,
+		SenderChainId: senderChain,
 		TxOrigin:      txOrigin,
 		Receiver:      receiver,
 		ReceiverChain: receiverChain,

@@ -56,12 +56,12 @@ func (chain Chain) IsEqual(c Chain) bool {
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.IsEqual(ZetaChain())
+	return chain.IsEqual(ZetaChain()) || chain.IsEqual(ZetaLocalNetChain()) || chain.IsEqual(ZetaAthensNetChain())
 }
 
 func (chain Chain) IsEVMChain() bool {
 	return chain.IsEqual(EthChain()) || chain.IsEqual(BscMainnetChain()) || chain.IsEqual(PolygonChain()) || chain.IsEqual(GoerliChain()) ||
-		chain.IsEqual(MumbaiChain()) || chain.IsEqual(BscTestnetChain()) || chain.IsEqual(BaobabChain())
+		chain.IsEqual(MumbaiChain()) || chain.IsEqual(BscTestnetChain()) || chain.IsEqual(BaobabChain()) || chain.IsEqual(GoeriliLocalNetChain())
 }
 
 func (chain Chain) IsKlaytnChain() bool {

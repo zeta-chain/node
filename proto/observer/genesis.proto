@@ -9,7 +9,7 @@ import "observer/params.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message GenesisState {
-  repeated Ballot Ballots =1;
-  repeated ObserverMapper Observers = 2;
+  repeated Ballot ballots =1;
+  repeated ObserverMapper observers = 2;
   Params Params = 3;
 }

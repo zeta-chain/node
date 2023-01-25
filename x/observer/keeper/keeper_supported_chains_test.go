@@ -11,15 +11,15 @@ func TestKeeper_SupportedChains(t *testing.T) {
 	keeper, ctx := SetupKeeper(t)
 	list := []*common.Chain{
 		{
-			ChainName: common.ChainName_Eth,
+			ChainName: common.ChainName_eth_mainnet,
 			ChainId:   1,
 		},
 		{
-			ChainName: common.ChainName_Btc,
+			ChainName: common.ChainName_btc_mainnet,
 			ChainId:   2,
 		},
 		{
-			ChainName: common.ChainName_BscMainnet,
+			ChainName: common.ChainName_bsc_mainnet,
 			ChainId:   3,
 		},
 	}
