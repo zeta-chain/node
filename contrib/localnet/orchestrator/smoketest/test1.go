@@ -29,6 +29,9 @@ func TestDepositEtherIntoZRC20(zevmClient *ethclient.Client, goerliClient *ethcl
 	}
 	fmt.Printf("GOERLI deployer balance: %s\n", bal.String())
 	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
 	value := big.NewInt(1000000000000000000) // in wei (1 eth)
 	gasLimit := uint64(21000)                // in units
 	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
@@ -41,8 +44,14 @@ func TestDepositEtherIntoZRC20(zevmClient *ethclient.Client, goerliClient *ethcl
 		panic(err)
 	}
 	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
 
 	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
+	if err != nil {
+		panic(err)
+	}
 	err = goerliClient.SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		panic(err)

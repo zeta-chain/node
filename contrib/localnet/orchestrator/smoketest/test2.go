@@ -34,8 +34,13 @@ func TestSendZetaOut(zevmClient *ethclient.Client, goerliClient *ethclient.Clien
 	}
 	fmt.Printf("zevm chainid: %d\n", zchainid)
 	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
 	zauth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, zchainid)
-
+	if err != nil {
+		panic(err)
+	}
 	zauth.Value = big.NewInt(1e18)
 	tx, err := wzeta.Deposit(zauth)
 	zauth.Value = BigZero
