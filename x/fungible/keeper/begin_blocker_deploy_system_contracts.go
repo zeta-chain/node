@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -10,7 +12,6 @@ import (
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 // FIXME: This is for testnet only
@@ -63,6 +64,10 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	system, _ := k.GetSystemContract(ctx)
 	system.SystemContract = SystemContractAddress.String()
 	k.SetSystemContract(ctx, system)
+	err = k.SetGasPrice(ctx, big.NewInt(1337), big.NewInt(1))
+	if err != nil {
+		return err
+	}
 	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_Goerli.String(), "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")

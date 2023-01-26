@@ -10,6 +10,16 @@
         "internalType": "address",
         "name": "_TSSAddressUpdater",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_zetaFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "_zeta",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -46,6 +56,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "ZeroFee",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -56,7 +71,7 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       },
@@ -107,7 +122,7 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       }
@@ -120,7 +135,7 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       }
@@ -139,7 +154,7 @@
       },
       {
         "indexed": false,
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       },
@@ -187,7 +202,7 @@
         "type": "bytes"
       },
       {
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       },
@@ -244,7 +259,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       }
@@ -270,7 +285,20 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
+        "name": "_zetaFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateZetaFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       }
@@ -283,7 +311,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "",
         "type": "address"
       }
@@ -307,7 +335,7 @@
         "type": "address"
       },
       {
-        "internalType": "address",
+        "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
       },
@@ -320,6 +348,32 @@
     "name": "withdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zeta",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetaFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

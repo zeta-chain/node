@@ -259,7 +259,7 @@ func main() {
 	wg.Wait()
 
 	fmt.Printf("Step 4: Deploying ERC20Custody contract\n")
-	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress)
+	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), ethcommon.HexToAddress("0x"))
 	if err != nil {
 		panic(err)
 	}

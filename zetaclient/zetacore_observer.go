@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"math/rand"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -399,7 +400,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}
 
 	var tx *ethtypes.Transaction
-	if send.InBoundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+	if send.InBoundTxParams.SenderChain == "ZetaChain" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		if send.InBoundTxParams.CoinType == common.CoinType_Zeta {
 			logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InBoundTxParams.SenderChain, toChain, send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutBoundTxParams.OutBoundTxTSSNonce, gasprice)
