@@ -170,8 +170,8 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
 	hash := types.TxHashList{
-		TxHash: msg.TxHash,
-		Signer: msg.Creator,
+		TxHash:   msg.TxHash,
+		TxSigner: msg.Creator,
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{

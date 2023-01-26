@@ -35,7 +35,7 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 				StatusMessage:       "",
 				LastUpdateTimestamp: 0,
 			},
-			InBoundTxParams: &types.InBoundTxParams{InBoundTxObservedHash: fmt.Sprintf("Hash-%d", i)},
+			InboundTxParams: &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i)},
 			ZetaMint:        sdk.OneUint(),
 			ZetaBurnt:       sdk.OneUint(),
 			ZetaFees:        sdk.OneUint()},

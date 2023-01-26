@@ -120,7 +120,6 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.ChainName.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
 		ObservationChain: chain.ChainName.String(),
 		ObservationType:  observationType,

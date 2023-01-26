@@ -18,7 +18,7 @@ import (
 func (k Keeper) SetGasPrice(ctx sdk.Context, gasPrice types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
 	b := k.cdc.MustMarshal(&gasPrice)
-	gasPrice.Index = strconv.FormatInt(gasPrice.ChainID, 10)
+	gasPrice.Index = strconv.FormatInt(gasPrice.ChainId, 10)
 	store.Set(types.KeyPrefix(gasPrice.Index), b)
 }
 
@@ -121,9 +121,9 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
-	chain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ChainID)
+	chain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainID))
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
 	}
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)
@@ -131,7 +131,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		gasPrice = types.GasPrice{
 			Creator:     msg.Creator,
 			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
-			ChainID:     chain.ChainId,
+			ChainId:     chain.ChainId,
 			Prices:      []uint64{msg.Price},
 			BlockNums:   []uint64{msg.BlockNumber},
 			Signers:     []string{msg.Creator},

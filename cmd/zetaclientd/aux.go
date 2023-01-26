@@ -28,7 +28,6 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 
 func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
 	signerMap := make(map[common.Chain]*mc.EVMSigner)
-
 	for _, chain := range mcconfig.ChainsEnabled {
 
 		if !(chain).IsEVMChain() {
@@ -51,7 +50,7 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
 func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]mc.ChainClient, error) {
 	clientMap := make(map[common.Chain]mc.ChainClient)
 	for _, chain := range mcconfig.ChainsEnabled {
-		log.Info().Msgf("starting observer for %s ", chain.String())
+		log.Info().Msgf("starting observer for : %s ", chain.String())
 		var co mc.ChainClient
 		var err error
 		if chain.IsEVMChain() {

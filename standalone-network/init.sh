@@ -44,16 +44,11 @@ observer_list=$(echo $observer | rev | cut -c2- | rev)
 echo $observer_list
 
 
-zetacored add-observer Goerli 5 InBoundTx "$observer_list" #goerli
-zetacored add-observer Goerli 5 OutBoundTx "$observer_list"
-zetacored add-observer BscTestnet 97 InBoundTx "$observer_list" #bsctestnet
-zetacored add-observer BscTestnet 97 OutBoundTx "$observer_list"
-zetacored add-observer Mumbai 80001 InBoundTx "$observer_list" #mumbai
-zetacored add-observer Mumbai 80001 OutBoundTx "$observer_list"
-zetacored add-observer BtcTestNet 8001 InBoundTx "$observer_list" #btctestnet
-zetacored add-observer BtcTestNet 8001 OutBoundTx "$observer_list"
-zetacored add-observer Baobab 1001 InBoundTx "$observer_list" #baobab klaytn
-zetacored add-observer Baobab 1001 OutBoundTx "$observer_list"
+
+zetacored add-observer GoeriliLocalNet 1337 InBoundTx "$observer_list" #goerli
+zetacored add-observer GoeriliLocalNet 1337 OutBoundTx "$observer_list"
+zetacored add-observer ZetaLocalNet 101 InBoundTx "$observer_list" #goerli
+zetacored add-observer ZetaLocalNet 101 OutBoundTx "$observer_list"
 
 
 
