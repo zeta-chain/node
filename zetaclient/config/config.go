@@ -52,12 +52,11 @@ var ChainsEnabled = []common.Chain{}
 
 var ChainConfigs = map[string]*types.ChainETHish{
 	common.GoerliChain().ChainName.String(): {
-		Chain:                       common.GoerliChain(),
-		ConnectorContractAddress:    "0x851b2446f225266C4EC3cd665f6801D624626c4D",
-		ZETATokenContractAddress:    "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   EthBlockTime,
-		Endpoint:                    "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
+		Chain:                    common.GoerliChain(),
+		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
+		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
+		BlockTime:                EthBlockTime,
+		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
 	},
 	common.BscTestnetChain().ChainName.String(): {
 		Chain:                       common.BscTestnetChain(),
@@ -93,11 +92,12 @@ var ChainConfigs = map[string]*types.ChainETHish{
 		Endpoint:                    "107.20.255.203:18332",
 	},
 	common.GoeriliLocalNetChain().ChainName.String(): {
-		Chain:                    common.GoeriliLocalNetChain(),
-		Endpoint:                 "http://eth:8545",
-		BlockTime:                3,
-		ZETATokenContractAddress: "0xA8D5060feb6B456e886F023709A2795373691E63",
-		ConnectorContractAddress: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+		Chain:                       common.GoeriliLocalNetChain(),
+		Endpoint:                    "http://eth:8545",
+		BlockTime:                   3,
+		ZETATokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
+		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
 	},
 	common.ZetaChain().ChainName.String(): {
 		Chain:                    common.ZetaChain(),

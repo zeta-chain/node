@@ -12,9 +12,10 @@ import (
 
 func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != types.AdminAddress {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "only admin can deploy fungible coin")
-	}
+	// FIXME: Reintroduce admin check or use governance
+	//if msg.Creator != types.AdminAddress {
+	//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "only admin can deploy fungible coin")
+	//}
 	if msg.CoinType == zetacommon.CoinType_Gas {
 		_, err := k.setupChainGasCoinAndPool(ctx, msg.ForeignChain, msg.Name, msg.Symbol, uint8(msg.Decimals))
 		if err != nil {

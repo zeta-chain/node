@@ -272,7 +272,7 @@ func (k Keeper) DepositZRC20(
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }
 
 // Deposit into ZRC4 and call contract function in a single tx

@@ -527,7 +527,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.chain.ChainId,
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
-			config.ChainConfigs["ZetaChain"].Chain.ChainId,
+			config.ChainConfigs[common.ZetaLocalNetChain().ChainName.String()].Chain.ChainId,
 			event.Amount.String(),
 			event.Amount.String(),
 			base64.StdEncoding.EncodeToString(event.Message),
@@ -542,7 +542,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.logger.Error().Err(err).Msg("error posting to zeta core")
 			continue
 		}
-		ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+		ob.logger.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 	}
 
 	// ============= query the incoming tx to TSS address ==============

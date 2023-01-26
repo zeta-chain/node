@@ -47,28 +47,20 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			if err != nil {
 				return err
 			}
-			// TODO : Return error if TX failed ?
-			if !tx.Failed() && withdrawMessage {
-				logs := evmtypes.LogsToEthereum(tx.Logs)
-				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-				txOrigin := msg.TxOrigin
-				if txOrigin == "" {
-					txOrigin = msg.Sender
-				}
-				err = k.ProcessWithdrawalLogs(ctx, logs, contract, txOrigin)
-				if err != nil {
-					return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
-				}
-				ctx.EventManager().EmitEvent(
-					sdk.NewEvent(sdk.EventTypeMessage,
-						sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-						sdk.NewAttribute("action", "depositZRC4AndCallContract"),
-						sdk.NewAttribute("contract", contract.String()),
-						sdk.NewAttribute("data", hex.EncodeToString(data)),
-						sdk.NewAttribute("cctxIndex", cctx.Index),
-					),
-				)
+
+			if err != nil {
+				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 			}
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
+					sdk.NewAttribute("action", "depositZRC4AndCallContract"),
+					sdk.NewAttribute("contract", contract.String()),
+					sdk.NewAttribute("data", hex.EncodeToString(data)),
+					sdk.NewAttribute("cctxIndex", cctx.Index),
+				),
+			)
+
 			if tx != nil {
 				cctx.OutboundTxParams.OutboundTxHash = tx.Hash
 			}

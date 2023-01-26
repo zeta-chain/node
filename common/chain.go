@@ -9,6 +9,7 @@ var (
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
 )
 
+// FIXME: should it return err?
 func ParseStringToObserverChain(chain string) ChainName {
 	c := ChainName_value[chain]
 	return ChainName(c)
