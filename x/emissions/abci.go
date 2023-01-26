@@ -1,7 +1,6 @@
 package emissions
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
@@ -11,9 +10,11 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-	blockRewards := GetReservesFactor(ctx, keeper).
-		Mul(GetBondFactor(ctx, stakingKeeper, keeper)).
-		Mul(GetDurationFactor(ctx, keeper))
+
+	bondFactor := GetBondFactor(ctx, stakingKeeper, keeper)
+	reservesFactor := GetReservesFactor(ctx, keeper)
+	durationFactor := GetDurationFactor(ctx, keeper)
+	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 
 	blockRewardsInt := blockRewards.TruncateInt()
 	blockRewardsCoins := sdk.NewCoin(config.BaseDenom, blockRewardsInt)
@@ -26,8 +27,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 	tracker, _ := keeper.GetEmissionTracker(ctx, types.EmissionCategory_ValidatorEmission)
 	tracker.AmountLeft = tracker.AmountLeft.Sub(blockRewardsInt)
 	keeper.SetEmissionTracker(ctx, &tracker)
-
-	fmt.Println("blockRewards", blockRewards, blockRewardsInt)
+	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(), durationFactor.String(), blockRewardsInt.String(), tracker.AmountLeft.String())
 }
 
 func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper, keeper keeper.Keeper) sdk.Dec {
