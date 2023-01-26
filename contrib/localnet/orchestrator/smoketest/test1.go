@@ -17,8 +17,7 @@ import (
 
 // this tests sending ZETA out of ZetaChain to Ethereum
 func test1(zevmClient *ethclient.Client, goerliClient *ethclient.Client, cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient) {
-
-	fmt.Printf("======= test1 =================")
+	LoudPrintf("Deposit Ether into ZEVM\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)

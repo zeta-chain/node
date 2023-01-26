@@ -72,7 +72,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Step 0: Check the nonce of deployer address\n")
+	LoudPrintf("Step 0: Check the nonce of deployer address\n")
 	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -80,7 +80,7 @@ func main() {
 	if nonce != 0 {
 		panic(fmt.Sprintf("nonce of deployer address should be 0, but got %d", nonce))
 	}
-	fmt.Printf("Step 1: Deploying ZetaEth contract\n")
+	LoudPrintf("Step 1: Deploying ZetaEth contract\n")
 	zetaEthAddr, tx, ZetaEth, err := zetaeth.DeployZetaEth(auth, goerliClient, big.NewInt(21_000_000_000))
 	if err != nil {
 		panic(err)
@@ -113,7 +113,7 @@ func main() {
 
 	// ==================== Interacting with contracts ====================
 	time.Sleep(10 * time.Second)
-	fmt.Printf("Step 2: Interacting with ZetaEth contract\n")
+	LoudPrintf("Step 2: Interacting with ZetaEth contract\n")
 	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -200,12 +200,12 @@ func main() {
 			}
 		}
 	}()
-	//wg.Wait() // allow the tests to run in parallel
+	wg.Wait() // comment this line to allow the tests to run in parallel
 
 	// ==================== Sending ZETA to ZetaChain ===================
 	amount = big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
-	fmt.Printf("Step 3: Sending ZETA to ZetaChain\n")
+	LoudPrintf("Step 3: Sending ZETA to ZetaChain\n")
 	tx, err = ZetaEth.Approve(auth, connectorEthAddr, amount)
 	if err != nil {
 		panic(err)
@@ -268,6 +268,7 @@ func main() {
 	// ==================== Add your tests here ====================
 
 	// ==================== Sending ZETA from ZEVM to Ethereum ===================
+	LoudPrintf("Step 4: Sending ZETA from ZEVM to Ethereum\n")
 	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
 	ConnectorZEVM, err := zevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
 	if err != nil {
@@ -405,4 +406,10 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 		return res.CrossChainTx
 	}
 
+}
+
+func LoudPrintf(format string, a ...any) {
+	fmt.Println("=======================================")
+	fmt.Printf(format, a...)
+	fmt.Println("=======================================")
 }

@@ -72,23 +72,20 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 // message is hex encoded byte array
 // [ contractAddress calldata ]
 // [ 20B, variable]
-func parseContractAndData(message string, asset string) (contractAddress ethcommon.Address, data []byte, err error) {
+func ParseContractAndData(message string) (contractAddress ethcommon.Address, data []byte, err error) {
+	var AddressNull ethcommon.Address
 	if len(message) == 0 {
-		return contractAddress, nil, nil
+		return AddressNull, nil, nil
 	}
 	data, err = hex.DecodeString(message)
 	if err != nil {
-		return contractAddress, nil, err
+		return AddressNull, nil, err
 	}
 	if len(data) < 20 {
-		if len(asset) != 42 || asset[:2] != "0x" {
-			err = fmt.Errorf("invalid message length")
-			return contractAddress, nil, err
-		}
-		contractAddress = ethcommon.HexToAddress(asset)
-	} else {
-		contractAddress = ethcommon.BytesToAddress(data[:20])
-		data = data[20:]
+		err = fmt.Errorf("invalid message length")
+		return AddressNull, nil, err
 	}
+	contractAddress = ethcommon.BytesToAddress(data[:20])
+	data = data[20:]
 	return contractAddress, data, nil
 }
