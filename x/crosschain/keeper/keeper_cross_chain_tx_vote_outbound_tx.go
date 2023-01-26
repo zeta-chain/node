@@ -9,13 +9,16 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
-	observationChain := zetaObserverTypes.ParseCommonChaintoObservationChain(msg.OutTxChain)
+	// Observer Chain already checked then inbound is created
+	/* EDGE CASE : Params updated in during the finalization process
+	   i.e Inbound has been finalized but outbound is still pending
+	*/
+	observationChain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.OutTxChain)
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
@@ -56,7 +59,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.ZetaMint))
 		}
 	}
-	cctx.OutBoundTxParams.OutBoundTxHash = msg.ObservedOutTxHash
+	cctx.OutboundTxParams.OutboundTxHash = msg.ObservedOutTxHash
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	oldStatus := cctx.CctxStatus.Status
@@ -64,12 +67,17 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		return nil, err
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		ctx.Logger().Error(err.Error())
+		k.SetCrossChainTx(ctx, cctx)
+		// Remove OutTX tracker and change CCTX prefix store
+		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
-	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
@@ -83,8 +91,8 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 }
 
 func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
-	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
+	cctx.OutboundTxParams.OutboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+	cctx.OutboundTxParams.OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.ZetaBurnt
 	zetaMinted := cctx.ZetaMint
 	oldStatus := cctx.CctxStatus.Status
@@ -112,12 +120,11 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
-			chain := cctx.InBoundTxParams.SenderChain
-			err := k.UpdatePrices(ctx, chain, cctx)
+			err := k.UpdatePrices(ctx, cctx.InboundTxParams.SenderChainId, cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, chain, cctx)
+			err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChain, cctx)
 			if err != nil {
 				return err
 			}

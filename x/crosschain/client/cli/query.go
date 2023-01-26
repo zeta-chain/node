@@ -24,8 +24,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdListZetaConversionRate())
-	cmd.AddCommand(CmdShowZetaConversionRate())
 	cmd.AddCommand(CmdListOutTxTracker())
 	cmd.AddCommand(CmdShowOutTxTracker())
 	cmd.AddCommand(CmdShowKeygen())
@@ -44,6 +42,9 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdListNodeAccount())
 	cmd.AddCommand(CmdShowNodeAccount())
 	cmd.AddCommand(CmdLastZetaHeight())
+	cmd.AddCommand(CmdListInTxHashToCctx())
+	cmd.AddCommand(CmdShowInTxHashToCctx())
+	// this line is used by starport scaffolding # 1
 
 	return cmd
 }

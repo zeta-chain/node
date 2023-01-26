@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -23,13 +24,39 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) (val types.SupportedChains, 
 	return val, false
 }
 
-func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.ObserverChain) bool {
+func (k Keeper) GetChainFromChainID(ctx sdk.Context, chainID int64) (*common.Chain, bool) {
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		return nil, false
+	}
+	for _, chain := range chains.ChainList {
+		if chain.ChainId == chainID {
+			return chain, true
+		}
+	}
+	return nil, false
+}
+
+func (k Keeper) GetChainFromChainName(ctx sdk.Context, name common.ChainName) (*common.Chain, bool) {
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		return nil, false
+	}
+	for _, chain := range chains.ChainList {
+		if chain.ChainName == name {
+			return chain, true
+		}
+	}
+	return nil, false
+}
+
+func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain common.Chain) bool {
 	chains, found := k.GetSupportedChains(ctx)
 	if !found {
 		return false
 	}
 	for _, chain := range chains.ChainList {
-		if checkChain == chain {
+		if checkChain.IsEqual(*chain) {
 			return true
 		}
 	}
@@ -38,8 +65,19 @@ func (k Keeper) IsChainSupported(ctx sdk.Context, checkChain types.ObserverChain
 
 func (k Keeper) SetSupportedChains(goCtx context.Context, msg *types.MsgSetSupportedChains) (*types.MsgSetSupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	supportedChains := types.SupportedChains{ChainList: msg.GetChainlist()}
-	k.SetSupportedChain(ctx, supportedChains)
+	chain := []*common.Chain{{
+		ChainName: msg.ChainName,
+		ChainId:   msg.ChainId,
+	},
+	}
+	chains, found := k.GetSupportedChains(ctx)
+	if !found {
+		supportedChains := types.SupportedChains{ChainList: chain}
+		k.SetSupportedChain(ctx, supportedChains)
+		return &types.MsgSetSupportedChainsResponse{}, nil
+	}
+	chains.ChainList = append(chains.ChainList, chain...)
+	k.SetSupportedChain(ctx, chains)
 	return &types.MsgSetSupportedChainsResponse{}, nil
 }
 

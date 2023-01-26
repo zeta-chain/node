@@ -28,6 +28,8 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 		items[i].ZetaBurnt = sdk.OneUint()
 		items[i].ZetaMint = sdk.OneUint()
 		items[i].ZetaFees = sdk.OneUint()
+		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i)}
+
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
 	return items
@@ -38,24 +40,26 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
-		items[i].InBoundTxParams = &types.InBoundTxParams{
+		items[i].InboundTxParams = &types.InboundTxParams{
 			Sender:                          fmt.Sprintf("%d", i),
 			SenderChain:                     fmt.Sprintf("%d", i),
-			InBoundTxObservedHash:           fmt.Sprintf("%d", i),
-			InBoundTxObservedExternalHeight: uint64(i),
-			InBoundTxFinalizedZetaHeight:    uint64(i),
+			TxOrigin:                        fmt.Sprintf("%d", i),
+			InboundTxObservedHash:           fmt.Sprintf("%d", i),
+			InboundTxObservedExternalHeight: uint64(i),
+			InboundTxFinalizedZetaHeight:    uint64(i),
 		}
-		items[i].OutBoundTxParams = &types.OutBoundTxParams{
+		items[i].OutboundTxParams = &types.OutboundTxParams{
 			Receiver:                         fmt.Sprintf("%d", i),
 			ReceiverChain:                    fmt.Sprintf("%d", i),
 			Broadcaster:                      uint64(i),
-			OutBoundTxHash:                   fmt.Sprintf("%d", i),
-			OutBoundTxTSSNonce:               uint64(i),
-			OutBoundTxGasLimit:               uint64(i),
-			OutBoundTxGasPrice:               fmt.Sprintf("%d", i),
-			OutBoundTXBallotIndex:            fmt.Sprintf("%d", i),
-			OutBoundTxObservedExternalHeight: uint64(i),
-			OutBoundTxFinalizedZetaHeight:    uint64(i),
+			OutboundTxHash:                   fmt.Sprintf("%d", i),
+			OutboundTxTssNonce:               uint64(i),
+			OutboundTxGasLimit:               uint64(i),
+			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
+			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
+			OutboundTxObservedExternalHeight: uint64(i),
+			OutboundTxFinalizedZetaHeight:    uint64(i),
+			CoinType:                         0,
 		}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,

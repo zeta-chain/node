@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint sdk.Uint, status common.ReceiveStatus, chain string, nonce uint64) *MsgVoteOnObservedOutboundTx {
+func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint sdk.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                  creator,
 		CctxHash:                 sendHash,
@@ -19,6 +19,7 @@ func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string
 		Status:                   status,
 		OutTxChain:               chain,
 		OutTxTssNonce:            nonce,
+		CoinType:                 coinType,
 	}
 }
 

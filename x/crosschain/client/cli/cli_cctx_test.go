@@ -24,7 +24,7 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
-
+	// TODO : Fix add EVM balance to deploy contracts
 	for i := 0; i < n; i++ {
 		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
 			Creator: "ANY",
@@ -34,9 +34,10 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 				StatusMessage:       "",
 				LastUpdateTimestamp: 0,
 			},
-			ZetaMint:  sdk.OneUint(),
-			ZetaBurnt: sdk.OneUint(),
-			ZetaFees:  sdk.OneUint()},
+			InboundTxParams: &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i)},
+			ZetaMint:        sdk.OneUint(),
+			ZetaBurnt:       sdk.OneUint(),
+			ZetaFees:        sdk.OneUint()},
 		)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)

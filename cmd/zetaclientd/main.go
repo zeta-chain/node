@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
+	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/cmd"
@@ -14,7 +14,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 
@@ -41,6 +40,7 @@ import (
 var (
 	preParams   *ecdsakeygen.LocalPreParams
 	keygenBlock int64
+	zetacoreURL *string
 )
 
 func main() {
@@ -53,29 +53,41 @@ func main() {
 	zetaCoreHome := flag.String("core-home", ".zetacored", "folder name for core")
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 	chainID := flag.String("chain-id", "athens-1", "chain id")
-
+	zetacoreURL = flag.String("zetacore-url", "127.0.0.1", "zetacore node URL")
+	devMode := flag.Bool("dev", false, "dev mode: geth private network as goerli testnet")
 	flag.Parse()
 	cmd.CHAINID = *chainID
+	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
+	if err != nil {
+		panic(err)
+	}
+	log.Info().Msgf("ZEVM Chain ID: %s ", ZEVMChainID.String())
+	// TODO Check this parsing to int64
+	config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId = ZEVMChainID.Int64()
 	keygenBlock = *keygen
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	chains := strings.Split(*enabledChains, ",")
+	chainList := []common.Chain{}
+	supportedChains := mc.GetSupportedChains()
 	for _, chain := range chains {
-		if c, err := common.ParseChain(chain); err == nil {
-			config.ChainsEnabled = append(config.ChainsEnabled, c)
-		} else {
-			log.Error().Err(err).Msgf("invalid chain %s", chain)
-			return
+		for _, supportedChain := range supportedChains {
+			if supportedChain.ChainName.String() == chain {
+				if !*devMode && chain == common.GoeriliLocalNetChain().ChainName.String() {
+					log.Error().Msgf("GoeriliLocalNetChain can only be enabled in Dev Mode ")
+					return
+				}
+				chainList = append(chainList, *supportedChain)
+			}
 		}
 	}
-	log.Info().Msgf("enabled chains %v", config.ChainsEnabled)
-
+	config.ChainsEnabled = chainList
 	if *logConsole {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
-
+	fmt.Println(config.ChainsEnabled)
 	if *preParamsPath != "" {
 		log.Info().Msgf("pre-params file path %s", *preParamsPath)
 		preParamsFile, err := os.Open(*preParamsPath)
@@ -96,7 +108,6 @@ func main() {
 	}
 
 	var peers addr.AddrList
-	fmt.Println("peer", *peer)
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {
@@ -128,17 +139,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	chainIP := os.Getenv("CHAIN_IP")
-	if chainIP == "" {
-		chainIP = "127.0.0.1"
-	}
+	//chainIP := os.Getenv("CHAIN_IP")
+	//if chainIP == "" {
+	//	chainIP = "127.0.0.1"
+	//}
 	updateConfig()
 
 	// wait until zetacore is up
 	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("%s:9090", chainIP),
+			fmt.Sprintf("%s:9090", *zetacoreURL),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -150,18 +161,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	}
 	log.Info().Msgf("ZetaCore to open 9090 port...")
 
-	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Err(err).Msg("UserHomeDir error")
 		return
 	}
-	chainHomeFoler := filepath.Join(homeDir, zetacoreHome)
+	chainHomeFolder := filepath.Join(homeDir, zetacoreHome)
 
 	// first signer & bridge
 	signerName := validatorName
 	signerPass := "password"
-	bridge1, done := CreateZetaBridge(chainHomeFoler, signerName, signerPass)
+	bridge1, done := CreateZetaBridge(chainHomeFolder, signerName, signerPass, *zetacoreURL)
 	if done {
 		return
 	}
@@ -189,12 +199,17 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
-	ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
-	if err != nil {
-		log.Error().Err(err).Msgf("SetNodeKey error : %s", err.Error())
-		return
+	for {
+		ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+		if err != nil {
+			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
+			time.Sleep(2 * time.Second)
+		} else {
+			log.Info().Msgf("SetNodeKey success: %s", ztx)
+			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
+			break
+		}
 	}
-	log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 
@@ -255,7 +270,7 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 			log.Error().Msgf("SetPubKey fail")
 			return
 		}
-		log.Info().Msgf("TSS address in hex: %s", tss.Address().Hex())
+		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
 
@@ -268,14 +283,19 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
-		zetaTx, err := bridge1.SetTSS(chain, tss.Address().Hex(), tss.CurrentPubkey)
-		if err != nil {
-			log.Error().Err(err).Msgf("SetTSS fail %s", chain)
+		var tssAddr string
+		if chain.IsEVMChain() {
+			tssAddr = tss.EVMAddress().Hex()
+		} else {
+			tssAddr = tss.BTCAddress()
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain, tss.Address().Hex(), zetaTx)
+		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
+		if err != nil {
+			log.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
+		}
+		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 
 	}
-
 	signerMap1, err := CreateSignerMap(tss)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
@@ -296,20 +316,19 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Err(err).Msg("CreateSignerMap")
 		return
 	}
-	for _, v := range *chainClientMap1 {
+	for _, v := range chainClientMap1 {
 		v.Start()
 	}
 
-	log.Info().Msg("starting zetacore observer...")
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, *chainClientMap1, metrics, tss)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss)
 
 	mo1.MonitorCore()
 
 	// report TSS address nonce on ETHish chains
 	for _, chain := range config.ChainsEnabled {
-		err = (*chainClientMap1)[chain].PostNonceIfNotRecorded()
+		err = (chainClientMap1)[chain].PostNonceIfNotRecorded()
 		if err != nil {
-			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain)
+			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 		}
 	}
 
@@ -322,81 +341,36 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 
 	// stop zetacore observer
 	for _, chain := range config.ChainsEnabled {
-		(*chainClientMap1)[chain].Stop()
+		(chainClientMap1)[chain].Stop()
 	}
 
 }
 
 func updateConfig() {
 
-	updateEndpoint(common.GoerliChain, "GOERLI_ENDPOINT")
-	updateEndpoint(common.BSCTestnetChain, "BSCTESTNET_ENDPOINT")
-	updateEndpoint(common.MumbaiChain, "MUMBAI_ENDPOINT")
-	updateEndpoint(common.RopstenChain, "ROPSTEN_ENDPOINT")
-	updateEndpoint(common.BaobabChain, "BAOBAB_ENDPOINT")
-	updateEndpoint(common.Ganache, "GANACHE_ENDPOINT")
+	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_ENDPOINT")
+	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")
+	updateEndpoint(common.MumbaiChain(), "MUMBAI_ENDPOINT")
+	updateEndpoint(common.BaobabChain(), "BAOBAB_ENDPOINT")
 
-	updateMPIAddress(common.GoerliChain, "GOERLI_MPI_ADDRESS")
-	updateMPIAddress(common.BSCTestnetChain, "BSCTESTNET_MPI_ADDRESS")
-	updateMPIAddress(common.MumbaiChain, "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.RopstenChain, "ROPSTEN_MPI_ADDRESS")
-	updateMPIAddress(common.BaobabChain, "BAOBAB_MPI_ADDRESS")
-	updateMPIAddress(common.Ganache, "GANACHE_MPI_ADDRESS")
+	updateMPIAddress(common.GoerliChain(), "GOERLI_MPI_ADDRESS")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_MPI_ENDPOINT")
+	updateMPIAddress(common.BscTestnetChain(), "BSCTESTNET_MPI_ADDRESS")
+	updateMPIAddress(common.MumbaiChain(), "MUMBAI_MPI_ADDRESS")
+	updateMPIAddress(common.BaobabChain(), "BAOBAB_MPI_ADDRESS")
 
-	// pools
-	updatePoolAddress("GOERLI_POOL_ADDRESS", common.GoerliChain)
-	updatePoolAddress("MUMBAI_POOL_ADDRESS", common.MumbaiChain)
-	updatePoolAddress("BSCTESTNET_POOL_ADDRESS", common.BSCTestnetChain)
-	updatePoolAddress("ROPSTEN_POOL_ADDRESS", common.RopstenChain)
-	updatePoolAddress("BAOBAB_POOL_ADDRESS", common.BaobabChain)
-	updatePoolAddress("GANACHE_POOL_ADDRESS", common.Ganache)
-
-	updateTokenAddress(common.GoerliChain, "GOERLI_ZETA_ADDRESS")
-	updateTokenAddress(common.BSCTestnetChain, "BSCTESTNET_ZETA_ADDRESS")
-	updateTokenAddress(common.MumbaiChain, "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.RopstenChain, "ROPSTEN_ZETA_ADDRESS")
-	updateTokenAddress(common.BaobabChain, "BAOBAB_ZETA_ADDRESS")
-	updateTokenAddress(common.Ganache, "Ganache_ZETA_ADDRESS")
-}
-
-func updatePoolAddress(envvar string, chain common.Chain) {
-	pool := os.Getenv(envvar)
-	if pool == "" {
-		return
-	}
-	parts := strings.Split(pool, ":")
-	if len(parts) != 3 {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if strings.EqualFold(parts[0], "v2") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV2
-	} else if strings.EqualFold(parts[0], "v3") {
-		config.Chains[chain.String()].PoolContract = clienttypes.UniswapV3
-	} else {
-		log.Error().Msgf("%s is not a valid type:address", pool)
-		return
-	}
-	if parts[1] != "" {
-		config.Chains[chain.String()].PoolContractAddress = parts[1]
-		log.Info().Msgf("Pool address ENVVAR: %s: %s", envvar, parts[1])
-	} else {
-		log.Info().Msgf("Pool address DEFAULT: %s", config.Chains[chain.String()].PoolContractAddress)
-	}
-	if strings.EqualFold(parts[2], "ZETAETH") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ZETAETH
-	} else if strings.EqualFold(parts[2], "ETHZETA") {
-		config.Chains[chain.String()].PoolTokenOrder = clienttypes.ETHZETA
-	} else {
-		log.Error().Msgf("%s is not a valid type:address:order", pool)
-		return
-	}
+	updateTokenAddress(common.GoerliChain(), "GOERLI_ZETA_ADDRESS")
+	updateEndpoint(common.GoeriliLocalNetChain(), "GOERLILOCALNET_ZETA_ENDPOINT")
+	updateTokenAddress(common.BscTestnetChain(), "BSCTESTNET_ZETA_ADDRESS")
+	updateTokenAddress(common.MumbaiChain(), "MUMBAI_ZETA_ADDRESS")
+	updateTokenAddress(common.BaobabChain(), "BAOBAB_ZETA_ADDRESS")
 }
 
 func updateMPIAddress(chain common.Chain, envvar string) {
 	mpi := os.Getenv(envvar)
 	if mpi != "" {
-		config.Chains[chain.String()].ConnectorContractAddress = mpi
+		config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress = mpi
 		log.Info().Msgf("MPI: %s", mpi)
 	}
 }
@@ -404,7 +378,7 @@ func updateMPIAddress(chain common.Chain, envvar string) {
 func updateEndpoint(chain common.Chain, envvar string) {
 	endpoint := os.Getenv(envvar)
 	if endpoint != "" {
-		config.Chains[chain.String()].Endpoint = endpoint
+		config.ChainConfigs[chain.ChainName.String()].Endpoint = endpoint
 		log.Info().Msgf("ENDPOINT: %s", endpoint)
 	}
 }
@@ -412,7 +386,7 @@ func updateEndpoint(chain common.Chain, envvar string) {
 func updateTokenAddress(chain common.Chain, envvar string) {
 	token := os.Getenv(envvar)
 	if token != "" {
-		config.Chains[chain.String()].ZETATokenContractAddress = token
+		config.ChainConfigs[chain.String()].ZETATokenContractAddress = token
 		log.Info().Msgf("TOKEN: %s", token)
 	}
 }

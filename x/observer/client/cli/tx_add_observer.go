@@ -14,21 +14,22 @@ var _ = strconv.Itoa(0)
 
 func CmdAddObserver() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [observer-chain] [observation-type]",
+		Use:   "add-observer [observer-chain-id] [observation-type]",
 		Short: "Broadcast message add-observer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argObserverChain := args[0]
 			argObservationType := args[1]
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
+			chainID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
 			msg := types.NewMsgAddObserver(
 				clientCtx.GetFromAddress().String(),
-				types.ParseStringToObserverChain(argObserverChain),
+				int64(chainID),
 				types.ParseStringToObservationType(argObservationType),
 			)
 			if err := msg.ValidateBasic(); err != nil {

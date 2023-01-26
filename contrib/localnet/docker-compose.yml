@@ -1,0 +1,87 @@
+version: "3"
+
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+
+services:
+  zetacore0:
+    image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetacore0
+    ports:
+      - "1317:1317"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.11
+    entrypoint: /root/start-zetacored.sh
+
+
+  zetacore1:
+    image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetacore1
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.12
+    entrypoint: /root/start-zetacored.sh
+
+
+  zetaclient0:
+    image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetaclient0
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.21
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
+
+  zetaclient1:
+    image: zetanode:latest
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetaclient1
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.22
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
+
+  eth:
+    image: ethereum/client-go:v1.10.26
+    hostname: eth
+    ports:
+      - "8545:8545"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.100
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "3"]
+
+  orchestrator:
+    image: orchestrator:latest
+    build:
+      context: ../../.
+      dockerfile: contrib/localnet/orchestrator/Dockerfile
+    depends_on:
+      - zetacore0
+      - eth
+    hostname: orchestrator
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.2
+    entrypoint: /work/start.sh
+
+

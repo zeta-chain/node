@@ -7,10 +7,9 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"os"
 )
 
-func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string) (*mc.ZetaCoreBridge, bool) {
+func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string, chainIP string) (*mc.ZetaCoreBridge, bool) {
 	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
@@ -18,11 +17,6 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	}
 
 	k := mc.NewKeysWithKeybase(kb, signerName, signerPass)
-
-	chainIP := os.Getenv("CHAIN_IP")
-	if chainIP == "" {
-		chainIP = "127.0.0.1"
-	}
 
 	bridge, err := mc.NewZetaCoreBridge(k, chainIP, signerName)
 	if err != nil {
@@ -32,14 +26,18 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
-	signerMap := make(map[common.Chain]*mc.Signer)
-
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
+	signerMap := make(map[common.Chain]*mc.EVMSigner)
 	for _, chain := range mcconfig.ChainsEnabled {
-		mpiAddress := ethcommon.HexToAddress(mcconfig.Chains[chain.String()].ConnectorContractAddress)
-		signer, err := mc.NewSigner(chain, mcconfig.Chains[chain.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
+
+		if !(chain).IsEVMChain() {
+			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain.String())
+			continue
+		}
+		mpiAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
+		signer, err := mc.NewEVMSigner(chain, mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mpiAddress)
 		if err != nil {
-			log.Fatal().Err(err).Msg("NewSigner Ethereum error ")
+			log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 			return nil, err
 		}
 		signerMap[chain] = signer
@@ -48,18 +46,23 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.Signer, error) {
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (*map[common.Chain]*mc.ChainObserver, error) {
-	clientMap := make(map[common.Chain]*mc.ChainObserver)
-
+func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]mc.ChainClient, error) {
+	clientMap := make(map[common.Chain]mc.ChainClient)
 	for _, chain := range mcconfig.ChainsEnabled {
-		log.Info().Msgf("starting %s observer...", chain)
-		co, err := mc.NewChainObserver(chain, bridge, tss, dbpath, metrics)
+		log.Info().Msgf("starting observer for : %s ", chain.String())
+		var co mc.ChainClient
+		var err error
+		if chain.IsEVMChain() {
+			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
+		} else {
+			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+		}
 		if err != nil {
-			log.Err(err).Msgf("%s NewChainObserver", chain)
+			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())
 			return nil, err
 		}
 		clientMap[chain] = co
 	}
 
-	return &clientMap, nil
+	return clientMap, nil
 }

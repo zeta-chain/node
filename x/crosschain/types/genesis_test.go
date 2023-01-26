@@ -1,12 +1,12 @@
 package types_test
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"testing"
 )
 
+// FIXME: make it work
 func TestGenesisState_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string
@@ -22,14 +22,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
 
-				ZetaConversionRateList: []types.ZetaConversionRate{
-					{
-						Index: "0",
-					},
-					{
-						Index: "1",
-					},
-				},
+				//ZetaConversionRateList: []types.ZetaConversionRate{
+				//	{
+				//		Index: "0",
+				//	},
+				//	{
+				//		Index: "1",
+				//	},
+				//},
 				OutTxTrackerList: []types.OutTxTracker{
 					{
 						Index: "0",
@@ -38,14 +38,22 @@ func TestGenesisState_Validate(t *testing.T) {
 						Index: "1",
 					},
 				},
+				InTxHashToCctxList: []types.InTxHashToCctx{
+					{
+						InTxHash: "0",
+					},
+					{
+						InTxHash: "1",
+					},
+				},
 				// this line is used by starport scaffolding # types/genesis/validField
 			},
 			valid: true,
 		},
 		{
-			desc: "duplicated zetaConversionRate",
+			desc: "duplicated outTxTracker",
 			genState: &types.GenesisState{
-				ZetaConversionRateList: []types.ZetaConversionRate{
+				OutTxTrackerList: []types.OutTxTracker{
 					{
 						Index: "0",
 					},
@@ -57,14 +65,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid: false,
 		},
 		{
-			desc: "duplicated outTxTracker",
+			desc: "duplicated inTxHashToCctx",
 			genState: &types.GenesisState{
-				OutTxTrackerList: []types.OutTxTracker{
+				InTxHashToCctxList: []types.InTxHashToCctx{
 					{
-						Index: "0",
+						InTxHash: "0",
 					},
 					{
-						Index: "0",
+						InTxHash: "0",
 					},
 				},
 			},

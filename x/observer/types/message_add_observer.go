@@ -9,10 +9,10 @@ const TypeMsgAddObserver = "add_observer"
 
 var _ sdk.Msg = &MsgAddObserver{}
 
-func NewMsgAddObserver(creator string, observerChain ObserverChain, observationType ObservationType) *MsgAddObserver {
+func NewMsgAddObserver(creator string, chainID int64, observationType ObservationType) *MsgAddObserver {
 	return &MsgAddObserver{
 		Creator:         creator,
-		ObserverChain:   observerChain,
+		ChainId:         chainID,
 		ObservationType: observationType,
 	}
 }

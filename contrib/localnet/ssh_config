@@ -1,0 +1,4 @@
+
+Host *
+    StrictHostKeyChecking no
+    IdentityFile ~/.ssh/meta.pem

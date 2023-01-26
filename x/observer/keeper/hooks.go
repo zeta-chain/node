@@ -55,6 +55,7 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	if !found {
 		return types.ErrNotValidator
 	}
+
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err
@@ -73,13 +74,12 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 		if resultingTokens.ToDec().LT(obsParams.MinObserverDelegation) {
 			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
 			k.SetObserverMapper(ctx, mapper)
-			RemoveObserverEvent(ctx, *mapper, accAddress.String(), "validator slashed below minimum observer delegation")
 		}
 	}
 	return nil
 }
 
-// CleanObservers cleans an observer Mapper without checking delegation amount
+// CleanObservers cleans a observer Mapper without checking delegation amount
 func (k Keeper) CleanObservers(ctx sdk.Context, valAddress sdk.ValAddress) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
@@ -89,7 +89,6 @@ func (k Keeper) CleanObservers(ctx sdk.Context, valAddress sdk.ValAddress) error
 	for _, mapper := range mappers {
 		mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
 		k.SetObserverMapper(ctx, mapper)
-		RemoveObserverEvent(ctx, *mapper, accAddress.String(), "validator unbonded")
 	}
 	return nil
 }
@@ -104,30 +103,18 @@ func (k Keeper) CheckAndCleanObserver(ctx sdk.Context, valAddress sdk.ValAddress
 	return nil
 }
 
-// CleanObservers cleans a observer Mapper checking delegation amount for a speficific delagator
+// CleanObservers cleans a observer Mapper checking delegation amount for a speficific delagator. It is used when delgator is the validator .
+// That is when when the validator is trying to remove self delgation
 func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.ValAddress, delAddress sdk.AccAddress) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err
 	}
-	// verify this is a self delegation
 	if !(accAddress.String() == delAddress.String()) {
 		return nil
 	}
 	k.CleanMapper(ctx, accAddress)
 	return nil
-}
-
-func (k Keeper) CleanMapper(ctx sdk.Context, accAddress sdk.AccAddress) {
-	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
-	for _, mapper := range mappers {
-		err := k.CheckObserverDelegation(ctx, accAddress.String(), mapper.ObserverChain, mapper.ObservationType)
-		if err != nil {
-			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
-			k.SetObserverMapper(ctx, mapper)
-			RemoveObserverEvent(ctx, *mapper, accAddress.String(), "validators self delegation is below minimum observer delegation")
-		}
-	}
 }
 
 func CleanAddressList(addresslist []string, address string) []string {
@@ -145,4 +132,15 @@ func CleanAddressList(addresslist []string, address string) []string {
 
 func RemoveIndex(s []string, index int) []string {
 	return append(s[:index], s[index+1:]...)
+}
+
+func (k Keeper) CleanMapper(ctx sdk.Context, accAddress sdk.AccAddress) {
+	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
+	for _, mapper := range mappers {
+		err := k.CheckObserverDelegation(ctx, accAddress.String(), mapper.ObserverChain, mapper.ObservationType)
+		if err != nil {
+			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
+			k.SetObserverMapper(ctx, mapper)
+		}
+	}
 }

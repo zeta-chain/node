@@ -12,6 +12,10 @@ type Address string
 
 var NoAddress Address
 
+var (
+	DeadAddress = eth.HexToAddress("0xdEAD000000000000000042069420694206942069")
+)
+
 const ETHAddressLen = 42
 
 // NewAddress create a new Address. Supports Ethereum, BSC, Polygon
@@ -22,15 +26,17 @@ func NewAddress(address string, chain Chain) (Address, error) {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
+	} else if chain.IsBitcoinChain() {
+
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
 }
 
 func IsETHChain(chain Chain) bool {
-	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
-		chain == RopstenChain || chain == BSCTestnetChain || chain == MumbaiChain ||
-		chain == GoerliChain || chain == Ganache {
+	if chain == EthChain() || chain == BscMainnetChain() || chain == PolygonChain() ||
+		chain == BscTestnetChain() || chain == MumbaiChain() ||
+		chain == GoerliChain() || chain == GoeriliLocalNetChain() || chain == ZetaChain() {
 		return true
 	}
 
@@ -57,7 +63,7 @@ func IsETHChain(chain Chain) bool {
 
 func (addr Address) GetNetwork(chain Chain) ChainNetwork {
 	switch chain {
-	case ETHChain:
+	case EthChain():
 		return GetCurrentChainNetwork()
 	}
 	return MockNet

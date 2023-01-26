@@ -3,6 +3,9 @@
 .env
 .idea/
 .secrets
+.actrc
+.zetacored/
+.zetaclientd/
 coverage
 coverage.json
 coverage.out
@@ -14,6 +17,11 @@ vue/dist
 vue/node_modules
 vue/node_modules
 yarn-error.log
+
+# GitHub Actions
+dispatch_payload.json
+.github/workflows/local-testing.yml
+
 
 # Hardhat files
 cache
@@ -33,3 +41,5 @@ localnet/chains/zetachain/config/node*/*
 localnet/chains/zetachain/storage
 localnet/ganache/storage
 localnet/zetachain-monorepo
+/tx.json
+/zetanode.log

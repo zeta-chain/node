@@ -17,6 +17,7 @@ func AllStatus() []CctxStatus {
 }
 
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
+	oldStatus := m.Status
 	m.StatusMessage = msg
 	oldStatus := m.Status
 	if !m.ValidateTransition(newStatus) {
@@ -48,6 +49,7 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	stateTransitionMap[CctxStatus_PendingInbound] = []CctxStatus{
 		CctxStatus_PendingOutbound,
 		CctxStatus_Aborted,
+		CctxStatus_OutboundMined, // EVM Deposit
 	}
 	stateTransitionMap[CctxStatus_PendingOutbound] = []CctxStatus{
 		CctxStatus_Aborted,
