@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/rs/zerolog"
@@ -85,11 +86,12 @@ func main() {
 	log.Info().Msgf("DEV mode: %v", *devMode)
 	if *devMode {
 		config.ChainConfigs[common.GoerliChain().ChainName.String()] = &types2.ChainETHish{
-			Chain:                    common.Chain{ChainName: common.ChainName_Goerli, ChainId: 1337},
-			Endpoint:                 "http://eth:8545",
-			BlockTime:                3,
-			ZETATokenContractAddress: "0xA8D5060feb6B456e886F023709A2795373691E63",
-			ConnectorContractAddress: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+			Chain:                       common.Chain{ChainName: common.ChainName_Goerli, ChainId: 1337},
+			Endpoint:                    "http://eth:8545",
+			BlockTime:                   3,
+			ZETATokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
+			ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+			ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
 		}
 	}
 

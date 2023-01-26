@@ -26,7 +26,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		}
 		cctx.OutBoundTxParams.OutBoundTxHash = "Mined directly to ZetaEVM without TX"
 	} else {
-		contract, data, err := parseContractAndData(msg.Message)
+		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
@@ -67,16 +67,21 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 // message is hex encoded byte array
 // [ contractAddress calldata ]
 // [ 20B, variable]
-func parseContractAndData(message string) (contractAddress ethcommon.Address, data []byte, err error) {
+func parseContractAndData(message string, asset string) (contractAddress ethcommon.Address, data []byte, err error) {
 	data, err = hex.DecodeString(message)
 	if err != nil {
 		return contractAddress, nil, err
 	}
 	if len(data) < 20 {
-		err = fmt.Errorf("invalid message length")
-		return contractAddress, nil, err
+		if len(asset) != 42 || asset[:2] != "0x" {
+			err = fmt.Errorf("invalid message length")
+			return contractAddress, nil, err
+		} else {
+			contractAddress = ethcommon.HexToAddress(asset)
+		}
+	} else {
+		contractAddress = ethcommon.BytesToAddress(data[:20])
+		data = data[20:]
 	}
-	contractAddress = ethcommon.BytesToAddress(data[:20])
-	data = data[20:]
 	return contractAddress, data, nil
 }

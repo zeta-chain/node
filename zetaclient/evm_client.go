@@ -110,6 +110,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", config.ChainConfigs[chain.String()].ConnectorContractAddress, chain.String())
 	}
 	ob.ConnectorAddress = addr
+	ob.ERC20CustodyAddress = erc20CustodyAddress
 	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
 	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 

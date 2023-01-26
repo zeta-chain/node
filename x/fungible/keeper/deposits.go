@@ -39,7 +39,6 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 		}
 	}
 	Zrc20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
-
 	if len(message) == 0 { // no message; transfer
 		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
 		txNoWithdraw, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
