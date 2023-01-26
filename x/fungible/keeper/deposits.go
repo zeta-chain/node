@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -21,7 +20,7 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain string, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var tx *evmtypes.MsgEthereumTxResponse
 	withdrawMessage := false
-	var Zrc20Contract ethcommon.Address
+	var Zrc20Contract eth.Address
 	var coin fungibletypes.ForeignCoins
 	if coinType == common.CoinType_Gas {
 		var found bool

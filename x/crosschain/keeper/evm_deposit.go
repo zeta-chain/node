@@ -89,9 +89,8 @@ func parseContractAndData(message string, asset string) (contractAddress ethcomm
 		if len(asset) != 42 || asset[:2] != "0x" {
 			err = fmt.Errorf("invalid message length")
 			return contractAddress, nil, err
-		} else {
-			contractAddress = ethcommon.HexToAddress(asset)
 		}
+		contractAddress = ethcommon.HexToAddress(asset)
 	} else {
 		contractAddress = ethcommon.BytesToAddress(data[:20])
 		data = data[20:]
