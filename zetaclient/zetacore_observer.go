@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"math/rand"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -289,8 +290,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						pTxs.Set(float64(len(sendList)))
 					}
-					fromOrToZeta := send.InboundTxParams.SenderChain == common.ZetaChain().ChainName.String() || send.OutboundTxParams.ReceiverChain == common.ZetaChain().ChainName.String()
-					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), fromOrToZeta)
+					included, confirmed, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), send.OutboundTxParams.CoinType)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 					}
@@ -301,7 +301,7 @@ func (co *CoreObserver) startSendScheduler() {
 					chain := GetTargetChain(send)
 					outTxID := fmt.Sprintf("%s/%d", chain, send.OutboundTxParams.OutboundTxTssNonce)
 					nonce := send.OutboundTxParams.OutboundTxTssNonce
-					//sinceBlock := int64(bn) - int64(send.InboundTxParams.InBoundTxFinalizedZetaHeight)
+					//sinceBlock := int64(bn) - int64(send.InboundTxParams.InboundTxFinalizedZetaHeight)
 
 					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
@@ -345,7 +345,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		toChain = GetChainFromChainName(common.ParseStringToObserverChain(send.InboundTxParams.SenderChain))
 		to = ethcommon.HexToAddress(send.InboundTxParams.Sender)
-		logger.Info().Msgf("Abort: reverting inbound")
+		logger.Info().Msgf("Abort: reverting Inbound")
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.OutboundTxParams.Receiver)
 		toChain = GetChainFromChainName(common.ParseStringToObserverChain(send.OutboundTxParams.ReceiverChain))
@@ -356,8 +356,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}
 
 	// Early return if the send is already processed
-	fromOrToZeta := send.InboundTxParams.SenderChain == common.ZetaChain().ChainName.String() || send.OutboundTxParams.ReceiverChain == common.ZetaChain().ChainName.String()
-	included, confirmed, _ := co.clientMap[*toChain].IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), fromOrToZeta)
+	included, confirmed, _ := co.clientMap[*toChain].IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), send.OutboundTxParams.CoinType)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
@@ -399,9 +398,17 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}
 
 	var tx *ethtypes.Transaction
-	if send.InboundTxParams.SenderChain == "ZETA" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
-		tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+	// FIXME: there is a chance wrong type of outbound tx is signed
+	if send.InboundTxParams.SenderChain == common.ZetaChain().ChainName.String() && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+		if send.InboundTxParams.CoinType == common.CoinType_Zeta {
+			logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+		}
+		if send.InboundTxParams.CoinType == common.CoinType_ERC20 {
+			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
+			logger.Info().Msgf("SignERC20WithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignERC20WithdrawTx(to, asset, send.ZetaMint.BigInt(), gasLimit, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChain].Chain.ChainId
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
@@ -427,7 +434,6 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	signers, err := co.bridge.GetObserverList(*toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.OutboundTxParams.OutboundTxTssNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
-
 	}
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()

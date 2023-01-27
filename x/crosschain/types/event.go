@@ -17,6 +17,7 @@ const (
 
 	ZetaMint         = "ZetaMint"
 	ZetaBurnt        = "ZetaBurnt"
+	Asset            = "Asset"
 	OutTXVotingChain = "OutTxVotingChain"
 	OutBoundChain    = "OutBoundChain"
 	OldStatus        = "OldStatus"

@@ -196,6 +196,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				0,
 				common.CoinType_Gas,
 				PostSendEVMGasLimit,
+				"",
 			)
 			if err != nil {
 				ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -211,7 +212,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 }
 
 // TODO
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
 	return false, false, nil
 }
 

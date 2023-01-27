@@ -3,6 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"math/big"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -11,10 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
-	"math/big"
-	"os"
-	"sync"
-	"time"
 )
 
 var (
@@ -24,6 +26,9 @@ var (
 	BLOCK              = 6 * time.Second // should be 2x block time
 	BigZero            = big.NewInt(0)
 	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr      = "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
+	USDTERC20Addr      = "0x92339c9Cf464c96E63A4104f3cb97ca336Ea4cE1"
+	ERC20CustodyAddr   = "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF"
 )
 
 func main() {
@@ -155,6 +160,7 @@ func main() {
 		panic(err)
 	}
 	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -231,8 +237,10 @@ func main() {
 			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
 			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
 			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+			fmt.Printf("    Block Num: %d\n", log.BlockNumber)
 		}
 	}
+
 	zevmClient, err := ethclient.Dial("http://zetacore0:8545")
 	if err != nil {
 		panic(err)
@@ -253,7 +261,36 @@ func main() {
 		}
 	}()
 	wg.Wait()
+	TestERC20Deposit(goerliClient, zevmClient, cctxClient, fungibleClient)
+	TestDepositEtherIntoZRC20(goerliClient, zevmClient, cctxClient, fungibleClient)
+	TestERC20Withdraw(goerliClient, zevmClient, cctxClient, fungibleClient)
 	// ==================== Add your tests here ====================
 	test1()
+
+}
+
+// wait until cctx is mined; returns the cctxIndex
+func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
+	var cctxIndex string
+	for {
+		time.Sleep(5 * time.Second)
+		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
+		if err != nil {
+			continue
+		}
+		cctxIndex = res.InTxHashToCctx.CctxIndex
+		fmt.Printf("Deposit receipt cctx index: %s\n", cctxIndex)
+		break
+	}
+	for {
+		time.Sleep(5 * time.Second)
+		res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})
+		if err != nil || res.CrossChainTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+			fmt.Printf("Deposit receipt cctx status: %s\n", res.CrossChainTx.CctxStatus.Status.String())
+			continue
+		}
+		fmt.Printf("Deposit receipt cctx status: %+v; success\n", res.CrossChainTx.CctxStatus.Status.String())
+		return res.CrossChainTx
+	}
 
 }

@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
@@ -15,6 +16,7 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
 			sdk.NewAttribute(types.SenderChain, cctx.InboundTxParams.SenderChain),
 			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
+			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
 			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
 			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InboundTxParams.InboundTxObservedExternalHeight)),
 			sdk.NewAttribute(types.Receiver, cctx.OutboundTxParams.Receiver),
@@ -36,6 +38,7 @@ func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
 			sdk.NewAttribute(types.SenderChain, cctx.InboundTxParams.SenderChain),
 			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
+			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
 			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
 			sdk.NewAttribute(types.Receiver, cctx.OutboundTxParams.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, cctx.OutboundTxParams.ReceiverChain),

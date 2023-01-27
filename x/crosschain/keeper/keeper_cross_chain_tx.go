@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -146,6 +147,8 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		SenderChain:                     senderChain.ChainName.String(),
 		SenderChainId:                   senderChain.ChainId,
 		TxOrigin:                        msg.TxOrigin,
+		Asset:                           msg.Asset,
+		CoinType:                        msg.CoinType,
 		InboundTxObservedHash:           msg.InTxHash,
 		InboundTxObservedExternalHeight: msg.InBlockHeight,
 		InboundTxFinalizedZetaHeight:    0,
