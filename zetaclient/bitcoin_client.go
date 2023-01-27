@@ -212,7 +212,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 }
 
 // TODO
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
 	return false, false, nil
 }
 

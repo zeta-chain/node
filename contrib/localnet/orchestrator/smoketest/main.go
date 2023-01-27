@@ -241,7 +241,7 @@ func main() {
 		}
 	}
 
-	zevmClient, err := ethclient.Dial("http://zetacore0:9545")
+	zevmClient, err := ethclient.Dial("http://zetacore0:8545")
 	if err != nil {
 		panic(err)
 	}

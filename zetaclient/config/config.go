@@ -38,7 +38,7 @@ const (
 	PolygonBlockTime = 2
 	BscBlockTime     = 5
 
-	DevEthBlockTime = 5
+	DevEthBlockTime = 2
 
 	// to catch up:
 	MaxBlocksPerPeriod = 100
@@ -97,7 +97,7 @@ var ChainConfigs = map[string]*types.ChainETHish{
 	common.GoeriliLocalNetChain().ChainName.String(): {
 		Chain:                       common.GoeriliLocalNetChain(),
 		Endpoint:                    "http://eth:8545",
-		BlockTime:                   3,
+		BlockTime:                   2,
 		ZETATokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
 		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",

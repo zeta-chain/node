@@ -205,7 +205,7 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found1 := ob.outTXConfirmedReceipts[nonce]
 	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
@@ -213,8 +213,11 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 	found := found1 && found2
 	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
 	logger := ob.logger.With().Str("sendID", sendID).Logger()
-	if fromOrToZeta {
-		if found && receipt.Status == 1 {
+	if !found {
+		return false, false, nil
+	}
+	if cointype == common.CoinType_Gas {
+		if receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
 				receipt.TxHash.Hex(),
@@ -230,7 +233,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 			}
 			logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 			return true, true, nil
-		} else if found && receipt.Status == 0 { // the same as below events flow
+		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
 			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Gas)
 			if err != nil {
@@ -239,8 +242,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
 		}
-	} else {
-		if found && receipt.Status == 1 {
+	} else if cointype == common.CoinType_Zeta {
+		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
 				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
@@ -307,7 +310,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 					return true, false, nil
 				}
 			}
-		} else if found && receipt.Status == 0 {
+		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
 			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Zeta)
@@ -316,6 +319,41 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 			}
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
+		}
+	} else if cointype == common.CoinType_ERC20 {
+		if receipt.Status == 1 {
+			logs := receipt.Logs
+			ERC20Custody, err := erc20custody.NewERC20Custody(ob.ERC20CustodyAddress, ob.EvmClient)
+			if err != nil {
+				logger.Warn().Msgf("NewERC20Custody err: %s", err)
+			}
+			for _, vLog := range logs {
+				event, err := ERC20Custody.ParseWithdrawn(*vLog)
+				if err == nil {
+					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
+					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
+						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+							sendHash,
+							vLog.TxHash.Hex(),
+							vLog.BlockNumber,
+							event.Amount,
+							common.ReceiveStatus_Success,
+							ob.chain,
+							nonce,
+							common.CoinType_ERC20,
+						)
+						if err != nil {
+							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							continue
+						}
+						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						return true, true, nil
+					}
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					return true, false, nil
+				}
+			}
 		}
 	}
 
