@@ -891,8 +891,6 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
-	} else {
-		ob.logger.Debug().Msgf("PostGasPrice: chain %s, gasPrice %d, bn: %d", ob.chain, gasPrice.Uint64(), blockNum)
 	}
 
 	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.EVMAddress(), nil)

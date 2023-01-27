@@ -28,6 +28,9 @@ func TestERC20Withdraw(goerliClient *ethclient.Client, zevmClient *ethclient.Cli
 	}
 	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
 	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
 	if bal.Int64() != 1e6 {
 		panic("balance is not correct")
