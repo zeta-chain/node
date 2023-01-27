@@ -32391,13 +32391,13 @@ paths:
                       type: string
                     index:
                       type: string
-                    zetaBurnt:
+                    zeta_burnt:
                       type: string
-                    zetaMint:
+                    zeta_mint:
                       type: string
-                    zetaFees:
+                    zeta_fees:
                       type: string
-                    relayedMessage:
+                    relayed_message:
                       type: string
                       title: Not used by protocol , just relayed across
                     cctx_status:
@@ -32420,59 +32420,87 @@ paths:
                              - PendingRevert: outbound cannot succeed; should revert inbound
                              - Reverted: inbound reverted.
                              - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-                        statusMessage:
+                        status_message:
                           type: string
-                        lastUpdateTimestamp:
+                        lastUpdate_timestamp:
                           type: string
                           format: int64
-                    InBoundTxParams:
+                    inbound_tx_params:
                       type: object
                       properties:
                         sender:
                           type: string
                         senderChain:
                           type: string
-                        inBoundTxObservedHash:
+                        sender_chain_id:
                           type: string
-                        inBoundTxObservedExternalHeight:
+                          format: int64
+                        inbound_tx_observed_hash:
+                          type: string
+                        inbound_tx_observed_external_height:
                           type: string
                           format: uint64
-                        inBoundTxFinalizedZetaHeight:
+                        inbound_tx_finalized_zeta_height:
                           type: string
                           format: uint64
-                        inBoundTXBallotIndex:
+                        inbound_tx_ballot_index:
                           type: string
-                        txOrigin:
+                        tx_origin:
                           type: string
-                    OutBoundTxParams:
+                        coin_type:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
+                        asset:
+                          type: string
+                    outbound_tx_params:
                       type: object
                       properties:
                         receiver:
                           type: string
-                        receiverChain:
+                        receiver_chain:
                           type: string
+                        receiver_chainId:
+                          type: string
+                          format: int64
                         broadcaster:
                           type: string
                           format: uint64
                           title: Can be removed
-                        outBoundTxHash:
+                        outbound_tx_hash:
                           type: string
-                        outBoundTxTSSNonce:
-                          type: string
-                          format: uint64
-                        outBoundTxGasLimit:
+                        outbound_tx_tss_nonce:
                           type: string
                           format: uint64
-                        outBoundTxGasPrice:
-                          type: string
-                        outBoundTXBallotIndex:
-                          type: string
-                        outBoundTxFinalizedZetaHeight:
+                        outbound_tx_gas_limit:
                           type: string
                           format: uint64
-                        outBoundTxObservedExternalHeight:
+                        outbound_tx_gas_price:
+                          type: string
+                        outbound_tx_ballot_index:
+                          type: string
+                        outbound_tx_finalized_zeta_height:
                           type: string
                           format: uint64
+                        outbound_tx_observed_external_height:
+                          type: string
+                          format: uint64
+                        coin_type:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
               pagination:
                 type: object
                 properties:
@@ -32584,13 +32612,13 @@ paths:
                     type: string
                   index:
                     type: string
-                  zetaBurnt:
+                  zeta_burnt:
                     type: string
-                  zetaMint:
+                  zeta_mint:
                     type: string
-                  zetaFees:
+                  zeta_fees:
                     type: string
-                  relayedMessage:
+                  relayed_message:
                     type: string
                     title: Not used by protocol , just relayed across
                   cctx_status:
@@ -32613,59 +32641,87 @@ paths:
                            - PendingRevert: outbound cannot succeed; should revert inbound
                            - Reverted: inbound reverted.
                            - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-                      statusMessage:
+                      status_message:
                         type: string
-                      lastUpdateTimestamp:
+                      lastUpdate_timestamp:
                         type: string
                         format: int64
-                  InBoundTxParams:
+                  inbound_tx_params:
                     type: object
                     properties:
                       sender:
                         type: string
                       senderChain:
                         type: string
-                      inBoundTxObservedHash:
+                      sender_chain_id:
                         type: string
-                      inBoundTxObservedExternalHeight:
+                        format: int64
+                      inbound_tx_observed_hash:
+                        type: string
+                      inbound_tx_observed_external_height:
                         type: string
                         format: uint64
-                      inBoundTxFinalizedZetaHeight:
+                      inbound_tx_finalized_zeta_height:
                         type: string
                         format: uint64
-                      inBoundTXBallotIndex:
+                      inbound_tx_ballot_index:
                         type: string
-                      txOrigin:
+                      tx_origin:
                         type: string
-                  OutBoundTxParams:
+                      coin_type:
+                        type: string
+                        enum:
+                          - Zeta
+                          - Gas
+                          - ERC20
+                        default: Zeta
+                        title: |-
+                          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                           - ERC20: ERC20 token
+                      asset:
+                        type: string
+                  outbound_tx_params:
                     type: object
                     properties:
                       receiver:
                         type: string
-                      receiverChain:
+                      receiver_chain:
                         type: string
+                      receiver_chainId:
+                        type: string
+                        format: int64
                       broadcaster:
                         type: string
                         format: uint64
                         title: Can be removed
-                      outBoundTxHash:
+                      outbound_tx_hash:
                         type: string
-                      outBoundTxTSSNonce:
-                        type: string
-                        format: uint64
-                      outBoundTxGasLimit:
+                      outbound_tx_tss_nonce:
                         type: string
                         format: uint64
-                      outBoundTxGasPrice:
-                        type: string
-                      outBoundTXBallotIndex:
-                        type: string
-                      outBoundTxFinalizedZetaHeight:
+                      outbound_tx_gas_limit:
                         type: string
                         format: uint64
-                      outBoundTxObservedExternalHeight:
+                      outbound_tx_gas_price:
+                        type: string
+                      outbound_tx_ballot_index:
+                        type: string
+                      outbound_tx_finalized_zeta_height:
                         type: string
                         format: uint64
+                      outbound_tx_observed_external_height:
+                        type: string
+                        format: uint64
+                      coin_type:
+                        type: string
+                        enum:
+                          - Zeta
+                          - Gas
+                          - ERC20
+                        default: Zeta
+                        title: |-
+                          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                           - ERC20: ERC20 token
         default:
           description: An unexpected error response.
           schema:
@@ -32715,13 +32771,13 @@ paths:
                       type: string
                     index:
                       type: string
-                    zetaBurnt:
+                    zeta_burnt:
                       type: string
-                    zetaMint:
+                    zeta_mint:
                       type: string
-                    zetaFees:
+                    zeta_fees:
                       type: string
-                    relayedMessage:
+                    relayed_message:
                       type: string
                       title: Not used by protocol , just relayed across
                     cctx_status:
@@ -32744,59 +32800,87 @@ paths:
                              - PendingRevert: outbound cannot succeed; should revert inbound
                              - Reverted: inbound reverted.
                              - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-                        statusMessage:
+                        status_message:
                           type: string
-                        lastUpdateTimestamp:
+                        lastUpdate_timestamp:
                           type: string
                           format: int64
-                    InBoundTxParams:
+                    inbound_tx_params:
                       type: object
                       properties:
                         sender:
                           type: string
                         senderChain:
                           type: string
-                        inBoundTxObservedHash:
+                        sender_chain_id:
                           type: string
-                        inBoundTxObservedExternalHeight:
+                          format: int64
+                        inbound_tx_observed_hash:
+                          type: string
+                        inbound_tx_observed_external_height:
                           type: string
                           format: uint64
-                        inBoundTxFinalizedZetaHeight:
+                        inbound_tx_finalized_zeta_height:
                           type: string
                           format: uint64
-                        inBoundTXBallotIndex:
+                        inbound_tx_ballot_index:
                           type: string
-                        txOrigin:
+                        tx_origin:
                           type: string
-                    OutBoundTxParams:
+                        coin_type:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
+                        asset:
+                          type: string
+                    outbound_tx_params:
                       type: object
                       properties:
                         receiver:
                           type: string
-                        receiverChain:
+                        receiver_chain:
                           type: string
+                        receiver_chainId:
+                          type: string
+                          format: int64
                         broadcaster:
                           type: string
                           format: uint64
                           title: Can be removed
-                        outBoundTxHash:
+                        outbound_tx_hash:
                           type: string
-                        outBoundTxTSSNonce:
-                          type: string
-                          format: uint64
-                        outBoundTxGasLimit:
+                        outbound_tx_tss_nonce:
                           type: string
                           format: uint64
-                        outBoundTxGasPrice:
-                          type: string
-                        outBoundTXBallotIndex:
-                          type: string
-                        outBoundTxFinalizedZetaHeight:
+                        outbound_tx_gas_limit:
                           type: string
                           format: uint64
-                        outBoundTxObservedExternalHeight:
+                        outbound_tx_gas_price:
+                          type: string
+                        outbound_tx_ballot_index:
+                          type: string
+                        outbound_tx_finalized_zeta_height:
                           type: string
                           format: uint64
+                        outbound_tx_observed_external_height:
+                          type: string
+                          format: uint64
+                        coin_type:
+                          type: string
+                          enum:
+                            - Zeta
+                            - Gas
+                            - ERC20
+                          default: Zeta
+                          title: |-
+                            - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                             - ERC20: ERC20 token
         default:
           description: An unexpected error response.
           schema:
@@ -33251,13 +33335,14 @@ paths:
                       type: string
                     index:
                       type: string
-                    chain:
+                    chain_id:
                       type: string
+                      format: int64
                     signers:
                       type: array
                       items:
                         type: string
-                    blockNums:
+                    block_nums:
                       type: array
                       items:
                         type: string
@@ -33267,7 +33352,7 @@ paths:
                       items:
                         type: string
                         format: uint64
-                    medianIndex:
+                    median_index:
                       type: string
                       format: uint64
               pagination:
@@ -33381,13 +33466,14 @@ paths:
                     type: string
                   index:
                     type: string
-                  chain:
+                  chain_id:
                     type: string
+                    format: int64
                   signers:
                     type: array
                     items:
                       type: string
-                  blockNums:
+                  block_nums:
                     type: array
                     items:
                       type: string
@@ -33397,7 +33483,7 @@ paths:
                     items:
                       type: string
                       format: uint64
-                  medianIndex:
+                  median_index:
                     type: string
                     format: uint64
         default:
@@ -33420,6 +33506,161 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/crosschain/inTxHashToCctx:
+    get:
+      summary: Queries a list of InTxHashToCctx items.
+      operationId: ZetachainZetacoreCrosschainInTxHashToCctxAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              inTxHashToCctx:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    in_tx_hash:
+                      type: string
+                    cctx_index:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/crosschain/inTxHashToCctx/{inTxHash}:
+    get:
+      summary: Queries a InTxHashToCctx by index.
+      operationId: ZetachainZetacoreCrosschainInTxHashToCctx
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              inTxHashToCctx:
+                type: object
+                properties:
+                  in_tx_hash:
+                    type: string
+                  cctx_index:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: inTxHash
           in: path
           required: true
           type: string
@@ -33891,18 +34132,20 @@ paths:
                     index:
                       type: string
                       title: 'format: "chain-nonce"'
-                    chain:
+                    chain_id:
                       type: string
+                      format: int64
                     nonce:
                       type: string
-                    hashList:
+                      format: uint64
+                    hash_list:
                       type: array
                       items:
                         type: object
                         properties:
-                          txHash:
+                          tx_hash:
                             type: string
-                          signer:
+                          tx_signer:
                             type: string
               pagination:
                 type: object
@@ -33998,7 +34241,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTracker/{index}:
+  /zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}:
     get:
       summary: Queries a OutTxTracker by index.
       operationId: ZetachainZetacoreCrosschainOutTxTracker
@@ -34014,18 +34257,20 @@ paths:
                   index:
                     type: string
                     title: 'format: "chain-nonce"'
-                  chain:
+                  chain_id:
                     type: string
+                    format: int64
                   nonce:
                     type: string
-                  hashList:
+                    format: uint64
+                  hash_list:
                     type: array
                     items:
                       type: object
                       properties:
-                        txHash:
+                        tx_hash:
                           type: string
-                        signer:
+                        tx_signer:
                           type: string
         default:
           description: An unexpected error response.
@@ -34046,10 +34291,16 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: index
+        - name: chainID
           in: path
           required: true
           type: string
+          format: int64
+        - name: nonce
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
         - Query
   /zeta-chain/crosschain/outTxTrackerByChain:
@@ -34069,18 +34320,20 @@ paths:
                     index:
                       type: string
                       title: 'format: "chain-nonce"'
-                    chain:
+                    chain_id:
                       type: string
+                      format: int64
                     nonce:
                       type: string
-                    hashList:
+                      format: uint64
+                    hash_list:
                       type: array
                       items:
                         type: object
                         properties:
-                          txHash:
+                          tx_hash:
                             type: string
-                          signer:
+                          tx_signer:
                             type: string
               pagination:
                 type: object
@@ -34132,6 +34385,7 @@ paths:
           in: query
           required: false
           type: string
+          format: int64
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -34248,6 +34502,242 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /zeta-chain/zevm/zevm_getBlockByNumber/{height}:
+    get:
+      operationId: ZetachainZetacoreCrosschainZEVMGetBlock
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              number:
+                type: string
+              hash:
+                type: string
+              parent_hash:
+                type: string
+              nonce:
+                type: string
+              sha3_uncles:
+                type: string
+              logs_bloom:
+                type: string
+              transactions_root:
+                type: string
+              state_root:
+                type: string
+              receipts_root:
+                type: string
+              miner:
+                type: string
+              difficulty:
+                type: string
+              total_difficulty:
+                type: string
+              extra_data:
+                type: string
+              size:
+                type: string
+              gas_limit:
+                type: string
+              gas_used:
+                type: string
+              timestamp:
+                type: string
+              transactions:
+                type: array
+                items:
+                  type: string
+              uncles:
+                type: array
+                items:
+                  type: string
+              base_fee_per_gas:
+                type: string
+              mix_hash:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /zeta-chain/zevm/zevm_getTransactionByHash/{hash}:
+    get:
+      operationId: ZetachainZetacoreCrosschainZEVMGetTransaction
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              block_hash:
+                type: string
+              block_number:
+                type: string
+              from:
+                type: string
+              gas:
+                type: string
+              gas_price:
+                type: string
+              hash:
+                type: string
+              input:
+                type: string
+              nonce:
+                type: string
+              to:
+                type: string
+              transaction_index:
+                type: string
+              value:
+                type: string
+              type:
+                type: string
+              access_list:
+                type: array
+                items:
+                  type: string
+              chain_id:
+                type: string
+              v:
+                type: string
+              r:
+                type: string
+              s:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/zevm/zevm_getTransactionReceipt/{hash}:
+    get:
+      operationId: ZetachainZetacoreCrosschainZEVMGetTransactionReceipt
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              block_hash:
+                type: string
+              block_number:
+                type: string
+              contract_address:
+                type: string
+              cumulative_gas_used:
+                type: string
+              from:
+                type: string
+              gas_used:
+                type: string
+              logs_bloom:
+                type: string
+              status:
+                type: string
+              to:
+                type: string
+              transaction_hash:
+                type: string
+              transaction_index:
+                type: string
+              logs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    topics:
+                      type: array
+                      items:
+                        type: string
+                    data:
+                      type: string
+                    block_number:
+                      type: string
+                      format: uint64
+                      title: sythetic fields
+                    transaction_hash:
+                      type: string
+                    transaction_index:
+                      type: string
+                      format: uint64
+                    block_hash:
+                      type: string
+                    log_index:
+                      type: string
+                      format: uint64
+                    removed:
+                      type: boolean
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
@@ -34527,31 +35017,44 @@ paths:
           schema:
             type: object
             properties:
-              ObserverMappers:
+              observer_mappers:
                 type: array
                 items:
                   type: object
                   properties:
                     index:
                       type: string
-                    ObserverChain:
-                      type: string
-                      enum:
-                        - Empty
-                        - Eth
-                        - ZetaChain
-                        - Btc
-                        - Polygon
-                        - BscMainnet
-                        - Goerli
-                        - Mumbai
-                        - Ropsten
-                        - Ganache
-                        - Baobab
-                        - BscTestnet
-                        - BTCTestnet
-                      default: Empty
-                    ObservationType:
+                    observer_chain:
+                      type: object
+                      properties:
+                        chain_name:
+                          type: string
+                          enum:
+                            - empty
+                            - eth_mainnet
+                            - zeta_mainnet
+                            - btc_mainnet
+                            - polygon_mainnet
+                            - bsc_mainnet
+                            - goerili_testnet
+                            - mumbai_testnet
+                            - ganache_testnet
+                            - baobab_testnet
+                            - bsc_testnet
+                            - zeta_testnet
+                            - btc_testnet
+                            - zeta_localnet
+                            - goerili_localnet
+                            - zeta_athensnet
+                          default: empty
+                          title: |-
+                            - goerili_testnet: Testnet
+                             - zeta_localnet: LocalNet
+                             - zeta_athensnet: Athens
+                        chain_id:
+                          type: string
+                          format: int64
+                    observation_type:
                       type: string
                       enum:
                         - EmptyObserverType
@@ -34559,7 +35062,7 @@ paths:
                         - OutBoundTx
                         - GasPrice
                       default: EmptyObserverType
-                    observerList:
+                    observer_list:
                       type: array
                       items:
                         type: string
@@ -34583,7 +35086,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /zeta-chain/observer/ballot_by_identifier/{ballotIdentifier}:
+  /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
       operationId: ZetachainZetacoreObserverBallotByIdentifier
@@ -34598,13 +35101,13 @@ paths:
                 properties:
                   index:
                     type: string
-                  BallotIdentifier:
+                  ballot_identifier:
                     type: string
-                  VoterList:
+                  voter_list:
                     type: array
                     items:
                       type: string
-                  Votes:
+                  votes:
                     type: array
                     items:
                       type: string
@@ -34614,7 +35117,7 @@ paths:
                         - NotYetVoted
                       default: SuccessObservation
                       description: ' - FailureObservation: Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.'
-                  ObservationType:
+                  observation_type:
                     type: string
                     enum:
                       - EmptyObserverType
@@ -34624,7 +35127,7 @@ paths:
                     default: EmptyObserverType
                   BallotThreshold:
                     type: string
-                  BallotStatus:
+                  ballot_status:
                     type: string
                     enum:
                       - BallotFinalized_SuccessObservation
@@ -34650,13 +35153,13 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: ballotIdentifier
+        - name: ballot_identifier
           in: path
           required: true
           type: string
       tags:
         - Query
-  /zeta-chain/observer/observers_by_chain_and_type/{observationChain}/{observationType}:
+  /zeta-chain/observer/observers_by_chain_and_type/{observation_chain}/{observation_type}:
     get:
       summary: Queries a list of ObserversByChainAndType items.
       operationId: ZetachainZetacoreObserverObserversByChainAndType
@@ -34666,7 +35169,7 @@ paths:
           schema:
             type: object
             properties:
-              Observers:
+              observers:
                 type: array
                 items:
                   type: string
@@ -34689,11 +35192,11 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: observationChain
+        - name: observation_chain
           in: path
           required: true
           type: string
-        - name: observationType
+        - name: observation_type
           in: path
           required: true
           type: string
@@ -34708,25 +35211,38 @@ paths:
           schema:
             type: object
             properties:
-              Chains:
+              chains:
                 type: array
                 items:
-                  type: string
-                  enum:
-                    - Empty
-                    - Eth
-                    - ZetaChain
-                    - Btc
-                    - Polygon
-                    - BscMainnet
-                    - Goerli
-                    - Mumbai
-                    - Ropsten
-                    - Ganache
-                    - Baobab
-                    - BscTestnet
-                    - BTCTestnet
-                  default: Empty
+                  type: object
+                  properties:
+                    chain_name:
+                      type: string
+                      enum:
+                        - empty
+                        - eth_mainnet
+                        - zeta_mainnet
+                        - btc_mainnet
+                        - polygon_mainnet
+                        - bsc_mainnet
+                        - goerili_testnet
+                        - mumbai_testnet
+                        - ganache_testnet
+                        - baobab_testnet
+                        - bsc_testnet
+                        - zeta_testnet
+                        - btc_testnet
+                        - zeta_localnet
+                        - goerili_localnet
+                        - zeta_athensnet
+                      default: empty
+                      title: |-
+                        - goerili_testnet: Testnet
+                         - zeta_localnet: LocalNet
+                         - zeta_athensnet: Athens
+                    chain_id:
+                      type: string
+                      format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -34761,29 +35277,42 @@ paths:
                 description: params holds all the parameters of this module.
                 type: object
                 properties:
-                  BallotThresholds:
+                  observer_params:
                     type: array
                     items:
                       type: object
                       properties:
-                        Chain:
-                          type: string
-                          enum:
-                            - Empty
-                            - Eth
-                            - ZetaChain
-                            - Btc
-                            - Polygon
-                            - BscMainnet
-                            - Goerli
-                            - Mumbai
-                            - Ropsten
-                            - Ganache
-                            - Baobab
-                            - BscTestnet
-                            - BTCTestnet
-                          default: Empty
-                        Observation:
+                        chain:
+                          type: object
+                          properties:
+                            chain_name:
+                              type: string
+                              enum:
+                                - empty
+                                - eth_mainnet
+                                - zeta_mainnet
+                                - btc_mainnet
+                                - polygon_mainnet
+                                - bsc_mainnet
+                                - goerili_testnet
+                                - mumbai_testnet
+                                - ganache_testnet
+                                - baobab_testnet
+                                - bsc_testnet
+                                - zeta_testnet
+                                - btc_testnet
+                                - zeta_localnet
+                                - goerili_localnet
+                                - zeta_athensnet
+                              default: empty
+                              title: |-
+                                - goerili_testnet: Testnet
+                                 - zeta_localnet: LocalNet
+                                 - zeta_athensnet: Athens
+                            chain_id:
+                              type: string
+                              format: int64
+                        observation:
                           type: string
                           enum:
                             - EmptyObserverType
@@ -34791,7 +35320,9 @@ paths:
                             - OutBoundTx
                             - GasPrice
                           default: EmptyObserverType
-                        Threshold:
+                        ballot_threshold:
+                          type: string
+                        min_observer_delegation:
                           type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -55945,13 +56476,13 @@ definitions:
         type: string
       index:
         type: string
-      zetaBurnt:
+      zeta_burnt:
         type: string
-      zetaMint:
+      zeta_mint:
         type: string
-      zetaFees:
+      zeta_fees:
         type: string
-      relayedMessage:
+      relayed_message:
         type: string
         title: Not used by protocol , just relayed across
       cctx_status:
@@ -55974,59 +56505,87 @@ definitions:
                - PendingRevert: outbound cannot succeed; should revert inbound
                - Reverted: inbound reverted.
                - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-          statusMessage:
+          status_message:
             type: string
-          lastUpdateTimestamp:
+          lastUpdate_timestamp:
             type: string
             format: int64
-      InBoundTxParams:
+      inbound_tx_params:
         type: object
         properties:
           sender:
             type: string
           senderChain:
             type: string
-          inBoundTxObservedHash:
+          sender_chain_id:
             type: string
-          inBoundTxObservedExternalHeight:
+            format: int64
+          inbound_tx_observed_hash:
+            type: string
+          inbound_tx_observed_external_height:
             type: string
             format: uint64
-          inBoundTxFinalizedZetaHeight:
+          inbound_tx_finalized_zeta_height:
             type: string
             format: uint64
-          inBoundTXBallotIndex:
+          inbound_tx_ballot_index:
             type: string
-          txOrigin:
+          tx_origin:
             type: string
-      OutBoundTxParams:
+          coin_type:
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
+            title: |-
+              - Gas: Ether, BNB, Matic, Klay, BTC, etc
+               - ERC20: ERC20 token
+          asset:
+            type: string
+      outbound_tx_params:
         type: object
         properties:
           receiver:
             type: string
-          receiverChain:
+          receiver_chain:
             type: string
+          receiver_chainId:
+            type: string
+            format: int64
           broadcaster:
             type: string
             format: uint64
             title: Can be removed
-          outBoundTxHash:
+          outbound_tx_hash:
             type: string
-          outBoundTxTSSNonce:
-            type: string
-            format: uint64
-          outBoundTxGasLimit:
+          outbound_tx_tss_nonce:
             type: string
             format: uint64
-          outBoundTxGasPrice:
-            type: string
-          outBoundTXBallotIndex:
-            type: string
-          outBoundTxFinalizedZetaHeight:
+          outbound_tx_gas_limit:
             type: string
             format: uint64
-          outBoundTxObservedExternalHeight:
+          outbound_tx_gas_price:
+            type: string
+          outbound_tx_ballot_index:
+            type: string
+          outbound_tx_finalized_zeta_height:
             type: string
             format: uint64
+          outbound_tx_observed_external_height:
+            type: string
+            format: uint64
+          coin_type:
+            type: string
+            enum:
+              - Zeta
+              - Gas
+              - ERC20
+            default: Zeta
+            title: |-
+              - Gas: Ether, BNB, Matic, Klay, BTC, etc
+               - ERC20: ERC20 token
   zetachain.zetacore.crosschain.GasBalance:
     type: object
     properties:
@@ -56059,13 +56618,14 @@ definitions:
         type: string
       index:
         type: string
-      chain:
+      chain_id:
         type: string
+        format: int64
       signers:
         type: array
         items:
           type: string
-      blockNums:
+      block_nums:
         type: array
         items:
           type: string
@@ -56075,27 +56635,49 @@ definitions:
         items:
           type: string
           format: uint64
-      medianIndex:
+      median_index:
         type: string
         format: uint64
-  zetachain.zetacore.crosschain.InBoundTxParams:
+  zetachain.zetacore.crosschain.InTxHashToCctx:
+    type: object
+    properties:
+      in_tx_hash:
+        type: string
+      cctx_index:
+        type: string
+  zetachain.zetacore.crosschain.InboundTxParams:
     type: object
     properties:
       sender:
         type: string
       senderChain:
         type: string
-      inBoundTxObservedHash:
+      sender_chain_id:
         type: string
-      inBoundTxObservedExternalHeight:
+        format: int64
+      inbound_tx_observed_hash:
+        type: string
+      inbound_tx_observed_external_height:
         type: string
         format: uint64
-      inBoundTxFinalizedZetaHeight:
+      inbound_tx_finalized_zeta_height:
         type: string
         format: uint64
-      inBoundTXBallotIndex:
+      inbound_tx_ballot_index:
         type: string
-      txOrigin:
+      tx_origin:
+        type: string
+      coin_type:
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
+        title: |-
+          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+           - ERC20: ERC20 token
+      asset:
         type: string
   zetachain.zetacore.crosschain.Keygen:
     type: object
@@ -56129,6 +56711,33 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  zetachain.zetacore.crosschain.Log:
+    type: object
+    properties:
+      address:
+        type: string
+      topics:
+        type: array
+        items:
+          type: string
+      data:
+        type: string
+      block_number:
+        type: string
+        format: uint64
+        title: sythetic fields
+      transaction_hash:
+        type: string
+      transaction_index:
+        type: string
+        format: uint64
+      block_hash:
+        type: string
+      log_index:
+        type: string
+        format: uint64
+      removed:
+        type: boolean
   zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse:
     type: object
   zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse:
@@ -56185,54 +56794,69 @@ definitions:
       - Active
       - Disabled
     default: Unknown
-  zetachain.zetacore.crosschain.OutBoundTxParams:
-    type: object
-    properties:
-      receiver:
-        type: string
-      receiverChain:
-        type: string
-      broadcaster:
-        type: string
-        format: uint64
-        title: Can be removed
-      outBoundTxHash:
-        type: string
-      outBoundTxTSSNonce:
-        type: string
-        format: uint64
-      outBoundTxGasLimit:
-        type: string
-        format: uint64
-      outBoundTxGasPrice:
-        type: string
-      outBoundTXBallotIndex:
-        type: string
-      outBoundTxFinalizedZetaHeight:
-        type: string
-        format: uint64
-      outBoundTxObservedExternalHeight:
-        type: string
-        format: uint64
   zetachain.zetacore.crosschain.OutTxTracker:
     type: object
     properties:
       index:
         type: string
         title: 'format: "chain-nonce"'
-      chain:
+      chain_id:
         type: string
+        format: int64
       nonce:
         type: string
-      hashList:
+        format: uint64
+      hash_list:
         type: array
         items:
           type: object
           properties:
-            txHash:
+            tx_hash:
               type: string
-            signer:
+            tx_signer:
               type: string
+  zetachain.zetacore.crosschain.OutboundTxParams:
+    type: object
+    properties:
+      receiver:
+        type: string
+      receiver_chain:
+        type: string
+      receiver_chainId:
+        type: string
+        format: int64
+      broadcaster:
+        type: string
+        format: uint64
+        title: Can be removed
+      outbound_tx_hash:
+        type: string
+      outbound_tx_tss_nonce:
+        type: string
+        format: uint64
+      outbound_tx_gas_limit:
+        type: string
+        format: uint64
+      outbound_tx_gas_price:
+        type: string
+      outbound_tx_ballot_index:
+        type: string
+      outbound_tx_finalized_zeta_height:
+        type: string
+        format: uint64
+      outbound_tx_observed_external_height:
+        type: string
+        format: uint64
+      coin_type:
+        type: string
+        enum:
+          - Zeta
+          - Gas
+          - ERC20
+        default: Zeta
+        title: |-
+          - Gas: Ether, BNB, Matic, Klay, BTC, etc
+           - ERC20: ERC20 token
   zetachain.zetacore.crosschain.Params:
     type: object
     properties:
@@ -56251,13 +56875,13 @@ definitions:
               type: string
             index:
               type: string
-            zetaBurnt:
+            zeta_burnt:
               type: string
-            zetaMint:
+            zeta_mint:
               type: string
-            zetaFees:
+            zeta_fees:
               type: string
-            relayedMessage:
+            relayed_message:
               type: string
               title: Not used by protocol , just relayed across
             cctx_status:
@@ -56280,59 +56904,87 @@ definitions:
                      - PendingRevert: outbound cannot succeed; should revert inbound
                      - Reverted: inbound reverted.
                      - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-                statusMessage:
+                status_message:
                   type: string
-                lastUpdateTimestamp:
+                lastUpdate_timestamp:
                   type: string
                   format: int64
-            InBoundTxParams:
+            inbound_tx_params:
               type: object
               properties:
                 sender:
                   type: string
                 senderChain:
                   type: string
-                inBoundTxObservedHash:
+                sender_chain_id:
                   type: string
-                inBoundTxObservedExternalHeight:
+                  format: int64
+                inbound_tx_observed_hash:
+                  type: string
+                inbound_tx_observed_external_height:
                   type: string
                   format: uint64
-                inBoundTxFinalizedZetaHeight:
+                inbound_tx_finalized_zeta_height:
                   type: string
                   format: uint64
-                inBoundTXBallotIndex:
+                inbound_tx_ballot_index:
                   type: string
-                txOrigin:
+                tx_origin:
                   type: string
-            OutBoundTxParams:
+                coin_type:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
+                asset:
+                  type: string
+            outbound_tx_params:
               type: object
               properties:
                 receiver:
                   type: string
-                receiverChain:
+                receiver_chain:
                   type: string
+                receiver_chainId:
+                  type: string
+                  format: int64
                 broadcaster:
                   type: string
                   format: uint64
                   title: Can be removed
-                outBoundTxHash:
+                outbound_tx_hash:
                   type: string
-                outBoundTxTSSNonce:
-                  type: string
-                  format: uint64
-                outBoundTxGasLimit:
+                outbound_tx_tss_nonce:
                   type: string
                   format: uint64
-                outBoundTxGasPrice:
-                  type: string
-                outBoundTXBallotIndex:
-                  type: string
-                outBoundTxFinalizedZetaHeight:
+                outbound_tx_gas_limit:
                   type: string
                   format: uint64
-                outBoundTxObservedExternalHeight:
+                outbound_tx_gas_price:
+                  type: string
+                outbound_tx_ballot_index:
+                  type: string
+                outbound_tx_finalized_zeta_height:
                   type: string
                   format: uint64
+                outbound_tx_observed_external_height:
+                  type: string
+                  format: uint64
+                coin_type:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
   zetachain.zetacore.crosschain.QueryAllCctxResponse:
     type: object
     properties:
@@ -56345,13 +56997,13 @@ definitions:
               type: string
             index:
               type: string
-            zetaBurnt:
+            zeta_burnt:
               type: string
-            zetaMint:
+            zeta_mint:
               type: string
-            zetaFees:
+            zeta_fees:
               type: string
-            relayedMessage:
+            relayed_message:
               type: string
               title: Not used by protocol , just relayed across
             cctx_status:
@@ -56374,59 +57026,87 @@ definitions:
                      - PendingRevert: outbound cannot succeed; should revert inbound
                      - Reverted: inbound reverted.
                      - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-                statusMessage:
+                status_message:
                   type: string
-                lastUpdateTimestamp:
+                lastUpdate_timestamp:
                   type: string
                   format: int64
-            InBoundTxParams:
+            inbound_tx_params:
               type: object
               properties:
                 sender:
                   type: string
                 senderChain:
                   type: string
-                inBoundTxObservedHash:
+                sender_chain_id:
                   type: string
-                inBoundTxObservedExternalHeight:
+                  format: int64
+                inbound_tx_observed_hash:
+                  type: string
+                inbound_tx_observed_external_height:
                   type: string
                   format: uint64
-                inBoundTxFinalizedZetaHeight:
+                inbound_tx_finalized_zeta_height:
                   type: string
                   format: uint64
-                inBoundTXBallotIndex:
+                inbound_tx_ballot_index:
                   type: string
-                txOrigin:
+                tx_origin:
                   type: string
-            OutBoundTxParams:
+                coin_type:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
+                asset:
+                  type: string
+            outbound_tx_params:
               type: object
               properties:
                 receiver:
                   type: string
-                receiverChain:
+                receiver_chain:
                   type: string
+                receiver_chainId:
+                  type: string
+                  format: int64
                 broadcaster:
                   type: string
                   format: uint64
                   title: Can be removed
-                outBoundTxHash:
+                outbound_tx_hash:
                   type: string
-                outBoundTxTSSNonce:
-                  type: string
-                  format: uint64
-                outBoundTxGasLimit:
+                outbound_tx_tss_nonce:
                   type: string
                   format: uint64
-                outBoundTxGasPrice:
-                  type: string
-                outBoundTXBallotIndex:
-                  type: string
-                outBoundTxFinalizedZetaHeight:
+                outbound_tx_gas_limit:
                   type: string
                   format: uint64
-                outBoundTxObservedExternalHeight:
+                outbound_tx_gas_price:
+                  type: string
+                outbound_tx_ballot_index:
+                  type: string
+                outbound_tx_finalized_zeta_height:
                   type: string
                   format: uint64
+                outbound_tx_observed_external_height:
+                  type: string
+                  format: uint64
+                coin_type:
+                  type: string
+                  enum:
+                    - Zeta
+                    - Gas
+                    - ERC20
+                  default: Zeta
+                  title: |-
+                    - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                     - ERC20: ERC20 token
       pagination:
         type: object
         properties:
@@ -56568,13 +57248,14 @@ definitions:
               type: string
             index:
               type: string
-            chain:
+            chain_id:
               type: string
+              format: int64
             signers:
               type: array
               items:
                 type: string
-            blockNums:
+            block_nums:
               type: array
               items:
                 type: string
@@ -56584,9 +57265,46 @@ definitions:
               items:
                 type: string
                 format: uint64
-            medianIndex:
+            median_index:
               type: string
               format: uint64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  zetachain.zetacore.crosschain.QueryAllInTxHashToCctxResponse:
+    type: object
+    properties:
+      inTxHashToCctx:
+        type: array
+        items:
+          type: object
+          properties:
+            in_tx_hash:
+              type: string
+            cctx_index:
+              type: string
       pagination:
         type: object
         properties:
@@ -56726,18 +57444,20 @@ definitions:
             index:
               type: string
               title: 'format: "chain-nonce"'
-            chain:
+            chain_id:
               type: string
+              format: int64
             nonce:
               type: string
-            hashList:
+              format: uint64
+            hash_list:
               type: array
               items:
                 type: object
                 properties:
-                  txHash:
+                  tx_hash:
                     type: string
-                  signer:
+                  tx_signer:
                     type: string
       pagination:
         type: object
@@ -56775,18 +57495,20 @@ definitions:
             index:
               type: string
               title: 'format: "chain-nonce"'
-            chain:
+            chain_id:
               type: string
+              format: int64
             nonce:
               type: string
-            hashList:
+              format: uint64
+            hash_list:
               type: array
               items:
                 type: object
                 properties:
-                  txHash:
+                  tx_hash:
                     type: string
-                  signer:
+                  tx_signer:
                     type: string
       pagination:
         type: object
@@ -56933,13 +57655,13 @@ definitions:
             type: string
           index:
             type: string
-          zetaBurnt:
+          zeta_burnt:
             type: string
-          zetaMint:
+          zeta_mint:
             type: string
-          zetaFees:
+          zeta_fees:
             type: string
-          relayedMessage:
+          relayed_message:
             type: string
             title: Not used by protocol , just relayed across
           cctx_status:
@@ -56962,59 +57684,87 @@ definitions:
                    - PendingRevert: outbound cannot succeed; should revert inbound
                    - Reverted: inbound reverted.
                    - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-              statusMessage:
+              status_message:
                 type: string
-              lastUpdateTimestamp:
+              lastUpdate_timestamp:
                 type: string
                 format: int64
-          InBoundTxParams:
+          inbound_tx_params:
             type: object
             properties:
               sender:
                 type: string
               senderChain:
                 type: string
-              inBoundTxObservedHash:
+              sender_chain_id:
                 type: string
-              inBoundTxObservedExternalHeight:
+                format: int64
+              inbound_tx_observed_hash:
+                type: string
+              inbound_tx_observed_external_height:
                 type: string
                 format: uint64
-              inBoundTxFinalizedZetaHeight:
+              inbound_tx_finalized_zeta_height:
                 type: string
                 format: uint64
-              inBoundTXBallotIndex:
+              inbound_tx_ballot_index:
                 type: string
-              txOrigin:
+              tx_origin:
                 type: string
-          OutBoundTxParams:
+              coin_type:
+                type: string
+                enum:
+                  - Zeta
+                  - Gas
+                  - ERC20
+                default: Zeta
+                title: |-
+                  - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                   - ERC20: ERC20 token
+              asset:
+                type: string
+          outbound_tx_params:
             type: object
             properties:
               receiver:
                 type: string
-              receiverChain:
+              receiver_chain:
                 type: string
+              receiver_chainId:
+                type: string
+                format: int64
               broadcaster:
                 type: string
                 format: uint64
                 title: Can be removed
-              outBoundTxHash:
+              outbound_tx_hash:
                 type: string
-              outBoundTxTSSNonce:
-                type: string
-                format: uint64
-              outBoundTxGasLimit:
+              outbound_tx_tss_nonce:
                 type: string
                 format: uint64
-              outBoundTxGasPrice:
-                type: string
-              outBoundTXBallotIndex:
-                type: string
-              outBoundTxFinalizedZetaHeight:
+              outbound_tx_gas_limit:
                 type: string
                 format: uint64
-              outBoundTxObservedExternalHeight:
+              outbound_tx_gas_price:
+                type: string
+              outbound_tx_ballot_index:
+                type: string
+              outbound_tx_finalized_zeta_height:
                 type: string
                 format: uint64
+              outbound_tx_observed_external_height:
+                type: string
+                format: uint64
+              coin_type:
+                type: string
+                enum:
+                  - Zeta
+                  - Gas
+                  - ERC20
+                default: Zeta
+                title: |-
+                  - Gas: Ether, BNB, Matic, Klay, BTC, etc
+                   - ERC20: ERC20 token
   zetachain.zetacore.crosschain.QueryGetChainNoncesResponse:
     type: object
     properties:
@@ -57075,13 +57825,14 @@ definitions:
             type: string
           index:
             type: string
-          chain:
+          chain_id:
             type: string
+            format: int64
           signers:
             type: array
             items:
               type: string
-          blockNums:
+          block_nums:
             type: array
             items:
               type: string
@@ -57091,9 +57842,19 @@ definitions:
             items:
               type: string
               format: uint64
-          medianIndex:
+          median_index:
             type: string
             format: uint64
+  zetachain.zetacore.crosschain.QueryGetInTxHashToCctxResponse:
+    type: object
+    properties:
+      inTxHashToCctx:
+        type: object
+        properties:
+          in_tx_hash:
+            type: string
+          cctx_index:
+            type: string
   zetachain.zetacore.crosschain.QueryGetKeygenResponse:
     type: object
     properties:
@@ -57172,18 +57933,20 @@ definitions:
           index:
             type: string
             title: 'format: "chain-nonce"'
-          chain:
+          chain_id:
             type: string
+            format: int64
           nonce:
             type: string
-          hashList:
+            format: uint64
+          hash_list:
             type: array
             items:
               type: object
               properties:
-                txHash:
+                tx_hash:
                   type: string
-                signer:
+                tx_signer:
                   type: string
   zetachain.zetacore.crosschain.QueryGetTSSResponse:
     type: object
@@ -57252,6 +58015,148 @@ definitions:
           enabled:
             type: boolean
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.crosschain.QueryZEVMGetBlockByNumberResponse:
+    type: object
+    properties:
+      number:
+        type: string
+      hash:
+        type: string
+      parent_hash:
+        type: string
+      nonce:
+        type: string
+      sha3_uncles:
+        type: string
+      logs_bloom:
+        type: string
+      transactions_root:
+        type: string
+      state_root:
+        type: string
+      receipts_root:
+        type: string
+      miner:
+        type: string
+      difficulty:
+        type: string
+      total_difficulty:
+        type: string
+      extra_data:
+        type: string
+      size:
+        type: string
+      gas_limit:
+        type: string
+      gas_used:
+        type: string
+      timestamp:
+        type: string
+      transactions:
+        type: array
+        items:
+          type: string
+      uncles:
+        type: array
+        items:
+          type: string
+      base_fee_per_gas:
+        type: string
+      mix_hash:
+        type: string
+  zetachain.zetacore.crosschain.QueryZEVMGetTransactionReceiptResponse:
+    type: object
+    properties:
+      block_hash:
+        type: string
+      block_number:
+        type: string
+      contract_address:
+        type: string
+      cumulative_gas_used:
+        type: string
+      from:
+        type: string
+      gas_used:
+        type: string
+      logs_bloom:
+        type: string
+      status:
+        type: string
+      to:
+        type: string
+      transaction_hash:
+        type: string
+      transaction_index:
+        type: string
+      logs:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            topics:
+              type: array
+              items:
+                type: string
+            data:
+              type: string
+            block_number:
+              type: string
+              format: uint64
+              title: sythetic fields
+            transaction_hash:
+              type: string
+            transaction_index:
+              type: string
+              format: uint64
+            block_hash:
+              type: string
+            log_index:
+              type: string
+              format: uint64
+            removed:
+              type: boolean
+  zetachain.zetacore.crosschain.QueryZEVMGetTransactionResponse:
+    type: object
+    properties:
+      block_hash:
+        type: string
+      block_number:
+        type: string
+      from:
+        type: string
+      gas:
+        type: string
+      gas_price:
+        type: string
+      hash:
+        type: string
+      input:
+        type: string
+      nonce:
+        type: string
+      to:
+        type: string
+      transaction_index:
+        type: string
+      value:
+        type: string
+      type:
+        type: string
+      access_list:
+        type: array
+        items:
+          type: string
+      chain_id:
+        type: string
+      v:
+        type: string
+      r:
+        type: string
+      s:
+        type: string
   zetachain.zetacore.crosschain.Status:
     type: object
     properties:
@@ -57272,9 +58177,9 @@ definitions:
            - PendingRevert: outbound cannot succeed; should revert inbound
            - Reverted: inbound reverted.
            - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-      statusMessage:
+      status_message:
         type: string
-      lastUpdateTimestamp:
+      lastUpdate_timestamp:
         type: string
         format: int64
   zetachain.zetacore.crosschain.TSS:
@@ -57320,9 +58225,9 @@ definitions:
   zetachain.zetacore.crosschain.TxHashList:
     type: object
     properties:
-      txHash:
+      tx_hash:
         type: string
-      signer:
+      tx_signer:
         type: string
   zetachain.zetacore.fungible.ForeignCoins:
     type: object
@@ -57468,18 +58373,72 @@ definitions:
     properties:
       systemContract:
         type: string
+  common.Chain:
+    type: object
+    properties:
+      chain_name:
+        type: string
+        enum:
+          - empty
+          - eth_mainnet
+          - zeta_mainnet
+          - btc_mainnet
+          - polygon_mainnet
+          - bsc_mainnet
+          - goerili_testnet
+          - mumbai_testnet
+          - ganache_testnet
+          - baobab_testnet
+          - bsc_testnet
+          - zeta_testnet
+          - btc_testnet
+          - zeta_localnet
+          - goerili_localnet
+          - zeta_athensnet
+        default: empty
+        title: |-
+          - goerili_testnet: Testnet
+           - zeta_localnet: LocalNet
+           - zeta_athensnet: Athens
+      chain_id:
+        type: string
+        format: int64
+  common.ChainName:
+    type: string
+    enum:
+      - empty
+      - eth_mainnet
+      - zeta_mainnet
+      - btc_mainnet
+      - polygon_mainnet
+      - bsc_mainnet
+      - goerili_testnet
+      - mumbai_testnet
+      - ganache_testnet
+      - baobab_testnet
+      - bsc_testnet
+      - zeta_testnet
+      - btc_testnet
+      - zeta_localnet
+      - goerili_localnet
+      - zeta_athensnet
+    default: empty
+    title: |-
+      - goerili_testnet: Testnet
+       - zeta_localnet: LocalNet
+       - zeta_athensnet: Athens
   zetachain.zetacore.observer.Ballot:
     type: object
     properties:
       index:
         type: string
-      BallotIdentifier:
+      ballot_identifier:
         type: string
-      VoterList:
+      voter_list:
         type: array
         items:
           type: string
-      Votes:
+      votes:
         type: array
         items:
           type: string
@@ -57489,7 +58448,7 @@ definitions:
             - NotYetVoted
           default: SuccessObservation
           description: ' - FailureObservation: Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.'
-      ObservationType:
+      observation_type:
         type: string
         enum:
           - EmptyObserverType
@@ -57499,7 +58458,7 @@ definitions:
         default: EmptyObserverType
       BallotThreshold:
         type: string
-      BallotStatus:
+      ballot_status:
         type: string
         enum:
           - BallotFinalized_SuccessObservation
@@ -57513,37 +58472,7 @@ definitions:
       - BallotFinalized_FailureObservation
       - BallotInProgress
     default: BallotFinalized_SuccessObservation
-  zetachain.zetacore.observer.BallotThreshold:
-    type: object
-    properties:
-      Chain:
-        type: string
-        enum:
-          - Empty
-          - Eth
-          - ZetaChain
-          - Btc
-          - Polygon
-          - BscMainnet
-          - Goerli
-          - Mumbai
-          - Ropsten
-          - Ganache
-          - Baobab
-          - BscTestnet
-          - BTCTestnet
-        default: Empty
-      Observation:
-        type: string
-        enum:
-          - EmptyObserverType
-          - InBoundTx
-          - OutBoundTx
-          - GasPrice
-        default: EmptyObserverType
-      Threshold:
-        type: string
-  zetachain.zetacore.observer.MsgSetBallotThresholdResponse:
+  zetachain.zetacore.observer.MsgAddObserverResponse:
     type: object
   zetachain.zetacore.observer.MsgSetSupportedChainsResponse:
     type: object
@@ -57555,46 +58484,42 @@ definitions:
       - OutBoundTx
       - GasPrice
     default: EmptyObserverType
-  zetachain.zetacore.observer.ObserverChain:
-    type: string
-    enum:
-      - Empty
-      - Eth
-      - ZetaChain
-      - Btc
-      - Polygon
-      - BscMainnet
-      - Goerli
-      - Mumbai
-      - Ropsten
-      - Ganache
-      - Baobab
-      - BscTestnet
-      - BTCTestnet
-    default: Empty
   zetachain.zetacore.observer.ObserverMapper:
     type: object
     properties:
       index:
         type: string
-      ObserverChain:
-        type: string
-        enum:
-          - Empty
-          - Eth
-          - ZetaChain
-          - Btc
-          - Polygon
-          - BscMainnet
-          - Goerli
-          - Mumbai
-          - Ropsten
-          - Ganache
-          - Baobab
-          - BscTestnet
-          - BTCTestnet
-        default: Empty
-      ObservationType:
+      observer_chain:
+        type: object
+        properties:
+          chain_name:
+            type: string
+            enum:
+              - empty
+              - eth_mainnet
+              - zeta_mainnet
+              - btc_mainnet
+              - polygon_mainnet
+              - bsc_mainnet
+              - goerili_testnet
+              - mumbai_testnet
+              - ganache_testnet
+              - baobab_testnet
+              - bsc_testnet
+              - zeta_testnet
+              - btc_testnet
+              - zeta_localnet
+              - goerili_localnet
+              - zeta_athensnet
+            default: empty
+            title: |-
+              - goerili_testnet: Testnet
+               - zeta_localnet: LocalNet
+               - zeta_athensnet: Athens
+          chain_id:
+            type: string
+            format: int64
+      observation_type:
         type: string
         enum:
           - EmptyObserverType
@@ -57602,36 +58527,94 @@ definitions:
           - OutBoundTx
           - GasPrice
         default: EmptyObserverType
-      observerList:
+      observer_list:
         type: array
         items:
           type: string
+  zetachain.zetacore.observer.ObserverParams:
+    type: object
+    properties:
+      chain:
+        type: object
+        properties:
+          chain_name:
+            type: string
+            enum:
+              - empty
+              - eth_mainnet
+              - zeta_mainnet
+              - btc_mainnet
+              - polygon_mainnet
+              - bsc_mainnet
+              - goerili_testnet
+              - mumbai_testnet
+              - ganache_testnet
+              - baobab_testnet
+              - bsc_testnet
+              - zeta_testnet
+              - btc_testnet
+              - zeta_localnet
+              - goerili_localnet
+              - zeta_athensnet
+            default: empty
+            title: |-
+              - goerili_testnet: Testnet
+               - zeta_localnet: LocalNet
+               - zeta_athensnet: Athens
+          chain_id:
+            type: string
+            format: int64
+      observation:
+        type: string
+        enum:
+          - EmptyObserverType
+          - InBoundTx
+          - OutBoundTx
+          - GasPrice
+        default: EmptyObserverType
+      ballot_threshold:
+        type: string
+      min_observer_delegation:
+        type: string
   zetachain.zetacore.observer.Params:
     type: object
     properties:
-      BallotThresholds:
+      observer_params:
         type: array
         items:
           type: object
           properties:
-            Chain:
-              type: string
-              enum:
-                - Empty
-                - Eth
-                - ZetaChain
-                - Btc
-                - Polygon
-                - BscMainnet
-                - Goerli
-                - Mumbai
-                - Ropsten
-                - Ganache
-                - Baobab
-                - BscTestnet
-                - BTCTestnet
-              default: Empty
-            Observation:
+            chain:
+              type: object
+              properties:
+                chain_name:
+                  type: string
+                  enum:
+                    - empty
+                    - eth_mainnet
+                    - zeta_mainnet
+                    - btc_mainnet
+                    - polygon_mainnet
+                    - bsc_mainnet
+                    - goerili_testnet
+                    - mumbai_testnet
+                    - ganache_testnet
+                    - baobab_testnet
+                    - bsc_testnet
+                    - zeta_testnet
+                    - btc_testnet
+                    - zeta_localnet
+                    - goerili_localnet
+                    - zeta_athensnet
+                  default: empty
+                  title: |-
+                    - goerili_testnet: Testnet
+                     - zeta_localnet: LocalNet
+                     - zeta_athensnet: Athens
+                chain_id:
+                  type: string
+                  format: int64
+            observation:
               type: string
               enum:
                 - EmptyObserverType
@@ -57639,37 +58622,52 @@ definitions:
                 - OutBoundTx
                 - GasPrice
               default: EmptyObserverType
-            Threshold:
+            ballot_threshold:
+              type: string
+            min_observer_delegation:
               type: string
     description: Params defines the parameters for the module.
   zetachain.zetacore.observer.QueryAllObserverMappersResponse:
     type: object
     properties:
-      ObserverMappers:
+      observer_mappers:
         type: array
         items:
           type: object
           properties:
             index:
               type: string
-            ObserverChain:
-              type: string
-              enum:
-                - Empty
-                - Eth
-                - ZetaChain
-                - Btc
-                - Polygon
-                - BscMainnet
-                - Goerli
-                - Mumbai
-                - Ropsten
-                - Ganache
-                - Baobab
-                - BscTestnet
-                - BTCTestnet
-              default: Empty
-            ObservationType:
+            observer_chain:
+              type: object
+              properties:
+                chain_name:
+                  type: string
+                  enum:
+                    - empty
+                    - eth_mainnet
+                    - zeta_mainnet
+                    - btc_mainnet
+                    - polygon_mainnet
+                    - bsc_mainnet
+                    - goerili_testnet
+                    - mumbai_testnet
+                    - ganache_testnet
+                    - baobab_testnet
+                    - bsc_testnet
+                    - zeta_testnet
+                    - btc_testnet
+                    - zeta_localnet
+                    - goerili_localnet
+                    - zeta_athensnet
+                  default: empty
+                  title: |-
+                    - goerili_testnet: Testnet
+                     - zeta_localnet: LocalNet
+                     - zeta_athensnet: Athens
+                chain_id:
+                  type: string
+                  format: int64
+            observation_type:
               type: string
               enum:
                 - EmptyObserverType
@@ -57677,7 +58675,7 @@ definitions:
                 - OutBoundTx
                 - GasPrice
               default: EmptyObserverType
-            observerList:
+            observer_list:
               type: array
               items:
                 type: string
@@ -57689,13 +58687,13 @@ definitions:
         properties:
           index:
             type: string
-          BallotIdentifier:
+          ballot_identifier:
             type: string
-          VoterList:
+          voter_list:
             type: array
             items:
               type: string
-          Votes:
+          votes:
             type: array
             items:
               type: string
@@ -57705,7 +58703,7 @@ definitions:
                 - NotYetVoted
               default: SuccessObservation
               description: ' - FailureObservation: Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.'
-          ObservationType:
+          observation_type:
             type: string
             enum:
               - EmptyObserverType
@@ -57715,7 +58713,7 @@ definitions:
             default: EmptyObserverType
           BallotThreshold:
             type: string
-          BallotStatus:
+          ballot_status:
             type: string
             enum:
               - BallotFinalized_SuccessObservation
@@ -57725,7 +58723,7 @@ definitions:
   zetachain.zetacore.observer.QueryObserversByChainAndTypeResponse:
     type: object
     properties:
-      Observers:
+      observers:
         type: array
         items:
           type: string
@@ -57736,29 +58734,42 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
         properties:
-          BallotThresholds:
+          observer_params:
             type: array
             items:
               type: object
               properties:
-                Chain:
-                  type: string
-                  enum:
-                    - Empty
-                    - Eth
-                    - ZetaChain
-                    - Btc
-                    - Polygon
-                    - BscMainnet
-                    - Goerli
-                    - Mumbai
-                    - Ropsten
-                    - Ganache
-                    - Baobab
-                    - BscTestnet
-                    - BTCTestnet
-                  default: Empty
-                Observation:
+                chain:
+                  type: object
+                  properties:
+                    chain_name:
+                      type: string
+                      enum:
+                        - empty
+                        - eth_mainnet
+                        - zeta_mainnet
+                        - btc_mainnet
+                        - polygon_mainnet
+                        - bsc_mainnet
+                        - goerili_testnet
+                        - mumbai_testnet
+                        - ganache_testnet
+                        - baobab_testnet
+                        - bsc_testnet
+                        - zeta_testnet
+                        - btc_testnet
+                        - zeta_localnet
+                        - goerili_localnet
+                        - zeta_athensnet
+                      default: empty
+                      title: |-
+                        - goerili_testnet: Testnet
+                         - zeta_localnet: LocalNet
+                         - zeta_athensnet: Athens
+                    chain_id:
+                      type: string
+                      format: int64
+                observation:
                   type: string
                   enum:
                     - EmptyObserverType
@@ -57766,31 +58777,46 @@ definitions:
                     - OutBoundTx
                     - GasPrice
                   default: EmptyObserverType
-                Threshold:
+                ballot_threshold:
+                  type: string
+                min_observer_delegation:
                   type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetachain.zetacore.observer.QuerySupportedChainsResponse:
     type: object
     properties:
-      Chains:
+      chains:
         type: array
         items:
-          type: string
-          enum:
-            - Empty
-            - Eth
-            - ZetaChain
-            - Btc
-            - Polygon
-            - BscMainnet
-            - Goerli
-            - Mumbai
-            - Ropsten
-            - Ganache
-            - Baobab
-            - BscTestnet
-            - BTCTestnet
-          default: Empty
+          type: object
+          properties:
+            chain_name:
+              type: string
+              enum:
+                - empty
+                - eth_mainnet
+                - zeta_mainnet
+                - btc_mainnet
+                - polygon_mainnet
+                - bsc_mainnet
+                - goerili_testnet
+                - mumbai_testnet
+                - ganache_testnet
+                - baobab_testnet
+                - bsc_testnet
+                - zeta_testnet
+                - btc_testnet
+                - zeta_localnet
+                - goerili_localnet
+                - zeta_athensnet
+              default: empty
+              title: |-
+                - goerili_testnet: Testnet
+                 - zeta_localnet: LocalNet
+                 - zeta_athensnet: Athens
+            chain_id:
+              type: string
+              format: int64
   zetachain.zetacore.observer.VoteType:
     type: string
     enum:

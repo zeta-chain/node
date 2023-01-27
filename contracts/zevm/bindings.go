@@ -1,5 +1,7 @@
 //go:generate sh -c "solc ZRC20.sol --combined-json abi,bin | jq '.contracts.\"ZRC20.sol:ZRC20\"'  > ZRC20.json"
 //go:generate sh -c "cat ZRC20.json | jq .abi | abigen --abi - --pkg zevm --type ZRC20 --out ZRC20.go"
+//go:generate sh -c "solc ZETABridge.sol --combined-json abi,bin | jq '.contracts.\"ZETABridge.sol:ZETABridge\"'  > ZETABridge.json"
+//go:generate sh -c "cat ZETABridge.json | jq .abi | abigen --abi - --pkg zevm --type ZETABridge --out ZETABridge.go"
 //go:generate sh -c "cat UniswapV2Factory.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Factory --out UniswapV2Factory.go"
 //go:generate sh -c "cat UniswapV2Router02.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Router02 --out UniswapV2Router02.go"
 //go:generate sh -c "cat WZETA.json | jq .abi | abigen --abi - --pkg zevm --type WZETA --out WZETA.go"

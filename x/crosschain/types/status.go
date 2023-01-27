@@ -48,6 +48,7 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	stateTransitionMap[CctxStatus_PendingInbound] = []CctxStatus{
 		CctxStatus_PendingOutbound,
 		CctxStatus_Aborted,
+		CctxStatus_OutboundMined, // EVM Deposit
 	}
 	stateTransitionMap[CctxStatus_PendingOutbound] = []CctxStatus{
 		CctxStatus_Aborted,

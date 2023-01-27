@@ -34,9 +34,9 @@ func NewAddress(address string, chain Chain) (Address, error) {
 }
 
 func IsETHChain(chain Chain) bool {
-	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
-		chain == BSCTestnetChain || chain == MumbaiChain ||
-		chain == GoerliChain || chain == Ganache || chain == ZETAChain {
+	if chain == EthChain() || chain == BscMainnetChain() || chain == PolygonChain() ||
+		chain == BscTestnetChain() || chain == MumbaiChain() ||
+		chain == GoerliChain() || chain == GoeriliLocalNetChain() || chain == ZetaChain() {
 		return true
 	}
 
@@ -63,7 +63,7 @@ func IsETHChain(chain Chain) bool {
 
 func (addr Address) GetNetwork(chain Chain) ChainNetwork {
 	switch chain {
-	case ETHChain:
+	case EthChain():
 		return GetCurrentChainNetwork()
 	}
 	return MockNet

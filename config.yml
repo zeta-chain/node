@@ -24,8 +24,8 @@ faucet:
 client:
   openapi:
     path: docs/static/openapi.yml
-validators:
-- name: alice
+validator:
+  name: alice
   bonded: 100000000stake
   app:
     api.enabled-unsafe-cors: "true"
