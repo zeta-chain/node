@@ -326,7 +326,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromO
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
 	logger := ob.logger
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(5 * time.Second) //FIXME: config this in chainconfig
 	for {
 		select {
 		case <-ticker.C:
@@ -556,6 +556,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
 				continue
 			}
+			ob.logger.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
 			for _, tx := range block.Transactions() {
 				if tx.To() == nil {
 					continue
@@ -591,7 +592,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						ob.logger.Error().Err(err).Msg("error posting to zeta core")
 						continue
 					}
-					ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+					ob.logger.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
 				}
 			}
 		}
@@ -723,7 +724,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 	}
-	gasTicker := time.NewTicker(60 * time.Second)
+	gasTicker := time.NewTicker(5 * time.Second) // FIXME: configure this in chainconfig
 	for {
 		select {
 		case <-gasTicker.C:
@@ -852,6 +853,8 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
+	} else {
+		ob.logger.Debug().Msgf("PostGasPrice: chain %s, gasPrice %d, bn: %d", ob.chain, gasPrice.Uint64(), blockNum)
 	}
 
 	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.EVMAddress(), nil)
@@ -970,8 +973,8 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 
 	case common.ChainName_goerili_localnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.EthConfirmationCount
-		ob.BlockTime = config.EthBlockTime
+		ob.confCount = config.DevEthConfirmationCount
+		ob.BlockTime = config.DevEthBlockTime
 
 	case common.ChainName_bsc_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)

@@ -65,7 +65,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	system.SystemContract = SystemContractAddress.String()
 	// FIXME: remove unnecessary SetGasPrice and setupChainGasCoinAndPool
 	k.SetSystemContract(ctx, system)
-	err = k.SetGasPrice(ctx, big.NewInt(1337), big.NewInt(1))
+	//err = k.SetGasPrice(ctx, big.NewInt(1337), big.NewInt(1))
 	if err != nil {
 		return err
 	}

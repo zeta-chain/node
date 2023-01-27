@@ -198,9 +198,7 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 // ) external onlyTssAddress
 func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset ethcommon.Address, amount *big.Int, gasLimit uint64, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
 	var data []byte
-
 	var err error
-
 	data, err = signer.erc20CustodyABI.Pack("withdraw", recipient, asset, amount)
 	if err != nil {
 		return nil, fmt.Errorf("pack error: %w", err)

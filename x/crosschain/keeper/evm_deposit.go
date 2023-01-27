@@ -73,6 +73,9 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 // [ contractAddress calldata ]
 // [ 20B, variable]
 func parseContractAndData(message string, asset string) (contractAddress ethcommon.Address, data []byte, err error) {
+	if len(message) == 0 {
+		return contractAddress, nil, nil
+	}
 	data, err = hex.DecodeString(message)
 	if err != nil {
 		return contractAddress, nil, err

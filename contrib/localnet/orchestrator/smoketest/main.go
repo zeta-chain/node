@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"os"
 	"sync"
@@ -13,8 +13,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -28,6 +26,9 @@ var (
 	BLOCK              = 6 * time.Second // should be 2x block time
 	BigZero            = big.NewInt(0)
 	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr      = "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
+	USDTERC20Addr      = "0x92339c9Cf464c96E63A4104f3cb97ca336Ea4cE1"
+	ERC20CustodyAddr   = "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF"
 )
 
 func main() {
@@ -159,6 +160,7 @@ func main() {
 		panic(err)
 	}
 	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -235,6 +237,7 @@ func main() {
 			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
 			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
 			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+			fmt.Printf("    Block Num: %d\n", log.BlockNumber)
 		}
 	}
 
@@ -258,114 +261,25 @@ func main() {
 		}
 	}()
 	wg.Wait()
+	TestERC20Deposit(goerliClient, zevmClient, cctxClient, fungibleClient)
+	TestDepositEtherIntoZRC20(goerliClient, zevmClient, cctxClient, fungibleClient)
+	TestERC20Withdraw(goerliClient, zevmClient, cctxClient, fungibleClient)
+	// ==================== Add your tests here ====================
+	test1()
 
-	fmt.Printf("Step 4: Deploying ERC20Custody contract\n")
-	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), ethcommon.HexToAddress("0x"))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("ERC20Custody contract address: %s, tx hash: %s\n", erc20CustodyAddr.Hex(), tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("ERC20Custody contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
-	fmt.Printf("Step 5: Deploying USDT contract\n")
-	usdtAddr, tx, _, err := erc20.DeployUSDT(auth, goerliClient, "USDT", "USDT", 6)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("USDT contract address: %s, tx hash: %s\n", usdtAddr.Hex(), tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("USDT contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
-	fmt.Printf("Step 6: Whitelist USDT\n")
-	tx, err = ERC20Custody.Whitelist(auth, usdtAddr)
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Whitelist receipt tx hash: %s\n", tx.Hash().Hex())
+}
 
-	fmt.Printf("Step 7: Set TSS address\n")
-	tx, err = ERC20Custody.UpdateTSSAddress(auth, TSSAddress)
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("TSS set receipt tx hash: %s\n", tx.Hash().Hex())
-
-	USDT, err := erc20.NewUSDT(usdtAddr, goerliClient)
-	if err != nil {
-		panic(err)
-	}
-	tx, err = USDT.Mint(auth, big.NewInt(1e10))
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
-
-	tx, err = USDT.Approve(auth, erc20CustodyAddr, big.NewInt(1e10))
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
-
-	tx, err = ERC20Custody.Deposit(auth, DeployerAddress.Bytes(), usdtAddr, big.NewInt(1e6), nil)
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("Deposit receipt tx hash: %s, status %d\n", receipt.TxHash.Hex(), receipt.Status)
-	for _, log := range receipt.Logs {
-		event, err := ERC20Custody.ParseDeposited(*log)
-		if err != nil {
-			continue
-		}
-		fmt.Printf("Deposited event: \n")
-		fmt.Printf("  Recipient address: %x, \n", event.Recipient)
-		fmt.Printf("  ERC20 address: %s, \n", event.Asset.Hex())
-		fmt.Printf("  Amount: %d, \n", event.Amount)
-		fmt.Printf("  Message: %x, \n", event.Message)
-	}
-
+// wait until cctx is mined; returns the cctxIndex
+func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
 	var cctxIndex string
 	for {
 		time.Sleep(5 * time.Second)
-
-		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: tx.Hash().Hex()})
+		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
 		if err != nil {
 			continue
 		}
 		cctxIndex = res.InTxHashToCctx.CctxIndex
-		fmt.Printf("Deposit receipt cctx index: %d\n", cctxIndex)
+		fmt.Printf("Deposit receipt cctx index: %s\n", cctxIndex)
 		break
 	}
 	for {
@@ -376,22 +290,7 @@ func main() {
 			continue
 		}
 		fmt.Printf("Deposit receipt cctx status: %+v; success\n", res.CrossChainTx.CctxStatus.Status.String())
-		break
+		return res.CrossChainTx
 	}
-
-	usdtZRC20Addr := "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
-	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(usdtZRC20Addr), zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err = usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
-	// ==================== Add your tests here ====================
-	test1()
 
 }

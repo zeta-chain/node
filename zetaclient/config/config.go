@@ -19,6 +19,8 @@ const (
 	EthConfirmationCount     = 3
 	BscConfirmationCount     = 5
 	PolygonConfirmationCount = 5
+
+	DevEthConfirmationCount = 2
 )
 
 const (
@@ -35,7 +37,8 @@ const (
 	EthBlockTime     = 12
 	PolygonBlockTime = 2
 	BscBlockTime     = 5
-	RopstenBlockTime = 12
+
+	DevEthBlockTime = 5
 
 	// to catch up:
 	MaxBlocksPerPeriod = 100

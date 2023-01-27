@@ -400,7 +400,8 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}
 
 	var tx *ethtypes.Transaction
-	if send.InboundTxParams.SenderChain == "ZetaChain" && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+	// FIXME: there is a chance wrong type of outbound tx is signed
+	if send.InboundTxParams.SenderChain == common.ZetaChain().ChainName.String() && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		if send.InboundTxParams.CoinType == common.CoinType_Zeta {
 			logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutboundTxParams.OutboundTxTssNonce, gasprice)
