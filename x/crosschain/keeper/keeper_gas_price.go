@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math/big"
 	"sort"
 	"strconv"
 )
@@ -158,11 +159,11 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)
-	//chainIDBigINT := big.NewInt(chain.ChainId)
-	//err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
-	//if err!=nil{
-	//	return nil,err
-	//}
+	chainIDBigINT := big.NewInt(chain.ChainId)
+	err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
 
