@@ -51,7 +51,7 @@ func ZetaChain() Chain {
 func ZetaAthensNetChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_athensnet,
-		ChainId:   1011,
+		ChainId:   7001,
 	}
 }
 
@@ -65,14 +65,14 @@ func ZetaLocalNetChain() Chain {
 func BtcMainnetChain() Chain {
 	return Chain{
 		ChainName: ChainName_btc_mainnet,
-		ChainId:   55555,
+		ChainId:   8332,
 	}
 }
 
 func BtcTestNetChain() Chain {
 	return Chain{
 		ChainName: ChainName_btc_testnet,
-		ChainId:   80001,
+		ChainId:   18332,
 	}
 }
 

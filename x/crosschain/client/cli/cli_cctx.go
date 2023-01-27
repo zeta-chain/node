@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -10,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"strconv"
 )
 
 var _ = strconv.Itoa(0)
@@ -81,7 +82,7 @@ func CmdShowSend() *cobra.Command {
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType]",
+		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,17 +92,18 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 			argsTxOrigin := (args[2])
-			argsReceiver := (args[2])
-			argsReceiverChain, err := strconv.Atoi(args[3])
+			argsReceiver := (args[3])
+			argsReceiverChain, err := strconv.Atoi(args[4])
 			if err != nil {
 				return err
 			}
-			argsMBurnt := (args[4])
-			argsMMint := (args[5])
-			argsMessage := (args[6])
-			argsInTxHash := (args[7])
-			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
-			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
+			argsMBurnt := (args[5])
+			argsMMint := (args[65])
+			argsMessage := (args[7])
+			argsInTxHash := (args[8])
+			argsInBlockHeight, err := strconv.ParseInt(args[9], 10, 64)
+			argsCoinType := common.CoinType(common.CoinType_value[args[10]])
+			argsAsset := args[11]
 			if err != nil {
 				return err
 			}
@@ -110,7 +112,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType)
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

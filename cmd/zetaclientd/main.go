@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/rs/zerolog"
@@ -41,6 +42,7 @@ var (
 	preParams   *ecdsakeygen.LocalPreParams
 	keygenBlock int64
 	zetacoreURL *string
+	devMode     *bool
 )
 
 func main() {
@@ -54,8 +56,15 @@ func main() {
 	keygen := flag.Int64("keygen-block", 0, "keygen at block height (default: 0 means no keygen)")
 	chainID := flag.String("chain-id", "athens-1", "chain id")
 	zetacoreURL = flag.String("zetacore-url", "127.0.0.1", "zetacore node URL")
-	devMode := flag.Bool("dev", false, "dev mode: geth private network as goerli testnet")
+	devMode = flag.Bool("dev", false, "dev mode: geth private network as goerli testnet")
+	debug := flag.Bool("debug", false, "debug mode: lower zerolog level to DEBUG")
 	flag.Parse()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *debug {
+		log.Info().Msgf("zerolog global log level: DEBUG")
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	cmd.CHAINID = *chainID
 	ZEVMChainID, err := etherminttypes.ParseChainID(cmd.CHAINID)
 	if err != nil {
@@ -137,7 +146,6 @@ func SetupConfigForTest() {
 
 func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	//chainIP := os.Getenv("CHAIN_IP")
 	//if chainIP == "" {

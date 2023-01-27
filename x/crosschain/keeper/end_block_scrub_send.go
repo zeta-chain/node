@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/big"
 )
 
 // ScrubGasPriceOfStuckOutTx change (increase) the gas price of a scheduled Send which has been stuck.

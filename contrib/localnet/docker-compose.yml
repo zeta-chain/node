@@ -16,6 +16,8 @@ services:
     hostname: zetacore0
     ports:
       - "1317:1317"
+      - "9545:8545"
+      - "9546:8546"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -68,7 +70,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "3"]
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
   orchestrator:
     image: orchestrator:latest

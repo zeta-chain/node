@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -94,11 +95,13 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	foundCoin := false
 	var receiverChainName common.ChainName
 	coinType := common.CoinType_Zeta
+	asset := ""
 	for _, coin := range foreignCoinList {
 		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
 			receiverChainName = common.ParseStringToObserverChain(coin.ForeignChain)
 			foundCoin = true
 			coinType = coin.CoinType
+			asset = coin.Erc20ContractAddress
 		}
 	}
 	if !foundCoin {
@@ -111,7 +114,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	senderChain := common.ZetaChain()
 
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
@@ -134,7 +137,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZETABridg
 	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
 	toAddr := "0x" + hex.EncodeToString(event.To)
 	senderChain := common.ZetaChain()
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)

@@ -2,16 +2,18 @@ package keeper
 
 import (
 	"fmt"
+	"math/rand"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/rand"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -44,6 +46,8 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			Sender:                          fmt.Sprintf("%d", i),
 			SenderChain:                     fmt.Sprintf("%d", i),
 			TxOrigin:                        fmt.Sprintf("%d", i),
+			Asset:                           fmt.Sprintf("%d", i),
+			CoinType:                        common.CoinType_Zeta,
 			InboundTxObservedHash:           fmt.Sprintf("%d", i),
 			InboundTxObservedExternalHeight: uint64(i),
 			InboundTxFinalizedZetaHeight:    uint64(i),

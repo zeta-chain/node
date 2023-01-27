@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"encoding/json"
+	"math/big"
+	"strconv"
+
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -271,7 +272,7 @@ func (k Keeper) DepositZRC20(
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }
 
 // Deposit into ZRC4 and call contract function in a single tx
@@ -425,7 +426,6 @@ func (k Keeper) CallEVMWithData(
 	if err != nil {
 		return nil, err
 	}
-
 	gasCap := config.DefaultGasCap
 	if commit && gasLimit == nil {
 		args, err := json.Marshal(evmtypes.TransactionArgs{

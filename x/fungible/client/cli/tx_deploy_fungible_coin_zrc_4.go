@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 
@@ -36,7 +37,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			fmt.Printf("CLI address: %s\n", clientCtx.GetFromAddress().String())
 			msg := types.NewMsgDeployFungibleCoinZRC20(
 				clientCtx.GetFromAddress().String(),
 				argERC20,

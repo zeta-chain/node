@@ -14,7 +14,7 @@ enum CctxStatus {
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
 }
 
-message InBoundTxParams{
+message InboundTxParams{
   string sender = 1;
   string senderChain = 2;
   int64 sender_chain_id = 3;
@@ -23,9 +23,11 @@ message InBoundTxParams{
   uint64 inbound_tx_finalized_zeta_height = 6;
   string inbound_tx_ballot_index=7;
   string tx_origin = 8;
+  common.CoinType coin_type = 9;
+  string asset = 10;
 }
 
-message OutBoundTxParams {
+message OutboundTxParams {
   string receiver = 1;
   string receiver_chain = 2;
   int64 receiver_chainId = 3;
@@ -66,6 +68,6 @@ message CrossChainTx {
   ];
   string relayed_message = 6; // Not used by protocol , just relayed across
   Status cctx_status = 8;
-  InBoundTxParams  inbound_tx_params = 9;
-  OutBoundTxParams outbound_tx_params = 10;
+  InboundTxParams  inbound_tx_params = 9;
+  OutboundTxParams outbound_tx_params = 10;
 }
