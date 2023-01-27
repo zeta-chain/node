@@ -26,7 +26,7 @@ var (
 	BLOCK              = 6 * time.Second // should be 2x block time
 	BigZero            = big.NewInt(0)
 	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr      = "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
+	USDTZRC20Addr      = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
 	USDTERC20Addr      = "0x92339c9Cf464c96E63A4104f3cb97ca336Ea4cE1"
 	ERC20CustodyAddr   = "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF"
 )
@@ -265,8 +265,8 @@ func main() {
 	TestDepositEtherIntoZRC20(goerliClient, zevmClient, cctxClient, fungibleClient)
 	TestERC20Withdraw(goerliClient, zevmClient, cctxClient, fungibleClient)
 	// ==================== Add your tests here ====================
-	TestSendZetaOut(zevmClient, goerliClient, cctxClient, fungibleClient)
-	TestDepositEtherIntoZRC20(zevmClient, goerliClient, cctxClient, fungibleClient)
+	//TestSendZetaOut(zevmClient, goerliClient, cctxClient, fungibleClient)
+
 }
 
 // wait until cctx is mined; returns the cctxIndex

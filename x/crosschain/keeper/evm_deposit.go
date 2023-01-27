@@ -25,17 +25,18 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			return err
 		}
 		cctx.OutboundTxParams.OutboundTxHash = "Mined directly to ZetaEVM without TX"
-	} else {
+	} else { // cointype is Gas or ERC20
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, withdrawMessage, err := k.fungibleKeeper.DepositCoin(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data, msg.CoinType, msg.Asset)
+		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			return err
 		}
 		// TODO : Return error if TX failed ?
-		if !tx.Failed() && withdrawMessage {
+
+		if !tx.Failed() && len(msg.Message) > 0 {
 			logs := evmtypes.LogsToEthereum(tx.Logs)
 			// TODO: is passing by ctx KV a good choice?
 			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
@@ -72,20 +73,23 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 // message is hex encoded byte array
 // [ contractAddress calldata ]
 // [ 20B, variable]
-func ParseContractAndData(message string) (contractAddress ethcommon.Address, data []byte, err error) {
-	var AddressNull ethcommon.Address
+func parseContractAndData(message string, asset string) (contractAddress ethcommon.Address, data []byte, err error) {
 	if len(message) == 0 {
-		return AddressNull, nil, nil
+		return contractAddress, nil, nil
 	}
 	data, err = hex.DecodeString(message)
 	if err != nil {
-		return AddressNull, nil, err
+		return contractAddress, nil, err
 	}
 	if len(data) < 20 {
-		err = fmt.Errorf("invalid message length")
-		return AddressNull, nil, err
+		if len(asset) != 42 || asset[:2] != "0x" {
+			err = fmt.Errorf("invalid message length")
+			return contractAddress, nil, err
+		}
+		contractAddress = ethcommon.HexToAddress(asset)
+	} else {
+		contractAddress = ethcommon.BytesToAddress(data[:20])
+		data = data[20:]
 	}
-	contractAddress = ethcommon.BytesToAddress(data[:20])
-	data = data[20:]
 	return contractAddress, data, nil
 }

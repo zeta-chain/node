@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
+	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
@@ -83,6 +84,29 @@ func TestERC20Deposit(goerliClient *ethclient.Client, zevmClient *ethclient.Clie
 	}
 	fmt.Printf("TSS set receipt tx hash: %s\n", tx.Hash().Hex())
 
+	fmt.Printf("Checking foreign coins...\n")
+	res, err := fungibleClient.ForeignCoinsAll(context.Background(), &fungibletypes.QueryAllForeignCoinsRequest{})
+	if err != nil {
+		panic(err)
+	}
+	found := false
+	zrc20addr := ""
+	for _, fcoin := range res.ForeignCoins {
+		if ethcommon.HexToAddress(fcoin.Erc20ContractAddress) == usdtAddr {
+			found = true
+			zrc20addr = fcoin.Zrc20ContractAddress
+		}
+	}
+	if !found {
+		fmt.Printf("foreign coins: %v", res.ForeignCoins)
+		panic(fmt.Sprintf("fungible module does not have foreign coin that represent USDT ERC20 %s", usdtAddr))
+	}
+	fmt.Printf("USDT ZRC20 Address: %s\n", zrc20addr)
+	H2A := ethcommon.HexToAddress
+	if H2A(zrc20addr) != H2A(USDTZRC20Addr) {
+		panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
+	}
+
 	USDT, err := erc20.NewUSDT(usdtAddr, goerliClient)
 	if err != nil {
 		panic(err)
@@ -133,4 +157,21 @@ func TestERC20Deposit(goerliClient *ethclient.Client, zevmClient *ethclient.Clie
 	}
 	WaitCctxMinedByInTxHash(tx.Hash().Hex(), cctxClient)
 
+	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	bal, err := usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
+	if bal.Int64() != 1e6 {
+		panic("balance is not correct")
+	}
 }

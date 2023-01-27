@@ -303,7 +303,8 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutboundTxParams.OutboundTxTssNonce
 					//sinceBlock := int64(bn) - int64(send.InboundTxParams.InboundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) {
+					// FIXME: config this schedule
+					if nonce%2 == bn%2 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 					}

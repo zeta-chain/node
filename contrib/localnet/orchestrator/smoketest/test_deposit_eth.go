@@ -15,12 +15,6 @@ import (
 	"time"
 )
 
-func LoudPrintf(format string, a ...any) {
-	fmt.Println("=======================================")
-	fmt.Printf(format, a...)
-	fmt.Println("=======================================")
-}
-
 // this tests sending ZETA out of ZetaChain to Ethereum
 func TestDepositEtherIntoZRC20(goerliClient *ethclient.Client, zevmClient *ethclient.Client, cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient) {
 	LoudPrintf("Deposit Ether into ZEVM\n")

@@ -364,12 +364,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
 	logger := ob.logger
-	period := 30 * time.Second
-	chaincfg, found := config.ChainConfigs[ob.chain.ChainName.String()]
-	if found && chaincfg.OutTxObservePeriod > 0 {
-		period = time.Duration(chaincfg.OutTxObservePeriod) * time.Second
-	}
-	ticker := time.NewTicker(period)
+	ticker := time.NewTicker(3 * time.Second) // FIXME: config this
 	for {
 		select {
 		case <-ticker.C:
