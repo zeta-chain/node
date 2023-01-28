@@ -72,7 +72,7 @@ func (sm *SmokeTest) TestMessagePass() {
 				fmt.Printf("  Dest Addr: %s\n", event.DestinationAddress)
 				fmt.Printf("  Zeta Value: %d\n", event.ZetaValue)
 				fmt.Printf("  src chainid: %d\n", event.SourceChainId)
-				if event.ZetaValue.Cmp(amount) != 0 {
+				if event.ZetaValue.Cmp(cctx.ZetaMint.BigInt()) != 0 {
 					panic("Zeta value mismatch")
 				}
 			}
