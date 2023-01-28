@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
 	"github.com/zeta-chain/zetacore/contracts/zevm"
 	"math/big"
@@ -26,7 +24,8 @@ func (sm *SmokeTest) TestSendZetaIn() {
 		panic(err)
 	}
 	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(BLOCK)
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("Approve tx receipt: status %d\n", receipt.Status)
 	tx, err = sm.ConnectorEth.Send(sm.goerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
 		DestinationAddress:  DeployerAddress.Bytes(),
@@ -39,11 +38,7 @@ func (sm *SmokeTest) TestSendZetaIn() {
 		panic(err)
 	}
 	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
 	fmt.Printf("  Logs:\n")
 	for _, log := range receipt.Logs {
@@ -100,37 +95,25 @@ func (sm *SmokeTest) TestSendZetaOut() {
 		panic(err)
 	}
 	fmt.Printf("zevm chainid: %d\n", zchainid)
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	zauth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, zchainid)
-	if err != nil {
-		panic(err)
-	}
+
+	zauth := sm.zevmAuth
 	zauth.Value = big.NewInt(1e18)
 	tx, err := wzeta.Deposit(zauth)
+	if err != nil {
+		panic(err)
+	}
 	zauth.Value = BigZero
-	if err != nil {
-		panic(err)
-	}
+
 	fmt.Printf("Deposit tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(12 * time.Second)
-	receipt, err := zevmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt := MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("Deposit tx receipt: status %d\n", receipt.Status)
+
 	tx, err = wzeta.Approve(zauth, ConnectorZEVMAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("wzeta.approve tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(12 * time.Second)
-	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("approve tx receipt: status %d\n", receipt.Status)
 	tx, err = ConnectorZEVM.Send(zauth, zevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337),
@@ -144,11 +127,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 		panic(err)
 	}
 	fmt.Printf("send tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(12 * time.Second)
-	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("send tx receipt: status %d\n", receipt.Status)
 	fmt.Printf("  Logs:\n")
 	for _, log := range receipt.Logs {
@@ -174,7 +153,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 			event, err := sm.ConnectorEth.ParseZetaReceived(*log)
 			if err == nil {
 				fmt.Printf("    Dest Addr: %s\n", event.DestinationAddress.Hex())
-				fmt.Printf("    sender addr: %d\n", event.ZetaTxSenderAddress)
+				fmt.Printf("    sender addr: %x\n", event.ZetaTxSenderAddress)
 				fmt.Printf("    Zeta Value: %d\n", event.ZetaValue)
 				if event.ZetaValue.Cmp(big.NewInt(1e17)) != 0 {
 					panic("wrong zeta value")

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"math/big"
@@ -23,33 +22,21 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
 
 	tx, err = USDT.Approve(sm.goerliAuth, sm.ERC20CustodyAddr, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err = sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
 
 	tx, err = sm.ERC20Custody.Deposit(sm.goerliAuth, DeployerAddress.Bytes(), sm.USDTERC20Addr, big.NewInt(1e6), nil)
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err = sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Deposit receipt tx hash: %s, status %d\n", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.ERC20Custody.ParseDeposited(*log)
@@ -130,39 +117,19 @@ func (sm *SmokeTest) TestERC20Withdraw() {
 		panic("not enough ETH ZRC20 balance!")
 	}
 
-	chainID, err := zevmClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	zauth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainID)
-	if err != nil {
-		panic("zauth error")
-	}
 	// Approve
-	tx, err := ethZRC20.Approve(zauth, ethcommon.HexToAddress(USDTZRC20Addr), big.NewInt(1e18))
+	tx, err := ethZRC20.Approve(sm.zevmAuth, ethcommon.HexToAddress(USDTZRC20Addr), big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(10 * time.Second)
-	receipt, err := zevmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt := MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 	// Withdraw
-	tx, err = usdtZRC20.Withdraw(zauth, DeployerAddress.Bytes(), big.NewInt(100))
+	tx, err = usdtZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(10 * time.Second)
-	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := usdtZRC20.ParseWithdrawal(*log)

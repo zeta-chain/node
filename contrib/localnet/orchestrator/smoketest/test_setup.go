@@ -44,11 +44,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		panic(err)
 	}
 	fmt.Printf("ZetaEth contract address: %s, tx hash: %s\n", zetaEthAddr.Hex(), tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err := goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt := MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("ZetaEth contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
 	sm.ZetaEth = ZetaEth
 	sm.ZetaEthAddr = zetaEthAddr
@@ -61,18 +57,13 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("ZetaConnectorEth contract address: %s, tx hash: %s\n", connectorEthAddr.Hex(), tx.Hash().Hex())
 	fmt.Printf("ZetaConnectorEth contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
 	sm.ConnectorEth = ConnectorEth
 	sm.ConnectorEthAddr = connectorEthAddr
 
 	fungibleClient := sm.fungibleClient
-
 	fmt.Printf("Deploying ERC20Custody contract\n")
 	if err := CheckNonce(goerliClient, DeployerAddress, 2); err != nil {
 		panic(err)
@@ -82,11 +73,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		panic(err)
 	}
 	fmt.Printf("ERC20Custody contract address: %s, tx hash: %s\n", erc20CustodyAddr.Hex(), tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("ERC20Custody contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
 	if erc20CustodyAddr != ethcommon.HexToAddress(ERC20CustodyAddr) {
 		panic("ERC20Custody contract address mismatch! check order of tx")
@@ -103,11 +90,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		panic(err)
 	}
 	fmt.Printf("USDT contract address: %s, tx hash: %s\n", usdtAddr.Hex(), tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("USDT contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
 	if receipt.ContractAddress != ethcommon.HexToAddress(USDTERC20Addr) {
 		panic("USDT contract address mismatch! check order of tx")
@@ -117,11 +100,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("Whitelist receipt tx hash: %s\n", tx.Hash().Hex())
 
 	fmt.Printf("Step 7: Set TSS address\n")
@@ -129,11 +108,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(BLOCK)
-	receipt, err = goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("TSS set receipt tx hash: %s\n", tx.Hash().Hex())
 
 	fmt.Printf("Checking foreign coins...\n")

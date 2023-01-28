@@ -109,6 +109,7 @@ func main() {
 	var zevmClient *ethclient.Client
 	for {
 		time.Sleep(5 * time.Second)
+		fmt.Printf("dialing zevm client: http://zetacore0:8545\n")
 		zevmClient, err = ethclient.Dial("http://zetacore0:8545")
 		if err != nil {
 			continue
@@ -133,13 +134,20 @@ func main() {
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth)
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
-
+	startTime := time.Now()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
-	smokeTest.TestERC20Deposit()
-	smokeTest.TestSendZetaIn()
-	smokeTest.TestSendZetaOut()
 	smokeTest.TestDepositEtherIntoZRC20()
+	smokeTest.TestSendZetaIn()
+	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
+	// The following tests are optional tests; comment out the ones you don't want to run
+	// temporarily to reduce dev/test cycle turnaround time
+	smokeTest.TestERC20Deposit()
 	smokeTest.TestERC20Withdraw()
-	smokeTest.TestMessagePass()
+	smokeTest.TestSendZetaOut()
+	smokeTest.TestMessagePassing()
+
+	// add your dev test here
+	smokeTest.TestMyTest()
+
 	smokeTest.wg.Wait()
 }

@@ -1008,9 +1008,9 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 		ob.BlockTime = config.EthBlockTime
 
 	case common.ChainName_goerli_localnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.DevEthConfirmationCount
 		ob.BlockTime = config.DevEthBlockTime
+		ob.ticker = time.NewTicker(time.Duration(ob.BlockTime) * time.Second)
 
 	case common.ChainName_bsc_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)

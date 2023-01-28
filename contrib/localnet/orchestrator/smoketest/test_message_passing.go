@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-func (sm *SmokeTest) TestMessagePass() {
+func (sm *SmokeTest) TestMessagePassing() {
 	startTime := time.Now()
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	// ==================== Interacting with contracts ====================
 	time.Sleep(10 * time.Second)
-	LoudPrintf("Step 2: Goerli->Goerli Message Passing (Sending ZETA only)\n")
+	LoudPrintf("Goerli->Goerli Message Passing (Sending ZETA only)\n")
 	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -26,7 +26,8 @@ func (sm *SmokeTest) TestMessagePass() {
 		panic(err)
 	}
 	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(BLOCK)
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("Approve tx receipt: %d\n", receipt.Status)
 	fmt.Printf("Calling ConnectorEth.Send\n")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
@@ -39,13 +40,9 @@ func (sm *SmokeTest) TestMessagePass() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
-	time.Sleep(BLOCK)
-	receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("ConnectorEth.Send tx hash: %s\n", tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("ConnectorEth.Send tx receipt: status %d\n", receipt.Status)
 	fmt.Printf("  Logs:\n")
 	for _, log := range receipt.Logs {
 		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)

@@ -62,11 +62,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		panic(err)
 	}
 	fmt.Printf("GOERLI tx sent: %s; to %s, nonce %d\n", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	time.Sleep(BLOCK)
-	receipt, err := goerliClient.TransactionReceipt(context.Background(), signedTx.Hash())
-	if err != nil {
-		panic(err)
-	}
+	receipt := MustWaitForTxReceipt(sm.goerliClient, signedTx)
 	fmt.Printf("GOERLI tx receipt: %d\n", receipt.Status)
 	fmt.Printf("  tx hash: %s\n", receipt.TxHash.String())
 	fmt.Printf("  to: %s\n", signedTx.To().String())
