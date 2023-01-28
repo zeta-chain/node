@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	"math/big"
 	"time"
 )
