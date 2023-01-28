@@ -116,6 +116,22 @@ func (sm *SmokeTest) TestERC20Withdraw() {
 			panic(err)
 		}
 		fmt.Printf("USDT ERC20 bal: %d\n", bal)
+
+		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.OutboundTxParams.OutboundTxHash))
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+		for _, log := range receipt.Logs {
+			event, err := USDTERC20.ParseTransfer(*log)
+			if err != nil {
+				continue
+			}
+			fmt.Printf("  logs: from %s, to %s, value %d\n", event.From.Hex(), event.To.Hex(), event.Value)
+			if event.Value.Int64() != 100 {
+				panic("value is not correct")
+			}
+		}
 	}()
 	sm.wg.Wait()
 }

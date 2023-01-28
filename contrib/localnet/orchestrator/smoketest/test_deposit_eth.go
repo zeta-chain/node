@@ -94,7 +94,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		if err != nil {
 			panic(err)
 		}
-		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoeriliLocalNetChain().ChainId))
+		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalNetChain().ChainId))
 		if err != nil {
 			panic(err)
 		}

@@ -60,7 +60,23 @@ func (sm *SmokeTest) TestMessagePass() {
 	go func() {
 		defer sm.wg.Done()
 		fmt.Printf("Waiting for ConnectorEth.Send CCTX to be mined...\n")
-		WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.OutboundTxParams.OutboundTxHash))
+		if err != nil {
+			panic(err)
+		}
+		for _, log := range receipt.Logs {
+			event, err := sm.ConnectorEth.ParseZetaReceived(*log)
+			if err == nil {
+				fmt.Printf("Received ZetaSent event:\n")
+				fmt.Printf("  Dest Addr: %s\n", event.DestinationAddress)
+				fmt.Printf("  Zeta Value: %d\n", event.ZetaValue)
+				fmt.Printf("  src chainid: %d\n", event.SourceChainId)
+				if event.ZetaValue.Cmp(amount) != 0 {
+					panic("Zeta value mismatch")
+				}
+			}
+		}
 	}()
 	sm.wg.Wait()
 }

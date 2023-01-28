@@ -9,14 +9,14 @@ func EthChain() Chain {
 
 func GoerliChain() Chain {
 	return Chain{
-		ChainName: ChainName_goerili_testnet,
+		ChainName: ChainName_goerli_testnet,
 		ChainId:   5,
 	}
 }
 
-func GoeriliLocalNetChain() Chain {
+func GoerliLocalNetChain() Chain {
 	return Chain{
-		ChainName: ChainName_goerili_localnet,
+		ChainName: ChainName_goerli_localnet,
 		ChainId:   1337,
 	}
 }
@@ -45,20 +45,6 @@ func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_mainnet,
 		ChainId:   10101,
-	}
-}
-
-func ZetaAthensNetChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_athensnet,
-		ChainId:   7001,
-	}
-}
-
-func ZetaLocalNetChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_localnet,
-		ChainId:   101,
 	}
 }
 
@@ -101,10 +87,8 @@ func DefaultChainsList() []*Chain {
 		BscMainnetChain(),
 		EthChain(),
 		GoerliChain(),
-		GoeriliLocalNetChain(),
+		GoerliLocalNetChain(),
 		ZetaChain(),
-		ZetaAthensNetChain(),
-		ZetaLocalNetChain(),
 	}
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {

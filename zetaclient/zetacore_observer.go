@@ -388,7 +388,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 		return
 	}
 	// FIXME: remove this hack
-	if toChain.ChainName == common.ChainName_goerili_testnet {
+	if toChain.ChainName == common.ChainName_goerli_testnet {
 		gasprice = gasprice.Mul(gasprice, big.NewInt(3))
 		gasprice = gasprice.Div(gasprice, big.NewInt(2))
 	}

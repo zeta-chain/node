@@ -165,7 +165,22 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	sm.wg.Add(1)
 	go func() {
 		defer sm.wg.Done()
-		WaitCctxMinedByInTxHash(tx.Hash().Hex(), cctxClient)
+		cctx := WaitCctxMinedByInTxHash(tx.Hash().Hex(), cctxClient)
+		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.OutboundTxParams.OutboundTxHash))
+		if err != nil {
+			panic(err)
+		}
+		for _, log := range receipt.Logs {
+			event, err := sm.ConnectorEth.ParseZetaReceived(*log)
+			if err == nil {
+				fmt.Printf("    Dest Addr: %s\n", event.DestinationAddress.Hex())
+				fmt.Printf("    sender addr: %d\n", event.ZetaTxSenderAddress)
+				fmt.Printf("    Zeta Value: %d\n", event.ZetaValue)
+				if event.ZetaValue.Cmp(big.NewInt(1e17)) != 0 {
+					panic("wrong zeta value")
+				}
+			}
+		}
 	}()
 	sm.wg.Wait()
 }

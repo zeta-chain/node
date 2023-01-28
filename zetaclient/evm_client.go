@@ -565,7 +565,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.chain.ChainId,
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
-			config.ChainConfigs[common.ZetaLocalNetChain().ChainName.String()].Chain.ChainId,
+			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
 			event.Amount.String(),
 			event.Amount.String(),
 			base64.StdEncoding.EncodeToString(event.Message),
@@ -1002,12 +1002,12 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
-	case common.ChainName_goerili_testnet:
+	case common.ChainName_goerli_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.ChainName_goerili_localnet:
+	case common.ChainName_goerli_localnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.DevEthConfirmationCount
 		ob.BlockTime = config.DevEthBlockTime

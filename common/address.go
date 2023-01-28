@@ -36,7 +36,7 @@ func NewAddress(address string, chain Chain) (Address, error) {
 func IsETHChain(chain Chain) bool {
 	if chain == EthChain() || chain == BscMainnetChain() || chain == PolygonChain() ||
 		chain == BscTestnetChain() || chain == MumbaiChain() ||
-		chain == GoerliChain() || chain == GoeriliLocalNetChain() || chain == ZetaChain() {
+		chain == GoerliChain() || chain == GoerliLocalNetChain() || chain == ZetaChain() {
 		return true
 	}
 
