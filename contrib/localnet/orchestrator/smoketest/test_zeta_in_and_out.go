@@ -6,16 +6,83 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
 	"github.com/zeta-chain/zetacore/contracts/zevm"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
-	"sync"
 	"time"
 )
 
-func TestSendZetaOut(zevmClient *ethclient.Client, goerliClient *ethclient.Client, cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient) {
+func (sm *SmokeTest) TestSendZetaIn() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	// ==================== Sending ZETA to ZetaChain ===================
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
+	LoudPrintf("Step 3: Sending ZETA to ZetaChain\n")
+	tx, err := sm.ZetaEth.Approve(sm.goerliAuth, sm.ConnectorEthAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	tx, err = sm.ConnectorEth.Send(sm.goerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     amount,
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("  Logs:\n")
+	for _, log := range receipt.Logs {
+		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		if err == nil {
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
+			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
+			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+			fmt.Printf("    Block Num: %d\n", log.BlockNumber)
+		}
+	}
+
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		for {
+			time.Sleep(5 * time.Second)
+			bn, _ := sm.zevmClient.BlockNumber(context.Background())
+			bal, _ := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
+
+			if bal.Cmp(amount) == 0 {
+				fmt.Printf("Expected zeta balance; success!\n")
+				break
+			}
+		}
+	}()
+	sm.wg.Wait()
+}
+
+func (sm *SmokeTest) TestSendZetaOut() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	zevmClient := sm.zevmClient
+	cctxClient := sm.cctxClient
+
 	LoudPrintf("Step 4: Sending ZETA from ZEVM to Ethereum\n")
 	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
 	ConnectorZEVM, err := zevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
@@ -94,42 +161,11 @@ func TestSendZetaOut(zevmClient *ethclient.Client, goerliClient *ethclient.Clien
 		}
 	}
 	fmt.Printf("waiting for cctx status to change to final...\n")
-	var wg sync.WaitGroup
-	wg.Add(1)
+
+	sm.wg.Add(1)
 	go func() {
-		defer wg.Done()
-		var index string
-		for {
-			time.Sleep(5 * time.Second)
-			res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{
-				InTxHash: tx.Hash().Hex(),
-			})
-			if err != nil {
-				fmt.Printf("No CCTX found for inTxHash %s\n", tx.Hash().Hex())
-				continue
-			}
-			index = res.InTxHashToCctx.CctxIndex
-			fmt.Printf("Found CCTX for inTxHash %s: %s\n", tx.Hash().Hex(), index)
-			break
-		}
-		for {
-			time.Sleep(5 * time.Second)
-			res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{
-				Index: index,
-			})
-			if err != nil {
-				fmt.Printf("No CCTX found for index %s\n", index)
-				continue
-			}
-			if res.CrossChainTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-				fmt.Printf("Found CCTX for index %s: status %s\n", index, res.CrossChainTx.CctxStatus.Status)
-				continue
-			}
-			if res.CrossChainTx.CctxStatus.Status == types.CctxStatus_OutboundMined {
-				fmt.Printf("Found CCTX for index %s: status %s; success\n", index, res.CrossChainTx.CctxStatus.Status)
-				break
-			}
-		}
+		defer sm.wg.Done()
+		WaitCctxMinedByInTxHash(tx.Hash().Hex(), cctxClient)
 	}()
-	wg.Wait()
+	sm.wg.Wait()
 }

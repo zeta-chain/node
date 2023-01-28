@@ -6,17 +6,21 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"time"
 )
 
-func TestERC20Withdraw(goerliClient *ethclient.Client, zevmClient *ethclient.Client, cctxClient cctxtypes.QueryClient, fungibleClient fungibletypes.QueryClient) {
-	LoudPrintf("Withdraw USDT ERC20 into ZEVM\n")
+func (sm *SmokeTest) TestERC20Withdraw() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	LoudPrintf("Withdraw USDT ZRC20\n")
+	zevmClient := sm.zevmClient
+	goerliClient := sm.goerliClient
+	cctxClient := sm.cctxClient
 
 	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
 	if err != nil {
@@ -96,17 +100,22 @@ func TestERC20Withdraw(goerliClient *ethclient.Client, zevmClient *ethclient.Cli
 		}
 		fmt.Printf("  logs: from %s, to %x, value %d, gasfee %d\n", event.From.Hex(), event.To, event.Value, event.Gasfee)
 	}
-	cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), cctxClient)
-	fmt.Printf("outTx hash %s\n", cctx.OutboundTxParams.OutboundTxHash)
 
-	USDTERC20, err := erc20.NewUSDT(ethcommon.HexToAddress(USDTERC20Addr), goerliClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err = USDTERC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("USDT ERC20 bal: %d\n", bal)
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), cctxClient)
+		fmt.Printf("outTx hash %s\n", cctx.OutboundTxParams.OutboundTxHash)
 
+		USDTERC20, err := erc20.NewUSDT(ethcommon.HexToAddress(USDTERC20Addr), goerliClient)
+		if err != nil {
+			panic(err)
+		}
+		bal, err = USDTERC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("USDT ERC20 bal: %d\n", bal)
+	}()
+	sm.wg.Wait()
 }

@@ -7,16 +7,21 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"time"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
-func TestDepositEtherIntoZRC20(goerliClient *ethclient.Client, zevmClient *ethclient.Client, cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient) {
+func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	goerliClient := sm.goerliClient
+	fungibleClient := sm.fungibleClient
 	LoudPrintf("Deposit Ether into ZEVM\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
@@ -67,54 +72,46 @@ func TestDepositEtherIntoZRC20(goerliClient *ethclient.Client, zevmClient *ethcl
 	fmt.Printf("  to: %s\n", signedTx.To().String())
 	fmt.Printf("  value: %d\n", signedTx.Value())
 	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
-	time.Sleep(BLOCK)
-	cctxIndex := ""
-	for {
-		time.Sleep(5 * time.Second)
-		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: signedTx.Hash().String()})
+
+	c := make(chan any)
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+		c <- 0
+	}()
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		<-c
+		systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
 		if err != nil {
-			fmt.Printf("waiting for cctx from intxhash %s\n", signedTx.Hash().String())
-			continue
+			panic(err)
 		}
-		fmt.Printf("cctx found: %s\n", res.InTxHashToCctx.CctxIndex)
-		cctxIndex = res.InTxHashToCctx.CctxIndex
-		break
-	}
-	for {
-		time.Sleep(5 * time.Second)
-		res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})
+		fmt.Printf("system contract address: %s\n", systemContractAddr.SystemContract.SystemContract)
+		addr := ethcommon.HexToAddress(systemContractAddr.SystemContract.SystemContract)
+		systemContract, err := contracts.NewSystemContract(addr, sm.zevmClient)
 		if err != nil {
-			fmt.Printf("waiting for cctx %s: status %s\n", cctxIndex, res.CrossChainTx.CctxStatus.Status)
-			continue
+			panic(err)
 		}
-		fmt.Printf("cctx found: %s\n", res.CrossChainTx.CctxStatus)
-		if res.CrossChainTx.CctxStatus.Status == types.CctxStatus_OutboundMined {
-			fmt.Printf("cctx %s is mined\n", cctxIndex)
-			break
+		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoeriliLocalNetChain().ChainId))
+		if err != nil {
+			panic(err)
 		}
-	}
-	systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("system contract address: %s\n", systemContractAddr.SystemContract.SystemContract)
-	addr := ethcommon.HexToAddress(systemContractAddr.SystemContract.SystemContract)
-	systemContract, err := contracts.NewSystemContract(addr, zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
-	ethZRC20, err := contracts.NewZRC20(ethZRC20Addr, zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	ethZRC20Balance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("eth zrc20 balance: %s\n", ethZRC20Balance.String())
+		fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
+		ethZRC20, err := contracts.NewZRC20(ethZRC20Addr, sm.zevmClient)
+		if err != nil {
+			panic(err)
+		}
+		ethZRC20Balance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("eth zrc20 balance: %s\n", ethZRC20Balance.String())
+		if ethZRC20Balance.Cmp(value) != 0 {
+			fmt.Printf("eth zrc20 bal wanted %d, got %d\n", value, ethZRC20Balance)
+			panic("bal mismatch")
+		}
+	}()
+	sm.wg.Wait()
 }

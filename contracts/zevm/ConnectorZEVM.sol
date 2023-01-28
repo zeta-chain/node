@@ -90,4 +90,9 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
             input.zetaParams
         );
     }
+
+    function setWzetaAddress(address _wzeta) external {
+        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "only fungible module can set wzeta address");
+        wzeta = _wzeta;
+    }
 }

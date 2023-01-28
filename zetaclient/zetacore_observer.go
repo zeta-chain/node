@@ -334,11 +334,6 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	}()
 
 	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
-	//amount, ok := send.ZetaMint
-	//if !ok {
-	//	logger.Error().Msg("error converting MBurnt to big.Int")
-	//	return
-	//}
 
 	var to ethcommon.Address
 	var err error
@@ -401,15 +396,21 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	var tx *ethtypes.Transaction
 	// FIXME: there is a chance wrong type of outbound tx is signed
 	if send.InboundTxParams.SenderChain == common.ZetaChain().ChainName.String() && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		if send.InboundTxParams.CoinType == common.CoinType_Zeta {
+		if send.OutboundTxParams.CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(to, send.ZetaMint.BigInt(), send.OutboundTxParams.OutboundTxTssNonce, gasprice)
 		}
-		if send.InboundTxParams.CoinType == common.CoinType_ERC20 {
+		if send.OutboundTxParams.CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignERC20WithdrawTx(to, asset, send.ZetaMint.BigInt(), gasLimit, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
 		}
+		if send.OutboundTxParams.CoinType == common.CoinType_Zeta {
+			srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChain].Chain.ChainId
+			logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(srcChainID), to, send.ZetaMint.BigInt(), gasLimit, message, sendhash, send.OutboundTxParams.OutboundTxTssNonce, gasprice)
+		}
+
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChain].Chain.ChainId
 		logger.Info().Msgf("SignRevertTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChain, toChain, send.OutboundTxParams.OutboundTxTssNonce, gasprice)

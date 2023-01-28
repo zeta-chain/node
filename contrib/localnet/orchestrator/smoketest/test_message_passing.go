@@ -1,0 +1,66 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
+	"math/big"
+	"time"
+)
+
+func (sm *SmokeTest) TestMessagePass() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	// ==================== Interacting with contracts ====================
+	time.Sleep(10 * time.Second)
+	LoudPrintf("Step 2: Goerli->Goerli Message Passing (Sending ZETA only)\n")
+	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
+	auth := sm.goerliAuth
+	tx, err := sm.ZetaEth.Approve(auth, sm.ConnectorEthAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	fmt.Printf("Calling ConnectorEth.Send\n")
+	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     amount,
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
+	time.Sleep(BLOCK)
+	receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("  Logs:\n")
+	for _, log := range receipt.Logs {
+		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		if err == nil {
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
+			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
+			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+		}
+	}
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		fmt.Printf("Waiting for ConnectorEth.Send CCTX to be mined...\n")
+		WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+	}()
+	sm.wg.Wait()
+}
