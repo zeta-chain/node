@@ -13,7 +13,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/address_book.seed
     export TSSPATH=~/.tss
-    exec zetaclientd -val val -log-console -enable-chains goerili_localnet \
+    exec zetaclientd -val val -log-console -enable-chains goerli_localnet \
       -pre-params ~/preParams.json  -zetacore-url zetacore0 \
       -chain-id athens_101-1 -dev
 else
@@ -22,7 +22,7 @@ else
   SEED=$(curl --retry 10 --retry-delay 5 --retry-connrefused  -s zetaclient0:8123/p2p)
 
   export TSSPATH=~/.tss
-  exec zetaclientd -val val -log-console -enable-chains goerili_localnet  \
+  exec zetaclientd -val val -log-console -enable-chains goerli_localnet  \
     -peer /dns/zetaclient0/tcp/6668/p2p/$SEED \
     -pre-params ~/preParams.json -zetacore-url $node \
     -chain-id athens_101-1 -dev

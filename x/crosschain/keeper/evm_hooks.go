@@ -47,11 +47,15 @@ func (k Keeper) PostTxProcessing(
 	for _, log := range receipt.Logs {
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err == nil {
-			return k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, "")
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
+				return err
+			}
 		}
 		eZeta, err := ParseZetaSentEvent(*log)
 		if err == nil {
-			return k.ProcessZetaSentEvent(ctx, eZeta, target, "")
+			if err := k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
