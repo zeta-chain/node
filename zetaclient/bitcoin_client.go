@@ -63,7 +63,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	if !chain.IsBitcoinChain() {
-		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain)
+		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}
 	ob.logger = log.With().Str("chain", chain.String()).Logger()
@@ -83,17 +83,22 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 
 	connCfg := &rpcclient.ConnConfig{
-		Host:         ob.endpoint,
-		User:         "user",
-		Pass:         "pass",
+		Host:         "localhost:18443",
+		User:         "smoketest",
+		Pass:         "123",
 		HTTPPostMode: true,
 		DisableTLS:   true,
+		Params:       "testnet3",
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating rpc client: %s", err)
 	}
 	ob.rpcClient = client
+	err = client.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+	}
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return nil, fmt.Errorf("error getting block count: %s", err)

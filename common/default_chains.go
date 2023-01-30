@@ -62,6 +62,13 @@ func BtcTestNetChain() Chain {
 	}
 }
 
+func BtcRegtestChain() Chain {
+	return Chain{
+		ChainName: ChainName_btc_regtest,
+		ChainId:   18444,
+	}
+}
+
 func PolygonChain() Chain {
 	return Chain{
 		ChainName: ChainName_polygon_mainnet,

@@ -34,7 +34,7 @@ func (s *SignerSuite) SetUpTest(c *C) {
 
 	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
 	c.Logf("TSS BTCAddress %s", tss.BTCAddress())
-	c.Logf("TSS BTCSegWitAddress %s", tss.BTCSegWitAddress())
+	c.Logf("TSS BTCSegWitAddress %s", tss.BTCAddressWitnessPubkeyHash())
 
 	addr := tss.BTCAddressPubkey()
 	if addr != nil {

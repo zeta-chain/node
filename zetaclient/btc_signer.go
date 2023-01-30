@@ -187,7 +187,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.OutboundTxParams.OutboundTxTssNonce, send.OutboundTxParams.ReceiverChain)
 		return
 	}
-	logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.InboundTxParams.SenderChain, btcClient.chain, send.OutboundTxParams.OutboundTxTssNonce)
+	logger.Info().Msgf("Key-sign success: %s => %s, nonce %d", send.InboundTxParams.SenderChain, btcClient.chain.ChainName, send.OutboundTxParams.OutboundTxTssNonce)
 	// FIXME: add prometheus metrics
 	signers, err := zetaBridge.GetObserverList(btcClient.chain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 	if err != nil {
@@ -195,7 +195,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	if tx != nil {
 		outTxHash := tx.TxHash().String()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcClient.chain, send.OutboundTxParams.OutboundTxTssNonce, outTxHash, myid)
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", btcClient.chain.ChainName, send.OutboundTxParams.OutboundTxTssNonce, outTxHash, myid)
 		if len(signers) == 0 || myid == signers[send.OutboundTxParams.Broadcaster] || myid == signers[int(send.OutboundTxParams.Broadcaster+1)%len(signers)] {
 			// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
 			for i := 0; i < 5; i++ {
@@ -203,13 +203,13 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 				time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond) //random delay to avoid sychronized broadcast
 				err := signer.Broadcast(tx)
 				if err != nil {
-					logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, btcClient.chain, send.OutboundTxParams.OutboundTxTssNonce, i)
+					logger.Warn().Err(err).Msgf("broadcasting tx %s to chain %s: nonce %d, retry %d", outTxHash, btcClient.chain.ChainName, send.OutboundTxParams.OutboundTxTssNonce, i)
 					continue
 				}
 				logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.OutboundTxParams.OutboundTxTssNonce, btcClient.chain.String(), outTxHash)
 				zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(btcClient.chain.ChainId, send.OutboundTxParams.OutboundTxTssNonce, outTxHash)
 				if err != nil {
-					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutboundTxParams.OutboundTxTssNonce, btcClient.chain, outTxHash)
+					logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.OutboundTxParams.OutboundTxTssNonce, btcClient.chain.ChainName, outTxHash)
 				}
 				logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 				break // successful broadcast; no need to retry

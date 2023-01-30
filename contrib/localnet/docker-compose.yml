@@ -77,6 +77,20 @@ services:
         ipv4_address: 172.20.0.100
     entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
+  bitcoin:
+    image: ruimarinho/bitcoin-core
+    container_name: bitcoin
+    hostname: bitcoin
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.101
+    command:
+      -printtoconsole
+      -regtest=1
+      -rpcallowip=172.20.0.0/16
+      -rpcbind=0.0.0.0
+      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
+
   orchestrator:
     image: orchestrator:latest
     container_name: orchestrator

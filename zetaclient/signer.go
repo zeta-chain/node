@@ -4,7 +4,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -46,7 +46,7 @@ func (s TestSigner) Pubkey() []byte {
 // return 33B compressed pubkey
 func (s TestSigner) PubKeyCompressedBytes() []byte {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +67,7 @@ func (s TestSigner) BTCAddress() string {
 
 func (s TestSigner) BTCAddressPubkey() *btcutil.AddressPubKey {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
 		fmt.Printf("error parsing pubkey: %v", err)
 		return nil
@@ -82,7 +82,7 @@ func (s TestSigner) BTCAddressPubkey() *btcutil.AddressPubKey {
 
 func (s TestSigner) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
 		fmt.Printf("error parsing pubkey: %v", err)
 		return nil

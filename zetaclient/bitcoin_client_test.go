@@ -1,9 +1,15 @@
+//go:build btc_regtest
+// +build btc_regtest
+
 package zetaclient
 
 import (
 	"encoding/hex"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
@@ -30,14 +36,49 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
+	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
+	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
+	skBytes, err := hex.DecodeString(skHex)
+	suite.Require().NoError(err)
+	suite.T().Logf("skBytes: %d", len(skBytes))
+	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.TestNet3Params, true)
+	suite.Require().NoError(err)
 
-	//suite.BitcoinChainClient.Start()
+	btc := client.rpcClient
+
+	_, err = btc.CreateWallet("test")
+	suite.Require().NoError(err)
+	//addr, err := btc.GetNewAddress("test")
+	//suite.Require().NoError(err)
+	//suite.T().Logf("deployer address: %s", addr)
+	err = btc.ImportPrivKey(privkeyWIF)
+	suite.Require().NoError(err)
+	addr, err := btc.GetNewAddress("*")
+
+	btc.GenerateToAddress(101, addr, nil)
+	suite.Require().NoError(err)
+
+	bal, err := btc.GetBalance("*")
+	suite.Require().NoError(err)
+	suite.T().Logf("balance: %f", bal.ToBTC())
+
+	utxo, err := btc.ListUnspent()
+	suite.Require().NoError(err)
+	suite.T().Logf("utxo: %d", len(utxo))
+	for _, u := range utxo {
+		suite.T().Logf("utxo: %s %f", u.Address, u.Amount)
+	}
+
 }
 
 func (suite *BitcoinClientTestSuite) TearDownSuite() {
+
+}
+
+func (suite *BitcoinClientTestSuite) Test0() {
 
 }
 
