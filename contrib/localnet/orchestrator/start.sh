@@ -9,11 +9,11 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 echo "waiting for 6s for the transaction to be mined"
 sleep 6
 echo "the new balance of the deployer addrees:"
-curl http://eth:8545 \
+curl -sS http://eth:8545 \
   -X POST \
   -H "Content-Type: application/json" \
   --data '{"method":"eth_getBalance","params":["0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "latest"],"id":1,"jsonrpc":"2.0"}'
-curl http://eth:8545 \
+curl -sS http://eth:8545 \
   -X POST \
   -H "Content-Type: application/json" \
   --data '{"method":"eth_getBalance","params":["0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", "latest"],"id":1,"jsonrpc":"2.0"}'

@@ -1,15 +1,15 @@
 package keeper
 
 import (
+	"github.com/pkg/errors"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/pkg/errors"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error {
@@ -30,11 +30,16 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 		}
 	} else {
 		foreignCoinList := k.GetAllForeignCoinsForChain(ctx, senderChain)
+		found := false
 		for _, foreignCoin := range foreignCoinList {
 			if foreignCoin.Erc20ContractAddress == asset && foreignCoin.ForeignChain == senderChain {
 				coin = foreignCoin
+				found = true
 				break
 			}
+		}
+		if !found {
+			return nil, false, types.ErrForeignCoinNotFound
 		}
 	}
 	Zrc20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
@@ -60,4 +65,5 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 		tx = txWithWithdraw
 	}
 	return tx, withdrawMessage, nil
+
 }

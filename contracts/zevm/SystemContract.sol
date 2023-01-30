@@ -23,12 +23,14 @@ contract SystemContract is SystemContractErrors {
     address public wZetaContractAddress;
     address public uniswapv2FactoryAddress;
     address public uniswapv2Router02Address;
+    address public zetaConnectorZEVMAddress;
 
     event SystemContractDeployed();
     event SetGasPrice(uint256, uint256);
     event SetGasCoin(uint256, address);
     event SetGasZetaPool(uint256, address);
     event SetWZeta(address);
+    event SetConnectorZEVM(address);
 
     constructor(
         address wzeta_,
@@ -111,5 +113,11 @@ contract SystemContract is SystemContractErrors {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         wZetaContractAddress = addr;
         emit SetWZeta(wZetaContractAddress);
+    }
+
+    function setConnectorZEVMAddress(address addr) external {
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
+        zetaConnectorZEVMAddress = addr;
+        emit SetConnectorZEVM(zetaConnectorZEVMAddress);
     }
 }

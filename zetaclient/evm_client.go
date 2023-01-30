@@ -211,12 +211,12 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
 	ob.mu.Unlock()
 	found := found1 && found2
-	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
-	logger := ob.logger.With().Str("sendID", sendID).Logger()
 	if !found {
 		return false, false, nil
 	}
-	if cointype == common.CoinType_Gas {
+	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
+	logger := ob.logger.With().Str("sendID", sendID).Logger()
+	if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
@@ -242,7 +242,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
 		}
-	} else if cointype == common.CoinType_Zeta {
+	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
@@ -364,7 +364,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
 	logger := ob.logger
-	ticker := time.NewTicker(5 * time.Second) //FIXME: config this in chainconfig
+	ticker := time.NewTicker(3 * time.Second) // FIXME: config this
 	for {
 		select {
 		case <-ticker.C:
@@ -488,7 +488,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.sampleLogger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Query evm chain for zeta sent logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
@@ -565,7 +565,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.chain.ChainId,
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
-			config.ChainConfigs[common.ZetaLocalNetChain().ChainName.String()].Chain.ChainId,
+			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
 			event.Amount.String(),
 			event.Amount.String(),
 			base64.StdEncoding.EncodeToString(event.Message),
@@ -625,7 +625,7 @@ func (ob *EVMChainClient) observeInTX() error {
 							continue
 						}
 					}
-					zetaHash, err := ob.reportInboundCctx(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+					zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 					if err != nil {
 						ob.logger.Error().Err(err).Msg("error posting to zeta core")
 						continue
@@ -660,7 +660,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					from := *tx.From
 					value := tx.Value.ToInt()
 
-					zetaHash, err := ob.reportInboundCctx(tx.Hash, value, receipt, from, tx.Input)
+					zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
 					if err != nil {
 						ob.logger.Error().Err(err).Msg("error posting to zeta core")
 						continue
@@ -683,7 +683,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	return nil
 }
 
-func (ob *EVMChainClient) reportInboundCctx(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) (string, error) {
+func (ob *EVMChainClient) ReportTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) (string, error) {
 	ob.logger.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
 	ob.logger.Info().Msgf("TSS inTx value: %s", value.String())
 	ob.logger.Info().Msgf("TSS inTx from: %s", from.Hex())
@@ -1002,15 +1002,15 @@ func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 		ob.confCount = config.PolygonConfirmationCount
 		ob.BlockTime = config.PolygonBlockTime
 
-	case common.ChainName_goerili_testnet:
+	case common.ChainName_goerli_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
 		ob.confCount = config.EthConfirmationCount
 		ob.BlockTime = config.EthBlockTime
 
-	case common.ChainName_goerili_localnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
+	case common.ChainName_goerli_localnet:
 		ob.confCount = config.DevEthConfirmationCount
 		ob.BlockTime = config.DevEthBlockTime
+		ob.ticker = time.NewTicker(time.Duration(ob.BlockTime) * time.Second)
 
 	case common.ChainName_bsc_testnet:
 		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)

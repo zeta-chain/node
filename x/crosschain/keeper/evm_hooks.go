@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -44,21 +45,16 @@ func (k Keeper) PostTxProcessing(
 		target = *msg.To()
 	}
 	for _, log := range receipt.Logs {
-		var eZeta *contracts.ZETABridgeZetaSent
-		var eZRC20 *contracts.ZRC20Withdrawal
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
-		if err != nil {
-			eZeta, err = ParseZetaSentEvent(*log)
-			if err == nil {
-				if err = k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
-					continue
-				}
-			} else {
-				fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
+		if err == nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
+				return err
 			}
-		} else {
-			if err = k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
-				continue
+		}
+		eZeta, err := ParseZetaSentEvent(*log)
+		if err == nil {
+			if err := k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
+				return err
 			}
 		}
 	}
@@ -121,23 +117,24 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
-func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZETABridgeZetaSent, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {
 	fmt.Printf("#############################\n")
-	fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.To), event.Value, event.ToChainID)
+	fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
 	fmt.Printf("#############################\n")
 
-	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.Value)))); err != nil {
+	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
+		fmt.Printf("burn coins failed: %s\n", err.Error())
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 	}
-	receiverChainID := event.ToChainID
+	receiverChainID := event.DestinationChainId
 	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, receiverChainID.Int64())
 	if !found {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
-	toAddr := "0x" + hex.EncodeToString(event.To)
+	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.ZetaValueAndGas.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
@@ -200,33 +197,16 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, er
 }
 
 // FIXME: add check for event emitting contracts
-func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZETABridgeZetaSent, error) {
-	zetaBridgeABI, err := contracts.ZETABridgeMetaData.GetAbi()
+// TODO: use the abigen'd filter instead of manual parsing for other events above
+func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZetaConnectorZEVMZetaSent, error) {
+	zetaConnectorZEVM, err := contracts.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
 	}
-
-	event := new(contracts.ZETABridgeZetaSent)
-	eventName := "ZetaSent"
-	if log.Topics[0] != zetaBridgeABI.Events[eventName].ID {
-		return nil, fmt.Errorf("event signature mismatch")
-	}
-	if len(log.Data) > 0 {
-		if err := zetaBridgeABI.UnpackIntoInterface(event, eventName, log.Data); err != nil {
-			return nil, err
-		}
-	}
-	var indexed abi.Arguments
-	for _, arg := range zetaBridgeABI.Events[eventName].Inputs {
-		if arg.Indexed {
-			indexed = append(indexed, arg)
-		}
-	}
-	err = abi.ParseTopics(event, indexed, log.Topics[1:])
+	event, err := zetaConnectorZEVM.ParseZetaSent(log)
 	if err != nil {
 		return nil, err
 	}
-	event.Raw = log
 
 	return event, nil
 }
