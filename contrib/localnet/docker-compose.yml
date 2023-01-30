@@ -10,6 +10,7 @@ networks:
 services:
   zetacore0:
     image: zetanode:latest
+    container_name: zetacore0
     build:
       context: ../../.
       dockerfile: Dockerfile
@@ -26,6 +27,7 @@ services:
 
   zetacore1:
     image: zetanode:latest
+    container_name: zetacore1
     build:
       context: ../../.
       dockerfile: Dockerfile
@@ -38,6 +40,7 @@ services:
 
   zetaclient0:
     image: zetanode:latest
+    container_name: zetaclient0
     build:
       context: ../../.
       dockerfile: Dockerfile
@@ -51,6 +54,7 @@ services:
 
   zetaclient1:
     image: zetanode:latest
+    container_name: zetaclient1
     build:
       context: ../../.
       dockerfile: Dockerfile
@@ -64,6 +68,7 @@ services:
 
   eth:
     image: ethereum/client-go:v1.10.26
+    container_name: eth
     hostname: eth
     ports:
       - "8545:8545"
@@ -74,6 +79,7 @@ services:
 
   orchestrator:
     image: orchestrator:latest
+    container_name: orchestrator
     build:
       context: ../../.
       dockerfile: contrib/localnet/orchestrator/Dockerfile

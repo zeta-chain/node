@@ -139,14 +139,19 @@ func main() {
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
+	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
+	fmt.Printf("##   Ether on Ethereum private net\n")
+	fmt.Printf("##   ZETA on ZetaChain EVM\n")
+	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
-	// temporarily to reduce dev/test cycle turnaround time
+	// temporarily to reduce dev/test cycle turnaround time;
+	// enable them when ready for review.
 	smokeTest.TestERC20Deposit()
 	smokeTest.TestERC20Withdraw()
 	smokeTest.TestSendZetaOut()
 	smokeTest.TestMessagePassing()
 
-	// add your dev test here
+	// add your dev test here; remove after you are done
 	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
