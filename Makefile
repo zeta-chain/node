@@ -59,10 +59,6 @@ install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
-install-btc_consolidator: go.sum
-		@echo "--> Installing btc_consolidator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/btc_consolidator
-
 # running with race detector on will be slow
 install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
@@ -76,10 +72,9 @@ install-indexer: go.sum
 		@echo "--> Installing indexer"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
 
-install-mockmpi:
-	@echo "--> Installing MockMPI"
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/mockmpi
-
+install-smoketest: go.sum
+		@echo "--> Installing orchestrator"
+		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
@@ -141,3 +136,24 @@ proto-check-breaking:
 	# we should turn this back on after our first release
 	# $(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking
+
+###############################################################################
+###                                Docker Images                             ###
+###############################################################################
+zetanode:
+	@echo "Building zetanode"
+	@docker build -t zetanode -f ./Dockerfile .
+.PHONY: zetanode
+
+smoketest:
+	@echo "--> Building smoketest image"
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
+.PHONY: smoketest
+
+start-smoketest:
+	@echo "--> Starting smoketest"
+	cd contrib/localnet/ && $(DOCKER) compose up -d
+
+stop-smoketest:
+	@echo "--> Stopping smoketest"
+	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans

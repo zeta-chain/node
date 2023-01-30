@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -10,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"strconv"
 )
 
 var _ = strconv.Itoa(0)
@@ -77,25 +78,32 @@ func CmdShowSend() *cobra.Command {
 }
 
 // Transaction CLI /////////////////////////
-//zetacored tx zetacore cctx-voter 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 0x96B05C238b99768F349135de0653b687f9c13fEE 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 1000000000000000000 0 message hash 100 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
+//zetacored tx zetacore cctx-voter 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 1000000000000000000 0 message hash 100 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChain] [txOrigin] [receiver] [receiverChain] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType]",
+		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := (args[0])
-			argsSenderChain := (args[1])
+			argsSenderChain, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
 			argsTxOrigin := (args[2])
 			argsReceiver := (args[3])
-			argsReceiverChain := (args[4])
+			argsReceiverChain, err := strconv.Atoi(args[4])
+			if err != nil {
+				return err
+			}
 			argsMBurnt := (args[5])
-			argsMMint := (args[6])
+			argsMMint := (args[65])
 			argsMessage := (args[7])
 			argsInTxHash := (args[8])
 			argsInBlockHeight, err := strconv.ParseInt(args[9], 10, 64)
 			argsCoinType := common.CoinType(common.CoinType_value[args[10]])
+			argsAsset := args[11]
 			if err != nil {
 				return err
 			}
@@ -104,7 +112,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), (argsSenderChain), (argsTxOrigin), (argsReceiver), (argsReceiverChain), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType)
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -138,7 +146,10 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 			} else {
 				return fmt.Errorf("wrong status")
 			}
-			chain := args[5]
+			chain, err := strconv.Atoi(args[5])
+			if err != nil {
+				return err
+			}
 			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
 			if err != nil {
 				return err
@@ -149,7 +160,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), (argsSendHash), (argsOutTxHash), uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, chain, uint64(outTxNonce), argsCoinType)
+			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), argsSendHash, argsOutTxHash, uint64(argsOutBlockHeight), sdk.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

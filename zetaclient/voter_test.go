@@ -85,7 +85,7 @@ func (s *VoterSuite) TestSendVoter(c *C) {
 	b1 := s.bridge1
 	b2 := s.bridge2
 	metaHash, err := b1.PostSend("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
-		"0xtxhash", 123123)
+		"0xtxhash", 123123, "0xtoken")
 
 	c.Assert(err, IsNil)
 	log.Info().Msgf("PostSend metaHash %s", metaHash)
@@ -95,7 +95,7 @@ func (s *VoterSuite) TestSendVoter(c *C) {
 	<-timer1.C
 
 	metaHash, err = b2.PostSend("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
-		"0xtxhash", 123123)
+		"0xtxhash", 123123, "0xtoken")
 	c.Assert(err, IsNil)
 	log.Info().Msgf("Second PostSend metaHash %s", metaHash)
 

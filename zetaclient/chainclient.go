@@ -2,7 +2,7 @@ package zetaclient
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 )
 
@@ -14,8 +14,8 @@ type ChainClient interface {
 	Start()
 	Stop()
 	GetBaseGasPrice() *big.Int
+	IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error)
 	PostNonceIfNotRecorded() error
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
-	IsSendOutTxProcessed(send *cctxtypes.CrossChainTx) (bool, bool, error)
 }

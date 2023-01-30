@@ -319,7 +319,7 @@ func New(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), ethermint.ProtoAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), nil,
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -341,10 +341,18 @@ func New(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
+	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaObserverModuleTypes.StoreKey],
+		keys[zetaObserverModuleTypes.MemStoreKey],
+		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+		&stakingKeeper,
+	)
+
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
 	)
 
 	// Create Ethermint keepers
@@ -357,6 +365,29 @@ func New(
 		app.AccountKeeper, app.BankKeeper, stakingKeeper,
 		&app.FeeMarketKeeper,
 		tracer,
+	)
+
+	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+		appCodec,
+		keys[fungibleModuleTypes.StoreKey],
+		keys[fungibleModuleTypes.MemStoreKey],
+		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		app.AccountKeeper,
+		*app.EvmKeeper,
+		app.BankKeeper,
+		app.ZetaObserverKeeper,
+	)
+
+	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
+		appCodec,
+		keys[zetaCoreModuleTypes.StoreKey],
+		keys[zetaCoreModuleTypes.MemStoreKey],
+		&stakingKeeper,
+		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.ZetaObserverKeeper,
+		app.FungibleKeeper,
 	)
 
 	// Create IBC Keeper
@@ -413,37 +444,6 @@ func New(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
 
-	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
-		appCodec,
-		keys[fungibleModuleTypes.StoreKey],
-		keys[fungibleModuleTypes.MemStoreKey],
-		app.GetSubspace(fungibleModuleTypes.ModuleName),
-		app.AccountKeeper,
-		*app.EvmKeeper,
-		app.BankKeeper,
-		//&app.ZetaCoreKeeper,
-	)
-
-	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaObserverModuleTypes.StoreKey],
-		keys[zetaObserverModuleTypes.MemStoreKey],
-		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
-	)
-
-	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
-		appCodec,
-		keys[zetaCoreModuleTypes.StoreKey],
-		keys[zetaCoreModuleTypes.MemStoreKey],
-		app.StakingKeeper,
-		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.ZetaObserverKeeper,
-		app.FungibleKeeper,
-	)
-
-	zetacoreModule := zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper)
 	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
 	/****  Module Options ****/
@@ -477,7 +477,7 @@ func New(
 		transferModule,
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
-		zetacoreModule,
+		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper),
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 	)
@@ -586,7 +586,7 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-
+	SetupHandlers(app)
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
@@ -654,7 +654,7 @@ func (app *App) LegacyAmino() *codec.LegacyAmino {
 	return app.cdc
 }
 
-// AppCodec returns Gaia's app codec.
+// AppCodec returns Zeta app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.

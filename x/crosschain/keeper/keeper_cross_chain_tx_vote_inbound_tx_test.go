@@ -39,23 +39,23 @@ import (
 //	cctx[0].ZetaBurnt = sdk.NewUintFromString("8000000000000000000")
 //	keeper.SetGasPrice(ctx, types.GasPrice{
 //		Creator:     cctx[0].Creator,
-//		Index:       cctx[0].OutBoundTxParams.ReceiverChain,
-//		Chain:       cctx[0].OutBoundTxParams.ReceiverChain,
+//		Index:       cctx[0].OutboundTxParams.ReceiverChain,
+//		Chain:       cctx[0].OutboundTxParams.ReceiverChain,
 //		Signers:     []string{cctx[0].Creator},
 //		BlockNums:   nil,
 //		Prices:      []uint64{20000000000, 20000000000, 20000000000, 20000000000},
 //		MedianIndex: 0,
 //	})
 //	//keeper.SetZetaConversionRate(ctx, types.ZetaConversionRate{
-//	//	Index:               cctx[0].OutBoundTxParams.ReceiverChain,
-//	//	Chain:               cctx[0].OutBoundTxParams.ReceiverChain,
+//	//	Index:               cctx[0].OutboundTxParams.ReceiverChain,
+//	//	Chain:               cctx[0].OutboundTxParams.ReceiverChain,
 //	//	Signers:             []string{cctx[0].Creator},
 //	//	BlockNums:           nil,
 //	//	ZetaConversionRates: []string{"1000000000000000000", "1000000000000000000", "1000000000000000000", "1000000000000000000"},
 //	//	NativeTokenSymbol:   "",
 //	//	MedianIndex:         0,
 //	//})
-//	err := keeper.UpdatePrices(ctx, cctx[0].OutBoundTxParams.ReceiverChain, &cctx[0])
+//	err := keeper.UpdatePrices(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
 //	assert.NoError(t, err)
 //	fmt.Println(cctx[0].String())
 //}
@@ -91,7 +91,7 @@ func TestStatus_StatusTransition(t *testing.T) {
 			Msg:          "Got super majority and finalized Inbound",
 			NonErrStatus: types.CctxStatus_OutboundMined,
 			ErrStatus:    types.CctxStatus_Aborted,
-			IsErr:        true,
+			IsErr:        false,
 		},
 	}
 	_, ctx := setupKeeper(t)

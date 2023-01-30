@@ -30,7 +30,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	client, err := NewBitcoinClient(common.BTCTestnetChain, nil, tss, "", nil)
+	client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 

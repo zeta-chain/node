@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"math/big"
 	"os"
 	"sort"
@@ -15,7 +15,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
@@ -51,7 +50,7 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 6
+	minConfirmations = 1
 	firstBlock       = 2406680
 	chunkSize        = 500
 )
@@ -78,10 +77,10 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 	ob.pendingUtxos = db
-	ob.endpoint = config.Chains[chain.String()].Endpoint
+	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
 
 	// initialize the Client
-	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
+	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
@@ -100,7 +99,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("error getting block count: %s", err)
 	}
 
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, bn)
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
 
 	envvar := ob.chain.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
@@ -127,7 +126,7 @@ func (ob *BitcoinChainClient) Start() {
 }
 
 func (ob *BitcoinChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
+	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	//
 	//ob.logger.Info().Msg("closing ob.pendingUtxos")
@@ -136,7 +135,7 @@ func (ob *BitcoinChainClient) Stop() {
 	//	ob.logger.Error().Err(err).Msg("error closing pendingUtxos")
 	//}
 	//
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
+	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
 func (ob *BitcoinChainClient) SetLastBlockHeight(block uint64) {
@@ -202,10 +201,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			message := hex.EncodeToString(inTx.MemoBytes)
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
-				ob.chain.String(),
+				ob.chain.ChainId,
 				inTx.FromAddress,
 				inTx.FromAddress,
-				"ZETA",
+				common.ZetaChain().ChainId,
 				amountInt.String(),
 				amountInt.String(),
 				message,
@@ -214,6 +213,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				0,
 				common.CoinType_Gas,
 				PostSendEVMGasLimit,
+				"",
 			)
 			if err != nil {
 				ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -229,11 +229,9 @@ func (ob *BitcoinChainClient) observeInTx() error {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(send *cctxtypes.CrossChainTx) (bool, bool, error) {
-	sendHash := send.Index
-	nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
-	chain := ob.chain.String()
-	outTxID := fmt.Sprintf("%s-%d", chain, nonce)
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
+	chain := ob.chain.ChainId
+	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
 	res, found := ob.submittedTx[outTxID]
 	if !found {
 		return false, false, nil
@@ -248,7 +246,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(send *cctxtypes.CrossChainTx)
 			uint64(res.BlockIndex),
 			amountInSat,
 			common.ReceiveStatus_Success,
-			ob.chain.String(),
+			ob.chain,
 			int(nonce),
 			common.CoinType_Gas,
 		)
@@ -516,7 +514,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				continue
 			}
 			for _, tracker := range trackers {
-				outTxID := fmt.Sprintf("%s-%s", tracker.Chain, tracker.Nonce)
+				outTxID := fmt.Sprintf("%d-%d", tracker.ChainId, tracker.Nonce)
 				for _, txHash := range tracker.HashList {
 					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
 					if err != nil {
