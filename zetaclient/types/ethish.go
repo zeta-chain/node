@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/hex"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -19,6 +18,7 @@ type ChainETHish struct {
 	Topics                      [][]ethcommon.Hash
 	BlockTime                   uint64
 	Endpoint                    string
+	OutTxObservePeriod          uint64
 }
 
 func BytesToEthHex(b []byte) string {

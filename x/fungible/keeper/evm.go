@@ -254,6 +254,37 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	return contractAddr, nil
 }
 
+func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
+	abi, err := contracts.ZetaConnectorZEVMMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZetaConnectorZEVMMetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"", // function--empty string for constructor
+		wzeta,
+	)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZetaConnectorZEVM constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.ConnectorZEVMContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.ConnectorZEVMContract.Bin)], contracts.ConnectorZEVMContract.Bin)
+	copy(data[len(contracts.ConnectorZEVMContract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy WZETA contract")
+	}
+
+	return contractAddr, nil
+}
+
 // Depoisit ZRC4 tokens into to account;
 // Callable only by the fungible module account
 func (k Keeper) DepositZRC20(

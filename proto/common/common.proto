@@ -33,13 +33,14 @@ enum CoinType {
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
   empty = 0;
+
   eth_mainnet = 1;
   zeta_mainnet = 2;
   btc_mainnet = 3;
   polygon_mainnet = 4;
   bsc_mainnet = 5 ;
 //  Testnet
-  goerili_testnet = 6;
+  goerli_testnet = 6;
   mumbai_testnet = 7;
   ganache_testnet = 8;
   baobab_testnet = 9;
@@ -47,10 +48,10 @@ enum ChainName {
   zeta_testnet = 11;
   btc_testnet = 12 ;
 //  LocalNet
-  zeta_localnet=13;
-  goerili_localnet=14;
+//  zeta_localnet = 13;
+  goerli_localnet = 14;
 // Athens
-  zeta_athensnet=15;
+//  zeta_athensnet=15;
 }
 
 message Chain {
