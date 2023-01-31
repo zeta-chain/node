@@ -115,14 +115,22 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 // setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
+// FIXME: use chainid instead of chain name; add cointype and use proper gas limit based on cointype/chain
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, c)
-	transferGasLimit := big.NewInt(21_000)
 	chainName := common.ParseStringToObserverChain(c)
 	chain, found := k.zetaobserverKeeper.GetChainFromChainName(ctx, chainName)
 	if !found {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
+
+	transferGasLimit := big.NewInt(21_000)
+	if chain.IsEVMChain() {
+		transferGasLimit = big.NewInt(21_000)
+	} else if chain.IsBitcoinChain() {
+		transferGasLimit = big.NewInt(100) // 100B for a typical tx
+	}
+
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainName.String(), common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")

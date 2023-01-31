@@ -173,10 +173,12 @@ func main() {
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time;
 	// enable them when ready for review.
-	smokeTest.TestERC20Deposit()
-	smokeTest.TestERC20Withdraw()
-	smokeTest.TestSendZetaOut()
-	smokeTest.TestMessagePassing()
+	smokeTest.TestBitcoinWithdraw()
+
+	//smokeTest.TestERC20Deposit()
+	//smokeTest.TestERC20Withdraw()
+	//smokeTest.TestSendZetaOut()
+	//smokeTest.TestMessagePassing()
 
 	// add your dev test here; remove after you are done
 	smokeTest.TestMyTest()
