@@ -5,11 +5,8 @@ package zetaclient
 
 import (
 	"encoding/hex"
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
@@ -43,20 +40,16 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	skBytes, err := hex.DecodeString(skHex)
 	suite.Require().NoError(err)
 	suite.T().Logf("skBytes: %d", len(skBytes))
-	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.TestNet3Params, true)
-	suite.Require().NoError(err)
 
 	btc := client.rpcClient
 
-	_, err = btc.CreateWallet("test")
+	_, err = btc.CreateWallet("smoketest")
 	suite.Require().NoError(err)
-	//addr, err := btc.GetNewAddress("test")
+	addr, err := btc.GetNewAddress("test")
+	suite.Require().NoError(err)
+	suite.T().Logf("deployer address: %s", addr)
+	//err = btc.ImportPrivKey(privkeyWIF)
 	//suite.Require().NoError(err)
-	//suite.T().Logf("deployer address: %s", addr)
-	err = btc.ImportPrivKey(privkeyWIF)
-	suite.Require().NoError(err)
-	addr, err := btc.GetNewAddress("*")
 
 	btc.GenerateToAddress(101, addr, nil)
 	suite.Require().NoError(err)

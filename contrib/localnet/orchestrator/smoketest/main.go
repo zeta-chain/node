@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
@@ -39,6 +40,7 @@ type SmokeTest struct {
 	zevmClient       *ethclient.Client
 	goerliClient     *ethclient.Client
 	cctxClient       types.QueryClient
+	btcRpcClient     *rpcclient.Client
 	fungibleClient   fungibletypes.QueryClient
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
@@ -60,7 +62,8 @@ type SmokeTest struct {
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
-	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts) *SmokeTest {
+	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
+	btcRpcClient *rpcclient.Client) *SmokeTest {
 	return &SmokeTest{
 		zevmClient:     zevmClient,
 		goerliClient:   goerliClient,
@@ -69,6 +72,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		wg:             sync.WaitGroup{},
 		goerliAuth:     goerliAuth,
 		zevmAuth:       zevmAuth,
+		btcRpcClient:   btcRpcClient,
 	}
 }
 
@@ -82,6 +86,20 @@ func main() {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	connCfg := &rpcclient.ConnConfig{
+		Host:         "bitcoin:18443",
+		User:         "smoketest",
+		Pass:         "123",
+		HTTPPostMode: true,
+		DisableTLS:   true,
+		Params:       "testnet3",
+	}
+	btcRpcClient, err := rpcclient.New(connCfg, nil)
+	if err != nil {
+		panic(err)
+	}
+
 	goerliClient, err := ethclient.Dial("http://eth:8545")
 	if err != nil {
 		panic(err)
@@ -131,7 +149,7 @@ func main() {
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRpcClient)
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()

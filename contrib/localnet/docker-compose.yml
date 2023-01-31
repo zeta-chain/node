@@ -84,6 +84,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.101
+    ports:
+      - "18443:18443"
     command:
       -printtoconsole
       -regtest=1
