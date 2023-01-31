@@ -78,7 +78,7 @@ services:
     entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
   bitcoin:
-    image: ruimarinho/bitcoin-core
+    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
     container_name: bitcoin
     hostname: bitcoin
     networks:

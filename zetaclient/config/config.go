@@ -110,7 +110,7 @@ var ChainConfigs = map[string]*types.ChainETHish{
 	},
 	common.BtcRegtestChain().ChainName.String(): {
 		Chain:     common.BtcRegtestChain(),
-		BlockTime: 5,
+		BlockTime: 1,
 		Endpoint:  "bitcoin:18443",
 	},
 }

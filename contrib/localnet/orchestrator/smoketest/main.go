@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
@@ -27,13 +29,15 @@ var (
 	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
-	BLOCK              = 5 * time.Second // should be 2x block time
-	BigZero            = big.NewInt(0)
-	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr      = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
-	USDTERC20Addr      = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	ERC20CustodyAddr   = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
-	HexToAddress       = ethcommon.HexToAddress
+	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", &chaincfg.RegressionNetParams)
+
+	BLOCK            = 5 * time.Second // should be 2x block time
+	BigZero          = big.NewInt(0)
+	SmokeTestTimeout = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr    = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+	USDTERC20Addr    = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+	ERC20CustodyAddr = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
+	HexToAddress     = ethcommon.HexToAddress
 )
 
 type SmokeTest struct {
@@ -153,6 +157,7 @@ func main() {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
+	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()

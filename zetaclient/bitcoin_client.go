@@ -120,6 +120,9 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
 		}
 	}
+	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+		ob.SetLastBlockHeight(uint64(100))
+	}
 
 	return &ob, nil
 }
@@ -157,7 +160,8 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ticker := time.NewTicker(30 * time.Second)
+	// FIXME: config this
+	ticker := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -193,6 +197,17 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		block, err := ob.rpcClient.GetBlockVerboseTx(hash)
 		if err != nil {
 			return err
+		}
+		ob.logger.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
+		if len(block.Tx) > 1 {
+			for idx, tx := range block.Tx {
+				fmt.Printf("tx %d: %s\n", idx, tx.Txid)
+				for vidx, vout := range tx.Vout {
+					fmt.Printf("  vout %d\n", vidx)
+					fmt.Printf("    value: %v\n", vout.Value)
+					fmt.Printf("    scriptPubKey: %v\n", vout.ScriptPubKey.Hex)
+				}
+			}
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
@@ -270,7 +285,8 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	gasTicker := time.NewTicker(60 * time.Second)
+	// FIXME: config this
+	gasTicker := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-gasTicker.C:
@@ -287,10 +303,25 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
+	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+		bn, err := ob.rpcClient.GetBlockCount()
+		if err != nil {
+			return err
+		}
+		_, err = ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		if err != nil {
+			ob.logger.Err(err).Msg("PostGasPrice:")
+			return err
+		}
+		return nil
+	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
 	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
 	if err != nil {
 		return err
+	}
+	if feeResult.Errors != nil || feeResult.FeeRate == nil {
+		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
 	gasPrice := big.NewFloat(0)
 	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
@@ -335,7 +366,8 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 				if err != nil {
 					continue
 				}
-				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.TestNet3Params)
+				//FIXME: config this
+				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
 				if err != nil {
 					continue
 				}
@@ -385,7 +417,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						break
 					}
 					hash := btcutil.Hash160(pkBytes)
-					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.TestNet3Params)
+					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
 					if err != nil {
 						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
 						break
