@@ -85,6 +85,7 @@ func MumbaiChain() Chain {
 
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
+		BtcRegtestChain(),
 		BtcTestNetChain(),
 		BtcMainnetChain(),
 		PolygonChain(),

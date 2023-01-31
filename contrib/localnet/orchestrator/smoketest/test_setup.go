@@ -22,6 +22,26 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 
+	btc := sm.btcRpcClient
+	_, err := btc.CreateWallet("smoketest")
+	if err != nil {
+		panic(err)
+	}
+	addr, err := btc.GetNewAddress("test")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Bitcoin initial funded address: %s\n", addr)
+	_, err = btc.GenerateToAddress(101, addr, nil)
+	if err != nil {
+		panic(err)
+	}
+	bal, err := btc.GetBalance("*")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("balance: %f\n", bal.ToBTC())
+
 	goerliClient := sm.goerliClient
 	chainid, err := goerliClient.ChainID(context.Background())
 	if err != nil {

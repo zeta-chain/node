@@ -83,7 +83,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 
 	connCfg := &rpcclient.ConnConfig{
-		Host:         "localhost:18443",
+		Host:         ob.endpoint,
 		User:         "smoketest",
 		Pass:         "123",
 		HTTPPostMode: true,
