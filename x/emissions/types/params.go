@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
 )
@@ -49,37 +51,51 @@ func (p Params) String() string {
 }
 
 func validateMaxBondFactor(i interface{}) error {
-	//v, ok := i.([]*string)
-	//fmt.Println(v)
-	//if !ok {
-	//	return fmt.Errorf("invalid parameter type: %T", i)
-	//}
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	decMaxBond := sdk.MustNewDecFromStr(v)
+	if decMaxBond.GT(sdk.MustNewDecFromStr("1.25")) {
+		return fmt.Errorf("max bond factor cannot be higher that 0.25")
+	}
 	return nil
 }
 
 func validateMinBondFactor(i interface{}) error {
-	//v, ok := i.([]*string)
-	//fmt.Println(v)
-	//if !ok {
-	//	return fmt.Errorf("invalid parameter type: %T", i)
-	//}
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	decMaxBond := sdk.MustNewDecFromStr(v)
+	if decMaxBond.LT(sdk.MustNewDecFromStr("0.75")) {
+		return fmt.Errorf("min bond factor cannot be lower that 0.75")
+	}
 	return nil
 }
 
 func validateAvgBlockTime(i interface{}) error {
-	//v, ok := i.([]*string)
-	//fmt.Println(v)
-	//if !ok {
-	//	return fmt.Errorf("invalid parameter type: %T", i)
-	//}
+	_, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	return nil
 }
 
 func validateTargetBondRatio(i interface{}) error {
-	//v, ok := i.([]*string)
-	//fmt.Println(v)
-	//if !ok {
-	//	return fmt.Errorf("invalid parameter type: %T", i)
-	//}
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	decMaxBond := sdk.MustNewDecFromStr(v)
+	if decMaxBond.GT(sdk.MustNewDecFromStr("100.00")) {
+		return fmt.Errorf("target bond ratio cannot be more than 100 percent")
+	}
+	if decMaxBond.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("target bond ratio cannot be less than 0 percent")
+	}
 	return nil
 }
