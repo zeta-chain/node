@@ -96,10 +96,12 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_testnet.String(), "BTC", "tBTC", 8)
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_regtest.String(), "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+
+	//FIXME: clean up and config the above based on localnet/testnet/mainnet
 
 	// for localnet only: USDT ZRC20
 	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"

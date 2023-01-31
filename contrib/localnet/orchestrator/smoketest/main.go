@@ -38,6 +38,8 @@ var (
 	USDTERC20Addr    = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
 	ERC20CustodyAddr = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
 	HexToAddress     = ethcommon.HexToAddress
+
+	SystemContractAddr = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 )
 
 type SmokeTest struct {
@@ -62,6 +64,8 @@ type SmokeTest struct {
 	USDTZRC20        *contracts.ZRC20
 	ETHZRC20Addr     ethcommon.Address
 	ETHZRC20         *contracts.ZRC20
+
+	SystemContract *contracts.SystemContract
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,

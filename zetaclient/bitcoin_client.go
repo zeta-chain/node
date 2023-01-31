@@ -161,6 +161,7 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 
 func (ob *BitcoinChainClient) WatchInTx() {
 	// FIXME: config this
+	ob.logger.Info().Msgf("WatchInTx to TSS Address %s", ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress())
 	ticker := time.NewTicker(5 * time.Second)
 	for {
 		select {
@@ -394,7 +395,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					}
 					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
 					if err != nil {
-						logger.Warn().Err(err).Msg("error b64 decoding memo")
+						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", (memoStr))
 						continue
 					}
 					memo = memoBytes
