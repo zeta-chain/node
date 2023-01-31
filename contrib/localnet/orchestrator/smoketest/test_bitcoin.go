@@ -84,11 +84,15 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 			BTCDeployerAddress: change,
 		}
 		tx, err := btc.CreateRawTransaction(inputs, amounts, nil)
-
 		if err != nil {
 			panic(err)
 		}
-		//fmt.Printf("tx: %+v\n", tx)
+		fmt.Printf("raw transaction: \n")
+		for idx, txout := range tx.TxOut {
+			fmt.Printf("txout %d\n", idx)
+			fmt.Printf("  value: %d\n", txout.Value)
+			fmt.Printf("  PkScript: %x\n", txout.PkScript)
+		}
 		stx, signed, err := btc.SignRawTransactionWithWallet(tx)
 		if err != nil {
 			panic(err)
