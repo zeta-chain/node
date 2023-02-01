@@ -36,6 +36,8 @@ type EVMSigner struct {
 	logger                      zerolog.Logger
 }
 
+var _ ChainSigner = &EVMSigner{}
+
 func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, erc20CustodyABIString string, metaContract ethcommon.Address, erc20CustodyContract ethcommon.Address) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {

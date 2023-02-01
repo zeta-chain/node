@@ -29,6 +29,8 @@ type BTCSigner struct {
 	logger    zerolog.Logger
 }
 
+var _ ChainSigner = &BTCSigner{}
+
 func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client) (*BTCSigner, error) {
 	return &BTCSigner{
 		tssSigner: tssSigner,
@@ -153,7 +155,12 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	return err
 }
 
-func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, btcClient *BitcoinChainClient, zetaBridge *ZetaCoreBridge) {
+func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, chainclient ChainClient, zetaBridge *ZetaCoreBridge) {
+	btcClient, ok := chainclient.(*BitcoinChainClient)
+	if !ok {
+		signer.logger.Error().Msgf("chain client is not a bitcoin client")
+		return
+	}
 
 	logger := signer.logger.With().
 		Str("sendHash", send.Index).
@@ -175,13 +182,15 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(send.OutboundTxParams.Receiver, &chaincfg.TestNet3Params)
+	addr, err := btcutil.DecodeAddress(send.OutboundTxParams.Receiver, &chaincfg.RegressionNetParams)
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if !ok {
 		logger.Error().Msgf("cannot decode address %s ", send.OutboundTxParams.Receiver)
 		return
 	}
 
+	logger.Info().Msgf("SignWithdrawTx: to %s, value %d", addr.EncodeAddress(), send.ZetaMint.Uint64()/1e8)
+	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	tx, err := signer.SignWithdrawTx(to, float64(send.ZetaMint.Uint64())/1e8, float64(gasprice.Int64())/1e8, btcClient.utxos, btcClient.pendingUtxos)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.OutboundTxParams.OutboundTxTssNonce, send.OutboundTxParams.ReceiverChain)

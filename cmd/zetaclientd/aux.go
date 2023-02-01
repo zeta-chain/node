@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/btcsuite/btcd/rpcclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
@@ -26,22 +28,39 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]*mc.EVMSigner, error) {
-	signerMap := make(map[common.Chain]*mc.EVMSigner)
+func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]mc.ChainSigner, error) {
+	signerMap := make(map[common.Chain]mc.ChainSigner)
 	for _, chain := range mcconfig.ChainsEnabled {
-
-		if !(chain).IsEVMChain() {
-			log.Warn().Msgf("chain %s is not an EVM chain, skip creating EVMSigner", chain.String())
-			continue
+		if chain.IsEVMChain() {
+			mpiAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
+			erc20CustodyAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
+			signer, err := mc.NewEVMSigner(chain, mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mcconfig.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress)
+			if err != nil {
+				log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
+				return nil, err
+			}
+			signerMap[chain] = signer
+		} else if chain.IsBitcoinChain() {
+			// FIXME: move the construction of rpcclient to somewhere else
+			connCfg := &rpcclient.ConnConfig{
+				Host:         mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint,
+				User:         "smoketest",
+				Pass:         "123",
+				HTTPPostMode: true,
+				DisableTLS:   true,
+				Params:       "regtest",
+			}
+			client, err := rpcclient.New(connCfg, nil)
+			if err != nil {
+				return nil, fmt.Errorf("error creating rpc client: %s", err)
+			}
+			signer, err := mc.NewBTCSigner(tss, client)
+			if err != nil {
+				log.Fatal().Err(err).Msgf("%s: NewBitcoinSigner Bitcoin error ", chain.String())
+				return nil, err
+			}
+			signerMap[chain] = signer
 		}
-		mpiAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
-		erc20CustodyAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
-		signer, err := mc.NewEVMSigner(chain, mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mcconfig.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress)
-		if err != nil {
-			log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
-			return nil, err
-		}
-		signerMap[chain] = signer
 	}
 
 	return signerMap, nil

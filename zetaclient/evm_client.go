@@ -114,7 +114,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 
 	if err != nil {
-		// Can we log an error before we have our logger? :)
+		// Can we log an error before we have our Logger? :)
 		log.Error().Err(err).Msgf("there was an error creating a logFile chain %s", ob.chain.String())
 	}
 	fileLogger := zerolog.New(logFile).With().Logger()

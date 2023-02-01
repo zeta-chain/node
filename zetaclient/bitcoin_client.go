@@ -81,14 +81,14 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	// initialize the Client
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
-
+	// FIXME: config this
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
 		User:         "smoketest",
 		Pass:         "123",
 		HTTPPostMode: true,
 		DisableTLS:   true,
-		Params:       "testnet3",
+		Params:       "regtest",
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
@@ -137,10 +137,10 @@ func (ob *BitcoinChainClient) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	//
-	//ob.logger.Info().Msg("closing ob.pendingUtxos")
+	//ob.Logger.Info().Msg("closing ob.pendingUtxos")
 	//err := ob.pendingUtxos.Close()
 	//if err != nil {
-	//	ob.logger.Error().Err(err).Msg("error closing pendingUtxos")
+	//	ob.Logger.Error().Err(err).Msg("error closing pendingUtxos")
 	//}
 	//
 	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
@@ -215,7 +215,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger)
 
 		for _, inTx := range inTxs {
-			//ob.logger.Info().Msgf("incoming tx %v", inTx)
+			//ob.Logger.Info().Msgf("incoming tx %v", inTx)
 			amount := big.NewFloat(inTx.Value)
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)

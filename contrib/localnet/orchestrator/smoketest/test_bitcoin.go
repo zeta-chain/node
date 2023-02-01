@@ -227,7 +227,6 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 	}
 	// approve the ZRC20 contract to spend 1 BTC from the deployer address
 	{
-
 		tx, err := BTCZRC20.Approve(sm.zevmAuth, BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
 		if err != nil {
 			panic(err)
