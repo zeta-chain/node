@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -45,7 +46,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
-	estimateFee := 0.0
+	estimateFee := 0.00001 // FIXME: proper fee estimation
 	for _, utxo := range utxos {
 		// check for pending utxBos
 		if _, err := pendingUTXOs.Get([]byte(utxoKey(utxo)), nil); err != nil {
@@ -120,7 +121,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Printf("witnessHash(len%d)\n", len(witnessHash))
 		sig65B, err := signer.tssSigner.Sign(witnessHash)
 		R := big.NewInt(0).SetBytes(sig65B[:32])
 		S := big.NewInt(0).SetBytes(sig65B[32:64])
@@ -147,6 +148,19 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 }
 
 func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
+	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
+
+	for idx, txIn := range signedTx.TxIn {
+		fmt.Printf("TxIn %d\n", idx)
+		fmt.Printf("  PreviousOutPoint: %+v\n", txIn.PreviousOutPoint)
+		fmt.Printf("  SignatureScript: %x\n", txIn.SignatureScript)
+		fmt.Printf("  Witness: %x\n", txIn.Witness)
+	}
+	for idx, txOut := range signedTx.TxOut {
+		fmt.Printf("TxOut %d\n", idx)
+		fmt.Printf("  Value: %d\n", txOut.Value)
+		fmt.Printf("  PkScript: %x\n", txOut.PkScript)
+	}
 	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
 	if err != nil {
 		return err
@@ -156,6 +170,15 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, chainclient ChainClient, zetaBridge *ZetaCoreBridge) {
+	toAddr, err := hex.DecodeString(send.OutboundTxParams.Receiver[2:])
+	if err != nil {
+		signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
+		return
+	}
+	fmt.Printf("BTC TryProcessOutTx: %s, value %d to %s\n", send.Index, send.ZetaMint, toAddr)
+	defer func() {
+		outTxMan.EndTryProcess(send.Index)
+	}()
 	btcClient, ok := chainclient.(*BitcoinChainClient)
 	if !ok {
 		signer.logger.Error().Msgf("chain client is not a bitcoin client")
@@ -182,7 +205,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(send.OutboundTxParams.Receiver, &chaincfg.RegressionNetParams)
+	addr, err := btcutil.DecodeAddress(string(toAddr), &chaincfg.RegressionNetParams)
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if !ok {
 		logger.Error().Msgf("cannot decode address %s ", send.OutboundTxParams.Receiver)
@@ -191,7 +214,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d", addr.EncodeAddress(), send.ZetaMint.Uint64()/1e8)
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(send.ZetaMint.Uint64())/1e8, float64(gasprice.Int64())/1e8, btcClient.utxos, btcClient.pendingUtxos)
+	// FIXME: gas price?
+	tx, err := signer.SignWithdrawTx(to, float64(send.ZetaMint.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.pendingUtxos)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %s", send.OutboundTxParams.OutboundTxTssNonce, send.OutboundTxParams.ReceiverChain)
 		return

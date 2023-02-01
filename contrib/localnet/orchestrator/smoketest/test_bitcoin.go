@@ -196,6 +196,7 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 			break
 		}
 	}
+
 }
 
 func (sm *SmokeTest) TestBitcoinWithdraw() {
@@ -253,6 +254,11 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("withdraw receipt status is not 1"))
 		}
+		_, err = sm.btcRpcClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
 		WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
 	}
+
 }

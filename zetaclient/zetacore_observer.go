@@ -154,20 +154,20 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
-			tStart := time.Now()
+			//tStart := time.Now()
 			sendList, err := co.bridge.GetAllPendingCctx()
 			if err != nil {
 				logger.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
-			logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
+			//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 			sendMap := SplitAndSortSendListByChain(sendList)
 
 			// schedule sends
 			for chain, sendList := range sendMap {
 				chainName := common.ParseStringToObserverChain(chain)
 				c := GetChainFromChainName(chainName)
-				//c, _ := common.ParseChain(chain)
+
 				found := false
 				for _, enabledChain := range GetSupportedChains() {
 					if enabledChain.ChainId == c.ChainId {
@@ -191,14 +191,14 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					// update metrics
-					if idx == 0 {
-						pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
-						if err != nil {
-							co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
-						} else {
-							pTxs.Set(float64(len(sendList)))
-						}
-					}
+					//if idx == 0 {
+					//	pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
+					//	if err != nil {
+					//		co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
+					//	} else {
+					//		pTxs.Set(float64(len(sendList)))
+					//	}
+					//}
 					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), send.OutboundTxParams.CoinType)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
@@ -209,12 +209,13 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					chain := GetTargetChain(send)
-					outTxID := fmt.Sprintf("%s/%d", chain, send.OutboundTxParams.OutboundTxTssNonce)
+					outTxID := fmt.Sprintf("%s", chain, send.Index) // should be the outTxID?
 					nonce := send.OutboundTxParams.OutboundTxTssNonce
 
 					// FIXME: config this schedule; this value is for localnet fast testing
 					if nonce%1 == bn%1 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
+						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.ZetaMint)
 						go signer.TryProcessOutTx(send, outTxMan, chainClient, co.bridge)
 					}
 					if idx > 60 { // only look at 50 sends per chain

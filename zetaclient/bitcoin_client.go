@@ -51,7 +51,6 @@ type BitcoinChainClient struct {
 
 const (
 	minConfirmations = 1
-	firstBlock       = 2406680
 	chunkSize        = 500
 )
 
@@ -128,6 +127,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 }
 
 func (ob *BitcoinChainClient) Start() {
+	ob.logger.Info().Msgf("BitcoinChainClient is starting", ob.chain.String())
 	go ob.WatchInTx()
 	go ob.WatchUTXOS()
 	go ob.WatchGasPrice()
@@ -281,6 +281,8 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, c
 	return false, false, nil
 }
 
+// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
+// by the client to easily identify the cctx outbound command
 func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
 	return nil
 }
@@ -440,7 +442,9 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	ticker := time.NewTicker(10 * time.Minute)
+	// FIXME: config this
+	ob.logger.Info().Msgf("WatchUTXOS started")
+	ticker := time.NewTicker(2 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -462,11 +466,11 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	if err != nil {
 		return fmt.Errorf("btc: error getting block height : %v", err)
 	}
-	maxConfirmations := int(bh - firstBlock)
+	maxConfirmations := int(bh)
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, &chaincfg.TestNet3Params)
+	address, err := btcutil.DecodeAddress(tssAddr, &chaincfg.RegressionNetParams)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
@@ -480,6 +484,14 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
+		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
+		for idx, utxo := range unspents {
+			fmt.Printf("utxo %d\n", idx)
+			fmt.Printf("  txid: %s\n", utxo.TxID)
+			fmt.Printf("  address: %s\n", utxo.Address)
+			fmt.Printf("  amount: %f\n", utxo.Amount)
+			fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
+		}
 	}
 	// filter pending
 	var filtered []btcjson.ListUnspentResult
