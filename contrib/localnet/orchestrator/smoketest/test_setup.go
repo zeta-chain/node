@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -12,8 +15,6 @@ import (
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"time"
 )
 
 func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
@@ -144,4 +145,14 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	}
 	sm.USDTERC20 = USDT
 	sm.USDTERC20Addr = usdtAddr
+	sm.UniswapV2FactoryAddr = ethcommon.HexToAddress(UniswapV2FactoryAddr)
+	sm.UniswapV2Factory, err = contracts.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.UniswapV2RouterAddr = ethcommon.HexToAddress(UniswapV2RouterAddr)
+	sm.UniswapV2Router, err = contracts.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
 }

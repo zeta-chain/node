@@ -20,6 +20,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	// setup uniswap v2 factory
 	uniswapV2Factory, err := k.DeployUniswapV2Factory(ctx)
+	fmt.Printf("Factory addr %s\n", uniswapV2Factory.Hex())
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployUniswapV2Factory")
 	}
@@ -41,6 +42,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	)
 
 	router, err := k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+	fmt.Printf("Router addr %s\n", router.Hex())
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployUniswapV2Router02")
 	}
