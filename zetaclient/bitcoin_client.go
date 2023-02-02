@@ -284,6 +284,13 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, c
 // FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
 // by the client to easily identify the cctx outbound command
 func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
+	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
+	if err != nil {
+		ob.logger.Error().Err(err).Msgf("error posting nonce to zeta core")
+		return err
+	} else {
+		ob.logger.Info().Msgf("PostNonce zeta tx: %s", zetaHash)
+	}
 	return nil
 }
 

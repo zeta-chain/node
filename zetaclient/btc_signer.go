@@ -154,17 +154,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
-	for idx, txIn := range signedTx.TxIn {
-		fmt.Printf("TxIn %d\n", idx)
-		fmt.Printf("  PreviousOutPoint: %+v\n", txIn.PreviousOutPoint)
-		fmt.Printf("  SignatureScript: %x\n", txIn.SignatureScript)
-		fmt.Printf("  Witness: %x\n", txIn.Witness)
-	}
-	for idx, txOut := range signedTx.TxOut {
-		fmt.Printf("TxOut %d\n", idx)
-		fmt.Printf("  Value: %d\n", txOut.Value)
-		fmt.Printf("  PkScript: %x\n", txOut.PkScript)
-	}
 	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
 	if err != nil {
 		return err

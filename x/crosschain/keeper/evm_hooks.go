@@ -155,12 +155,11 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	if ok {
 		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
 	}
-	if receiverChain.IsEVMChain() { // UTXO chains don't need nonce
-		err := k.UpdateNonce(ctx, receiverChain.ChainName.String(), &cctx)
-		if err != nil {
-			return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
-		}
+	err := k.UpdateNonce(ctx, receiverChain.ChainName.String(), &cctx)
+	if err != nil {
+		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
+
 	k.SetCrossChainTx(ctx, cctx)
 	fmt.Printf("####setting send... ###########\n")
 	return nil
