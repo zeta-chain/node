@@ -94,7 +94,7 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
 	ctx := b.GetContext()
-	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetSignerInfo().GetAddress())
+	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetAddress())
 }
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {

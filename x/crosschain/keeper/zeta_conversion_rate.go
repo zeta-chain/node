@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -18,8 +19,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	if !isFound {
 		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")
 	}
-
-	gasLimit := sdk.NewUintFromString(request.GasLimit)
+	gasLimit := math.NewUintFromString(request.GasLimit)
 	outTxGasFee := medianGasPrice.Mul(gasLimit)
 	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
 	if err != nil {

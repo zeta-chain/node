@@ -38,12 +38,12 @@ func NewKeysWithKeybase(kb ckeys.Keyring, name, password string) *Keys {
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyring, ckeys.Info, error) {
+func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyring, ckeys.Record, error) {
 	if len(signerName) == 0 {
-		return nil, nil, fmt.Errorf("signer name is empty")
+		return nil, ckeys.Record{}, fmt.Errorf("signer name is empty")
 	}
 	if len(password) == 0 {
-		return nil, nil, fmt.Errorf("password is empty")
+		return nil, ckeys.Record{}, fmt.Errorf("password is empty")
 	}
 
 	buf := bytes.NewBufferString(password)
@@ -53,7 +53,7 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	buf.WriteByte('\n')
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
-		return nil, nil, fmt.Errorf("fail to get keybase,err:%w", err)
+		return nil, ckeys.Record{}, fmt.Errorf("fail to get keybase,err:%w", err)
 	}
 
 	// the keyring library which used by cosmos sdk , will use interactive terminal if it detect it has one
@@ -65,9 +65,9 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	os.Stdin = nil
 	si, err := kb.Key(signerName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
+		return nil, ckeys.Record{}, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
 	}
-	return kb, si, nil
+	return kb, *si, nil
 }
 
 // getKeybase will create an instance of Keybase
@@ -86,16 +86,25 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	//	options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
 	//	options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
 	//}
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader)
+	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, nil)
 }
 
 // GetSignerInfo return signer info
-func (k *Keys) GetSignerInfo() ckeys.Info {
+func (k *Keys) GetSignerInfo() *ckeys.Record {
 	info, err := k.kb.Key(k.signerName)
 	if err != nil {
 		panic(err)
 	}
 	return info
+}
+
+func (k *Keys) GetAddress() sdk.AccAddress {
+	info, err := k.kb.Key(k.signerName)
+	if err != nil {
+		panic(err)
+	}
+	addr, _ := info.GetAddress()
+	return addr
 }
 
 // GetPrivateKey return the private key

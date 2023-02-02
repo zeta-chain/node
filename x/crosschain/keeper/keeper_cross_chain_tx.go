@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -177,9 +178,9 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,
 		Index:            index,
-		ZetaBurnt:        sdk.NewUintFromString(msg.ZetaBurnt),
-		ZetaMint:         sdk.ZeroUint(),
-		ZetaFees:         sdk.ZeroUint(),
+		ZetaBurnt:        math.NewUintFromString(msg.ZetaBurnt),
+		ZetaMint:         math.ZeroUint(),
+		ZetaFees:         math.ZeroUint(),
 		RelayedMessage:   msg.Message,
 		CctxStatus:       status,
 		InboundTxParams:  inboundParams,

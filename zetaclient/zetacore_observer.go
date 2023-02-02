@@ -74,7 +74,7 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	myid := co.bridge.keys.GetAddress().String()
 	log.Info().Msgf("monitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 
@@ -333,7 +333,7 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 		outTxMan.EndTryProcess(outTxID)
 	}()
 
-	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	myid := co.bridge.keys.GetAddress().String()
 
 	var to ethcommon.Address
 	var err error
