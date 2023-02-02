@@ -27,12 +27,15 @@ var (
 func (sm *SmokeTest) TestBitcoinSetup() {
 	LoudPrintf("Setup Bitcoin\n")
 
-	btc := sm.btcRpcClient
+	btc := sm.btcRPCClient
 	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		panic(err)
 	}
 	skBytes, err := hex.DecodeString(DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
 	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
 	if err != nil {
@@ -102,7 +105,7 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	if err != nil {
 		panic(err)
 	}
-	// contruct memo just to deposit BTC into deployer address
+	// construct memo just to deposit BTC into deployer address
 	// the bytes in the memo (following OP_RETURN) is of format:
 	// [ OP_RETURN(6a) <length of memo> <memo> ]
 	// where <memo> is ASCII encoding of the base64 bytes (!we do this because popular bitcoin wallet
@@ -162,7 +165,7 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("  TxHash: %s\n", event.TxHash)
 		fmt.Printf("  From: %s\n", event.FromAddress)
 		fmt.Printf("  To: %s\n", event.ToAddress)
-		fmt.Printf("  Amount: %d\n", event.Value)
+		fmt.Printf("  Amount: %f\n", event.Value)
 		fmt.Printf("  Memo: %x\n", event.MemoBytes)
 	}
 
@@ -241,7 +244,7 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
-			_, err = sm.btcRpcClient.GenerateToAddress(1, BTCDeployerAddress, nil)
+			_, err = sm.btcRPCClient.GenerateToAddress(1, BTCDeployerAddress, nil)
 			if err != nil {
 				panic(err)
 			}
@@ -263,7 +266,7 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("withdraw receipt status is not 1"))
 		}
-		_, err = sm.btcRpcClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 		if err != nil {
 			panic(err)
 		}

@@ -272,7 +272,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, c
 			amountInSat,
 			common.ReceiveStatus_Success,
 			ob.chain,
-			int(nonce),
+			nonce,
 			common.CoinType_Gas,
 		)
 		if err != nil {
@@ -292,9 +292,8 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
 	if err != nil {
 		ob.logger.Error().Err(err).Msgf("error posting nonce to zeta core")
 		return err
-	} else {
-		ob.logger.Info().Msgf("PostNonce zeta tx: %s", zetaHash)
 	}
+	ob.logger.Info().Msgf("PostNonce zeta tx: %s", zetaHash)
 	return nil
 }
 

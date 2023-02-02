@@ -63,7 +63,7 @@ func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 }
 
 // suicide whole zetaclient if keysign appears deadlocked.
-func (outTxMan OutTxProcessorManager) StartMonitorHealth() {
+func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
 	logger := outTxMan.Logger
 	logger.Info().Msgf("StartMonitorHealth")
 	ticker := time.NewTicker(60 * time.Second)

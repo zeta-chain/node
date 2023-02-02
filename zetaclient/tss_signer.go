@@ -210,7 +210,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	if err != nil {
 		return nil, err
 	}
-	// FIXME: config the chain paramters
+	// FIXME: config the chain parameters
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), &chaincfg.RegressionNetParams)
 	if err != nil {
 		return nil, err

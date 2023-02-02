@@ -46,7 +46,7 @@ type SmokeTest struct {
 	zevmClient       *ethclient.Client
 	goerliClient     *ethclient.Client
 	cctxClient       types.QueryClient
-	btcRpcClient     *rpcclient.Client
+	btcRPCClient     *rpcclient.Client
 	fungibleClient   fungibletypes.QueryClient
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
@@ -71,7 +71,7 @@ type SmokeTest struct {
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
-	btcRpcClient *rpcclient.Client) *SmokeTest {
+	btcRPCClient *rpcclient.Client) *SmokeTest {
 	return &SmokeTest{
 		zevmClient:     zevmClient,
 		goerliClient:   goerliClient,
@@ -80,7 +80,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		wg:             sync.WaitGroup{},
 		goerliAuth:     goerliAuth,
 		zevmAuth:       zevmAuth,
-		btcRpcClient:   btcRpcClient,
+		btcRPCClient:   btcRPCClient,
 	}
 }
 
@@ -103,7 +103,7 @@ func main() {
 		DisableTLS:   true,
 		Params:       "testnet3",
 	}
-	btcRpcClient, err := rpcclient.New(connCfg, nil)
+	btcRPCClient, err := rpcclient.New(connCfg, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -157,7 +157,7 @@ func main() {
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRpcClient)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
