@@ -495,13 +495,13 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		}
 		utxos = append(utxos, unspents...)
 		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
-		for idx, utxo := range unspents {
-			fmt.Printf("utxo %d\n", idx)
-			fmt.Printf("  txid: %s\n", utxo.TxID)
-			fmt.Printf("  address: %s\n", utxo.Address)
-			fmt.Printf("  amount: %f\n", utxo.Amount)
-			fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
-		}
+		//for idx, utxo := range unspents {
+		//	fmt.Printf("utxo %d\n", idx)
+		//	fmt.Printf("  txid: %s\n", utxo.TxID)
+		//	fmt.Printf("  address: %s\n", utxo.Address)
+		//	fmt.Printf("  amount: %f\n", utxo.Amount)
+		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
+		//}
 	}
 	// filter pending
 	var filtered []btcjson.ListUnspentResult
