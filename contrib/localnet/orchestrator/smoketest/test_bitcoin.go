@@ -238,6 +238,15 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 			panic(fmt.Errorf("approve receipt status is not 1"))
 		}
 	}
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			_, err = sm.btcRpcClient.GenerateToAddress(1, BTCDeployerAddress, nil)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}()
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	{
 		_, gasFee, err := BTCZRC20.WithdrawGasFee(&bind.CallOpts{})

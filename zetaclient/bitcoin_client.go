@@ -69,6 +69,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.confCount = 0
+	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
 	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
 	db, err := leveldb.OpenFile(path, nil)
@@ -129,6 +130,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 func (ob *BitcoinChainClient) Start() {
 	ob.logger.Info().Msgf("BitcoinChainClient is starting")
 	go ob.WatchInTx()
+	go ob.observeOutTx()
 	go ob.WatchUTXOS()
 	go ob.WatchGasPrice()
 }
@@ -253,6 +255,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
 	chain := ob.chain.ChainId
 	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
+	ob.logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
+
 	res, found := ob.submittedTx[outTxID]
 	if !found {
 		return false, false, nil
@@ -561,7 +565,7 @@ func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := time.NewTicker(2 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -572,6 +576,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			}
 			for _, tracker := range trackers {
 				outTxID := fmt.Sprintf("%d-%d", tracker.ChainId, tracker.Nonce)
+				ob.logger.Info().Msgf("tracker outTxID: %s", outTxID)
 				for _, txHash := range tracker.HashList {
 					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
 					if err != nil {
@@ -580,6 +585,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					}
 					getTxResult, err := ob.rpcClient.GetTransaction(hash)
 					if err != nil {
+						ob.logger.Warn().Err(err).Msg("error GetTransaction")
 						continue
 					}
 					if getTxResult.Confirmations >= 0 {
