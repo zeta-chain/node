@@ -13,7 +13,7 @@ import (
 func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	chainName := common.ParseStringToObserverChain(request.Chain)
-	chain, _ := k.zetaObserverKeeper.GetChainFromChainName(ctx, chainName)
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")

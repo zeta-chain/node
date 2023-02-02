@@ -24,6 +24,7 @@ func DefaultParams() Params {
 	i := 0
 	for _, chain := range chains {
 		observerParams[i] = &ObserverParams{
+			IsSupported:           true,
 			Chain:                 chain,
 			Observation:           ObservationType_InBoundTx,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
@@ -31,6 +32,7 @@ func DefaultParams() Params {
 		}
 		i++
 		observerParams[i] = &ObserverParams{
+			IsSupported:           true,
 			Chain:                 chain,
 			Observation:           ObservationType_OutBoundTx,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
@@ -79,4 +81,43 @@ func (p Params) GetParamsForChainAndType(chain *common.Chain, observationType Ob
 		}
 	}
 	return ObserverParams{}, false
+}
+
+func (p Params) GetSupportedChains() (chains []*common.Chain) {
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.IsSupported {
+			chains = append(chains, observerParam.Chain)
+		}
+	}
+	return
+}
+
+func (p Params) GetChainFromChainID(chainID int64) *common.Chain {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if chain.ChainId == chainID {
+			return chain
+		}
+	}
+	return nil
+}
+
+func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if chain.ChainName == name {
+			return chain
+		}
+	}
+	return nil
+}
+
+func (p Params) IsChainSupported(checkChain common.Chain) bool {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if checkChain.IsEqual(*chain) {
+			return true
+		}
+	}
+	return false
 }

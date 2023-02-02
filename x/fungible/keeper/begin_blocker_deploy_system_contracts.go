@@ -117,8 +117,8 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName
 	name := fmt.Sprintf("%s-%s", gasAssetName, c)
 	transferGasLimit := big.NewInt(21_000)
 	chainName := common.ParseStringToObserverChain(c)
-	chain, found := k.zetaobserverKeeper.GetChainFromChainName(ctx, chainName)
-	if !found {
+	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainName.String(), common.CoinType_Gas, "", transferGasLimit)

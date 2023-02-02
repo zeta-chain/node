@@ -103,8 +103,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	if !foundCoin {
 		return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
 	}
-	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainName(ctx, receiverChainName)
-	if !found {
+	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainName(receiverChainName)
+	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 	senderChain := common.ZetaChain()
@@ -127,8 +127,8 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConne
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 	}
 	receiverChainID := event.DestinationChainId
-	receiverChain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, receiverChainID.Int64())
-	if !found {
+	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
+	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
