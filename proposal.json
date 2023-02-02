@@ -1,0 +1,12 @@
+{
+  "title": "Staking Param Change",
+  "description": "Update max validators",
+  "changes": [
+    {
+      "subspace": "observer",
+      "key": "MaxValidators",
+      "value": 105
+    }
+  ],
+  "deposit": "10000zeta"
+}
