@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
@@ -11,10 +16,6 @@ import (
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"os"
-	"sync"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -23,16 +24,18 @@ import (
 )
 
 var (
-	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
-	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
-	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
-	BLOCK              = 5 * time.Second // should be 2x block time
-	BigZero            = big.NewInt(0)
-	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr      = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
-	USDTERC20Addr      = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	ERC20CustodyAddr   = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
-	HexToAddress       = ethcommon.HexToAddress
+	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+	TSSAddress           = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
+	BLOCK                = 5 * time.Second // should be 2x block time
+	BigZero              = big.NewInt(0)
+	SmokeTestTimeout     = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr        = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
+	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
+	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
+	HexToAddress         = ethcommon.HexToAddress
 )
 
 type SmokeTest struct {
@@ -48,14 +51,18 @@ type SmokeTest struct {
 	goerliAuth       *bind.TransactOpts
 	zevmAuth         *bind.TransactOpts
 
-	ERC20CustodyAddr ethcommon.Address
-	ERC20Custody     *erc20custody.ERC20Custody
-	USDTERC20Addr    ethcommon.Address
-	USDTERC20        *erc20.USDT
-	USDTZRC20Addr    ethcommon.Address
-	USDTZRC20        *contracts.ZRC20
-	ETHZRC20Addr     ethcommon.Address
-	ETHZRC20         *contracts.ZRC20
+	ERC20CustodyAddr     ethcommon.Address
+	ERC20Custody         *erc20custody.ERC20Custody
+	USDTERC20Addr        ethcommon.Address
+	USDTERC20            *erc20.USDT
+	USDTZRC20Addr        ethcommon.Address
+	USDTZRC20            *contracts.ZRC20
+	ETHZRC20Addr         ethcommon.Address
+	ETHZRC20             *contracts.ZRC20
+	UniswapV2FactoryAddr ethcommon.Address
+	UniswapV2Factory     *contracts.UniswapV2Factory
+	UniswapV2RouterAddr  ethcommon.Address
+	UniswapV2Router      *contracts.UniswapV2Router02
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
@@ -145,6 +152,7 @@ func main() {
 	smokeTest.TestERC20Withdraw()
 	smokeTest.TestSendZetaOut()
 	smokeTest.TestMessagePassing()
+	smokeTest.TestZRC20Swap()
 
 	// add your dev test here
 	smokeTest.TestMyTest()
