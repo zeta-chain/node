@@ -14,7 +14,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams() Params {
-	return Params{}
+	return Params{
+		Enabled: true,
+		Admin:   "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+	}
 }
 
 // DefaultParams returns a default set of parameters
