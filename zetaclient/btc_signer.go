@@ -117,6 +117,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		if err != nil {
 			return nil, err
 		}
+		pkScript, err := hex.DecodeString(prevOuts[ix].ScriptPubKey)
+		if err != nil {
+			return nil, err
+		}
 		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, sigHashes, txscript.SigHashAll, tx, ix, amt)
 		if err != nil {
 			return nil, err

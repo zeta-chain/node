@@ -209,7 +209,7 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					chain := GetTargetChain(send)
-					outTxID := fmt.Sprintf("%s", chain, send.Index) // should be the outTxID?
+					outTxID := fmt.Sprintf("%s", send.Index) // should be the outTxID?
 					nonce := send.OutboundTxParams.OutboundTxTssNonce
 
 					// FIXME: config this schedule; this value is for localnet fast testing
