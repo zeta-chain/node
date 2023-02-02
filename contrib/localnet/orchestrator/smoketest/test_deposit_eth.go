@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -10,8 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"time"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
@@ -94,11 +95,13 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		if err != nil {
 			panic(err)
 		}
+		sm.ETHZRC20Addr = ethZRC20Addr
 		fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
 		ethZRC20, err := contracts.NewZRC20(ethZRC20Addr, sm.zevmClient)
 		if err != nil {
 			panic(err)
 		}
+		sm.ETHZRC20 = ethZRC20
 		ethZRC20Balance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
 		if err != nil {
 			panic(err)
