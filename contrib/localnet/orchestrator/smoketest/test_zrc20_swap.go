@@ -40,6 +40,7 @@ func (sm *SmokeTest) TestZRC20Swap() {
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("ETH ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
+	sm.zevmAuth.GasLimit = 400000
 	tx, err = sm.UniswapV2Router.AddLiquidity(sm.zevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr, big.NewInt(90000), big.NewInt(1000), big.NewInt(90000), big.NewInt(1000), DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
 	if err != nil {
 		panic(err)
