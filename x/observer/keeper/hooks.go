@@ -67,8 +67,8 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	tokensToBurn := validator.Tokens.ToDec().Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
 	for _, mapper := range mappers {
-		obsParams, supported := k.GetParams(ctx).GetParamsForChainAndType(mapper.ObserverChain, mapper.ObservationType)
-		if !supported {
+		obsParams := k.GetParams(ctx).GetParamsForChain(mapper.ObserverChain)
+		if !obsParams.IsSupported {
 			return types.ErrSupportedChains
 		}
 		if resultingTokens.ToDec().LT(obsParams.MinObserverDelegation) {

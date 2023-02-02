@@ -29,6 +29,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
+// IsAuthorized checks whether a signer is authorized to sign , by checking thier address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
@@ -62,12 +63,9 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		if !k.zetaObserverKeeper.GetParams(ctx).IsChainSupported(*chain) {
-			return ballot, isNew, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
-		}
 		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
-		obsParams, found := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
-		if !found {
+		obsParams := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChain(chain)
+		if !obsParams.IsSupported {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
 			return
 		}

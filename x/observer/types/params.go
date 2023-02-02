@@ -20,25 +20,14 @@ func NewParams(observerParams []*ObserverParams) Params {
 }
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
-	observerParams := make([]*ObserverParams, len(chains)*2)
-	i := 0
-	for _, chain := range chains {
+	observerParams := make([]*ObserverParams, len(chains))
+	for i, chain := range chains {
 		observerParams[i] = &ObserverParams{
 			IsSupported:           true,
 			Chain:                 chain,
-			Observation:           ObservationType_InBoundTx,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
-		i++
-		observerParams[i] = &ObserverParams{
-			IsSupported:           true,
-			Chain:                 chain,
-			Observation:           ObservationType_OutBoundTx,
-			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
-			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
-		}
-		i++
 	}
 	return NewParams(observerParams)
 }
@@ -74,13 +63,13 @@ func validateVotingThresholds(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetParamsForChainAndType(chain *common.Chain, observationType ObservationType) (ObserverParams, bool) {
+func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	for _, ObserverParam := range p.GetObserverParams() {
-		if ObserverParam.Chain.IsEqual(*chain) && ObserverParam.Observation == observationType {
-			return *ObserverParam, true
+		if ObserverParam.Chain.IsEqual(*chain) {
+			return *ObserverParam
 		}
 	}
-	return ObserverParams{}, false
+	return ObserverParams{}
 }
 
 func (p Params) GetSupportedChains() (chains []*common.Chain) {
@@ -93,20 +82,18 @@ func (p Params) GetSupportedChains() (chains []*common.Chain) {
 }
 
 func (p Params) GetChainFromChainID(chainID int64) *common.Chain {
-	chains := p.GetSupportedChains()
-	for _, chain := range chains {
-		if chain.ChainId == chainID {
-			return chain
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.Chain.ChainId == chainID && observerParam.IsSupported {
+			return observerParam.Chain
 		}
 	}
 	return nil
 }
 
 func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
-	chains := p.GetSupportedChains()
-	for _, chain := range chains {
-		if chain.ChainName == name {
-			return chain
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.Chain.ChainName == name && observerParam.IsSupported {
+			return observerParam.Chain
 		}
 	}
 	return nil

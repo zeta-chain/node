@@ -2,6 +2,9 @@
 
 CHAINID="localnet_101-1"
 KEYRING="test"
+export DAEMON_HOME=$HOME/.zetacored
+export DAEMON_NAME=zetacored
+
 ### chain init script for development purposes only ###
 rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
@@ -45,15 +48,18 @@ echo $observer_list
 
 
 
-zetacored add-observer GoeriliLocalNet 1337 InBoundTx "$observer_list" #goerli
-zetacored add-observer GoeriliLocalNet 1337 OutBoundTx "$observer_list"
-zetacored add-observer ZetaLocalNet 101 InBoundTx "$observer_list" #goerli
-zetacored add-observer ZetaLocalNet 101 OutBoundTx "$observer_list"
+zetacored add-observer goerli_localnet 1337 InBoundTx "$observer_list" #goerli
+zetacored add-observer goerli_localnet 1337 OutBoundTx "$observer_list"
+zetacored add-observer zeta_testnet 101 InBoundTx "$observer_list" #goerli
+zetacored add-observer zeta_testnet 101 OutBoundTx "$observer_list"
 
 
 
 
 zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+
+contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
+echo "${contents}" > $DAEMON_HOME/config/genesis.json
 
 echo "Collecting genesis txs..."
 zetacored collect-gentxs
