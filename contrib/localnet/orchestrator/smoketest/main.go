@@ -31,15 +31,16 @@ var (
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
 	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", &chaincfg.RegressionNetParams)
 
-	BLOCK            = 5 * time.Second // should be 2x block time
-	BigZero          = big.NewInt(0)
-	SmokeTestTimeout = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr    = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
-	USDTERC20Addr    = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	ERC20CustodyAddr = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
-	HexToAddress     = ethcommon.HexToAddress
-
-	SystemContractAddr = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	BLOCK                = 5 * time.Second // should be 2x block time
+	BigZero              = big.NewInt(0)
+	SmokeTestTimeout     = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr        = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
+	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
+	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
+	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	HexToAddress         = ethcommon.HexToAddress
 )
 
 type SmokeTest struct {
@@ -56,14 +57,18 @@ type SmokeTest struct {
 	goerliAuth       *bind.TransactOpts
 	zevmAuth         *bind.TransactOpts
 
-	ERC20CustodyAddr ethcommon.Address
-	ERC20Custody     *erc20custody.ERC20Custody
-	USDTERC20Addr    ethcommon.Address
-	USDTERC20        *erc20.USDT
-	USDTZRC20Addr    ethcommon.Address
-	USDTZRC20        *contracts.ZRC20
-	ETHZRC20Addr     ethcommon.Address
-	ETHZRC20         *contracts.ZRC20
+	ERC20CustodyAddr     ethcommon.Address
+	ERC20Custody         *erc20custody.ERC20Custody
+	USDTERC20Addr        ethcommon.Address
+	USDTERC20            *erc20.USDT
+	USDTZRC20Addr        ethcommon.Address
+	USDTZRC20            *contracts.ZRC20
+	ETHZRC20Addr         ethcommon.Address
+	ETHZRC20             *contracts.ZRC20
+	UniswapV2FactoryAddr ethcommon.Address
+	UniswapV2Factory     *contracts.UniswapV2Factory
+	UniswapV2RouterAddr  ethcommon.Address
+	UniswapV2Router      *contracts.UniswapV2Router02
 
 	SystemContract *contracts.SystemContract
 }
@@ -171,16 +176,15 @@ func main() {
 	fmt.Printf("##   ZETA on ZetaChain EVM\n")
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
-	// temporarily to reduce dev/test cycle turnaround time;
-	// enable them when ready for review.
+	// temporarily to reduce dev/test cycle turnaround time
+	smokeTest.TestERC20Deposit()
+	smokeTest.TestERC20Withdraw()
+	smokeTest.TestSendZetaOut()
+	smokeTest.TestMessagePassing()
+	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
 
-	//smokeTest.TestERC20Deposit()
-	//smokeTest.TestERC20Withdraw()
-	//smokeTest.TestSendZetaOut()
-	//smokeTest.TestMessagePassing()
-
-	// add your dev test here; remove after you are done
+	// add your dev test here
 	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
