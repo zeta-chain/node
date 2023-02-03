@@ -78,6 +78,12 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 
 // FIXME: pass nonce
 func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
+	// reduce unnecessary outtx votes, only vote once every 100 block (around 10min)
+	lastReport, found := b.lastOutTxReportTime[outTxHash]
+	if found && time.Since(lastReport) < 10*time.Minute {
+		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
+	}
+
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
 	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
@@ -91,6 +97,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostReceiveConfirmation broadcast fail; re-trying...")
 		} else {
+			b.lastOutTxReportTime[outTxHash] = time.Now() // update last report time when bcast succeeds
 			return zetaTxHash, nil
 		}
 		time.Sleep(1 * time.Second)
