@@ -11,7 +11,7 @@ import (
 
 func (k msgServer) AddTokenEmission(goCtx context.Context, msg *types.MsgAddTokenEmission) (*types.MsgAddTokenEmissionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	tracker := types.EmissionTracker{}
+	var tracker types.EmissionTracker
 
 	tracker, found := k.GetEmissionTracker(ctx, msg.Category)
 	if !found {

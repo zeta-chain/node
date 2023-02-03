@@ -23,7 +23,7 @@ func CmdAddTokenEmission() *cobra.Command {
 			argCategory := types.ParseStringToEmissionCategory(args[0])
 			argAmount, ok := sdk.NewIntFromString(args[1])
 			if !ok {
-				return errors.New("Unable to parse INT")
+				return errors.New("unable to parse Int")
 			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
