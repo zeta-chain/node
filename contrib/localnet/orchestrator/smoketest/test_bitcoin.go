@@ -7,6 +7,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -202,7 +203,34 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 		if err != nil {
 			panic(err)
 		}
-		WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
+		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
+		outTxHash := cctx.OutboundTxParams.OutboundTxHash
+		hash, err := chainhash.NewHashFromStr(outTxHash)
+		if err != nil {
+			panic(err)
+		}
+		getTxRes, err := sm.btcRPCClient.GetTransaction(hash)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("outbound tx: %s\n", getTxRes.TxID)
+		fmt.Printf("  amount: %f\n", getTxRes.Amount)
+		fmt.Printf("  fee: %f\n", getTxRes.Fee)
+		fmt.Printf("  confirmations: %d\n", getTxRes.Confirmations)
+		for idx, detail := range getTxRes.Details {
+			fmt.Printf("  detail %d:\n", idx)
+			fmt.Printf("    address: %s\n", detail.Address)
+			fmt.Printf("    amount: %f\n", detail.Amount)
+			fmt.Printf("    category: %s\n", detail.Category)
+			fmt.Printf("    fee: %d\n", detail.Fee)
+			fmt.Printf("	   vout: %d\n", detail.Vout)
+		}
+		rawTx, err := sm.btcRPCClient.GetRawTransaction(hash)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("raw tx: %+v\n", rawTx)
+
 	}
 
 }
