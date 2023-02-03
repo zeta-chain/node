@@ -108,4 +108,9 @@ var ChainConfigs = map[string]*types.ChainETHish{
 		BlockTime:                6,
 		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
+	common.BtcRegtestChain().ChainName.String(): {
+		Chain:     common.BtcRegtestChain(),
+		BlockTime: 1,
+		Endpoint:  "bitcoin:18443",
+	},
 }

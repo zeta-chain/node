@@ -415,7 +415,7 @@
         },
         {
           "observer_chain": {
-            "chain_id": 101
+            "chain_id": 18444
           },
           "observation_type": 1,
           "observer_list": [
@@ -425,7 +425,7 @@
         },
         {
           "observer_chain": {
-            "chain_id": 101
+            "chain_id": 18444
           },
           "observation_type": 2,
           "observer_list": [
@@ -629,6 +629,24 @@
             "chain": {
               "chain_name": 13,
               "chain_id": 1212312
+            },
+            "observation": 2,
+            "ballot_threshold": "0.660000000000000000",
+            "min_observer_delegation": "10000000000.000000000000000000"
+          },
+          {
+            "chain": {
+              "chain_name": 15,
+              "chain_id": 18444
+            },
+            "observation": 1,
+            "ballot_threshold": "0.660000000000000000",
+            "min_observer_delegation": "10000000000.000000000000000000"
+          },
+          {
+            "chain": {
+              "chain_name": 15,
+              "chain_id": 18444
             },
             "observation": 2,
             "ballot_threshold": "0.660000000000000000",

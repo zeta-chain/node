@@ -50,6 +50,7 @@ enum ChainName {
 //  LocalNet
 //  zeta_localnet = 13;
   goerli_localnet = 14;
+  btc_regtest = 15;
 // Athens
 //  zeta_athensnet=15;
 }

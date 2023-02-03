@@ -146,11 +146,6 @@ func SetupConfigForTest() {
 
 func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
-
-	//chainIP := os.Getenv("CHAIN_IP")
-	//if chainIP == "" {
-	//	chainIP = "127.0.0.1"
-	//}
 	updateConfig()
 
 	// wait until zetacore is up
@@ -281,14 +276,6 @@ func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
 		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
-
-	//kg, err := bridge1.GetKeyGen()
-	//if err != nil {
-	//	log.Error().Err(err).Msg("GetKeyGen error")
-	//	return
-	//}
-	//log.Info().Msgf("Setting TSS pubkeys: %s", kg.Pubkeys)
-	//tss.Pubkeys = kg.Pubkeys
 
 	for _, chain := range config.ChainsEnabled {
 		var tssAddr string
