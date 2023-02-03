@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/big"
 )
 
 // ScrubGasPriceOfStuckOutTx change (increase) the gas price of a scheduled Send which has been stuck.
@@ -36,20 +37,20 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 		k.cdc.MustUnmarshal(iterator.Value(), &cctx)
 		// if the status of send is pending, which means Finalized/Revert
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			if ctx.BlockHeight()-int64(cctx.InBoundTxParams.InBoundTxFinalizedZetaHeight) > 100 { // stuck send
-				var chain string
+			if ctx.BlockHeight()-int64(cctx.InboundTxParams.InboundTxFinalizedZetaHeight) > 100 { // stuck send
+				var chainID int64
 				if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-					chain = cctx.OutBoundTxParams.ReceiverChain
+					chainID = cctx.OutboundTxParams.ReceiverChainId
 				} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-					chain = cctx.InBoundTxParams.SenderChain
+					chainID = cctx.InboundTxParams.SenderChainId
 				}
-				gasPrice, isFound := k.GetGasPrice(ctx, chain)
+				gasPrice, isFound := k.GetGasPrice(ctx, chainID)
 				if !isFound {
 					continue
 				}
 				mi := gasPrice.MedianIndex
 				newGasPrice := big.NewInt(0).SetUint64(gasPrice.Prices[mi])
-				oldGasPrice, ok := big.NewInt(0).SetString(cctx.OutBoundTxParams.OutBoundTxGasPrice, 10)
+				oldGasPrice, ok := big.NewInt(0).SetString(cctx.OutboundTxParams.OutboundTxGasPrice, 10)
 				if !ok {
 					k.Logger(ctx).Error("failed to parse old gas price")
 					continue
@@ -65,10 +66,10 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 				if newGasPrice.Cmp(targetGasPrice) < 0 {
 					newGasPrice = targetGasPrice
 				}
-				cctx.OutBoundTxParams.OutBoundTxGasPrice = newGasPrice.String()
+				cctx.OutboundTxParams.OutboundTxGasPrice = newGasPrice.String()
 				// No need to migrate as this function does not change the status of Send
 				k.SetCrossChainTx(ctx, cctx)
-				EmitCCTXScrubbed(ctx, cctx, oldGasPrice.String(), newGasPrice.String(), chain)
+				EmitCCTXScrubbed(ctx, cctx, chainID, oldGasPrice.String(), newGasPrice.String())
 			}
 		}
 	}

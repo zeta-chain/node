@@ -8,6 +8,7 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	common "github.com/zeta-chain/zetacore/common"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -24,24 +25,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type BallotThreshold struct {
-	Chain       ObserverChain                          `protobuf:"varint,1,opt,name=Chain,proto3,enum=zetachain.zetacore.observer.ObserverChain" json:"Chain,omitempty"`
-	Observation ObservationType                        `protobuf:"varint,2,opt,name=Observation,proto3,enum=zetachain.zetacore.observer.ObservationType" json:"Observation,omitempty"`
-	Threshold   github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=Threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"Threshold"`
+type ObserverParams struct {
+	Chain                 *common.Chain                          `protobuf:"bytes,1,opt,name=chain,proto3" json:"chain,omitempty"`
+	Observation           ObservationType                        `protobuf:"varint,2,opt,name=observation,proto3,enum=zetachain.zetacore.observer.ObservationType" json:"observation,omitempty"`
+	BallotThreshold       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=ballot_threshold,json=ballotThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"ballot_threshold"`
+	MinObserverDelegation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=min_observer_delegation,json=minObserverDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_observer_delegation"`
 }
 
-func (m *BallotThreshold) Reset()         { *m = BallotThreshold{} }
-func (m *BallotThreshold) String() string { return proto.CompactTextString(m) }
-func (*BallotThreshold) ProtoMessage()    {}
-func (*BallotThreshold) Descriptor() ([]byte, []int) {
+func (m *ObserverParams) Reset()         { *m = ObserverParams{} }
+func (m *ObserverParams) String() string { return proto.CompactTextString(m) }
+func (*ObserverParams) ProtoMessage()    {}
+func (*ObserverParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4542fa62877488a1, []int{0}
 }
-func (m *BallotThreshold) XXX_Unmarshal(b []byte) error {
+func (m *ObserverParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BallotThreshold) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ObserverParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BallotThreshold.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ObserverParams.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -51,26 +53,26 @@ func (m *BallotThreshold) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *BallotThreshold) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BallotThreshold.Merge(m, src)
+func (m *ObserverParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ObserverParams.Merge(m, src)
 }
-func (m *BallotThreshold) XXX_Size() int {
+func (m *ObserverParams) XXX_Size() int {
 	return m.Size()
 }
-func (m *BallotThreshold) XXX_DiscardUnknown() {
-	xxx_messageInfo_BallotThreshold.DiscardUnknown(m)
+func (m *ObserverParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_ObserverParams.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BallotThreshold proto.InternalMessageInfo
+var xxx_messageInfo_ObserverParams proto.InternalMessageInfo
 
-func (m *BallotThreshold) GetChain() ObserverChain {
+func (m *ObserverParams) GetChain() *common.Chain {
 	if m != nil {
 		return m.Chain
 	}
-	return ObserverChain_Empty
+	return nil
 }
 
-func (m *BallotThreshold) GetObservation() ObservationType {
+func (m *ObserverParams) GetObservation() ObservationType {
 	if m != nil {
 		return m.Observation
 	}
@@ -79,7 +81,7 @@ func (m *BallotThreshold) GetObservation() ObservationType {
 
 // Params defines the parameters for the module.
 type Params struct {
-	BallotThresholds []*BallotThreshold `protobuf:"bytes,1,rep,name=BallotThresholds,proto3" json:"BallotThresholds,omitempty"`
+	ObserverParams []*ObserverParams `protobuf:"bytes,1,rep,name=observer_params,json=observerParams,proto3" json:"observer_params,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -114,45 +116,48 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-func (m *Params) GetBallotThresholds() []*BallotThreshold {
+func (m *Params) GetObserverParams() []*ObserverParams {
 	if m != nil {
-		return m.BallotThresholds
+		return m.ObserverParams
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*BallotThreshold)(nil), "zetachain.zetacore.observer.BallotThreshold")
+	proto.RegisterType((*ObserverParams)(nil), "zetachain.zetacore.observer.ObserverParams")
 	proto.RegisterType((*Params)(nil), "zetachain.zetacore.observer.Params")
 }
 
 func init() { proto.RegisterFile("observer/params.proto", fileDescriptor_4542fa62877488a1) }
 
 var fileDescriptor_4542fa62877488a1 = []byte{
-	// 308 bytes of a gzipped FileDescriptorProto
+	// 364 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcd, 0x4f, 0x2a, 0x4e,
 	0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f,
 	0xc9, 0x17, 0x92, 0xae, 0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2,
 	0x8b, 0x52, 0xf5, 0x60, 0x2a, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0xea, 0xf4, 0x41, 0x2c,
-	0x88, 0x16, 0x29, 0x71, 0xb8, 0x49, 0x30, 0x06, 0x44, 0x42, 0xe9, 0x23, 0x23, 0x17, 0xbf, 0x53,
-	0x62, 0x4e, 0x4e, 0x7e, 0x49, 0x48, 0x46, 0x51, 0x6a, 0x71, 0x46, 0x7e, 0x4e, 0x8a, 0x90, 0x03,
-	0x17, 0xab, 0x33, 0xc8, 0x74, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x3e, 0x23, 0x2d, 0x3d, 0x3c, 0xf6,
-	0xe9, 0xf9, 0x43, 0x19, 0x60, 0x1d, 0x41, 0x10, 0x8d, 0x42, 0x7e, 0x5c, 0xdc, 0x10, 0xf1, 0xc4,
-	0x92, 0xcc, 0xfc, 0x3c, 0x09, 0x26, 0xb0, 0x39, 0x3a, 0x44, 0x98, 0x03, 0x56, 0x1f, 0x52, 0x59,
-	0x90, 0x1a, 0x84, 0x6c, 0x80, 0x90, 0x0f, 0x17, 0x27, 0xdc, 0x79, 0x12, 0xcc, 0x0a, 0x8c, 0x1a,
-	0x9c, 0x4e, 0x7a, 0x27, 0xee, 0xc9, 0x33, 0xdc, 0xba, 0x27, 0xaf, 0x96, 0x9e, 0x59, 0x92, 0x51,
-	0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x9f, 0x9c, 0x5f, 0x9c, 0x9b, 0x5f, 0x0c, 0xa5, 0x74, 0x8b,
-	0x53, 0xb2, 0xf5, 0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0xf5, 0x5c, 0x52, 0x93, 0x83, 0x10, 0x06, 0x28,
-	0x65, 0x70, 0xb1, 0x05, 0x80, 0xc3, 0x53, 0x28, 0x82, 0x4b, 0x00, 0xcd, 0xf3, 0xc5, 0x12, 0x8c,
-	0x0a, 0xcc, 0x1a, 0xdc, 0x04, 0x1c, 0x8b, 0xa6, 0x29, 0x08, 0xc3, 0x14, 0x2b, 0x96, 0x19, 0x0b,
-	0xe4, 0x19, 0x9c, 0x3c, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39,
-	0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x1f,
-	0xc9, 0xd9, 0x20, 0xf3, 0x75, 0xc1, 0x56, 0xe9, 0xc3, 0xac, 0xd2, 0xaf, 0x80, 0x47, 0x14, 0xc4,
-	0x0f, 0x49, 0x6c, 0xe0, 0xf8, 0x32, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xc5, 0x99, 0x04, 0x15,
-	0x14, 0x02, 0x00, 0x00,
+	0x88, 0x16, 0x29, 0x71, 0xb8, 0x49, 0x30, 0x06, 0x54, 0x42, 0x38, 0x39, 0x3f, 0x37, 0x37, 0x3f,
+	0x4f, 0x1f, 0x42, 0x41, 0x04, 0x95, 0x4e, 0x30, 0x71, 0xf1, 0xf9, 0x43, 0xd5, 0x05, 0x80, 0x6d,
+	0x16, 0x52, 0xe6, 0x62, 0x05, 0xdb, 0x28, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0xc4, 0xab, 0x07,
+	0xd5, 0xe0, 0x0c, 0x12, 0x0c, 0x82, 0xc8, 0x09, 0xf9, 0x71, 0x71, 0x43, 0x8c, 0x4f, 0x2c, 0xc9,
+	0xcc, 0xcf, 0x93, 0x60, 0x52, 0x60, 0xd4, 0xe0, 0x33, 0xd2, 0xd1, 0xc3, 0xe3, 0x5c, 0x3d, 0x7f,
+	0x84, 0xfa, 0x90, 0xca, 0x82, 0xd4, 0x20, 0x64, 0x03, 0x84, 0x22, 0xb9, 0x04, 0x92, 0x12, 0x73,
+	0x72, 0xf2, 0x4b, 0xe2, 0x4b, 0x32, 0x8a, 0x52, 0x8b, 0x33, 0xf2, 0x73, 0x52, 0x24, 0x98, 0x15,
+	0x18, 0x35, 0x38, 0x9d, 0xf4, 0x4e, 0xdc, 0x93, 0x67, 0xb8, 0x75, 0x4f, 0x5e, 0x2d, 0x3d, 0xb3,
+	0x24, 0xa3, 0x34, 0x09, 0xe4, 0x1a, 0xfd, 0xe4, 0xfc, 0xe2, 0xdc, 0xfc, 0x62, 0x28, 0xa5, 0x5b,
+	0x9c, 0x92, 0xad, 0x5f, 0x52, 0x59, 0x90, 0x5a, 0xac, 0xe7, 0x92, 0x9a, 0x1c, 0xc4, 0x0f, 0x31,
+	0x27, 0x04, 0x66, 0x8c, 0x50, 0x1a, 0x97, 0x78, 0x6e, 0x66, 0x5e, 0x3c, 0xcc, 0x1d, 0xf1, 0x29,
+	0xa9, 0x39, 0xa9, 0xe9, 0x10, 0x67, 0xb3, 0x90, 0x65, 0x83, 0x68, 0x6e, 0x66, 0x1e, 0x2c, 0xcc,
+	0x5c, 0xe0, 0x86, 0x29, 0xa5, 0x70, 0xb1, 0x41, 0x43, 0x30, 0x84, 0x8b, 0x1f, 0x6e, 0x1b, 0x24,
+	0x3a, 0x25, 0x18, 0x15, 0x98, 0x35, 0xb8, 0x8d, 0xb4, 0x89, 0x08, 0x20, 0x58, 0x3c, 0x04, 0xf1,
+	0xe5, 0xa3, 0xf0, 0xad, 0x58, 0x66, 0x2c, 0x90, 0x67, 0x70, 0xf2, 0x3c, 0xf1, 0x48, 0x8e, 0xf1,
+	0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e,
+	0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x7d, 0x24, 0xe7, 0x83, 0x0c, 0xd7, 0x05, 0xdb, 0xa3, 0x0f,
+	0xb3, 0x47, 0xbf, 0x02, 0x9e, 0x20, 0x20, 0x7e, 0x49, 0x62, 0x03, 0x27, 0x01, 0x63, 0x40, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0xee, 0x39, 0x6e, 0x52, 0x7c, 0x02, 0x00, 0x00,
 }
 
-func (m *BallotThreshold) Marshal() (dAtA []byte, err error) {
+func (m *ObserverParams) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -162,20 +167,30 @@ func (m *BallotThreshold) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BallotThreshold) MarshalTo(dAtA []byte) (int, error) {
+func (m *ObserverParams) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BallotThreshold) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ObserverParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size := m.Threshold.Size()
+		size := m.MinObserverDelegation.Size()
 		i -= size
-		if _, err := m.Threshold.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.MinObserverDelegation.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintParams(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.BallotThreshold.Size()
+		i -= size
+		if _, err := m.BallotThreshold.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintParams(dAtA, i, uint64(size))
@@ -187,10 +202,17 @@ func (m *BallotThreshold) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.Chain != 0 {
-		i = encodeVarintParams(dAtA, i, uint64(m.Chain))
+	if m.Chain != nil {
+		{
+			size, err := m.Chain.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintParams(dAtA, i, uint64(size))
+		}
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -215,10 +237,10 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.BallotThresholds) > 0 {
-		for iNdEx := len(m.BallotThresholds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.ObserverParams) > 0 {
+		for iNdEx := len(m.ObserverParams) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.BallotThresholds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.ObserverParams[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -243,19 +265,22 @@ func encodeVarintParams(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *BallotThreshold) Size() (n int) {
+func (m *ObserverParams) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Chain != 0 {
-		n += 1 + sovParams(uint64(m.Chain))
+	if m.Chain != nil {
+		l = m.Chain.Size()
+		n += 1 + l + sovParams(uint64(l))
 	}
 	if m.Observation != 0 {
 		n += 1 + sovParams(uint64(m.Observation))
 	}
-	l = m.Threshold.Size()
+	l = m.BallotThreshold.Size()
+	n += 1 + l + sovParams(uint64(l))
+	l = m.MinObserverDelegation.Size()
 	n += 1 + l + sovParams(uint64(l))
 	return n
 }
@@ -266,8 +291,8 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.BallotThresholds) > 0 {
-		for _, e := range m.BallotThresholds {
+	if len(m.ObserverParams) > 0 {
+		for _, e := range m.ObserverParams {
 			l = e.Size()
 			n += 1 + l + sovParams(uint64(l))
 		}
@@ -281,7 +306,7 @@ func sovParams(x uint64) (n int) {
 func sozParams(x uint64) (n int) {
 	return sovParams(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *BallotThreshold) Unmarshal(dAtA []byte) error {
+func (m *ObserverParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -304,17 +329,17 @@ func (m *BallotThreshold) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BallotThreshold: wiretype end group for non-group")
+			return fmt.Errorf("proto: ObserverParams: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BallotThreshold: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ObserverParams: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
 			}
-			m.Chain = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowParams
@@ -324,11 +349,28 @@ func (m *BallotThreshold) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Chain |= ObserverChain(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Chain == nil {
+				m.Chain = &common.Chain{}
+			}
+			if err := m.Chain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Observation", wireType)
@@ -350,7 +392,7 @@ func (m *BallotThreshold) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Threshold", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field BallotThreshold", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -378,7 +420,41 @@ func (m *BallotThreshold) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Threshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.BallotThreshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinObserverDelegation", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinObserverDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -434,7 +510,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BallotThresholds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObserverParams", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -461,8 +537,8 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.BallotThresholds = append(m.BallotThresholds, &BallotThreshold{})
-			if err := m.BallotThresholds[len(m.BallotThresholds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ObserverParams = append(m.ObserverParams, &ObserverParams{})
+			if err := m.ObserverParams[len(m.ObserverParams)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

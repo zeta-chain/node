@@ -82,7 +82,7 @@ func (m *Metrics) RegisterGauge(name string, help string) error {
 }
 
 func (m *Metrics) Start() {
-	log.Info().Msg("Metrics server starting...")
+	log.Info().Msg("metrics server starting")
 	go func() {
 		if err := m.s.ListenAndServe(); err != nil {
 			log.Error().Err(err).Msg("fail to start metric server")

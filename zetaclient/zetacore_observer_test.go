@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
@@ -30,7 +31,7 @@ const (
 )
 
 func (s *COSuite) SetUpTest(c *C) {
-	SetupConfigForTest() // setup meta-prefix
+	types.SetupConfigForTest() // setup meta-prefix
 
 	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()
@@ -116,7 +117,7 @@ func (s *COSuite) TestSendFlow(c *C) {
 	b1 := s.bridge1
 	b2 := s.bridge2
 	metaHash, err := b1.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
-		"0xtxhash", 123123)
+		"0xtxhash", 123123, "0xtoken")
 	c.Assert(err, IsNil)
 	c.Logf("PostSend metaHash %s", metaHash)
 
@@ -124,7 +125,7 @@ func (s *COSuite) TestSendFlow(c *C) {
 	<-timer1.C
 
 	metaHash, err = b2.PostSend(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
-		"0xtxhash", 123123)
+		"0xtxhash", 123123, "0xtoken")
 	c.Assert(err, IsNil)
 	c.Logf("Second PostSend metaHash %s", metaHash)
 

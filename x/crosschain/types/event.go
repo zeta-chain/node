@@ -17,6 +17,7 @@ const (
 
 	ZetaMint         = "ZetaMint"
 	ZetaBurnt        = "ZetaBurnt"
+	Asset            = "Asset"
 	OutTXVotingChain = "OutTxVotingChain"
 	OutBoundChain    = "OutBoundChain"
 	OldStatus        = "OldStatus"
@@ -24,6 +25,11 @@ const (
 	StatusMessage    = "StatusMessage"
 	RelayedMessage   = "RelayedMessage"
 	Identifiers      = "LogIdentifiers"
+
+	BallotIdentifier       = "BallotIdentifier"
+	CCTXIndex              = "CCTXIndex"
+	BallotObservationHash  = "BallotObservationHash"
+	BallotObservationChain = "BallotObservationChain"
 )
 
 const (
@@ -31,6 +37,7 @@ const (
 	OutboundTxFailed     = "crosschain/OutboundTxFailed"
 	CctxCreated          = "crosschain/CctxCreated"
 	ZrcWithdrawCreated   = "crosschain/ZrcWithdrawCreated"
+	BallotCreated        = "crosschain/BallotCreated"
 	ZetaWithdrawCreated  = "crosschain/ZetaWithdrawCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
 	StatusChanged        = "crosschain/StatusChanged"

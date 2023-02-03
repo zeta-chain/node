@@ -8,6 +8,7 @@ import (
 )
 
 // GetBlockHeight returns the current height for metachain blocks
+// FIXME: deprecate this in favor of tendermint RPC?
 func (b *ZetaCoreBridge) GetBlockHeight() (uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	height, err := client.LastMetaHeight(

@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strconv"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +19,8 @@ func createNGasPrice(keeper *Keeper, ctx sdk.Context, n int) []types.GasPrice {
 	items := make([]types.GasPrice, n)
 	for i := range items {
 		items[i].Creator = "any"
-		items[i].Index = fmt.Sprintf("%d", i)
+		items[i].ChainId = int64(i)
+		items[i].Index = strconv.FormatInt(int64(i), 10)
 		keeper.SetGasPrice(ctx, items[i])
 	}
 	return items
@@ -29,7 +30,7 @@ func TestGasPriceGet(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNGasPrice(keeper, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetGasPrice(ctx, item.Index)
+		rst, found := keeper.GetGasPrice(ctx, item.ChainId)
 		assert.True(t, found)
 		assert.Equal(t, item, rst)
 	}
@@ -39,7 +40,7 @@ func TestGasPriceRemove(t *testing.T) {
 	items := createNGasPrice(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveGasPrice(ctx, item.Index)
-		_, found := keeper.GetGasPrice(ctx, item.Index)
+		_, found := keeper.GetGasPrice(ctx, item.ChainId)
 		assert.False(t, found)
 	}
 }
@@ -74,7 +75,7 @@ func TestGasPriceQuerySingle(t *testing.T) {
 		},
 		{
 			desc:    "KeyNotFound",
-			request: &types.QueryGetGasPriceRequest{Index: "missing"},
+			request: &types.QueryGetGasPriceRequest{Index: "1000000000"},
 			err:     status.Error(codes.InvalidArgument, "not found"),
 		},
 		{

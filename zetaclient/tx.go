@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
-	"math/big"
-	"time"
 )
 
 const (
@@ -28,7 +29,7 @@ const (
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgGasPriceVoter(signerAddress, chain.String(), gasPrice, supply, blockNum)
+	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 	zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
@@ -37,12 +38,12 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chain, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, msg)
 	if err != nil {
-		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
+		b.logger.Error().Err(err).Msg("AddTxHashToOutTxTracker broadcast fail")
 		return "", err
 	}
 	return zetaTxHash, nil
@@ -50,7 +51,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chain string, nonce uint64, txH
 
 func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgNonceVoter(signerAddress, chain.String(), nonce)
+	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainName.String(), nonce)
 	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")
@@ -58,12 +59,13 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	}
 	return zetaTxHash, nil
 }
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, txOrigin string, receiver string, receiverChain string, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimt uint64) (string, error) {
+
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
-		zetaTxHash, err := b.Broadcast(zetaGasLimt, msg)
+		zetaTxHash, err := b.Broadcast(zetaGasLimit, msg)
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostSend broadcast fail; re-trying...")
 		} else {
@@ -75,9 +77,9 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain string, txOrigin st
 }
 
 // FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain string, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain, uint64(nonce), coinType)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, sdk.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
 	var gasLimit uint64 = PostReceiveConfirmationGasLimit
@@ -96,6 +98,16 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
+func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query CctxAll error")
+		return nil, err
+	}
+	return resp.CrossChainTx, nil
+}
+
 func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: sendHash})
@@ -108,9 +120,8 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	b.logger.Info().Msgf("GetObserverList resp: %s, %s", chain.String(), observationType)
 	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
-		ObservationChain: chain.String(),
+		ObservationChain: chain.ChainName.String(),
 		ObservationType:  observationType,
 	})
 	if err != nil {
@@ -153,7 +164,7 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.String()})
+	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query GetBlockHeight error")
 		return nil, err
@@ -173,7 +184,7 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
 
 func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.String()})
+	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query QueryGetChainNoncesRequest error")
 		return nil, err
@@ -215,7 +226,7 @@ func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
 
 func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey string) (string, error) {
 	signerAddress := b.keys.GetSignerInfo().GetAddress().String()
-	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.String(), address, pubkey)
+	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), address, pubkey)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		b.logger.Err(err).Msg("SetNodeKey broadcast fail")
@@ -227,7 +238,8 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, address string, pubkey strin
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
-		Index: fmt.Sprintf("%s-%d", chain.String(), nonce),
+		ChainID: chain.ChainId,
+		Nonce:   nonce,
 	})
 	if err != nil {
 		return nil, err
@@ -238,7 +250,7 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
-		Chain: chain.String(),
+		Chain: chain.ChainId,
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,

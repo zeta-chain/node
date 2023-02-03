@@ -3,14 +3,15 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	clientconfig "github.com/zeta-chain/zetacore/zetaclient/config"
-	"math/big"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // FIXME: This is for testnet only
@@ -49,6 +50,17 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		),
 	)
 
+	connector, err := k.DeployConnectorZEVM(ctx, wzeta)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to DeployConnectorZEVM")
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(sdk.EventTypeMessage,
+			sdk.NewAttribute("DeployConnectorZEVM", connector.String()),
+		),
+	)
+	ctx.Logger().Info("Deployed Connector ZEVM at " + connector.String())
+
 	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, router)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to SystemContractAddress")
@@ -62,34 +74,64 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	// set the system contract
 	system, _ := k.GetSystemContract(ctx)
 	system.SystemContract = SystemContractAddress.String()
+	// FIXME: remove unnecessary SetGasPrice and setupChainGasCoinAndPool
 	k.SetSystemContract(ctx, system)
+	//err = k.SetGasPrice(ctx, big.NewInt(1337), big.NewInt(1))
+	if err != nil {
+		return err
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_testnet.String(), "ETH", "gETH", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_localnet.String(), "ETH", "gETH", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_bsc_testnet.String(), "BNB", "tBNB", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_mumbai_testnet.String(), "MATIC", "tMATIC", 18)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
+	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_regtest.String(), "BTC", "tBTC", 8)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, "GOERLI", "ETH", "gETH", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "BSCTESTNET", "BNB", "tBNB", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "MUMBAI", "MATIC", "tMATIC", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
-	_, err = k.setupChainGasCoinAndPool(ctx, "BTCTESTNET", "BTC", "tBTC", 8)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
+	//FIXME: clean up and config the above based on localnet/testnet/mainnet
 
+	// for localnet only: USDT ZRC20
+	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+	_, err = k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliLocalNetChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
+	}
+	fmt.Println("Successfully deployed contracts")
 	return nil
 }
 
 // setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
-func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
-	name := fmt.Sprintf("%s-%s", gasAssetName, chain)
+// FIXME: use chainid instead of chain name; add cointype and use proper gas limit based on cointype/chain
+func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
+	name := fmt.Sprintf("%s-%s", gasAssetName, c)
+	chainName := common.ParseStringToObserverChain(c)
+	chain, found := k.zetaobserverKeeper.GetChainFromChainName(ctx, chainName)
+	if !found {
+		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
+	}
+
 	transferGasLimit := big.NewInt(21_000)
-	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain, common.CoinType_Gas, "", transferGasLimit)
+	if chain.IsEVMChain() {
+		transferGasLimit = big.NewInt(21_000)
+	} else if chain.IsBitcoinChain() {
+		transferGasLimit = big.NewInt(100) // 100B for a typical tx
+	}
+
+	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainName.String(), common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}
@@ -98,8 +140,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 			sdk.NewAttribute(name, zrc20Addr.String()),
 		),
 	)
-	chainid := clientconfig.Chains[chain].ChainID
-	err = k.SetGasCoin(ctx, chainid, zrc20Addr)
+	err = k.SetGasCoin(ctx, big.NewInt(chain.ChainId), zrc20Addr)
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
@@ -115,19 +156,17 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chain string, gasAsset
 	if err != nil {
 		return ethcommon.Address{}, err
 	}
-
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
 	}
-
 	systemABI, err := contracts.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get system contract abi")
 	}
-	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, BigIntZero, nil, true, "setGasZetaPool", chainid, zrc20Addr)
+	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, BigIntZero, nil, true, "setGasZetaPool", big.NewInt(chain.ChainId), zrc20Addr)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chainid, zrc20Addr.String())
+		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chain.ChainId, zrc20Addr.String())
 	}
 
 	// setup uniswap v2 pools gas/zeta

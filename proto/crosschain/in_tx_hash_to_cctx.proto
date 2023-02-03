@@ -4,8 +4,8 @@ package zetachain.zetacore.crosschain;
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 message InTxHashToCctx {
-  string inTxHash = 1; 
-  string cctxIndex = 2; 
+  string in_tx_hash = 1;
+  string cctx_index = 2;
   
 }
 

@@ -14,56 +14,60 @@ enum CctxStatus {
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
 }
 
-message InBoundTxParams{
+message InboundTxParams{
   string sender = 1;
   string senderChain = 2;
-  string inBoundTxObservedHash = 3;
-  uint64 inBoundTxObservedExternalHeight = 4;
-  uint64 inBoundTxFinalizedZetaHeight = 5;
-  string inBoundTXBallotIndex = 6;
-  string txOrigin = 7;
+  int64 sender_chain_id = 3;
+  string inbound_tx_observed_hash = 4;
+  uint64 inbound_tx_observed_external_height = 5;
+  uint64 inbound_tx_finalized_zeta_height = 6;
+  string inbound_tx_ballot_index=7;
+  string tx_origin = 8;
+  common.CoinType coin_type = 9;
+  string asset = 10;
 }
 
-message OutBoundTxParams {
+message OutboundTxParams {
   string receiver = 1;
-  string receiverChain = 2;
-  uint64 broadcaster = 3; // FIXME: remove this
-  string outBoundTxHash = 4;
-  uint64 outBoundTxTSSNonce = 5;
-  uint64 outBoundTxGasLimit = 6;
-  string outBoundTxGasPrice = 7;
-  string outBoundTXBallotIndex = 8;
-  uint64 outBoundTxFinalizedZetaHeight = 9;
-  uint64 outBoundTxObservedExternalHeight = 10;
-  common.CoinType coinType = 11;
+  string receiver_chain = 2;
+  int64 receiver_chainId = 3;
+  uint64 broadcaster = 4; // Can be removed
+  string outbound_tx_hash = 5;
+  uint64 outbound_tx_tss_nonce = 6;
+  uint64 outbound_tx_gas_limit = 7;
+  string outbound_tx_gas_price = 8;
+  string outbound_tx_ballot_index = 9;
+  uint64 outbound_tx_finalized_zeta_height = 10;
+  uint64 outbound_tx_observed_external_height = 11;
+  common.CoinType coin_type = 12;
 }
 
 message Status {
   CctxStatus status = 1;
-  string statusMessage = 2;
-  int64  lastUpdateTimestamp = 3;
+  string status_message = 2;
+  int64  lastUpdate_timestamp = 3;
 }
 
 message CrossChainTx {
   string creator = 1;
   string index = 2;
-  string zetaBurnt = 3 [
+  string zeta_burnt = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zetaBurnt\""
+    (gogoproto.moretags) = "yaml:\"zeta_burnt\""
   ];
-  string zetaMint = 4 [
+  string zeta_mint = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zetaMint\""
+    (gogoproto.moretags) = "yaml:\"zeta_mint\""
   ];
-  string zetaFees = 5 [
+  string zeta_fees = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zetaFees\""
+    (gogoproto.moretags) = "yaml:\"zeta_fees\""
   ];
-  string relayedMessage = 6; // Not used by protocol , just relayed across
+  string relayed_message = 6; // Not used by protocol , just relayed across
   Status cctx_status = 8;
-  InBoundTxParams  InBoundTxParams = 9;
-  OutBoundTxParams OutBoundTxParams = 10;
+  InboundTxParams  inbound_tx_params = 9;
+  OutboundTxParams outbound_tx_params = 10;
 }

@@ -9,6 +9,7 @@ import "gogoproto/gogo.proto";
 import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
+import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -20,12 +21,12 @@ service Query {
 	}
 	// Queries a list of VoterByIdentifier items.
 	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballotIdentifier}";
+		option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
 	}
 
 // Queries a list of ObserversByChainAndType items.
 	rpc ObserversByChainAndType(QueryObserversByChainAndTypeRequest) returns (QueryObserversByChainAndTypeResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain_and_type/{observationChain}/{observationType}";
+		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain_and_type/{observation_chain}/{observation_type}";
 	}
 	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
 		option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
@@ -47,7 +48,7 @@ message QueryParamsResponse {
 }
 
 message QueryBallotByIdentifierRequest {
-  string ballotIdentifier = 1;
+  string ballot_identifier = 1;
 }
 
 message QueryBallotByIdentifierResponse {
@@ -55,18 +56,18 @@ message QueryBallotByIdentifierResponse {
 }
 
 message QueryObserversByChainAndTypeRequest {
-  string observationChain = 1;
-  string observationType = 2;
+  string observation_chain = 1;
+  string observation_type = 2;
 }
 
 message QueryObserversByChainAndTypeResponse {
-  repeated string Observers = 1;
+  repeated string observers = 1;
 }
 
 message QueryAllObserverMappersRequest {
 }
 message QueryAllObserverMappersResponse {
-	repeated ObserverMapper ObserverMappers = 1;
+	repeated ObserverMapper observer_mappers = 1;
 }
 
 
@@ -74,7 +75,7 @@ message QuerySupportedChains {
 }
 
 message QuerySupportedChainsResponse {
-	repeated ObserverChain Chains = 1;
+	repeated common.Chain chains = 1;
 }
 
 

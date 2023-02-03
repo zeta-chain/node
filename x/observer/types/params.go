@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/zeta-chain/zetacore/common"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,73 +15,36 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new Params instance
-func NewParams() Params {
-	return Params{
-		BallotThresholds: []*BallotThreshold{
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BTCTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BTCTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Baobab,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Baobab,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-		},
-	}
+func NewParams(observerParams []*ObserverParams) Params {
+	return Params{ObserverParams: observerParams}
 }
-
-// DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	chains := common.DefaultChainsList()
+	observerParams := make([]*ObserverParams, len(chains)*2)
+	i := 0
+	for _, chain := range chains {
+		observerParams[i] = &ObserverParams{
+			Chain:                 chain,
+			Observation:           ObservationType_InBoundTx,
+			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+		}
+		i++
+		observerParams[i] = &ObserverParams{
+			Chain:                 chain,
+			Observation:           ObservationType_OutBoundTx,
+			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+		}
+		i++
+	}
+	return NewParams(observerParams)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.BallotThresholds, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.ObserverParams, validateVotingThresholds),
 	}
 }
 
@@ -96,23 +60,23 @@ func (p Params) String() string {
 }
 
 func validateVotingThresholds(i interface{}) error {
-	v, ok := i.([]*BallotThreshold)
+	v, ok := i.([]*ObserverParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	for _, threshold := range v {
-		if threshold.Threshold.GT(sdk.OneDec()) {
+		if threshold.BallotThreshold.GT(sdk.OneDec()) {
 			return ErrParamsThreshold
 		}
 	}
 	return nil
 }
 
-func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (BallotThreshold, bool) {
-	for _, threshold := range p.GetBallotThresholds() {
-		if threshold.Chain == chain && threshold.Observation == observationType {
-			return *threshold, true
+func (p Params) GetParamsForChainAndType(chain *common.Chain, observationType ObservationType) (ObserverParams, bool) {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain.IsEqual(*chain) && ObserverParam.Observation == observationType {
+			return *ObserverParam, true
 		}
 	}
-	return BallotThreshold{}, false
+	return ObserverParams{}, false
 }

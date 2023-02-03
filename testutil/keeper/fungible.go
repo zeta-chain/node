@@ -16,6 +16,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	"testing"
 )
 
@@ -42,6 +43,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	bankkeeper := bankkeeper2.BaseKeeper{}
 	authkeeper := authkeeper2.AccountKeeper{}
 	evmKeeper := evmkeeper.Keeper{}
+	zetaObserverKeeper := zetaObserverModuleKeeper.Keeper{}
 	keeper := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,
@@ -50,6 +52,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		authkeeper,
 		evmKeeper,
 		bankkeeper,
+		zetaObserverKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
