@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
@@ -30,7 +31,7 @@ const (
 )
 
 func (s *COSuite) SetUpTest(c *C) {
-	SetupConfigForTest() // setup meta-prefix
+	types.SetupConfigForTest() // setup meta-prefix
 
 	// setup 2 metabridges
 	homeDir, err := os.UserHomeDir()

@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/syndtr/goleveldb/leveldb/util"
 	"math/big"
 	"os"
 	"strconv"
@@ -13,9 +15,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/syndtr/goleveldb/leveldb/util"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/contracts/evm"
@@ -115,7 +114,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 
 	if err != nil {
-		// Can we log an error before we have our logger? :)
+		// Can we log an error before we have our Logger? :)
 		log.Error().Err(err).Msgf("there was an error creating a logFile chain %s", ob.chain.String())
 	}
 	fileLogger := zerolog.New(logFile).With().Logger()
@@ -194,10 +193,10 @@ func (ob *EVMChainClient) Stop() {
 	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
-	ob.logger.Info().Msg("closing ob.db")
+	ob.logger.Info().Msg("closing ob.pendingUtxos")
 	err := ob.db.Close()
 	if err != nil {
-		ob.logger.Error().Err(err).Msg("error closing db")
+		ob.logger.Error().Err(err).Msg("error closing pendingUtxos")
 	}
 
 	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
@@ -214,7 +213,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	if !found {
 		return false, false, nil
 	}
-	sendID := fmt.Sprintf("%s/%d", ob.chain.String(), nonce)
+	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger := ob.logger.With().Str("sendID", sendID).Logger()
 	if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
@@ -370,7 +369,7 @@ func (ob *EVMChainClient) observeOutTx() {
 		case <-ticker.C:
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
 			if err != nil {
-				return
+				continue
 			}
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
@@ -448,7 +447,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
-	fmt.Println("starting watcher")
+	fmt.Println("starting ExternalChainWatcher")
 	for {
 		select {
 		case <-ob.ticker.C:
@@ -488,7 +487,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if toBlock >= confirmedBlockNum {
 		toBlock = confirmedBlockNum
 	}
-	ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
+	//ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Query evm chain for zeta sent logs
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
@@ -794,98 +793,6 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	// SUPPLY
 	var supply string // lockedAmount on ETH, totalSupply on other chains
 	supply = "100"
-	//if chainOb.chain == common.ETHChain {
-	//	input, err := chainOb.connectorAbi.Pack("getLockedAmount")
-	//	if err != nil {
-	//		return fmt.Errorf("fail to getLockedAmount")
-	//	}
-	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-	//		return err
-	//	}
-	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-	//		From: fromAddr,
-	//		To:   &toAddr,
-	//		Data: input,
-	//	}, big.NewInt(0).SetUint64(bn))
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-	//		return err
-	//	}
-	//	output, err := chainOb.connectorAbi.Unpack("getLockedAmount", res)
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-	//		return err
-	//	}
-	//	lockedAmount := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-	//	//fmt.Printf("ETH: block %d: lockedAmount %d\n", bn, lockedAmount)
-	//	supply = lockedAmount.String()
-	//
-	//} else if chainOb.chain == common.BSCChain {
-	//	input, err := chainOb.connectorAbi.Pack("totalSupply")
-	//	if err != nil {
-	//		return fmt.Errorf("fail to totalSupply")
-	//	}
-	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-	//		return err
-	//	}
-	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.BSC_MPI_ADDRESS)
-	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-	//		From: fromAddr,
-	//		To:   &toAddr,
-	//		Data: input,
-	//	}, big.NewInt(0).SetUint64(bn))
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-	//		return err
-	//	}
-	//	output, err := chainOb.connectorAbi.Unpack("totalSupply", res)
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-	//		return err
-	//	}
-	//	totalSupply := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
-	//	supply = totalSupply.String()
-	//} else if chainOb.chain == common.POLYGONChain {
-	//	input, err := chainOb.connectorAbi.Pack("totalSupply")
-	//	if err != nil {
-	//		return fmt.Errorf("fail to totalSupply")
-	//	}
-	//	bn, err := chainOb.Client.BlockNumber(context.TODO())
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s BlockNumber error", chainOb.chain)
-	//		return err
-	//	}
-	//	fromAddr := ethcommon.HexToAddress(config.TSS_TEST_ADDRESS)
-	//	toAddr := ethcommon.HexToAddress(config.POLYGON_MPI_ADDRESS)
-	//	res, err := chainOb.Client.CallContract(context.TODO(), ethereum.CallMsg{
-	//		From: fromAddr,
-	//		To:   &toAddr,
-	//		Data: input,
-	//	}, big.NewInt(0).SetUint64(bn))
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s CallContract error", chainOb.chain)
-	//		return err
-	//	}
-	//	output, err := chainOb.connectorAbi.Unpack("totalSupply", res)
-	//	if err != nil {
-	//		log.Err(err).Msgf("%s Unpack error", chainOb.chain)
-	//		return err
-	//	}
-	//	totalSupply := *connectorAbi.ConvertType(output[0], new(*big.Int)).(**big.Int)
-	//	//fmt.Printf("BSC: block %d: totalSupply %d\n", bn, totalSupply)
-	//	supply = totalSupply.String()
-	//} else {
-	//	log.Error().Msgf("chain not supported %s", chainOb.chain)
-	//	return fmt.Errorf("unsupported chain %s", chainOb.chain)
-	//}
 
 	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
@@ -893,16 +800,6 @@ func (ob *EVMChainClient) PostGasPrice() error {
 		return err
 	}
 
-	//bal, err := chainOb.Client.BalanceAt(context.TODO(), chainOb.Tss.EVMAddress(), nil)
-	//if err != nil {
-	//	log.Err(err).Msg("BalanceAt:")
-	//	return err
-	//}
-	//_, err = chainOb.zetaClient.PostGasBalance(chainOb.chain, bal.String(), blockNum)
-	//if err != nil {
-	//	log.Err(err).Msg("PostGasBalance:")
-	//	return err
-	//}
 	return nil
 }
 

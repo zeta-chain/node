@@ -3,7 +3,8 @@ package zetaclient
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec"
+
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -16,7 +17,11 @@ type TSSSigner interface {
 	Sign(data []byte) ([65]byte, error)
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
+	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
+	PubKeyCompressedBytes() []byte
 }
+
+var _ TSSSigner = (*TestSigner)(nil)
 
 // a fake signer for testing
 type TestSigner struct {
@@ -41,7 +46,7 @@ func (s TestSigner) Pubkey() []byte {
 // return 33B compressed pubkey
 func (s TestSigner) PubKeyCompressedBytes() []byte {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -53,13 +58,8 @@ func (s TestSigner) EVMAddress() ethcommon.Address {
 }
 
 func (s TestSigner) BTCAddress() string {
-	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
-	if err != nil {
-		return ""
-	}
-	testnet3Addr, err := btcutil.NewAddressPubKey(pk.SerializeCompressed(), &chaincfg.TestNet3Params)
-	if err != nil {
+	testnet3Addr := s.BTCAddressPubkey()
+	if testnet3Addr == nil {
 		return ""
 	}
 	return testnet3Addr.EncodeAddress()
@@ -67,7 +67,7 @@ func (s TestSigner) BTCAddress() string {
 
 func (s TestSigner) BTCAddressPubkey() *btcutil.AddressPubKey {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
 		fmt.Printf("error parsing pubkey: %v", err)
 		return nil
@@ -80,16 +80,20 @@ func (s TestSigner) BTCAddressPubkey() *btcutil.AddressPubKey {
 	return testnet3Addr
 }
 
-func (s TestSigner) BTCSegWitAddress() string {
+func (s TestSigner) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
-	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
+	pk, err := btcec.ParsePubKey(pkBytes)
 	if err != nil {
-		return ""
+		fmt.Printf("error parsing pubkey: %v", err)
+		return nil
+	}
+	// witness program: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Witness_program
+	// The HASH160 of the public key must match the 20-byte witness program.
+	addrWPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pk.SerializeCompressed()), &chaincfg.TestNet3Params)
+	if err != nil {
+		fmt.Printf("error NewAddressWitnessPubKeyHash: %v", err)
+		return nil
 	}
 
-	testnet3Addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pk.SerializeCompressed()), &chaincfg.TestNet3Params)
-	if err != nil {
-		return ""
-	}
-	return testnet3Addr.EncodeAddress()
+	return addrWPKH
 }

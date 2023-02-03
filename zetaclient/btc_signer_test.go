@@ -35,11 +35,11 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(&tss)
+	s.btcSigner, err = NewBTCSigner(&tss, nil)
 	c.Assert(err, IsNil)
 }
 
-func (s *BTCSignerSuite) Test1(c *C) {
+func (s *BTCSignerSuite) TestP2PH(c *C) {
 	// Ordinarily the private key would come from whatever storage mechanism
 	// is being used, but for this example just hard code it.
 	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
@@ -48,7 +48,7 @@ func (s *BTCSignerSuite) Test1(c *C) {
 
 	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
 	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
-	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.TestNet3Params)
+	addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
 	c.Assert(err, IsNil)
 
 	// For this example, create a fake transaction that represents what
@@ -59,6 +59,7 @@ func (s *BTCSignerSuite) Test1(c *C) {
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
 	pkScript, err := txscript.PayToAddrScript(addr)
+
 	c.Assert(err, IsNil)
 
 	txOut := wire.NewTxOut(100000000, pkScript)
@@ -82,21 +83,6 @@ func (s *BTCSignerSuite) Test1(c *C) {
 
 	// Sign the redeeming transaction.
 	lookupKey := func(a btcutil.Address) (*btcec.PrivateKey, bool, error) {
-		// Ordinarily this function would involve looking up the private
-		// key for the provided address, but since the only thing being
-		// signed in this example uses the address associated with the
-		// private key from above, simply return it with the compressed
-		// flag set since the address is using the associated compressed
-		// public key.
-		//
-		// NOTE: If you want to prove the code is actually signing the
-		// transaction properly, uncomment the following line which
-		// intentionally returns an invalid key to sign with, which in
-		// turn will result in a failure during the script execution
-		// when verifying the signature.
-		//
-		// privKey.D.SetInt64(12345)
-		//
 		return privKey, true, nil
 	}
 	// Notice that the script database parameter is nil here since it isn't
@@ -120,6 +106,86 @@ func (s *BTCSignerSuite) Test1(c *C) {
 
 	err = vm.Execute()
 	c.Assert(err, IsNil)
+
+	fmt.Println("Transaction successfully signed")
+}
+
+func (s *BTCSignerSuite) TestP2WPH(c *C) {
+	// Ordinarily the private key would come from whatever storage mechanism
+	// is being used, but for this example just hard code it.
+	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
+		"d4f8720ee63e502ee2869afab7de234b80c")
+	c.Assert(err, IsNil)
+
+	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+	pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
+	//addr, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+	c.Assert(err, IsNil)
+
+	// For this example, create a fake transaction that represents what
+	// would ordinarily be the real transaction that is being spent.  It
+	// contains a single output that pays to address in the amount of 1 BTC.
+	originTx := wire.NewMsgTx(wire.TxVersion)
+	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
+	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
+	originTx.AddTxIn(txIn)
+	pkScript, err := txscript.PayToAddrScript(addr)
+	c.Assert(err, IsNil)
+	txOut := wire.NewTxOut(100000000, pkScript)
+	originTx.AddTxOut(txOut)
+	originTxHash := originTx.TxHash()
+
+	// Create the transaction to redeem the fake transaction.
+	redeemTx := wire.NewMsgTx(wire.TxVersion)
+
+	// Add the input(s) the redeeming transaction will spend.  There is no
+	// signature script at this point since it hasn't been created or signed
+	// yet, hence nil is provided for it.
+	prevOut = wire.NewOutPoint(&originTxHash, 0)
+	txIn = wire.NewTxIn(prevOut, nil, nil)
+	redeemTx.AddTxIn(txIn)
+
+	// Ordinarily this would contain that actual destination of the funds,
+	// but for this example don't bother.
+	txOut = wire.NewTxOut(0, nil)
+	redeemTx.AddTxOut(txOut)
+	txSigHashes := txscript.NewTxSigHashes(redeemTx)
+	pkScript, err = payToWitnessPubKeyHashScript(addr.WitnessProgram())
+
+	{
+		txWitness, err := txscript.WitnessSignature(redeemTx, txSigHashes, 0, 100000000, pkScript, txscript.SigHashAll, privKey, true)
+		redeemTx.TxIn[0].Witness = txWitness
+		// Prove that the transaction has been validly signed by executing the
+		// script pair.
+		flags := txscript.ScriptBip16 | txscript.ScriptVerifyDERSignatures |
+			txscript.ScriptStrictMultiSig |
+			txscript.ScriptDiscourageUpgradableNops
+		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
+			flags, nil, nil, -1)
+		c.Assert(err, IsNil)
+
+		err = vm.Execute()
+		c.Assert(err, IsNil)
+	}
+
+	{
+		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, txSigHashes, txscript.SigHashAll, redeemTx, 0, 100000000)
+		c.Assert(err, IsNil)
+		sig, err := privKey.Sign(witnessHash)
+		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
+		redeemTx.TxIn[0].Witness = txWitness
+
+		flags := txscript.ScriptBip16 | txscript.ScriptVerifyDERSignatures |
+			txscript.ScriptStrictMultiSig |
+			txscript.ScriptDiscourageUpgradableNops
+		vm, err := txscript.NewEngine(originTx.TxOut[0].PkScript, redeemTx, 0,
+			flags, nil, nil, -1)
+		c.Assert(err, IsNil)
+
+		err = vm.Execute()
+		c.Assert(err, IsNil)
+	}
 
 	fmt.Println("Transaction successfully signed")
 }

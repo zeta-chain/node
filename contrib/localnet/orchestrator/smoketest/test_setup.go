@@ -22,6 +22,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
+
 	goerliClient := sm.goerliClient
 	chainid, err := goerliClient.ChainID(context.Background())
 	if err != nil {
