@@ -4,13 +4,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"math/rand"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -112,6 +112,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	// sign the tx
 	sigHashes := txscript.NewTxSigHashes(tx)
+	witnessHashes := make([][]byte, len(tx.TxIn))
 	for ix := range tx.TxIn {
 		amt, err := getSatoshis(prevOuts[ix].Amount)
 		if err != nil {
@@ -121,12 +122,23 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		if err != nil {
 			return nil, err
 		}
-		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, sigHashes, txscript.SigHashAll, tx, ix, amt)
+		witnessHashes[ix], err = txscript.CalcWitnessSigHash(pkScript, sigHashes, txscript.SigHashAll, tx, ix, amt)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("witnessHash(len%d)\n", len(witnessHash))
-		sig65B, err := signer.tssSigner.Sign(witnessHash)
+
+	}
+	tss, ok := signer.tssSigner.(*TSS)
+	if !ok {
+		return nil, fmt.Errorf("tssSigner is not a TSS")
+	}
+	sig65Bs, err := tss.SignBatch(witnessHashes)
+	if err != nil {
+		return nil, fmt.Errorf("SignBatch error: %v", err)
+	}
+
+	for ix := range tx.TxIn {
+		sig65B := sig65Bs[ix]
 		R := big.NewInt(0).SetBytes(sig65B[:32])
 		S := big.NewInt(0).SetBytes(sig65B[32:64])
 		sig := btcec.Signature{
