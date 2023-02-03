@@ -248,7 +248,7 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
 	change := inputSats - feeSats - amountSats
 	if change < 0 {
-		return fmt.Errorf("not enough input amount; wanted %f, got %f", amountSats+feeSats, inputSats)
+		return fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
 	}
 	amounts := map[btcutil.Address]btcutil.Amount{
 		to:                 amountSats,
