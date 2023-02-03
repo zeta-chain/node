@@ -225,11 +225,26 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 			fmt.Printf("    fee: %d\n", detail.Fee)
 			fmt.Printf("	   vout: %d\n", detail.Vout)
 		}
-		rawTx, err := sm.btcRPCClient.GetRawTransaction(hash)
+		rawTx, err := sm.btcRPCClient.GetRawTransactionVerbose(hash)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("raw tx: %+v\n", rawTx)
+		fmt.Printf("raw tx:\n")
+		fmt.Printf("  TxIn: %d\n", len(rawTx.Vin))
+		for idx, txIn := range rawTx.Vin {
+			fmt.Printf("  TxIn %d:\n", idx)
+			fmt.Printf("    TxID: %s\n", txIn.Txid)
+			fmt.Printf("    Vout: %d\n", txIn.Vout)
+			fmt.Printf("    ScriptSig: %s\n", txIn.ScriptSig.Hex)
+			//fmt.Printf("    Sequence: %d\n", txIn.Sequence)
+		}
+		fmt.Printf("  TxOut: %d\n", len(rawTx.Vout))
+		for idx, txOut := range rawTx.Vout {
+			fmt.Printf("  TxOut %d:\n", idx)
+			fmt.Printf("    Value: %f\n", txOut.Value)
+			fmt.Printf("    N: %d\n", txOut.N)
+			fmt.Printf("    ScriptPubKey: %s\n", txOut.ScriptPubKey.Hex)
+		}
 
 	}
 

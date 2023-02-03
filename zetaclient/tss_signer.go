@@ -143,7 +143,7 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	// 32B msg hash, 32B R, 32B S, 1B RC
 
 	if len(signatures) != len(digests) {
-		log.Warn().Err(err).Msgf("signature has length (%d) not equal to lenght of digests (%d)", len(signatures), len(digests))
+		log.Warn().Err(err).Msgf("signature has length (%d) not equal to length of digests (%d)", len(signatures), len(digests))
 		return [][65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
 
