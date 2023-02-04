@@ -8,6 +8,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	evmante "github.com/evmos/ethermint/app/ante"
 	srvflags "github.com/evmos/ethermint/server/flags"
 	ethermint "github.com/evmos/ethermint/types"
@@ -167,7 +170,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-
+		groupmodule.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		vesting.AppModuleBasic{},
@@ -231,6 +234,7 @@ type App struct {
 	EvmKeeper          *evmkeeper.Keeper
 	FeeMarketKeeper    feemarketkeeper.Keeper
 	FungibleKeeper     fungibleModuleKeeper.Keeper
+	GroupKeeper        groupkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -260,7 +264,7 @@ func New(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey,
-
+		group.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
@@ -285,6 +289,7 @@ func New(
 	if homePath == "" {
 		homePath = DefaultNodeHome
 	}
+
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
@@ -379,6 +384,7 @@ func New(
 		app.ZetaObserverKeeper,
 		app.FungibleKeeper,
 	)
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
@@ -440,6 +446,7 @@ func New(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper),
@@ -467,6 +474,7 @@ func New(
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		paramstypes.ModuleName,
+		group.ModuleName,
 		vestingtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
@@ -480,7 +488,7 @@ func New(
 		slashingtypes.ModuleName, evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		vestingtypes.ModuleName, govtypes.ModuleName,
-		paramstypes.ModuleName, genutiltypes.ModuleName,
+		paramstypes.ModuleName, genutiltypes.ModuleName, group.ModuleName,
 		crisistypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
@@ -505,6 +513,7 @@ func New(
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
 		paramstypes.ModuleName,
+		group.ModuleName,
 		genutiltypes.ModuleName,
 		upgradetypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -725,6 +734,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	//pkt := ibctransfertypes.ParamKeyTable().RegisterParamSet(&ibccoreclienttypes.Params{}).RegisterParamSet(&ibcconnectiontypes.Params{})
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
+	paramsKeeper.Subspace(group.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
