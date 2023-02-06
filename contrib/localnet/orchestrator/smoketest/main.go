@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
@@ -26,19 +29,25 @@ var (
 	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
-	BLOCK              = 5 * time.Second // should be 2x block time
-	BigZero            = big.NewInt(0)
-	SmokeTestTimeout   = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr      = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
-	USDTERC20Addr      = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	ERC20CustodyAddr   = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
-	HexToAddress       = ethcommon.HexToAddress
+	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", &chaincfg.RegressionNetParams)
+
+	BLOCK                = 5 * time.Second // should be 2x block time
+	BigZero              = big.NewInt(0)
+	SmokeTestTimeout     = 10 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr        = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
+	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
+	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
+	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	HexToAddress         = ethcommon.HexToAddress
 )
 
 type SmokeTest struct {
 	zevmClient       *ethclient.Client
 	goerliClient     *ethclient.Client
 	cctxClient       types.QueryClient
+	btcRPCClient     *rpcclient.Client
 	fungibleClient   fungibletypes.QueryClient
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
@@ -48,19 +57,26 @@ type SmokeTest struct {
 	goerliAuth       *bind.TransactOpts
 	zevmAuth         *bind.TransactOpts
 
-	ERC20CustodyAddr ethcommon.Address
-	ERC20Custody     *erc20custody.ERC20Custody
-	USDTERC20Addr    ethcommon.Address
-	USDTERC20        *erc20.USDT
-	USDTZRC20Addr    ethcommon.Address
-	USDTZRC20        *contracts.ZRC20
-	ETHZRC20Addr     ethcommon.Address
-	ETHZRC20         *contracts.ZRC20
+	ERC20CustodyAddr     ethcommon.Address
+	ERC20Custody         *erc20custody.ERC20Custody
+	USDTERC20Addr        ethcommon.Address
+	USDTERC20            *erc20.USDT
+	USDTZRC20Addr        ethcommon.Address
+	USDTZRC20            *contracts.ZRC20
+	ETHZRC20Addr         ethcommon.Address
+	ETHZRC20             *contracts.ZRC20
+	UniswapV2FactoryAddr ethcommon.Address
+	UniswapV2Factory     *contracts.UniswapV2Factory
+	UniswapV2RouterAddr  ethcommon.Address
+	UniswapV2Router      *contracts.UniswapV2Router02
+
+	SystemContract *contracts.SystemContract
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
-	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts) *SmokeTest {
+	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
+	btcRPCClient *rpcclient.Client) *SmokeTest {
 	return &SmokeTest{
 		zevmClient:     zevmClient,
 		goerliClient:   goerliClient,
@@ -69,6 +85,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		wg:             sync.WaitGroup{},
 		goerliAuth:     goerliAuth,
 		zevmAuth:       zevmAuth,
+		btcRPCClient:   btcRPCClient,
 	}
 }
 
@@ -82,6 +99,20 @@ func main() {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	connCfg := &rpcclient.ConnConfig{
+		Host:         "bitcoin:18443",
+		User:         "smoketest",
+		Pass:         "123",
+		HTTPPostMode: true,
+		DisableTLS:   true,
+		Params:       "testnet3",
+	}
+	btcRPCClient, err := rpcclient.New(connCfg, nil)
+	if err != nil {
+		panic(err)
+	}
+
 	goerliClient, err := ethclient.Dial("http://eth:8545")
 	if err != nil {
 		panic(err)
@@ -131,20 +162,27 @@ func main() {
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
+	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
+	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
+	fmt.Printf("##   Ether on Ethereum private net\n")
+	fmt.Printf("##   ZETA on ZetaChain EVM\n")
+	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.TestERC20Deposit()
 	smokeTest.TestERC20Withdraw()
 	smokeTest.TestSendZetaOut()
 	smokeTest.TestMessagePassing()
+	smokeTest.TestZRC20Swap()
+	smokeTest.TestBitcoinWithdraw()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

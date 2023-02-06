@@ -40,7 +40,7 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	suite.testSigner = &TestSigner{ // fake TSS
 		PrivKey: privateKey.ToECDSA(),
 	}
-	addr := suite.testSigner.BTCSegWitAddress()
+	addr := suite.testSigner.BTCAddressWitnessPubkeyHash()
 	suite.T().Logf("segwit addr: %s", addr)
 
 }
@@ -154,8 +154,4 @@ func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, 
 
 	tssTX := hex.EncodeToString(buf.Bytes())
 	return tssTX, nil
-}
-
-func payToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
-	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
 }

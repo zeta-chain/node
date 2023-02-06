@@ -8,6 +8,7 @@ COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetaclientd /usr/local/bin/
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/
 
+
 COPY contrib/localnet/orchestrator/start.sh /work/
 RUN chmod +x /work/start.sh
 

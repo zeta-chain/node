@@ -70,7 +70,7 @@ func (chain Chain) IsKlaytnChain() bool {
 }
 
 func (chain Chain) IsBitcoinChain() bool {
-	return chain.IsEqual(BtcMainnetChain()) || chain.IsEqual(BtcTestNetChain())
+	return chain.IsEqual(BtcMainnetChain()) || chain.IsEqual(BtcTestNetChain()) || chain.IsEqual(BtcRegtestChain())
 }
 
 // IsEmpty is to determinate whether the chain is empty

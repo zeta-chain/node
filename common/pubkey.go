@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -83,7 +83,7 @@ func (pubKey PubKey) GetAddress(chain Chain) (Address, error) {
 			return NoAddress, err
 		}
 		// parse compressed bytes removing 5 first bytes (amino encoding) to get uncompressed
-		pub, err := secp256k1.ParsePubKey(pk.Bytes(), secp256k1.S256())
+		pub, err := secp256k1.ParsePubKey(pk.Bytes())
 		if err != nil {
 			return NoAddress, err
 		}
