@@ -34,9 +34,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
-	} else {
-		b.logger.Info().Str("zetaTxHash", zetaTxHash).Msg("PostGasPrice broadcast success")
 	}
+	b.logger.Debug().Str("zetaTxHash", zetaTxHash).Msg("PostGasPrice broadcast success")
+
 	return zetaTxHash, nil
 }
 
@@ -214,9 +214,9 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		return "", err
-	} else {
-		b.logger.Info().Msgf("SetNodeKey txhash: %s", zetaTxHash)
 	}
+	b.logger.Debug().Msgf("SetNodeKey txhash: %s", zetaTxHash)
+
 	return zetaTxHash, nil
 }
 
