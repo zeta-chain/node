@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	PostGasPriceGasLimit            = 60_000
+	PostGasPriceGasLimit            = 2_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
 	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
@@ -214,6 +214,8 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, msg)
 	if err != nil {
 		return "", err
+	} else {
+		b.logger.Info().Msgf("SetNodeKey txhash: %s", zetaTxHash)
 	}
 	return zetaTxHash, nil
 }

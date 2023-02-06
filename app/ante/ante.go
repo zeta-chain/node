@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"runtime/debug"
 
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -59,7 +60,24 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			anteHandler = newCosmosAnteHandler(options)
+			msgs := tx.GetMsgs()
+			found := false
+			for _, msg := range msgs {
+				switch msg.(type) {
+				// treat these two msg types differently because they might call EVM which results in massive gas consumption
+				// For these two msg types, we don't check gas limit by using a different ante handler
+				case *cctxtypes.MsgGasPriceVoter, *cctxtypes.MsgVoteOnObservedInboundTx:
+					found = true
+					break
+				}
+			}
+			if found {
+				// this differs newCosmosAnteHandler only in that it doesn't check gas limit
+				// by using an Infinite Gas Meter.
+				anteHandler = newCosmosAnteHandlerNoGasLimit(options)
+			} else {
+				anteHandler = newCosmosAnteHandler(options)
+			}
 		default:
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}

@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	ethermint "github.com/evmos/ethermint/types"
 )
 
 var _ GasTx = (*legacytx.StdTx)(nil) // assert StdTx implements GasTx
@@ -41,7 +42,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	}
 
 	// NOTE: create inifinite gas meter to ignore Cosmos KVStore read/write gas costs
-	newCtx = SetGasMeter(simulate, ctx, 0)
+	newCtx = SetGasMeter(simulate, ctx, gasTx.GetGas())
 	sud.evmKeeper.ResetTransientGasUsed(ctx) // reset transient gas used
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
@@ -73,7 +74,7 @@ func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	//if simulate || ctx.BlockHeight() == 0 {
-	return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	return ctx.WithGasMeter(ethermint.NewInfiniteGasMeterWithLimit(gasLimit))
 	//}
 
 	//return ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
