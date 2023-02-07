@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evmos/ethermint/server/config"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/server/config"
 	"golang.org/x/net/netutil"
 
 	sdkserver "github.com/cosmos/cosmos-sdk/server"

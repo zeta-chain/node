@@ -4,7 +4,7 @@ import (
 	"errors"
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/evmos/ethermint/crypto/hd"
-	ethermintserver "github.com/zeta-chain/zetacore/server"
+	zevmserver "github.com/zeta-chain/zetacore/server"
 
 	servercfg "github.com/evmos/ethermint/server/config"
 	"github.com/zeta-chain/zetacore/app"
@@ -124,7 +124,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
-	ethermintserver.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
+	zevmserver.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
 
 	// the ethermintserver one supercedes the sdk one
 	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
