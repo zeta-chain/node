@@ -22,7 +22,7 @@ env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-  SHORT_SHA: $("${{ github.sha }}".SubString(0, 8))"
+  SHORT_SHA: $(git rev-parse --short HEAD")
 
 jobs:
   build-and-test:
