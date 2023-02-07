@@ -128,16 +128,15 @@ jobs:
           echo "Setting the current branch name to same as the source branch of the PR"
           RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ github.event.pull_request.head.ref }})
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
-          
           TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD")"
-          echo $TAG_NAME"
+          echo "$TAG_NAME"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
         else
           RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ steps.branch-name.outputs.current_branch }})
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD")"
-          echo $TAG_NAME"
+          echo "$TAG_NAME"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         fi
 
