@@ -22,6 +22,7 @@ env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+  SHORT_SHA: $("${{ github.sha }}".SubString(0, 8))"
 
 jobs:
   build-and-test:
@@ -183,7 +184,7 @@ jobs:
       with:
         DOCKER_FILENAME: Dockerfile
         REPOSITORY_NAME: zeta-node
-        IMAGE_TAG: ${{ env.RELEASE_NAME }}
+        IMAGE_TAG: "${{ env.RELEASE_NAME }}-{{ env.SHORT_SHA }}"
         GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
         GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
