@@ -4,6 +4,8 @@ import (
 	"errors"
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/evmos/ethermint/crypto/hd"
+	ethermintserver "github.com/zeta-chain/zetacore/server"
+
 	servercfg "github.com/evmos/ethermint/server/config"
 	"github.com/zeta-chain/zetacore/app"
 	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
@@ -30,7 +32,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	ethermintclient "github.com/evmos/ethermint/client"
-	ethermintserver "github.com/evmos/ethermint/server"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
