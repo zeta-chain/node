@@ -49,11 +49,11 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: |
-    #     echo "Running Build Tests"
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
   
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
@@ -63,52 +63,52 @@ jobs:
             zetacored
             zetaclientd 
         
-  # smoke-test:
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   steps:
-  #   - uses: actions/checkout@v3
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v3
 
-  #   - name: Install Docker Compose
-  #     if: ${{ env.ACT }}
-  #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install \
-  #         ca-certificates \
-  #         curl \
-  #         gnupg \
-  #         lsb-release
-  #       sudo mkdir -p /etc/apt/keyrings
-  #       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  #       echo \
-  #         "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  #         $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  #       sudo apt-get install docker-compose-plugin
-  #       #sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    - name: Install Docker Compose
+      if: ${{ env.ACT }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get install docker-compose-plugin
+        #sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-  #   - name: Start Private Network
-  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-  #     run: |
-  #       cd contrib/localnet
-  #       docker compose build zetacore0 eth && docker compose build orchestrator
-  #       docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+    - name: Start Private Network
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        cd contrib/localnet
+        docker compose build zetacore0 eth && docker compose build orchestrator
+        docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
-  #   - name: Run Smoke Test
-  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-  #     run: |
-  #       cd contrib/localnet
-  #       docker compose up orchestrator --exit-code-from orchestrator
-  #       if [ $? -ne 0 ]; then
-  #         echo "Smoke Test Failed"
-  #         exit 1
-  #       fi
+    - name: Run Smoke Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        cd contrib/localnet
+        docker compose up orchestrator --exit-code-from orchestrator
+        if [ $? -ne 0 ]; then
+          echo "Smoke Test Failed"
+          exit 1
+        fi
 
   upload:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: 
       - build-and-test
-      # - smoke-test
+      - smoke-test
     steps:
     - uses: actions/checkout@v3
 
@@ -129,13 +129,11 @@ jobs:
           RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ github.event.pull_request.head.ref }})
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
-          echo "$TAG_NAME"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         else
           RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ steps.branch-name.outputs.current_branch }})
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
-          echo "$TAG_NAME"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         fi
 
