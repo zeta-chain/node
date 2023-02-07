@@ -10,26 +10,46 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-
+	reservesFactor := GetReservesFactor(ctx, bankKeeper)
+	if reservesFactor.LTE(sdk.ZeroDec()) {
+		return
+	}
 	bondFactor := GetBondFactor(ctx, stakingKeeper, keeper)
-	reservesFactor := GetReservesFactor(ctx, keeper)
 	durationFactor := GetDurationFactor(ctx, keeper)
 	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 
-	blockRewardsInt := blockRewards.TruncateInt()
-	blockRewardsCoins := sdk.NewCoin(config.BaseDenom, blockRewardsInt)
+	validatorRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt())
+	observerRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt())
+	tssSignerRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt())
 
-	err := bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, keeper.GetFeeCollector(), sdk.NewCoins(blockRewardsCoins))
+	err := DistributeValidatorRewards(ctx, sdk.NewCoins(validatorRewards), bankKeeper, keeper)
 	if err != nil {
 		panic(err)
 	}
-
-	tracker, _ := keeper.GetEmissionTracker(ctx, types.EmissionCategory_ValidatorEmission)
-	tracker.AmountLeft = tracker.AmountLeft.Sub(blockRewardsInt)
-	keeper.SetEmissionTracker(ctx, &tracker)
-	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(), durationFactor.String(), blockRewardsInt.String(), tracker.AmountLeft.String())
+	DistributeObserverRewards(ctx, observerRewards, keeper)
+	DistributeTssRewards(ctx, tssSignerRewards, keeper)
+	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(),
+		durationFactor.String(),
+		validatorRewards.String(),
+		observerRewards.String(),
+		tssSignerRewards.String())
 }
 
+func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Coins, bankKeeper types.BankKeeper, emissionKeeper keeper.Keeper) error {
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, emissionKeeper.GetFeeCollector(), amount)
+}
+
+func DistributeObserverRewards(ctx sdk.Context, amount sdk.Coin, emissionKeeper keeper.Keeper) {
+	tracker, _ := emissionKeeper.GetEmissionTracker(ctx, types.EmissionCategory_ObserverEmission)
+	tracker.UndistributedAmount = tracker.UndistributedAmount.Add(amount)
+	emissionKeeper.SetEmissionTracker(ctx, &tracker)
+}
+
+func DistributeTssRewards(ctx sdk.Context, amount sdk.Coin, emissionKeeper keeper.Keeper) {
+	tracker, _ := emissionKeeper.GetEmissionTracker(ctx, types.EmissionCategory_ObserverEmission)
+	tracker.UndistributedAmount = tracker.UndistributedAmount.Add(amount)
+	emissionKeeper.SetEmissionTracker(ctx, &tracker)
+}
 func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper, keeper keeper.Keeper) sdk.Dec {
 	targetBondRatio := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TargetBondRatio)
 	maxBondFactor := sdk.MustNewDecFromStr(keeper.GetParams(ctx).MaxBondFactor)
@@ -65,7 +85,7 @@ func GetDurationFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
 	return durationFactor
 }
 
-func GetReservesFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
-	reserveAmount, _ := keeper.GetEmissionTracker(ctx, types.EmissionCategory_ValidatorEmission)
-	return reserveAmount.AmountLeft.ToDec()
+func GetReservesFactor(ctx sdk.Context, keeper types.BankKeeper) sdk.Dec {
+	reserveAmount := keeper.GetBalance(ctx, types.EmissionsModuleAddress, config.BaseDenom)
+	return sdk.NewDecFromInt(reserveAmount.Amount)
 }

@@ -20,7 +20,6 @@ func CmdAddTokenEmission() *cobra.Command {
 		Short: "Broadcast message add_token_emission",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argCategory := types.ParseStringToEmissionCategory(args[0])
 			argAmount, ok := sdk.NewIntFromString(args[1])
 			if !ok {
 				return errors.New("unable to parse Int")
@@ -32,7 +31,6 @@ func CmdAddTokenEmission() *cobra.Command {
 
 			msg := types.NewMsgAddTokenEmission(
 				clientCtx.GetFromAddress().String(),
-				argCategory,
 				argAmount,
 			)
 			if err := msg.ValidateBasic(); err != nil {

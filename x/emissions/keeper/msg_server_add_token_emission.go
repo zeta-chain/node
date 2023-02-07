@@ -11,13 +11,6 @@ import (
 
 func (k msgServer) AddTokenEmission(goCtx context.Context, msg *types.MsgAddTokenEmission) (*types.MsgAddTokenEmissionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	var tracker types.EmissionTracker
-
-	tracker, found := k.GetEmissionTracker(ctx, msg.Category)
-	if !found {
-		return &types.MsgAddTokenEmissionResponse{}, types.ErrEmissionTrackerNotFound
-	}
-
 	coins := sdk.NewCoin(config.BaseDenom, msg.Amount)
 	senderAddress, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -27,7 +20,5 @@ func (k msgServer) AddTokenEmission(goCtx context.Context, msg *types.MsgAddToke
 	if err != nil {
 		return &types.MsgAddTokenEmissionResponse{}, errors.Wrap(types.ErrAddingCoinstoTracker, err.Error())
 	}
-	tracker.AmountLeft = tracker.AmountLeft.Add(msg.Amount)
-	k.SetEmissionTracker(ctx, &tracker)
 	return &types.MsgAddTokenEmissionResponse{}, nil
 }

@@ -15,5 +15,5 @@ func (k Keeper) ListBalances(goCtx context.Context, req *types.QueryListBalances
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	trackers := k.GetAllEmissionTrackers(ctx)
-	return &types.QueryListBalancesResponse{Trackers: trackers}, nil
+	return &types.QueryListBalancesResponse{Trackers: trackers, EmissionModuleAddress: types.EmissionsModuleAddress.String()}, nil
 }

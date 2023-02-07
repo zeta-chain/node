@@ -13,10 +13,10 @@ enum EmissionCategory {
 }
 
 message EmissionTracker {
-    EmissionCategory Type =1;
-    string AmountLeft = 2 [
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    EmissionCategory category =1;
+    string  undistributed_amount = 2 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coins",
       (gogoproto.nullable) = false,
-      (gogoproto.moretags) = "yaml:\"amountLeft\""
+      (gogoproto.moretags) = "yaml:\"undistributed_amount\""
     ];
 }

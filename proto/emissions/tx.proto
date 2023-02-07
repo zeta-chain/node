@@ -16,7 +16,6 @@ service Msg {
 
 message MsgAddTokenEmission {
   string creator = 1;
-  EmissionCategory category = 2;
   string Amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false,

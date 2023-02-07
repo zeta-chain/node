@@ -38,6 +38,7 @@ message QueryListBalancesRequest {
 
 message QueryListBalancesResponse {
   repeated EmissionTracker trackers =1 ;
+  string emission_module_address = 2;
 }
 
 // this line is used by starport scaffolding # 3
