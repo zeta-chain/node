@@ -47,7 +47,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 				PermissionFlags: &types.PermissionFlags{
-					IsInboundEnabled: "52",
+					IsInboundEnabled: true,
 				},
 				// this line is used by starport scaffolding # types/genesis/validField
 			},

@@ -1,11 +1,10 @@
 package cli_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"strconv"
 	"testing"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -36,9 +35,9 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 				LastUpdateTimestamp: 0,
 			},
 			InboundTxParams: &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i)},
-			ZetaMint:        sdk.OneUint(),
-			ZetaBurnt:       sdk.OneUint(),
-			ZetaFees:        sdk.OneUint()},
+			ZetaMint:        math.OneUint(),
+			ZetaBurnt:       math.OneUint(),
+			ZetaFees:        math.OneUint()},
 		)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
