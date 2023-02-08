@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -86,7 +89,10 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	//	options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
 	//	options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
 	//}
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, nil)
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, cdc)
 }
 
 // GetSignerInfo return signer info
