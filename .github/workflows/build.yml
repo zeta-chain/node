@@ -123,8 +123,7 @@ jobs:
 
     - name: Set branch name
       id: set-branch-name
-      run: |
-        
+      run: | 
         tag_check=$(echo ${{github.ref}} | grep 'refs/tags/')
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           echo "Setting the current branch name to same as the source branch of the PR"
