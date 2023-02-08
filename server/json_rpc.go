@@ -35,6 +35,7 @@ func StartJSONRPC(ctx *server.Context, clientCtx client.Context, tmRPCAddr, tmEn
 		return nil
 	}))
 
+	logger.Info("zEVM JSON-RPC server starting...")
 	rpcServer := ethrpc.NewServer()
 
 	allowUnprotectedTxs := config.JSONRPC.AllowUnprotectedTxs
