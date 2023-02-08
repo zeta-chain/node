@@ -117,7 +117,10 @@ func main() {
 	}
 
 	var peers addr.AddrList
+
 	if *peer != "" {
+		fmt.Println("trying to parse : ", *peer)
+		log.Info().Msg("trying to parse " + *peer)
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {
 			log.Error().Err(err).Msg("NewMultiaddr error")
