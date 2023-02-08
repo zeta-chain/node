@@ -1,0 +1,6 @@
+- name: zetaa
+  type: local
+  address: zeta1q6ug7qll3dqtncxq3nckssfnhy59e2ggckkmt4
+  pubkey: '{"@type":"/ethermint.crypto.v1.ethsecp256k1.PubKey","key":"A/7ETcc2C8l/SQX1JaGEaB0eOIPQSy8FA3G+YlvFDsXB"}'
+  mnemonic: ""
+
