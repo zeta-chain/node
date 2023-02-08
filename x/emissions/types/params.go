@@ -17,10 +17,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		MaxBondFactor:   "1.25",
-		MinBondFactor:   "0.75",
-		AvgBlockTime:    "6.00",
-		TargetBondRatio: "67.00",
+		MaxBondFactor:               "1.25",
+		MinBondFactor:               "0.75",
+		AvgBlockTime:                "6.00",
+		TargetBondRatio:             "67.00",
+		ValidatorEmissionPercentage: "00.50",
+		ObserverEmissionPercentage:  "00.25",
+		TssSignerEmissionPercentage: "00.25",
 	}
 }
 
@@ -36,6 +39,9 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPrefix(ParamMinBondFactor), &p.MinBondFactor, validateMinBondFactor),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamAvgBlockTime), &p.AvgBlockTime, validateAvgBlockTime),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamTargetBondRatio), &p.TargetBondRatio, validateTargetBondRatio),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamValidatorEmissionPercentage), &p.ValidatorEmissionPercentage, validateValidatorEmissonPercentage),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamObserverEmissionPercentage), &p.ObserverEmissionPercentage, validateObserverEmissonPercentage),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamTssSignerEmissionPercentage), &p.TssSignerEmissionPercentage, validateTssEmissonPercentage),
 	}
 }
 
@@ -96,6 +102,51 @@ func validateTargetBondRatio(i interface{}) error {
 	}
 	if decMaxBond.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("target bond ratio cannot be less than 0 percent")
+	}
+	return nil
+}
+
+func validateValidatorEmissonPercentage(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	dec := sdk.MustNewDecFromStr(v)
+	if dec.GT(sdk.MustNewDecFromStr("100.00")) {
+		return fmt.Errorf("validator emission percentage cannot be more than 100 percent")
+	}
+	if dec.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("validator emission percentage cannot be less than 0 percent")
+	}
+	return nil
+}
+
+func validateObserverEmissonPercentage(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	dec := sdk.MustNewDecFromStr(v)
+	if dec.GT(sdk.MustNewDecFromStr("100.00")) {
+		return fmt.Errorf("observer emission percentage cannot be more than 100 percent")
+	}
+	if dec.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("observer emission percentage cannot be less than 0 percent")
+	}
+	return nil
+}
+
+func validateTssEmissonPercentage(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	dec := sdk.MustNewDecFromStr(v)
+	if dec.GT(sdk.MustNewDecFromStr("100.00")) {
+		return fmt.Errorf("tss emission percentage cannot be more than 100 percent")
+	}
+	if dec.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("tss emission percentage cannot be less than 0 percent")
 	}
 	return nil
 }

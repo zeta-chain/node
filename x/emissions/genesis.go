@@ -8,16 +8,13 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
-	categories := types.GetAllCategories()
-	for _, cat := range categories {
-		k.SetEmissionTracker(ctx, &types.EmissionTracker{
-			Type:       cat,
-			AmountLeft: sdk.ZeroInt(),
-		})
-	}
+	ak.GetModuleAccount(ctx, types.ModuleName)
+	ak.GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
+	ak.GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)
+
 }
 
 // ExportGenesis returns the capability module's exported genesis.

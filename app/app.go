@@ -190,16 +190,18 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		zetaCoreModuleTypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-		evmtypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
-		fungibleModuleTypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
-		emissionsModuleTypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		authtypes.FeeCollectorName:                            nil,
+		distrtypes.ModuleName:                                 nil,
+		stakingtypes.BondedPoolName:                           {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                        {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                                   {authtypes.Burner},
+		ibctransfertypes.ModuleName:                           {authtypes.Minter, authtypes.Burner},
+		zetaCoreModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		evmtypes.ModuleName:                                   {authtypes.Minter, authtypes.Burner},
+		fungibleModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		emissionsModuleTypes.ModuleName:                       nil,
+		emissionsModuleTypes.UndistributedObserverRewardsPool: nil,
+		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
 	}
 )
 

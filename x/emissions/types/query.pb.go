@@ -113,21 +113,21 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-type QueryListBalancesRequest struct {
+type QueryListPoolAddressesRequest struct {
 }
 
-func (m *QueryListBalancesRequest) Reset()         { *m = QueryListBalancesRequest{} }
-func (m *QueryListBalancesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryListBalancesRequest) ProtoMessage()    {}
-func (*QueryListBalancesRequest) Descriptor() ([]byte, []int) {
+func (m *QueryListPoolAddressesRequest) Reset()         { *m = QueryListPoolAddressesRequest{} }
+func (m *QueryListPoolAddressesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryListPoolAddressesRequest) ProtoMessage()    {}
+func (*QueryListPoolAddressesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6e578782beb6ef82, []int{2}
 }
-func (m *QueryListBalancesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryListPoolAddressesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryListBalancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryListPoolAddressesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryListBalancesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryListPoolAddressesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -137,35 +137,36 @@ func (m *QueryListBalancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryListBalancesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListBalancesRequest.Merge(m, src)
+func (m *QueryListPoolAddressesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryListPoolAddressesRequest.Merge(m, src)
 }
-func (m *QueryListBalancesRequest) XXX_Size() int {
+func (m *QueryListPoolAddressesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryListBalancesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListBalancesRequest.DiscardUnknown(m)
+func (m *QueryListPoolAddressesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryListPoolAddressesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryListBalancesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryListPoolAddressesRequest proto.InternalMessageInfo
 
-type QueryListBalancesResponse struct {
-	Trackers              []*EmissionTracker `protobuf:"bytes,1,rep,name=trackers,proto3" json:"trackers,omitempty"`
-	EmissionModuleAddress string             `protobuf:"bytes,2,opt,name=emission_module_address,json=emissionModuleAddress,proto3" json:"emission_module_address,omitempty"`
+type QueryListPoolAddressesResponse struct {
+	UndistributedObserverBalancesAddress string `protobuf:"bytes,1,opt,name=undistributed_observer_balances_address,json=undistributedObserverBalancesAddress,proto3" json:"undistributed_observer_balances_address,omitempty"`
+	UndistributedTssBalancesAddress      string `protobuf:"bytes,2,opt,name=undistributed_tss_balances_address,json=undistributedTssBalancesAddress,proto3" json:"undistributed_tss_balances_address,omitempty"`
+	EmissionModuleAddress                string `protobuf:"bytes,3,opt,name=emission_module_address,json=emissionModuleAddress,proto3" json:"emission_module_address,omitempty"`
 }
 
-func (m *QueryListBalancesResponse) Reset()         { *m = QueryListBalancesResponse{} }
-func (m *QueryListBalancesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryListBalancesResponse) ProtoMessage()    {}
-func (*QueryListBalancesResponse) Descriptor() ([]byte, []int) {
+func (m *QueryListPoolAddressesResponse) Reset()         { *m = QueryListPoolAddressesResponse{} }
+func (m *QueryListPoolAddressesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryListPoolAddressesResponse) ProtoMessage()    {}
+func (*QueryListPoolAddressesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6e578782beb6ef82, []int{3}
 }
-func (m *QueryListBalancesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryListPoolAddressesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryListBalancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryListPoolAddressesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryListBalancesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryListPoolAddressesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -175,26 +176,33 @@ func (m *QueryListBalancesResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryListBalancesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryListBalancesResponse.Merge(m, src)
+func (m *QueryListPoolAddressesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryListPoolAddressesResponse.Merge(m, src)
 }
-func (m *QueryListBalancesResponse) XXX_Size() int {
+func (m *QueryListPoolAddressesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryListBalancesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryListBalancesResponse.DiscardUnknown(m)
+func (m *QueryListPoolAddressesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryListPoolAddressesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryListBalancesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryListPoolAddressesResponse proto.InternalMessageInfo
 
-func (m *QueryListBalancesResponse) GetTrackers() []*EmissionTracker {
+func (m *QueryListPoolAddressesResponse) GetUndistributedObserverBalancesAddress() string {
 	if m != nil {
-		return m.Trackers
+		return m.UndistributedObserverBalancesAddress
 	}
-	return nil
+	return ""
 }
 
-func (m *QueryListBalancesResponse) GetEmissionModuleAddress() string {
+func (m *QueryListPoolAddressesResponse) GetUndistributedTssBalancesAddress() string {
+	if m != nil {
+		return m.UndistributedTssBalancesAddress
+	}
+	return ""
+}
+
+func (m *QueryListPoolAddressesResponse) GetEmissionModuleAddress() string {
 	if m != nil {
 		return m.EmissionModuleAddress
 	}
@@ -204,42 +212,44 @@ func (m *QueryListBalancesResponse) GetEmissionModuleAddress() string {
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "zetachain.zetacore.emissions.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.emissions.QueryParamsResponse")
-	proto.RegisterType((*QueryListBalancesRequest)(nil), "zetachain.zetacore.emissions.QueryListBalancesRequest")
-	proto.RegisterType((*QueryListBalancesResponse)(nil), "zetachain.zetacore.emissions.QueryListBalancesResponse")
+	proto.RegisterType((*QueryListPoolAddressesRequest)(nil), "zetachain.zetacore.emissions.QueryListPoolAddressesRequest")
+	proto.RegisterType((*QueryListPoolAddressesResponse)(nil), "zetachain.zetacore.emissions.QueryListPoolAddressesResponse")
 }
 
 func init() { proto.RegisterFile("emissions/query.proto", fileDescriptor_6e578782beb6ef82) }
 
 var fileDescriptor_6e578782beb6ef82 = []byte{
-	// 442 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x41, 0xcb, 0xd3, 0x30,
-	0x1c, 0xc6, 0x9b, 0xa9, 0x43, 0xf3, 0x7a, 0x8a, 0xaf, 0x3a, 0xcb, 0x4b, 0x1d, 0x45, 0x71, 0x88,
-	0x6b, 0xde, 0x4d, 0x99, 0x67, 0x0b, 0x1e, 0x14, 0x05, 0x2d, 0x5e, 0xf4, 0x32, 0xd2, 0x2e, 0x74,
-	0xc1, 0xb6, 0xe9, 0x9a, 0x54, 0x9c, 0x47, 0x3f, 0x81, 0xe0, 0x55, 0xfc, 0x16, 0x7e, 0x87, 0x1d,
-	0x07, 0x5e, 0x3c, 0x0d, 0xd9, 0xfc, 0x20, 0xd2, 0x24, 0xeb, 0xa6, 0x8e, 0xf9, 0xee, 0xf6, 0xa7,
-	0xff, 0xe7, 0xf7, 0x3c, 0x4f, 0x92, 0xc2, 0xab, 0x34, 0x65, 0x42, 0x30, 0x9e, 0x09, 0x3c, 0x29,
-	0x69, 0x31, 0xf5, 0xf2, 0x82, 0x4b, 0x8e, 0x4e, 0x3e, 0x50, 0x49, 0xa2, 0x31, 0x61, 0x99, 0xa7,
-	0x26, 0x5e, 0x50, 0xaf, 0x56, 0xda, 0xc7, 0x31, 0x8f, 0xb9, 0x12, 0xe2, 0x6a, 0xd2, 0x8c, 0x7d,
-	0x12, 0x73, 0x1e, 0x27, 0x14, 0x93, 0x9c, 0x61, 0x92, 0x65, 0x5c, 0x12, 0x59, 0xa9, 0xcd, 0xf6,
-	0x6e, 0xc4, 0x45, 0xca, 0x05, 0x0e, 0x89, 0xa0, 0x3a, 0x0a, 0xbf, 0xeb, 0x85, 0x54, 0x92, 0x1e,
-	0xce, 0x49, 0xcc, 0x32, 0x25, 0x36, 0xda, 0x6b, 0x9b, 0x52, 0x39, 0x29, 0x48, 0xba, 0xf6, 0x68,
-	0x6f, 0xbe, 0xaf, 0xa7, 0xa1, 0x2c, 0x48, 0xf4, 0x96, 0x16, 0x5a, 0xe1, 0x1e, 0x43, 0xf4, 0xb2,
-	0xf2, 0x7e, 0xa1, 0xb0, 0x80, 0x4e, 0x4a, 0x2a, 0xa4, 0xfb, 0x1a, 0x5e, 0xf9, 0xe3, 0xab, 0xc8,
-	0x79, 0x26, 0x28, 0xf2, 0x61, 0x53, 0xdb, 0xb7, 0x40, 0x1b, 0x74, 0x8e, 0xfa, 0xb7, 0xbc, 0x7d,
-	0xa7, 0xf6, 0x34, 0xed, 0x9f, 0x9f, 0x2d, 0x6e, 0x5a, 0x81, 0x21, 0x5d, 0x1b, 0xb6, 0x94, 0xf5,
-	0x33, 0x26, 0xa4, 0x4f, 0x12, 0x92, 0x45, 0xb4, 0x8e, 0xfd, 0x0a, 0xe0, 0x8d, 0x1d, 0x4b, 0x93,
-	0xfe, 0x04, 0x5e, 0x34, 0xdd, 0xab, 0xfc, 0x73, 0x9d, 0xa3, 0x7e, 0x77, 0x7f, 0xfe, 0x63, 0x33,
-	0xbd, 0xd2, 0x54, 0x50, 0xe3, 0x68, 0x00, 0xaf, 0xd7, 0xf7, 0x91, 0xf2, 0x51, 0x99, 0xd0, 0x21,
-	0x19, 0x8d, 0x0a, 0x2a, 0x44, 0xab, 0xd1, 0x06, 0x9d, 0x4b, 0x41, 0xfd, 0xca, 0xcf, 0xd5, 0xf6,
-	0x91, 0x5e, 0xf6, 0x17, 0x0d, 0x78, 0x41, 0x15, 0x44, 0x5f, 0x00, 0x6c, 0xea, 0xf3, 0xa1, 0xd3,
-	0xfd, 0x2d, 0xfe, 0xbd, 0x5e, 0xbb, 0x77, 0x00, 0xa1, 0x0f, 0xef, 0x76, 0x3f, 0x7e, 0xff, 0xf5,
-	0xb9, 0x71, 0x07, 0xdd, 0xc6, 0x15, 0xd0, 0x55, 0x2c, 0x5e, 0xb3, 0xf8, 0xef, 0xe7, 0x47, 0xdf,
-	0x00, 0xbc, 0xbc, 0x7d, 0x89, 0x68, 0x70, 0x86, 0xc8, 0x1d, 0x4f, 0x62, 0x3f, 0x3c, 0x98, 0x33,
-	0x85, 0x1f, 0xa8, 0xc2, 0x1e, 0xba, 0xf7, 0x9f, 0xc2, 0x09, 0x13, 0x72, 0x18, 0x1a, 0xda, 0x7f,
-	0x3a, 0x5b, 0x3a, 0x60, 0xbe, 0x74, 0xc0, 0xcf, 0xa5, 0x03, 0x3e, 0xad, 0x1c, 0x6b, 0xbe, 0x72,
-	0xac, 0x1f, 0x2b, 0xc7, 0x7a, 0x73, 0x1a, 0x33, 0x39, 0x2e, 0x43, 0x2f, 0xe2, 0xe9, 0x4e, 0xc7,
-	0xf7, 0x5b, 0x9e, 0x72, 0x9a, 0x53, 0x11, 0x36, 0xd5, 0x1f, 0x7e, 0xff, 0x77, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x07, 0x77, 0xaf, 0x30, 0xb2, 0x03, 0x00, 0x00,
+	// 469 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0x4d, 0x6f, 0x13, 0x31,
+	0x10, 0x86, 0xb3, 0x01, 0x22, 0x61, 0x4e, 0x98, 0xf2, 0xa1, 0xa8, 0x6c, 0xd0, 0xaa, 0xa8, 0x08,
+	0x29, 0xeb, 0xa6, 0x08, 0x2e, 0x70, 0x21, 0x47, 0x3e, 0x44, 0x89, 0xe0, 0x00, 0x97, 0xc8, 0x9b,
+	0x1d, 0x6d, 0x2d, 0xed, 0x7a, 0xb6, 0x1e, 0x6f, 0x45, 0x39, 0xf2, 0x0b, 0x90, 0xb8, 0xf2, 0x77,
+	0x90, 0x7a, 0xac, 0xc4, 0x85, 0x13, 0x42, 0x09, 0x67, 0x7e, 0x01, 0x07, 0x14, 0xaf, 0x13, 0x48,
+	0x43, 0xc3, 0xc7, 0xcd, 0xb2, 0xdf, 0xe7, 0x9d, 0xd7, 0x33, 0x36, 0xbb, 0x08, 0x85, 0x22, 0x52,
+	0xa8, 0x49, 0xec, 0x55, 0x60, 0x0e, 0xe2, 0xd2, 0xa0, 0x45, 0xbe, 0xfe, 0x1a, 0xac, 0x1c, 0xed,
+	0x4a, 0xa5, 0x63, 0xb7, 0x42, 0x03, 0xf1, 0x5c, 0xd9, 0x5e, 0xcb, 0x30, 0x43, 0x27, 0x14, 0xd3,
+	0x55, 0xcd, 0xb4, 0xd7, 0x33, 0xc4, 0x2c, 0x07, 0x21, 0x4b, 0x25, 0xa4, 0xd6, 0x68, 0xa5, 0x9d,
+	0xaa, 0xfd, 0xe9, 0xcd, 0x11, 0x52, 0x81, 0x24, 0x12, 0x49, 0x50, 0x97, 0x12, 0xfb, 0xbd, 0x04,
+	0xac, 0xec, 0x89, 0x52, 0x66, 0x4a, 0x3b, 0xb1, 0xd7, 0x5e, 0xfa, 0x19, 0xaa, 0x94, 0x46, 0x16,
+	0xde, 0x23, 0x5a, 0x63, 0xfc, 0xe9, 0x94, 0xdc, 0x71, 0x9b, 0x03, 0xd8, 0xab, 0x80, 0x6c, 0xf4,
+	0x82, 0x5d, 0x58, 0xd8, 0xa5, 0x12, 0x35, 0x01, 0xef, 0xb3, 0x56, 0x0d, 0x5f, 0x09, 0xae, 0x05,
+	0x37, 0xce, 0x6d, 0x6f, 0xc4, 0xab, 0xee, 0x14, 0xd7, 0x74, 0xff, 0xf4, 0xe1, 0xe7, 0x4e, 0x63,
+	0xe0, 0xc9, 0xa8, 0xc3, 0xae, 0x3a, 0xeb, 0x47, 0x8a, 0xec, 0x0e, 0x62, 0x7e, 0x3f, 0x4d, 0x0d,
+	0x10, 0xc1, 0xbc, 0xf6, 0xf7, 0x80, 0x85, 0x27, 0x29, 0x7c, 0x8e, 0xe7, 0x6c, 0xb3, 0xd2, 0xa9,
+	0x22, 0x6b, 0x54, 0x52, 0x59, 0x48, 0x87, 0x98, 0x10, 0x98, 0x7d, 0x30, 0xc3, 0x44, 0xe6, 0x52,
+	0x8f, 0x80, 0x86, 0xb2, 0x86, 0x5c, 0xd0, 0xb3, 0x83, 0x8d, 0x05, 0xf9, 0x13, 0xaf, 0xee, 0x7b,
+	0xb1, 0x2f, 0xc0, 0x1f, 0xb2, 0x68, 0xd1, 0xd6, 0x12, 0x2d, 0x3b, 0x36, 0x9d, 0x63, 0x67, 0x41,
+	0xf9, 0x8c, 0xe8, 0xb8, 0xd9, 0x1d, 0x76, 0x79, 0xd6, 0x89, 0x61, 0x81, 0x69, 0x95, 0xc3, 0xdc,
+	0xe1, 0x94, 0x73, 0x98, 0x3f, 0x93, 0xc7, 0xee, 0xd4, 0x73, 0xdb, 0xdf, 0x9a, 0xec, 0x8c, 0xbb,
+	0x3e, 0x7f, 0x1f, 0xb0, 0x56, 0xdd, 0x42, 0xbe, 0xb5, 0xba, 0xd1, 0xcb, 0x13, 0x6c, 0xf7, 0xfe,
+	0x81, 0xa8, 0xbb, 0x1a, 0x75, 0xdf, 0x7c, 0xfc, 0xfa, 0xae, 0xb9, 0xc9, 0xaf, 0x8b, 0x29, 0xd0,
+	0x75, 0xac, 0x98, 0xb1, 0xe2, 0xf8, 0xfb, 0xe1, 0x1f, 0x02, 0x76, 0x7e, 0x69, 0x44, 0xfc, 0xee,
+	0x5f, 0xd4, 0x3d, 0x69, 0xf4, 0xed, 0x7b, 0xff, 0x07, 0xfb, 0xfc, 0xb7, 0x5d, 0x7e, 0xc1, 0xbb,
+	0x7f, 0xc8, 0x9f, 0x2b, 0xb2, 0xb3, 0x59, 0x00, 0xf5, 0x1f, 0x1c, 0x8e, 0xc3, 0xe0, 0x68, 0x1c,
+	0x06, 0x5f, 0xc6, 0x61, 0xf0, 0x76, 0x12, 0x36, 0x8e, 0x26, 0x61, 0xe3, 0xd3, 0x24, 0x6c, 0xbc,
+	0xdc, 0xca, 0x94, 0xdd, 0xad, 0x92, 0x78, 0x84, 0xc5, 0x6f, 0x2d, 0x5f, 0xfd, 0x62, 0x6a, 0x0f,
+	0x4a, 0xa0, 0xa4, 0xe5, 0x3e, 0xd5, 0xad, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x84, 0xea, 0xab,
+	0xf4, 0x03, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -257,7 +267,7 @@ type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of ListBalances items.
-	ListBalances(ctx context.Context, in *QueryListBalancesRequest, opts ...grpc.CallOption) (*QueryListBalancesResponse, error)
+	ListPoolAddresses(ctx context.Context, in *QueryListPoolAddressesRequest, opts ...grpc.CallOption) (*QueryListPoolAddressesResponse, error)
 }
 
 type queryClient struct {
@@ -277,9 +287,9 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) ListBalances(ctx context.Context, in *QueryListBalancesRequest, opts ...grpc.CallOption) (*QueryListBalancesResponse, error) {
-	out := new(QueryListBalancesResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.emissions.Query/ListBalances", in, out, opts...)
+func (c *queryClient) ListPoolAddresses(ctx context.Context, in *QueryListPoolAddressesRequest, opts ...grpc.CallOption) (*QueryListPoolAddressesResponse, error) {
+	out := new(QueryListPoolAddressesResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.emissions.Query/ListPoolAddresses", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +301,7 @@ type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of ListBalances items.
-	ListBalances(context.Context, *QueryListBalancesRequest) (*QueryListBalancesResponse, error)
+	ListPoolAddresses(context.Context, *QueryListPoolAddressesRequest) (*QueryListPoolAddressesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -301,8 +311,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (*UnimplementedQueryServer) ListBalances(ctx context.Context, req *QueryListBalancesRequest) (*QueryListBalancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListBalances not implemented")
+func (*UnimplementedQueryServer) ListPoolAddresses(ctx context.Context, req *QueryListPoolAddressesRequest) (*QueryListPoolAddressesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPoolAddresses not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -327,20 +337,20 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ListBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryListBalancesRequest)
+func _Query_ListPoolAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryListPoolAddressesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ListBalances(ctx, in)
+		return srv.(QueryServer).ListPoolAddresses(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.emissions.Query/ListBalances",
+		FullMethod: "/zetachain.zetacore.emissions.Query/ListPoolAddresses",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ListBalances(ctx, req.(*QueryListBalancesRequest))
+		return srv.(QueryServer).ListPoolAddresses(ctx, req.(*QueryListPoolAddressesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -354,8 +364,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "ListBalances",
-			Handler:    _Query_ListBalances_Handler,
+			MethodName: "ListPoolAddresses",
+			Handler:    _Query_ListPoolAddresses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -418,7 +428,7 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryListBalancesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryListPoolAddressesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -428,12 +438,12 @@ func (m *QueryListBalancesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListBalancesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryListPoolAddressesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListBalancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryListPoolAddressesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -441,7 +451,7 @@ func (m *QueryListBalancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryListBalancesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryListPoolAddressesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -451,12 +461,12 @@ func (m *QueryListBalancesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryListBalancesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryListPoolAddressesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryListBalancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryListPoolAddressesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -466,21 +476,21 @@ func (m *QueryListBalancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		copy(dAtA[i:], m.EmissionModuleAddress)
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.EmissionModuleAddress)))
 		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.UndistributedTssBalancesAddress) > 0 {
+		i -= len(m.UndistributedTssBalancesAddress)
+		copy(dAtA[i:], m.UndistributedTssBalancesAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.UndistributedTssBalancesAddress)))
+		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Trackers) > 0 {
-		for iNdEx := len(m.Trackers) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Trackers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
+	if len(m.UndistributedObserverBalancesAddress) > 0 {
+		i -= len(m.UndistributedObserverBalancesAddress)
+		copy(dAtA[i:], m.UndistributedObserverBalancesAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.UndistributedObserverBalancesAddress)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -516,7 +526,7 @@ func (m *QueryParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryListBalancesRequest) Size() (n int) {
+func (m *QueryListPoolAddressesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -525,17 +535,19 @@ func (m *QueryListBalancesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryListBalancesResponse) Size() (n int) {
+func (m *QueryListPoolAddressesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Trackers) > 0 {
-		for _, e := range m.Trackers {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
+	l = len(m.UndistributedObserverBalancesAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.UndistributedTssBalancesAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	l = len(m.EmissionModuleAddress)
 	if l > 0 {
@@ -683,7 +695,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryListBalancesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryListPoolAddressesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -706,10 +718,10 @@ func (m *QueryListBalancesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListBalancesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryListPoolAddressesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListBalancesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryListPoolAddressesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -733,7 +745,7 @@ func (m *QueryListBalancesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryListBalancesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryListPoolAddressesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -756,17 +768,17 @@ func (m *QueryListBalancesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryListBalancesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryListPoolAddressesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryListBalancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryListPoolAddressesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Trackers", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UndistributedObserverBalancesAddress", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -776,27 +788,57 @@ func (m *QueryListBalancesResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Trackers = append(m.Trackers, &EmissionTracker{})
-			if err := m.Trackers[len(m.Trackers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.UndistributedObserverBalancesAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UndistributedTssBalancesAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UndistributedTssBalancesAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EmissionModuleAddress", wireType)
 			}

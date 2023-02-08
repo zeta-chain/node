@@ -5,7 +5,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";
-import "emissions/emission_tracker.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
@@ -17,8 +16,8 @@ service Query {
     option (google.api.http).get = "/zeta-chain/zetacore/emissions/params";
   }
   // Queries a list of ListBalances items.
-	rpc ListBalances(QueryListBalancesRequest) returns (QueryListBalancesResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_balances";
+	rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -33,12 +32,13 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryListBalancesRequest {
+message QueryListPoolAddressesRequest {
 }
 
-message QueryListBalancesResponse {
-  repeated EmissionTracker trackers =1 ;
-  string emission_module_address = 2;
+message QueryListPoolAddressesResponse {
+  string undistributed_observer_balances_address = 1;
+  string undistributed_tss_balances_address = 2;
+  string emission_module_address = 3;
 }
 
 // this line is used by starport scaffolding # 3

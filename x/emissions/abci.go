@@ -18,16 +18,22 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 	durationFactor := GetDurationFactor(ctx, keeper)
 	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 
-	validatorRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt())
-	observerRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt())
-	tssSignerRewards := sdk.NewCoin(config.BaseDenom, sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt())
+	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
+	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
+	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
 
-	err := DistributeValidatorRewards(ctx, sdk.NewCoins(validatorRewards), bankKeeper, keeper)
+	err := DistributeValidatorRewards(ctx, validatorRewards, bankKeeper, keeper.GetFeeCollector())
 	if err != nil {
 		panic(err)
 	}
-	DistributeObserverRewards(ctx, observerRewards, keeper)
-	DistributeTssRewards(ctx, tssSignerRewards, keeper)
+	err = DistributeObserverRewards(ctx, observerRewards, bankKeeper)
+	if err != nil {
+		panic(err)
+	}
+	err = DistributeTssRewards(ctx, tssSignerRewards, bankKeeper)
+	if err != nil {
+		panic(err)
+	}
 	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(),
 		durationFactor.String(),
 		validatorRewards.String(),
@@ -35,20 +41,19 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 		tssSignerRewards.String())
 }
 
-func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Coins, bankKeeper types.BankKeeper, emissionKeeper keeper.Keeper) error {
-	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, emissionKeeper.GetFeeCollector(), amount)
+func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, feeCollector string) error {
+	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdk.Coin, emissionKeeper keeper.Keeper) {
-	tracker, _ := emissionKeeper.GetEmissionTracker(ctx, types.EmissionCategory_ObserverEmission)
-	tracker.UndistributedAmount = tracker.UndistributedAmount.Add(amount)
-	emissionKeeper.SetEmissionTracker(ctx, &tracker)
+func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, coin)
 }
 
-func DistributeTssRewards(ctx sdk.Context, amount sdk.Coin, emissionKeeper keeper.Keeper) {
-	tracker, _ := emissionKeeper.GetEmissionTracker(ctx, types.EmissionCategory_ObserverEmission)
-	tracker.UndistributedAmount = tracker.UndistributedAmount.Add(amount)
-	emissionKeeper.SetEmissionTracker(ctx, &tracker)
+func DistributeTssRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTssRewardsPool, coin)
 }
 func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper, keeper keeper.Keeper) sdk.Dec {
 	targetBondRatio := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TargetBondRatio)

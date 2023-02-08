@@ -6,7 +6,9 @@ import (
 
 const (
 	// ModuleName defines the module name
-	ModuleName = "emissions"
+	ModuleName                       = "emissions"
+	UndistributedObserverRewardsPool = ModuleName + "Observers"
+	UndistributedTssRewardsPool      = ModuleName + "Tss"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -28,13 +30,18 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	EmissionsTrackerKey  = "EmissionsTracker-value-"
-	ParamMaxBondFactor   = "MaxBondFactor"
-	ParamMinBondFactor   = "MinBondFactor"
-	ParamAvgBlockTime    = "AvgBlockTime"
-	ParamTargetBondRatio = "TargetBondRation"
+	EmissionsTrackerKey              = "EmissionsTracker-value-"
+	ParamMaxBondFactor               = "MaxBondFactor"
+	ParamMinBondFactor               = "MinBondFactor"
+	ParamAvgBlockTime                = "AvgBlockTime"
+	ParamTargetBondRatio             = "TargetBondRation"
+	ParamValidatorEmissionPercentage = "ValidatorEmissionPercentage"
+	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
+	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
 )
 
 var (
-	EmissionsModuleAddress = authtypes.NewModuleAddress(ModuleName)
+	EmissionsModuleAddress                  = authtypes.NewModuleAddress(ModuleName)
+	UndistributedObserverRewardsPoolAddress = authtypes.NewModuleAddress(UndistributedObserverRewardsPool)
+	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTssRewardsPool)
 )
