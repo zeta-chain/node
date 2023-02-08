@@ -6,9 +6,9 @@ import (
 	"github.com/evmos/ethermint/crypto/hd"
 	zevmserver "github.com/zeta-chain/zetacore/server"
 
-	servercfg "github.com/evmos/ethermint/server/config"
 	"github.com/zeta-chain/zetacore/app"
 	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	servercfg "github.com/zeta-chain/zetacore/server/config"
 	"io"
 	"os"
 	"path/filepath"

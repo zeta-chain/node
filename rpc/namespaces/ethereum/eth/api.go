@@ -14,11 +14,11 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/evmos/ethermint/rpc/backend"
+	"github.com/zeta-chain/zetacore/rpc/backend"
 
-	rpctypes "github.com/evmos/ethermint/rpc/types"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // The Ethereum API allows applications to connect to an Evmos node that is

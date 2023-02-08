@@ -7,7 +7,6 @@ import (
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evmante "github.com/evmos/ethermint/app/ante"
-	srvflags "github.com/evmos/ethermint/server/flags"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm"
 	evmrest "github.com/evmos/ethermint/x/evm/client/rest"
@@ -21,6 +20,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	srvflags "github.com/zeta-chain/zetacore/server/flags"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 

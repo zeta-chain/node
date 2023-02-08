@@ -24,9 +24,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/evmos/ethermint/rpc/backend"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/zeta-chain/zetacore/rpc/backend"
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // HandlerT keeps track of the cpu profiler and trace execution

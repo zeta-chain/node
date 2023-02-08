@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/evmos/ethermint/rpc/types"
+	"github.com/zeta-chain/zetacore/rpc/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 

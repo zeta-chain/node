@@ -5,14 +5,14 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
-	rpc "github.com/evmos/ethermint/rpc/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmrpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
+	rpc "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // Client defines a mocked object that implements the Tendermint JSON-RPC Client
