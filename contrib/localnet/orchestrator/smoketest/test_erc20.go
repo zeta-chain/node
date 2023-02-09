@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
-	"math/big"
-	"time"
 )
 
 func (sm *SmokeTest) TestERC20Deposit() {
@@ -17,6 +18,27 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	LoudPrintf("Deposit USDT ERC20 into ZEVM\n")
+	sm.DepositERC20(big.NewInt(1e9), []byte{})
+	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	bal, err := usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
+	if bal.Int64() != 1e9 {
+		panic("balance is not correct")
+	}
+}
+
+func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) {
 	USDT := sm.USDTERC20
 	tx, err := USDT.Mint(sm.goerliAuth, big.NewInt(1e10))
 	if err != nil {
@@ -32,7 +54,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
 
-	tx, err = sm.ERC20Custody.Deposit(sm.goerliAuth, DeployerAddress.Bytes(), sm.USDTERC20Addr, big.NewInt(1e6), nil)
+	tx, err = sm.ERC20Custody.Deposit(sm.goerliAuth, DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -49,25 +71,8 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		fmt.Printf("  Amount: %d, \n", event.Amount)
 		fmt.Printf("  Message: %x, \n", event.Message)
 	}
+	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
-
-	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err := usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
-	if bal.Int64() != 1e6 {
-		panic("balance is not correct")
-	}
 }
 
 func (sm *SmokeTest) TestERC20Withdraw() {
@@ -76,6 +81,10 @@ func (sm *SmokeTest) TestERC20Withdraw() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	LoudPrintf("Withdraw USDT ZRC20\n")
+	sm.WithdrawERC20()
+}
+
+func (sm *SmokeTest) WithdrawERC20() {
 	zevmClient := sm.zevmClient
 	goerliClient := sm.goerliClient
 	cctxClient := sm.cctxClient
@@ -94,7 +103,7 @@ func (sm *SmokeTest) TestERC20Withdraw() {
 		panic(err)
 	}
 	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
-	if bal.Int64() != 1e6 {
+	if bal.Int64() != 1e9 {
 		panic("balance is not correct")
 	}
 
