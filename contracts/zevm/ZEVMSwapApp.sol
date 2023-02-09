@@ -41,6 +41,6 @@ contract ZEVMSwapApp is zContract {
             revert LowAmount();
         }
         IZRC20(targetZRC20).approve(address(targetZRC20), gasFee);
-        IZRC20(targetZRC20).withdraw(bytes("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz"), amounts[1] - gasFee);
+        IZRC20(targetZRC20).withdraw(bytes("bcrt1qlj8pkmftahy9pxj290lu32k2w8um2vkdnu35w6"), amounts[1] - gasFee);
     }
 }
