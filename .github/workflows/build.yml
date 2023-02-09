@@ -124,7 +124,9 @@ jobs:
     - name: Set branch name
       id: set-branch-name
       run: | 
-        tag_check=`echo '${{github.ref}}' | grep 'refs/tags/'`
+        tag_check=`echo '${{github.ref}}' | grep 'tags'` || echo "grep failed"
+        echo "tag check: ${tag_check}"
+        
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           echo "Setting the current branch name to same as the source branch of the PR"
           RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ github.event.pull_request.head.ref }})
