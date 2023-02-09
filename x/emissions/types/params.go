@@ -20,7 +20,7 @@ func NewParams() Params {
 		MaxBondFactor:               "1.25",
 		MinBondFactor:               "0.75",
 		AvgBlockTime:                "6.00",
-		TargetBondRatio:             "67.00",
+		TargetBondRatio:             "00.67",
 		ValidatorEmissionPercentage: "00.50",
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",

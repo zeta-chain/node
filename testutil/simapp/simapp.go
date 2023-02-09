@@ -10,10 +10,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	"testing"
 	"time"
 	//"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
@@ -80,46 +80,16 @@ func setup(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
 	return a, app.GenesisState{}
 }
 
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.App {
-	vset := tmtypes.NewValidatorSet([]*tmtypes.Validator{})
-	for i := 0; i < 2; i++ {
-		privKey := ed25519.GenPrivKey()
-		pubKey := privKey.PubKey()
-		val := tmtypes.NewValidator(pubKey, 10)
-		err := vset.UpdateWithChangeSet([]*tmtypes.Validator{val})
-		if err != nil {
-			panic("Failed to add validator")
-		}
-	}
-	if valSet == nil {
-		valSet = vset
-	}
-	if genAccs == nil {
-		pk1 := ed25519.GenPrivKey().PubKey()
-		pk2 := ed25519.GenPrivKey().PubKey()
-		acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk1.Address()))
-		acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk2.Address()))
-		genAcc := make(authtypes.GenesisAccounts, 2)
-		balance := make([]banktypes.Balance, 2)
-		genAcc[0] = acc1
-		genAcc[1] = acc2
-		balance[0] = banktypes.Balance{
-			Address: acc1.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000))),
-		}
-		genAccs = genAcc
-	}
-
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAccs []authtypes.GenesisAccount, bondAmt sdk.Int, emissionParams emissionsModuleTypes.Params, genDelBalances []banktypes.Balance, genBalances []banktypes.Balance) *app.App {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
+	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genDelAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
-
-	bondAmt := sdk.NewInt(1000000)
-
+	// Make all members of valSet as validators
+	// Make all members of delSet as delegators to each of the validators
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
@@ -139,27 +109,42 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 			MinSelfDelegation: sdk.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		for _, del := range genDelAccs {
+			delegations = append(delegations, stakingtypes.NewDelegation(del.GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 
+		}
 	}
+
+	emissionsGenesis := emissionsModuleTypes.DefaultGenesis()
+	emissionsGenesis.Params = emissionParams
+	genesisState[emissionsModuleTypes.ModuleName] = app.AppCodec().MustMarshalJSON(emissionsGenesis)
 	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+	params := stakingtypes.DefaultParams()
+	params.BondDenom = config.BaseDenom
+	stakingGenesis := stakingtypes.NewGenesisState(params, validators, delegations)
 	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
+	// genDelBalances contains additional balances for delegators
+	// Add Bond amount and additional coins for these addresses
+	for _, b := range genDelBalances {
 		// add genesis acc tokens and delegated tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
+		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(config.BaseDenom, bondAmt))...)
 	}
-
-	// add bonded amount to bonded pool module account
-	balances = append(balances, banktypes.Balance{
+	// add balances for non delegator accounts
+	// Add only external balances
+	for _, b := range genBalances {
+		// add genesis acc tokens and delegated tokens to total supply
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+	totalBalances := []banktypes.Balance{}
+	totalBalances = append(append(append(totalBalances, genBalances...), genDelBalances...), banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
+		Coins:   sdk.Coins{sdk.NewCoin(config.BaseDenom, bondAmt)},
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, totalBalances, totalSupply, []banktypes.Metadata{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -168,6 +153,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
 		abci.RequestInitChain{
+			ChainId:         "simnet_101-1",
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: defaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -176,11 +162,13 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// commit genesis changes
 	app.Commit()
+
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
 		Height:             app.LastBlockHeight() + 1,
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
+		ChainID:            "simnet_101-1",
 	}})
 
 	return app
@@ -213,6 +201,7 @@ func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...ba
 	)
 
 	app.Commit()
+
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app

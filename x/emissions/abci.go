@@ -10,14 +10,13 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-	reservesFactor := GetReservesFactor(ctx, bankKeeper)
-	if reservesFactor.LTE(sdk.ZeroDec()) {
+	//fmt.Println("Executing begin block emisson")
+	reservesFactor, bondFactor, durationFactor := GetBlockRewardComponents(ctx, bankKeeper, stakingKeeper, keeper)
+	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
+	if blockRewards.IsZero() {
 		return
 	}
-	bondFactor := GetBondFactor(ctx, stakingKeeper, keeper)
-	durationFactor := GetDurationFactor(ctx, keeper)
-	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
-
+	//fmt.Println("BlockRewards for block :", ctx.BlockHeight(), blockRewards)
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
@@ -49,6 +48,16 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, coin)
+}
+
+func GetBlockRewardComponents(ctx sdk.Context, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, emissionKeeper keeper.Keeper) (sdk.Dec, sdk.Dec, sdk.Dec) {
+	reservesFactor := GetReservesFactor(ctx, bankKeeper)
+	if reservesFactor.LTE(sdk.ZeroDec()) {
+		return sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()
+	}
+	bondFactor := GetBondFactor(ctx, stakingKeeper, emissionKeeper)
+	durationFactor := GetDurationFactor(ctx, emissionKeeper)
+	return reservesFactor, bondFactor, durationFactor
 }
 
 func DistributeTssRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
