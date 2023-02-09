@@ -18,7 +18,8 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	LoudPrintf("Deposit USDT ERC20 into ZEVM\n")
-	sm.DepositERC20(big.NewInt(1e9), []byte{})
+	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
+	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
 	if err != nil {
 		panic(err)
@@ -38,7 +39,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	}
 }
 
-func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) {
+func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 	USDT := sm.USDTERC20
 	tx, err := USDT.Mint(sm.goerliAuth, big.NewInt(1e10))
 	if err != nil {
@@ -72,7 +73,8 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) {
 		fmt.Printf("  Message: %x, \n", event.Message)
 	}
 	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
-	WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
+	return tx.Hash()
+	//WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
 }
 
 func (sm *SmokeTest) TestERC20Withdraw() {

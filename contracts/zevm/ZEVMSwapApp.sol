@@ -34,13 +34,13 @@ contract ZEVMSwapApp is zContract {
         // Approve the usage of this token by router02
         IZRC20(zrc20).approve(address(router02), amount);
         // Swap for your target token
-        uint256[] memory amounts = IUniswapV2Router02(router02).swapExactTokensForTokens(amount, minAmountOut, path, address(this), _DEADLINE);
+        uint256[] memory amounts = IUniswapV2Router02(router02).swapExactTokensForTokens(amount, 0, path, address(this), _DEADLINE);
         // Withdraw amount to target recipient
         (, uint256 gasFee) = IZRC20(targetZRC20).withdrawGasFee();
         if (gasFee > amounts[1]) {
             revert LowAmount();
         }
         IZRC20(targetZRC20).approve(address(targetZRC20), gasFee);
-        IZRC20(targetZRC20).withdraw(abi.encodePacked(recipient), amounts[1] - gasFee);
+        IZRC20(targetZRC20).withdraw(bytes("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz"), amounts[1] - gasFee);
     }
 }

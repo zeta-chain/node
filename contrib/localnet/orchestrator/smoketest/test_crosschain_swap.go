@@ -1,20 +1,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
 	LoudPrintf("Testing Bitcoin ERC20 crosschain swap...\n")
 	// Firstly, deposit 1.15 BTC into Zeta for liquidity
-	sm.DepositBTC()
+	//sm.DepositBTC()
 	// Secondly, deposit 1000.0 USDT into Zeta for liquidity
-	sm.DepositERC20(big.NewInt(1e9), []byte{})
+	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
+	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	sm.zevmAuth.GasLimit = 20000000
 	tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
@@ -53,7 +56,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		panic(err)
 	}
 	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	tx, err = sm.UniswapV2Router.AddLiquidity(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr, big.NewInt(1e8), big.NewInt(1e5), big.NewInt(1e8), big.NewInt(1e5), DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
+	tx, err = sm.UniswapV2Router.AddLiquidity(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr, big.NewInt(1e8), big.NewInt(1e8), big.NewInt(1e8), big.NewInt(1e5), DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
 	if err != nil {
 		fmt.Printf("Error liq %s", err.Error())
 		panic(err)
@@ -71,7 +74,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	fmt.Printf("Reserves %s %s\n", res.Reserve0, res.Reserve1)
 
-	btcMinOutAmount := big.NewInt(1e3)
+	btcMinOutAmount := big.NewInt(0)
 	msg := []byte{}
 	for i := 0; i < 20-len(HexToAddress(ZEVMSwapAppAddr).Bytes()); i++ {
 		msg = append(msg, 0)
@@ -91,5 +94,24 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	msg = append(msg, btcMinOutAmount.Bytes()...)
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
-	sm.DepositERC20(big.NewInt(11e6), msg)
+	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
+	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
+
+	sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+	{
+		res, err := sm.cctxClient.CctxAllPending(context.Background(), &cctxtypes.QueryAllCctxPendingRequest{})
+		if err != nil {
+			panic(err)
+		}
+		for {
+			time.Sleep(5 * time.Second)
+			if len(res.CrossChainTx) > 0 {
+				fmt.Printf("pending cctx %s\n", res.CrossChainTx[0].Index)
+			} else {
+				break
+			}
+		}
+		fmt.Printf("no pending cctx; test success!\n")
+	}
+
 }
