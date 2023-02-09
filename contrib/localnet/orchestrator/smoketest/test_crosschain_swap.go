@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
@@ -62,16 +61,6 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("Add liquidity receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
-	usdtBtc, err := contracts.NewUniswapV2Pair(usdtBtcPair, sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	res, err := usdtBtc.GetReserves(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Reserves %s %s\n", res.Reserve0, res.Reserve1)
-
 	btcMinOutAmount := big.NewInt(0)
 	msg := []byte{}
 	for i := 0; i < 20-len(HexToAddress(ZEVMSwapAppAddr).Bytes()); i++ {
@@ -91,7 +80,6 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	msg = append(msg, btcMinOutAmount.Bytes()...)
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
-	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 

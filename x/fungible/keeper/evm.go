@@ -1,9 +1,7 @@
 package keeper
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"strconv"
 
@@ -347,10 +345,6 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	targetContract common.Address,
 	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
-	fmt.Printf("zrc %s\n", zrc4Contract.Hex())
-	fmt.Printf("targ %s\n", targetContract.Hex())
-	fmt.Printf("amt %s\n", amount.String())
-	fmt.Printf("msggg %s\n", hex.EncodeToString(message))
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
@@ -365,12 +359,8 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, true,
 		"depositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
-		fmt.Printf("Error %s\n", err.Error())
-		fmt.Printf("Result %s\n", res)
 		return nil, err
 	}
-	fmt.Printf("Result %s\n", res)
-
 	return res, nil
 }
 

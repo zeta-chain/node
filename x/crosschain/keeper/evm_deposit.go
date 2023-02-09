@@ -16,9 +16,6 @@ import (
 func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
-	fmt.Printf("YES\n")
-	fmt.Printf("Amt %s\n", msg.ZetaBurnt)
-	fmt.Printf("Msg %s\n", msg.Message)
 	if !ok {
 		return errors.Wrap(types.ErrFloatParseError, fmt.Sprintf("cannot parse zetaBurnt: %s", msg.ZetaBurnt))
 	}
@@ -30,7 +27,6 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		cctx.OutboundTxParams.OutboundTxHash = "Mined directly to ZetaEVM without TX"
 	} else { // cointype is Gas or ERC20
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
-		fmt.Printf("DAS %d %s\n", len(data), contract.Hex())
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
