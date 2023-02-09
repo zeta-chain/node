@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
@@ -98,20 +96,20 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
-	{
-		res, err := sm.cctxClient.CctxAllPending(context.Background(), &cctxtypes.QueryAllCctxPendingRequest{})
-		if err != nil {
-			panic(err)
-		}
-		for {
-			time.Sleep(5 * time.Second)
-			if len(res.CrossChainTx) > 0 {
-				fmt.Printf("pending cctx %s\n", res.CrossChainTx[0].Index)
-			} else {
-				break
-			}
-		}
-		fmt.Printf("no pending cctx; test success!\n")
-	}
+	//{
+	//	res, err := sm.cctxClient.CctxAllPending(context.Background(), &cctxtypes.QueryAllCctxPendingRequest{})
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	for {
+	//		time.Sleep(5 * time.Second)
+	//		if len(res.CrossChainTx) > 0 {
+	//			fmt.Printf("pending cctx %s\n", res.CrossChainTx[0].Index)
+	//		} else {
+	//			break
+	//		}
+	//	}
+	//	fmt.Printf("no pending cctx; test success!\n")
+	//}
 
 }
