@@ -83,7 +83,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
-	sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+	if err != nil {
+		panic(err)
+	}
 	//{
 	//	res, err := sm.cctxClient.CctxAllPending(context.Background(), &cctxtypes.QueryAllCctxPendingRequest{})
 	//	if err != nil {
