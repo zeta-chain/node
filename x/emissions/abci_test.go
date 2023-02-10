@@ -92,7 +92,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			for i := ctx.BlockHeight(); i < tt.testMaxHeight; i++ {
 				ctx = ctx.WithBlockHeight(i)
 				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
-				bondFactor, reservesFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
+				reservesFactor, bondFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
 				d = append(d, data{
 					BlockHeight:    ctx.BlockHeight(),
 					BondFactor:     bondFactor,
