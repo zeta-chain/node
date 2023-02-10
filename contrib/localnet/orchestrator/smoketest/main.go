@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
@@ -14,10 +19,6 @@ import (
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"os"
-	"sync"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -40,6 +41,7 @@ var (
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
 	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	ZEVMSwapAppAddr      = "0x91d4F0D54090Df2D81e834c3c8CE71C6c865e79F"
 	HexToAddress         = ethcommon.HexToAddress
 )
 
@@ -65,6 +67,8 @@ type SmokeTest struct {
 	USDTZRC20            *contracts.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *contracts.ZRC20
+	BTCZRC20Addr         ethcommon.Address
+	BTCZRC20             *contracts.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *contracts.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
@@ -183,6 +187,7 @@ func main() {
 	smokeTest.TestMessagePassing()
 	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
+	smokeTest.TestCrosschainSwap()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

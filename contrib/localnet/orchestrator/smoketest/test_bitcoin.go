@@ -4,6 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -17,8 +20,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/zetaclient"
-	"math/big"
-	"time"
 )
 
 var (
@@ -85,7 +86,12 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	}
 	fmt.Printf("TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
 
-	utxos, err := btc.ListUnspent()
+	sm.DepositBTC()
+}
+
+func (sm *SmokeTest) DepositBTC() {
+	btc := sm.btcRPCClient
+	utxos, err := sm.btcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
 	}
@@ -114,8 +120,14 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	if err != nil {
 		panic(err)
 	}
+	sm.BTCZRC20Addr = BTCZRC20Addr
 	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
 	BTCZRC20, err := contracts.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.BTCZRC20 = BTCZRC20
+	initialBalance, err := BTCZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -125,20 +137,25 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		if err != nil {
 			panic(err)
 		}
-		if balance.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
+		diff := big.NewInt(0)
+		diff.Sub(balance, initialBalance)
+		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
 			fmt.Printf("waiting for BTC balance to show up in ZRC contract... current bal %d\n", balance)
 		} else {
 			fmt.Printf("BTC balance is in ZRC contract! Success\n")
 			break
 		}
 	}
-
 }
 
 func (sm *SmokeTest) TestBitcoinWithdraw() {
 	LoudPrintf("Testing Bitcoin ZRC20 Withdraw...\n")
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
+	sm.WithdrawBitcoin()
+}
+
+func (sm *SmokeTest) WithdrawBitcoin() {
 	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
 	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
 	if err != nil {
@@ -245,9 +262,7 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 			fmt.Printf("    N: %d\n", txOut.N)
 			fmt.Printf("    ScriptPubKey: %s\n", txOut.ScriptPubKey.Hex)
 		}
-
 	}
-
 }
 
 func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client) error {
