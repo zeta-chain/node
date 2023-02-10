@@ -16,7 +16,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
-	sm.zevmAuth.GasLimit = 20000000
+	sm.zevmAuth.GasLimit = 10000000
 	tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
 	if err != nil {
 		panic(err)
