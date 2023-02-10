@@ -109,10 +109,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 			MinSelfDelegation: sdk.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		for _, del := range genDelAccs {
-			delegations = append(delegations, stakingtypes.NewDelegation(del.GetAddress(), val.Address.Bytes(), sdk.OneDec()))
-
-		}
+		delegations = append(delegations, stakingtypes.NewDelegation(genDelAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 	}
 
 	emissionsGenesis := emissionsModuleTypes.DefaultGenesis()
@@ -127,6 +124,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 	totalSupply := sdk.NewCoins()
 	// genDelBalances contains additional balances for delegators
 	// Add Bond amount and additional coins for these addresses
+
 	for _, b := range genDelBalances {
 		// add genesis acc tokens and delegated tokens to total supply
 		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(config.BaseDenom, bondAmt))...)
@@ -137,6 +135,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 		// add genesis acc tokens and delegated tokens to total supply
 		totalSupply = totalSupply.Add(b.Coins...)
 	}
+
 	totalBalances := []banktypes.Balance{}
 	totalBalances = append(append(append(totalBalances, genBalances...), genDelBalances...), banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
@@ -144,6 +143,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 	})
 
 	// update total supply
+
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, totalBalances, totalSupply, []banktypes.Metadata{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 

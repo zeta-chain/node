@@ -1,7 +1,7 @@
 package emissions_test
 
 import (
-	"fmt"
+	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/simapp"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	"io/ioutil"
 	"testing"
 )
 
@@ -24,8 +25,6 @@ func getaZetaFromString(amount string) sdk.Coins {
 func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoins sdk.Coins) (*zetaapp.App, sdk.Context, *tmtypes.ValidatorSet) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk1.Address()))
-	pk2 := ed25519.GenPrivKey().PubKey()
-	acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk2.Address()))
 	// genDelActs and genDelBalances need to have the same addresses
 	// bondAmount is specified separately , the Balances here are additional tokens for delegators to have in their accounts
 	genDelActs := make(authtypes.GenesisAccounts, 1)
@@ -33,11 +32,6 @@ func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoin
 	genDelActs[0] = acc1
 	genDelBalances[0] = banktypes.Balance{
 		Address: acc1.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000))),
-	}
-	genDelActs[0] = acc2
-	genDelBalances[0] = banktypes.Balance{
-		Address: acc2.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000))),
 	}
 	delBondAmount := getaZetaFromString("1000000000000000000000000")
@@ -52,7 +46,7 @@ func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoin
 	for i := 0; i < 1; i++ {
 		privKey := ed25519.GenPrivKey()
 		pubKey := privKey.PubKey()
-		val := tmtypes.NewValidator(pubKey, 100000000000)
+		val := tmtypes.NewValidator(pubKey, 1)
 		err := vset.UpdateWithChangeSet([]*tmtypes.Validator{val})
 		if err != nil {
 			panic("Failed to add validator")
@@ -65,41 +59,50 @@ func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoin
 }
 
 func TestAppModule_GetBlockRewardComponents(t *testing.T) {
+	type data struct {
+		BlockHeight    int64   `json:"blockHeight,omitempty"`
+		BondFactor     sdk.Dec `json:"bondFactor"`
+		ReservesFactor sdk.Dec `json:"reservesFactor"`
+		DurationFactor sdk.Dec `json:"durationFactor"`
+	}
 
 	tests := []struct {
-		name                             string
-		startingEmissionPool             string
-		testMaxHeight                    int64
-		checkValuesReserver              map[int64]string
-		checkValuesUndistributedObserver map[int64]string
-		checkValuesUndistributedTss      map[int64]string
+		name                 string
+		startingEmissionPool string
+		params               emissionsModuleTypes.Params
+		testMaxHeight        int64
+		checkValues          []data
 	}{
 		{
 			name:                 "test 1",
+			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
-			testMaxHeight:        5,
+			testMaxHeight:        200,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app, ctx, _ := SetupApp(t, emissionsModuleTypes.DefaultParams(), getaZetaFromString(tt.startingEmissionPool))
-			fmt.Println(app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom))
+			app, ctx, _ := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
+			ctx = ctx.WithBlockHeight(1)
+			//fmt.Println(app.EmissionsKeeper.GetParams(ctx).String())
+			//fmt.Println(app.StakingKeeper.BondedRatio(ctx))
+			//fmt.Println(app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom))
+			var d []data
 			for i := ctx.BlockHeight(); i < tt.testMaxHeight; i++ {
 				ctx = ctx.WithBlockHeight(i)
-				//app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-				//	Height:             app.LastBlockHeight() + 1,
-				//	AppHash:            app.LastCommitID().Hash,
-				//	ValidatorsHash:     vset.Hash(),
-				//	NextValidatorsHash: vset.Hash(),
-				//	ChainID:            "simnet_101-1",
-				//}})
 				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
 				bondFactor, reservesFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
-				fmt.Printf("bondFactor: %d, reservesFactor: %d, durationFactor: %d , blockheight: %d\n", bondFactor, reservesFactor, durationFactor, ctx.BlockHeight())
-				//app.Commit()
+				d = append(d, data{
+					BlockHeight:    ctx.BlockHeight(),
+					BondFactor:     bondFactor,
+					ReservesFactor: reservesFactor,
+					DurationFactor: durationFactor,
+				})
 
 			}
+			file, _ := json.MarshalIndent(d, "", " ")
+			_ = ioutil.WriteFile("simulations.json", file, 0600)
 		})
 	}
 
