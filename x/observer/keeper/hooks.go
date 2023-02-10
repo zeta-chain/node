@@ -11,39 +11,57 @@ type Hooks struct {
 	k Keeper
 }
 
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CleanObservers(ctx, valAddr)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CheckAndCleanObserver(ctx, valAddr)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	err := h.k.CheckAndCleanObserverDelegator(ctx, valAddr, delAddr)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+
 	err := h.k.CleanSlashedValidator(ctx, valAddr, fraction)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
-func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                            {}
-func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
-func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)          {}
-func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
-func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}
-func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
+func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
+	return nil
+}
+
+func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
+}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
@@ -64,14 +82,15 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	if len(mappers) == 0 {
 		return nil
 	}
-	tokensToBurn := validator.Tokens.ToDec().Mul(fraction)
+
+	tokensToBurn := sdk.NewDecFromInt(validator.Tokens).Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
 	for _, mapper := range mappers {
-		obsParams, supported := k.GetParams(ctx).GetParamsForChainAndType(mapper.ObserverChain, mapper.ObservationType)
-		if !supported {
+		obsParams := k.GetParams(ctx).GetParamsForChain(mapper.ObserverChain)
+		if !obsParams.IsSupported {
 			return types.ErrSupportedChains
 		}
-		if resultingTokens.ToDec().LT(obsParams.MinObserverDelegation) {
+		if sdk.NewDecFromInt(resultingTokens).LT(obsParams.MinObserverDelegation) {
 			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
 			k.SetObserverMapper(ctx, mapper)
 		}

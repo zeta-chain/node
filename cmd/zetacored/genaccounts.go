@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/crypto/hd"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
@@ -14,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,34 +42,19 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
+			kr := clientCtx.Keyring
 			config.SetRoot(clientCtx.HomeDir)
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				inBuf := bufio.NewReader(cmd.InOrStdin())
-				keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+				info, err := kr.Key(args[0])
+				if err != nil {
+					return fmt.Errorf("failed to get address from Keyring: %w", err)
+				}
+				addr, err = info.GetAddress()
 				if err != nil {
 					return err
 				}
-				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(
-					sdk.KeyringServiceName(),
-					keyringBackend,
-					clientCtx.HomeDir,
-					inBuf,
-					hd.EthSecp256k1Option(),
-				)
-				if err != nil {
-					return err
-				}
-
-				info, err := kb.Key(args[0])
-				if err != nil {
-					return fmt.Errorf("failed to get address from Keybase: %w", err)
-				}
-
-				addr = info.GetAddress()
 			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])

@@ -1,6 +1,9 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -13,7 +16,10 @@ import (
 )
 
 func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {
-	kb := keyring.NewInMemory()
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+	kb := keyring.NewInMemory(cdc)
 	path := sdk.GetConfig().GetFullBIP44Path()
 	_, err := kb.NewAccount("signerName", testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
@@ -21,8 +27,10 @@ func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {
 	k := mc.NewKeysWithKeybase(kb, "signerName", "")
 	pubKeySet, err := k.GetPubKeySet()
 	assert.NoError(t, err)
+	addr, err := k.GetSignerInfo().GetAddress()
+	assert.NoError(t, err)
 	msg := types.MsgSetNodeKeys{
-		Creator:                  k.GetSignerInfo().GetAddress().String(),
+		Creator:                  addr.String(),
 		PubkeySet:                &pubKeySet,
 		ValidatorConsensusPubkey: "",
 	}

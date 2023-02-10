@@ -14,6 +14,7 @@ func DefaultGenesis() *GenesisState {
 		// this line is used by starport scaffolding # ibc/genesistype/default
 		OutTxTrackerList:   []OutTxTracker{},
 		InTxHashToCctxList: []InTxHashToCctx{},
+		PermissionFlags:    nil,
 		// this line is used by starport scaffolding # genesis/types/default
 		Keygen:          nil,
 		TSSVoterList:    []*TSSVoter{},

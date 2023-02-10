@@ -48,7 +48,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 	factory = factory.WithSequence(b.seqNumber)
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
-	builder, err := clienttx.BuildUnsignedTx(factory, msgs...)
+	builder, err := factory.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return "", err
 	}
@@ -120,15 +120,17 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 // GetContext return a valid context with all relevant values set
 func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx := client.Context{}
+	addr, _ := b.keys.GetSignerInfo().GetAddress()
+	// TODO : Handle error
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(cmd.CHAINID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
-	ctx = ctx.WithFromAddress(b.keys.GetSignerInfo().GetAddress())
+	ctx = ctx.WithFromAddress(addr)
 	ctx = ctx.WithBroadcastMode("sync")
 
 	encodingConfig := app.MakeEncodingConfig()
-	ctx = ctx.WithJSONCodec(encodingConfig.Marshaler)
+	ctx = ctx.WithCodec(encodingConfig.Codec)
 	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)
 	ctx = ctx.WithLegacyAmino(encodingConfig.Amino)

@@ -18,7 +18,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.OutTxChain)
+	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err

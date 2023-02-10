@@ -63,7 +63,7 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetSignerInfo().GetAddress().String()
+	myid := co.bridge.keys.GetAddress().String()
 	log.Info().Msgf("monitorCore started by signer %s", myid)
 	go co.startSendScheduler()
 

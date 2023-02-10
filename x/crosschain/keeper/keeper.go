@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 
@@ -16,8 +17,8 @@ import (
 type (
 	Keeper struct {
 		cdc      codec.Codec
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
+		storeKey storetypes.StoreKey
+		memKey   storetypes.StoreKey
 
 		StakingKeeper      types.StakingKeeper
 		paramstore         paramtypes.Subspace
@@ -33,7 +34,7 @@ type (
 func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
-	memKey sdk.StoreKey,
+	memKey storetypes.StoreKey,
 	stakingKeeper types.StakingKeeper, // custom
 	paramstore paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
