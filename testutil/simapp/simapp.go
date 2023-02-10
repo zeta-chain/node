@@ -23,30 +23,6 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 )
 
-// New creates application instance with in-memory database and disabled logging.
-func New() *app.App {
-	db := tmdb.NewMemDB()
-	logger := log.NewNopLogger()
-
-	encoding := app.MakeEncodingConfig()
-
-	a := app.New(logger, db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 0, encoding,
-		simapp.EmptyAppOptions{})
-
-	genesisState := app.ModuleBasics.DefaultGenesis(encoding.Marshaler)
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	// InitChain updates deliverState which is required when app.NewContext is called
-	a.InitChain(abci.RequestInitChain{
-		Validators:      []abci.ValidatorUpdate{},
-		ConsensusParams: defaultConsensusParams,
-		AppStateBytes:   stateBytes,
-	})
-	return a
-}
-
 func Setup(isCheckTx bool) *app.App {
 	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
@@ -75,7 +51,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
 	encCdc := app.MakeEncodingConfig()
 	a := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, invCheckPeriod, encCdc, simapp.EmptyAppOptions{})
 	if withGenesis {
-		return a, app.NewDefaultGenesisState(encCdc.Marshaler)
+		return a, app.NewDefaultGenesisState(encCdc.Codec)
 	}
 	return a, app.GenesisState{}
 }
@@ -137,6 +113,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 	}
 
 	totalBalances := []banktypes.Balance{}
+	// Add extra balance to account for delegator bonded pool
 	totalBalances = append(append(append(totalBalances, genBalances...), genDelBalances...), banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
 		Coins:   sdk.Coins{sdk.NewCoin(config.BaseDenom, bondAmt)},

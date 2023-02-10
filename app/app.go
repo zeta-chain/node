@@ -30,6 +30,7 @@ import (
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"time"
 
 	"io"
 	"net/http"
@@ -180,15 +181,16 @@ var (
 		zetaObserverModule.AppModuleBasic{},
 		fungibleModule.AppModuleBasic{},
 		emissionsModule.AppModuleBasic{},
+		groupmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner}, {authtypes.Minter, authtypes.Burner},
+		authtypes.FeeCollectorName:                            nil,
+		distrtypes.ModuleName:                                 nil,
+		stakingtypes.BondedPoolName:                           {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                        {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                                   {authtypes.Burner},
 		zetaCoreModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:                                   {authtypes.Minter, authtypes.Burner},
 		fungibleModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
@@ -239,6 +241,7 @@ type App struct {
 	FeeMarketKeeper      feemarketkeeper.Keeper
 	FungibleKeeper       fungibleModuleKeeper.Keeper
 	EmissionsKeeper      emissionsModuleKeeper.Keeper
+	GroupKeeper          groupkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -345,7 +348,13 @@ func New(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
 	)
-
+	app.EmissionsKeeper = *emissionsModuleKeeper.NewKeeper(
+		appCodec,
+		keys[emissionsModuleTypes.StoreKey],
+		keys[emissionsModuleTypes.MemStoreKey],
+		app.GetSubspace(emissionsModuleTypes.ModuleName),
+		authtypes.FeeCollectorName,
+	)
 	// Create Ethermint keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
 	feeSs := app.GetSubspace(feemarkettypes.ModuleName)
@@ -384,7 +393,10 @@ func New(
 		app.ZetaObserverKeeper,
 		app.FungibleKeeper,
 	)
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
+		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
+		MaxMetadataLen:     255,
+	})
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
