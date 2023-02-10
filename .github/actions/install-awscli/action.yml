@@ -10,6 +10,7 @@ runs:
     - uses: actions/checkout@v3
 
     - name: Install AWS CLI
+      shell: bash
       if: ${{ env.ACT }}
       run: |
         curl "${{ inputs.download_url }}" -o "awscliv2.zip"

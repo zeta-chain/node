@@ -23,6 +23,7 @@ runs:
 
     - name: Set branch name
       id: set-branch-name
+      shell: bash
       run: | 
         tag_check=`echo '${{ inputs.github_ref }}' | grep 'tags'` || echo "proceed"
         if [ "${{ inputs.github_event }}" == "pull_request" ]; then

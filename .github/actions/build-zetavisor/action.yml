@@ -13,7 +13,7 @@ runs:
     - uses: actions/checkout@v3
 
     - name: Build Zetavisor
-      if: false
+      shell: bash
       run: |
         go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@${{ inputs.zetavisor_version }}
         go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@${{ inputs.zetavisor_version }}
