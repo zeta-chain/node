@@ -112,6 +112,7 @@ jobs:
       run: |
         echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
         echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
+        ls -lah ./
 
     - name: set-branch-name
       uses: ./.github/actions/set-branch-name
@@ -136,16 +137,31 @@ jobs:
         name: binaries-${{ github.sha }}
         path: ./
 
+    - name: Debug
+      run: |
+        pwd
+        ls -lah ./
+
     - name: build-zetavisor
       uses: ./.github/actions/build-zetavisor
       with:
         zetavisor_version: "zetavisor-v0.1.3"
         workspace_dir: "${{ env.WORKSPACE_DIR }}"
 
+    - name: Debug
+      run: |
+        pwd
+        ls -lah ./
+
     - name: build-zetavisor
       uses: ./.github/actions/install-awscli
       with:
         download_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+
+    - name: Debug
+      run: |
+        pwd
+        ls -lah ./
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -158,7 +174,6 @@ jobs:
       run: |
         pwd
         ls -lah ./
-        ls -lah $WORKSPACE_DIR
 
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
