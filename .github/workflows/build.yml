@@ -132,36 +132,21 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: binaries-${{ github.sha }}
-        path: ./
-
-    - name: Debug
-      run: |
-        pwd
-        ls -lah ./
-
     - name: build-zetavisor
       uses: ./.github/actions/build-zetavisor
       with:
         zetavisor_version: "zetavisor-v0.1.3"
         workspace_dir: "${{ env.WORKSPACE_DIR }}"
 
-    - name: Debug
-      run: |
-        pwd
-        ls -lah ./
-
-    - name: build-zetavisor
+    - name: install awscli
       uses: ./.github/actions/install-awscli
       with:
         download_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 
-    - name: Debug
-      run: |
-        pwd
-        ls -lah ./
+    - uses: actions/download-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: ./
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
