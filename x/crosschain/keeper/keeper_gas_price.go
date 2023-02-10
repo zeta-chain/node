@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (k Keeper) GetGasPrice(ctx sdk.Context, chainID int64) (val types.GasPrice,
 func (k Keeper) GetMedianGasPriceInUint(ctx sdk.Context, chainID int64) (sdk.Uint, bool) {
 	gasPrice, isFound := k.GetGasPrice(ctx, chainID)
 	if !isFound {
-		return sdk.ZeroUint(), isFound
+		return math.ZeroUint(), isFound
 	}
 	mi := gasPrice.MedianIndex
 	return sdk.NewUint(gasPrice.Prices[mi]), true
@@ -122,8 +123,8 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !IsBondedValidator(msg.Creator, validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
-	chain, found := k.zetaObserverKeeper.GetChainFromChainID(ctx, msg.ChainId)
-	if !found {
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
 	}
 

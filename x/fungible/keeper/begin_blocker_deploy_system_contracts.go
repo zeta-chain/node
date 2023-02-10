@@ -119,8 +119,8 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, c)
 	chainName := common.ParseStringToObserverChain(c)
-	chain, found := k.zetaobserverKeeper.GetChainFromChainName(ctx, chainName)
-	if !found {
+	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
 

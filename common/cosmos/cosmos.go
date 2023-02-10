@@ -14,19 +14,15 @@ var (
 	NewRoute                = sdk.NewRoute
 	NewKVStoreKeys          = sdk.NewKVStoreKeys
 	NewUint                 = sdk.NewUint
-	ParseUint               = sdk.ParseUint
 	NewInt                  = sdk.NewInt
 	NewDec                  = sdk.NewDec
-	ZeroUint                = sdk.ZeroUint
 	ZeroDec                 = sdk.ZeroDec
-	OneUint                 = sdk.OneUint
 	NewCoin                 = sdk.NewCoin
 	NewCoins                = sdk.NewCoins
 	ParseCoins              = sdk.ParseCoinsNormalized
 	NewDecWithPrec          = sdk.NewDecWithPrec
 	NewDecFromBigInt        = sdk.NewDecFromBigInt
 	NewIntFromBigInt        = sdk.NewIntFromBigInt
-	NewUintFromBigInt       = sdk.NewUintFromBigInt
 	AccAddressFromBech32    = sdk.AccAddressFromBech32
 	VerifyAddressFormat     = sdk.VerifyAddressFormat
 	GetFromBech32           = sdk.GetFromBech32
@@ -41,8 +37,6 @@ var (
 	KVStorePrefixIterator   = sdk.KVStorePrefixIterator
 	NewKVStoreKey           = sdk.NewKVStoreKey
 	NewTransientStoreKey    = sdk.NewTransientStoreKey
-	StoreTypeTransient      = sdk.StoreTypeTransient
-	StoreTypeIAVL           = sdk.StoreTypeIAVL
 	NewContext              = sdk.NewContext
 	GetPubKeyFromBech32     = legacybech32.UnmarshalPubKey
 	Bech32ifyPubKey         = legacybech32.MarshalPubKey
@@ -69,7 +63,6 @@ type (
 	Msg        = sdk.Msg
 	Iterator   = sdk.Iterator
 	Handler    = sdk.Handler
-	StoreKey   = sdk.StoreKey
 	Querier    = sdk.Querier
 	TxResponse = sdk.TxResponse
 	Account    = authtypes.AccountI

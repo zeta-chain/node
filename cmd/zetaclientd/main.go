@@ -117,6 +117,7 @@ func main() {
 	}
 
 	var peers addr.AddrList
+
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
 		if err != nil {

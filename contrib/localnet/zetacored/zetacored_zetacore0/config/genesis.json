@@ -395,6 +395,7 @@
       "observers": [
         {
           "observer_chain": {
+            "chain_name": 14,
             "chain_id": 1337
           },
           "observation_type": 1,
@@ -405,6 +406,7 @@
         },
         {
           "observer_chain": {
+            "chain_name": 14,
             "chain_id": 1337
           },
           "observation_type": 2,
@@ -415,6 +417,7 @@
         },
         {
           "observer_chain": {
+            "chain_name": 15,
             "chain_id": 18444
           },
           "observation_type": 1,
@@ -425,6 +428,7 @@
         },
         {
           "observer_chain": {
+            "chain_name": 15,
             "chain_id": 18444
           },
           "observation_type": 2,
@@ -434,223 +438,115 @@
           ]
         }
       ],
-      "Params": {
+      "params": {
         "observer_params": [
           {
             "chain": {
-              "chain_name": 1,
-              "chain_id": 1
+              "chain_name": 15,
+              "chain_id": 18444
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 1,
-              "chain_id": 1
+              "chain_name": 12,
+              "chain_id": 18332
             },
-            "observation": 2,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 6,
-              "chain_id": 5
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 6,
-              "chain_id": 5
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 8,
-              "chain_id": 3
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 8,
-              "chain_id": 3
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 5,
-              "chain_id": 56
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 5,
-              "chain_id": 56
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 11,
-              "chain_id": 97
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 11,
-              "chain_id": 97
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 10,
-              "chain_id": 1001
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 10,
-              "chain_id": 1001
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 2,
-              "chain_id": 2374
-            },
-            "observation": 1,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 2,
-              "chain_id": 2374
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
               "chain_name": 3,
-              "chain_id": 55555
+              "chain_id": 8332
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 3,
-              "chain_id": 55555
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
               "chain_name": 4,
               "chain_id": 137
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
-          },
-          {
-            "chain": {
-              "chain_name": 4,
-              "chain_id": 137
-            },
-            "observation": 2,
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
               "chain_name": 7,
               "chain_id": 80001
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 7,
-              "chain_id": 80001
+              "chain_name": 9,
+              "chain_id": 1001
             },
-            "observation": 2,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 13,
-              "chain_id": 1212312
+              "chain_name": 10,
+              "chain_id": 97
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 13,
-              "chain_id": 1212312
+              "chain_name": 5,
+              "chain_id": 56
             },
-            "observation": 2,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 15,
-              "chain_id": 18444
+              "chain_name": 1,
+              "chain_id": 1
             },
-            "observation": 1,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           },
           {
             "chain": {
-              "chain_name": 15,
-              "chain_id": 18444
+              "chain_name": 6,
+              "chain_id": 5
             },
-            "observation": 2,
             "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000"
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
+          },
+          {
+            "chain": {
+              "chain_name": 14,
+              "chain_id": 1337
+            },
+            "ballot_threshold": "0.660000000000000000",
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
+          },
+          {
+            "chain": {
+              "chain_name": 2,
+              "chain_id": 101
+            },
+            "ballot_threshold": "0.660000000000000000",
+            "min_observer_delegation": "10000000000.000000000000000000",
+            "is_supported": true
           }
         ]
       }
@@ -673,7 +569,8 @@
         "max_validators": 100,
         "max_entries": 7,
         "historical_entries": 10000,
-        "bond_denom": "azeta"
+        "bond_denom": "azeta",
+        "min_commission_rate": "0.000000000000000000"
       },
       "last_total_power": "0",
       "last_validator_powers": [],
