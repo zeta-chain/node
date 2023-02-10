@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	PostGasPriceGasLimit            = 60_000
+	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
 	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly

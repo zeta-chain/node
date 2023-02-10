@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	ethante "github.com/evmos/ethermint/app/ante"
+	ethermint "github.com/evmos/ethermint/types"
 
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 )
@@ -152,5 +153,5 @@ func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	//
 	//return ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 
-	return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	return ctx.WithGasMeter(ethermint.NewInfiniteGasMeterWithLimit(gasLimit))
 }
