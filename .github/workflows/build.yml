@@ -109,7 +109,6 @@ jobs:
       uses: tj-actions/branch-names@v6
 
     - name: Git Hash
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
         echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
         echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
@@ -154,6 +153,12 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Debug step
+      run: |
+        pwd
+        ls -lah ./
+        ls -lah $WORKSPACE_DIR
 
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
