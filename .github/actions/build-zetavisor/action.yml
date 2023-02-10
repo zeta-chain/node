@@ -17,4 +17,4 @@ runs:
       run: |
         go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@${{ inputs.zetavisor_version }}
         go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@${{ inputs.zetavisor_version }}
-        cp "$HOME"/go/bin/cosmovisor ./${{ inputs.workspace_dir }}/cosmovisor
+        cp "$HOME"/go/bin/cosmovisor ${{ inputs.workspace_dir }}/cosmovisor
