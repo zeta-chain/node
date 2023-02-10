@@ -6,8 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/syndtr/goleveldb/leveldb/util"
 	"math/big"
 	"os"
 	"strconv"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/syndtr/goleveldb/leveldb/util"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/contracts/evm"
@@ -567,10 +568,10 @@ func (ob *EVMChainClient) observeInTX() error {
 			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
 			event.Amount.String(),
 			event.Amount.String(),
-			base64.StdEncoding.EncodeToString(event.Message),
+			hex.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
-			1_000_000,
+			1_500_000,
 			common.CoinType_ERC20,
 			PostSendEVMGasLimit,
 			event.Asset.String(),

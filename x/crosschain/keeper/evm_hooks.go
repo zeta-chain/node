@@ -109,6 +109,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	}
 	senderChain := common.ZetaChain()
 
+	// FIXME: the following gas limit etc does not make sense for bitcoin
+	// FIXME: use the foreign coin's gaslimit
 	toAddr := "0x" + hex.EncodeToString(event.To)
 	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
 	sendHash := msg.Digest()
