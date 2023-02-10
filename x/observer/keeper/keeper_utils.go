@@ -40,9 +40,9 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 	if !found {
 		return types.ErrSelfDelgation
 	}
-	obsParams, found := k.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
-	if !found {
-		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Params for chain and type do not exists %s , %s", chain.String(), observationType.String()))
+	obsParams := k.GetParams(ctx).GetParamsForChain(chain)
+	if !obsParams.IsSupported {
+		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Chain not suported %s , %s", chain.String(), observationType.String()))
 	}
 
 	tokens := validator.TokensFromShares(delegation.Shares)

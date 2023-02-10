@@ -5,6 +5,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
@@ -63,6 +64,10 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
 	}
 
+// Queries a PermissionFlags by index.
+	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/crosschain/permission_flags";
+	}
 // this line is used by starport scaffolding # 2
 
 	// Queries a keygen by index.
@@ -229,6 +234,11 @@ message QueryAllInTxHashToCctxResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+message QueryGetPermissionFlagsRequest {}
+
+message QueryGetPermissionFlagsResponse {
+	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
+}
 // this line is used by starport scaffolding # 3
 message QueryGetKeygenRequest {}
 

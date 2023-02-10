@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,6 +30,7 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 	return ballot, true
 }
 
+// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
 	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
 	if !found {
@@ -62,12 +64,9 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		if !k.zetaObserverKeeper.IsChainSupported(ctx, *chain) {
-			return ballot, isNew, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("Chain %s, Observation %s", chain.String(), observationType.String()))
-		}
 		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
-		obsParams, found := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChainAndType(chain, observationType)
-		if !found {
+		obsParams := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChain(chain)
+		if !obsParams.IsSupported {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
 			return
 		}
@@ -86,7 +85,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 }
 
 func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
-	chain, _ := k.zetaObserverKeeper.GetChainFromChainID(ctx, chainID)
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutboundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
@@ -104,7 +103,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
-	feeInZeta := types.GetProtocolFee().Add(sdk.NewUintFromBigInt(outTxGasFeeInZeta))
+	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
 	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt())))

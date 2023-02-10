@@ -9,7 +9,6 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
@@ -17,6 +16,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the inTxHashToCctx
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
+	}
+	// Set if defined
+	if genState.PermissionFlags != nil {
+		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
+	} else {
+		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
 	}
 	// this line is used by starport scaffolding # genesis/module/init
 	// Set if defined
@@ -72,6 +77,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
+	// Get all permissionFlags
+	permissionFlags, found := k.GetPermissionFlags(ctx)
+	if found {
+		genesis.PermissionFlags = &permissionFlags
+	}
 	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
 	keygen, found := k.GetKeygen(ctx)

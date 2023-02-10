@@ -211,7 +211,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
-	myid := zetaBridge.keys.GetSignerInfo().GetAddress().String()
+	myid := zetaBridge.keys.GetAddress().String()
 
 	var to ethcommon.Address
 	var err error

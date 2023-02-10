@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -27,9 +28,9 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].ZetaBurnt = sdk.OneUint()
-		items[i].ZetaMint = sdk.OneUint()
-		items[i].ZetaFees = sdk.OneUint()
+		items[i].ZetaBurnt = math.OneUint()
+		items[i].ZetaMint = math.OneUint()
+		items[i].ZetaFees = math.OneUint()
 		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i)}
 
 		keeper.SetCrossChainTx(ctx, items[i])
@@ -70,9 +71,9 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			StatusMessage:       "any",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].ZetaBurnt = sdk.OneUint()
-		items[i].ZetaMint = sdk.OneUint()
-		items[i].ZetaFees = sdk.OneUint()
+		items[i].ZetaBurnt = math.OneUint()
+		items[i].ZetaMint = math.OneUint()
+		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
