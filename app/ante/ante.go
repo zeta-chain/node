@@ -29,10 +29,6 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
-const (
-	secp256k1VerifyCost uint64 = 21000
-)
-
 func ValidateHandlerOptions(options ethante.HandlerOptions) error {
 	if options.AccountKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "account keeper is required for AnteHandler")
