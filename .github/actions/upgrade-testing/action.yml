@@ -1,0 +1,51 @@
+name: 'EXECUTE:UPGRADE:PATH:TEST'
+description: 'Test binary upgrade path for Zeta binaries to ensure no state breaking changes.'
+inputs:
+  github_token:
+    description: "github token to use to call the api"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 'pypy3.9'
+
+    - name: Run Upgrade Path Testing
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_OWNER: "zeta-chain"
+        GITHUB_REPO: "zeta-node"
+        DOCKER_FILE_LOCATION: "."
+        MONIKER: "zeta"
+        CHAIN_ID: "test_1001-1"
+        NODE: "http://127.0.0.1:26657"
+        GO_PATH: "/Users/grantzukel/go/bin"
+        STARTING_VERSION: "athens2-v1.1.12"
+        BLOCK_TIME_SECONDS: "4"
+        PROPOSAL_TIME_SECONDS: "60"
+        GAS_PRICES: "0.1azeta"
+        DAEMON_HOME: "/root/.zetacored/"
+        DAEMON_NAME: "zetacored"
+        DENOM: "azeta"
+        DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+        DAEMON_RESTART_AFTER_UPGRADE: "true"
+        EXTERNAL_IP: "127.0.0.1"
+        LOG_LEVEL: "info"
+        UNSAFE_SKIP_BACKUP: "true"
+        CLIENT_DAEMON_NAME: "zetaclientd"
+        CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
+        CLIENT_SKIP_UPGRADE: "true"
+        CLIENT_START_PROCESS: "false"
+      run: |
+        pwd
+        echo "END_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        source $GITHUB_ENV
+        pip install -r requirements.txt
+        python run_upgrade_proposals.py
+
+
