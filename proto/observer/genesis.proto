@@ -11,5 +11,5 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 message GenesisState {
   repeated Ballot ballots =1;
   repeated ObserverMapper observers = 2;
-  Params Params = 3;
+  Params params = 3;
 }

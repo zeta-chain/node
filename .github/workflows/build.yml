@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: 
-      # - build-and-test
+      - build-and-test
       - smoke-test
     steps:
     - uses: actions/checkout@v3
@@ -123,12 +123,25 @@ jobs:
 
     - name: Set branch name
       id: set-branch-name
-      run: |
-        if [ ${{ github.event_name }} == "pull_request" ]; then
+      run: | 
+        tag_check=`echo '${{github.ref}}' | grep 'tags'` || echo "proceed"
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
           echo "Setting the current branch name to same as the source branch of the PR"
-          echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
+          RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ github.event.pull_request.head.ref }})
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        elif [ ! -z "${tag_check}" ]; then
+          echo "Tag Event, Set RELEASE and TAG NAMES accordingly."
+          echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo $TAG_NAME
+          echo $RELEASE_NAME
         else
-          echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
+          RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ steps.branch-name.outputs.current_branch }})
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         fi
 
     - uses: actions/cache@v3
@@ -140,24 +153,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    ## TODO - Once build-step is fixed, this can be enabled and the following build-step can be removed 
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: binaries-${{ github.sha }}
-    #     path: ./
+    - uses: actions/download-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: ./
 
-    ## TODO - Once build-step is fixed, this can be removed 
-    - name: Build zetacored and zetaclientd
+    - name: Build Zetavisor
+      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
       run: |
-        make install
-        cp "$HOME"/go/bin/* ./
-
-    # - name: Build Zetavisor
-    #   if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
-    #   run: |
-    #     go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-    #     go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-    #     cp "$HOME"/go/bin/cosmovisor ./cosmovisor
+        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
 
     - name: Install AWS CLI # Used for local testing of Git Actions
       if: ${{ env.ACT }}
@@ -188,7 +194,7 @@ jobs:
       with:
         DOCKER_FILENAME: Dockerfile
         REPOSITORY_NAME: zeta-node
-        IMAGE_TAG: ${{ env.RELEASE_NAME }}
+        IMAGE_TAG: ${{ env.TAG_NAME }}
         GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
         GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 

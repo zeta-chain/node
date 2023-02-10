@@ -73,8 +73,8 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if err != nil {
 		return nil, err
 	}
-	chain, found := k.GetChainFromChainID(ctx, msg.ChainId)
-	if !found {
+	chain := k.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
 		return nil, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf("ChainID %d", msg.ChainId))
 	}
 	err = k.CheckObserverDelegation(ctx, msg.Creator, chain, msg.ObservationType)
@@ -99,8 +99,8 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO move parsing to client
 	chainName := common.ParseStringToObserverChain(req.ObservationChain)
-	chain, found := k.GetChainFromChainName(ctx, chainName)
-	if !found {
+	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
+	if chain == nil {
 		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrSupportedChains
 	}
 	mapper, found := k.GetObserverMapper(ctx, chain, types.ParseStringToObservationType(req.ObservationType))
