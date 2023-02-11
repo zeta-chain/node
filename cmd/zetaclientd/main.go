@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"gitlab.com/thorchain/tss/go-tss/p2p"
 
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	etherminttypes "github.com/evmos/ethermint/types"
@@ -24,8 +25,7 @@ import (
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
-	//"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
+
 	maddr "github.com/multiformats/go-multiaddr"
 
 	"math/rand"
@@ -116,7 +116,7 @@ func main() {
 		}
 	}
 
-	var peers addr.AddrList
+	var peers p2p.AddrList
 
 	if *peer != "" {
 		address, err := maddr.NewMultiaddr(*peer)
@@ -145,7 +145,7 @@ func SetupConfigForTest() {
 
 }
 
-func start(validatorName string, peers addr.AddrList, zetacoreHome string) {
+func start(validatorName string, peers p2p.AddrList, zetacoreHome string) {
 	SetupConfigForTest() // setup meta-prefix
 	updateConfig()
 

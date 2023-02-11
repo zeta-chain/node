@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"path"
 	"path/filepath"
 	"sort"
@@ -22,7 +23,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/libp2p/go-libp2p-peerstore/addr"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 	"gitlab.com/thorchain/tss/go-tss/tss"
@@ -290,7 +290,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	return addr, nil
 }
 
-func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
+func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
 	server, _, err := SetupTSSServer(peer, privkey, preParams)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
@@ -355,7 +355,7 @@ func NewTSS(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Loca
 	return &tss, nil
 }
 
-func SetupTSSServer(peer addr.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
