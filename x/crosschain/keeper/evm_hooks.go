@@ -77,7 +77,6 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 	return nil
 }
 
-// FIXME: authenticate the emitting contract with foreign_coins
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
 	fmt.Printf("#############################\n")
 	fmt.Printf("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
@@ -90,35 +89,32 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 		return err
 	}
 	foundCoin := false
-	var receiverChainName common.ChainName
 	coinType := common.CoinType_Zeta
 	asset := ""
+	var receiverChainID int64
 	for _, coin := range foreignCoinList {
 		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			receiverChainName = common.ParseChainName(coin.ForeignChain)
+			//receiverChainName = common.ParseChainName(coin.ForeignChainId)
+			receiverChainID = coin.ForeignChainId
 			foundCoin = true
 			coinType = coin.CoinType
-			asset = coin.Erc20ContractAddress
+			asset = coin.Asset
 		}
 	}
 	if !foundCoin {
 		return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
 	}
-	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainName(receiverChainName)
-	if receiverChain == nil {
-		return zetaObserverTypes.ErrSupportedChains
-	}
-	senderChain := common.ZetaChain()
 
-	// FIXME: the following gas limit etc does not make sense for bitcoin
-	// FIXME: use the foreign coin's gaslimit
+	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID)
+	senderChain := common.ZetaChain()
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, math.NewUintFromBigInt(event.Value),
+	// FIXME: use proper gas limit
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChainID, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
 	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, receiverChain)
+	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {

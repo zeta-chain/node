@@ -38167,12 +38167,13 @@ paths:
                   properties:
                     index:
                       type: string
-                    zrc20ContractAddress:
+                    zrc20_contract_address:
                       type: string
-                    erc20ContractAddress:
+                    asset:
                       type: string
-                    foreignChain:
+                    foreign_chain_id:
                       type: string
+                      format: int64
                     decimals:
                       type: integer
                       format: int64
@@ -38180,7 +38181,7 @@ paths:
                       type: string
                     symbol:
                       type: string
-                    coinType:
+                    coin_type:
                       type: string
                       enum:
                         - Zeta
@@ -38299,12 +38300,13 @@ paths:
                 properties:
                   index:
                     type: string
-                  zrc20ContractAddress:
+                  zrc20_contract_address:
                     type: string
-                  erc20ContractAddress:
+                  asset:
                     type: string
-                  foreignChain:
+                  foreign_chain_id:
                     type: string
+                    format: int64
                   decimals:
                     type: integer
                     format: int64
@@ -38312,7 +38314,7 @@ paths:
                     type: string
                   symbol:
                     type: string
-                  coinType:
+                  coin_type:
                     type: string
                     enum:
                       - Zeta
@@ -65341,12 +65343,13 @@ definitions:
     properties:
       index:
         type: string
-      zrc20ContractAddress:
+      zrc20_contract_address:
         type: string
-      erc20ContractAddress:
+      asset:
         type: string
-      foreignChain:
+      foreign_chain_id:
         type: string
+        format: int64
       decimals:
         type: integer
         format: int64
@@ -65354,7 +65357,7 @@ definitions:
         type: string
       symbol:
         type: string
-      coinType:
+      coin_type:
         type: string
         enum:
           - Zeta
@@ -65381,12 +65384,13 @@ definitions:
           properties:
             index:
               type: string
-            zrc20ContractAddress:
+            zrc20_contract_address:
               type: string
-            erc20ContractAddress:
+            asset:
               type: string
-            foreignChain:
+            foreign_chain_id:
               type: string
+              format: int64
             decimals:
               type: integer
               format: int64
@@ -65394,7 +65398,7 @@ definitions:
               type: string
             symbol:
               type: string
-            coinType:
+            coin_type:
               type: string
               enum:
                 - Zeta
@@ -65437,12 +65441,13 @@ definitions:
         properties:
           index:
             type: string
-          zrc20ContractAddress:
+          zrc20_contract_address:
             type: string
-          erc20ContractAddress:
+          asset:
             type: string
-          foreignChain:
+          foreign_chain_id:
             type: string
+            format: int64
           decimals:
             type: integer
             format: int64
@@ -65450,7 +65455,7 @@ definitions:
             type: string
           symbol:
             type: string
-          coinType:
+          coin_type:
             type: string
             enum:
               - Zeta

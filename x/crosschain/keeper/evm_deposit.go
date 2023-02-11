@@ -26,7 +26,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain.ChainName.String(), msg.Message, contract, data, msg.CoinType, msg.Asset)
+		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			return err
 		}

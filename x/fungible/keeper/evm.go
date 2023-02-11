@@ -85,15 +85,15 @@ func (k Keeper) DeployZRC20Contract(
 	}
 
 	coinIndex := name
-	coin, _ := k.GetForeignCoins(ctx, coinIndex, chainStr)
+	coin, _ := k.GetForeignCoins(ctx, chain.ChainId, coinIndex)
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
 	coin.Decimals = uint32(decimals)
-	coin.Erc20ContractAddress = erc20Contract
+	coin.Asset = erc20Contract
 	coin.Zrc20ContractAddress = contractAddr.String()
 	coin.Index = coinIndex
-	coin.ForeignChain = chainStr
+	coin.ForeignChainId = chain.ChainId
 	k.SetForeignCoins(ctx, coin)
 
 	return contractAddr, nil
