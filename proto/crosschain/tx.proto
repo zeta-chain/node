@@ -117,7 +117,11 @@ message MsgVoteOnObservedInboundTx {
   int64 sender_chain_id = 3;
   string receiver = 4;
   int64 receiver_chain = 5;
-  string zeta_burnt = 6;
+//  string zeta_burnt = 6;
+  string amount = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
 //  string mMint = 7;
   string message = 8;
   string in_tx_hash = 9;

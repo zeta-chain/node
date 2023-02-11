@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
@@ -37,9 +38,8 @@ import (
 )
 
 const (
-	PosKey                 = "PosKey"
-	NonceTxHashesKeyPrefix = "NonceTxHashes-"
-	NonceTxKeyPrefix       = "NonceTx-"
+	PosKey           = "PosKey"
+	NonceTxKeyPrefix = "NonceTx-"
 )
 
 type TxHashEnvelope struct {
@@ -530,8 +530,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.SourceTxOriginAddress.Hex(),
 			clienttypes.BytesToEthHex(event.DestinationAddress),
 			destChain.ChainId,
-			event.ZetaValueAndGas.String(),
-			event.ZetaValueAndGas.String(),
+			math.NewUintFromBigInt(event.ZetaValueAndGas),
 			base64.StdEncoding.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
@@ -574,8 +573,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
 			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
-			event.Amount.String(),
-			event.Amount.String(),
+			math.NewUintFromBigInt(event.Amount),
 			hex.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
@@ -705,8 +703,7 @@ func (ob *EVMChainClient) ReportTokenSentToTSS(txhash ethcommon.Hash, value *big
 		from.Hex(),
 		from.Hex(),
 		common.ZetaChain().ChainId,
-		value.String(),
-		value.String(),
+		math.NewUintFromBigInt(value),
 		message,
 		txhash.Hex(),
 		receipt.BlockNumber.Uint64(),

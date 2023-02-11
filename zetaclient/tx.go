@@ -61,9 +61,9 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, msg)

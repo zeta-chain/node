@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -236,8 +237,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				inTx.FromAddress,
 				inTx.FromAddress,
 				common.ZetaChain().ChainId,
-				amountInt.String(),
-				amountInt.String(),
+				math.NewUintFromBigInt(amountInt),
 				message,
 				inTx.TxHash,
 				inTx.BlockNumber,

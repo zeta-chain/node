@@ -3,8 +3,6 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -15,12 +13,10 @@ import (
 
 func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
 	to := ethcommon.HexToAddress(msg.Receiver)
-	amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
-	if !ok {
-		return errors.Wrap(types.ErrFloatParseError, fmt.Sprintf("cannot parse zetaBurnt: %s", msg.ZetaBurnt))
-	}
+	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
+
 	if msg.CoinType == common.CoinType_Zeta {
-		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, amount)
+		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
 		if err != nil {
 			return err
 		}
@@ -30,7 +26,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, amount, senderChain.ChainName.String(), msg.Message, contract, data, msg.CoinType, msg.Asset)
+		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain.ChainName.String(), msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			return err
 		}

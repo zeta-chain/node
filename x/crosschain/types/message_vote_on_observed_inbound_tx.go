@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, asset string) *MsgVoteOnObservedInboundTx {
+func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, asset string) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
@@ -17,7 +18,7 @@ func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin 
 		TxOrigin:      txOrigin,
 		Receiver:      receiver,
 		ReceiverChain: receiverChain,
-		ZetaBurnt:     mBurnt,
+		Amount:        amount,
 		Message:       message,
 		InTxHash:      inTxHash,
 		InBlockHeight: inBlockHeight,

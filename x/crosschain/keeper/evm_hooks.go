@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
 
@@ -112,7 +113,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	// FIXME: the following gas limit etc does not make sense for bitcoin
 	// FIXME: use the foreign coin's gaslimit
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.Value.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, math.NewUintFromBigInt(event.Value),
+		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
@@ -136,7 +138,8 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConne
 	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, event.ZetaValueAndGas.String(), "", "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
+	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
+	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
