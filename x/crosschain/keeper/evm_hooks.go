@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -168,38 +167,19 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 
 // FIXME: add check for event emitting contracts
 func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
-	zrc20Abi, err := contracts.ZRC20MetaData.GetAbi()
+	zrc20ZEVM, err := contracts.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
 	}
-
-	event := new(contracts.ZRC20Withdrawal)
-	eventName := "Withdrawal"
-	if log.Topics[0] != zrc20Abi.Events[eventName].ID {
-		return nil, fmt.Errorf("event signature mismatch")
-	}
-	if len(log.Data) > 0 {
-		if err := zrc20Abi.UnpackIntoInterface(event, eventName, log.Data); err != nil {
-			return nil, err
-		}
-	}
-	var indexed abi.Arguments
-	for _, arg := range zrc20Abi.Events[eventName].Inputs {
-		if arg.Indexed {
-			indexed = append(indexed, arg)
-		}
-	}
-	err = abi.ParseTopics(event, indexed, log.Topics[1:])
+	event, err := zrc20ZEVM.ParseWithdrawal(log)
 	if err != nil {
 		return nil, err
 	}
-	event.Raw = log
 
 	return event, nil
 }
 
 // FIXME: add check for event emitting contracts
-// TODO: use the abigen'd filter instead of manual parsing for other events above
 func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZetaConnectorZEVMZetaSent, error) {
 	zetaConnectorZEVM, err := contracts.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
