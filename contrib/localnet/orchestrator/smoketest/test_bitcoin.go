@@ -28,6 +28,10 @@ var (
 
 func (sm *SmokeTest) TestBitcoinSetup() {
 	LoudPrintf("Setup Bitcoin\n")
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
+	}()
 
 	btc := sm.btcRPCClient
 	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
