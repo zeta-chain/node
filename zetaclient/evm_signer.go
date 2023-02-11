@@ -198,10 +198,7 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, evmClient ChainClient, zetaBridge *ZetaCoreBridge) {
-	chain := GetTargetChain(send)
-	outTxID := fmt.Sprintf("%s-%d", chain, send.GetCurrentOutTxParam().OutboundTxTssNonce)
-
+func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge) {
 	logger := signer.logger.With().
 		Str("sendHash", send.Index).
 		Str("outTxID", outTxID).

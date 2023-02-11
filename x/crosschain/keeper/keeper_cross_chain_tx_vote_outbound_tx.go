@@ -137,10 +137,10 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 				return err
 			}
 			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
+				types.CctxStatus_PendingRevert, "Outbound failed, start revert", cctx.LogIdentifierForCCTX())
 		case types.CctxStatus_PendingRevert:
 			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
+				types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX", cctx.LogIdentifierForCCTX())
 
 		}
 		newStatus := cctx.CctxStatus.Status.String()

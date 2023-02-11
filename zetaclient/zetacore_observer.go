@@ -209,14 +209,14 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					chain := GetTargetChain(send)
-					outTxID := fmt.Sprintf("%s", send.Index) // should be the outTxID?
 					nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
+					outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
 
 					// FIXME: config this schedule; this value is for localnet fast testing
 					if nonce%1 == bn%1 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
-						go signer.TryProcessOutTx(send, outTxMan, chainClient, co.bridge)
+						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
 					if idx > 60 { // only look at 50 sends per chain
 						break
