@@ -95,7 +95,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	asset := ""
 	for _, coin := range foreignCoinList {
 		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			receiverChainName = common.ParseStringToObserverChain(coin.ForeignChain)
+			receiverChainName = common.ParseChainName(coin.ForeignChain)
 			foundCoin = true
 			coinType = coin.CoinType
 			asset = coin.Erc20ContractAddress

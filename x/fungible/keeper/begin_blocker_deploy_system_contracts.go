@@ -123,7 +123,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 // FIXME: use chainid instead of chain name; add cointype and use proper gas limit based on cointype/chain
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, c)
-	chainName := common.ParseStringToObserverChain(c)
+	chainName := common.ParseChainName(c)
 	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains

@@ -42,7 +42,7 @@ func (k Keeper) DeployZRC20Contract(
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) { // FIXME: generalized beyond ETH
-	chainName := zetacommon.ParseStringToObserverChain(chainStr)
+	chainName := zetacommon.ParseChainName(chainStr)
 	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)

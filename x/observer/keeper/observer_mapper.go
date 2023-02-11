@@ -99,7 +99,7 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO move parsing to client
-	chainName := common.ParseStringToObserverChain(req.ObservationChain)
+	chainName := common.ParseChainName(req.ObservationChain)
 	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
 		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrSupportedChains

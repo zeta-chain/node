@@ -9,8 +9,9 @@ var (
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
 )
 
-// FIXME: should it return err?
-func ParseStringToObserverChain(chain string) ChainName {
+// return the ChainName from a string
+// if no such name exists, returns the empty chain name: ChainName_empty
+func ParseChainName(chain string) ChainName {
 	c := ChainName_value[chain]
 	return ChainName(c)
 }
