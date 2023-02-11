@@ -77,8 +77,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 	return zetaTxHash, fmt.Errorf("postSend: re-try fails")
 }
 
-// FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, amount *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
 	lastReport, found := b.lastOutTxReportTime[outTxHash]
 	if found && time.Since(lastReport) < 10*time.Minute {
 		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
@@ -89,9 +88,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		return "", err
 	}
 	signerAddress := address.String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(amount), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
+	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
+	// NewMsgReceiveConfirmation to it.
 	var gasLimit uint64 = PostReceiveConfirmationGasLimit
 	if status == common.ReceiveStatus_Failed {
 		gasLimit = PostSendEVMGasLimit
