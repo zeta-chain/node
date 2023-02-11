@@ -211,6 +211,10 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	// FIXME: config chain params
 	addr, err := btcutil.DecodeAddress(string(toAddr), &chaincfg.RegressionNetParams)
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot decode address %s ", send.OutboundTxParams.Receiver)
+		return
+	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.OutboundTxParams.Receiver)

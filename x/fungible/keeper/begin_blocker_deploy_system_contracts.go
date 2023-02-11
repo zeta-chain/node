@@ -109,6 +109,11 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
 	}
+	// for localnet only: ZEVM Swap App
+	_, err = k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
+	}
 	fmt.Println("Successfully deployed contracts")
 	return nil
 }
