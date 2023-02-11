@@ -54,8 +54,8 @@ func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifie
 	if !isFound {
 		return cctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find cctx hash %s", cctxIdentifier))
 	}
-	if cctx.OutboundTxParams.OutboundTxBallotIndex == "" {
-		cctx.OutboundTxParams.OutboundTxBallotIndex = ballotIdentifier
+	if cctx.GetCurrentOutTxParam().OutboundTxBallotIndex == "" {
+		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIdentifier
 		k.SetCrossChainTx(ctx, cctx)
 	}
 	return
@@ -88,59 +88,61 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %s | Identifiers : %s ", cctx.OutboundTxParams.ReceiverChain, cctx.LogIdentifierForCCTX()))
+		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ", cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.LogIdentifierForCCTX()))
 	}
-	cctx.OutboundTxParams.OutboundTxGasPrice = medianGasPrice.String()
-	gasLimit := sdk.NewUint(cctx.OutboundTxParams.OutboundTxGasLimit)
-
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
+	gasLimit := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
 
-	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
+	// the following logic computes outbound tx gas fee, and convert into ZETA using system uniswapv2 pool wzeta/gasZRC20
+	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}
-	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
+	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
-	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt()))) //FIXME: use var instead of hardcoded string
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
 	}
-	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, zrc20)
+	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
 	}
 	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
 	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, zrc20, amounts[1])
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
 	}
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
-	if cctx.ZetaFees.GT(cctx.ZetaBurnt) {
-		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.ZetaBurnt, cctx.LogIdentifierForCCTX()))
+	if cctx.ZetaFees.GT(cctx.InboundTxParams.Amount) && cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
+		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.InboundTxParams.Amount, cctx.LogIdentifierForCCTX()))
 	}
-	cctx.ZetaMint = cctx.ZetaBurnt.Sub(cctx.ZetaFees)
+	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
 
 	return nil
 }
 
 // TODO : USE CHAIN ID
-func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChain string, cctx *types.CrossChainTx) error {
-	nonce, found := k.GetChainNonces(ctx, receiveChain)
+func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainId int64, cctx *types.CrossChainTx) error {
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainId)
+
+	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
-		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", receiveChain, cctx.LogIdentifierForCCTX()))
+		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
 	// SET nonce
-	cctx.OutboundTxParams.OutboundTxTssNonce = nonce.Nonce
+	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
 	nonce.Nonce++
 	k.SetChainNonces(ctx, nonce)
 	return nil

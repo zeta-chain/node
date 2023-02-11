@@ -68,21 +68,15 @@ func OutTxTrackerKey(
 	return key
 }
 
-// ZetaConversionRateKey returns the store key to retrieve a ZetaConversionRate from the index fields
-func ZetaConversionRateKey(
-	index string,
-) []byte {
-	var key []byte
-
-	indexBytes := []byte(index)
-	key = append(key, indexBytes...)
-	key = append(key, []byte("/")...)
-
-	return key
-}
-
+// TODO: what's the purpose of this log identifier?
 func (cctx CrossChainTx) LogIdentifierForCCTX() string {
-	return fmt.Sprintf("%s-%s-%s-%d", cctx.InboundTxParams.Sender, cctx.InboundTxParams.SenderChain, cctx.OutboundTxParams.ReceiverChain, cctx.OutboundTxParams.OutboundTxTssNonce)
+	if len(cctx.OutboundTxParams) == 0 {
+		return fmt.Sprintf("%s-%d", cctx.InboundTxParams.Sender, cctx.InboundTxParams.SenderChainId)
+	} else {
+		i := len(cctx.OutboundTxParams) - 1
+		outTx := cctx.OutboundTxParams[i]
+		return fmt.Sprintf("%s-%d-%d-%d", cctx.InboundTxParams.Sender, cctx.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
+	}
 }
 
 const (

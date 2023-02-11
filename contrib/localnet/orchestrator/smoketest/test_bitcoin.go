@@ -221,7 +221,7 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 			panic(err)
 		}
 		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
-		outTxHash := cctx.OutboundTxParams.OutboundTxHash
+		outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		hash, err := chainhash.NewHashFromStr(outTxHash)
 		if err != nil {
 			panic(err)

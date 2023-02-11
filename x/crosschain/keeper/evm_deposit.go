@@ -24,7 +24,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return err
 		}
-		cctx.OutboundTxParams.OutboundTxHash = "Mined directly to ZetaEVM without TX"
+		cctx.GetCurrentOutTxParam().OutboundTxHash = "Mined directly to ZetaEVM without TX"
 	} else { // cointype is Gas or ERC20
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
@@ -63,7 +63,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			)
 
 			if tx != nil {
-				cctx.OutboundTxParams.OutboundTxHash = tx.Hash
+				cctx.GetCurrentOutTxParam().OutboundTxHash = tx.Hash
 			}
 		}
 	}

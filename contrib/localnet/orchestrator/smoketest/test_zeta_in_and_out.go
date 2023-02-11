@@ -145,7 +145,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	go func() {
 		defer sm.wg.Done()
 		cctx := WaitCctxMinedByInTxHash(tx.Hash().Hex(), cctxClient)
-		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.OutboundTxParams.OutboundTxHash))
+		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 		if err != nil {
 			panic(err)
 		}

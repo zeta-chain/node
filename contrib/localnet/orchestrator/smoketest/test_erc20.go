@@ -154,7 +154,7 @@ func (sm *SmokeTest) WithdrawERC20() {
 	go func() {
 		defer sm.wg.Done()
 		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), cctxClient)
-		fmt.Printf("outTx hash %s\n", cctx.OutboundTxParams.OutboundTxHash)
+		fmt.Printf("outTx hash %s\n", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
 		USDTERC20, err := erc20.NewUSDT(ethcommon.HexToAddress(USDTERC20Addr), goerliClient)
 		if err != nil {
@@ -166,7 +166,7 @@ func (sm *SmokeTest) WithdrawERC20() {
 		}
 		fmt.Printf("USDT ERC20 bal: %d\n", bal)
 
-		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.OutboundTxParams.OutboundTxHash))
+		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 		if err != nil {
 			panic(err)
 		}

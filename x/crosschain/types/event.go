@@ -16,7 +16,7 @@ const (
 	OutTxHash     = "OutTxObservedHash"
 
 	ZetaMint         = "ZetaMint"
-	ZetaBurnt        = "ZetaBurnt"
+	Amount           = "Amount"
 	Asset            = "Asset"
 	OutTXVotingChain = "OutTxVotingChain"
 	OutBoundChain    = "OutBoundChain"

@@ -180,7 +180,7 @@ func (co *CoreObserver) startSendScheduler() {
 					continue
 				}
 				if bn%10 == 0 {
-					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].OutboundTxParams.OutboundTxTssNonce, sendList[len(sendList)-1].OutboundTxParams.OutboundTxTssNonce)
+					logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce, sendList[len(sendList)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
 				}
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
@@ -199,7 +199,7 @@ func (co *CoreObserver) startSendScheduler() {
 					//		pTxs.Set(float64(len(sendList)))
 					//	}
 					//}
-					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.OutboundTxParams.OutboundTxTssNonce), send.OutboundTxParams.CoinType)
+					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType)
 					if err != nil {
 						logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 						continue
@@ -210,12 +210,12 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					chain := GetTargetChain(send)
 					outTxID := fmt.Sprintf("%s", send.Index) // should be the outTxID?
-					nonce := send.OutboundTxParams.OutboundTxTssNonce
+					nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
 
 					// FIXME: config this schedule; this value is for localnet fast testing
 					if nonce%1 == bn%1 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
-						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.ZetaMint)
+						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, chainClient, co.bridge)
 					}
 					if idx > 60 { // only look at 50 sends per chain
@@ -237,7 +237,7 @@ func trimSends(sends []*types.CrossChainTx) int {
 	for i := len(sends) - 1; i >= 1; i-- {
 		// from right to left, if there's a big hole, then before the gap are probably
 		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].OutboundTxParams.OutboundTxTssNonce > sends[i-1].OutboundTxParams.OutboundTxTssNonce+1000 {
+		if sends[i].GetCurrentOutTxParam().OutboundTxTssNonce > sends[i-1].GetCurrentOutTxParam().OutboundTxTssNonce+1000 {
 			start = i
 			break
 		}
@@ -259,32 +259,25 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 	}
 	for chain, sends := range sendMap {
 		sort.Slice(sends, func(i, j int) bool {
-			return sends[i].OutboundTxParams.OutboundTxTssNonce < sends[j].OutboundTxParams.OutboundTxTssNonce
+			return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
 		})
 		start := trimSends(sends)
 		sendMap[chain] = sends[start:]
-		log.Debug().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].OutboundTxParams.OutboundTxTssNonce)
+		log.Debug().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].GetCurrentOutTxParam().OutboundTxTssNonce)
 	}
 	return sendMap
 }
 
 func GetTargetChain(send *types.CrossChainTx) string {
-	if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		return send.OutboundTxParams.ReceiverChain
-	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		return send.InboundTxParams.SenderChain
-	}
-	return ""
+	chainId := send.GetCurrentOutTxParam().ReceiverChainId
+	return GetChainFromChainID(chainId).GetChainName().String()
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr := GetTargetChain(send)
 	chainName := common.ParseStringToObserverChain(chainStr)
 	c := GetChainFromChainName(chainName)
-	//c, err := common.ParseChain(chainStr)
-	//if err != nil {
-	//	return nil, err
-	//}
+
 	chainOb, found := co.clientMap[*c]
 	if !found {
 		return nil, fmt.Errorf("chain %s not found", c)

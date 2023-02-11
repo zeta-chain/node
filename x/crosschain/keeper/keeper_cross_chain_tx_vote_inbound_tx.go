@@ -88,35 +88,34 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
+// TODO: is LastBlockHeight needed?
 func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain common.Chain, numberofobservers int) error {
 	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	k.UpdateLastBlockHeight(ctx, cctx)
-	bftTime := ctx.BlockHeader().Time // we use BFTTime of the current block as random number
-	cctx.OutboundTxParams.Broadcaster = uint64(bftTime.Nanosecond() % numberofobservers)
+	//k.UpdateLastBlockHeight(ctx, cctx)
 
 	err := k.UpdatePrices(ctx, receiveChain.ChainId, cctx)
 	if err != nil {
 		return err
 	}
-	err = k.UpdateNonce(ctx, receiveChain.ChainName.String(), cctx)
+	err = k.UpdateNonce(ctx, receiveChain.ChainId, cctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainTx) {
-	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InboundTxParams.SenderChain)
-	if !isFound {
-		lastblock = types.LastBlockHeight{
-			Creator:           msg.Creator,
-			Index:             msg.InboundTxParams.SenderChain, // ?
-			Chain:             msg.InboundTxParams.SenderChain,
-			LastSendHeight:    msg.InboundTxParams.InboundTxObservedExternalHeight,
-			LastReceiveHeight: 0,
-		}
-	} else {
-		lastblock.LastSendHeight = msg.InboundTxParams.InboundTxObservedExternalHeight
-	}
-	k.SetLastBlockHeight(ctx, lastblock)
-}
+//func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainTx) {
+//	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InboundTxParams.SenderChain)
+//	if !isFound {
+//		lastblock = types.LastBlockHeight{
+//			Creator:           msg.Creator,
+//			Index:             msg.InboundTxParams.SenderChain, // ?
+//			Chain:             msg.InboundTxParams.SenderChain,
+//			LastSendHeight:    msg.InboundTxParams.InboundTxObservedExternalHeight,
+//			LastReceiveHeight: 0,
+//		}
+//	} else {
+//		lastblock.LastSendHeight = msg.InboundTxParams.InboundTxObservedExternalHeight
+//	}
+//	k.SetLastBlockHeight(ctx, lastblock)
+//}
