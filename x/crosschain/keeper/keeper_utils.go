@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -106,7 +107,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
-	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt()))) //FIXME: use var instead of hardcoded string
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
