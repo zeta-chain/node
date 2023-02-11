@@ -188,6 +188,7 @@ func main() {
 	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
 	smokeTest.TestCrosschainSwap()
+	smokeTest.TestMessagePassingRevertFail()
 
 	// add your dev test here
 	smokeTest.TestMyTest()
