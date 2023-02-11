@@ -280,7 +280,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
 			//srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChainId].Chain.ChainId
-			logger.Info().Msgf("SignOutboundTx: %s => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.InboundTxParams.Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {

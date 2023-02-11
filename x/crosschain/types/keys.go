@@ -69,14 +69,14 @@ func OutTxTrackerKey(
 }
 
 // TODO: what's the purpose of this log identifier?
-func (cctx CrossChainTx) LogIdentifierForCCTX() string {
-	if len(cctx.OutboundTxParams) == 0 {
-		return fmt.Sprintf("%s-%d", cctx.InboundTxParams.Sender, cctx.InboundTxParams.SenderChainId)
-	} else {
-		i := len(cctx.OutboundTxParams) - 1
-		outTx := cctx.OutboundTxParams[i]
-		return fmt.Sprintf("%s-%d-%d-%d", cctx.InboundTxParams.Sender, cctx.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
+func (m CrossChainTx) LogIdentifierForCCTX() string {
+	if len(m.OutboundTxParams) == 0 {
+		return fmt.Sprintf("%s-%d", m.InboundTxParams.Sender, m.InboundTxParams.SenderChainId)
 	}
+	i := len(m.OutboundTxParams) - 1
+	outTx := m.OutboundTxParams[i]
+	return fmt.Sprintf("%s-%d-%d-%d", m.InboundTxParams.Sender, m.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
+
 }
 
 const (

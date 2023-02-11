@@ -269,8 +269,8 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 }
 
 func GetTargetChain(send *types.CrossChainTx) string {
-	chainId := send.GetCurrentOutTxParam().ReceiverChainId
-	return GetChainFromChainID(chainId).GetChainName().String()
+	chainID := send.GetCurrentOutTxParam().ReceiverChainId
+	return GetChainFromChainID(chainID).GetChainName().String()
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
