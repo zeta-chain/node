@@ -116,6 +116,10 @@
       }
     },
     "crosschain": {
+      "params": {
+        "enabled": false,
+        "admin": ""
+      },
       "outTxTrackerList": [],
       "keygen": null,
       "tSSVoterList": [],
@@ -145,6 +149,17 @@
       "validator_current_rewards": [],
       "delegator_starting_infos": [],
       "validator_slash_events": []
+    },
+    "emissions": {
+      "params": {
+        "max_bond_factor": "1.25",
+        "min_bond_factor": "0.75",
+        "avg_block_time": "6.00",
+        "target_bond_ratio": "00.67",
+        "validator_emission_percentage": "00.50",
+        "observer_emission_percentage": "00.25",
+        "tss_signer_emission_percentage": "00.25"
+      }
     },
     "evidence": {
       "evidence": []
