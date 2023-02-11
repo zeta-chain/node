@@ -34657,6 +34657,71 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/zetacore/emissions/list_balances:
+    get:
+      summary: Queries a list of ListBalances items.
+      operationId: ZetachainZetacoreEmissionsListBalances
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /zeta-chain/zetacore/emissions/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: ZetachainZetacoreEmissionsParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
@@ -57935,6 +58000,27 @@ definitions:
         type: string
       tx_signer:
         type: string
+  zetachain.zetacore.emissions.EmissionCategory:
+    type: string
+    enum:
+      - ObserverEmission
+      - ValidatorEmission
+      - TssSignerEmission
+    default: ObserverEmission
+  zetachain.zetacore.emissions.MsgAddTokenEmissionResponse:
+    type: object
+  zetachain.zetacore.emissions.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  zetachain.zetacore.emissions.QueryListBalancesResponse:
+    type: object
+  zetachain.zetacore.emissions.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetachain.zetacore.fungible.ForeignCoins:
     type: object
     properties:
