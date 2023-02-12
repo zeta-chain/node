@@ -121,7 +121,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	found := false
 	zrc20addr := ""
 	for _, fcoin := range res.ForeignCoins {
-		if ethcommon.HexToAddress(fcoin.Erc20ContractAddress) == usdtAddr {
+		if ethcommon.HexToAddress(fcoin.Asset) == usdtAddr {
 			found = true
 			zrc20addr = fcoin.Zrc20ContractAddress
 		}
