@@ -178,4 +178,19 @@ func (sm *SmokeTest) TestMessagePassingRevertSuccess() {
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
+	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
+	receipt, err = sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(outTxHash))
+	if err != nil {
+		panic(err)
+	}
+	for _, log := range receipt.Logs {
+		event, err := sm.ConnectorEth.ParseZetaReverted(*log)
+		if err == nil {
+			fmt.Printf("ZetaReverted event: \n")
+			fmt.Printf("  Dest Addr: %s\n", ethcommon.BytesToAddress(event.DestinationAddress).Hex())
+			fmt.Printf("  Dest Chain: %d\n", event.DestinationChainId)
+			fmt.Printf("  RemainingZetaValue: %d\n", event.RemainingZetaValue)
+			fmt.Printf("  Message: %x\n", event.Message)
+		}
+	}
 }

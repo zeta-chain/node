@@ -47,7 +47,7 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 }
 
 func IsTerminalStatus(status types.CctxStatus) bool {
-	return status == types.CctxStatus_OutboundMined || status == types.CctxStatus_Aborted
+	return status == types.CctxStatus_OutboundMined || status == types.CctxStatus_Aborted || status == types.CctxStatus_Reverted
 }
 
 func LoudPrintf(format string, a ...any) {
