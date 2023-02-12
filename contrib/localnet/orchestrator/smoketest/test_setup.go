@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	"math/big"
@@ -178,7 +177,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("TestDApp contract code: %s\n", hex.EncodeToString(code))
+		fmt.Printf("TestDApp contract code: len %d\n", len(code))
 		if len(code) == 0 {
 			panic("TestDApp contract code is empty")
 		}
@@ -189,11 +188,6 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		if res != sm.ConnectorEthAddr {
 			panic("mismatch of TestDApp connector address")
 		}
-		tx, err := dapp.SendHelloWorld(auth, receipt.ContractAddress, big.NewInt(1337), big.NewInt(1000), true)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("TestDApp sendHelloWorld tx hash: %s\n", tx.Hash().Hex())
 	}
 	sm.TestDAppAddr = receipt.ContractAddress
 
