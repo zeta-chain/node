@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	"math/big"
@@ -159,13 +160,41 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	}
 
 	// deploy TestDApp contract
+	//auth.GasLimit = 1_000_000
 	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
 	receipt = MustWaitForTxReceipt(goerliClient, tx)
-	fmt.Printf("TestDApp contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
+	fmt.Printf("TestDApp contract receipt: contract address %s, status %d; used gas %d\n", receipt.ContractAddress, receipt.Status, receipt.GasUsed)
+	dapp, err := testdapp.NewTestDApp(receipt.ContractAddress, goerliClient)
+	if err != nil {
+		panic(err)
+	}
+	{
+		time.Sleep(10 * time.Second)
+		code, err := sm.goerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("TestDApp contract code: %s\n", hex.EncodeToString(code))
+		if len(code) == 0 {
+			panic("TestDApp contract code is empty")
+		}
+		res, err := dapp.Connector(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
+		if res != sm.ConnectorEthAddr {
+			panic("mismatch of TestDApp connector address")
+		}
+		tx, err := dapp.SendHelloWorld(auth, receipt.ContractAddress, big.NewInt(1337), big.NewInt(1000), true)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("TestDApp sendHelloWorld tx hash: %s\n", tx.Hash().Hex())
+	}
 	sm.TestDAppAddr = receipt.ContractAddress
 
 }

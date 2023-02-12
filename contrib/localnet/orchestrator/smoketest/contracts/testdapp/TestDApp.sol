@@ -70,7 +70,7 @@ contract TestDApp is  ZetaReceiver {
     event HelloWorldEvent();
     event RevertedHelloWorldEvent();
     error InvalidMessageType();
-    address connector;
+    address public connector;
     constructor(address _connector) {
         connector = _connector;
     }

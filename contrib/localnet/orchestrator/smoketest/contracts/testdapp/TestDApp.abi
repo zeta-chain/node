@@ -41,6 +41,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "connector",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
