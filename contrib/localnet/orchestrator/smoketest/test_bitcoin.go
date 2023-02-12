@@ -153,6 +153,10 @@ func (sm *SmokeTest) DepositBTC() {
 }
 
 func (sm *SmokeTest) TestBitcoinWithdraw() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("Bitcoin withdraw took %s\n", time.Since(startTime))
+	}()
 	LoudPrintf("Testing Bitcoin ZRC20 Withdraw...\n")
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address

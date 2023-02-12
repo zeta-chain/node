@@ -9,6 +9,10 @@ import (
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
 	LoudPrintf("Testing Bitcoin ERC20 crosschain swap...\n")
 	// Firstly, deposit 1.15 BTC into Zeta for liquidity
 	//sm.DepositBTC()
