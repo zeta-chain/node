@@ -173,22 +173,9 @@ func (sm *SmokeTest) TestMessagePassingRevertSuccess() {
 	fmt.Printf("TestDApp.SendHello tx hash: %s\n", tx.Hash().Hex())
 	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("TestDApp.SendHello tx receipt: status %d\n", receipt.Status)
-	if receipt.Status != 0 {
-		panic("expected tx to fail")
-	}
-	res, err := sm.cctxClient.InTxHashToCctx(context.Background(), &cctxtypes.QueryGetInTxHashToCctxRequest{InTxHash: receipt.TxHash.String()})
-	if err != nil {
-		panic(err)
-	}
-	cctxRes, err := sm.cctxClient.Cctx(context.Background(), &cctxtypes.QueryGetCctxRequest{Index: res.InTxHashToCctx.CctxIndex})
-	if err != nil {
-		panic(err)
-	}
-	cctx := cctxRes.CrossChainTx
-	fmt.Printf("CCTX: %s, status %s\n", cctx.String(), cctx.CctxStatus.Status)
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_PendingRevert {
-		panic("expected cctx status to be pending revert")
-	}
-	WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
 
+	cctx := WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
+		panic("expected cctx to be reverted")
+	}
 }

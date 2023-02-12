@@ -172,7 +172,6 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 		panic(err)
 	}
 	{
-		time.Sleep(10 * time.Second)
 		code, err := sm.goerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
 		if err != nil {
 			panic(err)
