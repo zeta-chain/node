@@ -5,6 +5,7 @@ import (
 	"fmt"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
@@ -85,8 +86,7 @@ func (sm *SmokeTest) TestMessagePassingRevertFail() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	// ==================== Interacting with contracts ====================
-	time.Sleep(10 * time.Second)
-	LoudPrintf("Goerli->Goerli Message Passing (revert)\n")
+	LoudPrintf("Goerli->Goerli Message Passing (revert fail)\n")
 	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -141,4 +141,54 @@ func (sm *SmokeTest) TestMessagePassingRevertFail() {
 		}
 	}()
 	sm.wg.Wait()
+}
+
+func (sm *SmokeTest) TestMessagePassingRevertSuccess() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	// ==================== Interacting with contracts ====================
+	LoudPrintf("Goerli->Goerli Message Passing (revert success)\n")
+	fmt.Printf("Approving TestDApp to spend deployer's ZetaEth\n")
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
+	auth := sm.goerliAuth
+	tx, err := sm.ZetaEth.Approve(auth, sm.TestDAppAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("Approve tx receipt: %d\n", receipt.Status)
+	fmt.Printf("Calling TestDApp.SendHello on contract address %s\n", sm.TestDAppAddr.Hex())
+	testDApp, err := testdapp.NewTestDApp(sm.TestDAppAddr, sm.goerliClient)
+	if err != nil {
+		panic(err)
+	}
+	tx, err = testDApp.SendHelloWorld(auth, sm.TestDAppAddr, big.NewInt(1337), amount, true)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TestDApp.SendHello tx hash: %s\n", tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("TestDApp.SendHello tx receipt: status %d\n", receipt.Status)
+	if receipt.Status != 0 {
+		panic("expected tx to fail")
+	}
+	res, err := sm.cctxClient.InTxHashToCctx(context.Background(), &cctxtypes.QueryGetInTxHashToCctxRequest{InTxHash: receipt.TxHash.String()})
+	if err != nil {
+		panic(err)
+	}
+	cctxRes, err := sm.cctxClient.Cctx(context.Background(), &cctxtypes.QueryGetCctxRequest{Index: res.InTxHashToCctx.CctxIndex})
+	if err != nil {
+		panic(err)
+	}
+	cctx := cctxRes.CrossChainTx
+	fmt.Printf("CCTX: %s, status %s\n", cctx.String(), cctx.CctxStatus.Status)
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_PendingRevert {
+		panic("expected cctx status to be pending revert")
+	}
+	WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+
 }

@@ -65,7 +65,7 @@ interface ZetaReceiver {
     function onZetaRevert(ZetaInterfaces.ZetaRevert calldata zetaRevert) external;
 }
 
-contract CrossChainMessage is  ZetaReceiver {
+contract TestDApp is  ZetaReceiver {
     bytes32 public constant HELLO_WORLD_MESSAGE_TYPE = keccak256("CROSS_CHAIN_HELLO_WORLD");
     event HelloWorldEvent();
     event RevertedHelloWorldEvent();

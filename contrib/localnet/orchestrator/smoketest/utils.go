@@ -44,7 +44,6 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 		}
 
 	}
-
 }
 
 func IsTerminalStatus(status types.CctxStatus) bool {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	"math/big"
 	"time"
 
@@ -156,4 +157,15 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err != nil {
 		panic(err)
 	}
+
+	// deploy TestDApp contract
+	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
+	fmt.Printf("TestDApp contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
+	sm.TestDAppAddr = receipt.ContractAddress
+
 }

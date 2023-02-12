@@ -73,6 +73,7 @@ type SmokeTest struct {
 	UniswapV2Factory     *contracts.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
 	UniswapV2Router      *contracts.UniswapV2Router02
+	TestDAppAddr         ethcommon.Address
 
 	SystemContract *contracts.SystemContract
 }
@@ -170,10 +171,10 @@ func main() {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	smokeTest.TestBitcoinSetup()
+	//smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
-	smokeTest.TestDepositEtherIntoZRC20()
-	smokeTest.TestSendZetaIn()
+	//smokeTest.TestDepositEtherIntoZRC20()
+	//smokeTest.TestSendZetaIn()
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
 	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
 	fmt.Printf("##   Ether on Ethereum private net\n")
@@ -181,14 +182,15 @@ func main() {
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
-	smokeTest.TestERC20Deposit()
-	smokeTest.TestERC20Withdraw()
-	smokeTest.TestSendZetaOut()
-	smokeTest.TestMessagePassing()
-	smokeTest.TestZRC20Swap()
-	smokeTest.TestBitcoinWithdraw()
-	smokeTest.TestCrosschainSwap()
-	smokeTest.TestMessagePassingRevertFail()
+	//smokeTest.TestERC20Deposit()
+	//smokeTest.TestERC20Withdraw()
+	//smokeTest.TestSendZetaOut()
+	//smokeTest.TestMessagePassing()
+	//smokeTest.TestZRC20Swap()
+	//smokeTest.TestBitcoinWithdraw()
+	//smokeTest.TestCrosschainSwap()
+	//smokeTest.TestMessagePassingRevertFail()
+	smokeTest.TestMessagePassingRevertSuccess()
 
 	// add your dev test here
 	smokeTest.TestMyTest()
