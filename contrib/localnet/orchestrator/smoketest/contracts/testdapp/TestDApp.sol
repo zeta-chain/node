@@ -65,14 +65,22 @@ interface ZetaReceiver {
     function onZetaRevert(ZetaInterfaces.ZetaRevert calldata zetaRevert) external;
 }
 
+interface IERC20 {
+    function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
+    function approve(address _spender, uint256 _value) external returns (bool success);
+}
+
 contract TestDApp is  ZetaReceiver {
     bytes32 public constant HELLO_WORLD_MESSAGE_TYPE = keccak256("CROSS_CHAIN_HELLO_WORLD");
     event HelloWorldEvent();
     event RevertedHelloWorldEvent();
     error InvalidMessageType();
+    error ErrorTransferringZeta();
     address public connector;
-    constructor(address _connector) {
+    address public zeta;
+    constructor(address _connector, address _zetaToken) {
         connector = _connector;
+        zeta = _zetaToken;
     }
 
     function onZetaMessage(ZetaInterfaces.ZetaMessage calldata zetaMessage) external override {
@@ -83,6 +91,10 @@ contract TestDApp is  ZetaReceiver {
     }
 
     function sendHelloWorld(address destinationAddress, uint256 destinationChainId, uint256 value, bool doRevert) external payable {
+        bool success1 = IERC20(zeta).approve(address(connector), value);
+        bool success2 = IERC20(zeta).transferFrom(msg.sender, address(this), value);
+        if (!(success1 && success2)) revert ErrorTransferringZeta();
+
         ZetaConnector(connector).send(
             ZetaInterfaces.SendInput({
                 destinationChainId: destinationChainId,

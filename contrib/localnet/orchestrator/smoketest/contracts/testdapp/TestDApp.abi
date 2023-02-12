@@ -5,10 +5,20 @@
         "internalType": "address",
         "name": "_connector",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_zetaToken",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ErrorTransferringZeta",
+    "type": "error"
   },
   {
     "inputs": [],
@@ -164,6 +174,19 @@
     "name": "sendHelloWorld",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zeta",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

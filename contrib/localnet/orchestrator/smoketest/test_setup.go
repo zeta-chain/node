@@ -160,7 +160,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 
 	// deploy TestDApp contract
 	//auth.GasLimit = 1_000_000
-	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr)
+	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
 	if err != nil {
 		panic(err)
 	}
