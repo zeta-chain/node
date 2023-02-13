@@ -224,6 +224,38 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 	return contractAddr, nil
 }
 
+func (k Keeper) DeployZEVMSwapApp(ctx sdk.Context, router common.Address, systemContract common.Address) (common.Address, error) {
+	zevmSwapABI, err := contracts.ZEVMSwapAppMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
+	}
+	ctorArgs, err := zevmSwapABI.Pack(
+		"", // function--empty string for constructor
+		router,
+		systemContract,
+	)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZEVMSwapApp constructor arguments: %s", err.Error())
+	}
+
+	data := make([]byte, len(contracts.ZEVMSwapAppContract.Bin)+len(ctorArgs))
+	copy(data[:len(contracts.ZEVMSwapAppContract.Bin)], contracts.ZEVMSwapAppContract.Bin)
+	copy(data[len(contracts.ZEVMSwapAppContract.Bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapAppContract contract")
+	}
+
+	return contractAddr, nil
+}
+
 func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	abi, err := contracts.WZETAMetaData.GetAbi()
 	if err != nil {
@@ -313,7 +345,6 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	targetContract common.Address,
 	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
-
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
@@ -330,7 +361,6 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-
 	return res, nil
 }
 
