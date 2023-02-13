@@ -6,7 +6,6 @@ package config
 import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 const (
@@ -52,7 +51,7 @@ var (
 
 var ChainsEnabled = []common.Chain{}
 
-var ChainConfigs = map[string]*types.ChainETHish{
+var ChainConfigs = map[string]*ChainETHish{
 	common.GoerliChain().ChainName.String(): {
 		Chain:                    common.GoerliChain(),
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",

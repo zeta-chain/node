@@ -6,7 +6,6 @@ package config
 import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 const (
@@ -41,7 +40,7 @@ var (
 
 var ChainsEnabled = []common.Chain{}
 
-var ChainConfigs = map[string]*types.ChainETHish{
+var ChainConfigs = map[string]*ChainETHish{
 
 	common.GoerliLocalNetChain().ChainName.String(): {
 		Chain:                       common.GoerliLocalNetChain(),
@@ -57,9 +56,15 @@ var ChainConfigs = map[string]*types.ChainETHish{
 		BlockTime:                6,
 		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
-	common.BtcRegtestChain().ChainName.String(): {
-		Chain:     common.BtcRegtestChain(),
-		BlockTime: 1,
-		Endpoint:  "bitcoin:18443",
-	},
+}
+
+var BitcoinConfig = &ChainBitcoinish{
+	RPCUsername: "smoketest",
+	RPCPassword: "123",
+	RPCEndpoint: "bitcoin:18443",
+	RPCParams:   "regtest",
+
+	WatchInTxPeriod:     5,
+	WatchGasPricePeriod: 5,
+	WatchUTXOSPeriod:    5,
 }
