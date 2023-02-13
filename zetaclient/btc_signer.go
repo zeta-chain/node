@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"math/rand"
 	"time"
@@ -210,7 +210,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(string(toAddr), &chaincfg.RegressionNetParams)
+	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
 		return

@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
@@ -388,7 +387,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					continue
 				}
 				//FIXME: config this
-				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
+				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 				if err != nil {
 					continue
 				}
@@ -438,7 +437,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						break
 					}
 					hash := btcutil.Hash160(pkBytes)
-					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
+					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 					if err != nil {
 						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
 						break
@@ -488,7 +487,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, &chaincfg.RegressionNetParams)
+	address, err := btcutil.DecodeAddress(tssAddr, config.BitconNetParams)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
