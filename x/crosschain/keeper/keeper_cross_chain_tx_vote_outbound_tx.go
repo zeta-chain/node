@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -81,7 +82,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
-func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) error {
+func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount math.Uint) error {
 	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(balanceAmount.BigInt()))))
 	if err != nil {
 		log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())

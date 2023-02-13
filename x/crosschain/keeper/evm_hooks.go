@@ -77,9 +77,7 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 }
 
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
-	fmt.Printf("#############################\n")
-	fmt.Printf("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
-	fmt.Printf("#############################\n")
+	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
 	// TODO , change to using GetAllForeignCoins for Chain .
 	// TODO , Add receiver chain in the message
@@ -117,10 +115,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {
-	fmt.Printf("#############################\n")
-	fmt.Printf("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
-	fmt.Printf("#############################\n")
 
+	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
 		fmt.Printf("burn coins failed: %s\n", err.Error())
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
