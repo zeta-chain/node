@@ -17,6 +17,7 @@ type ChainETHish struct {
 	Chain                       common.Chain
 	Topics                      [][]ethcommon.Hash
 	BlockTime                   uint64
+	ConfCount                   uint64
 	Endpoint                    string
 	OutTxObservePeriod          uint64
 }
