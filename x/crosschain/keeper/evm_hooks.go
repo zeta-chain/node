@@ -161,7 +161,6 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
-// FIXME: add check for event emitting contracts
 func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
 	zrc20ZEVM, err := contracts.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
@@ -175,7 +174,6 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, er
 	return event, nil
 }
 
-// FIXME: add check for event emitting contracts
 func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZetaConnectorZEVMZetaSent, error) {
 	zetaConnectorZEVM, err := contracts.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
