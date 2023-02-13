@@ -41,8 +41,9 @@ class GithubBinaryDownload:
                     response = requests.get(url_to_download, stream=True, headers=headers)
                     upgrade_version_name = binary_url.split("/")[7].replace("v.", "v")
                     try:
-                        os.mkdir("upgrades/" + upgrade_version_name)
-                        os.mkdir("upgrades/" + upgrade_version_name + "/bin")
+                        os.makedirs("upgrades/", exist_ok=True)
+                        os.makedirs("upgrades/" + upgrade_version_name, exist_ok=True)
+                        os.makedirs("upgrades/" + upgrade_version_name + "/bin", exist_ok=True)
                     except Exception as e:
                         print(e)
                     with open("upgrades/" + upgrade_version_name + "/bin/zetacored", "wb") as handle:
