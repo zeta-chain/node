@@ -79,12 +79,22 @@ for version in UPGRADE_DATA["upgrade_versions"]:
     **************************UPGRADE INFO**************************""")
     time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
 
-
 if command_runner.version_check(os.environ["END_VERSION"]):
     logger.log.info("Version is what was expected.")
-    logger.log.info("kill running docker containers and cleanup.")
-    command_runner.kill_docker_containers()
-    sys.exit(0)
+    current_block = command_runner.current_block()
+    logger.log.info("Check to see if chain is still processing blocks.")
+    time.sleep(10)
+    end_block = command_runner.current_block()
+    if abs(end_block - current_block) > 0:
+        logger.log.info("chain still processing blocks upgrade path looks good")
+        logger.log.info("kill running docker containers and cleanup.")
+        command_runner.kill_docker_containers()
+        sys.exit(0)
+    else:
+        logger.log.info("Chain doesn't seem to be processign blocks upgrade path was a failure.")
+        logger.log.info("kill running docker containers and cleanup.")
+        command_runner.kill_docker_containers()
+        sys.exit(1)
 else:
     logger.log.info("Version didn't match what was expected.")
     logger.log.info("kill running docker containers and cleanup.")
