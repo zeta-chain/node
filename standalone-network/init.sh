@@ -29,8 +29,8 @@ cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_g
 
 
 
-zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
-zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
+zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000000000azeta --keyring-backend=test
+zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 50000000000000000000000000000000000000azeta --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show zetaeth -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
 
@@ -56,7 +56,7 @@ zetacored add-observer zeta_testnet 101 OutBoundTx "$observer_list"
 
 
 
-zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored gentx zeta 50000000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
 
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json

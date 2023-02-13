@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -22,7 +23,7 @@ func getaZetaFromString(amount string) sdk.Coins {
 	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionPoolInt))
 }
 
-func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoins sdk.Coins) (*zetaapp.App, sdk.Context, *tmtypes.ValidatorSet) {
+func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoins sdk.Coins) (*zetaapp.App, sdk.Context, *tmtypes.ValidatorSet, *authtypes.BaseAccount) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk1.Address()))
 	// genDelActs and genDelBalances need to have the same addresses
@@ -32,15 +33,15 @@ func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoin
 	genDelActs[0] = acc1
 	genDelBalances[0] = banktypes.Balance{
 		Address: acc1.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000))),
+		Coins:   emissionPoolCoins,
 	}
 	delBondAmount := getaZetaFromString("1000000000000000000000000")
 
-	genBalances := make([]banktypes.Balance, 1)
-	genBalances[0] = banktypes.Balance{
-		Address: emissionsModuleTypes.EmissionsModuleAddress.String(),
-		Coins:   emissionPoolCoins,
-	}
+	//genBalances := make([]banktypes.Balance, 1)
+	//genBalances[0] = banktypes.Balance{
+	//	Address: emissionsModuleTypes.EmissionsModuleAddress.String(),
+	//	Coins:   emissionPoolCoins,
+	//}
 
 	vset := tmtypes.NewValidatorSet([]*tmtypes.Validator{})
 	for i := 0; i < 1; i++ {
@@ -53,9 +54,10 @@ func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoin
 		}
 	}
 
-	app := simapp.SetupWithGenesisValSet(t, vset, genDelActs, delBondAmount.AmountOf(config.BaseDenom), params, genDelBalances, genBalances)
+	app := simapp.SetupWithGenesisValSet(t, vset, genDelActs, delBondAmount.AmountOf(config.BaseDenom), params, genDelBalances, nil)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	return app, ctx, vset
+	ctx = ctx.WithBlockHeight(app.LastBlockHeight())
+	return app, ctx, vset, acc1
 }
 
 func TestAppModule_GetBlockRewardComponents(t *testing.T) {
@@ -77,31 +79,36 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			name:                 "test 1",
 			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
-			testMaxHeight:        200,
+			testMaxHeight:        300,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app, ctx, _ := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
-			ctx = ctx.WithBlockHeight(1)
-			//fmt.Println(app.EmissionsKeeper.GetParams(ctx).String())
-			//fmt.Println(app.StakingKeeper.BondedRatio(ctx))
-			//fmt.Println(app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom))
+			app, ctx, _, minter := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
 			var d []data
-			for i := ctx.BlockHeight(); i < tt.testMaxHeight; i++ {
-				ctx = ctx.WithBlockHeight(i)
-				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
+			// Setup app sets block height = 1
+			// Send tokens to module account to start emissions
+			err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, minter.GetAddress(), emissionsModuleTypes.ModuleName, getaZetaFromString(tt.startingEmissionPool))
+			assert.NoError(t, err)
+			startHeight := ctx.BlockHeight()
+			for i := startHeight; i < tt.testMaxHeight; i++ {
+				// First distribution will occur only when begin-block is triggered
 				reservesFactor, bondFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
 				d = append(d, data{
-					BlockHeight:    ctx.BlockHeight(),
+					BlockHeight:    i,
 					BondFactor:     bondFactor,
 					ReservesFactor: reservesFactor,
 					DurationFactor: durationFactor,
 				})
+				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
+				ctx = ctx.WithBlockHeight(i + 1)
 
 			}
 			file, _ := json.MarshalIndent(d, "", " ")
+			//for _, dd := range d {
+			//	fmt.Println(dd)
+			//}
 			_ = ioutil.WriteFile("simulations.json", file, 0600)
 		})
 	}

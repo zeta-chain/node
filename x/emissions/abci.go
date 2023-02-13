@@ -10,7 +10,6 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-	//fmt.Println("Executing begin block emisson")
 	reservesFactor, bondFactor, durationFactor := GetBlockRewardComponents(ctx, bankKeeper, stakingKeeper, keeper)
 	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 	if blockRewards.IsZero() {
@@ -85,8 +84,9 @@ func GetDurationFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
 	avgBlockTime := sdk.MustNewDecFromStr(keeper.GetParams(ctx).AvgBlockTime)
 	NumberOfBlocksInAMonth := sdk.NewDec(types.SecsInMonth).Quo(avgBlockTime)
 	monthFactor := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
+
 	//log(1 + 0.02 / 12)
-	fractionConstant := 0.02 / 12.00
+	fractionConstant := 0.052 / 12.00
 	logValue := math.Log(1.0 + fractionConstant)
 	logValueDec, _ := sdk.NewDecFromStr(big.NewFloat(logValue).String())
 	// month * log(1 + 0.02 / 12)
