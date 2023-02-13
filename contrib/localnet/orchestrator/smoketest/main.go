@@ -171,7 +171,7 @@ func main() {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	//smokeTest.TestBitcoinSetup()
+	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
 	//smokeTest.TestDepositEtherIntoZRC20()
 	//smokeTest.TestSendZetaIn()
@@ -188,7 +188,7 @@ func main() {
 	//smokeTest.TestMessagePassing()
 	//smokeTest.TestZRC20Swap()
 	//smokeTest.TestBitcoinWithdraw()
-	//smokeTest.TestCrosschainSwap()
+	smokeTest.TestCrosschainSwap()
 	//smokeTest.TestMessagePassingRevertFail()
 	smokeTest.TestMessagePassingRevertSuccess()
 

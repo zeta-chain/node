@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package zevm
+package zevmswap
 
 import (
 	"errors"
@@ -26,11 +26,12 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
 // ZEVMSwapAppMetaData contains all meta data concerning the ZEVMSwapApp contract.
 var ZEVMSwapAppMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"router02_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"systemContract_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"InvalidSender\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"LowAmount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"router02\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"systemContract\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "null",
 }
 
 // ZEVMSwapAppABI is the input ABI used to generate the binding from.
@@ -134,11 +135,11 @@ func NewZEVMSwapAppFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindZEVMSwapApp binds a generic wrapper to an already deployed contract.
 func bindZEVMSwapApp(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ZEVMSwapAppABI))
+	parsed, err := ZEVMSwapAppMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -177,87 +178,4 @@ func (_ZEVMSwapApp *ZEVMSwapAppTransactorRaw) Transfer(opts *bind.TransactOpts) 
 // Transact invokes the (paid) contract method with params as input values.
 func (_ZEVMSwapApp *ZEVMSwapAppTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _ZEVMSwapApp.Contract.contract.Transact(opts, method, params...)
-}
-
-// Router02 is a free data retrieval call binding the contract method 0xbd00c9c4.
-//
-// Solidity: function router02() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppCaller) Router02(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _ZEVMSwapApp.contract.Call(opts, &out, "router02")
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// Router02 is a free data retrieval call binding the contract method 0xbd00c9c4.
-//
-// Solidity: function router02() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppSession) Router02() (common.Address, error) {
-	return _ZEVMSwapApp.Contract.Router02(&_ZEVMSwapApp.CallOpts)
-}
-
-// Router02 is a free data retrieval call binding the contract method 0xbd00c9c4.
-//
-// Solidity: function router02() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppCallerSession) Router02() (common.Address, error) {
-	return _ZEVMSwapApp.Contract.Router02(&_ZEVMSwapApp.CallOpts)
-}
-
-// SystemContract is a free data retrieval call binding the contract method 0xbb88b769.
-//
-// Solidity: function systemContract() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppCaller) SystemContract(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _ZEVMSwapApp.contract.Call(opts, &out, "systemContract")
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// SystemContract is a free data retrieval call binding the contract method 0xbb88b769.
-//
-// Solidity: function systemContract() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppSession) SystemContract() (common.Address, error) {
-	return _ZEVMSwapApp.Contract.SystemContract(&_ZEVMSwapApp.CallOpts)
-}
-
-// SystemContract is a free data retrieval call binding the contract method 0xbb88b769.
-//
-// Solidity: function systemContract() view returns(address)
-func (_ZEVMSwapApp *ZEVMSwapAppCallerSession) SystemContract() (common.Address, error) {
-	return _ZEVMSwapApp.Contract.SystemContract(&_ZEVMSwapApp.CallOpts)
-}
-
-// OnCrossChainCall is a paid mutator transaction binding the contract method 0xc8522691.
-//
-// Solidity: function onCrossChainCall(address zrc20, uint256 amount, bytes message) returns()
-func (_ZEVMSwapApp *ZEVMSwapAppTransactor) OnCrossChainCall(opts *bind.TransactOpts, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _ZEVMSwapApp.contract.Transact(opts, "onCrossChainCall", zrc20, amount, message)
-}
-
-// OnCrossChainCall is a paid mutator transaction binding the contract method 0xc8522691.
-//
-// Solidity: function onCrossChainCall(address zrc20, uint256 amount, bytes message) returns()
-func (_ZEVMSwapApp *ZEVMSwapAppSession) OnCrossChainCall(zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _ZEVMSwapApp.Contract.OnCrossChainCall(&_ZEVMSwapApp.TransactOpts, zrc20, amount, message)
-}
-
-// OnCrossChainCall is a paid mutator transaction binding the contract method 0xc8522691.
-//
-// Solidity: function onCrossChainCall(address zrc20, uint256 amount, bytes message) returns()
-func (_ZEVMSwapApp *ZEVMSwapAppTransactorSession) OnCrossChainCall(zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
-	return _ZEVMSwapApp.Contract.OnCrossChainCall(&_ZEVMSwapApp.TransactOpts, zrc20, amount, message)
 }
