@@ -42,10 +42,18 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
       run: |
-        pwd
+        current_directory=$(pwd)
+        
+        cd /home/runner/work/zeta-node/zeta-node/.github/actions/upgrade-testing/
+        
         echo "END_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        
         source $GITHUB_ENV
+        
         pip install -r requirements.txt
+        
         python run_upgrade_proposals.py
+        
+        cd $current_directory
 
 
