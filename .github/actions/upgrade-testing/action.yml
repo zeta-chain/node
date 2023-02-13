@@ -24,6 +24,7 @@ runs:
           ${{ runner.os }}-go-
 
     - name: Build zetacored and zetaclientd
+      shell: bash
       run: |
         make install
         cp "$HOME"/go/bin/* ./
