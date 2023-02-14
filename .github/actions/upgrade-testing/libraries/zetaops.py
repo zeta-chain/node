@@ -70,7 +70,10 @@ class Utilities:
         cmd = COMMAND_PREFIX + cmd
         result = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True)
         result_output = result.stdout.decode('utf-8')
-        error_output = result.stderr.decode('utf-8')
+        try:
+            error_output = result.stderr.decode('utf-8')
+        except:
+            error_output = ""
         return result_output, error_output
 
     def generate_wallet(self):
@@ -287,10 +290,30 @@ class Utilities:
         docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
         self.logger.info(docker_logs)
         self.logger.error(error_output)
+        time.sleep(60)
         time.sleep(1)
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
+        time.sleep(1)
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
+        time.sleep(1)
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
+        time.sleep(1)
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
+        time.sleep(1)
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
 
         docker_ps = self.run_command("docker ps")
         self.logger.info(docker_ps)
-        
+
         time.sleep(60)
         return True
