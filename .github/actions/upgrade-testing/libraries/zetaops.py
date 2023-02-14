@@ -57,6 +57,7 @@ class Utilities:
         self.NODE = "http://127.0.0.1:26657"
         self.MONIKER = "zeta"
         self.CHAIN_ID = "test_1001-1"
+        self.CONTAINER_ID = None
 
     def run_command(self, cmd):
         COMMAND_PREFIX = "export PATH="+self.go_path+":${PATH} && "
@@ -85,7 +86,7 @@ class Utilities:
 
     def get_proposal_id(self):
         try:
-            QUERY_GOV_PROPOSAL = f"""zetacored query gov proposals --output json --node {self.NODE}"""
+            QUERY_GOV_PROPOSAL = f"""docker exec -it {self.CONTAINER_ID} zetacored query gov proposals --output json --node {self.NODE}"""
             GOV_PROPOSALS = json.loads(self.run_command(QUERY_GOV_PROPOSAL))
             for proposal in GOV_PROPOSALS["proposals"]:
                 PROPOSAL_ID = proposal["proposal_id"]
@@ -97,7 +98,7 @@ class Utilities:
     def raise_governance_proposal(self,VERSION,BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO):
         self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
         self.UPGRADE_HEIGHT = str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
-        GOV_PROPOSAL = f"""zetacored tx gov submit-proposal software-upgrade "{VERSION}" \
+        GOV_PROPOSAL = f"""docker exec -it {self.CONTAINER_ID} zetacored tx gov submit-proposal software-upgrade "{VERSION}" \
             --from "{self.MONIKER}" \
             --deposit 10000000000000000000azeta \
             --upgrade-height "{self.UPGRADE_HEIGHT}" \
@@ -117,7 +118,7 @@ class Utilities:
         return TX_HASH, self
 
     def raise_governance_vote(self, PROPOSAL_ID):
-        VOTE_PROPOSAL=f"""zetacored tx gov vote "{PROPOSAL_ID}" yes \
+        VOTE_PROPOSAL=f"""docker exec -it {self.CONTAINER_ID} zetacored tx gov vote "{PROPOSAL_ID}" yes \
             --from {self.MONIKER} \
             --keyring-backend test \
             --chain-id {self.CHAIN_ID} \
@@ -213,29 +214,15 @@ class Utilities:
         self.logger.info(docker_command)
         self.run_command(docker_command)
         container_id = self.run_command("docker ps | grep -v COMMAND | cut -d ' ' -f 1 | tr -d ' '")
+        self.CONTAINER_ID = container_id
         time.sleep(3)
         self.logger.info("ContainerID")
         self.logger.info(container_id)
-
-        time.sleep(1)
+        time.sleep(60)
         docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
         self.logger.info(docker_logs)
         self.logger.error(error_output)
-
-        time.sleep(1)
         docker_ps = self.run_command("docker ps")
         self.logger.info(docker_ps)
-
-        time.sleep(60)
-
-        time.sleep(1)
-        docker_logs, error_output = self.run_command_all_output(f'docker logs {container_id}')
-        self.logger.info(docker_logs)
-        self.logger.error(error_output)
-
-        time.sleep(1)
-        docker_ps = self.run_command("docker ps")
-        self.logger.info(docker_ps)
-
         time.sleep(60)
         return True
