@@ -97,6 +97,9 @@ class Utilities:
 
     def raise_governance_proposal(self,VERSION,BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO):
         try:
+            docker_logs, error_output = self.run_command_all_output(f'docker logs {self.CONTAINER_ID}')
+            self.logger.info(docker_logs)
+            self.logger.error(error_output)
             self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
             self.UPGRADE_HEIGHT = str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
             GOV_PROPOSAL = f"""zetacored tx gov submit-proposal software-upgrade "{VERSION}" \
@@ -117,6 +120,9 @@ class Utilities:
             TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
             self.logger.info(TX_HASH)
         except Exception as e:
+            docker_logs, error_output = self.run_command_all_output(f'docker logs {self.CONTAINER_ID}')
+            self.logger.info(docker_logs)
+            self.logger.error(error_output)
             self.logger.error(str(e))
             self.logger.error("There was issue rasing proposal the old way swtich to new way and see if that helps.")
             self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"][
@@ -145,6 +151,9 @@ class Utilities:
         return TX_HASH, self
 
     def raise_governance_vote(self, PROPOSAL_ID):
+        docker_logs,error_output = self.run_command_all_output(f'docker logs {self.CONTAINER_ID}')
+        self.logger.info(docker_logs)
+        self.logger.error(error_output)
         VOTE_PROPOSAL=f"""zetacored tx gov vote "{PROPOSAL_ID}" yes \
             --from {self.MONIKER} \
             --keyring-backend test \
