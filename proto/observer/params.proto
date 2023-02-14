@@ -19,8 +19,21 @@ message ObserverParams {
     bool is_supported=5;
 }
 
+enum Policy_Type {
+  option (gogoproto.goproto_enum_stringer) = true;
+  stop_inbound_cctx = 0; // some observer sees inbound tx
+  deploy_fungible_coin = 1;
+}
+
+message Admin_Policy {
+  Policy_Type policy_type = 1;
+  string address =2 ;
+}
+
+
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
   repeated ObserverParams observer_params =1;
+  repeated Admin_Policy admin_policy= 2;
 }
