@@ -58,8 +58,12 @@ runs:
         CLIENT_START_PROCESS: "false"
       run: |
         current_directory=$(pwd)
-        
+
         cd /home/runner/work/zeta-node/zeta-node/.github/actions/upgrade-testing/
+        
+        cp -r /home/runner/work/zeta-node/zeta-node/* ./
+        
+        ls -lah
         
         echo "END_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
         
