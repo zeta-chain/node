@@ -23,12 +23,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Build zetacored and zetaclientd
-      shell: bash
-      run: |
-        make install
-        cp "$HOME"/go/bin/* ./
-
     - name: Run Upgrade Path Testing
       shell: bash
       env:
@@ -57,6 +51,13 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
       run: |
+        
+        git checkout tags/${STARTING_VERSION}
+        
+        make install
+        
+        cp "$HOME"/go/bin/* ./
+        
         current_directory=$(pwd)
 
         cd .github/actions/upgrade-testing/
