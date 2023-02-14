@@ -8,11 +8,12 @@ ENV GOPATH=/go
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
-COPY ./* ./
-RUN rm -rf $GOPATH/go.mod && \
-    rm -rf go.mod && \
-    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
-    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+RUN apt update && \
+    apt install unzip wget -y && \
+    wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
+    unzip main.zip && \
+    cd cosmos-sdk-main/cosmovisor && \
+    make cosmovisor
 
 ################
 # BUILD MAIN IMAGE
@@ -23,7 +24,7 @@ EXPOSE 1317
 EXPOSE 26656
 EXPOSE 26657
 
-COPY --from=cosmovisor /go/bin/cosmovisor /usr/bin/cosmovisor
+COPY --from=cosmovisor /go/cosmos-sdk-main/cosmovisor/cosmovisor /usr/bin/cosmovisor
 COPY ./configs/* /app_version/
 COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
 COPY ./upgrades/ /app_version/
