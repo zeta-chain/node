@@ -109,6 +109,17 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return zetaTxHash, fmt.Errorf("postReceiveConfirmation: re-try fails")
 }
 
+func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.PermissionFlags(context.Background(), &types.QueryGetPermissionFlagsRequest{})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("Query permissions failed")
+		return types.PermissionFlags{}, err
+	}
+	return resp.PermissionFlags, nil
+
+}
+
 func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})
