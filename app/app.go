@@ -7,6 +7,9 @@ import (
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -181,6 +184,7 @@ var (
 		fungibleModule.AppModuleBasic{},
 		emissionsModule.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -241,6 +245,7 @@ type App struct {
 	FungibleKeeper       fungibleModuleKeeper.Keeper
 	EmissionsKeeper      emissionsModuleKeeper.Keeper
 	GroupKeeper          groupkeeper.Keeper
+	AuthzKeeper          authzkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -278,6 +283,7 @@ func New(
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
 		fungibleModuleTypes.StoreKey,
 		emissionsModuleTypes.StoreKey,
+		authzkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -347,6 +353,13 @@ func New(
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
 	)
+
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		app.MsgServiceRouter(),
+		app.AccountKeeper)
+
 	app.EmissionsKeeper = *emissionsModuleKeeper.NewKeeper(
 		appCodec,
 		keys[emissionsModuleTypes.StoreKey],
@@ -463,6 +476,7 @@ func New(
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -491,6 +505,7 @@ func New(
 		zetaObserverModuleTypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
+		authz.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
@@ -502,7 +517,7 @@ func New(
 		crisistypes.ModuleName,
 		evmtypes.ModuleName, feemarkettypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
-		fungibleModuleTypes.ModuleName, emissionsModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName, emissionsModuleTypes.ModuleName, authz.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -531,6 +546,7 @@ func New(
 		zetaObserverModuleTypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
