@@ -13,7 +13,8 @@ RUN apt update && \
     wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
     unzip main.zip && \
     cd cosmos-sdk-main/cosmovisor && \
-    make cosmovisor
+    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
+    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
 
 ################
 # BUILD MAIN IMAGE
@@ -24,7 +25,7 @@ EXPOSE 1317
 EXPOSE 26656
 EXPOSE 26657
 
-COPY --from=cosmovisor /go/cosmos-sdk-main/cosmovisor/cosmovisor /usr/bin/cosmovisor
+COPY --from=cosmovisor /go/bin/cosmovisor /usr/bin/cosmovisor
 COPY ./configs/* /app_version/
 COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
 COPY ./upgrades/ /app_version/
