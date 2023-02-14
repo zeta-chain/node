@@ -9,7 +9,9 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 
 COPY ./* ./
-RUN go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
+RUN rm -rf $GOPATH/go.mod && \
+    rm -rf go.mod && \
+    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
     go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
 
 ################
