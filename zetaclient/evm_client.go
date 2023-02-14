@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -465,6 +466,13 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
+	permssions, err := ob.zetaClient.GetInboundPermissions()
+	if err != nil {
+		return err
+	}
+	if !permssions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
+	}
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err

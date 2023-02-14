@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"math/big"
@@ -182,6 +183,13 @@ func (ob *BitcoinChainClient) WatchInTx() {
 
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
+	permssions, err := ob.zetaClient.GetInboundPermissions()
+	if err != nil {
+		return err
+	}
+	if !permssions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
+	}
 	lastBN := ob.GetLastBlockHeight()
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
