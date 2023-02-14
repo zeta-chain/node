@@ -61,21 +61,10 @@ runs:
         chmod a+x zetacored
         chmod -R 777 zetacored
         
-        cd .github/
-        pwd
-        ls -lah .
-        
-        cd actions/
-        pwd
-        ls -lah .
-        
-        cd upgrade-testing/
-        pwd
-        ls -lah .
+        cd .github/actions/upgrade-testing/
 
-        echo "END_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
-        
-        source $GITHUB_ENV
+        export END_VERSION=${GITHUB_REF##*/}
+        echo "***********END VERSION: ${END_VERSION}*********************"
         
         pip install -r requirements.txt
         
