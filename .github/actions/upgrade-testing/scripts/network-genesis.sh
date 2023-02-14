@@ -11,7 +11,7 @@ log_it () {
   echo ""
 }
 
-sudo chmod -R 777 /app_version
+chmod -R 777 /app_version
 cp /app_version/${STARTING_VERSION}/bin/${DAEMON_NAME} /usr/bin/${DAEMON_NAME}
 echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend test --recover
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
