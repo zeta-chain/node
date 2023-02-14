@@ -1,5 +1,5 @@
-//go:build MAINNET
-// +build MAINNET
+//go:build !PRIVNET && !TESTNET
+// +build !PRIVNET,!TESTNET
 
 package keeper
 
