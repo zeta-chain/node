@@ -88,6 +88,7 @@ class Utilities:
         try:
             QUERY_GOV_PROPOSAL = f"""zetacored query gov proposals --output json --node {self.NODE}"""
             GOV_PROPOSALS = json.loads(self.run_command(QUERY_GOV_PROPOSAL))
+            self.logger.info(GOV_PROPOSALS["proposals"])
             for proposal in GOV_PROPOSALS["proposals"]:
                 PROPOSAL_ID = proposal["proposal_id"]
             return PROPOSAL_ID
