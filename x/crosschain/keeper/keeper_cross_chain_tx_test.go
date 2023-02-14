@@ -28,9 +28,8 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].InboundTxParams.Amount = math.OneUint()
 		items[i].ZetaFees = math.OneUint()
-		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i)}
+		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
