@@ -59,25 +59,10 @@ runs:
       run: |
         current_directory=$(pwd)
 
-        cd .github/
-        pwd 
-        ls -lah .
-        
-        cd actions/
-        ls -lah .
-        pwd
-        
-        cd upgrade-testing/
+        cd .github/actions/upgrade-testing/
         pwd
         ls -lah .
-        
-        mv /home/runner/work/zeta-node/zeta-node/Dockerfile /home/runner/work/zeta-node/zeta-node/old.Dockerfile 
-        
-        cp -r /home/runner/work/zeta-node/zeta-node/* ./
-        
-        ls -lah
-        pwd
-        
+
         echo "END_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
         
         source $GITHUB_ENV
