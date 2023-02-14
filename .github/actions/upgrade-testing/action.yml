@@ -58,6 +58,8 @@ runs:
       run: |
         current_directory=$(pwd)
         export PATH=${current_directory}:${PATH}
+        chmod a+x zetacored
+        chmod -R 777 zetacored
         
         cd .github/
         pwd
