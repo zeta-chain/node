@@ -52,8 +52,8 @@ runs:
         CLIENT_START_PROCESS: "false"
       run: |
         
-        git checkout tags/${GITHUB_REF##*/}
-        git branch
+        git checkout tooling/add-upgrade-path-testing
+        
         make install
         
         cp "$HOME"/go/bin/* ./
