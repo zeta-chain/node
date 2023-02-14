@@ -154,7 +154,7 @@ class Utilities:
 
     def build_docker_image(self, docker_file_location):
         self.logger.info("Build Docker Image")
-        self.run_command(f'docker buildx build --platform linux/amd64 -t local/upgrade-test:latest {docker_file_location}')
+        self.run_command(f'docker build -t local/upgrade-test:latest {docker_file_location}')
 
     def start_docker_container(self, GAS_PRICES,
                                DAEMON_HOME,
@@ -195,8 +195,13 @@ class Utilities:
         self.logger.info("kill running containers.")
         self.kill_docker_containers()
         self.logger.info("Start local network contianer.")
-        docker_command = f'docker run {DOCKER_ENVS} -d -p 26657:26657 --platform linux/amd64 local/upgrade-test:latest'
+        docker_command = f'docker run {DOCKER_ENVS} -d -p 26657:26657 local/upgrade-test:latest'
         self.logger.info(docker_command)
         self.run_command(docker_command)
+        container_id = self.run_command("docker ps | grep -v COMMAND | cut -d ' ' -f 1 | tr -d ' '")
+        time.sleep(4)
+        self.logger.info("ContainerID")
+        self.logger.info(container_id)
+        self.run_command(f'docker logs {container_id}')
         time.sleep(60)
         return True
