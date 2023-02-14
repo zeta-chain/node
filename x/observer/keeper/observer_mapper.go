@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -68,25 +67,27 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 // Tx
 
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.IsValidator(ctx, msg.Creator)
-	if err != nil {
-		return nil, err
-	}
-	chain := k.GetParams(ctx).GetChainFromChainID(msg.ChainId)
-	if chain == nil {
-		return nil, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf("ChainID %d", msg.ChainId))
-	}
-	err = k.CheckObserverDelegation(ctx, msg.Creator, chain, msg.ObservationType)
-	if err != nil {
-		return nil, err
-	}
-	k.AddObserverToMapper(ctx,
-		chain,
-		msg.ObservationType,
-		msg.Creator)
-
+	_ = sdk.UnwrapSDKContext(goCtx)
 	return &types.MsgAddObserverResponse{}, nil
+
+	//err := k.IsValidator(ctx, msg.Creator)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//chain := k.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	//if chain == nil {
+	//	return nil, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf("ChainID %d", msg.ChainId))
+	//}
+	//err = k.CheckObserverDelegation(ctx, msg.Creator, chain, msg.ObservationType)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//k.AddObserverToMapper(ctx,
+	//	chain,
+	//	msg.ObservationType,
+	//	msg.Creator)
+
+	//return &types.MsgAddObserverResponse{}, nil
 }
 
 //Queries

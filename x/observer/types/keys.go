@@ -26,6 +26,7 @@ const (
 	ObserverKey           = "Observer-value-"
 	ObserverMapperKey     = "Observer-value-"
 	ObserverParamsKey     = "ObserverParams"
+	AdminPolicyParamsKey  = "AdminParams"
 	SupportedChainsKey    = "SupportedChains-value-"
 	AllSupportedChainsKey = "AllSupportedChains"
 )

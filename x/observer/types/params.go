@@ -15,8 +15,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(observerParams []*ObserverParams) Params {
-	return Params{ObserverParams: observerParams}
+func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
+	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
@@ -29,13 +29,24 @@ func DefaultParams() Params {
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 	}
-	return NewParams(observerParams)
+	adminPolicy := []*Admin_Policy{
+		{
+			PolicyType: Policy_Type_stop_inbound_cctx,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_deploy_fungible_coin,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+	}
+	return NewParams(observerParams, adminPolicy)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPrefix(ObserverParamsKey), &p.ObserverParams, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(AdminPolicyParamsKey), &p.AdminPolicy, validateAdminPolicy),
 	}
 }
 
@@ -62,7 +73,23 @@ func validateVotingThresholds(i interface{}) error {
 	}
 	return nil
 }
+func validateAdminPolicy(i interface{}) error {
+	_, ok := i.([]*Admin_Policy)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
+	return nil
+}
+
+func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
+	for _, admin := range p.AdminPolicy {
+		if admin.PolicyType == policyType {
+			return admin.Address
+		}
+	}
+	return ""
+}
 func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	for _, ObserverParam := range p.GetObserverParams() {
 		if ObserverParam.Chain.IsEqual(*chain) {
