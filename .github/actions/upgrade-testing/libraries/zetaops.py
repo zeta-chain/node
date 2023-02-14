@@ -149,6 +149,9 @@ class Utilities:
         LATEST_BLOCK = block_height_request["result"]["sync_info"]["latest_block_height"]
         return int(LATEST_BLOCK)
 
+    def docker_ps(self):
+        self.run_command(f'docker ps')
+
     def build_docker_image(self, docker_file_location):
         self.logger.info("Build Docker Image")
         self.run_command(f'docker buildx build --platform linux/amd64 -t local/upgrade-test:latest {docker_file_location}')
