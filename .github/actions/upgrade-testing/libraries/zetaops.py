@@ -90,7 +90,12 @@ class Utilities:
             GOV_PROPOSALS = json.loads(self.run_command(QUERY_GOV_PROPOSAL))
             self.logger.info(GOV_PROPOSALS["proposals"])
             for proposal in GOV_PROPOSALS["proposals"]:
-                PROPOSAL_ID = proposal["proposal_id"]
+                try:
+                    PROPOSAL_ID = proposal["proposal_id"]
+                except Exception as e:
+                    self.logger.error(str(e))
+                    self.logger.info("proposal_id key wasn't found trying id key.")
+                    PROPOSAL_ID = proposal["id"]
             return PROPOSAL_ID
         except Exception as e:
             self.logger.error(e)
