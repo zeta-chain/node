@@ -121,7 +121,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
 		}
 	}
-	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
 		ob.SetLastBlockHeight(uint64(100))
 	}
 
@@ -323,7 +323,7 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+	if ob.chain.ChainId == 18444 { //bitcoin regtest
 		bn, err := ob.rpcClient.GetBlockCount()
 		if err != nil {
 			return err

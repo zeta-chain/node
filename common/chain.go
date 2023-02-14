@@ -62,31 +62,29 @@ func (chain Chain) IsZetaChain() bool {
 }
 
 func (chain Chain) IsEVMChain() bool {
-	return chain.IsEqual(EthChain()) || chain.IsEqual(BscMainnetChain()) || chain.IsEqual(PolygonChain()) || chain.IsEqual(GoerliChain()) ||
-		chain.IsEqual(MumbaiChain()) || chain.IsEqual(BscTestnetChain()) || chain.IsEqual(BaobabChain()) || chain.IsEqual(GoerliLocalNetChain())
+	return chain.ChainId == 1 || // Ethereum
+		chain.ChainId == 56 || // BSC
+		chain.ChainId == 137 || // Polygon
+		chain.ChainId == 5 || // Goerli
+		chain.ChainId == 80001 || // Polygon mumbai
+		chain.ChainId == 97 || // BSC testnet
+		chain.ChainId == 1001 || // klaytn baobab
+		chain.ChainId == 1337 // eth privnet
 }
 
 func (chain Chain) IsKlaytnChain() bool {
-	return chain.IsEqual(BaobabChain())
+	return chain.ChainId == 1001
 }
 
 func (chain Chain) IsBitcoinChain() bool {
-	return chain.IsEqual(BtcMainnetChain()) || chain.IsEqual(BtcTestNetChain()) || chain.IsEqual(BtcRegtestChain())
+	return chain.ChainId == 18444 || // regtest
+		chain.ChainId == 18332 || //testnet
+		chain.ChainId == 8332 // mainnet
 }
 
 // IsEmpty is to determinate whether the chain is empty
 func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""
-}
-
-// GetSigningAlgo get the signing algorithm for the given chain
-func (chain Chain) GetSigningAlgo() SigninAlgo {
-	switch chain {
-	case EthChain(), PolygonChain(), BscMainnetChain(), BtcMainnetChain(), BtcTestNetChain():
-		return SigningAlgoSecp256k1
-	default:
-		return SigningAlgoSecp256k1
-	}
 }
 
 // Has check whether chain c is in the list

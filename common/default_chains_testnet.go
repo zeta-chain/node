@@ -1,30 +1,12 @@
-package common
+//go:build TESTNET
+// +build TESTNET
 
-func EthChain() Chain {
-	return Chain{
-		ChainName: ChainName_eth_mainnet,
-		ChainId:   1,
-	}
-}
+package common
 
 func GoerliChain() Chain {
 	return Chain{
 		ChainName: ChainName_goerli_testnet,
 		ChainId:   5,
-	}
-}
-
-func GoerliLocalNetChain() Chain {
-	return Chain{
-		ChainName: ChainName_goerli_localnet,
-		ChainId:   1337,
-	}
-}
-
-func BscMainnetChain() Chain {
-	return Chain{
-		ChainName: ChainName_bsc_mainnet,
-		ChainId:   56,
 	}
 }
 
@@ -41,6 +23,7 @@ func BaobabChain() Chain {
 		ChainId:   1001,
 	}
 }
+
 func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_mainnet,
@@ -48,31 +31,10 @@ func ZetaChain() Chain {
 	}
 }
 
-func BtcMainnetChain() Chain {
-	return Chain{
-		ChainName: ChainName_btc_mainnet,
-		ChainId:   8332,
-	}
-}
-
 func BtcTestNetChain() Chain {
 	return Chain{
 		ChainName: ChainName_btc_testnet,
 		ChainId:   18332,
-	}
-}
-
-func BtcRegtestChain() Chain {
-	return Chain{
-		ChainName: ChainName_btc_regtest,
-		ChainId:   18444,
-	}
-}
-
-func PolygonChain() Chain {
-	return Chain{
-		ChainName: ChainName_polygon_mainnet,
-		ChainId:   137,
 	}
 }
 
@@ -87,13 +49,9 @@ func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcRegtestChain(),
 		BtcTestNetChain(),
-		BtcMainnetChain(),
-		PolygonChain(),
 		MumbaiChain(),
 		BaobabChain(),
 		BscTestnetChain(),
-		BscMainnetChain(),
-		EthChain(),
 		GoerliChain(),
 		GoerliLocalNetChain(),
 		ZetaChain(),

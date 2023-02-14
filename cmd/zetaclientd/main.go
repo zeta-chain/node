@@ -84,7 +84,7 @@ func main() {
 	for _, chain := range chains {
 		for _, supportedChain := range supportedChains {
 			if supportedChain.ChainName.String() == chain {
-				if !*devMode && chain == common.GoerliLocalNetChain().ChainName.String() {
+				if !*devMode && supportedChain.ChainId == 1337 {
 					log.Error().Msgf("GoerliLocalNetChain can only be enabled in Dev Mode ")
 					return
 				}
@@ -340,27 +340,6 @@ func start(validatorName string, peers p2p.AddrList, zetacoreHome string) {
 		(chainClientMap1)[chain].Stop()
 	}
 
-}
-
-func updateConfig() {
-
-	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
-	updateEndpoint(common.GoerliLocalNetChain(), "GOERLILOCALNET_ENDPOINT")
-	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")
-	updateEndpoint(common.MumbaiChain(), "MUMBAI_ENDPOINT")
-	updateEndpoint(common.BaobabChain(), "BAOBAB_ENDPOINT")
-
-	updateMPIAddress(common.GoerliChain(), "GOERLI_MPI_ADDRESS")
-	updateEndpoint(common.GoerliLocalNetChain(), "GOERLILOCALNET_MPI_ENDPOINT")
-	updateMPIAddress(common.BscTestnetChain(), "BSCTESTNET_MPI_ADDRESS")
-	updateMPIAddress(common.MumbaiChain(), "MUMBAI_MPI_ADDRESS")
-	updateMPIAddress(common.BaobabChain(), "BAOBAB_MPI_ADDRESS")
-
-	updateTokenAddress(common.GoerliChain(), "GOERLI_ZETA_ADDRESS")
-	updateEndpoint(common.GoerliLocalNetChain(), "GOERLILOCALNET_ZETA_ENDPOINT")
-	updateTokenAddress(common.BscTestnetChain(), "BSCTESTNET_ZETA_ADDRESS")
-	updateTokenAddress(common.MumbaiChain(), "MUMBAI_ZETA_ADDRESS")
-	updateTokenAddress(common.BaobabChain(), "BAOBAB_ZETA_ADDRESS")
 }
 
 func updateMPIAddress(chain common.Chain, envvar string) {
