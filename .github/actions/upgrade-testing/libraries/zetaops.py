@@ -249,7 +249,5 @@ class Utilities:
         docker_logs,error_output = self.run_command_all_output(f'docker logs {container_id}')
         self.logger.info(docker_logs)
         self.logger.error(error_output)
-        docker_ps = self.run_command("docker ps")
-        self.logger.info(docker_ps)
         time.sleep(60)
         return True
