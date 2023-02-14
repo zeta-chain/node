@@ -52,15 +52,23 @@ runs:
         CLIENT_START_PROCESS: "false"
       run: |
         
-        git checkout tags/${STARTING_VERSION}
-        
+        git checkout tags/${GITHUB_REF##*/}
+        git branch
         make install
         
         cp "$HOME"/go/bin/* ./
-        
+                
         current_directory=$(pwd)
-
-        cd .github/actions/upgrade-testing/
+    
+        cd .github/
+        pwd
+        ls -lah .
+        
+        cd actions/
+        pwd
+        ls -lah .
+        
+        cd upgrade-testing/
         pwd
         ls -lah .
 
