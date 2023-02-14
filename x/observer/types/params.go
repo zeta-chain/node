@@ -15,8 +15,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(observerParams []*ObserverParams, admin_params []*Admin_Policy) Params {
-	return Params{ObserverParams: observerParams, AdminPolicy: admin_params}
+func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
+	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
@@ -29,7 +29,7 @@ func DefaultParams() Params {
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 	}
-	admin_policy := []*Admin_Policy{
+	adminPolicy := []*Admin_Policy{
 		{
 			PolicyType: Policy_Type_stop_inbound_cctx,
 			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
@@ -39,7 +39,7 @@ func DefaultParams() Params {
 			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
 		},
 	}
-	return NewParams(observerParams, admin_policy)
+	return NewParams(observerParams, adminPolicy)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -82,9 +82,9 @@ func validateAdminPolicy(i interface{}) error {
 	return nil
 }
 
-func (p Params) GetAdminPolicyAccount(policy_type Policy_Type) string {
+func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
 	for _, admin := range p.AdminPolicy {
-		if admin.PolicyType == policy_type {
+		if admin.PolicyType == policyType {
 			return admin.Address
 		}
 	}
