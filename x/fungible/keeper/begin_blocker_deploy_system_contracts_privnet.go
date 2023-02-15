@@ -1,4 +1,4 @@
-//go:build TESTNET
+//go:build PRIVNET
 
 package keeper
 
@@ -78,22 +78,12 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_testnet.String(), "ETH", "gETH", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
+
 	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_localnet.String(), "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_bsc_testnet.String(), "BNB", "tBNB", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_mumbai_testnet.String(), "MATIC", "tMATIC", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
+
 	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_regtest.String(), "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
@@ -103,15 +93,17 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	// for localnet only: USDT ZRC20
 	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	_, err = k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliLocalNetChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
+	USDTZRC20Addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliLocalNetChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
 	}
+	ctx.Logger().Info("Deployed USDT ZRC20 at " + USDTZRC20Addr.String())
 	// for localnet only: ZEVM Swap App
-	_, err = k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
+	ZEVMSwapAddress, err := k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
 	}
+	ctx.Logger().Info("Deployed ZEVM Swap App at " + ZEVMSwapAddress.String())
 	fmt.Println("Successfully deployed contracts")
 	return nil
 }
