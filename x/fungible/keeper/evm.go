@@ -27,7 +27,8 @@ import (
 
 // TODO USE string constant
 var (
-	BigIntZero = big.NewInt(0)
+	BigIntZero                 = big.NewInt(0)
+	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
 // TODO Unit test for these funtions
@@ -357,7 +358,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, true,
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
 		"depositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err

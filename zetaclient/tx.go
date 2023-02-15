@@ -17,12 +17,11 @@ import (
 )
 
 const (
-	PostZetaConversionRateGasLimit  = 200_000
 	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
-	PostSendNonEVMGasLimit          = 1_500_000
+	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly
+	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
 	DefaultGasLimit                 = 200_000
 )
@@ -36,6 +35,8 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
+	b.logger.Debug().Str("zetaTxHash", zetaTxHash).Msg("PostGasPrice broadcast success")
+
 	return zetaTxHash, nil
 }
 
@@ -226,6 +227,8 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	if err != nil {
 		return "", err
 	}
+	b.logger.Debug().Msgf("SetNodeKey txhash: %s", zetaTxHash)
+
 	return zetaTxHash, nil
 }
 
