@@ -115,7 +115,7 @@ func (sm *SmokeTest) DepositBTC() {
 		panic(err)
 	}
 
-	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...")
+	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
 
 	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
 	if err != nil {
