@@ -26,14 +26,15 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
+
     - uses: actions/checkout@v3
 
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
       with:
-        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
     - uses: actions/cache@v3
       with:
@@ -54,37 +55,23 @@ jobs:
       run: |
         echo "Running Build Tests"
         go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
-  
+
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: binaries-${{ github.sha }}
         path: |
             zetacored
-            zetaclientd 
+            zetaclientd
         
   smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Docker Compose
-      if: ${{ env.ACT }}
-      run: |
-        sudo apt-get update
-        sudo apt-get install \
-          ca-certificates \
-          curl \
-          gnupg \
-          lsb-release
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get install docker-compose-plugin
-        #sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    - name: install-docker-compose
+      uses: ./.github/actions/install-docker-compose
 
     - name: Start Private Network
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
@@ -109,6 +96,7 @@ jobs:
     needs: 
       - build-and-test
       - smoke-test
+
     steps:
     - uses: actions/checkout@v3
 
@@ -121,28 +109,20 @@ jobs:
       id: branch-name
       uses: tj-actions/branch-names@v6
 
-    - name: Set branch name
-      id: set-branch-name
-      run: | 
-        tag_check=`echo '${{github.ref}}' | grep 'tags'` || echo "proceed"
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          echo "Setting the current branch name to same as the source branch of the PR"
-          RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ github.event.pull_request.head.ref }})
-          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
-          TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        elif [ ! -z "${tag_check}" ]; then
-          echo "Tag Event, Set RELEASE and TAG NAMES accordingly."
-          echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "RELEASE_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo $TAG_NAME
-          echo $RELEASE_NAME
-        else
-          RELEASE_NAME=$(sed 's#/#-#g' <<< ${{ steps.branch-name.outputs.current_branch }})
-          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
-          TAG_NAME="$RELEASE_NAME-$(git rev-parse --short HEAD)"
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        fi
+    - name: Git Hash
+      run: |
+        echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+        echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
+        ls -lah ./
+
+    - name: set-branch-name
+      uses: ./.github/actions/set-branch-name
+      with:
+        github_ref: "${{github.ref}}"
+        github_event: "${{ github.event_name }}"
+        github_head_ref: "${{ github.event.pull_request.head.ref }}"
+        github_commit_sha: "${{ env.GIT_HASH }}"
+        current_branch_name: "${{ steps.branch-name.outputs.current_branch }}"
 
     - uses: actions/cache@v3
       with:
@@ -153,24 +133,21 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
+    - name: build-zetavisor
+      uses: ./.github/actions/build-zetavisor
+      with:
+        zetavisor_version: "zetavisor-v0.1.3"
+        workspace_dir: "${{ env.WORKSPACE_DIR }}"
+
+    - name: install awscli
+      uses: ./.github/actions/install-awscli
+      with:
+        download_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+
     - uses: actions/download-artifact@v3
       with:
         name: binaries-${{ github.sha }}
         path: ./
-
-    - name: Build Zetavisor
-      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
-      run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
-        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
-
-    - name: Install AWS CLI # Used for local testing of Git Actions
-      if: ${{ env.ACT }}
-      run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install --update 
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -178,6 +155,11 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Debug step
+      run: |
+        pwd
+        ls -lah ./
 
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
@@ -216,3 +198,20 @@ jobs:
         files: |
           zetacored
           zetaclientd
+
+  upgrade_path_testing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - upload
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: upgrade-path-testing
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: ./.github/actions/upgrade-testing
+      with:
+        github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
