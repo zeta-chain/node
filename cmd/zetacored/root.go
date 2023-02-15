@@ -253,22 +253,6 @@ func (ac appCreator) newApp(
 	)
 }
 
-func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
-	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-	//encCfg := app.MakeEncodingConfig()
-	//encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var zetaApp *app.App
-	if height != -1 {
-		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
-		if err := zetaApp.LoadHeight(height); err != nil {
-			return servertypes.ExportedApp{}, err
-		}
-	} else {
-		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
-	}
-	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
-}
-
 // appExport creates a new simapp (optionally at a given height)
 func (ac appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
