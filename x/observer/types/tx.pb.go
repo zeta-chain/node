@@ -176,7 +176,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error)
 }
 
@@ -199,7 +199,7 @@ func (c *msgClient) AddObserver(ctx context.Context, in *MsgAddObserver, opts ..
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
 }
 

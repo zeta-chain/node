@@ -45,6 +45,12 @@ func MumbaiChain() Chain {
 	}
 }
 
+func BtcRegtestChain() Chain {
+	return Chain{
+		ChainName: ChainName_btc_regtest,
+		ChainId:   18444,
+	}
+}
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcRegtestChain(),
@@ -53,7 +59,7 @@ func DefaultChainsList() []*Chain {
 		BaobabChain(),
 		BscTestnetChain(),
 		GoerliChain(),
-		GoerliLocalNetChain(),
+
 		ZetaChain(),
 	}
 	var c []*Chain

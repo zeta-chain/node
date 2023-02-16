@@ -12,6 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func GetNonceIndex(chainID int64) string {
+	return fmt.Sprintf("%d", chainID)
+}
+
 // SetChainNonces set a specific chainNonces in the store from its index
 func (k Keeper) SetChainNonces(ctx sdk.Context, chainNonces types.ChainNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ChainNoncesKey))
@@ -108,29 +112,22 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
-	chain := msg.Chain
-	chainNonce, isFound := k.GetChainNonces(ctx, chain)
-	//if isDuplicateSigner(msg.Creator, chainNonce.Signers) {
-	//	return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
-	//}
+	chainId := msg.ChainId
+	chainNonce, isFound := k.GetChainNonces(ctx, GetNonceIndex(chainId))
 	if isFound {
 		chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
 		chainNonce.Nonce = msg.Nonce
 	} else if !isFound {
 		chainNonce = types.ChainNonces{
 			Creator: msg.Creator,
-			Index:   msg.Chain,
-			Chain:   msg.Chain,
+			Index:   GetNonceIndex(chainId),
+			ChainId: msg.ChainId,
 			Nonce:   msg.Nonce,
 			Signers: []string{msg.Creator},
 		}
 	} else {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("chainNonce vote msg does not match state: %v vs %v", msg, chainNonce))
 	}
-
-	//if hasSuperMajorityValidators(len(chainNonce.Signers), validators) {
-	//	chainNonce.FinalizedHeight = uint64(ctx.BlockHeader().Height)
-	//}
 
 	k.SetChainNonces(ctx, chainNonce)
 	return &types.MsgNonceVoterResponse{}, nil

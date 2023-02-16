@@ -79,8 +79,11 @@ func CmdNonceVoter() *cobra.Command {
 		Short: "Broadcast message nonceVoter",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsChain := (args[0])
-			argsNonce, err := strconv.Atoi(args[1])
+			argsChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			argsNonce, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -89,7 +92,7 @@ func CmdNonceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgNonceVoter(clientCtx.GetFromAddress().String(), (argsChain), uint64(argsNonce))
+			msg := types.NewMsgNonceVoter(clientCtx.GetFromAddress().String(), argsChain, argsNonce)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
