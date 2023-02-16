@@ -42,7 +42,6 @@ var ChainsEnabled = []common.Chain{}
 
 var ChainConfigs = map[string]*ChainETHish{}
 
-// TODO: config this
 var BitcoinConfig = &ChainBitcoinish{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
