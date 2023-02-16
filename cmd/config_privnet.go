@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package cmd
 
 const (
@@ -10,9 +13,9 @@ const (
 	DenomRegex                  = `[a-zA-Z][a-zA-Z0-9:\\/\\\-\\_\\.]{2,127}`
 	ZetaChainCoinType    uint32 = 933
 	ZetaChainHDPath      string = `m/44'/933'/0'/0/0`
-	NET                         = "MAINNET"
+	NET                         = "PRIVNET"
 )
 
 var (
-	CHAINID = "athens-1"
+	CHAINID = "athens_101-1"
 )

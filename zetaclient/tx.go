@@ -17,12 +17,11 @@ import (
 )
 
 const (
-	PostZetaConversionRateGasLimit  = 200_000
 	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 10_000_000 // likely emit a lot of logs, so costly
-	PostSendNonEVMGasLimit          = 1_500_000
+	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly
+	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
 	DefaultGasLimit                 = 200_000
 )
@@ -36,6 +35,8 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 		b.logger.Error().Err(err).Msg("PostGasPrice broadcast fail")
 		return "", err
 	}
+	b.logger.Debug().Str("zetaTxHash", zetaTxHash).Msg("PostGasPrice broadcast success")
+
 	return zetaTxHash, nil
 }
 
@@ -61,9 +62,9 @@ func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, er
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, mBurnt string, mMint string, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
+func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, mBurnt, mMint, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
 	var zetaTxHash string
 	for i := 0; i < 2; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, msg)
@@ -77,8 +78,7 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 	return zetaTxHash, fmt.Errorf("postSend: re-try fails")
 }
 
-// FIXME: pass nonce
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, mMint *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, amount *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
 	lastReport, found := b.lastOutTxReportTime[outTxHash]
 	if found && time.Since(lastReport) < 10*time.Minute {
 		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
@@ -89,9 +89,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		return "", err
 	}
 	signerAddress := address.String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(mMint), status, chain.ChainId, uint64(nonce), coinType)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(amount), status, chain.ChainId, uint64(nonce), coinType)
 	//b.logger.Info().Msgf("PostReceiveConfirmation msg digest: %s", msg.Digest())
 	var zetaTxHash string
+	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
+	// NewMsgReceiveConfirmation to it.
 	var gasLimit uint64 = PostReceiveConfirmationGasLimit
 	if status == common.ReceiveStatus_Failed {
 		gasLimit = PostSendEVMGasLimit
@@ -225,6 +227,8 @@ func (b *ZetaCoreBridge) SetNodeKey(pubkeyset common.PubKeySet, conskey string) 
 	if err != nil {
 		return "", err
 	}
+	b.logger.Debug().Msgf("SetNodeKey txhash: %s", zetaTxHash)
+
 	return zetaTxHash, nil
 }
 

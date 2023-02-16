@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
@@ -38,14 +41,16 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 			}
 		}
 		res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})
-		if err != nil || res.CrossChainTx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-			fmt.Printf("Deposit receipt cctx status: %s\n", res.CrossChainTx.CctxStatus.Status.String())
-			continue
+		if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
+			fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
+			return res.CrossChainTx
 		}
-		fmt.Printf("Deposit receipt cctx status: %+v; success\n", res.CrossChainTx.CctxStatus.Status.String())
-		return res.CrossChainTx
-	}
 
+	}
+}
+
+func IsTerminalStatus(status types.CctxStatus) bool {
+	return status == types.CctxStatus_OutboundMined || status == types.CctxStatus_Aborted || status == types.CctxStatus_Reverted
 }
 
 func LoudPrintf(format string, a ...any) {

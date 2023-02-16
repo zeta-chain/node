@@ -145,10 +145,10 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	}
 	inboundParams := &types.InboundTxParams{
 		Sender:                          msg.Sender,
-		SenderChain:                     senderChain.ChainName.String(),
 		SenderChainId:                   senderChain.ChainId,
 		TxOrigin:                        msg.TxOrigin,
 		Asset:                           msg.Asset,
+		Amount:                          msg.Amount,
 		CoinType:                        msg.CoinType,
 		InboundTxObservedHash:           msg.InTxHash,
 		InboundTxObservedExternalHeight: msg.InBlockHeight,
@@ -158,17 +158,15 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 
 	outBoundParams := &types.OutboundTxParams{
 		Receiver:                         msg.Receiver,
-		ReceiverChain:                    receiverChain.ChainName.String(),
 		ReceiverChainId:                  receiverChain.ChainId,
-		Broadcaster:                      0,
 		OutboundTxHash:                   "",
 		OutboundTxTssNonce:               0,
 		OutboundTxGasLimit:               msg.GasLimit,
 		OutboundTxGasPrice:               "",
 		OutboundTxBallotIndex:            "",
-		OutboundTxFinalizedZetaHeight:    0,
 		OutboundTxObservedExternalHeight: 0,
-		CoinType:                         msg.CoinType,
+		CoinType:                         msg.CoinType, // FIXME: is this correct?
+		Amount:                           sdk.NewUint(0),
 	}
 	status := &types.Status{
 		Status:              s,
@@ -178,13 +176,11 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,
 		Index:            index,
-		ZetaBurnt:        math.NewUintFromString(msg.ZetaBurnt),
-		ZetaMint:         math.ZeroUint(),
 		ZetaFees:         math.ZeroUint(),
 		RelayedMessage:   msg.Message,
 		CctxStatus:       status,
 		InboundTxParams:  inboundParams,
-		OutboundTxParams: outBoundParams,
+		OutboundTxParams: []*types.OutboundTxParams{outBoundParams},
 	}
 	return newCctx
 }

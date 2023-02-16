@@ -1,7 +1,7 @@
 // Code generated - DO NOT EDIT.
 // This file is a generated binding and any manual changes will be lost.
 
-package zevm
+package zevmswap
 
 import (
 	"errors"
@@ -26,6 +26,7 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
 // ZEVMSwapAppMetaData contains all meta data concerning the ZEVMSwapApp contract.
@@ -134,11 +135,11 @@ func NewZEVMSwapAppFilterer(address common.Address, filterer bind.ContractFilter
 
 // bindZEVMSwapApp binds a generic wrapper to an already deployed contract.
 func bindZEVMSwapApp(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ZEVMSwapAppABI))
+	parsed, err := ZEVMSwapAppMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and

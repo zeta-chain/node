@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
@@ -28,6 +31,10 @@ var (
 
 func (sm *SmokeTest) TestBitcoinSetup() {
 	LoudPrintf("Setup Bitcoin\n")
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
+	}()
 
 	btc := sm.btcRPCClient
 	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
@@ -108,7 +115,7 @@ func (sm *SmokeTest) DepositBTC() {
 		panic(err)
 	}
 
-	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...")
+	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
 
 	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
 	if err != nil {
@@ -149,6 +156,10 @@ func (sm *SmokeTest) DepositBTC() {
 }
 
 func (sm *SmokeTest) TestBitcoinWithdraw() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("Bitcoin withdraw took %s\n", time.Since(startTime))
+	}()
 	LoudPrintf("Testing Bitcoin ZRC20 Withdraw...\n")
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
@@ -221,7 +232,7 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 			panic(err)
 		}
 		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
-		outTxHash := cctx.OutboundTxParams.OutboundTxHash
+		outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		hash, err := chainhash.NewHashFromStr(outTxHash)
 		if err != nil {
 			panic(err)

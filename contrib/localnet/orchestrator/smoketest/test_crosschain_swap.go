@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
@@ -9,6 +12,10 @@ import (
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
 	LoudPrintf("Testing Bitcoin ERC20 crosschain swap...\n")
 	// Firstly, deposit 1.15 BTC into Zeta for liquidity
 	//sm.DepositBTC()
@@ -81,26 +88,13 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	msg = append(msg, btcMinOutAmount.Bytes()...)
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
-	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
+	cctx1 := WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	//{
-	//	res, err := sm.cctxClient.CctxAllPending(context.Background(), &cctxtypes.QueryAllCctxPendingRequest{})
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	for {
-	//		time.Sleep(5 * time.Second)
-	//		if len(res.CrossChainTx) > 0 {
-	//			fmt.Printf("pending cctx %s\n", res.CrossChainTx[0].Index)
-	//		} else {
-	//			break
-	//		}
-	//	}
-	//	fmt.Printf("no pending cctx; test success!\n")
-	//}
-
+	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
+	cctx2 := WaitCctxMinedByInTxHash(cctx1.Index, sm.cctxClient)
+	_ = cctx2
 }

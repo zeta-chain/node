@@ -36,7 +36,7 @@ import (
 //func Test_UpdateGasFees(t *testing.T) {
 //	keeper, ctx := setupKeeper(t)
 //	cctx := createNCctx(keeper, ctx, 1)
-//	cctx[0].ZetaBurnt = sdk.NewUintFromString("8000000000000000000")
+//	cctx[0].Amount = sdk.NewUintFromString("8000000000000000000")
 //	keeper.SetGasPrice(ctx, types.GasPrice{
 //		Creator:     cctx[0].Creator,
 //		Index:       cctx[0].OutboundTxParams.ReceiverChain,

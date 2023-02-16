@@ -37,7 +37,7 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	observerMappers := make([]*ObserverMapper, len(observers))
 	for i, readerValue := range observers {
 		chain := &common.Chain{
-			ChainName: common.ParseStringToObserverChain(readerValue.ObserverChainName),
+			ChainName: common.ParseChainName(readerValue.ObserverChainName),
 			ChainId:   readerValue.ObserverChainID,
 		}
 		observationType := ParseStringToObservationType(readerValue.ObservationType)

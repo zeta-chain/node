@@ -28,10 +28,8 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].ZetaBurnt = math.OneUint()
-		items[i].ZetaMint = math.OneUint()
 		items[i].ZetaFees = math.OneUint()
-		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i)}
+		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 
 		keeper.SetCrossChainTx(ctx, items[i])
 	}
@@ -45,7 +43,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 		items[i].Creator = "any"
 		items[i].InboundTxParams = &types.InboundTxParams{
 			Sender:                          fmt.Sprintf("%d", i),
-			SenderChain:                     fmt.Sprintf("%d", i),
+			SenderChainId:                   int64(i),
 			TxOrigin:                        fmt.Sprintf("%d", i),
 			Asset:                           fmt.Sprintf("%d", i),
 			CoinType:                        common.CoinType_Zeta,
@@ -53,26 +51,24 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			InboundTxObservedExternalHeight: uint64(i),
 			InboundTxFinalizedZetaHeight:    uint64(i),
 		}
-		items[i].OutboundTxParams = &types.OutboundTxParams{
+		items[i].OutboundTxParams = []*types.OutboundTxParams{&types.OutboundTxParams{
 			Receiver:                         fmt.Sprintf("%d", i),
-			ReceiverChain:                    fmt.Sprintf("%d", i),
-			Broadcaster:                      uint64(i),
+			ReceiverChainId:                  int64(i),
 			OutboundTxHash:                   fmt.Sprintf("%d", i),
 			OutboundTxTssNonce:               uint64(i),
 			OutboundTxGasLimit:               uint64(i),
 			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
 			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
 			OutboundTxObservedExternalHeight: uint64(i),
-			OutboundTxFinalizedZetaHeight:    uint64(i),
 			CoinType:                         0,
-		}
+		}}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
 			StatusMessage:       "any",
 			LastUpdateTimestamp: 0,
 		}
-		items[i].ZetaBurnt = math.OneUint()
-		items[i].ZetaMint = math.OneUint()
+		items[i].InboundTxParams.Amount = math.OneUint()
+
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
 		keeper.SetCrossChainTx(ctx, items[i])
