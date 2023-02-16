@@ -95,3 +95,14 @@ var ChainConfigs = map[string]*ChainETHish{
 		ConfCount:                3,
 	},
 }
+
+var BitcoinConfig = &ChainBitcoinish{
+	RPCUsername: "smoketest",
+	RPCPassword: "123",
+	RPCEndpoint: "bitcoin:18443",
+	RPCParams:   "regtest",
+
+	WatchInTxPeriod:     5,
+	WatchGasPricePeriod: 5,
+	WatchUTXOSPeriod:    5,
+}
