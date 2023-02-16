@@ -29,6 +29,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/app/ante"
 	emissionsModuleKeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -574,7 +575,7 @@ func New(
 		MaxTxGasWanted:  maxGasWanted,
 	}
 
-	anteHandler, err := evmante.NewAnteHandler(options)
+	anteHandler, err := ante.NewAnteHandler(options)
 	if err != nil {
 		panic(err)
 	}

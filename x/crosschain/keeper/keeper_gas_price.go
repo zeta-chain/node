@@ -161,10 +161,14 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	}
 	k.SetGasPrice(ctx, gasPrice)
 	chainIDBigINT := big.NewInt(chain.ChainId)
-	err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
+	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
 	if err != nil {
 		return nil, err
 	}
+
+	// reset the gas count
+	k.ResetGasMeterAndConsumeGas(ctx, gasUsed)
+
 	return &types.MsgGasPriceVoterResponse{}, nil
 }
 
@@ -183,4 +187,12 @@ func medianOfArray(values []uint64) int {
 	})
 	l := len(array)
 	return array[l/2].Index
+}
+
+// ResetGasMeterAndConsumeGas reset first the gas meter consumed value to zero and set it back to the new value
+// 'gasUsed'
+func (k *Keeper) ResetGasMeterAndConsumeGas(ctx sdk.Context, gasUsed uint64) {
+	// reset the gas count
+	ctx.GasMeter().RefundGas(ctx.GasMeter().GasConsumed(), "reset the gas count")
+	ctx.GasMeter().ConsumeGas(gasUsed, "apply evm transaction")
 }

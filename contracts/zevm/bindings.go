@@ -1,9 +1,5 @@
-//go:generate sh -c "solc ZEVMSwapApp.sol --combined-json abi,bin | jq '.contracts.\"ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
-//go:generate sh -c "cat ZEVMSwapApp.json | jq .abi | abigen --abi - --pkg zevm --type ZEVMSwapApp --out ZEVMSwapApp.go"
 //go:generate sh -c "solc ZRC20.sol --combined-json abi,bin | jq '.contracts.\"ZRC20.sol:ZRC20\"'  > ZRC20.json"
 //go:generate sh -c "cat ZRC20.json | jq .abi | abigen --abi - --pkg zevm --type ZRC20 --out ZRC20.go"
-//go:generate sh -c "solc ZETABridge.sol --combined-json abi,bin | jq '.contracts.\"ZETABridge.sol:ZETABridge\"'  > ZETABridge.json"
-//go:generate sh -c "cat ZETABridge.json | jq .abi | abigen --abi - --pkg zevm --type ZETABridge --out ZETABridge.go"
 //go:generate sh -c "cat UniswapV2Factory.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Factory --out UniswapV2Factory.go"
 //go:generate sh -c "cat UniswapV2Router02.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Router02 --out UniswapV2Router02.go"
 //go:generate sh -c "cat WZETA.json | jq .abi | abigen --abi - --pkg zevm --type WZETA --out WZETA.go"
@@ -18,6 +14,7 @@ package zevm
 import (
 	_ "embed"
 	"encoding/json"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -30,7 +27,7 @@ var _ = ZRC20{}
 var _ = UniswapV2Factory{}
 var _ = SystemContract{}
 var _ = UniswapV2Router02{}
-var _ = ZEVMSwapApp{}
+var _ = zevmswap.ZEVMSwapApp{}
 
 type CompiledContract struct {
 	ABI abi.ABI
@@ -50,8 +47,6 @@ var (
 	UniswapV2Router02JSON []byte // nolint: golint
 	//go:embed ConnectorZEVM.json
 	ConnectorZEVMJSON []byte // nolint: golint
-	//go:embed ZEVMSwapApp.json
-	ZEVMSwapAppJSON []byte // nolint: golint
 
 	ZRC20Contract             CompiledContract
 	UniswapV2FactoryContract  CompiledContract
@@ -59,7 +54,6 @@ var (
 	SystemContractContract    CompiledContract
 	UniswapV2Router02Contract CompiledContract
 	ConnectorZEVMContract     CompiledContract
-	ZEVMSwapAppContract       CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC20AdminAddress ethcommon.Address
@@ -92,10 +86,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(ZEVMSwapAppJSON, &ZEVMSwapAppContract)
-	if err != nil {
-		panic(err)
-	}
 
 	if len(ZRC20Contract.Bin) == 0 {
 		panic("load contract failed")
@@ -121,7 +111,4 @@ func init() {
 		panic("load contract failed")
 	}
 
-	if len(ZEVMSwapAppContract.Bin) == 0 {
-		panic("load contract failed")
-	}
 }

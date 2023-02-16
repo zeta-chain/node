@@ -1,14 +1,17 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -30,18 +33,18 @@ var (
 	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
-	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", &chaincfg.RegressionNetParams)
+	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", config.BitconNetParams)
 
 	BLOCK                = 5 * time.Second // should be 2x block time
 	BigZero              = big.NewInt(0)
-	SmokeTestTimeout     = 10 * time.Minute // smoke test fails if timeout is reached
-	USDTZRC20Addr        = "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7"
+	SmokeTestTimeout     = 15 * time.Minute // smoke test fails if timeout is reached
+	USDTZRC20Addr        = "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
 	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
 	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
-	ZEVMSwapAppAddr      = "0x91d4F0D54090Df2D81e834c3c8CE71C6c865e79F"
+	ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress         = ethcommon.HexToAddress
 )
 
@@ -73,6 +76,7 @@ type SmokeTest struct {
 	UniswapV2Factory     *contracts.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
 	UniswapV2Router      *contracts.UniswapV2Router02
+	TestDAppAddr         ethcommon.Address
 
 	SystemContract *contracts.SystemContract
 }
@@ -188,6 +192,8 @@ func main() {
 	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
 	smokeTest.TestCrosschainSwap()
+	smokeTest.TestMessagePassingRevertFail()
+	smokeTest.TestMessagePassingRevertSuccess()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

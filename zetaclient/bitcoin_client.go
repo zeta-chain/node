@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
@@ -78,18 +78,17 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 	ob.pendingUtxos = db
-	ob.endpoint = config.ChainConfigs[chain.ChainName.String()].Endpoint
+	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
 	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
-	// FIXME: config this
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
-		User:         "smoketest",
-		Pass:         "123",
+		User:         config.BitcoinConfig.RPCUsername,
+		Pass:         config.BitcoinConfig.RPCPassword,
 		HTTPPostMode: true,
 		DisableTLS:   true,
-		Params:       "regtest",
+		Params:       config.BitcoinConfig.RPCParams,
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
@@ -121,7 +120,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
 		}
 	}
-	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
 		ob.SetLastBlockHeight(uint64(100))
 	}
 
@@ -163,9 +162,8 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	// FIXME: config this
 	ob.logger.Info().Msgf("WatchInTx to TSS Address %s", ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress())
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -236,8 +234,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				inTx.FromAddress,
 				inTx.FromAddress,
 				common.ZetaChain().ChainId,
-				amountInt.String(),
-				amountInt.String(),
+				math.NewUintFromBigInt(amountInt),
 				message,
 				inTx.TxHash,
 				inTx.BlockNumber,
@@ -260,7 +257,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType) (bool, bool, error) {
 	chain := ob.chain.ChainId
 	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
 	ob.logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
@@ -306,8 +303,7 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	// FIXME: config this
-	gasTicker := time.NewTicker(5 * time.Second)
+	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
 		select {
 		case <-gasTicker.C:
@@ -324,7 +320,7 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	if ob.chain.ChainId == common.BtcRegtestChain().ChainId {
+	if ob.chain.ChainId == 18444 { //bitcoin regtest
 		bn, err := ob.rpcClient.GetBlockCount()
 		if err != nil {
 			return err
@@ -387,8 +383,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 				if err != nil {
 					continue
 				}
-				//FIXME: config this
-				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
+				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 				if err != nil {
 					continue
 				}
@@ -438,7 +433,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						break
 					}
 					hash := btcutil.Hash160(pkBytes)
-					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.RegressionNetParams)
+					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 					if err != nil {
 						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
 						break
@@ -460,9 +455,8 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	// FIXME: config this
 	ob.logger.Info().Msgf("WatchUTXOS started")
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -488,7 +482,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, &chaincfg.RegressionNetParams)
+	address, err := btcutil.DecodeAddress(tssAddr, config.BitconNetParams)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}

@@ -82,9 +82,9 @@ func CmdShowSend() *cobra.Command {
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [mBurnt] [mMint] [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
+		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount]  [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
 		Short: "Broadcast message sendVoter",
-		Args:  cobra.ExactArgs(10),
+		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := (args[0])
 			argsSenderChain, err := strconv.Atoi(args[1])
@@ -97,13 +97,13 @@ func CmdCCTXInboundVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsMBurnt := (args[5])
-			argsMMint := (args[65])
-			argsMessage := (args[7])
-			argsInTxHash := (args[8])
-			argsInBlockHeight, err := strconv.ParseInt(args[9], 10, 64)
-			argsCoinType := common.CoinType(common.CoinType_value[args[10]])
-			argsAsset := args[11]
+
+			amount := math.NewUintFromString(args[5])
+			argsMessage := (args[6])
+			argsInTxHash := (args[7])
+			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
+			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
+			argsAsset := args[10]
 			if err != nil {
 				return err
 			}
@@ -112,7 +112,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), (argsMBurnt), (argsMMint), (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), amount, (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

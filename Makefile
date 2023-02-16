@@ -19,9 +19,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
 
 
-BUILD_FLAGS := -ldflags '$(ldflags)'
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS :=  -tags mocknet
+TEST_BUILD_FLAGS :=  -tags PRIVNET
 
 clean: clean-binaries clean-dir
 

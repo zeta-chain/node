@@ -23,7 +23,7 @@ func TestParsefileToObserverMapper(t *testing.T) {
 
 func createObserverList(fp string) (list []*ObserverMapper) {
 	list = append(append(append(list, CreateObserverMapperList(1, common.EthChain(), ObservationType_InBoundTx)...),
-		CreateObserverMapperList(1, common.BscTestnetChain(), ObservationType_InBoundTx)...),
+		CreateObserverMapperList(1, common.BscMainnetChain(), ObservationType_InBoundTx)...),
 		CreateObserverMapperList(1, common.PolygonChain(), ObservationType_OutBoundTx)...)
 	listReader := make([]ObserverMapperReader, len(list))
 	for i, mapper := range list {
