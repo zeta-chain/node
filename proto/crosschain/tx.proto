@@ -85,7 +85,7 @@ message MsgGasPriceVoterResponse {
 
 message MsgNonceVoter {
   string creator = 1;
-  string chain = 2;
+  int64 chain_id = 2;
   uint64 nonce = 3;
 }
 
