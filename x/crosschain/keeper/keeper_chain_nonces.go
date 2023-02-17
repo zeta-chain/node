@@ -120,7 +120,7 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		chainNonce = types.ChainNonces{
 			Creator: msg.Creator,
 			Index:   chain.ChainName.String(),
-			Chain:   chain.ChainId,
+			ChainId: chain.ChainId,
 			Nonce:   msg.Nonce,
 			Signers: []string{msg.Creator},
 		}

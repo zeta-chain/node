@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 message ChainNonces {
   string creator = 1;
   string index = 2;
-  int64 chain = 3;
+  int64 chain_id = 3;
   uint64 nonce = 4;
   repeated string signers = 5;
   uint64 finalizedHeight = 6;
