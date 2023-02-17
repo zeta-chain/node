@@ -43,12 +43,12 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]mc.ChainSigner, error) 
 		} else if chain.IsBitcoinChain() {
 			// FIXME: move the construction of rpcclient to somewhere else
 			connCfg := &rpcclient.ConnConfig{
-				Host:         mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint,
-				User:         "smoketest",
-				Pass:         "123",
+				Host:         mcconfig.BitcoinConfig.RPCEndpoint,
+				User:         mcconfig.BitcoinConfig.RPCUsername,
+				Pass:         mcconfig.BitcoinConfig.RPCPassword,
 				HTTPPostMode: true,
 				DisableTLS:   true,
-				Params:       "regtest",
+				Params:       mcconfig.BitcoinConfig.RPCParams,
 			}
 			client, err := rpcclient.New(connCfg, nil)
 			if err != nil {

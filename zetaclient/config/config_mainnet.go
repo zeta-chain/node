@@ -6,7 +6,6 @@ package config
 import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 const (
@@ -41,4 +40,15 @@ var (
 
 var ChainsEnabled = []common.Chain{}
 
-var ChainConfigs = map[string]*types.ChainETHish{}
+var ChainConfigs = map[string]*ChainETHish{}
+
+var BitcoinConfig = &ChainBitcoinish{
+	RPCUsername: "smoketest",
+	RPCPassword: "123",
+	RPCEndpoint: "bitcoin:18443",
+	RPCParams:   "regtest",
+
+	WatchInTxPeriod:     5,
+	WatchGasPricePeriod: 5,
+	WatchUTXOSPeriod:    5,
+}

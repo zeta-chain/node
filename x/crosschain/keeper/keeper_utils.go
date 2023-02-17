@@ -133,10 +133,11 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	return nil
 }
 
+// TODO : USE CHAIN ID
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
 
-	nonce, found := k.GetChainNonces(ctx, GetNonceIndex(chain.ChainId))
+	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
 		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
