@@ -108,8 +108,8 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
-	chain := msg.Chain
-	chainNonce, isFound := k.GetChainNonces(ctx, chain)
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chainNonce, isFound := k.GetChainNonces(ctx, chain.ChainName.String())
 	//if isDuplicateSigner(msg.Creator, chainNonce.Signers) {
 	//	return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
 	//}
@@ -119,8 +119,8 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	} else if !isFound {
 		chainNonce = types.ChainNonces{
 			Creator: msg.Creator,
-			Index:   msg.Chain,
-			Chain:   msg.Chain,
+			Index:   chain.ChainName.String(),
+			ChainId: chain.ChainId,
 			Nonce:   msg.Nonce,
 			Signers: []string{msg.Creator},
 		}
