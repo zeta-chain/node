@@ -17,8 +17,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/server/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/server/config"
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	zetacommon "github.com/zeta-chain/zetacore/common"

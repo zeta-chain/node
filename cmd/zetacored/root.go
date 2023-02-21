@@ -2,16 +2,18 @@ package main
 
 import (
 	"errors"
-	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/evmos/ethermint/crypto/hd"
-	servercfg "github.com/evmos/ethermint/server/config"
-	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/zeta-chain/zetacore/app"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"io"
 	"os"
 	"path/filepath"
+
+	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/evmos/ethermint/crypto/hd"
+	tmcfg "github.com/tendermint/tendermint/config"
+	"github.com/zeta-chain/zetacore/app"
+	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	zevmserver "github.com/zeta-chain/zetacore/server"
+	servercfg "github.com/zeta-chain/zetacore/server/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,7 +34,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	ethermintclient "github.com/evmos/ethermint/client"
-	ethermintserver "github.com/evmos/ethermint/server"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -125,7 +126,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
-	ethermintserver.AddCommands(rootCmd, ethermintserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
+	zevmserver.AddCommands(rootCmd, zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
+
+	// the ethermintserver one supercedes the sdk one
+	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
