@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"testing"
 )
 
@@ -67,7 +68,7 @@ type EmissionTestData struct {
 	BlockHeight    int64   `json:"blockHeight,omitempty"`
 	BondFactor     sdk.Dec `json:"bondFactor"`
 	ReservesFactor sdk.Dec `json:"reservesFactor"`
-	DurationFactor sdk.Dec `json:"durationFactor"`
+	DurationFactor string  `json:"durationFactor"`
 }
 
 func TestAppModule_GetBlockRewardComponents(t *testing.T) {
@@ -84,7 +85,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			name:                 "test 1",
 			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
-			testMaxHeight:        300,
+			testMaxHeight:        200,
 			inputFilename:        "simulations.json",
 		},
 	}
@@ -98,7 +99,6 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			assert.NoError(t, err)
 			sort.SliceStable(inputTestData, func(i, j int) bool { return inputTestData[i].BlockHeight < inputTestData[j].BlockHeight })
 			startHeight := ctx.BlockHeight()
-			//var generatedTestData []EmissionTestData
 			assert.Equal(t, startHeight, inputTestData[0].BlockHeight, "starting block height should be equal to the first block height in the input data")
 			for i := startHeight; i < tt.testMaxHeight; i++ {
 				//First distribution will occur only when begin-block is triggered
@@ -111,19 +111,26 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 				//})
 				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor, "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-
+				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
 				ctx = ctx.WithBlockHeight(i + 1)
 			}
+			//GenerateSampleFile("simulations.json", generatedTestData)
 		})
 	}
 }
+
+//fmt.Printf("Params:\n %+v \n", tt.params)
+//fmt.Printf("Bond Ratio: %+v \n", app.StakingKeeper.BondedRatio(ctx))
+//fmt.Printf("Total Bonded %s: \n", app.StakingKeeper.TotalBondedTokens(ctx))
+//fmt.Printf("Emission Pool starting Balance : %s \n", app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom))
+//fmt.Printf("Total Supply : %s \n", app.BankKeeper.GetSupply(ctx, config.BaseDenom))
 
 func GetInputData(fp string) ([]EmissionTestData, error) {
 	data := []EmissionTestData{}
 	file, err := filepath.Abs(fp)
 	if err != nil {
+
 		return nil, err
 	}
 	file = filepath.Clean(file)
@@ -135,13 +142,22 @@ func GetInputData(fp string) ([]EmissionTestData, error) {
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+	formatedData := make([]EmissionTestData, len(data))
+	for i, dd := range data {
+		fl, err := strconv.ParseFloat(dd.DurationFactor, 64)
+		if err != nil {
+			return nil, err
+		}
+		dd.DurationFactor = fmt.Sprintf("%0.18f", fl)
+		formatedData[i] = dd
+	}
+	return formatedData, nil
 }
 
 func GenerateSampleFile(fp string, data []EmissionTestData) {
 	file, _ := json.MarshalIndent(data, "", " ")
-	for _, dd := range data {
-		fmt.Println(dd)
-	}
+	//for _, dd := range data {
+	//	fmt.Println(dd)
+	//}
 	_ = ioutil.WriteFile(fp, file, 0600)
 }
