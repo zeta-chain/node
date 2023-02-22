@@ -1,0 +1,1202 @@
+[
+ {
+  "blockHeight": 1,
+  "durationFactor": "0.00000000434693737392",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "1000000000000000000000000.000000"
+ },
+ {
+  "blockHeight": 2,
+  "durationFactor": "0.00000000869387471004",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999989132657000000000.000000"
+ },
+ {
+  "blockHeight": 3,
+  "durationFactor": "0.00000001304081200837",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999972831642000000000.000000"
+ },
+ {
+  "blockHeight": 4,
+  "durationFactor": "0.00000001738774926891",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999951096956000000000.000000"
+ },
+ {
+  "blockHeight": 5,
+  "durationFactor": "0.00000002173468649166",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999923928599000000000.000000"
+ },
+ {
+  "blockHeight": 6,
+  "durationFactor": "0.00000002608162367662",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999891326572000000000.000000"
+ },
+ {
+  "blockHeight": 7,
+  "durationFactor": "0.00000003042856082379",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999853290875000000000.000000"
+ },
+ {
+  "blockHeight": 8,
+  "durationFactor": "0.00000003477549793316",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999809821509000000000.000000"
+ },
+ {
+  "blockHeight": 9,
+  "durationFactor": "0.00000003912243500474",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999760918474000000000.000000"
+ },
+ {
+  "blockHeight": 10,
+  "durationFactor": "0.00000004346937203853",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999706581772000000000.000000"
+ },
+ {
+  "blockHeight": 11,
+  "durationFactor": "0.00000004781630903453",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999646811404000000000.000000"
+ },
+ {
+  "blockHeight": 12,
+  "durationFactor": "0.00000005216324599274",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999581607369000000000.000000"
+ },
+ {
+  "blockHeight": 13,
+  "durationFactor": "0.00000005651018291315",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999510969670000000000.000000"
+ },
+ {
+  "blockHeight": 14,
+  "durationFactor": "0.00000006085711979578",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999434898307000000000.000000"
+ },
+ {
+  "blockHeight": 15,
+  "durationFactor": "0.00000006520405664061",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999353393283000000000.000000"
+ },
+ {
+  "blockHeight": 16,
+  "durationFactor": "0.00000006955099344765",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999266454597000000000.000000"
+ },
+ {
+  "blockHeight": 17,
+  "durationFactor": "0.00000007389793021690",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999174082252000000000.000000"
+ },
+ {
+  "blockHeight": 18,
+  "durationFactor": "0.00000007824486694835",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999999076276249000000000.000000"
+ },
+ {
+  "blockHeight": 19,
+  "durationFactor": "0.00000008259180364202",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998973036590000000000.000000"
+ },
+ {
+  "blockHeight": 20,
+  "durationFactor": "0.00000008693874029789",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998864363276000000000.000000"
+ },
+ {
+  "blockHeight": 21,
+  "durationFactor": "0.00000009128567691597",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998750256310000000000.000000"
+ },
+ {
+  "blockHeight": 22,
+  "durationFactor": "0.00000009563261349626",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998630715692000000000.000000"
+ },
+ {
+  "blockHeight": 23,
+  "durationFactor": "0.00000009997955003876",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998505741426000000000.000000"
+ },
+ {
+  "blockHeight": 24,
+  "durationFactor": "0.00000010432648654347",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998375333512000000000.000000"
+ },
+ {
+  "blockHeight": 25,
+  "durationFactor": "0.00000010867342301038",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998239491954000000000.000000"
+ },
+ {
+  "blockHeight": 26,
+  "durationFactor": "0.00000011302035943950",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999998098216754000000000.000000"
+ },
+ {
+  "blockHeight": 27,
+  "durationFactor": "0.00000011736729583083",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997951507913000000000.000000"
+ },
+ {
+  "blockHeight": 28,
+  "durationFactor": "0.00000012171423218437",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997799365434000000000.000000"
+ },
+ {
+  "blockHeight": 29,
+  "durationFactor": "0.00000012606116850012",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997641789320000000000.000000"
+ },
+ {
+  "blockHeight": 30,
+  "durationFactor": "0.00000013040810477808",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997478779574000000000.000000"
+ },
+ {
+  "blockHeight": 31,
+  "durationFactor": "0.00000013475504101824",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997310336197000000000.000000"
+ },
+ {
+  "blockHeight": 32,
+  "durationFactor": "0.00000013910197722061",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999997136459193000000000.000000"
+ },
+ {
+  "blockHeight": 33,
+  "durationFactor": "0.00000014344891338520",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999996957148565000000000.000000"
+ },
+ {
+  "blockHeight": 34,
+  "durationFactor": "0.00000014779584951198",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999996772404315000000000.000000"
+ },
+ {
+  "blockHeight": 35,
+  "durationFactor": "0.00000015214278560098",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999996582226447000000000.000000"
+ },
+ {
+  "blockHeight": 36,
+  "durationFactor": "0.00000015648972165219",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999996386614964000000000.000000"
+ },
+ {
+  "blockHeight": 37,
+  "durationFactor": "0.00000016083665766560",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999996185569868000000000.000000"
+ },
+ {
+  "blockHeight": 38,
+  "durationFactor": "0.00000016518359364122",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999995979091164000000000.000000"
+ },
+ {
+  "blockHeight": 39,
+  "durationFactor": "0.00000016953052957905",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999995767178854000000000.000000"
+ },
+ {
+  "blockHeight": 40,
+  "durationFactor": "0.00000017387746547909",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999995549832942000000000.000000"
+ },
+ {
+  "blockHeight": 41,
+  "durationFactor": "0.00000017822440134134",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999995327053432000000000.000000"
+ },
+ {
+  "blockHeight": 42,
+  "durationFactor": "0.00000018257133716580",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999995098840327000000000.000000"
+ },
+ {
+  "blockHeight": 43,
+  "durationFactor": "0.00000018691827295246",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999994865193630000000000.000000"
+ },
+ {
+  "blockHeight": 44,
+  "durationFactor": "0.00000019126520870133",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999994626113347000000000.000000"
+ },
+ {
+  "blockHeight": 45,
+  "durationFactor": "0.00000019561214441241",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999994381599481000000000.000000"
+ },
+ {
+  "blockHeight": 46,
+  "durationFactor": "0.00000019995908008570",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999994131652035000000000.000000"
+ },
+ {
+  "blockHeight": 47,
+  "durationFactor": "0.00000020430601572120",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999993876271014000000000.000000"
+ },
+ {
+  "blockHeight": 48,
+  "durationFactor": "0.00000020865295131890",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999993615456422000000000.000000"
+ },
+ {
+  "blockHeight": 49,
+  "durationFactor": "0.00000021299988687882",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999993349208263000000000.000000"
+ },
+ {
+  "blockHeight": 50,
+  "durationFactor": "0.00000021734682240094",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999993077526542000000000.000000"
+ },
+ {
+  "blockHeight": 51,
+  "durationFactor": "0.00000022169375788527",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999992800411263000000000.000000"
+ },
+ {
+  "blockHeight": 52,
+  "durationFactor": "0.00000022604069333181",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999992517862431000000000.000000"
+ },
+ {
+  "blockHeight": 53,
+  "durationFactor": "0.00000023038762874055",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999992229880050000000000.000000"
+ },
+ {
+  "blockHeight": 54,
+  "durationFactor": "0.00000023473456411151",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999991936464124000000000.000000"
+ },
+ {
+  "blockHeight": 55,
+  "durationFactor": "0.00000023908149944467",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999991637614660000000000.000000"
+ },
+ {
+  "blockHeight": 56,
+  "durationFactor": "0.00000024342843474004",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999991333331661000000000.000000"
+ },
+ {
+  "blockHeight": 57,
+  "durationFactor": "0.00000024777536999762",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999991023615133000000000.000000"
+ },
+ {
+  "blockHeight": 58,
+  "durationFactor": "0.00000025212230521741",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999990708465080000000000.000000"
+ },
+ {
+  "blockHeight": 59,
+  "durationFactor": "0.00000025646924039941",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999990387881508000000000.000000"
+ },
+ {
+  "blockHeight": 60,
+  "durationFactor": "0.00000026081617554361",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999990061864423000000000.000000"
+ },
+ {
+  "blockHeight": 61,
+  "durationFactor": "0.00000026516311065003",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999989730413828000000000.000000"
+ },
+ {
+  "blockHeight": 62,
+  "durationFactor": "0.00000026951004571865",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999989393529731000000000.000000"
+ },
+ {
+  "blockHeight": 63,
+  "durationFactor": "0.00000027385698074948",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999989051212136000000000.000000"
+ },
+ {
+  "blockHeight": 64,
+  "durationFactor": "0.00000027820391574251",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999988703461049000000000.000000"
+ },
+ {
+  "blockHeight": 65,
+  "durationFactor": "0.00000028255085069776",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999988350276475000000000.000000"
+ },
+ {
+  "blockHeight": 66,
+  "durationFactor": "0.00000028689778561521",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999987991658421000000000.000000"
+ },
+ {
+  "blockHeight": 67,
+  "durationFactor": "0.00000029124472049488",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999987627606892000000000.000000"
+ },
+ {
+  "blockHeight": 68,
+  "durationFactor": "0.00000029559165533675",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999987258121894000000000.000000"
+ },
+ {
+  "blockHeight": 69,
+  "durationFactor": "0.00000029993859014083",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999986883203434000000000.000000"
+ },
+ {
+  "blockHeight": 70,
+  "durationFactor": "0.00000030428552490712",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999986502851517000000000.000000"
+ },
+ {
+  "blockHeight": 71,
+  "durationFactor": "0.00000030863245963561",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999986117066149000000000.000000"
+ },
+ {
+  "blockHeight": 72,
+  "durationFactor": "0.00000031297939432632",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999985725847338000000000.000000"
+ },
+ {
+  "blockHeight": 73,
+  "durationFactor": "0.00000031732632897923",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999985329195088000000000.000000"
+ },
+ {
+  "blockHeight": 74,
+  "durationFactor": "0.00000032167326359435",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999984927109408000000000.000000"
+ },
+ {
+  "blockHeight": 75,
+  "durationFactor": "0.00000032602019817168",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999984519590303000000000.000000"
+ },
+ {
+  "blockHeight": 76,
+  "durationFactor": "0.00000033036713271122",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999984106637780000000000.000000"
+ },
+ {
+  "blockHeight": 77,
+  "durationFactor": "0.00000033471406721296",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999983688251845000000000.000000"
+ },
+ {
+  "blockHeight": 78,
+  "durationFactor": "0.00000033906100167692",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999983264432506000000000.000000"
+ },
+ {
+  "blockHeight": 79,
+  "durationFactor": "0.00000034340793610308",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999982835179770000000000.000000"
+ },
+ {
+  "blockHeight": 80,
+  "durationFactor": "0.00000034775487049145",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999982400493644000000000.000000"
+ },
+ {
+  "blockHeight": 81,
+  "durationFactor": "0.00000035210180484203",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999981960374134000000000.000000"
+ },
+ {
+  "blockHeight": 82,
+  "durationFactor": "0.00000035644873915482",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999981514821247000000000.000000"
+ },
+ {
+  "blockHeight": 83,
+  "durationFactor": "0.00000036079567342981",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999981063834992000000000.000000"
+ },
+ {
+  "blockHeight": 84,
+  "durationFactor": "0.00000036514260766702",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999980607415376000000000.000000"
+ },
+ {
+  "blockHeight": 85,
+  "durationFactor": "0.00000036948954186643",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999980145562405000000000.000000"
+ },
+ {
+  "blockHeight": 86,
+  "durationFactor": "0.00000037383647602805",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999979678276088000000000.000000"
+ },
+ {
+  "blockHeight": 87,
+  "durationFactor": "0.00000037818341015188",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999979205556432000000000.000000"
+ },
+ {
+  "blockHeight": 88,
+  "durationFactor": "0.00000038253034423792",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999978727403444000000000.000000"
+ },
+ {
+  "blockHeight": 89,
+  "durationFactor": "0.00000038687727828616",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999978243817134000000000.000000"
+ },
+ {
+  "blockHeight": 90,
+  "durationFactor": "0.00000039122421229662",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999977754797508000000000.000000"
+ },
+ {
+  "blockHeight": 91,
+  "durationFactor": "0.00000039557114626928",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999977260344575000000000.000000"
+ },
+ {
+  "blockHeight": 92,
+  "durationFactor": "0.00000039991808020415",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999976760458342000000000.000000"
+ },
+ {
+  "blockHeight": 93,
+  "durationFactor": "0.00000040426501410123",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999976255138818000000000.000000"
+ },
+ {
+  "blockHeight": 94,
+  "durationFactor": "0.00000040861194796052",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999975744386011000000000.000000"
+ },
+ {
+  "blockHeight": 95,
+  "durationFactor": "0.00000041295888178201",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999975228199930000000000.000000"
+ },
+ {
+  "blockHeight": 96,
+  "durationFactor": "0.00000041730581556571",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999974706580582000000000.000000"
+ },
+ {
+  "blockHeight": 97,
+  "durationFactor": "0.00000042165274931163",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999974179527977000000000.000000"
+ },
+ {
+  "blockHeight": 98,
+  "durationFactor": "0.00000042599968301975",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999973647042122000000000.000000"
+ },
+ {
+  "blockHeight": 99,
+  "durationFactor": "0.00000043034661669008",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999973109123027000000000.000000"
+ },
+ {
+  "blockHeight": 100,
+  "durationFactor": "0.00000043469355032261",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999972565770701000000000.000000"
+ },
+ {
+  "blockHeight": 101,
+  "durationFactor": "0.00000043904048391736",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999972016985152000000000.000000"
+ },
+ {
+  "blockHeight": 102,
+  "durationFactor": "0.00000044338741747431",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999971462766389000000000.000000"
+ },
+ {
+  "blockHeight": 103,
+  "durationFactor": "0.00000044773435099347",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999970903114422000000000.000000"
+ },
+ {
+  "blockHeight": 104,
+  "durationFactor": "0.00000045208128447485",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999970338029259000000000.000000"
+ },
+ {
+  "blockHeight": 105,
+  "durationFactor": "0.00000045642821791842",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999969767510910000000000.000000"
+ },
+ {
+  "blockHeight": 106,
+  "durationFactor": "0.00000046077515132421",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999969191559384000000000.000000"
+ },
+ {
+  "blockHeight": 107,
+  "durationFactor": "0.00000046512208469221",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999968610174690000000000.000000"
+ },
+ {
+  "blockHeight": 108,
+  "durationFactor": "0.00000046946901802241",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999968023356838000000000.000000"
+ },
+ {
+  "blockHeight": 109,
+  "durationFactor": "0.00000047381595131482",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999967431105838000000000.000000"
+ },
+ {
+  "blockHeight": 110,
+  "durationFactor": "0.00000047816288456944",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999966833421698000000000.000000"
+ },
+ {
+  "blockHeight": 111,
+  "durationFactor": "0.00000048250981778627",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999966230304430000000000.000000"
+ },
+ {
+  "blockHeight": 112,
+  "durationFactor": "0.00000048685675096531",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999965621754043000000000.000000"
+ },
+ {
+  "blockHeight": 113,
+  "durationFactor": "0.00000049120368410655",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999965007770546000000000.000000"
+ },
+ {
+  "blockHeight": 114,
+  "durationFactor": "0.00000049555061721001",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999964388353950000000000.000000"
+ },
+ {
+  "blockHeight": 115,
+  "durationFactor": "0.00000049989755027567",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999963763504265000000000.000000"
+ },
+ {
+  "blockHeight": 116,
+  "durationFactor": "0.00000050424448330354",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999963133221501000000000.000000"
+ },
+ {
+  "blockHeight": 117,
+  "durationFactor": "0.00000050859141629362",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999962497505668000000000.000000"
+ },
+ {
+  "blockHeight": 118,
+  "durationFactor": "0.00000051293834924591",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999961856356777000000000.000000"
+ },
+ {
+  "blockHeight": 119,
+  "durationFactor": "0.00000051728528216040",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999961209774838000000000.000000"
+ },
+ {
+  "blockHeight": 120,
+  "durationFactor": "0.00000052163221503710",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999960557759863000000000.000000"
+ },
+ {
+  "blockHeight": 121,
+  "durationFactor": "0.00000052597914787602",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999959900311860000000000.000000"
+ },
+ {
+  "blockHeight": 122,
+  "durationFactor": "0.00000053032608067714",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999959237430841000000000.000000"
+ },
+ {
+  "blockHeight": 123,
+  "durationFactor": "0.00000053467301344046",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999958569116818000000000.000000"
+ },
+ {
+  "blockHeight": 124,
+  "durationFactor": "0.00000053901994616600",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999957895369800000000000.000000"
+ },
+ {
+  "blockHeight": 125,
+  "durationFactor": "0.00000054336687885375",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999957216189800000000000.000000"
+ },
+ {
+  "blockHeight": 126,
+  "durationFactor": "0.00000054771381150370",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999956531576827000000000.000000"
+ },
+ {
+  "blockHeight": 127,
+  "durationFactor": "0.00000055206074411586",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999955841530893000000000.000000"
+ },
+ {
+  "blockHeight": 128,
+  "durationFactor": "0.00000055640767669023",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999955146052010000000000.000000"
+ },
+ {
+  "blockHeight": 129,
+  "durationFactor": "0.00000056075460922681",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999954445140189000000000.000000"
+ },
+ {
+  "blockHeight": 130,
+  "durationFactor": "0.00000056510154172560",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999953738795440000000000.000000"
+ },
+ {
+  "blockHeight": 131,
+  "durationFactor": "0.00000056944847418659",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999953027017777000000000.000000"
+ },
+ {
+  "blockHeight": 132,
+  "durationFactor": "0.00000057379540660980",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999952309807210000000000.000000"
+ },
+ {
+  "blockHeight": 133,
+  "durationFactor": "0.00000057814233899521",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999951587163750000000000.000000"
+ },
+ {
+  "blockHeight": 134,
+  "durationFactor": "0.00000058248927134283",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999950859087411000000000.000000"
+ },
+ {
+  "blockHeight": 135,
+  "durationFactor": "0.00000058683620365266",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999950125578204000000000.000000"
+ },
+ {
+  "blockHeight": 136,
+  "durationFactor": "0.00000059118313592470",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999949386636140000000000.000000"
+ },
+ {
+  "blockHeight": 137,
+  "durationFactor": "0.00000059553006815894",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999948642261232000000000.000000"
+ },
+ {
+  "blockHeight": 138,
+  "durationFactor": "0.00000059987700035539",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999947892453492000000000.000000"
+ },
+ {
+  "blockHeight": 139,
+  "durationFactor": "0.00000060422393251406",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999947137212932000000000.000000"
+ },
+ {
+  "blockHeight": 140,
+  "durationFactor": "0.00000060857086463493",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999946376539565000000000.000000"
+ },
+ {
+  "blockHeight": 141,
+  "durationFactor": "0.00000061291779671801",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999945610433403000000000.000000"
+ },
+ {
+  "blockHeight": 142,
+  "durationFactor": "0.00000061726472876329",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999944838894458000000000.000000"
+ },
+ {
+  "blockHeight": 143,
+  "durationFactor": "0.00000062161166077079",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999944061922743000000000.000000"
+ },
+ {
+  "blockHeight": 144,
+  "durationFactor": "0.00000062595859274049",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999943279518270000000000.000000"
+ },
+ {
+  "blockHeight": 145,
+  "durationFactor": "0.00000063030552467240",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999942491681054000000000.000000"
+ },
+ {
+  "blockHeight": 146,
+  "durationFactor": "0.00000063465245656652",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999941698411105000000000.000000"
+ },
+ {
+  "blockHeight": 147,
+  "durationFactor": "0.00000063899938842285",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999940899708438000000000.000000"
+ },
+ {
+  "blockHeight": 148,
+  "durationFactor": "0.00000064334632024139",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999940095573065000000000.000000"
+ },
+ {
+  "blockHeight": 149,
+  "durationFactor": "0.00000064769325202213",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999939286005000000000000.000000"
+ },
+ {
+  "blockHeight": 150,
+  "durationFactor": "0.00000065204018376509",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999938471004255000000000.000000"
+ },
+ {
+  "blockHeight": 151,
+  "durationFactor": "0.00000065638711547025",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999937650570844000000000.000000"
+ },
+ {
+  "blockHeight": 152,
+  "durationFactor": "0.00000066073404713762",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999936824704781000000000.000000"
+ },
+ {
+  "blockHeight": 153,
+  "durationFactor": "0.00000066508097876720",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999935993406078000000000.000000"
+ },
+ {
+  "blockHeight": 154,
+  "durationFactor": "0.00000066942791035899",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999935156674750000000000.000000"
+ },
+ {
+  "blockHeight": 155,
+  "durationFactor": "0.00000067377484191298",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999934314510810000000000.000000"
+ },
+ {
+  "blockHeight": 156,
+  "durationFactor": "0.00000067812177342919",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999933466914271000000000.000000"
+ },
+ {
+  "blockHeight": 157,
+  "durationFactor": "0.00000068246870490760",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999932613885149000000000.000000"
+ },
+ {
+  "blockHeight": 158,
+  "durationFactor": "0.00000068681563634822",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999931755423456000000000.000000"
+ },
+ {
+  "blockHeight": 159,
+  "durationFactor": "0.00000069116256775105",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999930891529206000000000.000000"
+ },
+ {
+  "blockHeight": 160,
+  "durationFactor": "0.00000069550949911609",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999930022202414000000000.000000"
+ },
+ {
+  "blockHeight": 161,
+  "durationFactor": "0.00000069985643044333",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999929147443094000000000.000000"
+ },
+ {
+  "blockHeight": 162,
+  "durationFactor": "0.00000070420336173278",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999928267251260000000000.000000"
+ },
+ {
+  "blockHeight": 163,
+  "durationFactor": "0.00000070855029298445",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999927381626927000000000.000000"
+ },
+ {
+  "blockHeight": 164,
+  "durationFactor": "0.00000071289722419832",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999926490570108000000000.000000"
+ },
+ {
+  "blockHeight": 165,
+  "durationFactor": "0.00000071724415537440",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999925594080819000000000.000000"
+ },
+ {
+  "blockHeight": 166,
+  "durationFactor": "0.00000072159108651268",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999924692159075000000000.000000"
+ },
+ {
+  "blockHeight": 167,
+  "durationFactor": "0.00000072593801761318",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999923784804888000000000.000000"
+ },
+ {
+  "blockHeight": 168,
+  "durationFactor": "0.00000073028494867588",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999922872018276000000000.000000"
+ },
+ {
+  "blockHeight": 169,
+  "durationFactor": "0.00000073463187970080",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999921953799252000000000.000000"
+ },
+ {
+  "blockHeight": 170,
+  "durationFactor": "0.00000073897881068792",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999921030147832000000000.000000"
+ },
+ {
+  "blockHeight": 171,
+  "durationFactor": "0.00000074332574163725",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999920101064031000000000.000000"
+ },
+ {
+  "blockHeight": 172,
+  "durationFactor": "0.00000074767267254878",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999919166547863000000000.000000"
+ },
+ {
+  "blockHeight": 173,
+  "durationFactor": "0.00000075201960342253",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999918226599344000000000.000000"
+ },
+ {
+  "blockHeight": 174,
+  "durationFactor": "0.00000075636653425848",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999917281218489000000000.000000"
+ },
+ {
+  "blockHeight": 175,
+  "durationFactor": "0.00000076071346505665",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999916330405315000000000.000000"
+ },
+ {
+  "blockHeight": 176,
+  "durationFactor": "0.00000076506039581702",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999915374159835000000000.000000"
+ },
+ {
+  "blockHeight": 177,
+  "durationFactor": "0.00000076940732653960",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999914412482067000000000.000000"
+ },
+ {
+  "blockHeight": 178,
+  "durationFactor": "0.00000077375425722438",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999913445372025000000000.000000"
+ },
+ {
+  "blockHeight": 179,
+  "durationFactor": "0.00000077810118787138",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999912472829725000000000.000000"
+ },
+ {
+  "blockHeight": 180,
+  "durationFactor": "0.00000078244811848058",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999911494855184000000000.000000"
+ },
+ {
+  "blockHeight": 181,
+  "durationFactor": "0.00000078679504905200",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999910511448417000000000.000000"
+ },
+ {
+  "blockHeight": 182,
+  "durationFactor": "0.00000079114197958562",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999909522609440000000000.000000"
+ },
+ {
+  "blockHeight": 183,
+  "durationFactor": "0.00000079548891008145",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999908528338270000000000.000000"
+ },
+ {
+  "blockHeight": 184,
+  "durationFactor": "0.00000079983584053948",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999907528634922000000000.000000"
+ },
+ {
+  "blockHeight": 185,
+  "durationFactor": "0.00000080418277095973",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999906523499413000000000.000000"
+ },
+ {
+  "blockHeight": 186,
+  "durationFactor": "0.00000080852970134218",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999905512931760000000000.000000"
+ },
+ {
+  "blockHeight": 187,
+  "durationFactor": "0.00000081287663168685",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999904496931978000000000.000000"
+ },
+ {
+  "blockHeight": 188,
+  "durationFactor": "0.00000081722356199372",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999903475500085000000000.000000"
+ },
+ {
+  "blockHeight": 189,
+  "durationFactor": "0.00000082157049226280",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999902448636097000000000.000000"
+ },
+ {
+  "blockHeight": 190,
+  "durationFactor": "0.00000082591742249409",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999901416340030000000000.000000"
+ },
+ {
+  "blockHeight": 191,
+  "durationFactor": "0.00000083026435268758",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999900378611903000000000.000000"
+ },
+ {
+  "blockHeight": 192,
+  "durationFactor": "0.00000083461128284329",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999899335451730000000000.000000"
+ },
+ {
+  "blockHeight": 193,
+  "durationFactor": "0.00000083895821296120",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999898286859531000000000.000000"
+ },
+ {
+  "blockHeight": 194,
+  "durationFactor": "0.00000084330514304132",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999897232835321000000000.000000"
+ },
+ {
+  "blockHeight": 195,
+  "durationFactor": "0.00000084765207308365",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999896173379118000000000.000000"
+ },
+ {
+  "blockHeight": 196,
+  "durationFactor": "0.00000085199900308819",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999895108490940000000000.000000"
+ },
+ {
+  "blockHeight": 197,
+  "durationFactor": "0.00000085634593305494",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999894038170802000000000.000000"
+ },
+ {
+  "blockHeight": 198,
+  "durationFactor": "0.00000086069286298389",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999892962418725000000000.000000"
+ },
+ {
+  "blockHeight": 199,
+  "durationFactor": "0.00000086503979287505",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999891881234723000000000.000000"
+ },
+ {
+  "blockHeight": 200,
+  "durationFactor": "0.00000086938672272843",
+  "bondFactor": "1.25000000000000",
+  "reservesFactor": "999890794618816000000000.000000"
+ }
+]
