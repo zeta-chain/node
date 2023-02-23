@@ -2,9 +2,11 @@ package zetaclient
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -36,9 +38,8 @@ import (
 )
 
 const (
-	PosKey                 = "PosKey"
-	NonceTxHashesKeyPrefix = "NonceTxHashes-"
-	NonceTxKeyPrefix       = "NonceTx-"
+	PosKey           = "PosKey"
+	NonceTxKeyPrefix = "NonceTx-"
 )
 
 type TxHashEnvelope struct {
@@ -465,6 +466,13 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
+	permssions, err := ob.zetaClient.GetInboundPermissions()
+	if err != nil {
+		return err
+	}
+	if !permssions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
+	}
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
@@ -522,8 +530,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			event.SourceTxOriginAddress.Hex(),
 			clienttypes.BytesToEthHex(event.DestinationAddress),
 			destChain.ChainId,
-			event.ZetaValueAndGas.String(),
-			event.ZetaValueAndGas.String(),
+			math.NewUintFromBigInt(event.ZetaValueAndGas),
 			base64.StdEncoding.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
@@ -566,8 +573,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
 			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
-			event.Amount.String(),
-			event.Amount.String(),
+			math.NewUintFromBigInt(event.Amount),
 			hex.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
 			event.Raw.BlockNumber,
@@ -697,8 +703,7 @@ func (ob *EVMChainClient) ReportTokenSentToTSS(txhash ethcommon.Hash, value *big
 		from.Hex(),
 		from.Hex(),
 		common.ZetaChain().ChainId,
-		value.String(),
-		value.String(),
+		math.NewUintFromBigInt(value),
 		message,
 		txhash.Hex(),
 		receipt.BlockNumber.Uint64(),
@@ -894,38 +899,10 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 
 func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
 	MinObInterval := 24
-	switch chain.ChainName {
-	case common.ChainName_mumbai_testnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.PolygonBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.PolygonConfirmationCount
-		ob.BlockTime = config.PolygonBlockTime
-
-	case common.ChainName_goerli_testnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.EthConfirmationCount
-		ob.BlockTime = config.EthBlockTime
-
-	case common.ChainName_goerli_localnet:
-		ob.confCount = config.DevEthConfirmationCount
-		ob.BlockTime = config.DevEthBlockTime
-		ob.ticker = time.NewTicker(time.Duration(ob.BlockTime) * time.Second)
-
-	case common.ChainName_bsc_testnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.BscBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.BscConfirmationCount
-		ob.BlockTime = config.BscBlockTime
-
-	case common.ChainName_baobab_testnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.EthConfirmationCount
-		ob.BlockTime = config.EthBlockTime
-
-	case common.ChainName_btc_mainnet:
-		ob.ticker = time.NewTicker(time.Duration(MaxInt(config.EthBlockTime, MinObInterval)) * time.Second)
-		ob.confCount = config.BtcConfirmationCount
-		ob.BlockTime = config.EthBlockTime
-	}
-	// TODO : ADD BTC TestNET
+	chainconfig := config.ChainConfigs[chain.ChainName.String()]
+	ob.confCount = chainconfig.ConfCount
+	ob.BlockTime = chainconfig.BlockTime
+	ob.ticker = time.NewTicker(time.Duration(MaxInt(int(chainconfig.BlockTime), MinObInterval)) * time.Second)
 }
 
 func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {

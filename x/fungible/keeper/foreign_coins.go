@@ -10,7 +10,7 @@ import (
 
 // SetForeignCoins set a specific foreignCoins in the store from its index
 func (k Keeper) SetForeignCoins(ctx sdk.Context, foreignCoins types.ForeignCoins) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%s", types.ForeignCoinsKeyPrefix, foreignCoins.ForeignChain))
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignCoins.ForeignChainId))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&foreignCoins)
 	store.Set(types.ForeignCoinsKey(
@@ -21,11 +21,11 @@ func (k Keeper) SetForeignCoins(ctx sdk.Context, foreignCoins types.ForeignCoins
 // GetForeignCoins returns a foreignCoins from its index
 func (k Keeper) GetForeignCoins(
 	ctx sdk.Context,
-	foreignChain string,
+	foreignChainID int64,
 	index string,
 
 ) (val types.ForeignCoins, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%s", types.ForeignCoinsKeyPrefix, foreignChain)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignChainID)))
 
 	b := store.Get(types.ForeignCoinsKey(
 		index,
@@ -51,8 +51,8 @@ func (k Keeper) GetForeignCoins(
 //}
 
 // GetAllForeignCoins returns all foreignCoins
-func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChain string) (list []types.ForeignCoins) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%s", types.ForeignCoinsKeyPrefix, foreignChain)))
+func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignChainID)))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -66,8 +66,8 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChain string)
 	return
 }
 
-func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chain string) (types.ForeignCoins, bool) {
-	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chain)
+func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (types.ForeignCoins, bool) {
+	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
 	for _, coin := range foreignCoinList {
 		if coin.CoinType == common.CoinType_Gas {
 			return coin, true

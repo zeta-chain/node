@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"strconv"
 
@@ -26,7 +27,8 @@ import (
 
 // TODO USE string constant
 var (
-	BigIntZero = big.NewInt(0)
+	BigIntZero                 = big.NewInt(0)
+	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
 // TODO Unit test for these funtions
@@ -41,8 +43,8 @@ func (k Keeper) DeployZRC20Contract(
 	coinType zetacommon.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
-) (common.Address, error) { // FIXME: generalized beyond ETH
-	chainName := zetacommon.ParseStringToObserverChain(chainStr)
+) (common.Address, error) {
+	chainName := zetacommon.ParseChainName(chainStr)
 	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
@@ -85,15 +87,15 @@ func (k Keeper) DeployZRC20Contract(
 	}
 
 	coinIndex := name
-	coin, _ := k.GetForeignCoins(ctx, coinIndex, chainStr)
+	coin, _ := k.GetForeignCoins(ctx, chain.ChainId, coinIndex)
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
 	coin.Decimals = uint32(decimals)
-	coin.Erc20ContractAddress = erc20Contract
+	coin.Asset = erc20Contract
 	coin.Zrc20ContractAddress = contractAddr.String()
 	coin.Index = coinIndex
-	coin.ForeignChain = chainStr
+	coin.ForeignChainId = chain.ChainId
 	k.SetForeignCoins(ctx, coin)
 
 	return contractAddr, nil
@@ -225,7 +227,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 }
 
 func (k Keeper) DeployZEVMSwapApp(ctx sdk.Context, router common.Address, systemContract common.Address) (common.Address, error) {
-	zevmSwapABI, err := contracts.ZEVMSwapAppMetaData.GetAbi()
+	zevmSwapABI, err := zevmswap.ZEVMSwapAppMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
 	}
@@ -238,9 +240,9 @@ func (k Keeper) DeployZEVMSwapApp(ctx sdk.Context, router common.Address, system
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZEVMSwapApp constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.ZEVMSwapAppContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.ZEVMSwapAppContract.Bin)], contracts.ZEVMSwapAppContract.Bin)
-	copy(data[len(contracts.ZEVMSwapAppContract.Bin):], ctorArgs)
+	data := make([]byte, len(zevmswap.ZEVMSwapAppContract.Bin)+len(ctorArgs))
+	copy(data[:len(zevmswap.ZEVMSwapAppContract.Bin)], zevmswap.ZEVMSwapAppContract.Bin)
+	copy(data[len(zevmswap.ZEVMSwapAppContract.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -356,7 +358,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, true,
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
 		"depositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
 		return nil, err

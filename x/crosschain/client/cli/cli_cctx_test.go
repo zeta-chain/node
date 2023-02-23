@@ -34,10 +34,9 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 				StatusMessage:       "",
 				LastUpdateTimestamp: 0,
 			},
-			InboundTxParams: &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i)},
-			ZetaMint:        math.OneUint(),
-			ZetaBurnt:       math.OneUint(),
-			ZetaFees:        math.OneUint()},
+			InboundTxParams:  &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i), Amount: math.OneUint()},
+			OutboundTxParams: []*types.OutboundTxParams{},
+			ZetaFees:         math.OneUint()},
 		)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)

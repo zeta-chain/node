@@ -19,9 +19,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
 
 
-BUILD_FLAGS := -ldflags '$(ldflags)'
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS :=  -tags mocknet
+TEST_BUILD_FLAGS :=  -tags PRIVNET
 
 clean: clean-binaries clean-dir
 
@@ -98,44 +98,9 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-###############################################################################
-###                                Protobuf                                 ###
-###############################################################################
-
-protoVer=v0.3
-protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
-
-proto-all: proto-format proto-lint proto-gen
-
-proto-gen:
-	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen.sh
-.PHONY: proto-gen
-
-proto-format:
-	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace $(protoImageName) \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
-.PHONY: proto-format
-
-# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-proto-gen-any:
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen-any.sh
-.PHONY: proto-gen-any
-
-proto-swagger-gen:
-	@./scripts/protoc-swagger-gen.sh
-.PHONY: proto-swagger-gen
-
-proto-lint:
-	$(DOCKER_BUF) lint --error-format=json
-.PHONY: proto-lint
-
-proto-check-breaking:
-	# we should turn this back on after our first release
-	# $(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
-.PHONY: proto-check-breaking
+proto-go:
+	@echo "--> Generating protobuf files"
+	@ignite generate proto-go -y
 
 ###############################################################################
 ###                                Docker Images                             ###

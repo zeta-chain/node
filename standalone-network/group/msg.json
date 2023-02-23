@@ -5,7 +5,7 @@
         "@type": "/zetachain.zetacore.crosschain.MsgUpdatePermissionFlags",
         "creator": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
         "isInboundEnabled": false
-      }
+      },
     ],
     "memo": "",
     "timeout_height": "0",

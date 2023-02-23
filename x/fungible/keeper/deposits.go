@@ -17,22 +17,22 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain string, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain *common.Chain, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var tx *evmtypes.MsgEthereumTxResponse
 	withdrawMessage := false
 	var Zrc20Contract eth.Address
 	var coin fungibletypes.ForeignCoins
 	if coinType == common.CoinType_Gas {
 		var found bool
-		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain)
+		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
 		if !found {
 			return tx, false, types.ErrGasCoinNotFound
 		}
 	} else {
-		foreignCoinList := k.GetAllForeignCoinsForChain(ctx, senderChain)
+		foreignCoinList := k.GetAllForeignCoinsForChain(ctx, senderChain.ChainId)
 		found := false
 		for _, foreignCoin := range foreignCoinList {
-			if foreignCoin.Erc20ContractAddress == asset && foreignCoin.ForeignChain == senderChain {
+			if foreignCoin.Asset == asset && foreignCoin.ForeignChainId == senderChain.ChainId {
 				coin = foreignCoin
 				found = true
 				break

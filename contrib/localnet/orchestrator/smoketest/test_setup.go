@@ -1,8 +1,12 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	"math/big"
 	"time"
 
@@ -121,7 +125,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	found := false
 	zrc20addr := ""
 	for _, fcoin := range res.ForeignCoins {
-		if ethcommon.HexToAddress(fcoin.Erc20ContractAddress) == usdtAddr {
+		if ethcommon.HexToAddress(fcoin.Asset) == usdtAddr {
 			found = true
 			zrc20addr = fcoin.Zrc20ContractAddress
 		}
@@ -156,4 +160,37 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err != nil {
 		panic(err)
 	}
+
+	// deploy TestDApp contract
+	//auth.GasLimit = 1_000_000
+	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(goerliClient, tx)
+	fmt.Printf("TestDApp contract receipt: contract address %s, status %d; used gas %d\n", receipt.ContractAddress, receipt.Status, receipt.GasUsed)
+	dapp, err := testdapp.NewTestDApp(receipt.ContractAddress, goerliClient)
+	if err != nil {
+		panic(err)
+	}
+	{
+		code, err := sm.goerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("TestDApp contract code: len %d\n", len(code))
+		if len(code) == 0 {
+			panic("TestDApp contract code is empty")
+		}
+		res, err := dapp.Connector(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
+		if res != sm.ConnectorEthAddr {
+			panic("mismatch of TestDApp connector address")
+		}
+	}
+	sm.TestDAppAddr = receipt.ContractAddress
+
 }

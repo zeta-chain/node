@@ -8,5 +8,4 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 message Params {
   option (gogoproto.goproto_stringer) = false;
   bool enabled = 1;
-  string admin = 2;
 }
