@@ -16,6 +16,7 @@ import (
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -80,13 +81,82 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		testMaxHeight        int64
 		inputFilename        string
 		checkValues          []EmissionTestData
+		generateOnly         bool
 	}{
 		{
-			name:                 "test 1",
+			name:                 "default values",
 			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
 			testMaxHeight:        300,
 			inputFilename:        "simulations.json",
+			generateOnly:         false,
+		},
+		{
+			name:                 "higher starting pool",
+			params:               emissionsModuleTypes.DefaultParams(),
+			startingEmissionPool: "100000000000000000000000000000000",
+			testMaxHeight:        300,
+			inputFilename:        "simulations.json",
+			generateOnly:         false,
+		},
+		{
+			name:                 "lower starting pool",
+			params:               emissionsModuleTypes.DefaultParams(),
+			startingEmissionPool: "100000000000000000",
+			testMaxHeight:        300,
+			inputFilename:        "simulations.json",
+			generateOnly:         false,
+		},
+		{
+			name: "different distribution percentages",
+			params: emissionsModuleTypes.Params{
+				MaxBondFactor:               "1.25",
+				MinBondFactor:               "0.75",
+				AvgBlockTime:                "6.00",
+				TargetBondRatio:             "00.67",
+				ValidatorEmissionPercentage: "00.10",
+				ObserverEmissionPercentage:  "00.85",
+				TssSignerEmissionPercentage: "00.05",
+				DurationFactorConstant:      "0.001877876953694702",
+			},
+			startingEmissionPool: "1000000000000000000000000",
+			testMaxHeight:        300,
+			inputFilename:        "simulations.json",
+			generateOnly:         false,
+		},
+		{
+			name: "higher block time",
+			params: emissionsModuleTypes.Params{
+				MaxBondFactor:               "1.25",
+				MinBondFactor:               "0.75",
+				AvgBlockTime:                "20.00",
+				TargetBondRatio:             "00.67",
+				ValidatorEmissionPercentage: "00.10",
+				ObserverEmissionPercentage:  "00.85",
+				TssSignerEmissionPercentage: "00.05",
+				DurationFactorConstant:      "0.1",
+			},
+			startingEmissionPool: "1000000000000000000000000",
+			testMaxHeight:        300,
+			inputFilename:        "simulations.json",
+			generateOnly:         false,
+		},
+		{
+			name: "different duration constant",
+			params: emissionsModuleTypes.Params{
+				MaxBondFactor:               "1.25",
+				MinBondFactor:               "0.75",
+				AvgBlockTime:                "6.00",
+				TargetBondRatio:             "00.67",
+				ValidatorEmissionPercentage: "00.10",
+				ObserverEmissionPercentage:  "00.85",
+				TssSignerEmissionPercentage: "00.05",
+				DurationFactorConstant:      "0.1",
+			},
+			startingEmissionPool: "1000000000000000000000000",
+			testMaxHeight:        300,
+			inputFilename:        "simulations.json",
+			generateOnly:         false,
 		},
 	}
 
@@ -95,6 +165,15 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			app, ctx, _, minter := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
 			err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, minter.GetAddress(), emissionsModuleTypes.ModuleName, getaZetaFromString(tt.startingEmissionPool))
 			assert.NoError(t, err)
+			GenerateTestDataMaths(app, ctx, tt.testMaxHeight, tt.inputFilename)
+			defer func(t *testing.T, fp string) {
+				err := os.RemoveAll(fp)
+				assert.NoError(t, err)
+			}(t, tt.inputFilename)
+
+			if tt.generateOnly {
+				return
+			}
 			inputTestData, err := GetInputData(tt.inputFilename)
 			assert.NoError(t, err)
 			sort.SliceStable(inputTestData, func(i, j int) bool { return inputTestData[i].BlockHeight < inputTestData[j].BlockHeight })
@@ -103,28 +182,15 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			for i := startHeight; i < tt.testMaxHeight; i++ {
 				//First distribution will occur only when begin-block is triggered
 				reservesFactor, bondFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
-				//generatedTestData = append(generatedTestData, EmissionTestData{
-				//	BlockHeight:    i,
-				//	BondFactor:     bondFactor,
-				//	ReservesFactor: reservesFactor,
-				//	DurationFactor: durationFactor,
-				//})
 				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
 				ctx = ctx.WithBlockHeight(i + 1)
 			}
-			//GenerateSampleFile("simulations.json", generatedTestData)
 		})
 	}
 }
-
-//fmt.Printf("Params:\n %+v \n", tt.params)
-//fmt.Printf("Bond Ratio: %+v \n", app.StakingKeeper.BondedRatio(ctx))
-//fmt.Printf("Total Bonded %s: \n", app.StakingKeeper.TotalBondedTokens(ctx))
-//fmt.Printf("Emission Pool starting Balance : %s \n", app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom))
-//fmt.Printf("Total Supply : %s \n", app.BankKeeper.GetSupply(ctx, config.BaseDenom))
 
 func GetInputData(fp string) ([]EmissionTestData, error) {
 	data := []EmissionTestData{}
@@ -154,10 +220,32 @@ func GetInputData(fp string) ([]EmissionTestData, error) {
 	return formatedData, nil
 }
 
+func GenerateTestDataMaths(app *zetaapp.App, ctx sdk.Context, testMaxHeight int64, fileName string) {
+	var generatedTestData []EmissionTestData
+	reserverCoins := app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom)
+	startHeight := ctx.BlockHeight()
+	for i := startHeight; i < testMaxHeight; i++ {
+		reservesFactor := sdk.NewDecFromInt(reserverCoins.Amount)
+		bondFactor := emissionsModule.GetBondFactor(ctx, app.StakingKeeper, app.EmissionsKeeper)
+		durationFactor := emissionsModule.GetDurationFactor(ctx, app.EmissionsKeeper)
+		blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
+		generatedTestData = append(generatedTestData, EmissionTestData{
+			BlockHeight:    i,
+			BondFactor:     bondFactor,
+			DurationFactor: durationFactor.String(),
+			ReservesFactor: reservesFactor,
+		})
+		validatorRewards := sdk.MustNewDecFromStr(app.EmissionsKeeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
+		observerRewards := sdk.MustNewDecFromStr(app.EmissionsKeeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
+		tssSignerRewards := sdk.MustNewDecFromStr(app.EmissionsKeeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
+		truncatedRewards := validatorRewards.Add(observerRewards).Add(tssSignerRewards)
+		reserverCoins = reserverCoins.Sub(sdk.NewCoin(config.BaseDenom, truncatedRewards))
+		ctx = ctx.WithBlockHeight(i + 1)
+	}
+	GenerateSampleFile(fileName, generatedTestData)
+}
+
 func GenerateSampleFile(fp string, data []EmissionTestData) {
 	file, _ := json.MarshalIndent(data, "", " ")
-	//for _, dd := range data {
-	//	fmt.Println(dd)
-	//}
 	_ = ioutil.WriteFile(fp, file, 0600)
 }

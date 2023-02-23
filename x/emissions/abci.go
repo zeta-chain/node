@@ -13,11 +13,9 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 	if blockRewards.IsZero() {
 		return
 	}
-
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
-
 	err := DistributeValidatorRewards(ctx, validatorRewards, bankKeeper, keeper.GetFeeCollector())
 	if err != nil {
 		panic(err)
