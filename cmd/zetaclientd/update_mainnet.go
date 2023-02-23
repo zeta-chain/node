@@ -3,7 +3,9 @@
 
 package main
 
-import "github.com/zeta-chain/zetacore/common"
+import (
+	"github.com/zeta-chain/zetacore/common"
+)
 
 func updateConfig() {
 
