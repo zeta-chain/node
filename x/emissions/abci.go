@@ -5,22 +5,17 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
-	"math"
-	"math/big"
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
-	//fmt.Println("Executing begin block emisson")
 	reservesFactor, bondFactor, durationFactor := GetBlockRewardComponents(ctx, bankKeeper, stakingKeeper, keeper)
 	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 	if blockRewards.IsZero() {
 		return
 	}
-	//fmt.Println("BlockRewards for block :", ctx.BlockHeight(), blockRewards)
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
-
 	err := DistributeValidatorRewards(ctx, validatorRewards, bankKeeper, keeper.GetFeeCollector())
 	if err != nil {
 		panic(err)
@@ -85,18 +80,20 @@ func GetDurationFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
 	avgBlockTime := sdk.MustNewDecFromStr(keeper.GetParams(ctx).AvgBlockTime)
 	NumberOfBlocksInAMonth := sdk.NewDec(types.SecsInMonth).Quo(avgBlockTime)
 	monthFactor := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
-	//log(1 + 0.02 / 12)
-	fractionConstant := 0.02 / 12.00
-	logValue := math.Log(1.0 + fractionConstant)
-	logValueDec, _ := sdk.NewDecFromStr(big.NewFloat(logValue).String())
+	logValueDec := sdk.MustNewDecFromStr(keeper.GetParams(ctx).DurationFactorConstant)
 	// month * log(1 + 0.02 / 12)
 	fractionNumerator := monthFactor.Mul(logValueDec)
 	// (month * log(1 + 0.02 / 12) ) + 1
 	fractionDenominator := fractionNumerator.Add(sdk.OneDec())
-	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
-	durationFactor := fractionNumerator.Quo(fractionDenominator)
 
-	return durationFactor
+	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
+	if fractionDenominator.IsZero() {
+		return sdk.OneDec()
+	}
+	if fractionNumerator.IsZero() {
+		return sdk.ZeroDec()
+	}
+	return fractionNumerator.Quo(fractionDenominator)
 }
 
 func GetReservesFactor(ctx sdk.Context, keeper types.BankKeeper) sdk.Dec {

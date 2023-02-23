@@ -24,6 +24,7 @@ func NewParams() Params {
 		ValidatorEmissionPercentage: "00.50",
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
+		DurationFactorConstant:      "0.001877876953694702",
 	}
 }
 
@@ -42,6 +43,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPrefix(ParamValidatorEmissionPercentage), &p.ValidatorEmissionPercentage, validateValidatorEmissonPercentage),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamObserverEmissionPercentage), &p.ObserverEmissionPercentage, validateObserverEmissonPercentage),
 		paramtypes.NewParamSetPair(KeyPrefix(ParamTssSignerEmissionPercentage), &p.TssSignerEmissionPercentage, validateTssEmissonPercentage),
+		paramtypes.NewParamSetPair(KeyPrefix(ParamDurationFactorConstant), &p.DurationFactorConstant, validateDurationFactorConstant),
 	}
 }
 
@@ -54,6 +56,14 @@ func (p Params) Validate() error {
 func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
+}
+
+func validateDurationFactorConstant(i interface{}) error {
+	_, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
 }
 
 func validateMaxBondFactor(i interface{}) error {
