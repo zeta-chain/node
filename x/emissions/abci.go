@@ -82,15 +82,20 @@ func GetDurationFactor(ctx sdk.Context, keeper keeper.Keeper) sdk.Dec {
 	avgBlockTime := sdk.MustNewDecFromStr(keeper.GetParams(ctx).AvgBlockTime)
 	NumberOfBlocksInAMonth := sdk.NewDec(types.SecsInMonth).Quo(avgBlockTime)
 	monthFactor := sdk.NewDec(ctx.BlockHeight()).Quo(NumberOfBlocksInAMonth)
-
-	logValueDec := sdk.MustNewDecFromStr("0.001877876953694702")
+	logValueDec := sdk.MustNewDecFromStr(keeper.GetParams(ctx).DurationFactorConstant)
 	// month * log(1 + 0.02 / 12)
 	fractionNumerator := monthFactor.Mul(logValueDec)
 	// (month * log(1 + 0.02 / 12) ) + 1
 	fractionDenominator := fractionNumerator.Add(sdk.OneDec())
+
 	// (month * log(1 + 0.02 / 12)) / (month * log(1 + 0.02 / 12) ) + 1
-	durationFactor := fractionNumerator.Quo(fractionDenominator)
-	return durationFactor
+	if fractionDenominator.IsZero() {
+		return sdk.OneDec()
+	}
+	if fractionNumerator.IsZero() {
+		return sdk.ZeroDec()
+	}
+	return fractionNumerator.Quo(fractionDenominator)
 }
 
 func GetReservesFactor(ctx sdk.Context, keeper types.BankKeeper) sdk.Dec {

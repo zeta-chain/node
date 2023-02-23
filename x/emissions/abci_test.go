@@ -85,7 +85,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			name:                 "test 1",
 			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
-			testMaxHeight:        200,
+			testMaxHeight:        300,
 			inputFilename:        "simulations.json",
 		},
 	}
