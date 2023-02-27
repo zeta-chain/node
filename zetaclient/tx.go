@@ -53,7 +53,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 
 func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
 	signerAddress := b.keys.GetAddress().String()
-	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainName.String(), nonce)
+	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainId, nonce)
 	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, msg)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("PostNonce broadcast fail")

@@ -45,6 +45,7 @@ const EnvPrefix = "zetacore"
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
+
 func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
