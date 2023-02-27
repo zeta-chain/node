@@ -26,9 +26,9 @@ func Save(config *Config, path string) error {
 	return nil
 }
 
-func Load(path string) (Config, error) {
+func Load(path string) (*Config, error) {
 	file := filepath.Join(path, filename)
-	result := Config{}
+	result := &Config{}
 	fp, err := os.Open(file)
 	if err != nil {
 		return result, err

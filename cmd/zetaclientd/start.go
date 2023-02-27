@@ -32,8 +32,7 @@ var StartCmd = &cobra.Command{
 var startArgs = startArguments{}
 
 type startArguments struct {
-	configPath string
-	debug      bool
+	debug bool
 }
 
 func init() {
@@ -52,19 +51,12 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	//Wait until zetacore has started
-	waitForZetaCore(&configData)
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Err(err).Msg("UserHomeDir error")
-		return err
-	}
-	chainHomeFolder := filepath.Join(homeDir, rootArgs.zetaCoreHome)
+	waitForZetaCore(configData)
 
 	// first signer & bridge
 	signerName := configData.ValidatorName
 	signerPass := "password"
-	bridge1, done := CreateZetaBridge(chainHomeFolder, signerName, signerPass, configData.ZetaCoreURL)
+	bridge1, done := CreateZetaBridge(rootArgs.zetaCoreHome, signerName, signerPass, configData.ZetaCoreURL)
 	if done {
 		return nil
 	}
