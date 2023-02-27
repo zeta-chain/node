@@ -25,11 +25,11 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // GetTransactionByHash returns the Ethereum format transaction identified by Ethereum transaction hash
@@ -307,9 +307,11 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNum
 // https://github.com/tendermint/tendermint/issues/6539
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) {
 	if b.indexer != nil {
-		return b.indexer.GetByTxHash(hash)
+		txResult, err := b.indexer.GetByTxHash(hash)
+		if err == nil {
+			return txResult, nil
+		}
 	}
-
 	// fallback to tendermint tx indexer
 	query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, hash.Hex())
 	txResult, err := b.queryTendermintTxIndexer(query, func(txs *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
@@ -347,6 +349,8 @@ func (b *Backend) queryTendermintTxIndexer(query string, txGetter func(*rpctypes
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("Dat %d\n", len(resTxs.Txs))
+
 	if len(resTxs.Txs) == 0 {
 		return nil, errors.New("ethereum tx not found")
 	}
@@ -354,6 +358,7 @@ func (b *Backend) queryTendermintTxIndexer(query string, txGetter func(*rpctypes
 	if !rpctypes.TxSuccessOrExceedsBlockGasLimit(&txResult.TxResult) {
 		return nil, errors.New("invalid ethereum tx")
 	}
+	fmt.Printf("LEL\n")
 
 	var tx sdk.Tx
 	if txResult.TxResult.Code != 0 {
@@ -363,7 +368,7 @@ func (b *Backend) queryTendermintTxIndexer(query string, txGetter func(*rpctypes
 			return nil, fmt.Errorf("invalid ethereum tx")
 		}
 	}
-
+	fmt.Printf("YESSS\n")
 	return rpctypes.ParseTxIndexerResult(txResult, tx, txGetter)
 }
 

@@ -21,10 +21,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // TraceTransaction returns the structured logs created during the execution of EVM

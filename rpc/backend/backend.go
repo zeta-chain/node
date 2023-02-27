@@ -30,12 +30,12 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	rpctypes "github.com/evmos/ethermint/rpc/types"
-	"github.com/evmos/ethermint/server/config"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/zetacore/server/config"
 )
 
 // BackendI implements the Cosmos and EVM backend.
@@ -182,6 +182,6 @@ func NewBackend(
 		chainID:             chainID,
 		cfg:                 appConf,
 		allowUnprotectedTxs: allowUnprotectedTxs,
-		indexer:             nil,
+		indexer:             indexer,
 	}
 }

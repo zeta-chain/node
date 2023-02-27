@@ -12,7 +12,7 @@
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
+// along with the Ethermint library. If not, see https://github.com/zeta-chain/zetacore/blob/main/LICENSE
 package rpc
 
 import (
@@ -23,16 +23,16 @@ import (
 
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/evmos/ethermint/rpc/backend"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth/filters"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/miner"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/net"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/personal"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/txpool"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/web3"
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/zeta-chain/zetacore/rpc/backend"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/miner"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/net"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/personal"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/txpool"
+	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/web3"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )

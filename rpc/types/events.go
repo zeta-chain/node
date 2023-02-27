@@ -98,9 +98,10 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 		TxHashes: make(map[common.Hash]int),
 	}
 	for _, event := range result.Events {
-		if event.Type != evmtypes.EventTypeEthereumTx {
-			continue
-		}
+		/*
+			if event.Type != evmtypes.EventTypeEthereumTx {
+				continue
+			}*/
 
 		if format == eventFormatUnknown {
 			// discover the format version by inspect the first ethereum_tx event.
@@ -110,7 +111,6 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 				format = eventFormat2
 			}
 		}
-
 		if len(event.Attributes) == 2 {
 			// the first part of format 2
 			if err := p.newTx(event.Attributes); err != nil {

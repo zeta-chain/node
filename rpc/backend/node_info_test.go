@@ -9,10 +9,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/evmos/ethermint/rpc/backend/mocks"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/spf13/viper"
 	tmrpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/zeta-chain/zetacore/rpc/backend/mocks"
 	"google.golang.org/grpc/metadata"
 )
 

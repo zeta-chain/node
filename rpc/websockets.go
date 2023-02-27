@@ -41,11 +41,11 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/evmos/ethermint/rpc/ethereum/pubsub"
-	rpcfilters "github.com/evmos/ethermint/rpc/namespaces/ethereum/eth/filters"
-	"github.com/evmos/ethermint/rpc/types"
-	"github.com/evmos/ethermint/server/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
+	rpcfilters "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
+	"github.com/zeta-chain/zetacore/rpc/types"
+	"github.com/zeta-chain/zetacore/server/config"
 )
 
 type WebsocketsServer interface {

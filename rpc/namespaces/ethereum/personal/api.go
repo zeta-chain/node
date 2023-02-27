@@ -21,7 +21,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/evmos/ethermint/rpc/backend"
+	"github.com/zeta-chain/zetacore/rpc/backend"
 
 	"github.com/evmos/ethermint/crypto/hd"
 	ethermint "github.com/evmos/ethermint/types"
