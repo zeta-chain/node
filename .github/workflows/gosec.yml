@@ -1,8 +1,6 @@
 name: Gosec
 on:
   push:
-    branches:
-      - cicd/fix-git-guardian-job
     tags:
       - v*
       - athens2-*
