@@ -1,13 +1,13 @@
 //go:build !PRIVNET && !TESTNET
 // +build !PRIVNET,!TESTNET
 
-package main
+package update
 
 import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func updateConfig() {
+func UpdateConfig() {
 
 	updateEndpoint(common.EthChain(), "ETH_ENDPOINT")
 	updateEndpoint(common.BscMainnetChain(), "BSC")

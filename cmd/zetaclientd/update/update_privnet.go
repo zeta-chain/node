@@ -1,13 +1,13 @@
 //go:build PRIVNET
 // +build PRIVNET
 
-package main
+package update
 
 import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func updateConfig() {
+func UpdateConfig() {
 
 	updateEndpoint(common.GoerliLocalNetChain(), "GOERLILOCALNET_ENDPOINT")
 

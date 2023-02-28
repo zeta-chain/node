@@ -7,9 +7,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
 
@@ -57,29 +55,5 @@ func initLogLevel(debug bool) {
 	if debug {
 		log.Info().Msgf("zerolog global log level: DEBUG")
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-}
-
-func updateMPIAddress(chain common.Chain, envvar string) {
-	mpi := os.Getenv(envvar)
-	if mpi != "" {
-		config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress = mpi
-		log.Info().Msgf("MPI: %s", mpi)
-	}
-}
-
-func updateEndpoint(chain common.Chain, envvar string) {
-	endpoint := os.Getenv(envvar)
-	if endpoint != "" {
-		config.ChainConfigs[chain.ChainName.String()].Endpoint = endpoint
-		log.Info().Msgf("ENDPOINT: %s", endpoint)
-	}
-}
-
-func updateTokenAddress(chain common.Chain, envvar string) {
-	token := os.Getenv(envvar)
-	if token != "" {
-		config.ChainConfigs[chain.String()].ZETATokenContractAddress = token
-		log.Info().Msgf("TOKEN: %s", token)
 	}
 }

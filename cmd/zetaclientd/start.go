@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/zeta-chain/zetacore/cmd/zetaclientd/update"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -41,6 +42,7 @@ func init() {
 }
 
 func start(_ *cobra.Command, _ []string) error {
+	setHomeDir()
 	SetupConfigForTest()
 	initLogLevel(startArgs.debug)
 
@@ -49,6 +51,9 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	//Update config from env variables (Might remove this later on)
+	update.UpdateConfig()
 
 	//Wait until zetacore has started
 	waitForZetaCore(configData)

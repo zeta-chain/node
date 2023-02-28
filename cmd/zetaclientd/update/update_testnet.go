@@ -1,13 +1,13 @@
 //go:build TESTNET
 // +build TESTNET
 
-package main
+package update
 
 import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func updateConfig() {
+func UpdateConfig() {
 
 	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
 	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")

@@ -48,6 +48,8 @@ func init() {
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
+	setHomeDir()
+
 	//Create new config struct
 	configData := config.New()
 
