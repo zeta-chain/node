@@ -10,6 +10,7 @@ const filename string = "zeta-client.toml"
 
 func Save(config *Config, path string) error {
 	file := filepath.Join(path, filename)
+	file = filepath.Clean(file)
 	fp, err := os.Create(file)
 	if err != nil {
 		// failed to create/open the file
@@ -28,6 +29,7 @@ func Save(config *Config, path string) error {
 
 func Load(path string) (*Config, error) {
 	file := filepath.Join(path, filename)
+	file = filepath.Clean(file)
 	result := &Config{}
 	fp, err := os.Open(file)
 	if err != nil {

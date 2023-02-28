@@ -53,7 +53,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	//Update config from env variables (Might remove this later on)
-	update.UpdateConfig()
+	update.Config()
 
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
@@ -212,6 +212,7 @@ func initPeers(peer string) (p2p.AddrList, error) {
 
 func initPreParams(path string) {
 	if path != "" {
+		path = filepath.Clean(path)
 		log.Info().Msgf("pre-params file path %s", path)
 		preParamsFile, err := os.Open(path)
 		if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func UpdateConfig() {
+func Config() {
 
 	updateEndpoint(common.EthChain(), "ETH_ENDPOINT")
 	updateEndpoint(common.BscMainnetChain(), "BSC")

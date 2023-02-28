@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func UpdateConfig() {
+func Config() {
 
 	updateEndpoint(common.GoerliChain(), "GOERLI_ENDPOINT")
 	updateEndpoint(common.BscTestnetChain(), "BSCTESTNET_ENDPOINT")

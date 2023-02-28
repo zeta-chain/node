@@ -2,9 +2,8 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
-
-const HomeFlag = "home"
 
 var RootCmd = &cobra.Command{
 	Use:   "zetaclientd",
@@ -17,5 +16,5 @@ type rootArguments struct {
 }
 
 func setHomeDir() {
-	rootArgs.zetaCoreHome, _ = RootCmd.Flags().GetString(HomeFlag)
+	rootArgs.zetaCoreHome, _ = RootCmd.Flags().GetString(tmcli.HomeFlag)
 }
