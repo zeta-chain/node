@@ -31,7 +31,7 @@ import (
 // and returns them as a JSON object.
 func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
-	transaction, err := b.GetTxByEthHash(hash)
+	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.logger.Debug("tx not found", "hash", hash)
 		return nil, err

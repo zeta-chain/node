@@ -17,6 +17,7 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,6 +73,12 @@ type ParsedTx struct {
 	EthTxIndex int32
 	GasUsed    uint64
 	Failed     bool
+	// Additional cosmos EVM tx fields
+	TxHash    string
+	Type      *big.Int
+	Amount    *big.Int
+	Recipient common.Address
+	Sender    common.Address
 }
 
 // NewParsedTx initialize a ParsedTx
@@ -97,11 +104,20 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	p := &ParsedTxs{
 		TxHashes: make(map[common.Hash]int),
 	}
+	prevEventType := ""
 	for _, event := range result.Events {
-		/*
-			if event.Type != evmtypes.EventTypeEthereumTx {
-				continue
-			}*/
+		if event.Type != evmtypes.EventTypeEthereumTx && !(prevEventType == evmtypes.EventTypeEthereumTx && event.Type == "message") {
+			continue
+		}
+
+		// Parse tendermint message after ethereum_tx event
+		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == "message" {
+			fillTxAttributes(&p.Txs[eventIndex], event.Attributes)
+			prevEventType = "message"
+			continue
+		} else {
+			prevEventType = evmtypes.EventTypeEthereumTx
+		}
 
 		if format == eventFormatUnknown {
 			// discover the format version by inspect the first ethereum_tx event.
@@ -111,6 +127,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 				format = eventFormat2
 			}
 		}
+
 		if len(event.Attributes) == 2 {
 			// the first part of format 2
 			if err := p.newTx(event.Attributes); err != nil {
@@ -131,6 +148,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 				}
 			}
 		}
+
 	}
 
 	// some old versions miss some events, fill it with tx result
@@ -152,26 +170,32 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
-func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(*ParsedTxs) *ParsedTx) (*ethermint.TxResult, error) {
+func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(*ParsedTxs) *ParsedTx) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", txResult.Height, txResult.Index, err)
+		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", txResult.Height, txResult.Index, err)
 	}
 
 	parsedTx := getter(txs)
 	if parsedTx == nil {
-		return nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
+		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
 	}
-
 	return &ethermint.TxResult{
-		Height:            txResult.Height,
-		TxIndex:           txResult.Index,
-		MsgIndex:          uint32(parsedTx.MsgIndex),
-		EthTxIndex:        parsedTx.EthTxIndex,
-		Failed:            parsedTx.Failed,
-		GasUsed:           parsedTx.GasUsed,
-		CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
-	}, nil
+			Height:            txResult.Height,
+			TxIndex:           txResult.Index,
+			MsgIndex:          uint32(parsedTx.MsgIndex),
+			EthTxIndex:        parsedTx.EthTxIndex,
+			Failed:            parsedTx.Failed,
+			GasUsed:           parsedTx.GasUsed,
+			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+		}, &TxResultAdditionalFields{
+			Value:     parsedTx.Amount,
+			Hash:      parsedTx.Hash,
+			TxHash:    parsedTx.TxHash,
+			Type:      parsedTx.Type,
+			Recipient: parsedTx.Recipient,
+			Sender:    parsedTx.Sender,
+		}, nil
 }
 
 // newTx parse a new tx from events, called during parsing.
@@ -260,6 +284,16 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 		tx.GasUsed = gasUsed
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
+	case "sender":
+		tx.Sender = common.HexToAddress(string(value))
+	case evmtypes.AttributeKeyRecipient:
+		tx.Recipient = common.HexToAddress(string(value))
+	case evmtypes.AttributeKeyTxHash:
+		tx.TxHash = string(value)
+	case evmtypes.AttributeKeyTxType:
+		tx.Type = big.NewInt(0).SetBytes(value)
+	case "amount":
+		tx.Amount, _ = big.NewInt(0).SetString(string(value), 10)
 	}
 	return nil
 }

@@ -427,7 +427,7 @@ func (e *PublicAPI) GetTransactionLogs(txHash common.Hash) ([]*ethtypes.Log, err
 	e.logger.Debug("eth_getTransactionLogs", "hash", txHash)
 
 	hexTx := txHash.Hex()
-	res, err := e.backend.GetTxByEthHash(txHash)
+	res, _, err := e.backend.GetTxByEthHash(txHash)
 	if err != nil {
 		e.logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
 		return nil, nil
@@ -515,6 +515,8 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 				uint64(0),
 				nil,
 				e.backend.ChainConfig().ChainID,
+				nil,
+				nil,
 			)
 			if err != nil {
 				return nil, err

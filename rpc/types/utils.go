@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
+	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
@@ -161,8 +162,13 @@ func NewTransactionFromMsg(
 	blockNumber, index uint64,
 	baseFee *big.Int,
 	chainID *big.Int,
+	txResult *ethermint.TxResult,
+	txAdditional *TxResultAdditionalFields,
 ) (*RPCTransaction, error) {
 	tx := msg.AsTransaction()
+	if tx == nil {
+		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txResult, txAdditional)
+	}
 	return NewRPCTransaction(tx, blockHash, blockNumber, index, baseFee, chainID)
 }
 
@@ -223,6 +229,37 @@ func NewRPCTransaction(
 		} else {
 			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
 		}
+	}
+	return result, nil
+}
+
+// NewRPCTransactionFromIncompleteMsg returns a transaction that will serialize to the RPC
+// representation, with the given location metadata set (if available).
+func NewRPCTransactionFromIncompleteMsg(
+	msg *evmtypes.MsgEthereumTx, blockHash common.Hash, blockNumber, index uint64, baseFee *big.Int,
+	chainID *big.Int, txResult *ethermint.TxResult, txAdditional *TxResultAdditionalFields,
+) (*RPCTransaction, error) {
+	to := &common.Address{}
+	*to = txAdditional.Recipient
+	result := &RPCTransaction{
+		Type:     hexutil.Uint64(txAdditional.Type.Uint64()),
+		From:     common.HexToAddress(msg.From),
+		Gas:      hexutil.Uint64(txResult.GasUsed),
+		GasPrice: (*hexutil.Big)(baseFee),
+		Hash:     common.HexToHash(msg.Hash),
+		Input:    []byte{},
+		Nonce:    0, // TODO: get nonce for "from" from ethermint
+		To:       to,
+		Value:    (*hexutil.Big)(txAdditional.Value),
+		V:        nil,
+		R:        nil,
+		S:        nil,
+		ChainID:  (*hexutil.Big)(chainID),
+	}
+	if blockHash != (common.Hash{}) {
+		result.BlockHash = &blockHash
+		result.BlockNumber = (*hexutil.Big)(new(big.Int).SetUint64(blockNumber))
+		result.TransactionIndex = (*hexutil.Uint64)(&index)
 	}
 	return result, nil
 }

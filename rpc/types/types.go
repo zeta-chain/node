@@ -44,6 +44,16 @@ type StorageResult struct {
 	Proof []string     `json:"proof"`
 }
 
+// TxResultAdditionalFields allows to return additional cosmos EVM txs fields
+type TxResultAdditionalFields struct {
+	Value     *big.Int       `json:"amount"`
+	Hash      common.Hash    `json:"hash"`
+	TxHash    string         `json:"txHash"`
+	Type      *big.Int       `json:"type"`
+	Recipient common.Address `json:"recipient"`
+	Sender    common.Address `json:"sender"`
+}
+
 // RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction
 type RPCTransaction struct {
 	BlockHash        *common.Hash         `json:"blockHash"`
