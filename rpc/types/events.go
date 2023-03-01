@@ -35,6 +35,9 @@ import (
 type EventFormat int
 
 const (
+	MessageType                    = "message"
+	AmountType                     = "amount"
+	SenderType                     = "sender"
 	eventFormatUnknown EventFormat = iota
 
 	// Event Format 1 (the format used before PR #1062):
@@ -106,14 +109,17 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	}
 	prevEventType := ""
 	for _, event := range result.Events {
-		if event.Type != evmtypes.EventTypeEthereumTx && !(prevEventType == evmtypes.EventTypeEthereumTx && event.Type == "message") {
+		if event.Type != evmtypes.EventTypeEthereumTx && !(prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType) {
 			continue
 		}
 
 		// Parse tendermint message after ethereum_tx event
-		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == "message" {
-			fillTxAttributes(&p.Txs[eventIndex], event.Attributes)
-			prevEventType = "message"
+		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType {
+			err := fillTxAttributes(&p.Txs[eventIndex], event.Attributes)
+			if err != nil {
+				return nil, err
+			}
+			prevEventType = MessageType
 			continue
 		} else {
 			prevEventType = evmtypes.EventTypeEthereumTx
@@ -284,7 +290,7 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 		tx.GasUsed = gasUsed
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
-	case "sender":
+	case SenderType:
 		tx.Sender = common.HexToAddress(string(value))
 	case evmtypes.AttributeKeyRecipient:
 		tx.Recipient = common.HexToAddress(string(value))
@@ -292,8 +298,12 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 		tx.TxHash = string(value)
 	case evmtypes.AttributeKeyTxType:
 		tx.Type = big.NewInt(0).SetBytes(value)
-	case "amount":
-		tx.Amount, _ = big.NewInt(0).SetString(string(value), 10)
+	case AmountType:
+		var success bool
+		tx.Amount, success = big.NewInt(0).SetString(string(value), 10)
+		if !success {
+			return nil
+		}
 	}
 	return nil
 }
