@@ -68,3 +68,11 @@ var BitcoinConfig = &ChainBitcoinish{
 	WatchGasPricePeriod: 5,
 	WatchUTXOSPeriod:    5,
 }
+
+func New() Config {
+	return Config{
+		ChainsEnabled: ChainsEnabled,
+		ChainConfigs:  ChainConfigs,
+		BitcoinConfig: BitcoinConfig,
+	}
+}
