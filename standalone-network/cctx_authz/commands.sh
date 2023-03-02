@@ -4,6 +4,7 @@ zetacored tx authz grant zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99 generic --f
 zetacored tx authz grant zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99 generic --from zeta --fees=40azeta --chain-id=localnet_101-1 --keyring-backend=test -y --broadcast-mode=block --msg-type=/zetachain.zetacore.crosschain.MsgNonceVoter
 
 #Grant executer authorization to execute the Inbound and Outbound VOTER for observers `zeta` and `mario`
+#These are essentially the list of transactions that the zetaclient does to process a CCTX end to end
 zetacored tx authz grant zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99 generic --from zeta --fees=40azeta --chain-id=localnet_101-1 --keyring-backend=test -y --broadcast-mode=block --msg-type=/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx
 zetacored tx authz grant zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99 generic --from mario --fees=40azeta --chain-id=localnet_101-1 --keyring-backend=test -y --broadcast-mode=block --msg-type=/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx
 
