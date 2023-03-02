@@ -5,6 +5,9 @@ zetacored start --trace \
 --minimum-gas-prices=0.0001azeta \
 --json-rpc.api eth,txpool,personal,net,debug,web3,miner \
 --api.enable \
+>> "$HOME"/.zetacored/zetanode.log 2>&1  & \
+
+#--home ~/.zetacored \
 #--p2p.laddr 0.0.0.0:27655  \
 #--grpc.address 0.0.0.0:9096 \
 #--grpc-web.address 0.0.0.0:9093 \

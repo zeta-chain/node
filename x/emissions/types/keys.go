@@ -38,6 +38,7 @@ const (
 	ParamValidatorEmissionPercentage = "ValidatorEmissionPercentage"
 	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
 	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
+	ParamDurationFactorConstant      = "DurationFactorConstant"
 )
 
 var (
