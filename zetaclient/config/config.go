@@ -1,43 +1,52 @@
 package config
 
 import (
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	common2 "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/pelletier/go-toml"
+	"os"
+	"path/filepath"
 )
 
-// ClientConfiguration
-type ClientConfiguration struct {
-	ChainHost       string `json:"chain_host" mapstructure:"chain_host"`
-	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`
-	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
-	SignerName      string `json:"signer_name" mapstructure:"signer_name"`
-	SignerPasswd    string
+const filename string = "zeta-client.toml"
+
+func Save(config *Config, path string) error {
+	file := filepath.Join(path, filename)
+	file = filepath.Clean(file)
+	fp, err := os.Create(file)
+	if err != nil {
+		// failed to create/open the file
+		return err
+	}
+	if err := toml.NewEncoder(fp).Encode(config); err != nil {
+		// failed to encode
+		return err
+	}
+	if err := fp.Close(); err != nil {
+		// failed to close the file
+		return err
+	}
+	return nil
 }
 
-type ChainETHish struct {
-	ConnectorABI                abi.ABI
-	ConnectorContractAddress    string
-	ZETATokenContractAddress    string
-	ERC20CustodyContractAddress string
-	Client                      *ethclient.Client
-	Chain                       common.Chain
-	Topics                      [][]common2.Hash
-	BlockTime                   uint64
-	ConfCount                   uint64
-	Endpoint                    string
-	OutTxObservePeriod          uint64
-}
+func Load(path string) (*Config, error) {
+	file := filepath.Join(path, filename)
+	file = filepath.Clean(file)
+	result := &Config{}
+	fp, err := os.Open(file)
+	if err != nil {
+		return result, err
+	}
+	if err := toml.NewDecoder(fp).Decode(result); err != nil {
+		return result, err
+	}
+	if err := fp.Close(); err != nil {
+		// failed to close the file
+		return result, err
+	}
 
-type ChainBitcoinish struct {
-	// the following are rpcclient ConnConfig fields
-	RPCUsername string
-	RPCPassword string
-	RPCEndpoint string
-	RPCParams   string // "regtest", "mainnet", "testnet3"
+	// Initialize Global config variables
+	ChainsEnabled = result.ChainsEnabled
+	ChainConfigs = result.ChainConfigs
+	BitcoinConfig = result.BitcoinConfig
 
-	WatchInTxPeriod     uint64
-	WatchGasPricePeriod uint64
-	WatchUTXOSPeriod    uint64
+	return result, nil
 }
