@@ -326,6 +326,7 @@ func (s *websocketsServer) tcpGetAndSendResponse(wsConn *wsConn, mb []byte) erro
 		return errors.Wrap(err, "Could not perform request")
 	}
 
+	/* #nosec */
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)

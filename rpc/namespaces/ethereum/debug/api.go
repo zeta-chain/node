@@ -204,6 +204,7 @@ func (a *API) StartCPUProfile(file string) error {
 			a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
 		}
+		/* #nosec */
 		f, err := os.Create(fp)
 		if err != nil {
 			a.logger.Debug("failed to create CPU profile file", "error", err.Error())

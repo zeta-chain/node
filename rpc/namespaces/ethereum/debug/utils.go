@@ -59,6 +59,7 @@ func writeProfile(name, file string, log log.Logger) error {
 	if err != nil {
 		return err
 	}
+	/* #nosec */
 	f, err := os.Create(fp)
 	if err != nil {
 		return err
