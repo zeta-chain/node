@@ -65,6 +65,8 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 			Hash: hexTx,
 			From: additional.Sender.Hex(),
 		}
+	} else {
+		additional = nil
 	}
 
 	if res.EthTxIndex == -1 {

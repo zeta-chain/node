@@ -109,20 +109,21 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 	}
 	prevEventType := ""
 	for _, event := range result.Events {
-		if event.Type != evmtypes.EventTypeEthereumTx && !(prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType) {
+		if event.Type != evmtypes.EventTypeEthereumTx && (prevEventType != evmtypes.EventTypeEthereumTx || event.Type != MessageType) {
 			continue
 		}
 
 		// Parse tendermint message after ethereum_tx event
-		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType {
+		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType && eventIndex != -1 {
 			err := fillTxAttributes(&p.Txs[eventIndex], event.Attributes)
 			if err != nil {
 				return nil, err
 			}
+		}
+
+		if event.Type == MessageType {
 			prevEventType = MessageType
 			continue
-		} else {
-			prevEventType = evmtypes.EventTypeEthereumTx
 		}
 
 		if format == eventFormatUnknown {
@@ -155,6 +156,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 			}
 		}
 
+		prevEventType = evmtypes.EventTypeEthereumTx
 	}
 
 	// some old versions miss some events, fill it with tx result
