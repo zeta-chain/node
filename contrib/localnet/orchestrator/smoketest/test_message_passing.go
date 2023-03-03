@@ -93,7 +93,7 @@ func (sm *SmokeTest) TestMessagePassingAbort() {
 	fmt.Printf("  Token0: %d\n", res1.Reserve0)
 	fmt.Printf("  Token1: %d\n", res1.Reserve1)
 
-	if res0.Reserve0 != res1.Reserve0 || res0.Reserve1 != res1.Reserve1 {
+	if res0.Reserve0.Cmp(res1.Reserve0) != 0 || res0.Reserve1.Cmp(res1.Reserve1) != 0 {
 		panic("Reserve of pool should not change")
 	}
 }
