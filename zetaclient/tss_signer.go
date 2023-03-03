@@ -379,6 +379,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		privkey,
 		"MetaMetaOpenTheDoor",
 		tsspath,
+		// TODO: config this
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
 			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen

@@ -497,7 +497,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
-		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
+		//ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
 		//for idx, utxo := range unspents {
 		//	fmt.Printf("utxo %d\n", idx)
 		//	fmt.Printf("  txid: %s\n", utxo.TxID)
