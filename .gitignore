@@ -41,5 +41,5 @@ localnet/chains/zetachain/config/node*/*
 localnet/chains/zetachain/storage
 localnet/ganache/storage
 localnet/zetachain-monorepo
-/tx.json
+/standalone-network/authz/tx.json
 /zetanode.log
