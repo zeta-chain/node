@@ -24,9 +24,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgCreateTSSVoter:
 			res, err := msgServer.CreateTSSVoter(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgGasBalanceVoter:
-			res, err := msgServer.GasBalanceVoter(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgGasPriceVoter:
 			res, err := msgServer.GasPriceVoter(sdk.WrapSDKContext(ctx), msg)
