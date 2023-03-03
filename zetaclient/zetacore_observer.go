@@ -214,7 +214,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					// FIXME: config this schedule; this value is for localnet fast testing
 					//if nonce%1 == bn%1 && !outTxMan.IsOutTxActive(outTxID) {
-					if nonce%3 == bn%3 {
+					if nonce%3 == bn%3 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
