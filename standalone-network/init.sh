@@ -12,7 +12,7 @@ zetacored config keyring-backend $KEYRING --home ~/.zetacored
 zetacored config chain-id $CHAINID --home ~/.zetacored
 echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
 echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
-echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add zetaeth --recover --keyring-backend=test
+echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
 
 zetacored init test --chain-id=$CHAINID
 
@@ -29,9 +29,9 @@ cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_g
 
 
 
-zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000000000azeta --keyring-backend=test
-zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 50000000000000000000000000000000000000azeta --keyring-backend=test
-zetacored add-genesis-account $(zetacored keys show zetaeth -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
+zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
+zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
+zetacored add-genesis-account $(zetacored keys show executer -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
 
 ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
@@ -56,7 +56,7 @@ zetacored add-observer zeta_testnet 101 OutBoundTx "$observer_list"
 
 
 
-zetacored gentx zeta 50000000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
 
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json
