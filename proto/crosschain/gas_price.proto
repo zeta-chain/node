@@ -3,7 +3,6 @@ package zetachain.zetacore.crosschain;
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-import "gogoproto/gogo.proto";
 
 message GasPrice {
   string creator = 1;
