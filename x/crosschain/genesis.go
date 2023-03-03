@@ -39,11 +39,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTSS(ctx, *elem)
 	}
 
-	// Set all the gasBalance
-	for _, elem := range genState.GasBalanceList {
-		k.SetGasBalance(ctx, *elem)
-	}
-
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
 		k.SetGasPrice(ctx, *elem)
@@ -101,13 +96,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	for _, elem := range tSSList {
 		elem := elem
 		genesis.TSSList = append(genesis.TSSList, &elem)
-	}
-
-	// Get all gasBalance
-	gasBalanceList := k.GetAllGasBalance(ctx)
-	for _, elem := range gasBalanceList {
-		elem := elem
-		genesis.GasBalanceList = append(genesis.GasBalanceList, &elem)
 	}
 
 	// Get all gasPrice

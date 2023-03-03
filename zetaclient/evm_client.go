@@ -518,7 +518,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	for logs.Next() {
 		event := logs.Event
 		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-		destChain := GetChainFromChainID(event.DestinationChainId.Int64())
+		destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].ZETATokenContractAddress) {

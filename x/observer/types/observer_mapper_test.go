@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package types
 
 import (
@@ -22,16 +25,15 @@ func TestParsefileToObserverMapper(t *testing.T) {
 }
 
 func createObserverList(fp string) (list []*ObserverMapper) {
-	list = append(append(append(list, CreateObserverMapperList(1, common.EthChain(), ObservationType_InBoundTx)...),
-		CreateObserverMapperList(1, common.BscMainnetChain(), ObservationType_InBoundTx)...),
-		CreateObserverMapperList(1, common.PolygonChain(), ObservationType_OutBoundTx)...)
+	list = append(append(append(list, CreateObserverMapperList(1, common.GoerliLocalNetChain())...),
+		CreateObserverMapperList(1, common.BtcRegtestChain())...),
+		CreateObserverMapperList(1, common.ZetaChain())...)
 	listReader := make([]ObserverMapperReader, len(list))
 	for i, mapper := range list {
 		listReader[i] = ObserverMapperReader{
 			Index:             mapper.Index,
 			ObserverChainName: mapper.ObserverChain.ChainName.String(),
 			ObserverChainID:   mapper.ObserverChain.ChainId,
-			ObservationType:   mapper.ObservationType.String(),
 			ObserverList:      mapper.ObserverList,
 		}
 	}

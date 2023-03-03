@@ -25,7 +25,7 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 
 }
 
-func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain, observationType types.ObservationType) error {
+func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {
 	selfdelAddr, _ := sdk.AccAddressFromBech32(accAddress)
 	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {
@@ -42,7 +42,7 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 	}
 	obsParams := k.GetParams(ctx).GetParamsForChain(chain)
 	if !obsParams.IsSupported {
-		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Chain not suported %s , %s", chain.String(), observationType.String()))
+		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Chain not suported %s ", chain.String()))
 	}
 
 	tokens := validator.TokensFromShares(delegation.Shares)

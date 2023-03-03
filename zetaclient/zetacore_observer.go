@@ -166,7 +166,7 @@ func (co *CoreObserver) startSendScheduler() {
 			// schedule sends
 			for chain, sendList := range sendMap {
 				chainName := common.ParseChainName(chain)
-				c := GetChainFromChainName(chainName)
+				c := common.GetChainFromChainName(chainName)
 
 				found := false
 				for _, enabledChain := range GetSupportedChains() {
@@ -270,13 +270,13 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 
 func GetTargetChain(send *types.CrossChainTx) string {
 	chainID := send.GetCurrentOutTxParam().ReceiverChainId
-	return GetChainFromChainID(chainID).GetChainName().String()
+	return common.GetChainFromChainID(chainID).GetChainName().String()
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr := GetTargetChain(send)
 	chainName := common.ParseChainName(chainStr)
-	c := GetChainFromChainName(chainName)
+	c := common.GetChainFromChainName(chainName)
 
 	chainOb, found := co.clientMap[*c]
 	if !found {

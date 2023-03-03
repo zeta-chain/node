@@ -214,11 +214,11 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	var toChain *common.Chain
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		to = ethcommon.HexToAddress(send.InboundTxParams.Sender)
-		toChain = GetChainFromChainID(send.InboundTxParams.SenderChainId)
+		toChain = common.GetChainFromChainID(send.InboundTxParams.SenderChainId)
 		logger.Info().Msgf("Abort: reverting inbound")
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.GetCurrentOutTxParam().Receiver)
-		toChain = GetChainFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
+		toChain = common.GetChainFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
@@ -296,7 +296,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 
-	_, err = zetaBridge.GetObserverList(*toChain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	_, err = zetaBridge.GetObserverList(*toChain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 

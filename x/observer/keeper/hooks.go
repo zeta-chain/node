@@ -156,7 +156,7 @@ func RemoveIndex(s []string, index int) []string {
 func (k Keeper) CleanMapper(ctx sdk.Context, accAddress sdk.AccAddress) {
 	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
 	for _, mapper := range mappers {
-		err := k.CheckObserverDelegation(ctx, accAddress.String(), mapper.ObserverChain, mapper.ObservationType)
+		err := k.CheckObserverDelegation(ctx, accAddress.String(), mapper.ObserverChain)
 		if err != nil {
 			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
 			k.SetObserverMapper(ctx, mapper)

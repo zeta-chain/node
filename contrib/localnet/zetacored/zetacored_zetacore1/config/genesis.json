@@ -123,7 +123,6 @@
       "keygen": null,
       "tSSVoterList": [],
       "tSSList": [],
-      "gasBalanceList": [],
       "gasPriceList": [],
       "chainNoncesList": [],
       "CrossChainTxs": [],
@@ -157,7 +156,8 @@
         "target_bond_ratio": "00.67",
         "validator_emission_percentage": "00.50",
         "observer_emission_percentage": "00.25",
-        "tss_signer_emission_percentage": "00.25"
+        "tss_signer_emission_percentage": "00.25",
+        "duration_factor_constant": "0.001877876953694702"
       }
     },
     "evidence": {
@@ -412,7 +412,6 @@
             "chain_name": 14,
             "chain_id": 1337
           },
-          "observation_type": 1,
           "observer_list": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
             "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
@@ -423,7 +422,6 @@
             "chain_name": 14,
             "chain_id": 1337
           },
-          "observation_type": 2,
           "observer_list": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
             "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
@@ -434,7 +432,6 @@
             "chain_name": 15,
             "chain_id": 18444
           },
-          "observation_type": 1,
           "observer_list": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
             "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
@@ -445,7 +442,6 @@
             "chain_name": 15,
             "chain_id": 18444
           },
-          "observation_type": 2,
           "observer_list": [
             "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
             "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"

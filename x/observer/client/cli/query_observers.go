@@ -37,12 +37,11 @@ func CmdAllObserverMappers() *cobra.Command {
 
 func CmdObserversByChainAndType() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-observer [observation-chain] [observation-type]",
+		Use:   "show-observer [observation-chain]",
 		Short: "Query ObserversByChainAndType , Use common.chain for querying",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqObservationChain := args[0]
-			reqObservationType := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -51,12 +50,11 @@ func CmdObserversByChainAndType() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryObserversByChainAndTypeRequest{
+			params := &types.QueryObserversByChainRequest{
 				ObservationChain: reqObservationChain,
-				ObservationType:  reqObservationType,
 			}
 
-			res, err := queryClient.ObserversByChainAndType(cmd.Context(), params)
+			res, err := queryClient.ObserversByChain(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

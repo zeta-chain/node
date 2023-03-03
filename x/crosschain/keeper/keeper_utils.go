@@ -32,10 +32,10 @@ func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTyp
 }
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error) {
+	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
 	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Mapper Not present | Chain-Observation  %s-%s", chain.String(), observationType))
+		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("observer list not present for chain %s", chain.String()))
 	}
 	for _, obs := range observerMapper.ObserverList {
 		if obs == address {
@@ -65,7 +65,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain, observationType)
+		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
 		obsParams := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChain(chain)
 		if !obsParams.IsSupported {
 			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
