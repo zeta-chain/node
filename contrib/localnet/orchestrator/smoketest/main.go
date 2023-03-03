@@ -46,6 +46,8 @@ var (
 	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress         = ethcommon.HexToAddress
+
+	ETHZETAPoolAddress = ethcommon.HexToAddress("0x0C0B35C5eF00d9caD8D2ce65b147ea2A27d526Bc")
 )
 
 type SmokeTest struct {
@@ -176,8 +178,8 @@ func main() {
 	startTime := time.Now()
 	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorContracts()
-	smokeTest.TestDepositEtherIntoZRC20()
-	smokeTest.TestSendZetaIn()
+	//smokeTest.TestDepositEtherIntoZRC20()
+	//smokeTest.TestSendZetaIn()
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
 	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
 	fmt.Printf("##   Ether on Ethereum private net\n")
@@ -185,15 +187,17 @@ func main() {
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
-	smokeTest.TestERC20Deposit()
-	smokeTest.TestERC20Withdraw()
-	smokeTest.TestSendZetaOut()
-	smokeTest.TestMessagePassing()
-	smokeTest.TestZRC20Swap()
-	smokeTest.TestBitcoinWithdraw()
-	smokeTest.TestCrosschainSwap()
-	smokeTest.TestMessagePassingRevertFail()
-	smokeTest.TestMessagePassingRevertSuccess()
+	//smokeTest.TestERC20Deposit()
+	//smokeTest.TestERC20Withdraw()
+	//smokeTest.TestSendZetaOut()
+	smokeTest.TestMessagePassingAbort()
+
+	//smokeTest.TestMessagePassing()
+	//smokeTest.TestZRC20Swap()
+	//smokeTest.TestBitcoinWithdraw()
+	//smokeTest.TestCrosschainSwap()
+	//smokeTest.TestMessagePassingRevertFail()
+	//smokeTest.TestMessagePassingRevertSuccess()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

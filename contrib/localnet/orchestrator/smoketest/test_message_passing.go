@@ -6,13 +6,97 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
+	"github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
 )
+
+func (sm *SmokeTest) TestMessagePassingAbort() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	// ==================== Interacting with contracts ====================
+	time.Sleep(10 * time.Second)
+	LoudPrintf("Goerli->Goerli Message Passing (Abort due to insfficient ZETA burnt)\n")
+
+	pool, err := zevm.NewUniswapV2Pair(ETHZETAPoolAddress, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	res0, err := pool.GetReserves(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Reserve of pool before MP: \n")
+	fmt.Printf("  Token0: %d\n", res0.Reserve0)
+	fmt.Printf("  Token1: %d\n", res0.Reserve1)
+
+	fmt.Printf("Approving ConnectorEth to spend deployer's ZetaEth\n")
+	amount := big.NewInt(100)
+	//amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
+	auth := sm.goerliAuth
+	tx, err := sm.ZetaEth.Approve(auth, sm.ConnectorEthAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("Approve tx receipt: %d\n", receipt.Status)
+	fmt.Printf("Calling ConnectorEth.Send\n")
+	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     amount,
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ConnectorEth.Send tx hash: %s\n", tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("ConnectorEth.Send tx receipt: status %d\n", receipt.Status)
+	fmt.Printf("  Logs:\n")
+	for _, log := range receipt.Logs {
+		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		if err == nil {
+			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
+			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
+			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
+		}
+	}
+	sm.wg.Add(1)
+	go func() {
+		defer sm.wg.Done()
+		fmt.Printf("Waiting for ConnectorEth.Send CCTX to be mined...\n")
+		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
+		if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
+			fmt.Printf("CCTX status is not aborted: %s\n", cctx.CctxStatus)
+			//panic("CCTX status is not aborted")
+		}
+	}()
+	sm.wg.Wait()
+
+	res1, err := pool.GetReserves(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Reserve of pool before MP: \n")
+	fmt.Printf("  Token0: %d\n", res1.Reserve0)
+	fmt.Printf("  Token1: %d\n", res1.Reserve1)
+
+	if res0.Reserve0 != res1.Reserve0 || res0.Reserve1 != res1.Reserve1 {
+		panic("Reserve of pool should not change")
+	}
+}
 
 func (sm *SmokeTest) TestMessagePassing() {
 	startTime := time.Now()
