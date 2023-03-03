@@ -2,9 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"path/filepath"
@@ -14,7 +12,6 @@ type ObserverMapperReader struct {
 	Index             string   `json:"index"`
 	ObserverChainName string   `json:"observerChainName"`
 	ObserverChainID   int64    `json:"observerChainId"`
-	ObservationType   string   `json:"observationType"`
 	ObserverList      []string `json:"observerList"`
 }
 
@@ -40,15 +37,10 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 			ChainName: common.ParseChainName(readerValue.ObserverChainName),
 			ChainId:   readerValue.ObserverChainID,
 		}
-		observationType := ParseStringToObservationType(readerValue.ObservationType)
-		if observationType == 0 || chain.ChainName == 0 {
-			return nil, errors.Wrap(ErrUnableToParseMapper, fmt.Sprintf("Chain %s | ObserVation %s", readerValue.ObserverChainName, readerValue.ObservationType))
-		}
 		observerMappers[i] = &ObserverMapper{
-			Index:           readerValue.Index,
-			ObserverChain:   chain,
-			ObservationType: ParseStringToObservationType(readerValue.ObservationType),
-			ObserverList:    readerValue.ObserverList,
+			Index:         readerValue.Index,
+			ObserverChain: chain,
+			ObserverList:  readerValue.ObserverList,
 		}
 	}
 	return observerMappers, nil

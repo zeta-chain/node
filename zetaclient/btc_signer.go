@@ -231,7 +231,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, btcClient.chain.ChainName, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 	// FIXME: add prometheus metrics
-	_, err = zetaBridge.GetObserverList(btcClient.chain, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+	_, err = zetaBridge.GetObserverList(btcClient.chain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
 	}

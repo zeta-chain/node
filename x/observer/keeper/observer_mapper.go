@@ -11,19 +11,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func GetObserverMapperIndex(chain *common.Chain, obs types.ObservationType) string {
-	return fmt.Sprintf("%d-%s", chain.ChainId, obs.String())
+func GetObserverMapperIndex(chain *common.Chain) string {
+	return fmt.Sprintf("%d", chain.ChainId)
 }
 
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
-	om.Index = GetObserverMapperIndex(om.ObserverChain, om.ObservationType)
+	om.Index = GetObserverMapperIndex(om.ObserverChain)
 	b := k.cdc.MustMarshal(om)
 	store.Set([]byte(om.Index), b)
 }
 
-func (k Keeper) GetObserverMapper(ctx sdk.Context, chain *common.Chain, obsType types.ObservationType) (val types.ObserverMapper, found bool) {
-	index := GetObserverMapperIndex(chain, obsType)
+func (k Keeper) GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val types.ObserverMapper, found bool) {
+	index := GetObserverMapperIndex(chain)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	b := store.Get(types.KeyPrefix(index))
 	if b == nil {
@@ -92,7 +92,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 
 //Queries
 
-func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryObserversByChainAndTypeRequest) (*types.QueryObserversByChainAndTypeResponse, error) {
+func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserversByChainRequest) (*types.QueryObserversByChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -102,13 +102,13 @@ func (k Keeper) ObserversByChainAndType(goCtx context.Context, req *types.QueryO
 	chainName := common.ParseChainName(req.ObservationChain)
 	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
-		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrSupportedChains
+		return &types.QueryObserversByChainResponse{}, types.ErrSupportedChains
 	}
-	mapper, found := k.GetObserverMapper(ctx, chain, types.ParseStringToObservationType(req.ObservationType))
+	mapper, found := k.GetObserverMapper(ctx, chain)
 	if !found {
-		return &types.QueryObserversByChainAndTypeResponse{}, types.ErrObserverNotPresent
+		return &types.QueryObserversByChainResponse{}, types.ErrObserverNotPresent
 	}
-	return &types.QueryObserversByChainAndTypeResponse{Observers: mapper.ObserverList}, nil
+	return &types.QueryObserversByChainResponse{Observers: mapper.ObserverList}, nil
 }
 
 func (k Keeper) AllObserverMappers(goCtx context.Context, req *types.QueryAllObserverMappersRequest) (*types.QueryAllObserverMappersResponse, error) {
@@ -141,14 +141,13 @@ func (k Keeper) GetAllObserverAddresses(ctx sdk.Context) []string {
 	return dedupedList
 }
 
-func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain *common.Chain, obsType types.ObservationType, address string) {
-	mapper, found := k.GetObserverMapper(ctx, chain, obsType)
+func (k Keeper) AddObserverToMapper(ctx sdk.Context, chain *common.Chain, address string) {
+	mapper, found := k.GetObserverMapper(ctx, chain)
 	if !found {
 		k.SetObserverMapper(ctx, &types.ObserverMapper{
-			Index:           "",
-			ObserverChain:   chain,
-			ObservationType: obsType,
-			ObserverList:    []string{address},
+			Index:         "",
+			ObserverChain: chain,
+			ObserverList:  []string{address},
 		})
 		return
 	}
