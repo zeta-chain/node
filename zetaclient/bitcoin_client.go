@@ -371,29 +371,28 @@ type BTCInTxEvnet struct {
 func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for _, tx := range txs {
-		found := false
 		var value float64
 		var memo []byte
 		if len(tx.Vout) >= 2 {
+			voutPayToTSS := -1
+			voutMemo := -1
 			// first vout must to addressed to the targetAddress with p2wpkh scriptPubKey
-			out := tx.Vout[0]
-			script := out.ScriptPubKey.Hex
-			if len(script) == 44 && script[:4] == "0014" { // segwit output: 0x00 + 20 bytes of pubkey hash
-				hash, err := hex.DecodeString(script[4:])
-				if err != nil {
-					continue
-				}
-				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
-				if err != nil {
-					continue
-				}
-				if wpkhAddress.EncodeAddress() != targetAddress {
-					continue
-				}
-				value = out.Value
-				out = tx.Vout[1]
-				script = out.ScriptPubKey.Hex
-				if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
+			for idx, vout := range tx.Vout {
+				script := vout.ScriptPubKey.Hex
+				if len(script) == 44 && script[:4] == "0014" { // segwit output: 0x00 + 20 bytes of pubkey hash
+					hash, err := hex.DecodeString(script[4:])
+					if err != nil {
+						continue
+					}
+					wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+					if err != nil {
+						continue
+					}
+					if wpkhAddress.EncodeAddress() == targetAddress {
+						voutPayToTSS = idx
+						value = vout.Value
+					}
+				} else if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
 					memoSize, err := strconv.ParseInt(script[2:4], 16, 32)
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error decoding pubkey hash")
@@ -414,41 +413,43 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						continue
 					}
 					memo = memoBytes
-					found = true
-
+					voutMemo = idx
+				}
+				if voutPayToTSS >= 0 && voutMemo >= 0 { // found both vouts
+					break
 				}
 			}
 
-		}
-		if found {
-			var fromAddress string
-			if len(tx.Vin) > 0 {
-				vin := tx.Vin[0]
-				//log.Info().Msgf("vin: %v", vin.Witness)
-				if len(vin.Witness) == 2 {
-					pk := vin.Witness[1]
-					pkBytes, err := hex.DecodeString(pk)
-					if err != nil {
-						logger.Warn().Msgf("error decoding pubkey: %s", err)
-						break
+			if voutPayToTSS >= 0 && voutMemo >= 0 {
+				var fromAddress string
+				if len(tx.Vin) > 0 { // the first Vin is the sender
+					vin := tx.Vin[0]
+					//log.Info().Msgf("vin: %v", vin.Witness)
+					if len(vin.Witness) == 2 {
+						pk := vin.Witness[1]
+						pkBytes, err := hex.DecodeString(pk)
+						if err != nil {
+							logger.Warn().Msgf("error decoding pubkey: %s", err)
+							break
+						}
+						hash := btcutil.Hash160(pkBytes)
+						addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+						if err != nil {
+							logger.Warn().Msgf("error decoding pubkey hash: %s", err)
+							break
+						}
+						fromAddress = addr.EncodeAddress()
 					}
-					hash := btcutil.Hash160(pkBytes)
-					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
-					if err != nil {
-						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
-						break
-					}
-					fromAddress = addr.EncodeAddress()
 				}
+				inTxs = append(inTxs, &BTCInTxEvnet{
+					FromAddress: fromAddress,
+					ToAddress:   targetAddress,
+					Value:       value,
+					MemoBytes:   memo,
+					BlockNumber: blockNumber,
+					TxHash:      tx.Txid,
+				})
 			}
-			inTxs = append(inTxs, &BTCInTxEvnet{
-				FromAddress: fromAddress,
-				ToAddress:   targetAddress,
-				Value:       value,
-				MemoBytes:   memo,
-				BlockNumber: blockNumber,
-				TxHash:      tx.Txid,
-			})
 		}
 	}
 	return inTxs
