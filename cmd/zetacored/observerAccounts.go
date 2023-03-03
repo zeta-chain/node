@@ -54,7 +54,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 func AddObserverAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [chainName] [chainID][comma separate list of address] ",
+		Use:   "add-observer [chainName] [chainID] [comma separate list of address] ",
 		Short: "Add a list of observers to the observer mapper",
 		Long: `
            Chain Types :
@@ -72,7 +72,7 @@ func AddObserverAccountCmd() *cobra.Command {
 					"BscTestnet"
 					"BTCTestnet"
 			`,
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
@@ -89,7 +89,7 @@ func AddObserverAccountCmd() *cobra.Command {
 					ChainName: chainName,
 					ChainId:   int64(chainID),
 				},
-				ObserverList: strings.Split(args[3], ","),
+				ObserverList: strings.Split(args[2], ","),
 			}
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
