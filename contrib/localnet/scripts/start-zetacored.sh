@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 HOSTNAME=$(hostname)
 cp -r "/root/zetacored/zetacored_$HOSTNAME" /root/.zetacored
 
@@ -12,3 +12,7 @@ else
 fi
 
 exec zetacored start --pruning=nothing   --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+
+# uncomment the following to run genesis script reset-testnet.sh from zetacore0 container
+#/usr/sbin/sshd
+#sleep 10000

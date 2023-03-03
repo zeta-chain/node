@@ -359,5 +359,27 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		fmt.Printf("  Amount: %f\n", event.Value)
 		fmt.Printf("  Memo: %x\n", event.MemoBytes)
 	}
+	if len(events) != 1 {
+		fmt.Printf("expected 1 event; got 0\n")
+		fmt.Printf("rawtx: \n")
+		fmt.Printf("  TxIn: %d\n", len(rawtx.Vin))
+		for idx, txIn := range rawtx.Vin {
+			fmt.Printf("  idx %d:\n", idx)
+			fmt.Printf("    TxID: %s\n", txIn.Txid)
+			fmt.Printf("    Vout: %d\n", txIn.Vout)
+			fmt.Printf("    ScriptSig: %s\n", txIn.ScriptSig.Hex)
+			//fmt.Printf("    Sequence: %d\n", txIn.Sequence)
+		}
+		fmt.Printf("  TxOut: %d\n", len(rawtx.Vout))
+		for idx, txOut := range rawtx.Vout {
+			fmt.Printf("  idx %d:\n", idx)
+			fmt.Printf("    Value: %f\n", txOut.Value)
+			fmt.Printf("    N: %d\n", txOut.N)
+			fmt.Printf("    ScriptPubKey: %s\n", txOut.ScriptPubKey.Hex)
+		}
+		fmt.Printf("  LockTime: %d\n", rawtx.LockTime)
+		fmt.Printf("  confirmations: %d\n", rawtx.Confirmations)
+		panic("expected 1 event")
+	}
 	return nil
 }

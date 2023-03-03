@@ -30,7 +30,7 @@ else
 
   export TSSPATH=~/.tss2
   zetaclientd init --val val --log-console --enable-chains "GOERLI,BSCTESTNET"  \
-    --peer /dns/zetaclient0/tcp/6668/p2p/$SEED \
+    --peer /ip4/172.20.0.21/tcp/6668/p2p/$SEED \
     --pre-params ~/preParams.json --keygen-block $BLOCKNUM --zetacore-url $node \
     --chain-id athens_101-1
   zetaclientd start

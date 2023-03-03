@@ -1,5 +1,5 @@
 {
-  "genesis_time": "2023-01-16T04:54:06.919538199Z",
+  "genesis_time": "2023-03-02T21:32:29.947178212Z",
   "chain_id": "athens_101-1",
   "initial_height": "1",
   "consensus_params": {
@@ -34,7 +34,7 @@
         {
           "@type": "/ethermint.types.v1.EthAccount",
           "base_account": {
-            "address": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+            "address": "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
             "pub_key": null,
             "account_number": "0",
             "sequence": "0"
@@ -54,7 +54,27 @@
         {
           "@type": "/ethermint.types.v1.EthAccount",
           "base_account": {
-            "address": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+            "address": "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+            "pub_key": null,
+            "account_number": "0",
+            "sequence": "0"
+          },
+          "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+        },
+        {
+          "@type": "/ethermint.types.v1.EthAccount",
+          "base_account": {
+            "address": "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+            "pub_key": null,
+            "account_number": "0",
+            "sequence": "0"
+          },
+          "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+        },
+        {
+          "@type": "/ethermint.types.v1.EthAccount",
+          "base_account": {
+            "address": "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat",
             "pub_key": null,
             "account_number": "0",
             "sequence": "0"
@@ -63,6 +83,9 @@
         }
       ]
     },
+    "authz": {
+      "authorization": []
+    },
     "bank": {
       "params": {
         "send_enabled": [],
@@ -70,7 +93,34 @@
       },
       "balances": [
         {
-          "address": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "address": "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat",
           "coins": [
             {
               "denom": "azeta",
@@ -86,21 +136,12 @@
               "amount": "10000000000000000000000"
             }
           ]
-        },
-        {
-          "address": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
-          "coins": [
-            {
-              "denom": "azeta",
-              "amount": "100000000000000000000000000"
-            }
-          ]
         }
       ],
       "supply": [
         {
           "denom": "azeta",
-          "amount": "200010000000000000000000000"
+          "amount": "400010000000000000000000000"
         }
       ],
       "denom_metadata": []
@@ -128,7 +169,9 @@
       "chainNoncesList": [],
       "CrossChainTxs": [],
       "nodeAccountList": [],
-      "lastBlockHeightList": []
+      "lastBlockHeightList": [],
+      "inTxHashToCctxList": [],
+      "permissionFlags": null
     },
     "distribution": {
       "params": {
@@ -157,7 +200,8 @@
         "target_bond_ratio": "00.67",
         "validator_emission_percentage": "00.50",
         "observer_emission_percentage": "00.25",
-        "tss_signer_emission_percentage": "00.25"
+        "tss_signer_emission_percentage": "00.25",
+        "duration_factor_constant": "0.001877876953694702"
       }
     },
     "evidence": {
@@ -187,7 +231,9 @@
           "london_block": "0",
           "arrow_glacier_block": "0",
           "gray_glacier_block": "0",
-          "merge_netsplit_block": "0"
+          "merge_netsplit_block": "0",
+          "shanghai_block": "0",
+          "cancun_block": "0"
         },
         "allow_unprotected_txs": false
       }
@@ -217,7 +263,7 @@
               {
                 "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
                 "description": {
-                  "moniker": "zetachain",
+                  "moniker": "zetacore2",
                   "identity": "",
                   "website": "",
                   "security_contact": "",
@@ -229,11 +275,11 @@
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-                "validator_address": "zetavaloper1z46tdw75jvh4h39y3vu758ctv34rw5z9jmut95",
+                "delegator_address": "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+                "validator_address": "zetavaloper1dw3amez655kxnlfhcw0gus3t0mtd0xkg0uh0d9",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
-                  "key": "cnOc/39ATQw+bYKG56pL8A2aMO6M8sBxXO3OVJHbhdA="
+                  "key": "/CXclmB88ykE911Mx6wU1uZZ+p2qqQxNGZbKJ+KBbmk="
                 },
                 "value": {
                   "denom": "azeta",
@@ -241,7 +287,7 @@
                 }
               }
             ],
-            "memo": "baef847b3c8b4fc599b4434b1f234a95de70cdc2@172.20.0.11:26656",
+            "memo": "3cbc1f0083f21289fbc6bbbb9fa4937dab38c76b@zetacore2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -251,7 +297,7 @@
               {
                 "public_key": {
                   "@type": "/cosmos.crypto.secp256k1.PubKey",
-                  "key": "A5xB7o1mDrL/KygJY5y45rWkMlplJlKpUtAxFIpoLyLn"
+                  "key": "AmfO3VmpQiiJowogRz0JSyfseYmRx/yeiL74SK7R8a6X"
                 },
                 "mode_info": {
                   "single": {
@@ -266,10 +312,135 @@
               "gas_limit": "200000",
               "payer": "",
               "granter": ""
-            }
+            },
+            "tip": null
           },
           "signatures": [
-            "xo+pCyqUVhYyDoZiL0lZmwgdoyESaD/GXwX3dYyOfb0XcX72p/VcVPAH8LKb4rRp3WNg+0e0ge0ps5sn4cinbg=="
+            "TeRX9j65RewtQB4n/Xtz4S6DlrCrPZ/jvImPkcV/WDomG/u+6e1mmRtyJxftz8oZWy7l8fTldeig/Y4sU9zMww=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "zetacore3",
+                  "identity": "",
+                  "website": "",
+                  "security_contact": "",
+                  "details": ""
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat",
+                "validator_address": "zetavaloper1539cj6muk8l2zq2jznvdn0xpz7m3wrath2q5sa",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "leqFRy7/7++i/7gyfnse8p3vb4pN+Dq1jJo024/uCC4="
+                },
+                "value": {
+                  "denom": "azeta",
+                  "amount": "10000000000000000000000000"
+                }
+              }
+            ],
+            "memo": "3d278fc9ddaf0e12ae7806738e22e5d320e99d98@zetacore3:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "AtAtefRqZzYz2Gbp0vWkndPswl9xgHVFVKWnYzNkpEgy"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "zgZ6jQ2JdXThfeiXksopNSoXjVALUe8JegbQq4n0fjRSC6xfOw1D6Eo7Eg4CKE8E/AYqDO898alJ7VsuNSjycw=="
+          ]
+        },
+        {
+          "body": {
+            "messages": [
+              {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                  "moniker": "zetachain",
+                  "identity": "",
+                  "website": "",
+                  "security_contact": "",
+                  "details": ""
+                },
+                "commission": {
+                  "rate": "0.100000000000000000",
+                  "max_rate": "0.200000000000000000",
+                  "max_change_rate": "0.010000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+                "validator_address": "zetavaloper1vktl72xy7gm2w59w92l8aru2krt20e9e2kmlmc",
+                "pubkey": {
+                  "@type": "/cosmos.crypto.ed25519.PubKey",
+                  "key": "n5AgKL7a0cw474J7EVqI/pn+HjHEYxL4pmZaOtBfbgw="
+                },
+                "value": {
+                  "denom": "azeta",
+                  "amount": "10000000000000000000000000"
+                }
+              }
+            ],
+            "memo": "5700abb95ccd560877e959ff50d3be0c9dc11a31@172.20.0.11:26656",
+            "timeout_height": "0",
+            "extension_options": [],
+            "non_critical_extension_options": []
+          },
+          "auth_info": {
+            "signer_infos": [
+              {
+                "public_key": {
+                  "@type": "/cosmos.crypto.secp256k1.PubKey",
+                  "key": "A1cN7WbE01XxHiZf69PICMzybwMsik88da06FNKKV2Ww"
+                },
+                "mode_info": {
+                  "single": {
+                    "mode": "SIGN_MODE_DIRECT"
+                  }
+                },
+                "sequence": "0"
+              }
+            ],
+            "fee": {
+              "amount": [],
+              "gas_limit": "200000",
+              "payer": "",
+              "granter": ""
+            },
+            "tip": null
+          },
+          "signatures": [
+            "UZcWIz06TBU5aJ/b01tVUWfd/9OrL27jXfZYQCNS4qxpQo9d7+BSIlmIsrHfUKcqmjzeeuRKnR8XdlOBahsWFQ=="
           ]
         },
         {
@@ -290,11 +461,11 @@
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
-                "validator_address": "zetavaloper1lz2fqwzjnk6qy48fgj753h48444fxtt7newaeu",
+                "delegator_address": "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+                "validator_address": "zetavaloper1t047gmw8pk0ust7j0znrgs4k3745yuxv83h2ac",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
-                  "key": "TpCVIVP20iVz5vE7OY6R78HvIzP22Je0zHHnjJAcBnY="
+                  "key": "9wvDOQnktTkbkusqe1QvhRBP0AQ6Enjy1/ETOWKnR+Q="
                 },
                 "value": {
                   "denom": "azeta",
@@ -302,7 +473,7 @@
                 }
               }
             ],
-            "memo": "c9733926bd0e54244bd5189f64be9a5bd3754599@zetacore1:26656",
+            "memo": "f3e2d5d6748d16ef6ae5ca8825df77cbc775af79@zetacore1:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -312,7 +483,7 @@
               {
                 "public_key": {
                   "@type": "/cosmos.crypto.secp256k1.PubKey",
-                  "key": "A+INzBCKz8TVJ0QBabAGIUKXMKyQTalQ761JBBQSYfr3"
+                  "key": "AiaUMaD+PkL1V0SdDEEJIS8dQgDBWd61J+5ENDLEvBJL"
                 },
                 "mode_info": {
                   "single": {
@@ -327,10 +498,11 @@
               "gas_limit": "200000",
               "payer": "",
               "granter": ""
-            }
+            },
+            "tip": null
           },
           "signatures": [
-            "db3f3P/7BMMiH+Sh+WCflVYk69Zi659fXsJ0DHtQPJ1KaNorFVf8j1TZ0dnBYy7XyeDKtmu6b52OpnPT86W7SQ=="
+            "Xxk1PrXSSa6nH/p3woTcoPRIiRiAYP4/PxG0EDImdOAaa5fsTbmSSS++0x2HTHJNFSrBlIroDESLoo2hK0iOfQ=="
           ]
         }
       ]
@@ -358,52 +530,15 @@
         "veto_threshold": "0.334000000000000000"
       }
     },
-    "ibc": {
-      "client_genesis": {
-        "clients": [],
-        "clients_consensus": [],
-        "clients_metadata": [],
-        "params": {
-          "allowed_clients": [
-            "06-solomachine",
-            "07-tendermint"
-          ]
-        },
-        "create_localhost": false,
-        "next_client_sequence": "0"
-      },
-      "connection_genesis": {
-        "connections": [],
-        "client_connection_paths": [],
-        "next_connection_sequence": "0",
-        "params": {
-          "max_expected_time_per_block": "30000000000"
-        }
-      },
-      "channel_genesis": {
-        "channels": [],
-        "acknowledgements": [],
-        "commitments": [],
-        "receipts": [],
-        "send_sequences": [],
-        "recv_sequences": [],
-        "ack_sequences": [],
-        "next_channel_sequence": "0"
-      }
-    },
-    "mint": {
-      "minter": {
-        "inflation": "0.130000000000000000",
-        "annual_provisions": "0.000000000000000000"
-      },
-      "params": {
-        "mint_denom": "azeta",
-        "inflation_rate_change": "0.130000000000000000",
-        "inflation_max": "0.200000000000000000",
-        "inflation_min": "0.070000000000000000",
-        "goal_bonded": "0.670000000000000000",
-        "blocks_per_year": "6311520"
-      }
+    "group": {
+      "group_seq": "0",
+      "groups": [],
+      "group_members": [],
+      "group_policy_seq": "0",
+      "group_policies": [],
+      "proposal_seq": "0",
+      "proposals": [],
+      "votes": []
     },
     "observer": {
       "observers": [
@@ -414,8 +549,10 @@
           },
           "observation_type": 1,
           "observer_list": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
+            "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+            "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+            "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+            "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat"
           ]
         },
         {
@@ -425,8 +562,10 @@
           },
           "observation_type": 2,
           "observer_list": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
+            "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+            "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+            "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+            "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat"
           ]
         },
         {
@@ -436,8 +575,10 @@
           },
           "observation_type": 1,
           "observer_list": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
+            "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+            "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+            "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+            "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat"
           ]
         },
         {
@@ -447,8 +588,10 @@
           },
           "observation_type": 2,
           "observer_list": [
-            "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-            "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52"
+            "zeta1vktl72xy7gm2w59w92l8aru2krt20e9ewkrrkw",
+            "zeta1t047gmw8pk0ust7j0znrgs4k3745yuxvr30ksw",
+            "zeta1dw3amez655kxnlfhcw0gus3t0mtd0xkgtu0nqn",
+            "zeta1539cj6muk8l2zq2jznvdn0xpz7m3wratn2cgat"
           ]
         }
       ],
@@ -458,87 +601,6 @@
             "chain": {
               "chain_name": 15,
               "chain_id": 18444
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 12,
-              "chain_id": 18332
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 3,
-              "chain_id": 8332
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 4,
-              "chain_id": 137
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 7,
-              "chain_id": 80001
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 9,
-              "chain_id": 1001
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 10,
-              "chain_id": 97
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 5,
-              "chain_id": 56
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 1,
-              "chain_id": 1
-            },
-            "ballot_threshold": "0.660000000000000000",
-            "min_observer_delegation": "10000000000.000000000000000000",
-            "is_supported": true
-          },
-          {
-            "chain": {
-              "chain_name": 6,
-              "chain_id": 5
             },
             "ballot_threshold": "0.660000000000000000",
             "min_observer_delegation": "10000000000.000000000000000000",
@@ -603,15 +665,12 @@
       "redelegations": [],
       "exported": false
     },
-    "transfer": {
-      "port_id": "transfer",
-      "denom_traces": [],
-      "params": {
-        "send_enabled": true,
-        "receive_enabled": true
-      }
-    },
     "upgrade": {},
-    "vesting": {}
+    "vesting": {},
+    "mint": {
+      "params": {
+        "mint_denom": "azeta"
+      }
+    }
   }
 }

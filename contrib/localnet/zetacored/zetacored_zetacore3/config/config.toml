@@ -15,7 +15,7 @@
 proxy_app = "tcp://127.0.0.1:26658"
 
 # A custom human readable name for this node
-moniker = "zetachain"
+moniker = "zetacore3"
 
 # If this node is many blocks behind the tip of the chain, FastSync
 # allows them to catchup quickly by downloading blocks in parallel
@@ -212,7 +212,7 @@ external_address = ""
 seeds = ""
 
 # Comma separated list of nodes to keep persistent connections to
-persistent_peers = "3cbc1f0083f21289fbc6bbbb9fa4937dab38c76b@zetacore2:26656,3d278fc9ddaf0e12ae7806738e22e5d320e99d98@zetacore3:26656,f3e2d5d6748d16ef6ae5ca8825df77cbc775af79@zetacore1:26656"
+persistent_peers = ""
 
 # UPNP port forwarding
 upnp = false

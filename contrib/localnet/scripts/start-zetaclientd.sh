@@ -29,3 +29,7 @@ else
     --chain-id athens_101-1 --dev
   zetaclientd start
 fi
+
+# uncomment the following to do TSS Keygen
+
+
