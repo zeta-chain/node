@@ -214,11 +214,11 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	var toChain *common.Chain
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		to = ethcommon.HexToAddress(send.InboundTxParams.Sender)
-		toChain = GetChainFromChainID(send.InboundTxParams.SenderChainId)
+		toChain = common.GetChainFromChainID(send.InboundTxParams.SenderChainId)
 		logger.Info().Msgf("Abort: reverting inbound")
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		to = ethcommon.HexToAddress(send.GetCurrentOutTxParam().Receiver)
-		toChain = GetChainFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
+		toChain = common.GetChainFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
