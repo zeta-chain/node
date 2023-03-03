@@ -14,7 +14,6 @@ service Msg {
   rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
-  rpc GasBalanceVoter(MsgGasBalanceVoter) returns (MsgGasBalanceVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
@@ -60,17 +59,6 @@ message MsgCreateTSSVoter {
 }
 
 message MsgCreateTSSVoterResponse { }
-
-
-message MsgGasBalanceVoter {
-  string creator = 1;
-  string chain = 2;
-  string balance = 3;
-  uint64 blockNumber = 4;
-}
-
-message MsgGasBalanceVoterResponse {
-}
 
 message MsgGasPriceVoter {
   string creator = 1;

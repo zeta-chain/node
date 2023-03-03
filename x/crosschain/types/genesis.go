@@ -19,7 +19,6 @@ func DefaultGenesis() *GenesisState {
 		Keygen:          nil,
 		TSSVoterList:    []*TSSVoter{},
 		TSSList:         []*TSS{},
-		GasBalanceList:  []*GasBalance{},
 		GasPriceList:    []*GasPrice{},
 		ChainNoncesList: []*ChainNonces{},
 		//CCTX:            []*Send{},
@@ -71,15 +70,7 @@ func (gs GenesisState) Validate() error {
 		}
 		tSSIndexMap[elem.Index] = true
 	}
-	// Check for duplicated index in gasBalance
-	gasBalanceIndexMap := make(map[string]bool)
 
-	for _, elem := range gs.GasBalanceList {
-		if _, ok := gasBalanceIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for gasBalance")
-		}
-		gasBalanceIndexMap[elem.Index] = true
-	}
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)
 
