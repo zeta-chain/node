@@ -3,7 +3,8 @@
     "athens2-v1.1.16",
     "athens2-v1.1.17",
     "athens2-v1.1.18",
-    "athens2-v1.1.19"
+    "athens2-v1.1.19",
+    "athens2-v1.1.20"
   ],
   "upgrade_sleep_time": 140,
   "binary_versions": [
@@ -11,6 +12,7 @@
     ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.16", "zetacored"],
     ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.17", "zetacored"],
     ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.18", "zetacored"],
-    ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.19", "zetacored"]
+    ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.19", "zetacored"],
+    ["https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/athens2-v1.1.20", "zetacored"]
   ]
 }
