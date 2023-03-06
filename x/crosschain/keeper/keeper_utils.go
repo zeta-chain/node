@@ -106,6 +106,27 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	}
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
+	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+	if err != nil {
+		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
+	}
+
+	tmpCtx, commit := ctx.CacheContext()
+	{
+		amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(tmpCtx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
+		if err != nil {
+			return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
+		}
+		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
+		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+		err = k.fungibleKeeper.CallZRC20Burn(tmpCtx, types.ModuleAddressEVM, gasZRC20, amounts[1])
+		if err != nil {
+			return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
+		}
+	}
+
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
 	if cctx.ZetaFees.GT(cctx.InboundTxParams.Amount) && cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
@@ -113,23 +134,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	}
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
 
-	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
-	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
-	}
-	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
-	}
-	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
-	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
-	}
-
+	commit()
 	return nil
 }
 
