@@ -108,7 +108,10 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(sdk.NewUintFromBigInt(outTxGasFeeInZeta))
-
+	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
+	if cctx.ZetaFees.GT(cctx.ZetaBurnt) {
+		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.ZetaBurnt, cctx.LogIdentifierForCCTX()))
+	}
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
 	coins := sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(feeInZeta.BigInt())))
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
@@ -126,11 +129,6 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, receiveChain string, cctx *types.C
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
 	}
 
-	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
-
-	if cctx.ZetaFees.GT(cctx.ZetaBurnt) {
-		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.ZetaBurnt, cctx.LogIdentifierForCCTX()))
-	}
 	cctx.ZetaMint = cctx.ZetaBurnt.Sub(cctx.ZetaFees)
 
 	return nil
