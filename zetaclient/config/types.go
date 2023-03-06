@@ -49,6 +49,8 @@ type Config struct {
 	KeygenBlock   int64
 	ChainID       string
 	ZetaCoreURL   string
+	AuthzGranter  string
+	AuthzGrantee  string
 
 	ChainsEnabled []common.Chain
 	ChainConfigs  map[string]*ChainETHish

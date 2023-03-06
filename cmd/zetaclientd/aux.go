@@ -4,23 +4,42 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcd/rpcclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	mc "github.com/zeta-chain/zetacore/zetaclient"
-	mcconfig "github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass string, chainIP string) (*mc.ZetaCoreBridge, bool) {
-	kb, _, err := mc.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+func CreateAuthzSigner(config *config.Config) error {
+	granteeAddress, err := cosmos.AccAddressFromBech32(config.AuthzGrantee)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("fail to parse AuthzGrantee string to address %s", config.AuthzGrantee))
+	}
+	zetaclient.SetupAuthZSignerList(config.AuthzGranter, granteeAddress)
+	return nil
+}
+
+func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, bool) {
+	signerName := config.ValidatorName
+	signerPass := "password"
+	chainIP := config.ZetaCoreURL
+
+	kb, err := zetaclient.GetKeyringKeybase([]common.KeyType{common.ObserverGranteeKey, common.TssSignerKey}, chainHomeFolder, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		return nil, true
 	}
+	granterAddreess, err := cosmos.AccAddressFromBech32(config.AuthzGranter)
+	if err != nil {
+		log.Fatal().Err(err).Msg("fail to parse AuthzGranter string to address ")
+		return nil, true
+	}
+	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, signerName, signerPass)
 
-	k := mc.NewKeysWithKeybase(kb, signerName, signerPass)
-
-	bridge, err := mc.NewZetaCoreBridge(k, chainIP, signerName)
+	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, signerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewZetaCoreBridge")
 		return nil, true
@@ -28,13 +47,13 @@ func CreateZetaBridge(chainHomeFoler string, signerName string, signerPass strin
 	return bridge, false
 }
 
-func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]mc.ChainSigner, error) {
-	signerMap := make(map[common.Chain]mc.ChainSigner)
-	for _, chain := range mcconfig.ChainsEnabled {
+func CreateSignerMap(tss zetaclient.TSSSigner) (map[common.Chain]zetaclient.ChainSigner, error) {
+	signerMap := make(map[common.Chain]zetaclient.ChainSigner)
+	for _, chain := range config.ChainsEnabled {
 		if chain.IsEVMChain() {
-			mpiAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
-			erc20CustodyAddress := ethcommon.HexToAddress(mcconfig.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
-			signer, err := mc.NewEVMSigner(chain, mcconfig.ChainConfigs[chain.ChainName.String()].Endpoint, tss, mcconfig.ConnectorAbiString, mcconfig.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress)
+			mpiAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
+			erc20CustodyAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
+			signer, err := zetaclient.NewEVMSigner(chain, config.ChainConfigs[chain.ChainName.String()].Endpoint, tss, config.ConnectorAbiString, config.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress)
 			if err != nil {
 				log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 				return nil, err
@@ -43,18 +62,18 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]mc.ChainSigner, error) 
 		} else if chain.IsBitcoinChain() {
 			// FIXME: move the construction of rpcclient to somewhere else
 			connCfg := &rpcclient.ConnConfig{
-				Host:         mcconfig.BitcoinConfig.RPCEndpoint,
-				User:         mcconfig.BitcoinConfig.RPCUsername,
-				Pass:         mcconfig.BitcoinConfig.RPCPassword,
+				Host:         config.BitcoinConfig.RPCEndpoint,
+				User:         config.BitcoinConfig.RPCUsername,
+				Pass:         config.BitcoinConfig.RPCPassword,
 				HTTPPostMode: true,
 				DisableTLS:   true,
-				Params:       mcconfig.BitcoinConfig.RPCParams,
+				Params:       config.BitcoinConfig.RPCParams,
 			}
 			client, err := rpcclient.New(connCfg, nil)
 			if err != nil {
 				return nil, fmt.Errorf("error creating rpc client: %s", err)
 			}
-			signer, err := mc.NewBTCSigner(tss, client)
+			signer, err := zetaclient.NewBTCSigner(tss, client)
 			if err != nil {
 				log.Fatal().Err(err).Msgf("%s: NewBitcoinSigner Bitcoin error ", chain.String())
 				return nil, err
@@ -66,16 +85,16 @@ func CreateSignerMap(tss mc.TSSSigner) (map[common.Chain]mc.ChainSigner, error) 
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *mc.ZetaCoreBridge, tss mc.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]mc.ChainClient, error) {
-	clientMap := make(map[common.Chain]mc.ChainClient)
-	for _, chain := range mcconfig.ChainsEnabled {
+func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]zetaclient.ChainClient, error) {
+	clientMap := make(map[common.Chain]zetaclient.ChainClient)
+	for _, chain := range config.ChainsEnabled {
 		log.Info().Msgf("starting observer for : %s ", chain.String())
-		var co mc.ChainClient
+		var co zetaclient.ChainClient
 		var err error
 		if chain.IsEVMChain() {
-			co, err = mc.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
+			co, err = zetaclient.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
 		} else {
-			co, err = mc.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())

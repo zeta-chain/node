@@ -33,7 +33,7 @@ func (msg *MsgVoteOnObservedInboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedInboundTx) Type() string {
-	return "InBoundTXVoter"
+	return common.InboundVoter.String()
 }
 
 func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {

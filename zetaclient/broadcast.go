@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	stypes "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd"
+	"github.com/zeta-chain/zetacore/common"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,10 +19,12 @@ import (
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string, error) {
+func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msg sdktypes.Msg) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
+
+	authzSigner := GetSigner(msg.String())
 	blockHeight, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return "", err
@@ -29,31 +32,31 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 
 	if int64(blockHeight) > b.blockHeight {
 		b.blockHeight = int64(blockHeight)
-		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber()
+		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber(authzSigner.KeyType)
 		if err != nil {
 			return "", err
 		}
-		b.accountNumber = accountNumber
-		if b.seqNumber < seqNumber {
-			b.seqNumber = seqNumber
+		b.accountNumber[authzSigner.KeyType] = accountNumber
+		if b.seqNumber[authzSigner.KeyType] < seqNumber {
+			b.seqNumber[authzSigner.KeyType] = seqNumber
 		}
 	}
 	//b.logger.Info().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
 	flags := flag.NewFlagSet("zetacore", 0)
 
-	ctx := b.GetContext()
+	ctx := b.GetContext(authzSigner.KeyType)
 	factory := clienttx.NewFactoryCLI(ctx, flags)
-	factory = factory.WithAccountNumber(b.accountNumber)
-	factory = factory.WithSequence(b.seqNumber)
+	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
+	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
-	builder, err := factory.BuildUnsignedTx(msgs...)
+	builder, err := factory.BuildUnsignedTx(msg)
 	if err != nil {
 		return "", err
 	}
 	builder.SetGasLimit(gaslimit)
-	fee := stypes.NewCoins(stypes.NewCoin("azeta", stypes.NewInt(40000)))
+	fee := sdktypes.NewCoins(sdktypes.NewCoin("azeta", sdktypes.NewInt(40000)))
 	builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
@@ -75,17 +78,6 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
 	if commit.Code > 0 {
 		if commit.Code == 32 {
-			// bad sequence number, fetch new one
-			//_, seqNum, _ := b.GetAccountNumberAndSequenceNumber()
-			//if seqNum == b.seqNumber {
-			//	b.logger.Warn().Msgf("seq # %d is the most current that zetacore tells us, not sure why it's not accepting it; increment it and try later. ", seqNum)
-			//	//atomic.AddUint64(&b.seqNumber, 1)
-			//} else {
-			//	b.seqNumber = seqNum
-			//}
-
-			// The above logic does not work when the fetched new one is stuck at out-of-date values. (why?)
-			// Here are directly parse the error message and get the expected seq num
 			errMsg := commit.RawLog
 			re := regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
 			matches := re.FindStringSubmatch(errMsg)
@@ -102,25 +94,26 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 				b.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
 				return "", err
 			}
-			b.seqNumber = uint64(expectedSeq)
-			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber, gotSeq)
+			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
+			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
-		b.logger.Info().Msgf("messages: %+v", msgs)
+		b.logger.Info().Msgf("messages: %+v", msg)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 	//b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
 
 	// increment seqNum
-	atomic.AddUint64(&b.seqNumber, 1)
+	seq := b.seqNumber[authzSigner.KeyType]
+	atomic.AddUint64(&seq, 1)
 	//b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
 
 	return commit.TxHash, nil
 }
 
 // GetContext return a valid context with all relevant values set
-func (b *ZetaCoreBridge) GetContext() client.Context {
+func (b *ZetaCoreBridge) GetContext(keyType common.KeyType) client.Context {
 	ctx := client.Context{}
-	addr, _ := b.keys.GetSignerInfo().GetAddress()
+	addr, _ := b.keys.GetSignerInfo(keyType).GetAddress()
 	// TODO : Handle error
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(cmd.CHAINID)

@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/zeta-chain/zetacore/common"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -50,19 +51,21 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	err = CreateAuthzSigner(configData)
+	if err != nil {
+		return err
+	}
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
 
 	// first signer & bridge
-	signerName := configData.ValidatorName
-	signerPass := "password"
-	bridge1, done := CreateZetaBridge(rootArgs.zetaCoreHome, signerName, signerPass, configData.ZetaCoreURL)
+
+	bridge1, done := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
 	if done {
 		return nil
 	}
 
-	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
+	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
 	if err != nil {
 		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
@@ -88,18 +91,18 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	consKey := ""
-	pubkeySet, err := bridge1.GetKeys().GetPubKeySet()
+	operatorPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
 	for {
-		ztx, err := bridge1.SetNodeKey(pubkeySet, consKey)
+		ztx, err := bridge1.SetNodeKey(operatorPubkeySet, consKey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
 			time.Sleep(2 * time.Second)
 		} else {
 			log.Info().Msgf("SetNodeKey success: %s", ztx)
-			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", pubkeySet.Secp256k1.String(), consKey, ztx)
+			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", operatorPubkeySet.Secp256k1.String(), consKey, ztx)
 			break
 		}
 	}

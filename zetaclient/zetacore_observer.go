@@ -63,8 +63,8 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetAddress().String()
-	log.Info().Msgf("monitorCore started by signer %s", myid)
+	myid := co.bridge.keys.GetAddress(common.TssSignerKey)
+	log.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
 
 	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")

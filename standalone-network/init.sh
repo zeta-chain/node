@@ -34,22 +34,23 @@ zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=t
 zetacored add-genesis-account $(zetacored keys show executer -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
 
-ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
-observer+=$ADDR1
-observer+=","
-ADDR2=$(zetacored keys show mario -a --keyring-backend=test)
-observer+=$ADDR2
-observer+=","
-
-
-observer_list=$(echo $observer | rev | cut -c2- | rev)
-
-echo $observer_list
-
-
-
-zetacored add-observer 1337 "$observer_list" #goerli
-zetacored add-observer 101  "$observer_list" #goerli
+#ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
+#observer+=$ADDR1
+#observer+=","
+#ADDR2=$(zetacored keys show mario -a --keyring-backend=test)
+#observer+=$ADDR2
+#observer+=","
+#
+#
+#observer_list=$(echo $observer | rev | cut -c2- | rev)
+#
+#echo $observer_list
+#
+#
+#
+#zetacored add-observer 1337 "$observer_list" #goerli
+#zetacored add-observer 101  "$observer_list" #goerli
+zetacored add-observer-list tmp.json
 
 
 
