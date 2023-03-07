@@ -114,7 +114,7 @@ jobs:
         with:
           UPGRADE_NAME: ${{ github.ref_name }}
           CHAIN_ID: ${{ env.CHAIN_ID }}
-          DESCRIPTION: ${{ github.event.inputs.UPGRADE_NAME }}
+          DESCRIPTION: ${{ github.ref_name }}
           ZETACORED_CHECKSUM: ${{ env.ZETACORED_CHECKSUM }}
           ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
           ZETACLIENTD_CHECKSUM: ${{ env.ZETACLIENTD_CHECKSUM }}
