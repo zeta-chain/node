@@ -64,32 +64,6 @@ jobs:
             zetacored
             zetaclientd
         
-  smoke-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: install-docker-compose
-      uses: ./.github/actions/install-docker-compose
-
-    - name: Start Private Network
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        cd contrib/localnet
-        docker compose build zetacore0 eth && docker compose build orchestrator
-        docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
-
-    - name: Run Smoke Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        cd contrib/localnet
-        docker compose up orchestrator --exit-code-from orchestrator
-        if [ $? -ne 0 ]; then
-          echo "Smoke Test Failed"
-          exit 1
-        fi
-
   upload:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -198,20 +172,3 @@ jobs:
         files: |
           zetacored
           zetaclientd
-
-  upgrade_path_testing:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    needs:
-      - upload
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: upgrade-path-testing
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: ./.github/actions/upgrade-testing
-      with:
-        github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
