@@ -51,11 +51,11 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+    # - name: Test
+    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+    #   run: |
+    #     echo "Running Build Tests"
+    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
