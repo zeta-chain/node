@@ -12,6 +12,7 @@ on:
     branches: 
       - develop
       - athens2-develop 
+      - release/athens2*
     types: 
       - synchronize
       - opened
@@ -69,7 +70,6 @@ jobs:
     timeout-minutes: 15
     needs: 
       - build-and-test
-      - smoke-test
 
     steps:
     - uses: actions/checkout@v3
