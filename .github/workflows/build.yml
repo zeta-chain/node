@@ -12,6 +12,11 @@ on:
     branches: 
       - develop
       - athens2-develop 
+    types: 
+      - synchronize
+      - opened
+      - reopened
+      - ready_for_review
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
@@ -19,30 +24,17 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  build-and-upload:
+  build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
+
     - uses: actions/checkout@v3
 
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
       with:
-        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
-
-
-    - name: Get branch name
-      id: branch-name
-      uses: tj-actions/branch-names@v6
-
-    - name: Set branch name
-      id: set-branch-name
-      run: |
-        if [ ${{ github.event_name }} == "pull_request" ]; then
-          echo "Setting the current branch name to same as the source branch of the PR"
-          echo "RELEASE_NAME=${{ steps.branch-name.outputs.head_ref_branch }}" >> $GITHUB_ENV
-        else
-          echo "RELEASE_NAME=${{ steps.branch-name.outputs.current_branch }}" >> $GITHUB_ENV
-        fi
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
     - uses: actions/cache@v3
       with:
@@ -58,26 +50,104 @@ jobs:
         make install
         cp "$HOME"/go/bin/* ./
 
-    # - name: Test
-    #   if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-    #   run: |
-    #     echo "Running Build Tests"
-    #     #make test
-    #     go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
-
-    - name: Build Zetavisor
-      if: false # Not needed - Building cosmovisor should be part of the zetavisor repo
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
-        go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.2
-        cp "$HOME"/go/bin/cosmovisor ./cosmovisor
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-    - name: Install AWS CLI # Used for local testing of Git Actions
-      if: ${{ env.ACT }}
+    - name: Save Binaries as Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: |
+            zetacored
+            zetaclientd
+        
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install-docker-compose
+      uses: ./.github/actions/install-docker-compose
+
+    - name: Start Private Network
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install --update 
+        cd contrib/localnet
+        docker compose build zetacore0 eth && docker compose build orchestrator
+        docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+
+    - name: Run Smoke Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        cd contrib/localnet
+        docker compose up orchestrator --exit-code-from orchestrator
+        if [ $? -ne 0 ]; then
+          echo "Smoke Test Failed"
+          exit 1
+        fi
+
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: 
+      - build-and-test
+      - smoke-test
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: setup-git-credentials
+      uses: de-vri-es/setup-git-credentials@v2.0.8
+      with:
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v6
+
+    - name: Git Hash
+      run: |
+        echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+        echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
+        ls -lah ./
+
+    - name: set-branch-name
+      uses: ./.github/actions/set-branch-name
+      with:
+        github_ref: "${{github.ref}}"
+        github_event: "${{ github.event_name }}"
+        github_head_ref: "${{ github.event.pull_request.head.ref }}"
+        github_commit_sha: "${{ env.GIT_HASH }}"
+        current_branch_name: "${{ steps.branch-name.outputs.current_branch }}"
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: build-zetavisor
+      uses: ./.github/actions/build-zetavisor
+      with:
+        zetavisor_version: "zetavisor-v0.1.3"
+        workspace_dir: "${{ env.WORKSPACE_DIR }}"
+
+    - name: install awscli
+      uses: ./.github/actions/install-awscli
+      with:
+        download_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: ./
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -85,6 +155,11 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Debug step
+      run: |
+        pwd
+        ls -lah ./
 
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
@@ -96,15 +171,16 @@ jobs:
           zetacored
           zetaclientd
 
-    ## Not being used 
-    # - name: Build, tag, and push image to Amazon ECR
-    #   uses:  ./.github/actions/upload-to-ecr
-    #   with:
-    #     DOCKER_FILENAME: Dockerfile.zetacore_binary
-    #     ECR_REPOSITORY: zetachain
-    #     IMAGE_TAG: latest
+    - name: Build, tag, and push docker images
+      uses:  ./.github/actions/build-docker-images
+      with:
+        DOCKER_FILENAME: Dockerfile
+        REPOSITORY_NAME: zeta-node
+        IMAGE_TAG: ${{ env.TAG_NAME }}
+        GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+        GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-    ## Approval will be required closer to mainnet
+    # # Approval will be required closer to mainnet
     # - name: Require Approval To Create a Release
     #   uses: softprops/action-gh-release@v1
     #   if: startsWith(github.ref, 'refs/tags/athens')
@@ -122,3 +198,20 @@ jobs:
         files: |
           zetacored
           zetaclientd
+
+  upgrade_path_testing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - upload
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: upgrade-path-testing
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: ./.github/actions/upgrade-testing
+      with:
+        github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
