@@ -107,11 +107,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: build-zetavisor
-      uses: ./.github/actions/build-zetavisor
-      with:
-        zetavisor_version: "zetavisor-v0.1.3"
-        workspace_dir: "${{ env.WORKSPACE_DIR }}"
+    # - name: build-zetavisor
+    #   uses: ./.github/actions/build-zetavisor
+    #   with:
+    #     zetavisor_version: "zetavisor-v0.1.3"
+    #     workspace_dir: "${{ env.WORKSPACE_DIR }}"
 
     - name: install awscli
       uses: ./.github/actions/install-awscli
