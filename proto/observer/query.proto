@@ -25,8 +25,8 @@ service Query {
 	}
 
 // Queries a list of ObserversByChainAndType items.
-	rpc ObserversByChainAndType(QueryObserversByChainAndTypeRequest) returns (QueryObserversByChainAndTypeResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain_and_type/{observation_chain}/{observation_type}";
+	rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
 	}
 	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
 		option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
@@ -55,12 +55,11 @@ message QueryBallotByIdentifierResponse {
   Ballot ballot = 1;
 }
 
-message QueryObserversByChainAndTypeRequest {
+message QueryObserversByChainRequest {
   string observation_chain = 1;
-  string observation_type = 2;
 }
 
-message QueryObserversByChainAndTypeResponse {
+message QueryObserversByChainResponse {
   repeated string observers = 1;
 }
 

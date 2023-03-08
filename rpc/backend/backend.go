@@ -87,7 +87,7 @@ type EVMBackend interface {
 	TendermintBlockByHash(blockHash common.Hash) (*tmrpctypes.ResultBlock, error)
 	BlockNumberFromTendermint(blockNrOrHash rpctypes.BlockNumberOrHash) (rpctypes.BlockNumber, error)
 	BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.Int, error)
-	EthMsgsFromTendermintBlock(block *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) []*evmtypes.MsgEthereumTx
+	EthMsgsFromTendermintBlock(block *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields)
 	BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 	HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Header, error)
 	HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error)

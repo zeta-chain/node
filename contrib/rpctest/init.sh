@@ -48,10 +48,8 @@ echo $observer_list
 
 
 
-zetacored add-observer goerli_localnet 1337 InBoundTx "$observer_list" #goerli
-zetacored add-observer goerli_localnet 1337 OutBoundTx "$observer_list"
-zetacored add-observer zeta_testnet 101 InBoundTx "$observer_list" #goerli
-zetacored add-observer zeta_testnet 101 OutBoundTx "$observer_list"
+zetacored add-observer 1337 "$observer_list"
+zetacored add-observer 101 "$observer_list"
 
 
 

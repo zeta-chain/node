@@ -206,6 +206,36 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 		}, nil
 }
 
+// ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
+func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int, height int64) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
+	txs, err := ParseTxResult(txResult, tx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", height, txIndex, err)
+	}
+
+	if len(txs.Txs) == 0 {
+		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", height, txIndex)
+	}
+	parsedTx := txs.Txs[0]
+	return &ethermint.TxResult{
+			Height:            height,
+			TxIndex:           uint32(txIndex),
+			MsgIndex:          uint32(parsedTx.MsgIndex),
+			EthTxIndex:        parsedTx.EthTxIndex,
+			Failed:            parsedTx.Failed,
+			GasUsed:           parsedTx.GasUsed,
+			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+		}, &TxResultAdditionalFields{
+			Value:     parsedTx.Amount,
+			Hash:      parsedTx.Hash,
+			TxHash:    parsedTx.TxHash,
+			Type:      parsedTx.Type,
+			Recipient: parsedTx.Recipient,
+			Sender:    parsedTx.Sender,
+			GasUsed:   parsedTx.GasUsed,
+		}, nil
+}
+
 // newTx parse a new tx from events, called during parsing.
 func (p *ParsedTxs) newTx(attrs []abci.EventAttribute) error {
 	msgIndex := len(p.Txs)

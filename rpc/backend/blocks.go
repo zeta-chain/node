@@ -159,7 +159,7 @@ func (b *Backend) GetBlockTransactionCount(block *tmrpctypes.ResultBlock) *hexut
 		return nil
 	}
 
-	ethMsgs := b.EthMsgsFromTendermintBlock(block, blockRes)
+	ethMsgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
 	n := hexutil.Uint(len(ethMsgs))
 	return &n
 }
@@ -248,12 +248,12 @@ func (b *Backend) BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.I
 func (b *Backend) EthMsgsFromTendermintBlock(
 	resBlock *tmrpctypes.ResultBlock,
 	blockRes *tmrpctypes.ResultBlockResults,
-) []*evmtypes.MsgEthereumTx {
+) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields) {
 	var result []*evmtypes.MsgEthereumTx
+	var txsAdditional []*rpctypes.TxResultAdditionalFields
 	block := resBlock.Block
 
 	txResults := blockRes.TxsResults
-
 	for i, tx := range block.Txs {
 		// Check if tx exists on EVM by cross checking with blockResults:
 		//  - Include unsuccessful tx that exceeds block gas limit
@@ -268,19 +268,26 @@ func (b *Backend) EthMsgsFromTendermintBlock(
 			b.logger.Debug("failed to decode transaction in block", "height", block.Height, "error", err.Error())
 			continue
 		}
-
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 			if !ok {
-				continue
+				res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
+				if err != nil || additional == nil || res == nil {
+					continue
+				}
+				ethMsg = &evmtypes.MsgEthereumTx{
+					From: additional.Sender.Hex(),
+					Hash: additional.Hash.Hex(),
+				}
+				txsAdditional = append(txsAdditional, additional)
+			} else {
+				ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
+				txsAdditional = append(txsAdditional, nil)
 			}
-
-			ethMsg.Hash = ethMsg.AsTransaction().Hash().Hex()
 			result = append(result, ethMsg)
 		}
 	}
-
-	return result
+	return result, txsAdditional
 }
 
 // HeaderByNumber returns the block header identified by height.
@@ -376,25 +383,29 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 		b.logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", block.Height, "error", err)
 	}
 
-	msgs := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
+	msgs, txsAdditional := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 	for txIndex, ethMsg := range msgs {
 		if !fullTx {
 			hash := common.HexToHash(ethMsg.Hash)
 			ethRPCTxs = append(ethRPCTxs, hash)
 			continue
 		}
-
-		tx := ethMsg.AsTransaction()
-		rpcTx, err := rpctypes.NewRPCTransaction(
-			tx,
-			common.BytesToHash(block.Hash()),
-			uint64(block.Height),
-			uint64(txIndex),
-			baseFee,
-			b.chainID,
-		)
+		var rpcTx *rpctypes.RPCTransaction
+		if txsAdditional[txIndex] == nil {
+			tx := ethMsg.AsTransaction()
+			rpcTx, err = rpctypes.NewRPCTransaction(
+				tx,
+				common.BytesToHash(block.Hash()),
+				uint64(block.Height),
+				uint64(txIndex),
+				baseFee,
+				b.chainID,
+			)
+		} else {
+			rpcTx, err = rpctypes.NewRPCTransactionFromIncompleteMsg(ethMsg, common.BytesToHash(block.Hash()), uint64(block.Height), uint64(txIndex), baseFee, b.chainID, txsAdditional[txIndex])
+		}
 		if err != nil {
-			b.logger.Debug("NewTransactionFromData for receipt failed", "hash", tx.Hash().Hex(), "error", err.Error())
+			b.logger.Debug("NewTransactionFromData for receipt failed", "hash", ethMsg.Hash, "error", err.Error())
 			continue
 		}
 		ethRPCTxs = append(ethRPCTxs, rpcTx)
@@ -494,14 +505,15 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee)
-	msgs := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
+	msgs, additionals := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 
-	txs := make([]*ethtypes.Transaction, len(msgs))
+	txs := []*ethtypes.Transaction{}
 	for i, ethMsg := range msgs {
-		txs[i] = ethMsg.AsTransaction()
+		if additionals[i] == nil {
+			txs = append(txs, ethMsg.AsTransaction())
+		}
 	}
 
-	// TODO: add tx receipts
 	ethBlock := ethtypes.NewBlock(ethHeader, txs, nil, nil, trie.NewStackTrie(nil))
 	return ethBlock, nil
 }

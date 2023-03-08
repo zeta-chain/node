@@ -7,13 +7,12 @@ import (
 	"strconv"
 )
 
-func CreateObserverMapperList(items int, chain common.Chain, observationType ObservationType) (list []*ObserverMapper) {
+func CreateObserverMapperList(items int, chain common.Chain) (list []*ObserverMapper) {
 	SetConfig(false)
 	for i := 0; i < items; i++ {
 		mapper := &ObserverMapper{
-			Index:           "Index" + strconv.Itoa(i),
-			ObserverChain:   &chain,
-			ObservationType: observationType,
+			Index:         "Index" + strconv.Itoa(i),
+			ObserverChain: &chain,
 			ObserverList: []string{
 				sdk.AccAddress(crypto.AddressHash([]byte("Output1" + strconv.Itoa(i)))).String(),
 				sdk.AccAddress(crypto.AddressHash([]byte("Output1" + strconv.Itoa(i+1)))).String(),

@@ -52,6 +52,7 @@ type TxResultAdditionalFields struct {
 	Type      *big.Int       `json:"type"`
 	Recipient common.Address `json:"recipient"`
 	Sender    common.Address `json:"sender"`
+	GasUsed   uint64         `json:"gasUsed"`
 }
 
 // RPCTransaction represents a transaction that will serialize to the RPC representation of a transaction

@@ -31,8 +31,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowTSSVoter())
 	cmd.AddCommand(CmdListTSS())
 	cmd.AddCommand(CmdShowTSS())
-	cmd.AddCommand(CmdListGasBalance())
-	cmd.AddCommand(CmdShowGasBalance())
 	cmd.AddCommand(CmdListGasPrice())
 	cmd.AddCommand(CmdShowGasPrice())
 	cmd.AddCommand(CmdListChainNonces())
