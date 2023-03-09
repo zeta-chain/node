@@ -16,9 +16,9 @@ func (t TxType) String() string {
 type KeyType string
 
 const (
-	TssSignerKey        KeyType = "OperatorGranterKey"
-	ValidatorGranteeKey KeyType = "ValidatorGranteeKey"
-	ObserverGranteeKey  KeyType = "ObserverGranteeKey"
+	TssSignerKey        KeyType = "tss_signer"
+	ValidatorGranteeKey KeyType = "grantee_validator"
+	ObserverGranteeKey  KeyType = "grantee_observer"
 )
 
 func GetAllKeyTypes() []KeyType {

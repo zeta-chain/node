@@ -10,10 +10,10 @@ rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
 zetacored config keyring-backend $KEYRING --home ~/.zetacored
 zetacored config chain-id $CHAINID --home ~/.zetacored
-echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
-echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
-echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
-
+echo "elevator gorilla destroy silk any hip wrap bench diary adult powder blame coast future gas affair angry write pig country crew beef rack laundry" | zetacored keys add val_tss_signer --algo=secp256k1 --recover --keyring-backend=test
+echo "gloom skull world long ready panel special glance method maximum evil book learn salt level logic acoustic basket survey usual crawl olive enemy gown" | zetacored keys add val_grantee_validator --algo secp256k1 --recover --keyring-backend=test
+echo "banner powder select list size resource drum cloth clap strike fade duty supply wheel device asthma impact whisper off settle gorilla pizza cage modify" | zetacored keys add val_grantee_observer --recover --keyring-backend=test --algo secp256k1
+echo "category lucky claw exhaust hobby hero garden hero tooth involve play decorate general organ shock cloud inquiry provide inspire depend spread simple width orient" | zetacored keys add val --recover --keyring-backend=test --algo secp256k1
 zetacored init test --chain-id=$CHAINID
 
 #Set config to use azeta
