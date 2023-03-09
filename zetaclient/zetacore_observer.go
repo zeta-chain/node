@@ -254,7 +254,7 @@ func (co *CoreObserver) startSendScheduler() {
 			sendMap := SplitAndSortSendListByChain(sendList)
 
 			// schedule sends
-
+			numSend := 0
 			for chain, sendList := range sendMap {
 				c, _ := common.ParseChain(chain)
 				found := false
@@ -300,11 +300,13 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSend < 5 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
+						numSend++
+						time.Sleep(500 * time.Millisecond)
 					}
-					if idx > 40 { // only look at 50 sends per chain
+					if idx > 60 { // only look at 50 sends per chain
 						break
 					}
 				}
