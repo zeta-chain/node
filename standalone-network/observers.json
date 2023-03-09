@@ -1,0 +1,29 @@
+[
+ {
+  "SupportedChainsList": [
+   1337,
+   18444,
+   101
+  ],
+  "ObserverAddress": "zeta1acdh3rca2elta9jdg5a6mjsw2cv3map677am6a",
+  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
+ },
+ {
+  "SupportedChainsList": [
+   1337,
+   18444,
+   101
+  ],
+  "ObserverAddress": "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
+  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
+ },
+ {
+  "SupportedChainsList": [
+   1337,
+   18444,
+   101
+  ],
+  "ObserverAddress": "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
+  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
+ }
+]

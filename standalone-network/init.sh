@@ -50,7 +50,7 @@ zetacored add-genesis-account $(zetacored keys show executer -a --keyring-backen
 #
 #zetacored add-observer 1337 "$observer_list" #goerli
 #zetacored add-observer 101  "$observer_list" #goerli
-zetacored add-observer-list tmp.json
+zetacored add-observer-list standalone-network/observers.json
 
 
 
