@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/btcsuite/btcd/rpcclient"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -13,13 +13,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func CreateAuthzSigner(config *config.Config) error {
-	granteeAddress, err := cosmos.AccAddressFromBech32(config.AuthzGrantee)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("fail to parse AuthzGrantee string to address %s", config.AuthzGrantee))
-	}
-	zetaclient.SetupAuthZSignerList(config.AuthzGranter, granteeAddress)
-	return nil
+func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
+	zetaclient.SetupAuthZSignerList(granter, grantee)
 }
 
 func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, bool) {

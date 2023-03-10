@@ -51,10 +51,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	err = CreateAuthzSigner(configData)
-	if err != nil {
-		return err
-	}
+
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
 
@@ -64,6 +61,9 @@ func start(_ *cobra.Command, _ []string) error {
 	if done {
 		return nil
 	}
+
+	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
+		bridge1.GetKeys().GetAddress(common.ObserverGranteeKey))
 
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
 	if err != nil {
@@ -91,18 +91,18 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	consKey := ""
-	operatorPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
+	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
 	for {
-		ztx, err := bridge1.SetNodeKey(operatorPubkeySet, consKey)
+		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
 		if err != nil {
 			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
 			time.Sleep(2 * time.Second)
 		} else {
 			log.Info().Msgf("SetNodeKey success: %s", ztx)
-			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", operatorPubkeySet.Secp256k1.String(), consKey, ztx)
+			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
 			break
 		}
 	}

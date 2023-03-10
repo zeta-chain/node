@@ -15,7 +15,7 @@ then
     export TSSPATH=~/.tss
     zetaclientd init --val val --log-console --enable-chains "goerli_localnet,btc_regtest" \
       --pre-params ~/preParams.json  --zetacore-url zetacore0 \
-      --chain-id athens_101-1 --dev
+      --chain-id athens_101-1 --dev --operator zeta1m0lynuvgfwlnh07x56yucrg6l32scvsdg4ss9t
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
@@ -26,6 +26,6 @@ else
   zetaclientd init --val val --log-console --enable-chains "goerli_localnet,btc_regtest"  \
     --peer /ip4/172.20.0.21/tcp/6668/p2p/$SEED \
     --pre-params ~/preParams.json --zetacore-url $node \
-    --chain-id athens_101-1 --dev
+    --chain-id athens_101-1 --dev --operator zeta1qshqv23h97krlyw9rvk0sj4xkpv8juwuvvupy5
   zetaclientd start
 fi

@@ -50,7 +50,6 @@ type Config struct {
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
-	AuthzGrantee  string
 
 	ChainsEnabled []common.Chain
 	ChainConfigs  map[string]*ChainETHish

@@ -17,11 +17,7 @@ import (
 	"os"
 )
 
-const (
-	metachainCliFolderPath = `.meta-chaind`
-)
-
-// Keys manages all the keys used by metachain
+// Keys manages all the keys used by zeta client
 type Keys struct {
 	signerName      string
 	password        string // TODO this is a bad way , need to fix it
@@ -67,10 +63,10 @@ func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signer
 	}()
 	os.Stdin = nil
 	for _, keyType := range requireKeytypes {
-		fmt.Println("keyType:", keyType.String())
+		fmt.Printf("Checking if key for keyType: %s is present ", keyType.String())
 		_, err = kb.Key(GetGranteeKeyName(keyType, signerName))
 		if err != nil {
-			return nil, fmt.Errorf("fail to get grantee info(%s): %w", GetGranteeKeyName(keyType, signerName), err)
+			return nil, fmt.Errorf("key not presnt with name (%s): %w", GetGranteeKeyName(keyType, signerName), err)
 		}
 	}
 

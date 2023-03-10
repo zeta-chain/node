@@ -19,12 +19,11 @@ import (
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msg sdktypes.Msg) (string, error) {
+func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner AuthZSigner) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
 
-	authzSigner := GetSigner(msg.String())
 	blockHeight, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return "", err
@@ -51,7 +50,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msg sdktypes.Msg) (string, e
 	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
-	builder, err := factory.BuildUnsignedTx(msg)
+	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
 		return "", err
 	}
@@ -97,7 +96,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msg sdktypes.Msg) (string, e
 			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
 			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
-		b.logger.Info().Msgf("messages: %+v", msg)
+		b.logger.Info().Msgf("messages: %+v", authzWrappedMsg)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 	//b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)

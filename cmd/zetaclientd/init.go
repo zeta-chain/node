@@ -29,7 +29,6 @@ type initArguments struct {
 	chainID       string
 	zetacoreURL   string
 	authzGranter  string
-	authzGrantee  string
 	devMode       bool
 	debug         bool
 }
@@ -45,8 +44,7 @@ func init() {
 	InitCmd.Flags().Int64Var(&initArgs.keygen, "keygen-block", 0, "keygen at block height (default: 0 means no keygen")
 	InitCmd.Flags().StringVar(&initArgs.chainID, "chain-id", "athens-1", "chain id")
 	InitCmd.Flags().StringVar(&initArgs.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
-	InitCmd.Flags().StringVar(&initArgs.authzGranter, "granter", "", "granter for the authorization , this should be oeprator address")
-	InitCmd.Flags().StringVar(&initArgs.authzGrantee, "grantee", "", "grantee for the authorization , this is the address used for all observer signing")
+	InitCmd.Flags().StringVar(&initArgs.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
 	InitCmd.Flags().BoolVar(&initArgs.devMode, "dev", false, "dev mode: geth private network as goerli testnet")
 	InitCmd.Flags().BoolVar(&initArgs.debug, "debug", false, "debug mode: lower zerolog level to DEBUG")
 }
@@ -69,7 +67,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ChainID = initArgs.chainID
 	configData.ZetaCoreURL = initArgs.zetacoreURL
 	configData.AuthzGranter = initArgs.authzGranter
-	configData.AuthzGrantee = initArgs.authzGrantee
 
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)

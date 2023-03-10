@@ -12,22 +12,24 @@ type AuthZSigner struct {
 	GranteeAddress sdk.AccAddress
 }
 
-var signerList map[string]AuthZSigner
+var signers map[string]AuthZSigner
 
 func init() {
+	signersList := make(map[string]AuthZSigner)
 	for _, tx := range crosschaintypes.GetAllAuthzTxTypes() {
-		signerList[tx] = AuthZSigner{KeyType: common.ObserverGranteeKey}
+		signersList[tx] = AuthZSigner{KeyType: common.ObserverGranteeKey}
 	}
+	signers = signersList
 }
 
 func SetupAuthZSignerList(granter string, grantee sdk.AccAddress) {
-	for k, v := range signerList {
+	for k, v := range signers {
 		v.GranterAddress = granter
 		v.GranteeAddress = grantee
-		signerList[k] = v
+		signers[k] = v
 	}
 }
 
 func GetSigner(msgUrl string) AuthZSigner {
-	return signerList[msgUrl]
+	return signers[msgUrl]
 }
