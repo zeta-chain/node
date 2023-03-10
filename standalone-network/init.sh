@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CHAINID="localnet_101-1"
+CHAINID="athens_101-1"
 KEYRING="test"
 export DAEMON_HOME=$HOME/.zetacored
 export DAEMON_NAME=zetacored
@@ -10,7 +10,7 @@ rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
 zetacored config keyring-backend $KEYRING --home ~/.zetacored
 zetacored config chain-id $CHAINID --home ~/.zetacored
-echo "category lucky claw exhaust hobby hero garden hero tooth involve play decorate general organ shock cloud inquiry provide inspire depend spread simple width orient" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
+echo "anxiety enact group destroy motion gain picture lumber recipe leisure snow aunt impact science claw model luggage mango bulk trash mom skate electric unlock" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
 echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
 echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
 
@@ -56,7 +56,7 @@ zetacored add-observer-list standalone-network/observers.json
 
 
 
-zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=test
 
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json
