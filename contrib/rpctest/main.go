@@ -5,12 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
 	"math/big"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
+)
+
+var (
+	ZetaEthPriv = "9D00E4D7A8A14384E01CD90B83745BCA847A66AD8797A9904A200C28C2648E64"
 )
 
 type Request struct {
@@ -126,6 +134,55 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Block header: %+v\n", blockHeader)
+
+	chainid, err := zevmClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	zetaEthPrivKey, err := crypto.HexToECDSA(ZetaEthPriv)
+	if err != nil {
+		panic(err)
+	}
+	zevmAuth, err := bind.NewKeyedTransactorWithChainID(zetaEthPrivKey, chainid)
+	if err != nil {
+		panic(err)
+	}
+	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, big.NewInt(2_100_000_000))
+	_, _ = zetaContractAddress, zetaContract
+	if err != nil {
+		panic(err)
+	}
+	time.Sleep(10 * time.Second)
+	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx2.Hash())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Deploy EthZeta Contract Receipt: %+v\n", receipt)
+	receipt2 := client.EthGetTransactionReceipt(tx2.Hash().Hex())
+	if receipt2.Error != nil {
+		fmt.Printf("Error: %s (code %d)\n", receipt2.Error.Message, receipt2.Error.Code)
+		panic(tx.Error.Message)
+	} else {
+		jsonObject = make(map[string]interface{})
+		err = json.Unmarshal(receipt2.Result, &jsonObject)
+		if err != nil {
+			panic(err)
+		}
+		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Result: %s\n", string(prettyJSON))
+	}
+	fmt.Printf("ZetaEth Contract Address: %s\n", zetaContractAddress.Hex())
+	if zetaContractAddress != receipt.ContractAddress {
+		panic(fmt.Sprintf("Contract address mismatch: wanted %s, got %s", zetaContractAddress, receipt.ContractAddress))
+	}
+	//bal, err := zetaContract.BalanceOf(&bind.CallOpts{}, zevmAuth.From)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Printf("Balance of %s: %s\n", zevmAuth.From.Hex(), bal.String())
 
 }
 
