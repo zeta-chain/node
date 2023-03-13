@@ -82,11 +82,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Result: %s\n", string(prettyJSON))
 	}
 
 	txs, ok := jsonObject["transactions"].([]interface{})
@@ -102,17 +97,6 @@ func main() {
 	if tx.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", tx.Error.Message, tx.Error.Code)
 		panic(tx.Error.Message)
-	} else {
-		jsonObject = make(map[string]interface{})
-		err = json.Unmarshal(tx.Result, &jsonObject)
-		if err != nil {
-			panic(err)
-		}
-		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Result: %s\n", string(prettyJSON))
 	}
 
 	// tx receipt can be queried by ethclient queries.
@@ -124,7 +108,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Receipt: %+v\n", receipt)
+	fmt.Printf("Receipt status: %+v\n", receipt.Status)
 
 	// HeaderByHash works; BlockByHash does not work;
 	// main offending RPC is the transaction type; we have custom type id 56
@@ -133,7 +117,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Block header: %+v\n", blockHeader)
+	fmt.Printf("Block header TxHash: %+v\n", blockHeader.TxHash)
 
 	chainid, err := zevmClient.ChainID(context.Background())
 	if err != nil {
@@ -178,11 +162,6 @@ func main() {
 	if zetaContractAddress != receipt.ContractAddress {
 		panic(fmt.Sprintf("Contract address mismatch: wanted %s, got %s", zetaContractAddress, receipt.ContractAddress))
 	}
-	//bal, err := zetaContract.BalanceOf(&bind.CallOpts{}, zevmAuth.From)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("Balance of %s: %s\n", zevmAuth.From.Hex(), bal.String())
 
 }
 
@@ -223,7 +202,7 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //#nosec
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -264,7 +243,7 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //#nosec
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
