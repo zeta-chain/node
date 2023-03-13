@@ -39,8 +39,8 @@ type BitcoinChainClient struct {
 	rpcClient    *rpcclient.Client
 	zetaClient   *ZetaCoreBridge
 	Tss          TSSSigner
-	lastBlock    uint64
-	confCount    uint64                                  // must wait this many blocks to be considered "confirmed"
+	lastBlock    int64
+	confCount    int64                                   // must wait this many blocks to be considered "confirmed"
 	BlockTime    uint64                                  // block time in seconds
 	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
 	mu           *sync.Mutex
@@ -121,7 +121,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		}
 	}
 	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
-		ob.SetLastBlockHeight(uint64(100))
+		ob.SetLastBlockHeight(100)
 	}
 
 	return &ob, nil
@@ -149,11 +149,11 @@ func (ob *BitcoinChainClient) Stop() {
 }
 
 func (ob *BitcoinChainClient) SetLastBlockHeight(block uint64) {
-	atomic.StoreUint64(&ob.lastBlock, block)
+	atomic.StoreInt64(&ob.lastBlock, int64(block))
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeight() uint64 {
-	return atomic.LoadUint64(&ob.lastBlock)
+	return uint64(atomic.LoadInt64(&ob.lastBlock))
 }
 
 // TODO
@@ -250,7 +250,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
-		ob.SetLastBlockHeight((bn))
+		ob.SetLastBlockHeight(bn)
 	}
 
 	return nil
