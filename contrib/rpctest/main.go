@@ -111,6 +111,16 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Receipt: %+v\n", receipt)
+
+	// HeaderByHash works; BlockByHash does not work;
+	// main offending RPC is the transaction type; we have custom type id 56
+	// which is not recognized by the go-ethereum client.
+	blockHeader, err := zevmClient.HeaderByNumber(context.Background(), big.NewInt(int64(bn)))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Block header: %+v\n", blockHeader)
+
 }
 
 type EthClient struct {
