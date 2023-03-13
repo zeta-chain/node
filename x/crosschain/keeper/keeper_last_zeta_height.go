@@ -17,8 +17,8 @@ func (k Keeper) LastZetaHeight(goCtx context.Context, req *types.QueryLastZetaHe
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	height := ctx.BlockHeight()
-	if height >= math.MaxInt64 {
-		return nil, status.Error(codes.OutOfRange, "current height is higher than int64 Max")
+	if height >= math.MaxInt64 || height < 0 {
+		return nil, status.Error(codes.OutOfRange, "height out of range")
 	}
 	return &types.QueryLastZetaHeightResponse{
 		Height: height,

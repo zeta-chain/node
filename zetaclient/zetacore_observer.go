@@ -91,7 +91,7 @@ func (co *CoreObserver) keygenObserve() {
 			for {
 				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
 				var req keygen.Request
-				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+				req = keygen.NewRequest(kg.Pubkeys, kg.BlockNumber, "0.14.0")
 				res, err := co.tss.Server.Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
 					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
@@ -214,7 +214,7 @@ func (co *CoreObserver) startSendScheduler() {
 					outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
 
 					// FIXME: config this schedule; this value is for localnet fast testing
-					if bn > math.MaxInt64 {
+					if bn >= math.MaxInt64 {
 						continue
 					}
 					currentHeight := uint64(bn)

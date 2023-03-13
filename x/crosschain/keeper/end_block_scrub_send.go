@@ -42,8 +42,8 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 			}
 			if uint64(ctx.BlockHeight())-cctx.InboundTxParams.InboundTxFinalizedZetaHeight > 100 { // stuck send
 				currentOutTxParam := cctx.GetCurrentOutTxParam()
-				receiverChainId := currentOutTxParam.ReceiverChainId
-				gasPrice, isFound := k.GetGasPrice(ctx, receiverChainId)
+				receiverChainID := currentOutTxParam.ReceiverChainId
+				gasPrice, isFound := k.GetGasPrice(ctx, receiverChainID)
 				if !isFound {
 					continue
 				}
@@ -68,7 +68,7 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 				currentOutTxParam.OutboundTxGasPrice = newGasPrice.String()
 				// No need to migrate as this function does not change the status of Send
 				k.SetCrossChainTx(ctx, cctx)
-				EmitCCTXScrubbed(ctx, cctx, receiverChainId, oldGasPrice.String(), newGasPrice.String())
+				EmitCCTXScrubbed(ctx, cctx, receiverChainID, oldGasPrice.String(), newGasPrice.String())
 			}
 		}
 	}

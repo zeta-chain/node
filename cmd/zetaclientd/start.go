@@ -236,7 +236,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			log.Error().Err(err).Msg("GetZetaBlockHeight error")
 			return
 		}
-		if int64(bn)+3 > height {
+		if bn+3 > height {
 			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", height, bn)
 			return
 		}
