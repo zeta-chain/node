@@ -27,8 +27,8 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, msgs ...stypes.Msg) (string,
 		return "", err
 	}
 
-	if int64(blockHeight) > b.blockHeight {
-		b.blockHeight = int64(blockHeight)
+	if blockHeight > b.blockHeight {
+		b.blockHeight = blockHeight
 		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber()
 		if err != nil {
 			return "", err

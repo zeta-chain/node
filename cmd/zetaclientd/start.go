@@ -256,7 +256,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 				log.Error().Err(err).Msg("GetZetaBlockHeight error")
 				return
 			}
-			if int64(bn) == height {
+			if bn == height {
 				break
 			}
 		}
