@@ -61,7 +61,7 @@ func main() {
 
 	client := &EthClient{
 		Endpoint:   "http://localhost:8545",
-		HttpClient: &http.Client{},
+		HTTPClient: &http.Client{},
 	}
 	resp := client.EthGetBlockByNumber(uint64(bn), false)
 	var jsonObject map[string]interface{}
@@ -70,7 +70,10 @@ func main() {
 		panic(resp.Error.Message)
 	} else {
 		//fmt.Printf("Result: %s\n", string(resp.Result))
-		err := json.Unmarshal(resp.Result, &jsonObject)
+		err = json.Unmarshal(resp.Result, &jsonObject)
+		if err != nil {
+			panic(err)
+		}
 		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
 		if err != nil {
 			panic(err)
@@ -93,7 +96,10 @@ func main() {
 		panic(tx.Error.Message)
 	} else {
 		jsonObject = make(map[string]interface{})
-		err := json.Unmarshal(tx.Result, &jsonObject)
+		err = json.Unmarshal(tx.Result, &jsonObject)
+		if err != nil {
+			panic(err)
+		}
 		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
 		if err != nil {
 			panic(err)
@@ -125,11 +131,11 @@ func main() {
 
 type EthClient struct {
 	Endpoint   string
-	HttpClient *http.Client
+	HTTPClient *http.Client
 }
 
 func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response {
-	client := c.HttpClient
+	client := c.HTTPClient
 	hexBlockNum := fmt.Sprintf("0x%x", blockNum)
 	req := &Request{
 		Jsonrpc: "2.0",
@@ -160,6 +166,7 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 	if err != nil {
 		panic(err)
 	}
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -171,7 +178,7 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 }
 
 func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
-	client := c.HttpClient
+	client := c.HTTPClient
 	req := &Request{
 		Jsonrpc: "2.0",
 		Method:  "eth_getTransactionReceipt",
@@ -200,6 +207,7 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	if err != nil {
 		panic(err)
 	}
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
