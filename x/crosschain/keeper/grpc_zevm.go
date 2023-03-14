@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"math"
 	"strings"
 )
 
@@ -36,6 +37,10 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 		return nil, status.Error(codes.Internal, "rpc client is not initialized")
 	}
 
+	height := req.Height
+	if height >= math.MaxInt64 {
+		return nil, status.Error(codes.OutOfRange, "invalid height , the height is too large")
+	}
 	blockResults, err := GetTendermintBlockResultsByNumber(ctx, int64(req.Height))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

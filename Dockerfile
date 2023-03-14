@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine AS builder
+FROM golang:1.19-alpine AS builder
 
 RUN apk --no-cache add git make build-base jq
 
@@ -12,7 +12,7 @@ COPY . .
 RUN make install
 RUN make install-smoketest
 
-FROM golang:1.18-alpine
+FROM golang:1.19-alpine
 
 RUN apk --no-cache add openssh jq tmux vim curl bash
 RUN ssh-keygen -A

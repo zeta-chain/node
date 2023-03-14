@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	math2 "math"
 	"math/big"
 	"os"
 	"sort"
@@ -39,8 +40,8 @@ type BitcoinChainClient struct {
 	rpcClient    *rpcclient.Client
 	zetaClient   *ZetaCoreBridge
 	Tss          TSSSigner
-	lastBlock    uint64
-	confCount    uint64                                  // must wait this many blocks to be considered "confirmed"
+	lastBlock    int64
+	confCount    int64                                   // must wait this many blocks to be considered "confirmed"
 	BlockTime    uint64                                  // block time in seconds
 	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
 	mu           *sync.Mutex
@@ -111,17 +112,17 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	if scanFromBlock != "" {
 		ob.logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
-			ob.SetLastBlockHeight(uint64(bn))
+			ob.SetLastBlockHeight(bn)
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
+			ob.SetLastBlockHeight(scanFromBlockInt)
 		}
 	}
 	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
-		ob.SetLastBlockHeight(uint64(100))
+		ob.SetLastBlockHeight(100)
 	}
 
 	return &ob, nil
@@ -148,12 +149,25 @@ func (ob *BitcoinChainClient) Stop() {
 	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeight(block uint64) {
-	atomic.StoreUint64(&ob.lastBlock, block)
+func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
+	if block < 0 {
+		panic("lastBlock is negative")
+	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	atomic.StoreInt64(&ob.lastBlock, block)
 }
 
-func (ob *BitcoinChainClient) GetLastBlockHeight() uint64 {
-	return atomic.LoadUint64(&ob.lastBlock)
+func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
+	height := atomic.LoadInt64(&ob.lastBlock)
+	if height < 0 {
+		panic("lastBlock is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	return height
 }
 
 // TODO
@@ -193,12 +207,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
-	currentBlock := uint64(cnt)
+	if cnt < 0 || cnt >= math2.MaxInt64 {
+		return fmt.Errorf("block count is out of range: %d", cnt)
+	}
 	// query incoming gas asset
-	if currentBlock > lastBN {
+	if cnt > lastBN {
 		bn := lastBN + 1
-		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, currentBlock, lastBN)
-		hash, err := ob.rpcClient.GetBlockHash(int64(bn))
+		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
+		hash, err := ob.rpcClient.GetBlockHash(bn)
 		if err != nil {
 			return err
 		}
@@ -250,7 +266,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
-		ob.SetLastBlockHeight((bn))
+		ob.SetLastBlockHeight(bn)
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	math2 "math"
 )
 
 // SetLastBlockHeight set a specific lastBlockHeight in the store from its index
@@ -91,6 +92,12 @@ func (k Keeper) LastBlockHeight(c context.Context, req *types.QueryGetLastBlockH
 	val, found := k.GetLastBlockHeight(ctx, req.Index)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
+	}
+	if val.LastSendHeight < 0 || val.LastSendHeight >= math2.MaxInt64 {
+		return nil, status.Error(codes.OutOfRange, "invalid last send height")
+	}
+	if val.LastReceiveHeight < 0 || val.LastReceiveHeight >= math2.MaxInt64 {
+		return nil, status.Error(codes.OutOfRange, "invalid last recv height")
 	}
 
 	return &types.QueryGetLastBlockHeightResponse{LastBlockHeight: &val}, nil
