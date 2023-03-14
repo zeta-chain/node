@@ -38,6 +38,7 @@ const (
 	MessageType                    = "message"
 	AmountType                     = "amount"
 	SenderType                     = "sender"
+	CosmosEVMTxType                = 88
 	eventFormatUnknown EventFormat = iota
 
 	// Event Format 1 (the format used before PR #1062):
@@ -78,7 +79,7 @@ type ParsedTx struct {
 	Failed     bool
 	// Additional cosmos EVM tx fields
 	TxHash    string
-	Type      *big.Int
+	Type      uint64
 	Amount    *big.Int
 	Recipient common.Address
 	Sender    common.Address
@@ -188,7 +189,25 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 	if parsedTx == nil {
 		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
 	}
-	return &ethermint.TxResult{
+	if parsedTx.Type == 88 {
+		return &ethermint.TxResult{
+				Height:            txResult.Height,
+				TxIndex:           txResult.Index,
+				MsgIndex:          uint32(parsedTx.MsgIndex),
+				EthTxIndex:        parsedTx.EthTxIndex,
+				Failed:            parsedTx.Failed,
+				GasUsed:           parsedTx.GasUsed,
+				CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+			}, &TxResultAdditionalFields{
+				Value:     parsedTx.Amount,
+				Hash:      parsedTx.Hash,
+				TxHash:    parsedTx.TxHash,
+				Type:      parsedTx.Type,
+				Recipient: parsedTx.Recipient,
+				Sender:    parsedTx.Sender,
+			}, nil
+	} else {
+		return &ethermint.TxResult{
 			Height:            txResult.Height,
 			TxIndex:           txResult.Index,
 			MsgIndex:          uint32(parsedTx.MsgIndex),
@@ -196,14 +215,8 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 			Failed:            parsedTx.Failed,
 			GasUsed:           parsedTx.GasUsed,
 			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
-		}, &TxResultAdditionalFields{
-			Value:     parsedTx.Amount,
-			Hash:      parsedTx.Hash,
-			TxHash:    parsedTx.TxHash,
-			Type:      parsedTx.Type,
-			Recipient: parsedTx.Recipient,
-			Sender:    parsedTx.Sender,
-		}, nil
+		}, nil, nil
+	}
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
@@ -217,7 +230,26 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", height, txIndex)
 	}
 	parsedTx := txs.Txs[0]
-	return &ethermint.TxResult{
+	if parsedTx.Type == 88 {
+		return &ethermint.TxResult{
+				Height:            height,
+				TxIndex:           uint32(txIndex),
+				MsgIndex:          uint32(parsedTx.MsgIndex),
+				EthTxIndex:        parsedTx.EthTxIndex,
+				Failed:            parsedTx.Failed,
+				GasUsed:           parsedTx.GasUsed,
+				CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+			}, &TxResultAdditionalFields{
+				Value:     parsedTx.Amount,
+				Hash:      parsedTx.Hash,
+				TxHash:    parsedTx.TxHash,
+				Type:      parsedTx.Type,
+				Recipient: parsedTx.Recipient,
+				Sender:    parsedTx.Sender,
+				GasUsed:   parsedTx.GasUsed,
+			}, nil
+	} else {
+		return &ethermint.TxResult{
 			Height:            height,
 			TxIndex:           uint32(txIndex),
 			MsgIndex:          uint32(parsedTx.MsgIndex),
@@ -225,15 +257,8 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 			Failed:            parsedTx.Failed,
 			GasUsed:           parsedTx.GasUsed,
 			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
-		}, &TxResultAdditionalFields{
-			Value:     parsedTx.Amount,
-			Hash:      parsedTx.Hash,
-			TxHash:    parsedTx.TxHash,
-			Type:      parsedTx.Type,
-			Recipient: parsedTx.Recipient,
-			Sender:    parsedTx.Sender,
-			GasUsed:   parsedTx.GasUsed,
-		}, nil
+		}, nil, nil
+	}
 }
 
 // newTx parse a new tx from events, called during parsing.
@@ -329,7 +354,11 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 	case evmtypes.AttributeKeyTxHash:
 		tx.TxHash = string(value)
 	case evmtypes.AttributeKeyTxType:
-		tx.Type = big.NewInt(0).SetBytes(value)
+		txType, err := strconv.ParseUint(string(value), 10, 31)
+		if err != nil {
+			return err
+		}
+		tx.Type = txType
 	case AmountType:
 		var success bool
 		tx.Amount, success = big.NewInt(0).SetString(string(value), 10)

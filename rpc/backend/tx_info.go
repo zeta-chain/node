@@ -245,7 +245,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txType uint8
 
 	if txData == nil {
-		txType = uint8(additional.Type.Uint64())
+		txType = uint8(additional.Type)
 		*to = additional.Recipient
 	} else {
 		txType = ethMsg.AsTransaction().Type()

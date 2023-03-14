@@ -49,7 +49,7 @@ type TxResultAdditionalFields struct {
 	Value     *big.Int       `json:"amount"`
 	Hash      common.Hash    `json:"hash"`
 	TxHash    string         `json:"txHash"`
-	Type      *big.Int       `json:"type"`
+	Type      uint64         `json:"type"`
 	Recipient common.Address `json:"recipient"`
 	Sender    common.Address `json:"sender"`
 	GasUsed   uint64         `json:"gasUsed"`
