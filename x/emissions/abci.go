@@ -66,6 +66,9 @@ func GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper, keeper ke
 
 	currentBondedRatio := stakingKeeper.BondedRatio(ctx)
 	// Bond factor ranges between minBondFactor (0.75) to maxBondFactor (1.25)
+	if currentBondedRatio.IsZero() {
+		return sdk.ZeroDec()
+	}
 	bondFactor := targetBondRatio.Quo(currentBondedRatio)
 	if bondFactor.GT(maxBondFactor) {
 		return maxBondFactor

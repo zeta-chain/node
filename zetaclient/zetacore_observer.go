@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -90,7 +91,7 @@ func (co *CoreObserver) keygenObserve() {
 			for {
 				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
 				var req keygen.Request
-				req = keygen.NewRequest(kg.Pubkeys, int64(kg.BlockNumber), "0.14.0")
+				req = keygen.NewRequest(kg.Pubkeys, kg.BlockNumber, "0.14.0")
 				res, err := co.tss.Server.Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
 					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
@@ -139,7 +140,7 @@ func (co *CoreObserver) startSendScheduler() {
 	go outTxMan.StartMonitorHealth()
 
 	observeTicker := time.NewTicker(3 * time.Second)
-	var lastBlockNum uint64
+	var lastBlockNum int64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -213,7 +214,11 @@ func (co *CoreObserver) startSendScheduler() {
 					outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
 
 					// FIXME: config this schedule; this value is for localnet fast testing
-					if nonce%1 == bn%1 && !outTxMan.IsOutTxActive(outTxID) {
+					if bn >= math.MaxInt64 {
+						continue
+					}
+					currentHeight := uint64(bn)
+					if nonce%1 == currentHeight%1 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						fmt.Printf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
