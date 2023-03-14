@@ -206,17 +206,16 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 			}, nil
-	} else {
-		return &ethermint.TxResult{
-			Height:            txResult.Height,
-			TxIndex:           txResult.Index,
-			MsgIndex:          uint32(parsedTx.MsgIndex),
-			EthTxIndex:        parsedTx.EthTxIndex,
-			Failed:            parsedTx.Failed,
-			GasUsed:           parsedTx.GasUsed,
-			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
-		}, nil, nil
 	}
+	return &ethermint.TxResult{
+		Height:            txResult.Height,
+		TxIndex:           txResult.Index,
+		MsgIndex:          uint32(parsedTx.MsgIndex),
+		EthTxIndex:        parsedTx.EthTxIndex,
+		Failed:            parsedTx.Failed,
+		GasUsed:           parsedTx.GasUsed,
+		CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+	}, nil, nil
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
@@ -248,17 +247,16 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
 			}, nil
-	} else {
-		return &ethermint.TxResult{
-			Height:            height,
-			TxIndex:           uint32(txIndex),
-			MsgIndex:          uint32(parsedTx.MsgIndex),
-			EthTxIndex:        parsedTx.EthTxIndex,
-			Failed:            parsedTx.Failed,
-			GasUsed:           parsedTx.GasUsed,
-			CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
-		}, nil, nil
 	}
+	return &ethermint.TxResult{
+		Height:            height,
+		TxIndex:           uint32(txIndex),
+		MsgIndex:          uint32(parsedTx.MsgIndex),
+		EthTxIndex:        parsedTx.EthTxIndex,
+		Failed:            parsedTx.Failed,
+		GasUsed:           parsedTx.GasUsed,
+		CumulativeGasUsed: txs.AccumulativeGasUsed(parsedTx.MsgIndex),
+	}, nil, nil
 }
 
 // newTx parse a new tx from events, called during parsing.
