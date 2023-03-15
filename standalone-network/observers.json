@@ -5,8 +5,8 @@
    18444,
    101
   ],
-  "ObserverAddress": "zeta1acdh3rca2elta9jdg5a6mjsw2cv3map677am6a",
-  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
+  "ObserverAddress": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+  "ObserverGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
  },
  {
   "SupportedChainsList": [
@@ -14,16 +14,7 @@
    18444,
    101
   ],
-  "ObserverAddress": "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
-  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
- },
- {
-  "SupportedChainsList": [
-   1337,
-   18444,
-   101
-  ],
-  "ObserverAddress": "zeta1g0ecn4l05rdtzd8vcxpnt8283wxrnx4pz3lnyz",
-  "ObserverGranteeAddress": "zeta1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxg2y5h8w"
+  "ObserverAddress": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+  "ObserverGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50"
  }
 ]

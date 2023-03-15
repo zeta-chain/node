@@ -73,11 +73,19 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		log.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
+	accountsMap := make(map[common.KeyType]uint64)
+	seqMap := make(map[common.KeyType]uint64)
+	for _, keyType := range common.GetAllKeyTypes() {
+		accountsMap[keyType] = 0
+		seqMap[keyType] = 0
+	}
 
 	return &ZetaCoreBridge{
 		logger:              logger,
 		grpcConn:            grpcConn,
 		httpClient:          httpClient,
+		accountNumber:       accountsMap,
+		seqNumber:           seqMap,
 		cfg:                 cfg,
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
@@ -99,6 +107,14 @@ func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyTyp
 	ctx := b.GetContext(keyType)
 	address := b.keys.GetAddress(keyType)
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+}
+
+func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
+	ctx := b.GetContext(keyType)
+	address := b.keys.GetAddress(keyType)
+	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	b.accountNumber[keyType] = accN
+	b.seqNumber[keyType] = seq
 }
 
 //func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {

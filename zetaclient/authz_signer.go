@@ -12,6 +12,10 @@ type AuthZSigner struct {
 	GranteeAddress sdk.AccAddress
 }
 
+func (a AuthZSigner) String() string {
+	return a.KeyType.String() + " " + a.GranterAddress + " " + a.GranteeAddress.String()
+}
+
 var signers map[string]AuthZSigner
 
 func init() {

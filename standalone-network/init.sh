@@ -10,9 +10,9 @@ rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
 zetacored config keyring-backend $KEYRING --home ~/.zetacored
 zetacored config chain-id $CHAINID --home ~/.zetacored
-echo "anxiety enact group destroy motion gain picture lumber recipe leisure snow aunt impact science claw model luggage mango bulk trash mom skate electric unlock" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
-echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
-echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
+echo "anxiety enact group destroy motion gain picture lumber recipe leisure snow aunt impact science claw model luggage mango bulk trash mom skate electric unlock" | zetacored keys add val_tss_signer --algo=secp256k1 --recover --keyring-backend=test
+#echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
+#echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
 
 zetacored init test --chain-id=$CHAINID
 

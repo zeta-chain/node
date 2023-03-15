@@ -78,10 +78,12 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 		if err != nil {
 			b.logger.Error().Err(err).Msg("PostSend broadcast fail; re-trying...")
 		} else {
+			b.logger.Debug().Str("zetaTxHash", zetaTxHash).Msg("PostSend broadcast success")
 			return zetaTxHash, nil
 		}
 		time.Sleep(1 * time.Second)
 	}
+
 	return zetaTxHash, fmt.Errorf("postSend: re-try fails")
 }
 

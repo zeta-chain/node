@@ -62,6 +62,12 @@ func start(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	bridge1.SetAccountNumber(common.ObserverGranteeKey)
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("Unable to set account number for observer key :" + err.Error())
+	//	return err
+	//}
+
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
 		bridge1.GetKeys().GetAddress(common.ObserverGranteeKey))
 

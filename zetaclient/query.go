@@ -23,6 +23,21 @@ func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) 
 
 }
 
+//func (b *ZetaCoreBridge) GetAccountDetails(address string) (string, error) {
+//	client := authtypes.NewQueryClient(b.grpcConn)
+//	resp, err := client.Account(context.Background(), &authtypes.QueryAccountRequest{
+//		Address: address,
+//	})
+//	if err != nil {
+//		b.logger.Error().Err(err).Msg("Query account failed")
+//		return "", err
+//	}
+//
+//	err := resp.UnpackInterfaces
+//	return resp.Account.GetTypeUrl(), nil
+//
+//}
+
 func (b *ZetaCoreBridge) GetAllCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.CctxAll(context.Background(), &types.QueryAllCctxRequest{})

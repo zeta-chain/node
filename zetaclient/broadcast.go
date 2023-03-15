@@ -15,11 +15,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync/atomic"
+	"time"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner AuthZSigner) (string, error) {
+	gaslimit = gaslimit * 3
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
@@ -49,7 +50,6 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
 	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
 	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
 		return "", err
@@ -71,7 +71,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	// broadcast to a Tendermint node
 	commit, err := ctx.BroadcastTxSync(txBytes)
 	if err != nil {
-		b.logger.Error().Err(err).Msgf("fail to broadcast tx")
+		b.logger.Error().Err(err).Msgf("fail to broadcast tx", err)
 		return "", err
 	}
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
@@ -96,14 +96,16 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
 			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
-		b.logger.Info().Msgf("messages: %+v", authzWrappedMsg)
-		return commit.TxHash, fmt.Errorf("fail to broadcast to metachain,code:%d, log:%s", commit.Code, commit.RawLog)
+		b.logger.Info().Msgf("retrying message in 3s: %s", commit.RawLog)
+		time.Sleep(3 * time.Second)
+		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 	//b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
 
 	// increment seqNum
-	seq := b.seqNumber[authzSigner.KeyType]
-	atomic.AddUint64(&seq, 1)
+	//seq := b.seqNumber[authzSigner.KeyType]
+	//atomic.AddUint64(&seq, 1)
+	b.seqNumber[authzSigner.KeyType] = b.seqNumber[authzSigner.KeyType] + 1
 	//b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
 
 	return commit.TxHash, nil

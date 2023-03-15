@@ -19,5 +19,7 @@ func GetAllAuthzTxTypes() []string {
 		sdk.MsgTypeURL(&MsgVoteOnObservedInboundTx{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedOutboundTx{}),
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
+		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
+		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
 	}
 }
