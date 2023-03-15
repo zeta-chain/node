@@ -142,7 +142,7 @@ func main() {
 	//time.Sleep(10 * time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
-	receipt = MustWaitForReceipt(ctx, zevmClient, tx2)
+	receipt = MustWaitForReceipt(ctx, zevmClient, tx2.Hash())
 	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx2.Hash())
 	if err != nil {
 		panic(err)
@@ -169,6 +169,34 @@ func main() {
 		panic(fmt.Sprintf("Contract address mismatch: wanted %s, got %s", zetaContractAddress, receipt.ContractAddress))
 	}
 
+	{
+		//  test of filter event of ZetaEth, a typical ERC20 token contract
+		tx, err := zetaContract.Approve(zevmAuth, ethcommon.HexToAddress(SystemContractAddress), big.NewInt(100))
+		if err != nil {
+			panic(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+		defer cancel()
+		receipt = MustWaitForReceipt(ctx, zevmClient, tx.Hash())
+		fmt.Printf("Approve Receipt status: %+v\n", receipt.Status)
+		approveIter, err := zetaContract.FilterApproval(&bind.FilterOpts{
+			Start: 0,
+			End:   nil,
+		}, nil, nil)
+		if err != nil {
+			panic(err)
+		}
+		for approveIter.Next() {
+			event := approveIter.Event
+			fmt.Printf("Approval event: owner %s, spender %s, amount %s\n", event.Owner.Hex(), event.Spender.Hex(), event.Value.String())
+			fmt.Printf("  raw log txhash: %s\n", event.Raw.TxHash.Hex())
+			fmt.Printf("  tx hash: %s\n", tx.Hash().Hex())
+			if event.Raw.TxHash != tx.Hash() {
+				panic("Tx hash mismatch")
+			}
+		}
+	}
+
 	// test getLogs
 	sys, err := zevm.NewSystemContract(ethcommon.HexToAddress(SystemContractAddress), zevmClient)
 	if err != nil {
@@ -179,9 +207,10 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Gas price: %s\n", gas.String())
+	toBlock := uint64(bn)
 	gasPriceIter, err := sys.FilterSetGasPrice(&bind.FilterOpts{
-		Start: 0,
-		End:   nil,
+		Start: uint64(bn),
+		End:   &toBlock,
 	})
 	if err != nil {
 		panic(err)
@@ -195,7 +224,21 @@ func main() {
 		if event.Raw.TxHash.Big().Cmp(big.NewInt(0)) == 0 {
 			panic("TxHash is zero")
 		}
+		fmt.Printf("  raw log txhash: %s\n", event.Raw.TxHash.Hex())
+		fmt.Printf("  querying the receipt...\n")
+		receipt = MustWaitForReceipt(context.Background(), zevmClient, event.Raw.TxHash)
+		fmt.Printf("  receipt: hash: %s\n", receipt.TxHash)
+		fmt.Printf("    receipt status: %d\n", receipt.Status)
+		fmt.Printf("    receipt gas used: %d\n", receipt.GasUsed)
+		fmt.Printf("    receipt cumulative gas used: %d\n", receipt.CumulativeGasUsed)
+		fmt.Printf("    receipt logs: %+v\n", receipt.Logs)
+		fmt.Printf("    receipt block hash: %s\n", receipt.BlockHash.Hex())
+		fmt.Printf("    receipt block number: %d\n", receipt.BlockNumber)
+		fmt.Printf("    receipt transaction index: %d\n", receipt.TransactionIndex)
+		fmt.Printf("    receipt contract address: %s\n", receipt.ContractAddress.Hex())
+
 	}
+
 }
 
 type EthClient struct {
@@ -287,13 +330,54 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	return &rpcResp
 }
 
-func MustWaitForReceipt(ctx context.Context, client *ethclient.Client, tx *types.Transaction) *types.Receipt {
+func (c *EthClient) EthGetLogs() {
+	//client := c.HTTPClient
+	//req := &Request{
+	//	Jsonrpc: "2.0",
+	//	Method:  "eth_getTransactionReceipt",
+	//	Params: []interface{}{
+	//		txhash,
+	//	},
+	//	ID: 1,
+	//}
+	//
+	//// Encode the request to JSON
+	//buf := &bytes.Buffer{}
+	//err := json.NewEncoder(buf).Encode(req)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//// Create a new HTTP request
+	//httpReq, err := http.NewRequest("POST", c.Endpoint, buf)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//// Set the content type header
+	//httpReq.Header.Set("Content-Type", "application/json")
+	//
+	//// Send the HTTP request
+	//resp, err := client.Do(httpReq)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//defer resp.Body.Close() //#nosec
+	//// Decode the response from JSON
+	//var rpcResp Response
+	//err = json.NewDecoder(resp.Body).Decode(&rpcResp)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//return &rpcResp
+}
+
+func MustWaitForReceipt(ctx context.Context, client *ethclient.Client, txhash ethcommon.Hash) *types.Receipt {
 	for {
 		select {
 		case <-ctx.Done():
 			panic("timeout waiting for transaction receipt")
 		default:
-			receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+			receipt, err := client.TransactionReceipt(context.Background(), txhash)
 			if err == nil {
 				return receipt
 			}
