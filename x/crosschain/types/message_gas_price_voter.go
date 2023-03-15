@@ -43,5 +43,8 @@ func (msg *MsgGasPriceVoter) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	if msg.ChainId < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
+	}
 	return nil
 }

@@ -54,24 +54,13 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
 	}
-	// TODO : Add regex to check for address and chain id formats
-	//senderChain, err := common.ParseChain(msg.SenderChain)
-	//if err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid sender chain (%s): %s", err, msg.SenderChain)
-	//}
-	//_, err = common.NewAddress(msg.Sender, senderChain)
-	//if err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s): %s", err, msg.Sender)
-	//}
-	//recvChain, err := common.ParseChain(msg.ReceiverChain)
-	//if err != nil {
-	//	return fmt.Errorf("cannot parse receiver chain %s", msg.ReceiverChain)
-	//}
-	//_, err = common.NewAddress(msg.Receiver, recvChain)
-	//if err != nil {
-	//	return fmt.Errorf("cannot parse receiver addr %s", msg.Receiver)
-	//}
+	if msg.SenderChainId < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.SenderChainId)
+	}
 
+	if msg.ReceiverChain < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ReceiverChain)
+	}
 	// TODO: should parameterize the hardcoded max len
 	// FIXME: should allow this observation and handle errors in the state machine
 	if len(msg.Message) > 10240 {
