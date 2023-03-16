@@ -6,10 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -36,7 +40,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			observersforChain := map[int64][]string{}
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
-				grantAuthorizations = append(grantAuthorizations, generateGrants(info.ObserverAddress, info.ObserverGranteeAddress)...)
+				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
 				for _, chain := range info.SupportedChainsList {
 					observersforChain[chain] = append(observersforChain[chain], info.ObserverAddress)
 				}
@@ -107,7 +111,15 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 	return list
 }
 
-func generateGrants(granter, grantee string) (grants []authz.GrantAuthorization) {
+func generateGrants(info types.ObserverInfoReader) (grants []authz.GrantAuthorization) {
+
+	grants = append(append(append(grants, addStakingGrants(grants, info)...),
+		addSpendingGrants(grants, info)...),
+		addZetaClientGrants(grants, info)...)
+	return grants
+}
+
+func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
 	txTypes := crosschaintypes.GetAllAuthzTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
@@ -115,13 +127,86 @@ func generateGrants(granter, grantee string) (grants []authz.GrantAuthorization)
 			panic(err)
 		}
 		grants = append(grants, authz.GrantAuthorization{
-			Granter:       granter,
-			Grantee:       grantee,
+			Granter:       info.ObserverAddress,
+			Grantee:       info.ZetaClientGranteeAddress,
 			Authorization: auth,
 			Expiration:    nil,
 		})
 	}
 	return grants
+}
+
+func addSpendingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+	spendMaxTokens, ok := sdk.NewIntFromString(info.SpendMaxTokens)
+	if !ok {
+		panic("Failed to parse spend max tokens")
+	}
+	spendAuth, err := codectypes.NewAnyWithValue(&banktypes.SendAuthorization{
+		SpendLimit: sdk.NewCoins(sdk.NewCoin(config.BaseDenom, spendMaxTokens)),
+	})
+	if err != nil {
+		panic(err)
+	}
+	grants = append(grants, authz.GrantAuthorization{
+		Granter:       info.ObserverAddress,
+		Grantee:       info.SpendGranteeAddress,
+		Authorization: spendAuth,
+		Expiration:    nil,
+	})
+	return grants
+}
+
+func addStakingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+	stakingMaxTokens, ok := sdk.NewIntFromString(info.StakingMaxTokens)
+	if !ok {
+		panic("Failed to parse staking max tokens")
+	}
+	alllowList := stakingtypes.StakeAuthorization_AllowList{AllowList: &stakingtypes.StakeAuthorization_Validators{Address: info.StakingValidatorAllowList}}
+
+	stakingAuth, err := codectypes.NewAnyWithValue(&stakingtypes.StakeAuthorization{
+		MaxTokens:         &sdk.Coin{Denom: config.BaseDenom, Amount: stakingMaxTokens},
+		Validators:        &alllowList,
+		AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+	})
+	if err != nil {
+		panic(err)
+	}
+	grants = append(grants, authz.GrantAuthorization{
+		Granter:       info.ObserverAddress,
+		Grantee:       info.StakingGranteeAddress,
+		Authorization: stakingAuth,
+		Expiration:    nil,
+	})
+	delAuth, err := codectypes.NewAnyWithValue(&stakingtypes.StakeAuthorization{
+		MaxTokens:         &sdk.Coin{Denom: config.BaseDenom, Amount: stakingMaxTokens},
+		Validators:        &alllowList,
+		AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
+	})
+	if err != nil {
+		panic(err)
+	}
+	grants = append(grants, authz.GrantAuthorization{
+		Granter:       info.ObserverAddress,
+		Grantee:       info.StakingGranteeAddress,
+		Authorization: delAuth,
+		Expiration:    nil,
+	})
+	reDelauth, err := codectypes.NewAnyWithValue(&stakingtypes.StakeAuthorization{
+		MaxTokens:         &sdk.Coin{Denom: config.BaseDenom, Amount: stakingMaxTokens},
+		Validators:        &alllowList,
+		AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
+	})
+	if err != nil {
+		panic(err)
+	}
+	grants = append(grants, authz.GrantAuthorization{
+		Granter:       info.ObserverAddress,
+		Grantee:       info.StakingGranteeAddress,
+		Authorization: reDelauth,
+		Expiration:    nil,
+	})
+	return grants
+
 }
 
 // AddObserverAccountCmd Deprecated : Use AddObserverAccountsCmd instead

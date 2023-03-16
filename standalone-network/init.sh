@@ -10,9 +10,9 @@ rm -rf ~/.zetacored
 kill -9 $(lsof -ti:26657)
 zetacored config keyring-backend $KEYRING --home ~/.zetacored
 zetacored config chain-id $CHAINID --home ~/.zetacored
-echo "anxiety enact group destroy motion gain picture lumber recipe leisure snow aunt impact science claw model luggage mango bulk trash mom skate electric unlock" | zetacored keys add val_tss_signer --algo=secp256k1 --recover --keyring-backend=test
-#echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
-#echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
+echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=test
+echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
+echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer --recover --keyring-backend=test --algo secp256k1
 
 zetacored init test --chain-id=$CHAINID
 
@@ -33,23 +33,6 @@ zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=te
 zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show executer -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
-
-#ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
-#observer+=$ADDR1
-#observer+=","
-#ADDR2=$(zetacored keys show mario -a --keyring-backend=test)
-#observer+=$ADDR2
-#observer+=","
-#
-#
-#observer_list=$(echo $observer | rev | cut -c2- | rev)
-#
-#echo $observer_list
-#
-#
-#
-#zetacored add-observer 1337 "$observer_list" #goerli
-#zetacored add-observer 101  "$observer_list" #goerli
 zetacored add-observer-list standalone-network/observers.json
 
 

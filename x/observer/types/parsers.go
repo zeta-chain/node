@@ -9,9 +9,14 @@ import (
 )
 
 type ObserverInfoReader struct {
-	SupportedChainsList    []int64 `json:"SupportedChainsList"`
-	ObserverAddress        string  `json:"ObserverAddress"`
-	ObserverGranteeAddress string  `json:"ObserverGranteeAddress"`
+	SupportedChainsList       []int64  `json:"SupportedChainsList"`
+	ObserverAddress           string   `json:"ObserverAddress"`
+	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
+	StakingGranteeAddress     string   `json:"StakingGranteeAddress"`
+	StakingMaxTokens          string   `json:"StakingMaxTokens"`
+	StakingValidatorAllowList []string `json:"StakingValidatorAllowList"`
+	SpendGranteeAddress       string   `json:"SpendGranteeAddress"`
+	SpendMaxTokens            string   `json:"SpendMaxTokens"`
 }
 
 func ParsefileToObserverDetails(fp string) ([]ObserverInfoReader, error) {

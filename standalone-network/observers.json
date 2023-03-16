@@ -6,7 +6,14 @@
    101
   ],
   "ObserverAddress": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-  "ObserverGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
+  "ZetaClientGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+  "StakingGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+  "StakingMaxTokens": "100000000",
+  "StakingValidatorAllowList": [
+   "zetavaloper1syavy2npfyt9tcncdtsdzf7kny9lh777nep4tq"
+  ],
+  "SpendGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+  "SpendMaxTokens": "100000000"
  },
  {
   "SupportedChainsList": [
@@ -15,6 +22,13 @@
    101
   ],
   "ObserverAddress": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
-  "ObserverGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50"
+  "ZetaClientGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+  "StakingGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+  "StakingMaxTokens": "100000000",
+  "StakingValidatorAllowList": [
+   "zetavaloper1syavy2npfyt9tcncdtsdzf7kny9lh777nep4tq"
+  ],
+  "SpendGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+  "SpendMaxTokens": "100000000"
  }
 ]
