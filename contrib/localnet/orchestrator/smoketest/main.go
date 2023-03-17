@@ -6,11 +6,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"

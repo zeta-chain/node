@@ -28,7 +28,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType)
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
@@ -60,7 +60,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// ******************************************************************************
 
 	// Inbound Ballot has been finalized , Create CCTX
-	// New CCTX can only set either to Aborted or PendingOutbound
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail

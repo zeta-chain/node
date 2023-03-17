@@ -142,11 +142,10 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType string) ([]string, error) {
+func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.ObserversByChainAndType(context.Background(), &zetaObserverTypes.QueryObserversByChainAndTypeRequest{
+	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{
 		ObservationChain: chain.ChainName.String(),
-		ObservationType:  observationType,
 	})
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query GetObserverList error")
@@ -196,9 +195,9 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
+func (b *ZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+	resp, err := client.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
 	if err != nil {
 		b.logger.Warn().Err(err).Msg("query GetBlockHeight error")
 		return 0, err

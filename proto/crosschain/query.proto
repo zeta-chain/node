@@ -11,7 +11,6 @@ import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
 import "crosschain/tss_voter.proto";
 import "crosschain/tss.proto";
-import "crosschain/gas_balance.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
 import "crosschain/last_block_height.proto";
@@ -97,17 +96,6 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/TSS";
 	}
 
-	// Queries a gasBalance by index.
-	rpc GasBalance(QueryGetGasBalanceRequest) returns (QueryGetGasBalanceResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/gasBalance/{index}";
-	}
-
-	// Queries a list of gasBalance items.
-	rpc GasBalanceAll(QueryAllGasBalanceRequest) returns (QueryAllGasBalanceResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/gasBalance";
-	}
-
-
 	// Queries a gasPrice by index.
 	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/gasPrice/{index}";
@@ -171,8 +159,8 @@ service Query {
 	}
 
 	// Queries a list of lastMetaHeight items.
-	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/lastMetaHeight";
+	rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
 	}
 
 }
@@ -278,22 +266,7 @@ message QueryAllTSSResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetGasBalanceRequest {
-	string index = 1;
-}
 
-message QueryGetGasBalanceResponse {
-	GasBalance GasBalance = 1;
-}
-
-message QueryAllGasBalanceRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllGasBalanceResponse {
-	repeated GasBalance GasBalance = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
 message QueryGetGasPriceRequest {
 	string index = 1;
 }
@@ -385,11 +358,11 @@ message QueryAllNodeAccountResponse {
 	repeated NodeAccount NodeAccount = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryLastMetaHeightRequest {
+message QueryLastZetaHeightRequest {
 }
 
-message QueryLastMetaHeightResponse {
-	uint64 Height = 1;
+message QueryLastZetaHeightResponse {
+	int64 Height = 1;
 }
 
 message QueryConvertGasToZetaRequest {

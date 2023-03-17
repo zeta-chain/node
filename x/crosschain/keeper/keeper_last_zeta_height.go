@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -9,14 +10,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) LastMetaHeight(goCtx context.Context, req *types.QueryLastMetaHeightRequest) (*types.QueryLastMetaHeightResponse, error) {
+func (k Keeper) LastZetaHeight(goCtx context.Context, req *types.QueryLastZetaHeightRequest) (*types.QueryLastZetaHeightResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	return &types.QueryLastMetaHeightResponse{
-		uint64(ctx.BlockHeight()),
+	height := ctx.BlockHeight()
+	if height >= math.MaxInt64 || height < 0 {
+		return nil, status.Error(codes.OutOfRange, "height out of range")
+	}
+	return &types.QueryLastZetaHeightResponse{
+		Height: height,
 	}, nil
 }

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	math2 "math"
 	"math/big"
 	"os"
 	"strconv"
@@ -69,7 +70,7 @@ type EVMChainClient struct {
 	KlaytnClient              *KlaytnClient
 	zetaClient                *ZetaCoreBridge
 	Tss                       TSSSigner
-	lastBlock                 uint64
+	lastBlock                 int64
 	confCount                 uint64 // must wait this many blocks to be considered "confirmed"
 	BlockTime                 uint64 // block time in seconds
 	txWatchList               map[ethcommon.Hash]string
@@ -247,10 +248,15 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
+				confHeight := vLog.BlockNumber + ob.confCount
+				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+					return false, false, fmt.Errorf("confHeight is out of range")
+				}
+				// TODO rewrite this to return early if not confirmed
 				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
+					if int64(confHeight) < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -282,7 +288,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
+					if int64(confHeight) < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -330,9 +336,14 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			}
 			for _, vLog := range logs {
 				event, err := ERC20Custody.ParseWithdrawn(*vLog)
+				confHeight := vLog.BlockNumber + ob.confCount
+				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+					return false, false, fmt.Errorf("confHeight is out of range")
+				}
 				if err == nil {
 					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					if vLog.BlockNumber+ob.confCount < ob.GetLastBlockHeight() {
+					if int64(confHeight) < ob.GetLastBlockHeight() {
+
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 							sendHash,
@@ -423,33 +434,53 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	receipt, err1 := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
-	transaction, _, err2 := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 
-	if err1 != nil || err2 != nil {
-		if err1 != ethereum.NotFound {
-			logger.Warn().Err(err1).Msg("TransactionReceipt/TransactionByHash error")
+	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
+	if err != nil {
+		if err != ethereum.NotFound {
+			logger.Warn().Err(err).Msg("TransactionReceipt/TransactionByHash error")
 		}
-		return nil, nil, err1
-	} else if receipt.BlockNumber.Uint64()+ob.confCount > ob.GetLastBlockHeight() {
+		return nil, nil, err
+	}
+	transaction, _, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	if err != nil {
+		return nil, nil, err
+	}
+	confHeight := receipt.BlockNumber.Uint64() + ob.confCount
+	if confHeight < 0 || confHeight >= math2.MaxInt64 {
+		return nil, nil, fmt.Errorf("confHeight is out of range")
+	}
+	if int64(confHeight) > ob.GetLastBlockHeight() {
 		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
-	} else { // confirmed outbound tx
-		return receipt, transaction, nil
 	}
+	return receipt, transaction, nil
 }
 
-func (ob *EVMChainClient) SetLastBlockHeight(block uint64) {
-	atomic.StoreUint64(&ob.lastBlock, block)
+func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
+	if block < 0 {
+		panic("lastBlock is negative")
+	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	atomic.StoreInt64(&ob.lastBlock, block)
 }
 
-func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
-	return atomic.LoadUint64(&ob.lastBlock)
+func (ob *EVMChainClient) GetLastBlockHeight() int64 {
+	height := atomic.LoadInt64(&ob.lastBlock)
+	if height < 0 {
+		panic("lastBlock is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	return height
 }
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
-	fmt.Println("starting ExternalChainWatcher")
+	ob.logger.Info().Msg("ExternalChainWatcher started")
 	for {
 		select {
 		case <-ob.ticker.C:
@@ -486,22 +517,33 @@ func (ob *EVMChainClient) observeInTX() error {
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - ob.confCount
 	// skip if no new block is produced.
-	if confirmedBlockNum <= ob.GetLastBlockHeight() {
+	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
+		ob.sampleLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
+		return nil
+	}
+	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
 		ob.sampleLogger.Info().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
 	lastBlock := ob.GetLastBlockHeight()
 	startBlock := lastBlock + 1
 	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
-	if toBlock >= confirmedBlockNum {
-		toBlock = confirmedBlockNum
+	if uint64(toBlock) >= confirmedBlockNum {
+		toBlock = int64(confirmedBlockNum)
 	}
 	//ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
 
 	// Query evm chain for zeta sent logs
+	if startBlock < 0 || startBlock >= math2.MaxInt64 {
+		return fmt.Errorf("startBlock is negative or too large")
+	}
+	if toBlock < 0 || toBlock >= math2.MaxInt64 {
+		return fmt.Errorf("toBlock is negative or too large")
+	}
+	tb := uint64(toBlock)
 	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   startBlock,
-		End:     &toBlock,
+		Start:   uint64(startBlock),
+		End:     &tb,
 		Context: context.TODO(),
 	}, []ethcommon.Address{}, []*big.Int{})
 
@@ -518,7 +560,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	for logs.Next() {
 		event := logs.Event
 		ob.logger.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-		destChain := GetChainFromChainID(event.DestinationChainId.Int64())
+		destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].ZETATokenContractAddress) {
@@ -547,9 +589,16 @@ func (ob *EVMChainClient) observeInTX() error {
 	}
 
 	// Query evm chain for deposited logs
+	if startBlock < 0 || startBlock >= math2.MaxInt64 {
+		ob.logger.Error().Msgf("startBlock is out of range: %d", startBlock)
+	}
+	if toBlock < 0 || toBlock >= math2.MaxInt64 {
+		ob.logger.Error().Msgf("toBlock is out of range: %d", toBlock)
+	}
+	toB := uint64(toBlock)
 	depositedLogs, err := ob.ERC20Custody.FilterDeposited(&bind.FilterOpts{
-		Start:   startBlock,
-		End:     &toBlock,
+		Start:   uint64(startBlock),
+		End:     &toB,
 		Context: context.TODO(),
 	})
 
@@ -595,7 +644,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if !ob.chain.IsKlaytnChain() {
 		for bn := startBlock; bn <= toBlock; bn++ {
 			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
 			if err != nil {
 				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
 				continue
@@ -643,7 +692,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	} else { // for Klaytn
 		for bn := startBlock; bn <= toBlock; bn++ {
 			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-			block, err := ob.KlaytnClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+			block, err := ob.KlaytnClient.BlockByNumber(context.Background(), big.NewInt(bn))
 			if err != nil {
 				ob.logger.Error().Err(err).Msgf("error getting block: %d", bn)
 				continue
@@ -681,7 +730,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	//ob.LastBlock = toBlock
 	ob.SetLastBlockHeight(toBlock)
 	buf := make([]byte, binary.MaxVarintLen64)
-	n := binary.PutUvarint(buf, toBlock)
+	n := binary.PutUvarint(buf, uint64(toBlock))
 	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
@@ -811,13 +860,13 @@ func (ob *EVMChainClient) PostGasPrice() error {
 
 // query ZetaCore about the last block that it has heard from a specific chain.
 // return 0 if not existent.
-func (ob *EVMChainClient) getLastHeight() uint64 {
+func (ob *EVMChainClient) getLastHeight() int64 {
 	lastheight, err := ob.zetaClient.GetLastBlockHeightByChain(ob.chain)
 	if err != nil {
 		ob.logger.Warn().Err(err).Msgf("getLastHeight")
 		return 0
 	}
-	return lastheight.LastSendHeight
+	return int64(lastheight.LastSendHeight)
 }
 
 func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
@@ -837,13 +886,13 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 			if err != nil {
 				return err
 			}
-			ob.SetLastBlockHeight(header.Number.Uint64())
+			ob.SetLastBlockHeight(header.Number.Int64())
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return err
 			}
-			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
+			ob.SetLastBlockHeight(scanFromBlockInt)
 		}
 	} else { // last observed block
 		buf, err := db.Get([]byte(PosKey), nil)
@@ -856,17 +905,17 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 				if err != nil {
 					return err
 				}
-				ob.SetLastBlockHeight(header.Number.Uint64())
+				ob.SetLastBlockHeight(header.Number.Int64())
 			}
 			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, ob.GetLastBlockHeight())
+			n := binary.PutUvarint(buf2, uint64(ob.GetLastBlockHeight()))
 			err := db.Put([]byte(PosKey), buf2[:n], nil)
 			if err != nil {
 				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
 			lastBlock, _ := binary.Uvarint(buf)
-			ob.SetLastBlockHeight(lastBlock)
+			ob.SetLastBlockHeight(int64(lastBlock))
 		}
 	}
 	return nil

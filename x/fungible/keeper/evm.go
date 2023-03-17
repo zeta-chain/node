@@ -17,8 +17,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/server/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/zetacore/server/config"
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	zetacommon "github.com/zeta-chain/zetacore/common"
@@ -539,20 +539,24 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	msgBytes, _ := json.Marshal(msg)
-	attrs := []sdk.Attribute{
+	ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
+	attrs := []sdk.Attribute{}
+	if len(ctx.TxBytes()) > 0 {
+		// add event for tendermint transaction hash format
+		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+		ethTxHash = common.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
+		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
+	}
+	attrs = append(attrs, []sdk.Attribute{
 		sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
 		// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
-		sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, common.BytesToHash(crypto.Keccak256(msgBytes)).String()),
+		sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, ethTxHash.String()),
 		// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
 		sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
 		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
 		sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
-	}
-	if len(ctx.TxBytes()) > 0 {
-		// add event for tendermint transaction hash format
-		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
-	}
+	}...)
+
 	// receipient: contract address
 	if contract != nil {
 		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
@@ -563,6 +567,7 @@ func (k Keeper) CallEVMWithData(
 
 	txLogAttrs := make([]sdk.Attribute, len(res.Logs))
 	for i, log := range res.Logs {
+		log.TxHash = ethTxHash.String()
 		value, err := json.Marshal(log)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "failed to encode log")

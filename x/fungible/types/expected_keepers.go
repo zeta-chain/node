@@ -31,7 +31,7 @@ type BankKeeper interface {
 
 type ZetaObserverKeeper interface {
 	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain, obsType zetaObserverTypes.ObservationType) (val zetaObserverTypes.ObserverMapper, found bool)
+	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val zetaObserverTypes.ObserverMapper, found bool)
 	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
 	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
