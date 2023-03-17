@@ -55,8 +55,8 @@ enum CoinType {
 }
 
 /**
- * @dev Any Zeta Contract must implement this interface to allow SystemContract to interact with. 
- * It's only require if the contract wants to interact with other chains.
+ * @dev Any ZetaChain Contract must implement this interface to allow SystemContract to interact with. 
+ * This is only required if the contract wants to interact with other chains.
  */
 interface zContract {
     function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external;
