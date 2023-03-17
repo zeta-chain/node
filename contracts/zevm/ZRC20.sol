@@ -2,13 +2,18 @@
 pragma solidity 0.8.7;
 import "./Interfaces.sol";
 
+/**
+ * @dev Custom errors for ZRC20
+ */
 interface ZRC20Errors {
+    // @dev: Error thrown when caller is not the fungible module
     error CallerIsNotFungibleModule();
 
     error InvalidSender();
 }
 
 contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
+    // @dev: Fungible address is always the same, it's on protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
@@ -26,6 +31,9 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     string private _symbol;
     uint8 private _decimals;
 
+    /**
+     * @dev The only one allowed to deploy new ZRC20 is fungible address
+     */
     constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_, address systemContractAddress_) {
         if(msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         _name = name_;
@@ -152,16 +160,25 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return true;
     }
 
+    /**
+     * @dev System contract address can be updated only by fungible module
+     */
     function updateSystemContractAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         SYSTEM_CONTRACT_ADDRESS = addr;
     }
 
+    /**
+     * @dev Gas limit can be updated only by fungible module
+     */
     function updateGasLimit(uint256 gasLimit) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         GAS_LIMIT = gasLimit;
     }
 
+    /**
+     * @dev Protocol flat fee can be updated only by fungible module
+     */
     function updateProtocolFlatFee(uint256 protocolFlatFee) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         PROTOCOL_FLAT_FEE = protocolFlatFee;
