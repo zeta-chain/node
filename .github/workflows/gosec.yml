@@ -36,6 +36,16 @@ jobs:
           go install github.com/securego/gosec/v2/cmd/gosec@latest
           gosec ./...
 
+  git-guardian:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 
+
       - name: GitGuardian scan
         uses: GitGuardian/ggshield-action@master
         env:
