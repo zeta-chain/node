@@ -21,6 +21,7 @@ runs:
     - uses: chrisdickinson/setup-yq@latest
 
     - name: Dependencies.
+      shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install wget jq -y
