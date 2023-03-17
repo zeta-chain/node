@@ -16,7 +16,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
+	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
+
 
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET
@@ -52,7 +54,7 @@ gosec:
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(BUILD_FLAGS) -tags pebbledb ./cmd/zetacored
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 install-zetaclient: go.sum
@@ -66,11 +68,11 @@ install-zetaclient-race-test-only-build: go.sum
 
 install-zetacore: go.sum
 		@echo "--> Installing zetacored"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(BUILD_FLAGS) -tags pebbledb ./cmd/zetacored
 
-install-indexer: go.sum
-		@echo "--> Installing indexer"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
+# install-indexer: go.sum
+# 		@echo "--> Installing indexer"
+# 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
 
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"

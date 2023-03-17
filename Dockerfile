@@ -3,6 +3,8 @@ FROM golang:1.19-alpine AS builder
 RUN apk --no-cache add git make build-base jq
 
 ENV GOPATH /go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
