@@ -10,6 +10,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	common "github.com/zeta-chain/zetacore/common"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -113,7 +114,7 @@ func (m *QueryParamsResponse) GetParams() Params {
 }
 
 type QueryBallotByIdentifierRequest struct {
-	BallotIdentifier string `protobuf:"bytes,1,opt,name=ballotIdentifier,proto3" json:"ballotIdentifier,omitempty"`
+	BallotIdentifier string `protobuf:"bytes,1,opt,name=ballot_identifier,json=ballotIdentifier,proto3" json:"ballot_identifier,omitempty"`
 }
 
 func (m *QueryBallotByIdentifierRequest) Reset()         { *m = QueryBallotByIdentifierRequest{} }
@@ -200,23 +201,22 @@ func (m *QueryBallotByIdentifierResponse) GetBallot() *Ballot {
 	return nil
 }
 
-type QueryObserversByChainAndTypeRequest struct {
-	ObservationChain string `protobuf:"bytes,1,opt,name=observationChain,proto3" json:"observationChain,omitempty"`
-	ObservationType  string `protobuf:"bytes,2,opt,name=observationType,proto3" json:"observationType,omitempty"`
+type QueryObserversByChainRequest struct {
+	ObservationChain string `protobuf:"bytes,1,opt,name=observation_chain,json=observationChain,proto3" json:"observation_chain,omitempty"`
 }
 
-func (m *QueryObserversByChainAndTypeRequest) Reset()         { *m = QueryObserversByChainAndTypeRequest{} }
-func (m *QueryObserversByChainAndTypeRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryObserversByChainAndTypeRequest) ProtoMessage()    {}
-func (*QueryObserversByChainAndTypeRequest) Descriptor() ([]byte, []int) {
+func (m *QueryObserversByChainRequest) Reset()         { *m = QueryObserversByChainRequest{} }
+func (m *QueryObserversByChainRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryObserversByChainRequest) ProtoMessage()    {}
+func (*QueryObserversByChainRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dcb801e455adaee4, []int{4}
 }
-func (m *QueryObserversByChainAndTypeRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryObserversByChainRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryObserversByChainAndTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryObserversByChainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryObserversByChainAndTypeRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryObserversByChainRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -226,48 +226,41 @@ func (m *QueryObserversByChainAndTypeRequest) XXX_Marshal(b []byte, deterministi
 		return b[:n], nil
 	}
 }
-func (m *QueryObserversByChainAndTypeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryObserversByChainAndTypeRequest.Merge(m, src)
+func (m *QueryObserversByChainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryObserversByChainRequest.Merge(m, src)
 }
-func (m *QueryObserversByChainAndTypeRequest) XXX_Size() int {
+func (m *QueryObserversByChainRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryObserversByChainAndTypeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryObserversByChainAndTypeRequest.DiscardUnknown(m)
+func (m *QueryObserversByChainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryObserversByChainRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryObserversByChainAndTypeRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryObserversByChainRequest proto.InternalMessageInfo
 
-func (m *QueryObserversByChainAndTypeRequest) GetObservationChain() string {
+func (m *QueryObserversByChainRequest) GetObservationChain() string {
 	if m != nil {
 		return m.ObservationChain
 	}
 	return ""
 }
 
-func (m *QueryObserversByChainAndTypeRequest) GetObservationType() string {
-	if m != nil {
-		return m.ObservationType
-	}
-	return ""
+type QueryObserversByChainResponse struct {
+	Observers []string `protobuf:"bytes,1,rep,name=observers,proto3" json:"observers,omitempty"`
 }
 
-type QueryObserversByChainAndTypeResponse struct {
-	Observers []string `protobuf:"bytes,1,rep,name=Observers,proto3" json:"Observers,omitempty"`
-}
-
-func (m *QueryObserversByChainAndTypeResponse) Reset()         { *m = QueryObserversByChainAndTypeResponse{} }
-func (m *QueryObserversByChainAndTypeResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryObserversByChainAndTypeResponse) ProtoMessage()    {}
-func (*QueryObserversByChainAndTypeResponse) Descriptor() ([]byte, []int) {
+func (m *QueryObserversByChainResponse) Reset()         { *m = QueryObserversByChainResponse{} }
+func (m *QueryObserversByChainResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryObserversByChainResponse) ProtoMessage()    {}
+func (*QueryObserversByChainResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dcb801e455adaee4, []int{5}
 }
-func (m *QueryObserversByChainAndTypeResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryObserversByChainResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryObserversByChainAndTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryObserversByChainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryObserversByChainAndTypeResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryObserversByChainResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -277,19 +270,19 @@ func (m *QueryObserversByChainAndTypeResponse) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (m *QueryObserversByChainAndTypeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryObserversByChainAndTypeResponse.Merge(m, src)
+func (m *QueryObserversByChainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryObserversByChainResponse.Merge(m, src)
 }
-func (m *QueryObserversByChainAndTypeResponse) XXX_Size() int {
+func (m *QueryObserversByChainResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryObserversByChainAndTypeResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryObserversByChainAndTypeResponse.DiscardUnknown(m)
+func (m *QueryObserversByChainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryObserversByChainResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryObserversByChainAndTypeResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryObserversByChainResponse proto.InternalMessageInfo
 
-func (m *QueryObserversByChainAndTypeResponse) GetObservers() []string {
+func (m *QueryObserversByChainResponse) GetObservers() []string {
 	if m != nil {
 		return m.Observers
 	}
@@ -333,7 +326,7 @@ func (m *QueryAllObserverMappersRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryAllObserverMappersRequest proto.InternalMessageInfo
 
 type QueryAllObserverMappersResponse struct {
-	ObserverMappers []*ObserverMapper `protobuf:"bytes,1,rep,name=ObserverMappers,proto3" json:"ObserverMappers,omitempty"`
+	ObserverMappers []*ObserverMapper `protobuf:"bytes,1,rep,name=observer_mappers,json=observerMappers,proto3" json:"observer_mappers,omitempty"`
 }
 
 func (m *QueryAllObserverMappersResponse) Reset()         { *m = QueryAllObserverMappersResponse{} }
@@ -413,7 +406,7 @@ func (m *QuerySupportedChains) XXX_DiscardUnknown() {
 var xxx_messageInfo_QuerySupportedChains proto.InternalMessageInfo
 
 type QuerySupportedChainsResponse struct {
-	Chains []ObserverChain `protobuf:"varint,1,rep,packed,name=Chains,proto3,enum=zetachain.zetacore.observer.ObserverChain" json:"Chains,omitempty"`
+	Chains []*common.Chain `protobuf:"bytes,1,rep,name=chains,proto3" json:"chains,omitempty"`
 }
 
 func (m *QuerySupportedChainsResponse) Reset()         { *m = QuerySupportedChainsResponse{} }
@@ -449,7 +442,7 @@ func (m *QuerySupportedChainsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QuerySupportedChainsResponse proto.InternalMessageInfo
 
-func (m *QuerySupportedChainsResponse) GetChains() []ObserverChain {
+func (m *QuerySupportedChainsResponse) GetChains() []*common.Chain {
 	if m != nil {
 		return m.Chains
 	}
@@ -461,8 +454,8 @@ func init() {
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.observer.QueryParamsResponse")
 	proto.RegisterType((*QueryBallotByIdentifierRequest)(nil), "zetachain.zetacore.observer.QueryBallotByIdentifierRequest")
 	proto.RegisterType((*QueryBallotByIdentifierResponse)(nil), "zetachain.zetacore.observer.QueryBallotByIdentifierResponse")
-	proto.RegisterType((*QueryObserversByChainAndTypeRequest)(nil), "zetachain.zetacore.observer.QueryObserversByChainAndTypeRequest")
-	proto.RegisterType((*QueryObserversByChainAndTypeResponse)(nil), "zetachain.zetacore.observer.QueryObserversByChainAndTypeResponse")
+	proto.RegisterType((*QueryObserversByChainRequest)(nil), "zetachain.zetacore.observer.QueryObserversByChainRequest")
+	proto.RegisterType((*QueryObserversByChainResponse)(nil), "zetachain.zetacore.observer.QueryObserversByChainResponse")
 	proto.RegisterType((*QueryAllObserverMappersRequest)(nil), "zetachain.zetacore.observer.QueryAllObserverMappersRequest")
 	proto.RegisterType((*QueryAllObserverMappersResponse)(nil), "zetachain.zetacore.observer.QueryAllObserverMappersResponse")
 	proto.RegisterType((*QuerySupportedChains)(nil), "zetachain.zetacore.observer.QuerySupportedChains")
@@ -472,50 +465,49 @@ func init() {
 func init() { proto.RegisterFile("observer/query.proto", fileDescriptor_dcb801e455adaee4) }
 
 var fileDescriptor_dcb801e455adaee4 = []byte{
-	// 685 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x5d, 0x6b, 0x13, 0x41,
-	0x14, 0xcd, 0x56, 0x8d, 0x74, 0x0a, 0x56, 0xc6, 0x68, 0xcb, 0x1a, 0xb6, 0x65, 0x5a, 0xa4, 0xb6,
-	0x9a, 0x31, 0xf1, 0x49, 0x5a, 0xc4, 0xc4, 0xbe, 0x14, 0x14, 0x75, 0xb5, 0x28, 0x82, 0x86, 0xd9,
-	0x66, 0x4c, 0x17, 0x36, 0x3b, 0xdb, 0x9d, 0x4d, 0x69, 0x2c, 0x7d, 0xf1, 0x0f, 0x28, 0xf8, 0x3b,
-	0xfc, 0x13, 0x3e, 0xf5, 0xb1, 0x20, 0x82, 0x4f, 0x22, 0xad, 0xf8, 0x2f, 0x04, 0xd9, 0x3b, 0xb3,
-	0xdb, 0x66, 0xf3, 0xd1, 0xa8, 0x6f, 0x93, 0x33, 0xf7, 0x9c, 0x7b, 0xee, 0xdc, 0x3d, 0x04, 0x15,
-	0x84, 0x23, 0x79, 0xb8, 0xcd, 0x43, 0xba, 0xd5, 0xe6, 0x61, 0xa7, 0x14, 0x84, 0x22, 0x12, 0xf8,
-	0xea, 0x5b, 0x1e, 0xb1, 0x8d, 0x4d, 0xe6, 0xfa, 0x25, 0x38, 0x89, 0x90, 0x97, 0x92, 0x42, 0xb3,
-	0xd8, 0x14, 0xa2, 0xe9, 0x71, 0xca, 0x02, 0x97, 0x32, 0xdf, 0x17, 0x11, 0x8b, 0x5c, 0xe1, 0x4b,
-	0x45, 0x35, 0x17, 0x37, 0x84, 0x6c, 0x09, 0x49, 0x1d, 0x26, 0xb9, 0xd2, 0xa4, 0xdb, 0x65, 0x87,
-	0x47, 0xac, 0x4c, 0x03, 0xd6, 0x74, 0x7d, 0x28, 0xd6, 0xb5, 0x85, 0xa6, 0x68, 0x0a, 0x38, 0xd2,
-	0xf8, 0xa4, 0xd1, 0xcb, 0xa9, 0xa5, 0x80, 0x85, 0xac, 0x95, 0x08, 0x4f, 0xa5, 0x70, 0x72, 0xe8,
-	0xa9, 0x77, 0x98, 0xe7, 0x89, 0x48, 0xc1, 0xa4, 0x80, 0xf0, 0x93, 0xb8, 0xfd, 0x63, 0x10, 0xb1,
-	0xf9, 0x56, 0x9b, 0xcb, 0x88, 0xbc, 0x40, 0x97, 0xba, 0x50, 0x19, 0x08, 0x5f, 0x72, 0x5c, 0x45,
-	0x79, 0xd5, 0x6c, 0xda, 0x98, 0x35, 0x16, 0x26, 0x2a, 0x73, 0xa5, 0x21, 0x2f, 0x50, 0x52, 0xe4,
-	0xda, 0xd9, 0xfd, 0xef, 0x33, 0x39, 0x5b, 0x13, 0xc9, 0x03, 0x64, 0x81, 0x72, 0x0d, 0x4c, 0xd4,
-	0x3a, 0x6b, 0x0d, 0xee, 0x47, 0xee, 0x1b, 0x97, 0x87, 0xba, 0x37, 0x5e, 0x44, 0x17, 0x95, 0xc3,
-	0xe3, 0x2b, 0x68, 0x37, 0x6e, 0xf7, 0xe0, 0xe4, 0x35, 0x9a, 0x19, 0xa8, 0xa6, 0x3d, 0x2f, 0xa3,
-	0xbc, 0xa2, 0x8d, 0xe4, 0x59, 0x09, 0xd9, 0x9a, 0x42, 0x76, 0xd1, 0x1c, 0xe8, 0x3f, 0xd2, 0xf7,
-	0xb2, 0xd6, 0xb9, 0x1f, 0x33, 0xab, 0x7e, 0xe3, 0x59, 0x27, 0xe0, 0x27, 0x2c, 0x2b, 0x05, 0x58,
-	0x1b, 0x54, 0x24, 0x96, 0xb3, 0x38, 0x5e, 0x40, 0x93, 0x27, 0xb0, 0x58, 0x65, 0x7a, 0x0c, 0x4a,
-	0xb3, 0x30, 0x59, 0x45, 0xf3, 0xc3, 0x9b, 0xeb, 0x09, 0x8b, 0x68, 0x3c, 0x2d, 0x99, 0x36, 0x66,
-	0xcf, 0x2c, 0x8c, 0xdb, 0xc7, 0x00, 0x99, 0xd5, 0x0f, 0x5e, 0xf5, 0xbc, 0x04, 0x7c, 0xc8, 0x82,
-	0x80, 0x87, 0xe9, 0xb2, 0x77, 0xf4, 0x23, 0xf6, 0xab, 0xd0, 0x2d, 0xd6, 0xd1, 0x64, 0xe6, 0x0a,
-	0x1a, 0x4d, 0x54, 0x96, 0x86, 0xbe, 0x66, 0x37, 0xc7, 0xce, 0x6a, 0x90, 0x2b, 0xa8, 0x00, 0x9d,
-	0x9f, 0xb6, 0x83, 0x40, 0x84, 0x11, 0x6f, 0xc0, 0x7c, 0x92, 0x38, 0xa8, 0xd8, 0x0f, 0x4f, 0xed,
-	0xd4, 0x50, 0x5e, 0x21, 0xe0, 0xe2, 0x42, 0x65, 0x71, 0x24, 0x17, 0x40, 0xb1, 0x35, 0xb3, 0xf2,
-	0xeb, 0x3c, 0x3a, 0x07, 0x4d, 0xf0, 0x7b, 0x03, 0xe5, 0xd5, 0xb7, 0x8a, 0xe9, 0x50, 0xa1, 0xde,
-	0xa0, 0x98, 0xb7, 0x46, 0x27, 0x28, 0xef, 0x84, 0xbc, 0xfb, 0xf2, 0xf3, 0xe3, 0x58, 0x11, 0x9b,
-	0x34, 0x65, 0xd2, 0x4c, 0x94, 0xf1, 0x57, 0x03, 0xe1, 0xde, 0x4f, 0x1a, 0x2f, 0x9f, 0xde, 0x6c,
-	0x60, 0xac, 0xcc, 0x95, 0x7f, 0x23, 0x6b, 0xd7, 0xab, 0xe0, 0xfa, 0x2e, 0x5e, 0x01, 0xd7, 0x37,
-	0x33, 0xb6, 0x55, 0x5a, 0xea, 0x4e, 0xa7, 0xee, 0xa6, 0x54, 0xba, 0x9b, 0x4d, 0xeb, 0x1e, 0xfe,
-	0x6d, 0xa0, 0xa9, 0x01, 0x5f, 0x33, 0xbe, 0x77, 0xba, 0xbf, 0xe1, 0x29, 0x34, 0xab, 0xff, 0xa1,
-	0xa0, 0xc7, 0x7c, 0x05, 0x63, 0x3e, 0xc7, 0xeb, 0x7d, 0xc7, 0x4c, 0x0e, 0x32, 0x9e, 0x14, 0xee,
-	0xea, 0xcc, 0x6f, 0xd4, 0xa3, 0x4e, 0xc0, 0xe9, 0x6e, 0x36, 0xe8, 0x7b, 0x5d, 0x50, 0xdc, 0x65,
-	0x0f, 0x7f, 0x36, 0x10, 0xee, 0x4d, 0xd9, 0x28, 0x7b, 0x1d, 0x98, 0xde, 0x51, 0xf6, 0x3a, 0x38,
-	0xd8, 0xa4, 0x0c, 0x03, 0x2f, 0xe1, 0xeb, 0x7d, 0x07, 0x66, 0x9e, 0x57, 0x4f, 0x7e, 0xd4, 0x5b,
-	0xda, 0xed, 0x27, 0x03, 0x4d, 0x66, 0x82, 0x89, 0xcb, 0xa7, 0x9b, 0xc8, 0x50, 0xcc, 0x3b, 0x7f,
-	0x4d, 0x49, 0x4d, 0xdf, 0x00, 0xd3, 0xd7, 0xf0, 0x7c, 0x5f, 0xd3, 0xb2, 0x9b, 0x55, 0x5b, 0xdb,
-	0x3f, 0xb4, 0x8c, 0x83, 0x43, 0xcb, 0xf8, 0x71, 0x68, 0x19, 0x1f, 0x8e, 0xac, 0xdc, 0xc1, 0x91,
-	0x95, 0xfb, 0x76, 0x64, 0xe5, 0x5e, 0xd2, 0xa6, 0x1b, 0x6d, 0xb6, 0x9d, 0xd2, 0x86, 0x68, 0x9d,
-	0x54, 0x4a, 0xdc, 0xd0, 0x9d, 0x63, 0xd1, 0x78, 0xc7, 0xd2, 0xc9, 0xc3, 0x7f, 0xe6, 0xed, 0x3f,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0x45, 0x6a, 0xbc, 0xc5, 0x0f, 0x08, 0x00, 0x00,
+	// 671 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0x4d, 0x6b, 0xd4, 0x40,
+	0x18, 0xc7, 0x37, 0xbe, 0xac, 0x74, 0x8a, 0xb4, 0x4e, 0xd7, 0x17, 0xe2, 0x9a, 0x96, 0xf1, 0x85,
+	0x6a, 0x35, 0xe3, 0xd6, 0x53, 0xad, 0x45, 0xba, 0xa5, 0x87, 0x22, 0x45, 0x8d, 0x20, 0xe2, 0xc1,
+	0x65, 0xd2, 0x8e, 0x69, 0x20, 0x9b, 0x49, 0x33, 0xd9, 0x62, 0x2c, 0xbd, 0xf8, 0x05, 0x14, 0xfc,
+	0x1c, 0xde, 0x3d, 0x7b, 0xea, 0x49, 0x0a, 0x82, 0x78, 0x12, 0x69, 0xfd, 0x20, 0x92, 0x99, 0x49,
+	0xba, 0x9b, 0x6c, 0x76, 0xd7, 0x9e, 0x36, 0xcc, 0xcc, 0xff, 0xff, 0xfc, 0x9e, 0x67, 0xe6, 0xcf,
+	0x82, 0x1a, 0xb3, 0x39, 0x0d, 0x77, 0x68, 0x88, 0xb7, 0x3b, 0x34, 0x8c, 0xcd, 0x20, 0x64, 0x11,
+	0x83, 0x57, 0xdf, 0xd3, 0x88, 0x6c, 0x6c, 0x11, 0xd7, 0x37, 0xc5, 0x17, 0x0b, 0xa9, 0x99, 0x1e,
+	0xd4, 0xeb, 0x0e, 0x63, 0x8e, 0x47, 0x31, 0x09, 0x5c, 0x4c, 0x7c, 0x9f, 0x45, 0x24, 0x72, 0x99,
+	0xcf, 0xa5, 0x54, 0xbf, 0xb3, 0xc1, 0x78, 0x9b, 0x71, 0x6c, 0x13, 0x4e, 0xa5, 0x27, 0xde, 0x69,
+	0xd8, 0x34, 0x22, 0x0d, 0x1c, 0x10, 0xc7, 0xf5, 0xc5, 0x61, 0x75, 0xb6, 0xe6, 0x30, 0x87, 0x89,
+	0x4f, 0x9c, 0x7c, 0xa9, 0xd5, 0x8b, 0x19, 0x52, 0x40, 0x42, 0xd2, 0x4e, 0x8d, 0x2f, 0x67, 0xcb,
+	0xe9, 0x47, 0xe1, 0xbc, 0x4d, 0x3c, 0x8f, 0x45, 0x6a, 0x79, 0x6a, 0x83, 0xb5, 0xdb, 0xcc, 0xc7,
+	0xf2, 0x47, 0x2e, 0xa2, 0x1a, 0x80, 0xcf, 0x13, 0xa6, 0x67, 0xc2, 0xd9, 0xa2, 0xdb, 0x1d, 0xca,
+	0x23, 0xf4, 0x0a, 0x4c, 0xf5, 0xac, 0xf2, 0x80, 0xf9, 0x9c, 0xc2, 0x65, 0x50, 0x95, 0x04, 0x57,
+	0xb4, 0x19, 0x6d, 0x76, 0x7c, 0xfe, 0xba, 0x39, 0x60, 0x2c, 0xa6, 0x14, 0x37, 0xcf, 0xec, 0xff,
+	0x9e, 0xae, 0x58, 0x4a, 0x88, 0xd6, 0x81, 0x21, 0x9c, 0x9b, 0x82, 0xac, 0x19, 0xaf, 0x6d, 0x52,
+	0x3f, 0x72, 0xdf, 0xba, 0x34, 0x54, 0xb5, 0xe1, 0x1c, 0xb8, 0x20, 0xb1, 0x5b, 0x6e, 0xb6, 0x27,
+	0xea, 0x8d, 0x59, 0x93, 0x72, 0xe3, 0x58, 0x83, 0xde, 0x80, 0xe9, 0x52, 0x3b, 0x05, 0xbd, 0x08,
+	0xaa, 0x52, 0x36, 0x12, 0xb4, 0x34, 0xb2, 0x94, 0x04, 0x3d, 0x01, 0x75, 0xe1, 0xff, 0x54, 0xed,
+	0xf3, 0x66, 0xbc, 0x92, 0x28, 0xbb, 0x60, 0xa5, 0x54, 0xdc, 0x62, 0x4b, 0xb8, 0xa6, 0xb0, 0x5d,
+	0x1b, 0x42, 0x83, 0x96, 0xc0, 0xb5, 0x12, 0x33, 0x85, 0x5a, 0x07, 0x63, 0x29, 0x48, 0x32, 0xe2,
+	0xd3, 0xb3, 0x63, 0xd6, 0xf1, 0x02, 0x9a, 0x51, 0xa3, 0x5b, 0xf6, 0xbc, 0xd4, 0x61, 0x9d, 0x04,
+	0x01, 0x0d, 0xb3, 0x6b, 0x8b, 0xd5, 0x34, 0xfa, 0x9d, 0x50, 0x25, 0x5e, 0x82, 0xc9, 0xd4, 0xb1,
+	0xd5, 0x96, 0x7b, 0xa2, 0xd2, 0xf8, 0xfc, 0xdc, 0xc0, 0xb9, 0xf4, 0xfa, 0x59, 0x13, 0xac, 0xd7,
+	0x1f, 0x5d, 0x02, 0x35, 0x51, 0xfa, 0x45, 0x27, 0x08, 0x58, 0x18, 0xd1, 0x4d, 0xd1, 0x19, 0x47,
+	0xab, 0x6a, 0x80, 0xb9, 0xf5, 0x8c, 0xe7, 0x26, 0xa8, 0x8a, 0x92, 0x29, 0xc5, 0x79, 0x53, 0x3d,
+	0x4f, 0x39, 0x19, 0xb5, 0x39, 0xff, 0xf5, 0x1c, 0x38, 0x2b, 0x7c, 0xe0, 0x47, 0x0d, 0x54, 0xe5,
+	0xcb, 0x82, 0x78, 0x20, 0x71, 0xf1, 0x59, 0xeb, 0xf7, 0x47, 0x17, 0x48, 0x3c, 0x84, 0x3e, 0xfc,
+	0xf8, 0xfb, 0xf9, 0x54, 0x1d, 0xea, 0x38, 0x53, 0xe2, 0x5c, 0x1a, 0xe1, 0x4f, 0x0d, 0xc0, 0xe2,
+	0xfb, 0x83, 0x8b, 0xc3, 0x8b, 0x95, 0x86, 0x40, 0x7f, 0x74, 0x32, 0xb1, 0xa2, 0x5e, 0x15, 0xd4,
+	0x8f, 0xe1, 0x92, 0xa0, 0xbe, 0x97, 0xc3, 0x56, 0xe9, 0xb2, 0xe3, 0xae, 0x80, 0xe1, 0xdd, 0x42,
+	0xe6, 0xf6, 0xe0, 0x77, 0x0d, 0x4c, 0xe6, 0xdf, 0x2a, 0x5c, 0x18, 0x4e, 0x56, 0x12, 0x16, 0xfd,
+	0xe1, 0x49, 0xa4, 0xaa, 0xa5, 0x15, 0xd1, 0xd2, 0x12, 0x5c, 0xec, 0xdb, 0x52, 0x16, 0x92, 0xa4,
+	0x2b, 0xb9, 0xb7, 0x5b, 0xc8, 0xe5, 0x1e, 0xfc, 0xa6, 0x01, 0x58, 0xcc, 0xc6, 0x28, 0x37, 0x55,
+	0x9a, 0xb9, 0x51, 0x6e, 0xaa, 0x3c, 0x8e, 0xa8, 0x21, 0xda, 0x9a, 0x83, 0xb7, 0xfb, 0xb6, 0x45,
+	0x3c, 0xaf, 0x95, 0x4f, 0x2b, 0xfc, 0xa2, 0x81, 0x89, 0x5c, 0x9a, 0x60, 0x63, 0x38, 0x44, 0x4e,
+	0xa2, 0x2f, 0xfc, 0xb7, 0x24, 0x83, 0xbe, 0x2b, 0xa0, 0x6f, 0xc1, 0x1b, 0x7d, 0xa1, 0x79, 0xaf,
+	0xaa, 0xb9, 0xb6, 0x7f, 0x68, 0x68, 0x07, 0x87, 0x86, 0xf6, 0xe7, 0xd0, 0xd0, 0x3e, 0x1d, 0x19,
+	0x95, 0x83, 0x23, 0xa3, 0xf2, 0xeb, 0xc8, 0xa8, 0xbc, 0xc6, 0x8e, 0x1b, 0x6d, 0x75, 0xec, 0x24,
+	0xf1, 0xdd, 0x4e, 0x29, 0x0d, 0x7e, 0x77, 0x6c, 0x1a, 0xc5, 0x01, 0xe5, 0x76, 0x55, 0xfc, 0x67,
+	0x3d, 0xf8, 0x17, 0x00, 0x00, 0xff, 0xff, 0xbe, 0xbb, 0x77, 0xba, 0xa4, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -535,7 +527,7 @@ type QueryClient interface {
 	// Queries a list of VoterByIdentifier items.
 	BallotByIdentifier(ctx context.Context, in *QueryBallotByIdentifierRequest, opts ...grpc.CallOption) (*QueryBallotByIdentifierResponse, error)
 	// Queries a list of ObserversByChainAndType items.
-	ObserversByChainAndType(ctx context.Context, in *QueryObserversByChainAndTypeRequest, opts ...grpc.CallOption) (*QueryObserversByChainAndTypeResponse, error)
+	ObserversByChain(ctx context.Context, in *QueryObserversByChainRequest, opts ...grpc.CallOption) (*QueryObserversByChainResponse, error)
 	AllObserverMappers(ctx context.Context, in *QueryAllObserverMappersRequest, opts ...grpc.CallOption) (*QueryAllObserverMappersResponse, error)
 	SupportedChains(ctx context.Context, in *QuerySupportedChains, opts ...grpc.CallOption) (*QuerySupportedChainsResponse, error)
 }
@@ -566,9 +558,9 @@ func (c *queryClient) BallotByIdentifier(ctx context.Context, in *QueryBallotByI
 	return out, nil
 }
 
-func (c *queryClient) ObserversByChainAndType(ctx context.Context, in *QueryObserversByChainAndTypeRequest, opts ...grpc.CallOption) (*QueryObserversByChainAndTypeResponse, error) {
-	out := new(QueryObserversByChainAndTypeResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Query/ObserversByChainAndType", in, out, opts...)
+func (c *queryClient) ObserversByChain(ctx context.Context, in *QueryObserversByChainRequest, opts ...grpc.CallOption) (*QueryObserversByChainResponse, error) {
+	out := new(QueryObserversByChainResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Query/ObserversByChain", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -600,7 +592,7 @@ type QueryServer interface {
 	// Queries a list of VoterByIdentifier items.
 	BallotByIdentifier(context.Context, *QueryBallotByIdentifierRequest) (*QueryBallotByIdentifierResponse, error)
 	// Queries a list of ObserversByChainAndType items.
-	ObserversByChainAndType(context.Context, *QueryObserversByChainAndTypeRequest) (*QueryObserversByChainAndTypeResponse, error)
+	ObserversByChain(context.Context, *QueryObserversByChainRequest) (*QueryObserversByChainResponse, error)
 	AllObserverMappers(context.Context, *QueryAllObserverMappersRequest) (*QueryAllObserverMappersResponse, error)
 	SupportedChains(context.Context, *QuerySupportedChains) (*QuerySupportedChainsResponse, error)
 }
@@ -615,8 +607,8 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 func (*UnimplementedQueryServer) BallotByIdentifier(ctx context.Context, req *QueryBallotByIdentifierRequest) (*QueryBallotByIdentifierResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BallotByIdentifier not implemented")
 }
-func (*UnimplementedQueryServer) ObserversByChainAndType(ctx context.Context, req *QueryObserversByChainAndTypeRequest) (*QueryObserversByChainAndTypeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ObserversByChainAndType not implemented")
+func (*UnimplementedQueryServer) ObserversByChain(ctx context.Context, req *QueryObserversByChainRequest) (*QueryObserversByChainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObserversByChain not implemented")
 }
 func (*UnimplementedQueryServer) AllObserverMappers(ctx context.Context, req *QueryAllObserverMappersRequest) (*QueryAllObserverMappersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllObserverMappers not implemented")
@@ -665,20 +657,20 @@ func _Query_BallotByIdentifier_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ObserversByChainAndType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryObserversByChainAndTypeRequest)
+func _Query_ObserversByChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryObserversByChainRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).ObserversByChainAndType(ctx, in)
+		return srv.(QueryServer).ObserversByChain(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.observer.Query/ObserversByChainAndType",
+		FullMethod: "/zetachain.zetacore.observer.Query/ObserversByChain",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).ObserversByChainAndType(ctx, req.(*QueryObserversByChainAndTypeRequest))
+		return srv.(QueryServer).ObserversByChain(ctx, req.(*QueryObserversByChainRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -732,8 +724,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_BallotByIdentifier_Handler,
 		},
 		{
-			MethodName: "ObserversByChainAndType",
-			Handler:    _Query_ObserversByChainAndType_Handler,
+			MethodName: "ObserversByChain",
+			Handler:    _Query_ObserversByChain_Handler,
 		},
 		{
 			MethodName: "AllObserverMappers",
@@ -869,7 +861,7 @@ func (m *QueryBallotByIdentifierResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryObserversByChainAndTypeRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryObserversByChainRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -879,23 +871,16 @@ func (m *QueryObserversByChainAndTypeRequest) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *QueryObserversByChainAndTypeRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryObserversByChainRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryObserversByChainAndTypeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryObserversByChainRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ObservationType) > 0 {
-		i -= len(m.ObservationType)
-		copy(dAtA[i:], m.ObservationType)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.ObservationType)))
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ObservationChain) > 0 {
 		i -= len(m.ObservationChain)
 		copy(dAtA[i:], m.ObservationChain)
@@ -906,7 +891,7 @@ func (m *QueryObserversByChainAndTypeRequest) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryObserversByChainAndTypeResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryObserversByChainResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -916,12 +901,12 @@ func (m *QueryObserversByChainAndTypeResponse) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *QueryObserversByChainAndTypeResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryObserversByChainResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryObserversByChainAndTypeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryObserversByChainResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1042,22 +1027,18 @@ func (m *QuerySupportedChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	var l int
 	_ = l
 	if len(m.Chains) > 0 {
-		dAtA4 := make([]byte, len(m.Chains)*10)
-		var j3 int
-		for _, num := range m.Chains {
-			for num >= 1<<7 {
-				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j3++
+		for iNdEx := len(m.Chains) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Chains[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
 			}
-			dAtA4[j3] = uint8(num)
-			j3++
+			i--
+			dAtA[i] = 0xa
 		}
-		i -= j3
-		copy(dAtA[i:], dAtA4[:j3])
-		i = encodeVarintQuery(dAtA, i, uint64(j3))
-		i--
-		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1119,7 +1100,7 @@ func (m *QueryBallotByIdentifierResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryObserversByChainAndTypeRequest) Size() (n int) {
+func (m *QueryObserversByChainRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1129,14 +1110,10 @@ func (m *QueryObserversByChainAndTypeRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = len(m.ObservationType)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
 	return n
 }
 
-func (m *QueryObserversByChainAndTypeResponse) Size() (n int) {
+func (m *QueryObserversByChainResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1191,11 +1168,10 @@ func (m *QuerySupportedChainsResponse) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Chains) > 0 {
-		l = 0
 		for _, e := range m.Chains {
-			l += sovQuery(uint64(e))
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
 		}
-		n += 1 + sovQuery(uint64(l)) + l
 	}
 	return n
 }
@@ -1507,7 +1483,7 @@ func (m *QueryBallotByIdentifierResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryObserversByChainAndTypeRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryObserversByChainRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1530,10 +1506,10 @@ func (m *QueryObserversByChainAndTypeRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryObserversByChainAndTypeRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryObserversByChainRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryObserversByChainAndTypeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryObserversByChainRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1568,38 +1544,6 @@ func (m *QueryObserversByChainAndTypeRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ObservationChain = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObservationType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ObservationType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -1621,7 +1565,7 @@ func (m *QueryObserversByChainAndTypeRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryObserversByChainAndTypeResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryObserversByChainResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1644,10 +1588,10 @@ func (m *QueryObserversByChainAndTypeResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryObserversByChainAndTypeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryObserversByChainResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryObserversByChainAndTypeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryObserversByChainResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1917,74 +1861,39 @@ func (m *QuerySupportedChainsResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType == 0 {
-				var v ObserverChain
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQuery
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= ObserverChain(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.Chains = append(m.Chains, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowQuery
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthQuery
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthQuery
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				if elementCount != 0 && len(m.Chains) == 0 {
-					m.Chains = make([]ObserverChain, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v ObserverChain
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowQuery
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= ObserverChain(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.Chains = append(m.Chains, v)
-				}
-			} else {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Chains", wireType)
 			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Chains = append(m.Chains, &common.Chain{})
+			if err := m.Chains[len(m.Chains)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

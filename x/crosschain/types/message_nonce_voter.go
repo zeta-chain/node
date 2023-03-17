@@ -3,15 +3,14 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgNonceVoter{}
 
-func NewMsgNonceVoter(creator string, chain string, nonce uint64) *MsgNonceVoter {
+func NewMsgNonceVoter(creator string, chain int64, nonce uint64) *MsgNonceVoter {
 	return &MsgNonceVoter{
 		Creator: creator,
-		Chain:   chain,
+		ChainId: chain,
 		Nonce:   nonce,
 	}
 }
@@ -42,9 +41,8 @@ func (msg *MsgNonceVoter) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	_, err = common.ParseChain(msg.Chain)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain string (%s): %s", err, msg.Chain)
+	if msg.ChainId < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 
 	return nil

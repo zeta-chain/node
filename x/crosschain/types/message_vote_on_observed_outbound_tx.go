@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint sdk.Uint, status common.ReceiveStatus, chain string, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
+func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint sdk.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                  creator,
 		CctxHash:                 sendHash,
@@ -28,7 +28,7 @@ func (msg *MsgVoteOnObservedOutboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) Type() string {
-	return "ReceiveConfirmation"
+	return "OutBoundTXVoter"
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) GetSigners() []sdk.AccAddress {
@@ -48,6 +48,9 @@ func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.OutTxChain < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
 	}
 	return nil
 }

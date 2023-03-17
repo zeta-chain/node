@@ -12,13 +12,13 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # ibc/genesistype/default
-		ZetaConversionRateList: []ZetaConversionRate{},
-		OutTxTrackerList:       []OutTxTracker{},
+		OutTxTrackerList:   []OutTxTracker{},
+		InTxHashToCctxList: []InTxHashToCctx{},
+		PermissionFlags:    nil,
 		// this line is used by starport scaffolding # genesis/types/default
 		Keygen:          nil,
 		TSSVoterList:    []*TSSVoter{},
 		TSSList:         []*TSS{},
-		GasBalanceList:  []*GasBalance{},
 		GasPriceList:    []*GasPrice{},
 		ChainNoncesList: []*ChainNonces{},
 		//CCTX:            []*Send{},
@@ -31,16 +31,6 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # ibc/genesistype/validate
 
-	// Check for duplicated index in zetaConversionRate
-	zetaConversionRateIndexMap := make(map[string]struct{})
-
-	for _, elem := range gs.ZetaConversionRateList {
-		index := string(ZetaConversionRateKey(elem.Index))
-		if _, ok := zetaConversionRateIndexMap[index]; ok {
-			return fmt.Errorf("duplicated index for zetaConversionRate")
-		}
-		zetaConversionRateIndexMap[index] = struct{}{}
-	}
 	// Check for duplicated index in outTxTracker
 	outTxTrackerIndexMap := make(map[string]struct{})
 
@@ -50,6 +40,16 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated index for outTxTracker")
 		}
 		outTxTrackerIndexMap[index] = struct{}{}
+	}
+	// Check for duplicated index in inTxHashToCctx
+	inTxHashToCctxIndexMap := make(map[string]struct{})
+
+	for _, elem := range gs.InTxHashToCctxList {
+		index := string(InTxHashToCctxKey(elem.InTxHash))
+		if _, ok := inTxHashToCctxIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for inTxHashToCctx")
+		}
+		inTxHashToCctxIndexMap[index] = struct{}{}
 	}
 	// this line is used by starport scaffolding # genesis/types/validate
 	// Check for duplicated index in tSSVoter
@@ -70,15 +70,7 @@ func (gs GenesisState) Validate() error {
 		}
 		tSSIndexMap[elem.Index] = true
 	}
-	// Check for duplicated index in gasBalance
-	gasBalanceIndexMap := make(map[string]bool)
 
-	for _, elem := range gs.GasBalanceList {
-		if _, ok := gasBalanceIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for gasBalance")
-		}
-		gasBalanceIndexMap[elem.Index] = true
-	}
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)
 

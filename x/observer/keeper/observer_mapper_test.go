@@ -1,8 +1,12 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"testing"
 )
@@ -12,46 +16,83 @@ func TestKeeper_GetObserver(t *testing.T) {
 	tt := []struct {
 		name             string
 		mapper           []*types.ObserverMapper
-		assertChain      types.ObserverChain
-		assertObsType    types.ObservationType
+		assertChain      *common.Chain
 		assertObsListLen int
 		isFound          bool
 	}{
 		{
-			name:             "4 eth Observers",
-			mapper:           types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
-			assertChain:      types.ObserverChain_Eth,
-			assertObsType:    types.ObservationType_InBoundTx,
+			name: "4 eth Observers",
+			mapper: types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			}),
+			assertChain: &common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			},
 			assertObsListLen: 4,
 			isFound:          true,
 		},
 		{
 			name: "Filter out from multiple mappers",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:      types.ObserverChain_Eth,
-			assertObsType:    types.ObservationType_InBoundTx,
+			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			}),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_eth_mainnet,
+					ChainId:   1,
+				})...),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_bsc_mainnet,
+					ChainId:   2,
+				})...),
+			assertChain: &common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			},
 			assertObsListLen: 4,
 			isFound:          true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:      types.ObserverChain_Eth,
-			assertObsType:    types.ObservationType_InBoundTx,
+			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_btc_mainnet,
+				ChainId:   3,
+			}),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_polygon_mainnet,
+					ChainId:   4,
+				})...),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_bsc_mainnet,
+					ChainId:   5,
+				})...),
+			assertChain: &common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			},
 			assertObsListLen: 0,
 			isFound:          false,
 		},
 		{
 			name: "No Observers of expected Observation Type",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:      types.ObserverChain_Eth,
-			assertObsType:    types.ObservationType_GasPrice,
+			mapper: append(append(types.CreateObserverMapperList(1, common.Chain{
+				ChainName: common.ChainName_btc_mainnet,
+				ChainId:   3,
+			}),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_polygon_mainnet,
+					ChainId:   4,
+				})...),
+				types.CreateObserverMapperList(1, common.Chain{
+					ChainName: common.ChainName_bsc_mainnet,
+					ChainId:   5,
+				})...),
+			assertChain: &common.Chain{
+				ChainName: common.ChainName_eth_mainnet,
+				ChainId:   1,
+			},
 			assertObsListLen: 0,
 			isFound:          false,
 		},
@@ -64,7 +105,7 @@ func TestKeeper_GetObserver(t *testing.T) {
 			for _, mapper := range test.mapper {
 				keeper.SetObserverMapper(ctx, mapper)
 			}
-			mapper, found := keeper.GetObserverMapper(ctx, test.assertChain, test.assertObsType.String())
+			mapper, found := keeper.GetObserverMapper(ctx, test.assertChain)
 			assert.Equal(t, test.isFound, found)
 			if test.isFound {
 				assert.Equal(t, test.assertObsListLen, len(mapper.ObserverList))
@@ -78,65 +119,35 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 	tt := []struct {
 		name             string
 		mapper           []*types.ObserverMapper
-		assertChain      string
-		assertObsType    string
+		assertChain      common.ChainName
 		assertObsListLen int
 		isFound          bool
 	}{
 		{
-			name:          "4 ETH InBoundTx Observers",
-			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
-			assertChain:   "EthChainObserver",
-			assertObsType: "InBoundTx",
-			isFound:       true,
+			name:        "4 ETH InBoundTx Observers",
+			mapper:      types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+			assertChain: common.ChainName_goerli_localnet,
+			isFound:     true,
 		},
 		{
-			name:          "4 ETH OutBoundTx Observers",
-			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_OutBoundTx),
-			assertChain:   "EthChainObserver",
-			assertObsType: "OutBoundTx",
-			isFound:       true,
-		},
-		{
-			name:          "4 BSC InBoundTx Observers",
-			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_InBoundTx),
-			assertChain:   "BscChainObserver",
-			assertObsType: "InBoundTx",
-			isFound:       true,
-		},
-		{
-			name:          "4 POLYGON OutBoundTx Observers",
-			mapper:        types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx),
-			assertChain:   "PolygonChainObserver",
-			assertObsType: "OutBoundTx",
-			isFound:       true,
+			name:        "4 BTC InBoundTx Observers",
+			mapper:      types.CreateObserverMapperList(1, common.BtcRegtestChain()),
+			assertChain: common.ChainName_btc_regtest,
+			isFound:     true,
 		},
 		{
 			name: "Filter out from multiple mappers",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Eth, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:   "EthChainObserver",
-			assertObsType: "InBoundTx",
-			isFound:       true,
+			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+			assertChain: common.ChainName_goerli_localnet,
+			isFound:     true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:   "EthChainObserver",
-			assertObsType: "InBoundTx",
-			isFound:       false,
-		},
-		{
-			name: "No Observers of expected Observation Type",
-			mapper: append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
-				types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-				types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...),
-			assertChain:   "EthChainObserver",
-			assertObsType: "GasPrice",
-			isFound:       false,
+			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+			assertChain: common.ChainName_btc_regtest,
+			isFound:     false,
 		},
 	}
 
@@ -148,12 +159,11 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 				keeper.SetObserverMapper(ctx, mapper)
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
-			msg := &types.QueryObserversByChainAndTypeRequest{
-				ObservationChain: test.assertChain,
-				ObservationType:  test.assertObsType,
+			msg := &types.QueryObserversByChainRequest{
+				ObservationChain: test.assertChain.String(),
 			}
 
-			mapper, _ := keeper.ObserversByChainAndType(goCtx, msg)
+			mapper, _ := keeper.ObserversByChain(goCtx, msg)
 			if test.isFound {
 				assert.NotEqual(t, "", mapper)
 			}
@@ -163,9 +173,18 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 }
 
 func TestKeeper_GetAllObserverAddresses(t *testing.T) {
-	mappers := append(append(types.CreateObserverMapperList(1, types.ObserverChain_Btc, types.ObservationType_InBoundTx),
-		types.CreateObserverMapperList(1, types.ObserverChain_Polygon, types.ObservationType_OutBoundTx)...),
-		types.CreateObserverMapperList(1, types.ObserverChain_BscMainnet, types.ObservationType_OutBoundTx)...)
+	mappers := append(append(types.CreateObserverMapperList(1, common.Chain{
+		ChainName: common.ChainName_btc_mainnet,
+		ChainId:   3,
+	}),
+		types.CreateObserverMapperList(1, common.Chain{
+			ChainName: common.ChainName_polygon_mainnet,
+			ChainId:   4,
+		})...),
+		types.CreateObserverMapperList(1, common.Chain{
+			ChainName: common.ChainName_bsc_mainnet,
+			ChainId:   5,
+		})...)
 	keeper, ctx := SetupKeeper(t)
 	for _, mapper := range mappers {
 		keeper.SetObserverMapper(ctx, mapper)

@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +29,12 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
+
+	// set mapping inTxHash -> cctxIndex
+	k.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
+		InTxHash:  send.InboundTxParams.InboundTxObservedHash,
+		CctxIndex: send.Index,
+	})
 }
 
 // GetCrossChainTx returns a send from its index
@@ -130,27 +139,34 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus) types.CrossChainTx {
-	inboundParams := &types.InBoundTxParams{
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
+	if msg.TxOrigin == "" {
+		msg.TxOrigin = msg.Sender
+	}
+	inboundParams := &types.InboundTxParams{
 		Sender:                          msg.Sender,
-		SenderChain:                     msg.SenderChain,
-		InBoundTxObservedHash:           msg.InTxHash,
-		InBoundTxObservedExternalHeight: msg.InBlockHeight,
-		InBoundTxFinalizedZetaHeight:    0,
-		InBoundTXBallotIndex:            index,
+		SenderChainId:                   senderChain.ChainId,
+		TxOrigin:                        msg.TxOrigin,
+		Asset:                           msg.Asset,
+		Amount:                          msg.Amount,
+		CoinType:                        msg.CoinType,
+		InboundTxObservedHash:           msg.InTxHash,
+		InboundTxObservedExternalHeight: msg.InBlockHeight,
+		InboundTxFinalizedZetaHeight:    0,
+		InboundTxBallotIndex:            index,
 	}
 
-	outBoundParams := &types.OutBoundTxParams{
+	outBoundParams := &types.OutboundTxParams{
 		Receiver:                         msg.Receiver,
-		ReceiverChain:                    msg.ReceiverChain,
-		Broadcaster:                      0,
-		OutBoundTxHash:                   "",
-		OutBoundTxTSSNonce:               0,
-		OutBoundTxGasLimit:               msg.GasLimit,
-		OutBoundTxGasPrice:               "",
-		OutBoundTXBallotIndex:            "",
-		OutBoundTxFinalizedZetaHeight:    0,
-		OutBoundTxObservedExternalHeight: 0,
+		ReceiverChainId:                  receiverChain.ChainId,
+		OutboundTxHash:                   "",
+		OutboundTxTssNonce:               0,
+		OutboundTxGasLimit:               msg.GasLimit,
+		OutboundTxGasPrice:               "",
+		OutboundTxBallotIndex:            "",
+		OutboundTxObservedExternalHeight: 0,
+		CoinType:                         msg.CoinType, // FIXME: is this correct?
+		Amount:                           sdk.NewUint(0),
 	}
 	status := &types.Status{
 		Status:              s,
@@ -160,13 +176,11 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,
 		Index:            index,
-		ZetaBurnt:        sdk.NewUintFromString(msg.ZetaBurnt),
-		ZetaMint:         sdk.ZeroUint(),
-		ZetaFees:         sdk.ZeroUint(),
+		ZetaFees:         math.ZeroUint(),
 		RelayedMessage:   msg.Message,
 		CctxStatus:       status,
-		InBoundTxParams:  inboundParams,
-		OutBoundTxParams: outBoundParams,
+		InboundTxParams:  inboundParams,
+		OutboundTxParams: []*types.OutboundTxParams{outBoundParams},
 	}
 	return newCctx
 }

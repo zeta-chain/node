@@ -53,5 +53,6 @@ func (msg *MsgSetNodeKeys) ValidateBasic() error {
 	if bytes.Compare(accAddressCreator.Bytes(), pubkey.Address().Bytes()) != 0 {
 		return sdkerrors.Wrapf(ErrInvalidPubKeySet, fmt.Sprintf("Creator : %s , PubkeySet %s", accAddressCreator.String(), pubkey.Address().String()))
 	}
+
 	return nil
 }

@@ -5,12 +5,17 @@
 //go:generate sh -c "cat WZETA.json | jq .abi | abigen --abi - --pkg zevm --type WZETA --out WZETA.go"
 //go:generate sh -c "solc SystemContract.sol --combined-json abi,bin | jq '.contracts.\"SystemContract.sol:SystemContract\"'  > SystemContract.json"
 //go:generate sh -c "cat SystemContract.json | jq .abi | abigen --abi - --pkg zevm --type SystemContract --out SystemContract.go"
+//go:generate sh -c "cat UniswapV2Pair.json | jq .abi | abigen --abi - --pkg zevm --type UniswapV2Pair --out UniswapV2Pair.go"
+//go:generate sh -c "solc ConnectorZEVM.sol --combined-json abi,bin | jq '.contracts.\"ConnectorZEVM.sol:ZetaConnectorZEVM\"'  > ConnectorZEVM.json"
+//go:generate sh -c "cat ConnectorZEVM.json | jq .abi | abigen --abi - --pkg zevm --type ZetaConnectorZEVM --out ConnectorZEVM.go"
 
 package zevm
 
 import (
 	_ "embed"
 	"encoding/json"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -22,6 +27,7 @@ var _ = ZRC20{}
 var _ = UniswapV2Factory{}
 var _ = SystemContract{}
 var _ = UniswapV2Router02{}
+var _ = zevmswap.ZEVMSwapApp{}
 
 type CompiledContract struct {
 	ABI abi.ABI
@@ -39,12 +45,15 @@ var (
 	SystemContractJSON []byte // nolint: golint
 	//go:embed UniswapV2Router02.json
 	UniswapV2Router02JSON []byte // nolint: golint
+	//go:embed ConnectorZEVM.json
+	ConnectorZEVMJSON []byte // nolint: golint
 
 	ZRC20Contract             CompiledContract
 	UniswapV2FactoryContract  CompiledContract
 	WZETAContract             CompiledContract
 	SystemContractContract    CompiledContract
 	UniswapV2Router02Contract CompiledContract
+	ConnectorZEVMContract     CompiledContract
 
 	// the module address of zetacore; no private exists.
 	ZRC20AdminAddress ethcommon.Address
@@ -73,6 +82,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = json.Unmarshal(ConnectorZEVMJSON, &ConnectorZEVMContract)
+	if err != nil {
+		panic(err)
+	}
 
 	if len(ZRC20Contract.Bin) == 0 {
 		panic("load contract failed")
@@ -93,4 +106,9 @@ func init() {
 	if len(UniswapV2Router02Contract.Bin) == 0 {
 		panic("load contract failed")
 	}
+
+	if len(ConnectorZEVMContract.Bin) == 0 {
+		panic("load contract failed")
+	}
+
 }

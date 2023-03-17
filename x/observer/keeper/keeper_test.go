@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
@@ -20,8 +21,8 @@ func SetupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
-	stateStore.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, sdk.StoreTypeMemory, nil)
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
@@ -39,6 +40,7 @@ func SetupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		storeKey,
 		memStoreKey,
 		paramsSubspace,
+		stakingkeeper.Keeper{},
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, nil)

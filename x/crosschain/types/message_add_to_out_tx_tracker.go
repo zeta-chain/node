@@ -5,14 +5,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgAddToOutTxTracker = "add_to_out_tx_tracker"
+const TypeMsgAddToOutTxTracker = "AddToTracker"
 
 var _ sdk.Msg = &MsgAddToOutTxTracker{}
 
-func NewMsgAddToOutTxTracker(creator string, chain string, nonce uint64, txHash string) *MsgAddToOutTxTracker {
+func NewMsgAddToOutTxTracker(creator string, chain int64, nonce uint64, txHash string) *MsgAddToOutTxTracker {
 	return &MsgAddToOutTxTracker{
 		Creator: creator,
-		Chain:   chain,
+		ChainId: chain,
 		Nonce:   nonce,
 		TxHash:  txHash,
 	}
@@ -43,6 +43,9 @@ func (msg *MsgAddToOutTxTracker) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.ChainId < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 	return nil
 }

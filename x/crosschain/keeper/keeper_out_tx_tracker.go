@@ -8,14 +8,19 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strconv"
 	"strings"
 )
 
+func getOutTrackerIndex(chainID int64, nonce uint64) string {
+	return fmt.Sprintf("%d-%d", chainID, nonce)
+}
+
 // SetOutTxTracker set a specific outTxTracker in the store from its index
 func (k Keeper) SetOutTxTracker(ctx sdk.Context, outTxTracker types.OutTxTracker) {
+	outTxTracker.Index = getOutTrackerIndex(outTxTracker.ChainId, outTxTracker.Nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
 	b := k.cdc.MustMarshal(&outTxTracker)
 	store.Set(types.OutTxTrackerKey(
@@ -26,9 +31,11 @@ func (k Keeper) SetOutTxTracker(ctx sdk.Context, outTxTracker types.OutTxTracker
 // GetOutTxTracker returns a outTxTracker from its index
 func (k Keeper) GetOutTxTracker(
 	ctx sdk.Context,
-	index string,
+	chainID int64,
+	nonce uint64,
 
 ) (val types.OutTxTracker, found bool) {
+	index := getOutTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
 
 	b := store.Get(types.OutTxTrackerKey(
@@ -45,9 +52,11 @@ func (k Keeper) GetOutTxTracker(
 // RemoveOutTxTracker removes a outTxTracker from the store
 func (k Keeper) RemoveOutTxTracker(
 	ctx sdk.Context,
-	index string,
+	chainID int64,
+	nonce uint64,
 
 ) {
+	index := getOutTrackerIndex(chainID, nonce)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
 	store.Delete(types.OutTxTrackerKey(
 		index,
@@ -114,7 +123,7 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-		if outTxTracker.Chain == req.Chain {
+		if outTxTracker.ChainId == req.Chain {
 			outTxTrackers = append(outTxTrackers, outTxTracker)
 		}
 		return nil
@@ -134,7 +143,8 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 	ctx := sdk.UnwrapSDKContext(c)
 	val, found := k.GetOutTxTracker(
 		ctx,
-		req.Index,
+		req.ChainID,
+		req.Nonce,
 	)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")
@@ -149,25 +159,30 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) && msg.Creator != types.AdminKey {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
-	nonceString := strconv.Itoa(int(msg.Nonce))
-	index := fmt.Sprintf("%s-%s", msg.Chain, nonceString)
-	tracker, found := k.GetOutTxTracker(ctx, index)
+
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
+		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Chain is not supported %d", msg.ChainId))
+	}
+
+	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
 	hash := types.TxHashList{
-		TxHash: msg.TxHash,
-		Signer: msg.Creator,
+		TxHash:   msg.TxHash,
+		TxSigner: msg.Creator,
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
-			Index:    index,
-			Chain:    msg.Chain,
-			Nonce:    nonceString,
+			Index:    "",
+			ChainId:  chain.ChainId,
+			Nonce:    msg.Nonce,
 			HashList: []*types.TxHashList{&hash},
 		})
 		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}
+
 	var isDup = false
 	for _, hash := range tracker.HashList {
 		if strings.EqualFold(hash.TxHash, msg.TxHash) {
@@ -186,12 +201,10 @@ func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
+	if !IsBondedValidator(msg.Creator, validators) && msg.Creator != types.AdminKey {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
-	nonceString := strconv.Itoa(int(msg.Nonce))
-	index := fmt.Sprintf("%s/%s", msg.Chain, nonceString)
 
-	k.RemoveOutTxTracker(ctx, index)
+	k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
 	return &types.MsgRemoveFromOutTxTrackerResponse{}, nil
 }

@@ -141,6 +141,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
@@ -174,7 +175,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	if ctx.BlockHeight() == 1 {
 		err := am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
 		if err != nil {
-			ctx.Logger().Error("Unable To deploy contracts", err.Error())
+			ctx.Logger().Error("Unable To deploy contracts", "err", err.Error())
 		}
 	}
 }

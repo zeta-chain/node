@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdDeployFungibleCoinZRC4())
+	cmd.AddCommand(CmdRemoveForeignCoin())
 	// this line is used by starport scaffolding # 1
 
 	return cmd

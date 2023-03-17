@@ -1,35 +1,35 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-import "crosschain/zeta_conversion_rate.proto";
 import "crosschain/out_tx_tracker.proto";
+import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
 import "crosschain/tss_voter.proto";
 import "crosschain/tss.proto";
-
-import "crosschain/gas_balance.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/node_account.proto";
-
+import "crosschain/params.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-    repeated ZetaConversionRate zetaConversionRateList = 1 [(gogoproto.nullable) = false];
+		Params params = 1 [(gogoproto.nullable) = false];
 		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
 		Keygen keygen = 3;
 		repeated TSSVoter tSSVoterList = 4;
 		repeated TSS tSSList = 5;
-		repeated GasBalance gasBalanceList = 6;
 		repeated GasPrice gasPriceList = 7;
 		repeated ChainNonces chainNoncesList = 8;
 		repeated CrossChainTx CrossChainTxs = 9;
 		repeated NodeAccount nodeAccountList = 11;
 		repeated LastBlockHeight lastBlockHeightList = 12;
-
+	repeated InTxHashToCctx inTxHashToCctxList = 13 [(gogoproto.nullable) = false];
+  PermissionFlags permissionFlags = 14;
+  // this line is used by starport scaffolding # genesis/proto/state
 }

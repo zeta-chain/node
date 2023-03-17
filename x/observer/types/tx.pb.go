@@ -29,23 +29,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MsgSetSupportedChains struct {
-	Creator   string          `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Chainlist []ObserverChain `protobuf:"varint,2,rep,packed,name=Chainlist,proto3,enum=zetachain.zetacore.observer.ObserverChain" json:"Chainlist,omitempty"`
+//	message MsgSetSupportedChains {
+//	 string creator = 1;
+//	 int64 chain_id=2;
+//	 common.ChainName ChainName=3;
+//	}
+//
+// // this line is used by starport scaffolding # proto/tx/message
+//
+// message MsgSetSupportedChainsResponse{
+// }
+type MsgAddObserver struct {
+	Creator         string          `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ChainId         int64           `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	ObservationType ObservationType `protobuf:"varint,3,opt,name=observationType,proto3,enum=zetachain.zetacore.observer.ObservationType" json:"observationType,omitempty"`
 }
 
-func (m *MsgSetSupportedChains) Reset()         { *m = MsgSetSupportedChains{} }
-func (m *MsgSetSupportedChains) String() string { return proto.CompactTextString(m) }
-func (*MsgSetSupportedChains) ProtoMessage()    {}
-func (*MsgSetSupportedChains) Descriptor() ([]byte, []int) {
+func (m *MsgAddObserver) Reset()         { *m = MsgAddObserver{} }
+func (m *MsgAddObserver) String() string { return proto.CompactTextString(m) }
+func (*MsgAddObserver) ProtoMessage()    {}
+func (*MsgAddObserver) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1bcd40fa296a2b1d, []int{0}
 }
-func (m *MsgSetSupportedChains) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddObserver) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgSetSupportedChains) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddObserver) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgSetSupportedChains.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddObserver.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,47 +66,54 @@ func (m *MsgSetSupportedChains) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *MsgSetSupportedChains) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetSupportedChains.Merge(m, src)
+func (m *MsgAddObserver) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddObserver.Merge(m, src)
 }
-func (m *MsgSetSupportedChains) XXX_Size() int {
+func (m *MsgAddObserver) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgSetSupportedChains) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetSupportedChains.DiscardUnknown(m)
+func (m *MsgAddObserver) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddObserver.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgSetSupportedChains proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddObserver proto.InternalMessageInfo
 
-func (m *MsgSetSupportedChains) GetCreator() string {
+func (m *MsgAddObserver) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgSetSupportedChains) GetChainlist() []ObserverChain {
+func (m *MsgAddObserver) GetChainId() int64 {
 	if m != nil {
-		return m.Chainlist
+		return m.ChainId
 	}
-	return nil
+	return 0
 }
 
-type MsgSetSupportedChainsResponse struct {
+func (m *MsgAddObserver) GetObservationType() ObservationType {
+	if m != nil {
+		return m.ObservationType
+	}
+	return ObservationType_EmptyObserverType
 }
 
-func (m *MsgSetSupportedChainsResponse) Reset()         { *m = MsgSetSupportedChainsResponse{} }
-func (m *MsgSetSupportedChainsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgSetSupportedChainsResponse) ProtoMessage()    {}
-func (*MsgSetSupportedChainsResponse) Descriptor() ([]byte, []int) {
+type MsgAddObserverResponse struct {
+}
+
+func (m *MsgAddObserverResponse) Reset()         { *m = MsgAddObserverResponse{} }
+func (m *MsgAddObserverResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddObserverResponse) ProtoMessage()    {}
+func (*MsgAddObserverResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1bcd40fa296a2b1d, []int{1}
 }
-func (m *MsgSetSupportedChainsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgAddObserverResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgSetSupportedChainsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgAddObserverResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgSetSupportedChainsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgAddObserverResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -105,45 +123,45 @@ func (m *MsgSetSupportedChainsResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *MsgSetSupportedChainsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetSupportedChainsResponse.Merge(m, src)
+func (m *MsgAddObserverResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddObserverResponse.Merge(m, src)
 }
-func (m *MsgSetSupportedChainsResponse) XXX_Size() int {
+func (m *MsgAddObserverResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgSetSupportedChainsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetSupportedChainsResponse.DiscardUnknown(m)
+func (m *MsgAddObserverResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddObserverResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgSetSupportedChainsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgAddObserverResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgSetSupportedChains)(nil), "zetachain.zetacore.observer.MsgSetSupportedChains")
-	proto.RegisterType((*MsgSetSupportedChainsResponse)(nil), "zetachain.zetacore.observer.MsgSetSupportedChainsResponse")
+	proto.RegisterType((*MsgAddObserver)(nil), "zetachain.zetacore.observer.MsgAddObserver")
+	proto.RegisterType((*MsgAddObserverResponse)(nil), "zetachain.zetacore.observer.MsgAddObserverResponse")
 }
 
 func init() { proto.RegisterFile("observer/tx.proto", fileDescriptor_1bcd40fa296a2b1d) }
 
 var fileDescriptor_1bcd40fa296a2b1d = []byte{
-	// 274 bytes of a gzipped FileDescriptorProto
+	// 287 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcc, 0x4f, 0x2a, 0x4e,
 	0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0xae,
 	0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x60,
 	0xaa, 0xa4, 0x84, 0x93, 0xf3, 0x73, 0x73, 0xf3, 0xf3, 0xf4, 0x21, 0x14, 0x44, 0x87, 0x94, 0x48,
 	0x7a, 0x7e, 0x7a, 0x3e, 0x98, 0xa9, 0x0f, 0x62, 0x41, 0x45, 0xc5, 0xe1, 0x46, 0xc3, 0x18, 0x10,
-	0x09, 0xa5, 0x6a, 0x2e, 0x51, 0xdf, 0xe2, 0xf4, 0xe0, 0xd4, 0x92, 0xe0, 0xd2, 0x82, 0x82, 0xfc,
-	0xa2, 0x92, 0xd4, 0x14, 0x67, 0x90, 0x6d, 0xc5, 0x42, 0x12, 0x5c, 0xec, 0xc9, 0x45, 0xa9, 0x89,
-	0x25, 0xf9, 0x45, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x30, 0xae, 0x90, 0x07, 0x17, 0x27,
-	0x58, 0x4d, 0x4e, 0x66, 0x71, 0x89, 0x04, 0x93, 0x02, 0xb3, 0x06, 0x9f, 0x91, 0x96, 0x1e, 0x1e,
-	0x77, 0xea, 0xf9, 0x43, 0x19, 0x60, 0x5d, 0x41, 0x08, 0xcd, 0x4a, 0xf2, 0x5c, 0xb2, 0x58, 0x2d,
-	0x0f, 0x4a, 0x2d, 0x2e, 0xc8, 0xcf, 0x2b, 0x4e, 0x35, 0xea, 0x61, 0xe4, 0x62, 0xf6, 0x2d, 0x4e,
-	0x17, 0x6a, 0x61, 0xe4, 0x12, 0xc2, 0xe2, 0x46, 0x23, 0xbc, 0xd6, 0x62, 0x35, 0x5a, 0xca, 0x8a,
-	0x74, 0x3d, 0x30, 0xe7, 0x38, 0x79, 0x9e, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83,
-	0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43,
-	0x94, 0x7e, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0xc8, 0x54, 0x5d,
-	0xb0, 0x05, 0xfa, 0x30, 0x0b, 0xf4, 0x2b, 0xf4, 0x11, 0x71, 0x5b, 0x59, 0x90, 0x5a, 0x9c, 0xc4,
-	0x06, 0x0e, 0x7e, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2a, 0x56, 0xf8, 0x54, 0xf4, 0x01,
-	0x00, 0x00,
+	0x09, 0xa5, 0xb9, 0x8c, 0x5c, 0x7c, 0xbe, 0xc5, 0xe9, 0x8e, 0x29, 0x29, 0xfe, 0x50, 0x09, 0x21,
+	0x09, 0x2e, 0xf6, 0xe4, 0xa2, 0xd4, 0xc4, 0x92, 0xfc, 0x22, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xce,
+	0x20, 0x18, 0x57, 0x48, 0x92, 0x8b, 0x03, 0xec, 0x96, 0xf8, 0xcc, 0x14, 0x09, 0x26, 0x05, 0x46,
+	0x0d, 0xe6, 0x20, 0x76, 0x30, 0xdf, 0x33, 0x45, 0x28, 0x8c, 0x8b, 0x1f, 0x62, 0x72, 0x62, 0x49,
+	0x66, 0x7e, 0x5e, 0x48, 0x65, 0x41, 0xaa, 0x04, 0xb3, 0x02, 0xa3, 0x06, 0x9f, 0x91, 0x8e, 0x1e,
+	0x1e, 0x2f, 0xe8, 0xf9, 0xa3, 0xea, 0x09, 0x42, 0x37, 0x44, 0x49, 0x82, 0x4b, 0x0c, 0xd5, 0x79,
+	0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x46, 0x65, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42,
+	0xf9, 0x5c, 0xdc, 0xc8, 0x8e, 0xd7, 0xc6, 0x6b, 0x1d, 0xaa, 0x51, 0x52, 0xc6, 0x24, 0x28, 0x86,
+	0xd9, 0xeb, 0xe4, 0x79, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31,
+	0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0xfa, 0xe9,
+	0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x20, 0xe3, 0x74, 0xc1, 0x26, 0xeb,
+	0xc3, 0x4c, 0xd6, 0xaf, 0xd0, 0x47, 0x44, 0x70, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0x38, 0x0e,
+	0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x52, 0x25, 0xd9, 0x40, 0xf9, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -158,7 +176,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	SetSupportedChains(ctx context.Context, in *MsgSetSupportedChains, opts ...grpc.CallOption) (*MsgSetSupportedChainsResponse, error)
+	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error)
 }
 
 type msgClient struct {
@@ -169,9 +188,9 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) SetSupportedChains(ctx context.Context, in *MsgSetSupportedChains, opts ...grpc.CallOption) (*MsgSetSupportedChainsResponse, error) {
-	out := new(MsgSetSupportedChainsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/SetSupportedChains", in, out, opts...)
+func (c *msgClient) AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error) {
+	out := new(MsgAddObserverResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/AddObserver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,35 +199,36 @@ func (c *msgClient) SetSupportedChains(ctx context.Context, in *MsgSetSupportedC
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	SetSupportedChains(context.Context, *MsgSetSupportedChains) (*MsgSetSupportedChainsResponse, error)
+	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) SetSupportedChains(ctx context.Context, req *MsgSetSupportedChains) (*MsgSetSupportedChainsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetSupportedChains not implemented")
+func (*UnimplementedMsgServer) AddObserver(ctx context.Context, req *MsgAddObserver) (*MsgAddObserverResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddObserver not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_SetSupportedChains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSetSupportedChains)
+func _Msg_AddObserver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddObserver)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).SetSupportedChains(ctx, in)
+		return srv.(MsgServer).AddObserver(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.observer.Msg/SetSupportedChains",
+		FullMethod: "/zetachain.zetacore.observer.Msg/AddObserver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SetSupportedChains(ctx, req.(*MsgSetSupportedChains))
+		return srv.(MsgServer).AddObserver(ctx, req.(*MsgAddObserver))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -218,15 +238,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SetSupportedChains",
-			Handler:    _Msg_SetSupportedChains_Handler,
+			MethodName: "AddObserver",
+			Handler:    _Msg_AddObserver_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "observer/tx.proto",
 }
 
-func (m *MsgSetSupportedChains) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddObserver) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -236,33 +256,25 @@ func (m *MsgSetSupportedChains) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgSetSupportedChains) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddObserver) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgSetSupportedChains) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddObserver) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Chainlist) > 0 {
-		dAtA2 := make([]byte, len(m.Chainlist)*10)
-		var j1 int
-		for _, num := range m.Chainlist {
-			for num >= 1<<7 {
-				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j1++
-			}
-			dAtA2[j1] = uint8(num)
-			j1++
-		}
-		i -= j1
-		copy(dAtA[i:], dAtA2[:j1])
-		i = encodeVarintTx(dAtA, i, uint64(j1))
+	if m.ObservationType != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ObservationType))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x18
+	}
+	if m.ChainId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Creator) > 0 {
 		i -= len(m.Creator)
@@ -274,7 +286,7 @@ func (m *MsgSetSupportedChains) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgSetSupportedChainsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgAddObserverResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -284,12 +296,12 @@ func (m *MsgSetSupportedChainsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgSetSupportedChainsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgAddObserverResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgSetSupportedChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgAddObserverResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -308,7 +320,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgSetSupportedChains) Size() (n int) {
+func (m *MsgAddObserver) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -318,17 +330,16 @@ func (m *MsgSetSupportedChains) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if len(m.Chainlist) > 0 {
-		l = 0
-		for _, e := range m.Chainlist {
-			l += sovTx(uint64(e))
-		}
-		n += 1 + sovTx(uint64(l)) + l
+	if m.ChainId != 0 {
+		n += 1 + sovTx(uint64(m.ChainId))
+	}
+	if m.ObservationType != 0 {
+		n += 1 + sovTx(uint64(m.ObservationType))
 	}
 	return n
 }
 
-func (m *MsgSetSupportedChainsResponse) Size() (n int) {
+func (m *MsgAddObserverResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -343,7 +354,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgSetSupportedChains) Unmarshal(dAtA []byte) error {
+func (m *MsgAddObserver) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -366,10 +377,10 @@ func (m *MsgSetSupportedChains) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetSupportedChains: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddObserver: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetSupportedChains: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddObserver: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -405,73 +416,42 @@ func (m *MsgSetSupportedChains) Unmarshal(dAtA []byte) error {
 			m.Creator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType == 0 {
-				var v ObserverChain
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTx
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= ObserverChain(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			m.ChainId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
 				}
-				m.Chainlist = append(m.Chainlist, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTx
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthTx
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthTx
-				}
-				if postIndex > l {
+				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
 				}
-				var elementCount int
-				if elementCount != 0 && len(m.Chainlist) == 0 {
-					m.Chainlist = make([]ObserverChain, 0, elementCount)
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChainId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
-				for iNdEx < postIndex {
-					var v ObserverChain
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTx
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= ObserverChain(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.Chainlist = append(m.Chainlist, v)
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservationType", wireType)
+			}
+			m.ObservationType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
 				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Chainlist", wireType)
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ObservationType |= ObservationType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
 		default:
 			iNdEx = preIndex
@@ -494,7 +474,7 @@ func (m *MsgSetSupportedChains) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgSetSupportedChainsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgAddObserverResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -517,10 +497,10 @@ func (m *MsgSetSupportedChainsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetSupportedChainsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgAddObserverResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetSupportedChainsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgAddObserverResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

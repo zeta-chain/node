@@ -1,12 +1,17 @@
+//go:build btc_regtest
+// +build btc_regtest
+
 package zetaclient
 
 import (
 	"encoding/hex"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
+	"math/big"
 	"testing"
 )
 
@@ -28,14 +33,45 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	client, err := NewBitcoinClient(common.BTCTestnetChain, nil, tss, "", nil)
+	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
+	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
+	skBytes, err := hex.DecodeString(skHex)
+	suite.Require().NoError(err)
+	suite.T().Logf("skBytes: %d", len(skBytes))
 
-	//suite.BitcoinChainClient.Start()
+	btc := client.rpcClient
+
+	_, err = btc.CreateWallet("smoketest")
+	suite.Require().NoError(err)
+	addr, err := btc.GetNewAddress("test")
+	suite.Require().NoError(err)
+	suite.T().Logf("deployer address: %s", addr)
+	//err = btc.ImportPrivKey(privkeyWIF)
+	//suite.Require().NoError(err)
+
+	btc.GenerateToAddress(101, addr, nil)
+	suite.Require().NoError(err)
+
+	bal, err := btc.GetBalance("*")
+	suite.Require().NoError(err)
+	suite.T().Logf("balance: %f", bal.ToBTC())
+
+	utxo, err := btc.ListUnspent()
+	suite.Require().NoError(err)
+	suite.T().Logf("utxo: %d", len(utxo))
+	for _, u := range utxo {
+		suite.T().Logf("utxo: %s %f", u.Address, u.Amount)
+	}
+
 }
 
 func (suite *BitcoinClientTestSuite) TearDownSuite() {
+
+}
+
+func (suite *BitcoinClientTestSuite) Test0() {
 
 }
 
@@ -95,6 +131,21 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.Require().Equal(0, len(inTxs))
 }
 
+func (suite *BitcoinClientTestSuite) Test3() {
+	client := suite.BitcoinChainClient.rpcClient
+	res, err := client.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	suite.Require().NoError(err)
+	suite.T().Logf("fee: %f", *res.FeeRate)
+	suite.T().Logf("blocks: %d", res.Blocks)
+	suite.T().Logf("errors: %s", res.Errors)
+	gasPrice := big.NewFloat(0)
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*res.FeeRate), big.NewFloat(1e8)).Uint64()
+	suite.T().Logf("gas price: %d", gasPriceU64)
+
+	bn, err := client.GetBlockCount()
+	suite.Require().NoError(err)
+	suite.T().Logf("block number %d", bn)
+}
 func TestBitcoinChainClient(t *testing.T) {
 	suite.Run(t, new(BitcoinClientTestSuite))
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/zeta-chain/zetacore/common"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,63 +15,38 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new Params instance
-func NewParams() Params {
-	return Params{
-		BallotThresholds: []*BallotThreshold{
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BscTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Goerli,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_Mumbai,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BTCTestnet,
-				Observation: ObservationType_InBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
-			{
-				Chain:       ObserverChain_BTCTestnet,
-				Observation: ObservationType_OutBoundTx,
-				Threshold:   sdk.MustNewDecFromStr("0.66"),
-			},
+func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
+	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
+}
+func DefaultParams() Params {
+	chains := common.DefaultChainsList()
+	observerParams := make([]*ObserverParams, len(chains))
+	for i, chain := range chains {
+		observerParams[i] = &ObserverParams{
+			IsSupported:           true,
+			Chain:                 chain,
+			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+		}
+	}
+	adminPolicy := []*Admin_Policy{
+		{
+			PolicyType: Policy_Type_stop_inbound_cctx,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_deploy_fungible_coin,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
 		},
 	}
-}
-
-// DefaultParams returns a default set of parameters
-func DefaultParams() Params {
-	return NewParams()
+	return NewParams(observerParams, adminPolicy)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyPrefix(ParamVotingThresholdsKey), &p.BallotThresholds, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(ObserverParamsKey), &p.ObserverParams, validateVotingThresholds),
+		paramtypes.NewParamSetPair(KeyPrefix(AdminPolicyParamsKey), &p.AdminPolicy, validateAdminPolicy),
 	}
 }
 
@@ -86,23 +62,76 @@ func (p Params) String() string {
 }
 
 func validateVotingThresholds(i interface{}) error {
-	v, ok := i.([]*BallotThreshold)
+	v, ok := i.([]*ObserverParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	for _, threshold := range v {
-		if threshold.Threshold.GT(sdk.OneDec()) {
+		if threshold.BallotThreshold.GT(sdk.OneDec()) {
 			return ErrParamsThreshold
 		}
 	}
 	return nil
 }
+func validateAdminPolicy(i interface{}) error {
+	_, ok := i.([]*Admin_Policy)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 
-func (p Params) GetVotingThreshold(chain ObserverChain, observationType ObservationType) (BallotThreshold, bool) {
-	for _, threshold := range p.GetBallotThresholds() {
-		if threshold.Chain == chain && threshold.Observation == observationType {
-			return *threshold, true
+	return nil
+}
+
+func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
+	for _, admin := range p.AdminPolicy {
+		if admin.PolicyType == policyType {
+			return admin.Address
 		}
 	}
-	return BallotThreshold{}, false
+	return ""
+}
+func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain.IsEqual(*chain) {
+			return *ObserverParam
+		}
+	}
+	return ObserverParams{}
+}
+
+func (p Params) GetSupportedChains() (chains []*common.Chain) {
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.IsSupported {
+			chains = append(chains, observerParam.Chain)
+		}
+	}
+	return
+}
+
+func (p Params) GetChainFromChainID(chainID int64) *common.Chain {
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.Chain.ChainId == chainID && observerParam.IsSupported {
+			return observerParam.Chain
+		}
+	}
+	return nil
+}
+
+func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
+	for _, observerParam := range p.GetObserverParams() {
+		if observerParam.Chain.ChainName == name && observerParam.IsSupported {
+			return observerParam.Chain
+		}
+	}
+	return nil
+}
+
+func (p Params) IsChainSupported(checkChain common.Chain) bool {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if checkChain.IsEqual(*chain) {
+			return true
+		}
+	}
+	return false
 }

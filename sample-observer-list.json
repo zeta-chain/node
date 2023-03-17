@@ -1,7 +1,8 @@
 [
  {
   "index": "",
-  "observerChain": "Eth",
+  "observerChainName": "Eth",
+  "observerChainId" : 1,
   "observationType": "InBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
@@ -10,7 +11,8 @@
  },
  {
   "index": "",
-  "observerChain": "Eth",
+  "observerChainName": "Eth",
+  "observerChainId" : 1,
   "observationType": "OutBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
@@ -19,7 +21,8 @@
  },
  {
   "index": "",
-  "observerChain": "Goerli",
+  "observerChainName": "Goerli",
+  "observerChainId" : 5,
   "observationType": "InBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
@@ -28,7 +31,8 @@
  },
  {
   "index": "",
-  "observerChain": "Goerli",
+  "observerChainName": "Goerli",
+  "observerChainId" : 5,
   "observationType": "OutBoundTx",
   "observerList": [
    "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",

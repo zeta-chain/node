@@ -3,29 +3,27 @@ on:
   workflow_dispatch:
     inputs:
       ENVIRONMENT:
-        description: 'What Environment to deploy into (athens2, development)'
+        description: 'What Environment to deploy into (athens2, development)?'
         type: environment
         required: true
-      # VERSION:
-      #   description: 'Version number for the release (0.0.1)'
-      #   type: string
-      #   required: true
-      # UPGRADE_BLOCK_HEIGHT:
-      #   description: 'What block height to upgrade at - If Blank, will upgrade in 150 blocks'
-      #   type: string
-      #   required: false
-      # REGENESIS:
-      #   description: 'Perform Regenesis? (Keeping existing keys)'
-      #   type: boolean
-      #   required: false
-      #   default: false
+      UPGRADE_BLOCK_HEIGHT:
+        description: 'What block height to stop and upgrade? (Cosmovisor Only)'
+        type: string
+        required: false
+      DEPLOYMENT_METHOD:
+        description: 'Do you want to use Cosmovisor or the more dangerous binary replacement method?'
+        type: choice
+        required: true
+        options: 
+          - cosmovisor
+          - binary_replacement
 
 env:
   S3_BUCKET_NAME: "zetachain-deployment-files"
   AWS_REGION: "us-east-1"
 
 jobs:
-  deploy-release:
+  deploy-cosmovisor-upgrade:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.ENVIRONMENT }}
     steps:
@@ -46,51 +44,80 @@ jobs:
       - name: Set Chain ID Automatically based on Environment
         run: |
           if [ ${{ github.event.inputs.ENVIRONMENT }} == "development" ]; then
+            echo "using development chain id: develop_101-1"
             echo "CHAIN_ID=develop_101-1" >> $GITHUB_ENV
           elif [ ${{ github.event.inputs.ENVIRONMENT }} == "athens2" ]; then
+            echo "using athens2 chain id"
             echo "CHAIN_ID=athens_7001-1" >> $GITHUB_ENV
           fi
-          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
-          
+
+      # Approval needed to deploy to environments other than development
+      # - uses: trstringer/manual-approval@v1
+      #   if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
+      #   with:
+      #     secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     approvers: charliemc0, brewmaster012, kingpinXD, afzeta, chriskzeta, lucas-janon
+      #     minimum-approvals: 1
+      #     issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
+      #     exclude-workflow-initiator-as-approver: false
+
       - name: Test Inputs
         if: ${{ env.ACT }}
         run: |
           echo  ${{ github.ref_name }}
           echo  ${{ github.event.inputs.ENVIRONMENT }}
-
-      - name: Verify target files exist 
-        run: |
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/cosmovisor || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd || exit 1
-          aws s3 ls s3:///${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored || exit 1
-
-      # Approval needed to deploy to environments other than development
-      - uses: trstringer/manual-approval@v1
-        if : ${{ github.event.inputs.ENVIRONMENT != 'development' }}
-        with:
-          secret: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          approvers: charliemc0, brewmaster012, kingpinXD, afzeta, chriskzeta, lucas-janon
-          minimum-approvals: 1
-          issue-title: "Protocol Upgrade ${{ github.ref_name }} Env: ${{ github.event.inputs.ENVIRONMENT }}"
-          exclude-workflow-initiator-as-approver: false
-
-      # - name: Cosmovisor Upgrade Proposal and Vote # NEEDS ADDITIONAL TESTING
-      #   uses:  ./.github/actions/cosmovisor-upgrade
-      #   with:
-      #     VERSION: ${{ github.event.inputs.VERSION }}
-      #     # DESCRIPTION: ${{ github.event.inputs.VERSION }}
-      #     # ZETACORED_CHECKSUM: ""
-      #     ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
-      #     # ZETACLIENTD_CHECKSUM: ""
-      #     ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
-      #     CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
-      #     API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
-      #     UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
-
-      - name: Update Nodes (OLD Method) ## Will Be Replaced By CosmoVisor
+          echo  ${{ env.CHAIN_ID }}
+          echo  ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
+          echo  ${{ env.ZETACORED_CHECKSUM }}
+          echo  ${{ env.ZETACLIENTD_CHECKSUM }}
+          echo  ${{ github.event.inputs.DEPLOYMENT_METHOD }}
+      - name: Update Nodes via Binary Replacement (Dangerous Method) 
         uses:  ./.github/actions/deploy-binaries
+        if:  ${{ github.event.inputs.DEPLOYMENT_METHOD == 'binary_replacement' }}
         with:
           S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
           TAKE_SNAPSHOTS: true
           BRANCH_OR_TAG_NAME: ${{ github.ref_name }}
 
+    ## Cosmovisor Actions Start Here
+      - name: Block Dangerous Updates To Public Networks
+        if: ${{ github.event.inputs.DEPLOYMENT_METHOD == 'binary_replacement' && github.event.inputs.ENVIRONMENT  != 'development' }}
+        run: |
+          echo  "ERROR: CANNOT USE DANGEROUS DEPLOYMENT METHODS FOR ATHENS AND OTHER PUBLIC NETWORKS"
+          exit 1
+
+      - name: Check Upgrade Handler Name Matches Tag
+        if:  ${{ github.event.inputs.DEPLOYMENT_METHOD == 'cosmovisor' }}
+        run: |
+          UPGRADE_HANDLER_NAME=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          echo $UPGRADE_HANDLER_NAME
+          if [ ${{ github.ref_name }} != $UPGRADE_HANDLER_NAME ]; then
+            echo "ERROR: The name of this release does not match the releaseVersion const in app/setup_handlers.go"
+            echo "Did you forget to update the 'releaseVersion' const in app/setup_handlers.go?" 
+            exit 1
+          fi
+          echo "releaseVersion' const in app/setup_handlers.go matches this tagged release - Moving Forward!"
+    
+      - name: Get Checksum
+        if: ${{ github.event.inputs.DEPLOYMENT_METHOD == 'cosmovisor' }}
+        run: |
+          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored ./ || exit 1
+          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd ./ || exit 1
+          ZETACORED_CHECKSUM=$(shasum -b -a 256 zetacored | cut -d ' ' -f 1)
+          ZETACLIENTD_CHECKSUM=$(shasum -b -a 256 zetaclientd | cut -d ' ' -f 1)
+          echo "ZETACORED_CHECKSUM=$ZETACORED_CHECKSUM" >> $GITHUB_ENV
+          echo "ZETACLIENTD_CHECKSUM=$ZETACLIENTD_CHECKSUM" >> $GITHUB_ENV
+
+      - name: Update Nodes via Cosmovisor Upgrade Proposal
+        uses:  ./.github/actions/cosmovisor-upgrade
+        if: ${{ github.event.inputs.DEPLOYMENT_METHOD == 'cosmovisor' }}
+        with:
+          UPGRADE_NAME: ${{ github.ref_name }}
+          CHAIN_ID: ${{ env.CHAIN_ID }}
+          DESCRIPTION: ${{ github.event.inputs.UPGRADE_NAME }}
+          ZETACORED_CHECKSUM: ${{ env.ZETACORED_CHECKSUM }}
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
+          ZETACLIENTD_CHECKSUM: ${{ env.ZETACLIENTD_CHECKSUM }}
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
+          API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
+          UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}

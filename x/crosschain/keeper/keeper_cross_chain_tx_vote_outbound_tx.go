@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -9,28 +10,34 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
-	observationChain := zetaObserverTypes.ParseCommonChaintoObservationChain(msg.OutTxChain)
+	// Observer Chain already checked then inbound is created
+	/* EDGE CASE : Params updated in during the finalization process
+	   i.e Inbound has been finalized but outbound is still pending
+	*/
+	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain, observationType.String())
+	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
+	ballot, isNew, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
 	if err != nil {
 		return nil, err
+	}
+	if isNew {
+		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
@@ -46,14 +53,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	if !isFinalized {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
-		if !msg.ZetaMinted.Equal(cctx.ZetaMint) {
-			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.ZetaMint)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.ZetaMint))
+		if !msg.ZetaMinted.Equal(cctx.GetCurrentOutTxParam().Amount) {
+			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount)
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount))
 		}
 	}
-	cctx.OutBoundTxParams.OutBoundTxHash = msg.ObservedOutTxHash
+
+	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	oldStatus := cctx.CctxStatus.Status
@@ -61,16 +68,21 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		return nil, err
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		ctx.Logger().Error(err.Error())
+		k.SetCrossChainTx(ctx, cctx)
+		// Remove OutTX tracker and change CCTX prefix store
+		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
-	k.RemoveOutTxTracker(ctx, fmt.Sprintf("%s-%s", msg.OutTxChain, strconv.Itoa(int(msg.OutTxTssNonce))))
+	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
-func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) error {
+func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount math.Uint) error {
 	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(balanceAmount.BigInt()))))
 	if err != nil {
 		log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
@@ -80,20 +92,18 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount sdk.Uint) err
 }
 
 func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
-	cctx.OutBoundTxParams.OutBoundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	cctx.OutBoundTxParams.OutBoundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
-	zetaBurnt := cctx.ZetaBurnt
-	zetaMinted := cctx.ZetaMint
+	//cctx.GetCurrentOutTxParam().OutboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+	cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
+	zetaBurnt := cctx.InboundTxParams.Amount
+	zetaMinted := cctx.GetCurrentOutTxParam().Amount
 	oldStatus := cctx.CctxStatus.Status
 	switch status {
 	case zetaObserverTypes.BallotStatus_BallotFinalized_SuccessObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingRevert:
-			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
 		case types.CctxStatus_PendingOutbound:
-			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
 		}
 
 		newStatus := cctx.CctxStatus.Status.String()
@@ -101,28 +111,37 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 			// TODO :Handle Error ?
 		}
 		balanceAmount := zetaBurnt.Sub(zetaMinted)
-		err := HandleFeeBalances(k, ctx, balanceAmount)
-		if err != nil {
-			return err
+		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta { // TODO : Handle Fee for other coins
+			err := HandleFeeBalances(k, ctx, balanceAmount)
+			if err != nil {
+				return err
+			}
 		}
 		EmitOutboundSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
-			chain := cctx.InBoundTxParams.SenderChain
-			err := k.UpdatePrices(ctx, chain, cctx)
+			// create new OutboundTxParams for the revert
+			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+				Receiver:           cctx.InboundTxParams.Sender,
+				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+				Amount:             cctx.InboundTxParams.Amount,
+				CoinType:           cctx.InboundTxParams.CoinType,
+				OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+			})
+			err := k.UpdatePrices(ctx, cctx.InboundTxParams.SenderChainId, cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, chain, cctx)
+			err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChainId, cctx)
 			if err != nil {
 				return err
 			}
 			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_PendingRevert, "Outbound Failed , Starting Revert", cctx.LogIdentifierForCCTX())
+				types.CctxStatus_PendingRevert, "Outbound failed, start revert", cctx.LogIdentifierForCCTX())
 		case types.CctxStatus_PendingRevert:
 			cctx.CctxStatus.ChangeStatus(&ctx,
-				types.CctxStatus_Aborted, "Outbound Failed & Revert Failed , Abort TX", cctx.LogIdentifierForCCTX())
+				types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX", cctx.LogIdentifierForCCTX())
 
 		}
 		newStatus := cctx.CctxStatus.Status.String()

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity ^0.8.7;
 
 interface IZRC20 {
     function totalSupply() external view returns (uint256);
@@ -20,9 +20,13 @@ interface IZRC20 {
 
     function deposit(address to, uint256 amount) external returns (bool);
 
+    function burn(address account, uint256 amount) external returns (bool);
+
     function withdraw(bytes memory to, uint256 amount) external returns (bool);
 
     function withdrawGasFee() external view returns (address, uint256);
+
+    function PROTOCOL_FEE() external view returns (uint256);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);

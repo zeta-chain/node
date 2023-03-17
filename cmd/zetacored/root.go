@@ -2,14 +2,18 @@ package main
 
 import (
 	"errors"
-	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/evmos/ethermint/crypto/hd"
-	servercfg "github.com/evmos/ethermint/server/config"
-	"github.com/zeta-chain/zetacore/app"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"io"
 	"os"
 	"path/filepath"
+
+	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/evmos/ethermint/crypto/hd"
+	tmcfg "github.com/tendermint/tendermint/config"
+	"github.com/zeta-chain/zetacore/app"
+	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	zevmserver "github.com/zeta-chain/zetacore/server"
+	servercfg "github.com/zeta-chain/zetacore/server/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,7 +34,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	ethermintclient "github.com/evmos/ethermint/client"
-	ethermintserver "github.com/evmos/ethermint/server"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -42,6 +45,7 @@ const EnvPrefix = "zetacore"
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
+
 func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
@@ -52,7 +56,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	cfg.Seal()
 
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
@@ -87,7 +91,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 	}
 
@@ -123,9 +127,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
-	ethermintserver.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
+	zevmserver.AddCommands(rootCmd, zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
 
-	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
+	// the ethermintserver one supercedes the sdk one
+	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -135,7 +140,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 
 }
 
@@ -229,7 +234,10 @@ func (ac appCreator) newApp(
 	if err != nil {
 		panic(err)
 	}
-
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
@@ -244,26 +252,10 @@ func (ac appCreator) newApp(
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshotStore(snapshotStore),
-		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
-		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
 	)
-}
-
-func (ac appCreator) createSimappAndExport(logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
-	jailAllowedAddrs []string, appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-	//encCfg := app.MakeEncodingConfig()
-	//encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var zetaApp *app.App
-	if height != -1 {
-		zetaApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
-		if err := zetaApp.LoadHeight(height); err != nil {
-			return servertypes.ExportedApp{}, err
-		}
-	} else {
-		zetaApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), ac.encCfg, appOpts)
-	}
-	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
 
 // appExport creates a new simapp (optionally at a given height)

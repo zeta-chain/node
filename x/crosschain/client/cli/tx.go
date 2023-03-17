@@ -16,7 +16,7 @@ var (
 )
 
 const (
-//flagPacketTimeoutTimestamp = "packet-timeout-timestamp"
+// flagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -29,16 +29,16 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdZetaConversionRateVoter())
 	cmd.AddCommand(CmdAddToWatchList())
 	cmd.AddCommand(CmdCreateTSSVoter())
-	cmd.AddCommand(CmdGasBalanceVoter())
 	cmd.AddCommand(CmdGasPriceVoter())
 	cmd.AddCommand(CmdNonceVoter())
 	cmd.AddCommand(CmdCCTXOutboundVoter())
 	cmd.AddCommand(CmdCCTXInboundVoter())
 	cmd.AddCommand(CmdSetNodeKeys())
 	cmd.AddCommand(CmdRemoveFromWatchList())
+	cmd.AddCommand(CmdUpdatePermissionFlags())
+	// this line is used by starport scaffolding # 1
 
 	return cmd
 }

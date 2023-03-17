@@ -7,10 +7,10 @@ import (
 
 var _ sdk.Msg = &MsgGasPriceVoter{}
 
-func NewMsgGasPriceVoter(creator string, chain string, price uint64, supply string, blockNumber uint64) *MsgGasPriceVoter {
+func NewMsgGasPriceVoter(creator string, chain int64, price uint64, supply string, blockNumber uint64) *MsgGasPriceVoter {
 	return &MsgGasPriceVoter{
 		Creator:     creator,
-		Chain:       chain,
+		ChainId:     chain,
 		Price:       price,
 		BlockNumber: blockNumber,
 		Supply:      supply,
@@ -42,6 +42,9 @@ func (msg *MsgGasPriceVoter) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.ChainId < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"time"
 
 	"sync"
 
@@ -35,16 +36,17 @@ import (
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger        zerolog.Logger
-	blockHeight   int64
-	accountNumber uint64
-	seqNumber     uint64
-	grpcConn      *grpc.ClientConn
-	httpClient    *retryablehttp.Client
-	cfg           config.ClientConfiguration
-	keys          *Keys
-	broadcastLock *sync.RWMutex
-	ChainNonces   map[string]uint64
+	logger              zerolog.Logger
+	blockHeight         int64
+	accountNumber       uint64
+	seqNumber           uint64
+	grpcConn            *grpc.ClientConn
+	httpClient          *retryablehttp.Client
+	cfg                 config.ClientConfiguration
+	keys                *Keys
+	broadcastLock       *sync.RWMutex
+	ChainNonces         map[string]uint64 // FIXME: Remove this?
+	lastOutTxReportTime map[string]time.Time
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -72,13 +74,14 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 	}
 
 	return &ZetaCoreBridge{
-		logger:        logger,
-		grpcConn:      grpcConn,
-		httpClient:    httpClient,
-		cfg:           cfg,
-		keys:          k,
-		broadcastLock: &sync.RWMutex{},
-		ChainNonces:   map[string]uint64{},
+		logger:              logger,
+		grpcConn:            grpcConn,
+		httpClient:          httpClient,
+		cfg:                 cfg,
+		keys:                k,
+		broadcastLock:       &sync.RWMutex{},
+		ChainNonces:         map[string]uint64{},
+		lastOutTxReportTime: map[string]time.Time{},
 	}, nil
 }
 
@@ -94,7 +97,7 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
 	ctx := b.GetContext()
-	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetSignerInfo().GetAddress())
+	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetAddress())
 }
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {

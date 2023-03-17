@@ -17,11 +17,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-
 		case *types.MsgDeployFungibleCoinZRC20:
 			res, err := msgServer.DeployFungibleCoinZRC20(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgRemoveForeignCoin:
+			res, err := msgServer.RemoveForeignCoin(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 			// this line is used by starport scaffolding # 1
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)

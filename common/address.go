@@ -12,13 +12,17 @@ type Address string
 
 var NoAddress Address
 
+var (
+	DeadAddress = eth.HexToAddress("0xdEAD000000000000000042069420694206942069")
+)
+
 const ETHAddressLen = 42
 
 // NewAddress create a new Address. Supports Ethereum, BSC, Polygon
 func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
-	if IsETHChain(chain) {
+	if chain.IsEVMChain() {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
@@ -27,42 +31,6 @@ func NewAddress(address string, chain Chain) (Address, error) {
 	}
 
 	return NoAddress, fmt.Errorf("address format not supported: %s", address)
-}
-
-func IsETHChain(chain Chain) bool {
-	if chain == ETHChain || chain == BSCChain || chain == POLYGONChain ||
-		chain == BSCTestnetChain || chain == MumbaiChain ||
-		chain == GoerliChain || chain == Ganache || chain == ZETAChain {
-		return true
-	}
-
-	return false
-}
-
-//func (addr Address) IsChain(chain Chain) bool {
-//	switch chain {
-//	case ETHChain:
-//		return strings.HasPrefix(addr.String(), "0x")
-//	default:
-//		return false
-//	}
-//}
-
-//func (addr Address) GetChain() Chain {
-//	for _, chain := range []Chain{ETHChain} {
-//		if addr.IsChain(chain) {
-//			return chain
-//		}
-//	}
-//	return EmptyChain
-//}
-
-func (addr Address) GetNetwork(chain Chain) ChainNetwork {
-	switch chain {
-	case ETHChain:
-		return GetCurrentChainNetwork()
-	}
-	return MockNet
 }
 
 func (addr Address) AccAddress() (cosmos.AccAddress, error) {

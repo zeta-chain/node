@@ -9,14 +9,19 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
-	// Set all the zetaConversionRate
-	for _, elem := range genState.ZetaConversionRateList {
-		k.SetZetaConversionRate(ctx, elem)
-	}
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
+	}
+	// Set all the inTxHashToCctx
+	for _, elem := range genState.InTxHashToCctxList {
+		k.SetInTxHashToCctx(ctx, elem)
+	}
+	// Set if defined
+	if genState.PermissionFlags != nil {
+		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
+	} else {
+		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
 	}
 	// this line is used by starport scaffolding # genesis/module/init
 	// Set if defined
@@ -32,11 +37,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the tSS
 	for _, elem := range genState.TSSList {
 		k.SetTSS(ctx, *elem)
-	}
-
-	// Set all the gasBalance
-	for _, elem := range genState.GasBalanceList {
-		k.SetGasBalance(ctx, *elem)
 	}
 
 	// Set all the gasPrice
@@ -70,8 +70,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
-	genesis.ZetaConversionRateList = k.GetAllZetaConversionRate(ctx)
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
+	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
+	// Get all permissionFlags
+	permissionFlags, found := k.GetPermissionFlags(ctx)
+	if found {
+		genesis.PermissionFlags = &permissionFlags
+	}
 	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
 	keygen, found := k.GetKeygen(ctx)
@@ -91,13 +96,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	for _, elem := range tSSList {
 		elem := elem
 		genesis.TSSList = append(genesis.TSSList, &elem)
-	}
-
-	// Get all gasBalance
-	gasBalanceList := k.GetAllGasBalance(ctx)
-	for _, elem := range gasBalanceList {
-		elem := elem
-		genesis.GasBalanceList = append(genesis.GasBalanceList, &elem)
 	}
 
 	// Get all gasPrice

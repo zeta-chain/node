@@ -8,6 +8,7 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	common "github.com/zeta-chain/zetacore/common"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -61,27 +62,31 @@ func (CctxStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_af3a0ad055343c21, []int{0}
 }
 
-type InBoundTxParams struct {
-	Sender                          string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	SenderChain                     string `protobuf:"bytes,2,opt,name=senderChain,proto3" json:"senderChain,omitempty"`
-	InBoundTxObservedHash           string `protobuf:"bytes,3,opt,name=inBoundTxObservedHash,proto3" json:"inBoundTxObservedHash,omitempty"`
-	InBoundTxObservedExternalHeight uint64 `protobuf:"varint,4,opt,name=inBoundTxObservedExternalHeight,proto3" json:"inBoundTxObservedExternalHeight,omitempty"`
-	InBoundTxFinalizedZetaHeight    uint64 `protobuf:"varint,5,opt,name=inBoundTxFinalizedZetaHeight,proto3" json:"inBoundTxFinalizedZetaHeight,omitempty"`
-	InBoundTXBallotIndex            string `protobuf:"bytes,6,opt,name=inBoundTXBallotIndex,proto3" json:"inBoundTXBallotIndex,omitempty"`
+type InboundTxParams struct {
+	Sender                          string                                  `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	SenderChainId                   int64                                   `protobuf:"varint,2,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
+	TxOrigin                        string                                  `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
+	CoinType                        common.CoinType                         `protobuf:"varint,4,opt,name=coin_type,json=coinType,proto3,enum=common.CoinType" json:"coin_type,omitempty"`
+	Asset                           string                                  `protobuf:"bytes,5,opt,name=asset,proto3" json:"asset,omitempty"`
+	Amount                          github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
+	InboundTxObservedHash           string                                  `protobuf:"bytes,7,opt,name=inbound_tx_observed_hash,json=inboundTxObservedHash,proto3" json:"inbound_tx_observed_hash,omitempty"`
+	InboundTxObservedExternalHeight uint64                                  `protobuf:"varint,8,opt,name=inbound_tx_observed_external_height,json=inboundTxObservedExternalHeight,proto3" json:"inbound_tx_observed_external_height,omitempty"`
+	InboundTxBallotIndex            string                                  `protobuf:"bytes,9,opt,name=inbound_tx_ballot_index,json=inboundTxBallotIndex,proto3" json:"inbound_tx_ballot_index,omitempty"`
+	InboundTxFinalizedZetaHeight    uint64                                  `protobuf:"varint,10,opt,name=inbound_tx_finalized_zeta_height,json=inboundTxFinalizedZetaHeight,proto3" json:"inbound_tx_finalized_zeta_height,omitempty"`
 }
 
-func (m *InBoundTxParams) Reset()         { *m = InBoundTxParams{} }
-func (m *InBoundTxParams) String() string { return proto.CompactTextString(m) }
-func (*InBoundTxParams) ProtoMessage()    {}
-func (*InBoundTxParams) Descriptor() ([]byte, []int) {
+func (m *InboundTxParams) Reset()         { *m = InboundTxParams{} }
+func (m *InboundTxParams) String() string { return proto.CompactTextString(m) }
+func (*InboundTxParams) ProtoMessage()    {}
+func (*InboundTxParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_af3a0ad055343c21, []int{0}
 }
-func (m *InBoundTxParams) XXX_Unmarshal(b []byte) error {
+func (m *InboundTxParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *InBoundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *InboundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_InBoundTxParams.Marshal(b, m, deterministic)
+		return xxx_messageInfo_InboundTxParams.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -91,85 +96,108 @@ func (m *InBoundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *InBoundTxParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InBoundTxParams.Merge(m, src)
+func (m *InboundTxParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InboundTxParams.Merge(m, src)
 }
-func (m *InBoundTxParams) XXX_Size() int {
+func (m *InboundTxParams) XXX_Size() int {
 	return m.Size()
 }
-func (m *InBoundTxParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_InBoundTxParams.DiscardUnknown(m)
+func (m *InboundTxParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_InboundTxParams.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InBoundTxParams proto.InternalMessageInfo
+var xxx_messageInfo_InboundTxParams proto.InternalMessageInfo
 
-func (m *InBoundTxParams) GetSender() string {
+func (m *InboundTxParams) GetSender() string {
 	if m != nil {
 		return m.Sender
 	}
 	return ""
 }
 
-func (m *InBoundTxParams) GetSenderChain() string {
+func (m *InboundTxParams) GetSenderChainId() int64 {
 	if m != nil {
-		return m.SenderChain
-	}
-	return ""
-}
-
-func (m *InBoundTxParams) GetInBoundTxObservedHash() string {
-	if m != nil {
-		return m.InBoundTxObservedHash
-	}
-	return ""
-}
-
-func (m *InBoundTxParams) GetInBoundTxObservedExternalHeight() uint64 {
-	if m != nil {
-		return m.InBoundTxObservedExternalHeight
+		return m.SenderChainId
 	}
 	return 0
 }
 
-func (m *InBoundTxParams) GetInBoundTxFinalizedZetaHeight() uint64 {
+func (m *InboundTxParams) GetTxOrigin() string {
 	if m != nil {
-		return m.InBoundTxFinalizedZetaHeight
-	}
-	return 0
-}
-
-func (m *InBoundTxParams) GetInBoundTXBallotIndex() string {
-	if m != nil {
-		return m.InBoundTXBallotIndex
+		return m.TxOrigin
 	}
 	return ""
 }
 
-type OutBoundTxParams struct {
-	Receiver                         string `protobuf:"bytes,1,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	ReceiverChain                    string `protobuf:"bytes,2,opt,name=receiverChain,proto3" json:"receiverChain,omitempty"`
-	Broadcaster                      uint64 `protobuf:"varint,3,opt,name=broadcaster,proto3" json:"broadcaster,omitempty"`
-	OutBoundTxHash                   string `protobuf:"bytes,4,opt,name=outBoundTxHash,proto3" json:"outBoundTxHash,omitempty"`
-	OutBoundTxTSSNonce               uint64 `protobuf:"varint,5,opt,name=outBoundTxTSSNonce,proto3" json:"outBoundTxTSSNonce,omitempty"`
-	OutBoundTxGasLimit               uint64 `protobuf:"varint,6,opt,name=outBoundTxGasLimit,proto3" json:"outBoundTxGasLimit,omitempty"`
-	OutBoundTxGasPrice               string `protobuf:"bytes,7,opt,name=outBoundTxGasPrice,proto3" json:"outBoundTxGasPrice,omitempty"`
-	OutBoundTXBallotIndex            string `protobuf:"bytes,8,opt,name=outBoundTXBallotIndex,proto3" json:"outBoundTXBallotIndex,omitempty"`
-	OutBoundTxFinalizedZetaHeight    uint64 `protobuf:"varint,9,opt,name=outBoundTxFinalizedZetaHeight,proto3" json:"outBoundTxFinalizedZetaHeight,omitempty"`
-	OutBoundTxObservedExternalHeight uint64 `protobuf:"varint,10,opt,name=outBoundTxObservedExternalHeight,proto3" json:"outBoundTxObservedExternalHeight,omitempty"`
+func (m *InboundTxParams) GetCoinType() common.CoinType {
+	if m != nil {
+		return m.CoinType
+	}
+	return common.CoinType_Zeta
 }
 
-func (m *OutBoundTxParams) Reset()         { *m = OutBoundTxParams{} }
-func (m *OutBoundTxParams) String() string { return proto.CompactTextString(m) }
-func (*OutBoundTxParams) ProtoMessage()    {}
-func (*OutBoundTxParams) Descriptor() ([]byte, []int) {
+func (m *InboundTxParams) GetAsset() string {
+	if m != nil {
+		return m.Asset
+	}
+	return ""
+}
+
+func (m *InboundTxParams) GetInboundTxObservedHash() string {
+	if m != nil {
+		return m.InboundTxObservedHash
+	}
+	return ""
+}
+
+func (m *InboundTxParams) GetInboundTxObservedExternalHeight() uint64 {
+	if m != nil {
+		return m.InboundTxObservedExternalHeight
+	}
+	return 0
+}
+
+func (m *InboundTxParams) GetInboundTxBallotIndex() string {
+	if m != nil {
+		return m.InboundTxBallotIndex
+	}
+	return ""
+}
+
+func (m *InboundTxParams) GetInboundTxFinalizedZetaHeight() uint64 {
+	if m != nil {
+		return m.InboundTxFinalizedZetaHeight
+	}
+	return 0
+}
+
+type OutboundTxParams struct {
+	Receiver           string                                  `protobuf:"bytes,1,opt,name=receiver,proto3" json:"receiver,omitempty"`
+	ReceiverChainId    int64                                   `protobuf:"varint,2,opt,name=receiver_chainId,json=receiverChainId,proto3" json:"receiver_chainId,omitempty"`
+	CoinType           common.CoinType                         `protobuf:"varint,3,opt,name=coin_type,json=coinType,proto3,enum=common.CoinType" json:"coin_type,omitempty"`
+	Amount             github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,4,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
+	OutboundTxTssNonce uint64                                  `protobuf:"varint,5,opt,name=outbound_tx_tss_nonce,json=outboundTxTssNonce,proto3" json:"outbound_tx_tss_nonce,omitempty"`
+	OutboundTxGasLimit uint64                                  `protobuf:"varint,6,opt,name=outbound_tx_gas_limit,json=outboundTxGasLimit,proto3" json:"outbound_tx_gas_limit,omitempty"`
+	OutboundTxGasPrice string                                  `protobuf:"bytes,7,opt,name=outbound_tx_gas_price,json=outboundTxGasPrice,proto3" json:"outbound_tx_gas_price,omitempty"`
+	// the above are commands for zetaclients
+	// the following fields are used for the outbound tx are mined
+	OutboundTxHash                   string `protobuf:"bytes,8,opt,name=outbound_tx_hash,json=outboundTxHash,proto3" json:"outbound_tx_hash,omitempty"`
+	OutboundTxBallotIndex            string `protobuf:"bytes,9,opt,name=outbound_tx_ballot_index,json=outboundTxBallotIndex,proto3" json:"outbound_tx_ballot_index,omitempty"`
+	OutboundTxObservedExternalHeight uint64 `protobuf:"varint,10,opt,name=outbound_tx_observed_external_height,json=outboundTxObservedExternalHeight,proto3" json:"outbound_tx_observed_external_height,omitempty"`
+}
+
+func (m *OutboundTxParams) Reset()         { *m = OutboundTxParams{} }
+func (m *OutboundTxParams) String() string { return proto.CompactTextString(m) }
+func (*OutboundTxParams) ProtoMessage()    {}
+func (*OutboundTxParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_af3a0ad055343c21, []int{1}
 }
-func (m *OutBoundTxParams) XXX_Unmarshal(b []byte) error {
+func (m *OutboundTxParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *OutBoundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *OutboundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_OutBoundTxParams.Marshal(b, m, deterministic)
+		return xxx_messageInfo_OutboundTxParams.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -179,92 +207,85 @@ func (m *OutBoundTxParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *OutBoundTxParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_OutBoundTxParams.Merge(m, src)
+func (m *OutboundTxParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OutboundTxParams.Merge(m, src)
 }
-func (m *OutBoundTxParams) XXX_Size() int {
+func (m *OutboundTxParams) XXX_Size() int {
 	return m.Size()
 }
-func (m *OutBoundTxParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_OutBoundTxParams.DiscardUnknown(m)
+func (m *OutboundTxParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_OutboundTxParams.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_OutBoundTxParams proto.InternalMessageInfo
+var xxx_messageInfo_OutboundTxParams proto.InternalMessageInfo
 
-func (m *OutBoundTxParams) GetReceiver() string {
+func (m *OutboundTxParams) GetReceiver() string {
 	if m != nil {
 		return m.Receiver
 	}
 	return ""
 }
 
-func (m *OutBoundTxParams) GetReceiverChain() string {
+func (m *OutboundTxParams) GetReceiverChainId() int64 {
 	if m != nil {
-		return m.ReceiverChain
-	}
-	return ""
-}
-
-func (m *OutBoundTxParams) GetBroadcaster() uint64 {
-	if m != nil {
-		return m.Broadcaster
+		return m.ReceiverChainId
 	}
 	return 0
 }
 
-func (m *OutBoundTxParams) GetOutBoundTxHash() string {
+func (m *OutboundTxParams) GetCoinType() common.CoinType {
 	if m != nil {
-		return m.OutBoundTxHash
+		return m.CoinType
 	}
-	return ""
+	return common.CoinType_Zeta
 }
 
-func (m *OutBoundTxParams) GetOutBoundTxTSSNonce() uint64 {
+func (m *OutboundTxParams) GetOutboundTxTssNonce() uint64 {
 	if m != nil {
-		return m.OutBoundTxTSSNonce
-	}
-	return 0
-}
-
-func (m *OutBoundTxParams) GetOutBoundTxGasLimit() uint64 {
-	if m != nil {
-		return m.OutBoundTxGasLimit
+		return m.OutboundTxTssNonce
 	}
 	return 0
 }
 
-func (m *OutBoundTxParams) GetOutBoundTxGasPrice() string {
+func (m *OutboundTxParams) GetOutboundTxGasLimit() uint64 {
 	if m != nil {
-		return m.OutBoundTxGasPrice
-	}
-	return ""
-}
-
-func (m *OutBoundTxParams) GetOutBoundTXBallotIndex() string {
-	if m != nil {
-		return m.OutBoundTXBallotIndex
-	}
-	return ""
-}
-
-func (m *OutBoundTxParams) GetOutBoundTxFinalizedZetaHeight() uint64 {
-	if m != nil {
-		return m.OutBoundTxFinalizedZetaHeight
+		return m.OutboundTxGasLimit
 	}
 	return 0
 }
 
-func (m *OutBoundTxParams) GetOutBoundTxObservedExternalHeight() uint64 {
+func (m *OutboundTxParams) GetOutboundTxGasPrice() string {
 	if m != nil {
-		return m.OutBoundTxObservedExternalHeight
+		return m.OutboundTxGasPrice
+	}
+	return ""
+}
+
+func (m *OutboundTxParams) GetOutboundTxHash() string {
+	if m != nil {
+		return m.OutboundTxHash
+	}
+	return ""
+}
+
+func (m *OutboundTxParams) GetOutboundTxBallotIndex() string {
+	if m != nil {
+		return m.OutboundTxBallotIndex
+	}
+	return ""
+}
+
+func (m *OutboundTxParams) GetOutboundTxObservedExternalHeight() uint64 {
+	if m != nil {
+		return m.OutboundTxObservedExternalHeight
 	}
 	return 0
 }
 
 type Status struct {
 	Status              CctxStatus `protobuf:"varint,1,opt,name=status,proto3,enum=zetachain.zetacore.crosschain.CctxStatus" json:"status,omitempty"`
-	StatusMessage       string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
-	LastUpdateTimestamp int64      `protobuf:"varint,3,opt,name=lastUpdateTimestamp,proto3" json:"lastUpdateTimestamp,omitempty"`
+	StatusMessage       string     `protobuf:"bytes,2,opt,name=status_message,json=statusMessage,proto3" json:"status_message,omitempty"`
+	LastUpdateTimestamp int64      `protobuf:"varint,3,opt,name=lastUpdate_timestamp,json=lastUpdateTimestamp,proto3" json:"lastUpdate_timestamp,omitempty"`
 }
 
 func (m *Status) Reset()         { *m = Status{} }
@@ -324,13 +345,11 @@ func (m *Status) GetLastUpdateTimestamp() int64 {
 type CrossChainTx struct {
 	Creator          string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Index            string                                  `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	ZetaBurnt        github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,3,opt,name=zetaBurnt,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"zetaBurnt" yaml:"zetaBurnt"`
-	ZetaMint         github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,4,opt,name=zetaMint,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"zetaMint" yaml:"zetaMint"`
-	ZetaFees         github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=zetaFees,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"zetaFees" yaml:"zetaFees"`
-	RelayedMessage   string                                  `protobuf:"bytes,6,opt,name=relayedMessage,proto3" json:"relayedMessage,omitempty"`
+	ZetaFees         github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=zeta_fees,json=zetaFees,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"zeta_fees" yaml:"zeta_fees"`
+	RelayedMessage   string                                  `protobuf:"bytes,6,opt,name=relayed_message,json=relayedMessage,proto3" json:"relayed_message,omitempty"`
 	CctxStatus       *Status                                 `protobuf:"bytes,8,opt,name=cctx_status,json=cctxStatus,proto3" json:"cctx_status,omitempty"`
-	InBoundTxParams  *InBoundTxParams                        `protobuf:"bytes,9,opt,name=InBoundTxParams,proto3" json:"InBoundTxParams,omitempty"`
-	OutBoundTxParams *OutBoundTxParams                       `protobuf:"bytes,10,opt,name=OutBoundTxParams,proto3" json:"OutBoundTxParams,omitempty"`
+	InboundTxParams  *InboundTxParams                        `protobuf:"bytes,9,opt,name=inbound_tx_params,json=inboundTxParams,proto3" json:"inbound_tx_params,omitempty"`
+	OutboundTxParams []*OutboundTxParams                     `protobuf:"bytes,10,rep,name=outbound_tx_params,json=outboundTxParams,proto3" json:"outbound_tx_params,omitempty"`
 }
 
 func (m *CrossChainTx) Reset()         { *m = CrossChainTx{} }
@@ -394,24 +413,24 @@ func (m *CrossChainTx) GetCctxStatus() *Status {
 	return nil
 }
 
-func (m *CrossChainTx) GetInBoundTxParams() *InBoundTxParams {
+func (m *CrossChainTx) GetInboundTxParams() *InboundTxParams {
 	if m != nil {
-		return m.InBoundTxParams
+		return m.InboundTxParams
 	}
 	return nil
 }
 
-func (m *CrossChainTx) GetOutBoundTxParams() *OutBoundTxParams {
+func (m *CrossChainTx) GetOutboundTxParams() []*OutboundTxParams {
 	if m != nil {
-		return m.OutBoundTxParams
+		return m.OutboundTxParams
 	}
 	return nil
 }
 
 func init() {
 	proto.RegisterEnum("zetachain.zetacore.crosschain.CctxStatus", CctxStatus_name, CctxStatus_value)
-	proto.RegisterType((*InBoundTxParams)(nil), "zetachain.zetacore.crosschain.InBoundTxParams")
-	proto.RegisterType((*OutBoundTxParams)(nil), "zetachain.zetacore.crosschain.OutBoundTxParams")
+	proto.RegisterType((*InboundTxParams)(nil), "zetachain.zetacore.crosschain.InboundTxParams")
+	proto.RegisterType((*OutboundTxParams)(nil), "zetachain.zetacore.crosschain.OutboundTxParams")
 	proto.RegisterType((*Status)(nil), "zetachain.zetacore.crosschain.Status")
 	proto.RegisterType((*CrossChainTx)(nil), "zetachain.zetacore.crosschain.CrossChainTx")
 }
@@ -419,60 +438,68 @@ func init() {
 func init() { proto.RegisterFile("crosschain/cross_chain_tx.proto", fileDescriptor_af3a0ad055343c21) }
 
 var fileDescriptor_af3a0ad055343c21 = []byte{
-	// 794 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcd, 0x6e, 0x13, 0x3b,
-	0x14, 0xce, 0x34, 0x3f, 0x4d, 0x4e, 0xfa, 0x93, 0xeb, 0xf6, 0x5e, 0x45, 0xd5, 0x6d, 0x12, 0x45,
-	0xf7, 0x42, 0x41, 0xea, 0x04, 0x02, 0x2b, 0x76, 0x9d, 0x40, 0x69, 0x81, 0xd2, 0x6a, 0x9a, 0x4a,
-	0x55, 0x91, 0xa8, 0x9c, 0x19, 0x2b, 0xb1, 0x48, 0xc6, 0xd1, 0xd8, 0xa9, 0xa6, 0x15, 0x0f, 0xc0,
-	0x92, 0x77, 0x80, 0x05, 0xef, 0xc1, 0xa6, 0xcb, 0x2e, 0x11, 0x8b, 0x0a, 0xb5, 0x6f, 0xc0, 0x82,
-	0x35, 0xb2, 0xe7, 0x27, 0xbf, 0x34, 0x42, 0xac, 0x72, 0xce, 0x77, 0xbe, 0xf3, 0x39, 0x3e, 0xfe,
-	0xec, 0x81, 0xa2, 0xe5, 0x32, 0xce, 0xad, 0x16, 0xa6, 0x4e, 0x45, 0x85, 0xc7, 0x2a, 0x3e, 0x16,
-	0x9e, 0xde, 0x75, 0x99, 0x60, 0x68, 0xf5, 0x8c, 0x08, 0xac, 0x30, 0x5d, 0x45, 0xcc, 0x25, 0x7a,
-	0xbf, 0x67, 0x65, 0xb9, 0xc9, 0x9a, 0x4c, 0x31, 0x2b, 0x32, 0xf2, 0x9b, 0xca, 0x9f, 0x67, 0x60,
-	0x71, 0xdb, 0x31, 0x58, 0xcf, 0xb1, 0xeb, 0xde, 0x1e, 0x76, 0x71, 0x87, 0xa3, 0x7f, 0x20, 0xc5,
-	0x89, 0x63, 0x13, 0x37, 0xaf, 0x95, 0xb4, 0xb5, 0x8c, 0x19, 0x64, 0xa8, 0x04, 0x59, 0x3f, 0xaa,
-	0x49, 0xc1, 0xfc, 0x8c, 0x2a, 0x0e, 0x42, 0xe8, 0x21, 0xfc, 0x4d, 0x43, 0xb1, 0xdd, 0x06, 0x27,
-	0xee, 0x09, 0xb1, 0xb7, 0x30, 0x6f, 0xe5, 0xe3, 0x8a, 0x3b, 0xb9, 0x88, 0xb6, 0xa0, 0x38, 0x56,
-	0x78, 0xe2, 0x09, 0xe2, 0x3a, 0xb8, 0xbd, 0x45, 0x68, 0xb3, 0x25, 0xf2, 0x89, 0x92, 0xb6, 0x96,
-	0x30, 0xa7, 0xd1, 0x90, 0x01, 0xff, 0x46, 0x94, 0x4d, 0xea, 0xe0, 0x36, 0x3d, 0x23, 0xf6, 0x11,
-	0x11, 0x38, 0x90, 0x49, 0x2a, 0x99, 0x1b, 0x39, 0xa8, 0x0a, 0xcb, 0x61, 0xfd, 0xd0, 0xc0, 0xed,
-	0x36, 0x13, 0xdb, 0x8e, 0x4d, 0xbc, 0x7c, 0x4a, 0x6d, 0x61, 0x62, 0xad, 0xfc, 0x23, 0x0e, 0xb9,
-	0xdd, 0x9e, 0x18, 0x1e, 0xe3, 0x0a, 0xa4, 0x5d, 0x62, 0x11, 0x7a, 0x12, 0x0d, 0x32, 0xca, 0xd1,
-	0x7f, 0x30, 0x1f, 0xc6, 0x83, 0xc3, 0x1c, 0x06, 0xe5, 0xc0, 0x1b, 0x2e, 0xc3, 0xb6, 0x85, 0xb9,
-	0x20, 0xae, 0x1a, 0x62, 0xc2, 0x1c, 0x84, 0xd0, 0x2d, 0x58, 0x60, 0xd1, 0xba, 0x6a, 0xd2, 0x09,
-	0x25, 0x34, 0x82, 0x22, 0x1d, 0x50, 0x1f, 0xa9, 0xef, 0xef, 0xbf, 0x64, 0x8e, 0x45, 0x82, 0x71,
-	0x4c, 0xa8, 0x0c, 0xf3, 0x9f, 0x62, 0xfe, 0x82, 0x76, 0xa8, 0x50, 0x23, 0x18, 0xe2, 0x87, 0x95,
-	0x31, 0xfe, 0x9e, 0x4b, 0x2d, 0x92, 0x9f, 0x55, 0xff, 0x65, 0x42, 0x45, 0x1a, 0x25, 0x42, 0x87,
-	0xa6, 0x9c, 0xf6, 0x8d, 0x32, 0xb1, 0x88, 0x1e, 0xc3, 0x6a, 0x5f, 0x6b, 0xd2, 0xf9, 0x66, 0xd4,
-	0x1f, 0xbc, 0x99, 0x84, 0x9e, 0x41, 0xa9, 0x4f, 0xf8, 0x85, 0xdf, 0x40, 0x09, 0x4d, 0xe5, 0x95,
-	0x3f, 0x68, 0x90, 0xda, 0x17, 0x58, 0xf4, 0x38, 0xda, 0x80, 0x14, 0x57, 0x91, 0x3a, 0xec, 0x85,
-	0xea, 0x1d, 0xfd, 0xc6, 0xfb, 0xa8, 0xd7, 0x2c, 0xe1, 0xf9, 0xad, 0x66, 0xd0, 0x28, 0x5d, 0xe1,
-	0x47, 0x3b, 0x84, 0x73, 0xdc, 0x24, 0xa1, 0x2b, 0x86, 0x40, 0x74, 0x0f, 0x96, 0xda, 0x98, 0x8b,
-	0x83, 0xae, 0x8d, 0x05, 0xa9, 0xd3, 0x0e, 0xe1, 0x02, 0x77, 0xba, 0xca, 0x1d, 0x71, 0x73, 0x52,
-	0xa9, 0xfc, 0x2e, 0x09, 0x73, 0x35, 0xb9, 0xb2, 0xb2, 0x55, 0xdd, 0x43, 0x79, 0x98, 0xb5, 0x5c,
-	0x82, 0x05, 0x0b, 0x9d, 0x19, 0xa6, 0x68, 0x19, 0x92, 0x54, 0x1d, 0x84, 0xbf, 0xb4, 0x9f, 0x20,
-	0x0c, 0x19, 0xb9, 0x05, 0xa3, 0xe7, 0x3a, 0xc2, 0xbf, 0xcb, 0x46, 0xed, 0xfc, 0xb2, 0x18, 0xfb,
-	0x7a, 0x59, 0xbc, 0xdd, 0xa4, 0xa2, 0xd5, 0x6b, 0xe8, 0x16, 0xeb, 0x54, 0x2c, 0xc6, 0x3b, 0x8c,
-	0x07, 0x3f, 0xeb, 0xdc, 0x7e, 0x53, 0x11, 0xa7, 0x5d, 0xc2, 0xf5, 0x03, 0xea, 0x88, 0xef, 0x97,
-	0xc5, 0xdc, 0x29, 0xee, 0xb4, 0x1f, 0x95, 0x23, 0xa5, 0xb2, 0xd9, 0x57, 0x45, 0xaf, 0x21, 0x2d,
-	0x93, 0x1d, 0xea, 0xf8, 0xb7, 0x3d, 0x63, 0x18, 0xbf, 0xbf, 0xc2, 0x62, 0x7f, 0x05, 0x29, 0x54,
-	0x36, 0x23, 0xcd, 0x50, 0x7f, 0x93, 0x10, 0xae, 0x7c, 0xff, 0xa7, 0xfa, 0x52, 0x28, 0xd0, 0x97,
-	0xa1, 0xbc, 0x89, 0x2e, 0x69, 0xe3, 0x53, 0x62, 0x87, 0x87, 0xe7, 0x3f, 0x18, 0x23, 0x28, 0xda,
-	0x84, 0xac, 0x65, 0x09, 0xef, 0x38, 0xf0, 0x8a, 0xf4, 0x7b, 0xb6, 0xfa, 0xff, 0x14, 0xaf, 0x04,
-	0x3e, 0x01, 0x2b, 0xf2, 0x0c, 0x3a, 0x1c, 0x7b, 0xb7, 0x95, 0xfb, 0xb3, 0x55, 0x7d, 0x8a, 0xd6,
-	0x48, 0x97, 0x39, 0xf6, 0xfc, 0xbf, 0x1a, 0x7f, 0xcb, 0xd4, 0x7d, 0xc8, 0x56, 0x2b, 0x53, 0xa4,
-	0x47, 0xdb, 0xcc, 0x31, 0xa1, 0xbb, 0x6f, 0x01, 0xfa, 0xc6, 0x47, 0x08, 0x16, 0xf6, 0x88, 0x63,
-	0x53, 0xa7, 0xb9, 0xed, 0x34, 0x24, 0x2f, 0x17, 0x43, 0x4b, 0xb0, 0x18, 0x60, 0xbb, 0x3d, 0xe1,
-	0x83, 0x1a, 0xfa, 0x0b, 0xe6, 0xc3, 0x6c, 0x87, 0x3a, 0xc4, 0xce, 0xc5, 0x25, 0x14, 0xf0, 0x4c,
-	0x72, 0x42, 0x5c, 0x91, 0x4b, 0xa0, 0x39, 0x48, 0xfb, 0x31, 0xb1, 0x73, 0x49, 0x94, 0x85, 0xd9,
-	0x8d, 0x06, 0x53, 0x49, 0x6a, 0x25, 0xf1, 0xe9, 0x63, 0x41, 0x33, 0x9e, 0x9f, 0x5f, 0x15, 0xb4,
-	0x8b, 0xab, 0x82, 0xf6, 0xed, 0xaa, 0xa0, 0xbd, 0xbf, 0x2e, 0xc4, 0x2e, 0xae, 0x0b, 0xb1, 0x2f,
-	0xd7, 0x85, 0xd8, 0xd1, 0xfd, 0x01, 0x13, 0xc8, 0xad, 0xad, 0xfb, 0x1f, 0xda, 0x70, 0x97, 0x15,
-	0xaf, 0x32, 0xf0, 0xf9, 0x55, 0x9e, 0x68, 0xa4, 0xd4, 0x17, 0xf4, 0xc1, 0xcf, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xc2, 0xed, 0x7b, 0x30, 0x99, 0x07, 0x00, 0x00,
+	// 916 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x95, 0xdd, 0x6e, 0x1b, 0x45,
+	0x14, 0xc7, 0xbd, 0xd8, 0x71, 0xec, 0xe3, 0xc6, 0xde, 0x4e, 0x12, 0x58, 0x05, 0xb0, 0x2d, 0x43,
+	0xa9, 0x8b, 0x14, 0xaf, 0x62, 0x84, 0x2a, 0x71, 0xd7, 0x58, 0xa4, 0x8d, 0x68, 0x9b, 0x68, 0x71,
+	0x6f, 0x22, 0xa1, 0x65, 0xbc, 0x3b, 0xb5, 0x47, 0x78, 0x77, 0xac, 0x9d, 0x71, 0xb4, 0xa9, 0xb8,
+	0xe2, 0x09, 0x78, 0x01, 0xee, 0x40, 0xe2, 0x51, 0x7a, 0xc1, 0x45, 0x2f, 0x11, 0x17, 0x11, 0x4a,
+	0xde, 0x80, 0x27, 0x40, 0xf3, 0xb1, 0xf6, 0xc6, 0x04, 0x2c, 0xd4, 0xab, 0x3d, 0x73, 0xce, 0xf9,
+	0x9f, 0x99, 0x33, 0xf3, 0xdb, 0x19, 0x68, 0x05, 0x09, 0xe3, 0x3c, 0x98, 0x60, 0x1a, 0xbb, 0xca,
+	0xf4, 0x95, 0xed, 0x8b, 0xb4, 0x37, 0x4b, 0x98, 0x60, 0xe8, 0xc3, 0x57, 0x44, 0x60, 0xe5, 0xeb,
+	0x29, 0x8b, 0x25, 0xa4, 0xb7, 0xd4, 0xec, 0xed, 0x8c, 0xd9, 0x98, 0xa9, 0x4c, 0x57, 0x5a, 0x5a,
+	0xb4, 0xb7, 0x1d, 0xb0, 0x28, 0x62, 0xb1, 0xab, 0x3f, 0xda, 0xd9, 0xf9, 0xa1, 0x04, 0x8d, 0xe3,
+	0x78, 0xc4, 0xe6, 0x71, 0x38, 0x4c, 0x4f, 0x71, 0x82, 0x23, 0x8e, 0xde, 0x85, 0x32, 0x27, 0x71,
+	0x48, 0x12, 0xc7, 0x6a, 0x5b, 0xdd, 0xaa, 0x67, 0x46, 0xe8, 0x13, 0x68, 0x68, 0xcb, 0x2c, 0x87,
+	0x86, 0xce, 0x3b, 0x6d, 0xab, 0x5b, 0xf4, 0xb6, 0xb4, 0x7b, 0x20, 0xbd, 0xc7, 0x21, 0x7a, 0x1f,
+	0xaa, 0x22, 0xf5, 0x59, 0x42, 0xc7, 0x34, 0x76, 0x8a, 0xaa, 0x44, 0x45, 0xa4, 0x27, 0x6a, 0x8c,
+	0xf6, 0xa1, 0x1a, 0x30, 0xd9, 0xcb, 0xc5, 0x8c, 0x38, 0xa5, 0xb6, 0xd5, 0xad, 0xf7, 0xed, 0x9e,
+	0x59, 0xd2, 0x80, 0xd1, 0x78, 0x78, 0x31, 0x23, 0x5e, 0x25, 0x30, 0x16, 0xda, 0x81, 0x0d, 0xcc,
+	0x39, 0x11, 0xce, 0x86, 0xaa, 0xa3, 0x07, 0xe8, 0x31, 0x94, 0x71, 0xc4, 0xe6, 0xb1, 0x70, 0xca,
+	0xd2, 0x7d, 0xe8, 0xbe, 0xbe, 0x6c, 0x15, 0xfe, 0xb8, 0x6c, 0xdd, 0x1f, 0x53, 0x31, 0x99, 0x8f,
+	0x64, 0x3d, 0x37, 0x60, 0x3c, 0x62, 0xdc, 0x7c, 0xf6, 0x79, 0xf8, 0x9d, 0x2b, 0xa7, 0xe4, 0xbd,
+	0x17, 0x34, 0x16, 0x9e, 0x91, 0xa3, 0x87, 0xe0, 0x50, 0xdd, 0xbd, 0x2f, 0x97, 0x3c, 0xe2, 0x24,
+	0x39, 0x27, 0xa1, 0x3f, 0xc1, 0x7c, 0xe2, 0x6c, 0xaa, 0x19, 0x77, 0x69, 0xb6, 0x3b, 0x27, 0x26,
+	0xfa, 0x04, 0xf3, 0x09, 0x7a, 0x0a, 0x1f, 0xdd, 0x26, 0x24, 0xa9, 0x20, 0x49, 0x8c, 0xa7, 0xfe,
+	0x84, 0xd0, 0xf1, 0x44, 0x38, 0x95, 0xb6, 0xd5, 0x2d, 0x79, 0xad, 0x7f, 0xd4, 0xf8, 0xd2, 0xe4,
+	0x3d, 0x51, 0x69, 0xe8, 0x73, 0x78, 0x2f, 0x57, 0x6d, 0x84, 0xa7, 0x53, 0x26, 0x7c, 0x1a, 0x87,
+	0x24, 0x75, 0xaa, 0x6a, 0x15, 0x3b, 0x8b, 0x0a, 0x87, 0x2a, 0x78, 0x2c, 0x63, 0xe8, 0x08, 0xda,
+	0x39, 0xd9, 0x4b, 0x1a, 0xe3, 0x29, 0x7d, 0x45, 0x42, 0x5f, 0x32, 0x91, 0xad, 0x00, 0xd4, 0x0a,
+	0x3e, 0x58, 0xe8, 0x8f, 0xb2, 0xac, 0x33, 0x22, 0xb0, 0x9e, 0xbe, 0xf3, 0x53, 0x09, 0xec, 0x93,
+	0xb9, 0xb8, 0x49, 0xc1, 0x1e, 0x54, 0x12, 0x12, 0x10, 0x7a, 0xbe, 0xe0, 0x60, 0x31, 0x46, 0x0f,
+	0xc0, 0xce, 0x6c, 0xcd, 0xc2, 0x71, 0x86, 0x42, 0x23, 0xf3, 0x67, 0x30, 0xdc, 0x38, 0xef, 0xe2,
+	0xda, 0xf3, 0x5e, 0x9e, 0x6c, 0xe9, 0xed, 0x4e, 0xf6, 0x00, 0x76, 0x99, 0x69, 0x49, 0x6e, 0x8e,
+	0xe0, 0xdc, 0x8f, 0x59, 0x1c, 0x10, 0x05, 0x52, 0xc9, 0x43, 0x6c, 0xd1, 0xef, 0x90, 0xf3, 0xe7,
+	0x32, 0xb2, 0x2a, 0x19, 0x63, 0xee, 0x4f, 0x69, 0x44, 0x35, 0x64, 0x37, 0x24, 0x8f, 0x31, 0x7f,
+	0x2a, 0x23, 0xb7, 0x49, 0x66, 0x09, 0x0d, 0x88, 0x81, 0xe7, 0xa6, 0xe4, 0x54, 0x46, 0x50, 0x17,
+	0xec, 0xbc, 0x44, 0xa1, 0x56, 0x51, 0xd9, 0xf5, 0x65, 0xb6, 0x62, 0xec, 0x21, 0x38, 0xf9, 0xcc,
+	0x5b, 0xb0, 0xd8, 0x5d, 0x2a, 0xf2, 0x5c, 0x3c, 0x87, 0x8f, 0xf3, 0xc2, 0x7f, 0xa5, 0x53, 0xb3,
+	0xd1, 0x5e, 0x16, 0xb9, 0x1d, 0xcf, 0xce, 0x2f, 0x16, 0x94, 0xbf, 0x16, 0x58, 0xcc, 0x39, 0x7a,
+	0x04, 0x65, 0xae, 0x2c, 0xc5, 0x44, 0xbd, 0xff, 0xa0, 0xf7, 0x9f, 0x57, 0x51, 0x6f, 0x10, 0x88,
+	0x54, 0x4b, 0x3d, 0x23, 0x44, 0xf7, 0xa0, 0xae, 0x2d, 0x3f, 0x22, 0x9c, 0xe3, 0x31, 0x51, 0xe8,
+	0x54, 0xbd, 0x2d, 0xed, 0x7d, 0xa6, 0x9d, 0xe8, 0x00, 0x76, 0xa6, 0x98, 0x8b, 0x17, 0xb3, 0x10,
+	0x0b, 0xe2, 0x0b, 0x1a, 0x11, 0x2e, 0x70, 0x34, 0x53, 0x0c, 0x15, 0xbd, 0xed, 0x65, 0x6c, 0x98,
+	0x85, 0x3a, 0xbf, 0x15, 0xe1, 0xce, 0x40, 0xce, 0xad, 0xe0, 0x1b, 0xa6, 0xc8, 0x81, 0xcd, 0x20,
+	0x21, 0x58, 0xb0, 0x0c, 0xe1, 0x6c, 0x28, 0xef, 0x15, 0xbd, 0x91, 0x7a, 0x6e, 0x3d, 0x40, 0xdf,
+	0x42, 0x55, 0xfd, 0x3b, 0x2f, 0x09, 0xe1, 0xfa, 0xc6, 0x39, 0x1c, 0xfc, 0x4f, 0x00, 0xff, 0xba,
+	0x6c, 0xd9, 0x17, 0x38, 0x9a, 0x7e, 0xd1, 0x59, 0x54, 0xea, 0x78, 0x15, 0x69, 0x1f, 0x11, 0xc2,
+	0xd1, 0x7d, 0x68, 0x24, 0x64, 0x8a, 0x2f, 0x48, 0xb8, 0xe8, 0xbe, 0xac, 0x0f, 0xdf, 0xb8, 0xb3,
+	0xf6, 0x8f, 0xa0, 0x16, 0x04, 0x22, 0xf5, 0xcd, 0x6e, 0x4b, 0x42, 0x6a, 0xfd, 0x7b, 0x6b, 0x76,
+	0xdb, 0xec, 0x34, 0x04, 0x8b, 0x5d, 0x47, 0x67, 0x70, 0x37, 0x77, 0x47, 0xcc, 0xd4, 0xbf, 0xad,
+	0xe8, 0xa9, 0xf5, 0x7b, 0x6b, 0xaa, 0xad, 0xbc, 0x0b, 0x5e, 0x83, 0xae, 0x3c, 0x14, 0xdf, 0x00,
+	0xca, 0x73, 0x66, 0x8a, 0x43, 0xbb, 0xd8, 0xad, 0xf5, 0xdd, 0x35, 0xc5, 0x57, 0xef, 0x1b, 0xcf,
+	0x66, 0x2b, 0x9e, 0x4f, 0xbf, 0x07, 0x58, 0xe2, 0x83, 0x10, 0xd4, 0x4f, 0x49, 0x1c, 0xd2, 0x78,
+	0x6c, 0xd6, 0x65, 0x17, 0xd0, 0x36, 0x34, 0x8c, 0x2f, 0x2b, 0x67, 0x5b, 0xe8, 0x2e, 0x6c, 0x65,
+	0xa3, 0x67, 0x34, 0x26, 0xa1, 0x5d, 0x94, 0x2e, 0x93, 0xe7, 0x91, 0x73, 0x92, 0x08, 0xbb, 0x84,
+	0xee, 0x40, 0x45, 0xdb, 0x24, 0xb4, 0x37, 0x50, 0x0d, 0x36, 0x1f, 0x8d, 0x98, 0x1a, 0x94, 0xf7,
+	0x4a, 0xbf, 0xfe, 0xdc, 0xb4, 0x0e, 0xbf, 0x7a, 0x7d, 0xd5, 0xb4, 0xde, 0x5c, 0x35, 0xad, 0x3f,
+	0xaf, 0x9a, 0xd6, 0x8f, 0xd7, 0xcd, 0xc2, 0x9b, 0xeb, 0x66, 0xe1, 0xf7, 0xeb, 0x66, 0xe1, 0xec,
+	0x20, 0x87, 0x82, 0x6c, 0x6d, 0x5f, 0xbf, 0xd4, 0x59, 0x97, 0x6e, 0xea, 0xe6, 0xde, 0x6f, 0x45,
+	0xc6, 0xa8, 0xac, 0x5e, 0xdb, 0xcf, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x51, 0x3b, 0x8c, 0x67,
+	0xda, 0x07, 0x00, 0x00,
 }
 
-func (m *InBoundTxParams) Marshal() (dAtA []byte, err error) {
+func (m *InboundTxParams) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -482,46 +509,73 @@ func (m *InBoundTxParams) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *InBoundTxParams) MarshalTo(dAtA []byte) (int, error) {
+func (m *InboundTxParams) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *InBoundTxParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *InboundTxParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.InBoundTXBallotIndex) > 0 {
-		i -= len(m.InBoundTXBallotIndex)
-		copy(dAtA[i:], m.InBoundTXBallotIndex)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.InBoundTXBallotIndex)))
+	if m.InboundTxFinalizedZetaHeight != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.InboundTxFinalizedZetaHeight))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x50
 	}
-	if m.InBoundTxFinalizedZetaHeight != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.InBoundTxFinalizedZetaHeight))
+	if len(m.InboundTxBallotIndex) > 0 {
+		i -= len(m.InboundTxBallotIndex)
+		copy(dAtA[i:], m.InboundTxBallotIndex)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.InboundTxBallotIndex)))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x4a
 	}
-	if m.InBoundTxObservedExternalHeight != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.InBoundTxObservedExternalHeight))
+	if m.InboundTxObservedExternalHeight != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.InboundTxObservedExternalHeight))
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.InboundTxObservedHash) > 0 {
+		i -= len(m.InboundTxObservedHash)
+		copy(dAtA[i:], m.InboundTxObservedHash)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.InboundTxObservedHash)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if len(m.Asset) > 0 {
+		i -= len(m.Asset)
+		copy(dAtA[i:], m.Asset)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.Asset)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.CoinType != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.CoinType))
 		i--
 		dAtA[i] = 0x20
 	}
-	if len(m.InBoundTxObservedHash) > 0 {
-		i -= len(m.InBoundTxObservedHash)
-		copy(dAtA[i:], m.InBoundTxObservedHash)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.InBoundTxObservedHash)))
+	if len(m.TxOrigin) > 0 {
+		i -= len(m.TxOrigin)
+		copy(dAtA[i:], m.TxOrigin)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.TxOrigin)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.SenderChain) > 0 {
-		i -= len(m.SenderChain)
-		copy(dAtA[i:], m.SenderChain)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.SenderChain)))
+	if m.SenderChainId != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.SenderChainId))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x10
 	}
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
@@ -533,7 +587,7 @@ func (m *InBoundTxParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *OutBoundTxParams) Marshal() (dAtA []byte, err error) {
+func (m *OutboundTxParams) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -543,68 +597,71 @@ func (m *OutBoundTxParams) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *OutBoundTxParams) MarshalTo(dAtA []byte) (int, error) {
+func (m *OutboundTxParams) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *OutBoundTxParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *OutboundTxParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.OutBoundTxObservedExternalHeight != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutBoundTxObservedExternalHeight))
+	if m.OutboundTxObservedExternalHeight != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutboundTxObservedExternalHeight))
 		i--
 		dAtA[i] = 0x50
 	}
-	if m.OutBoundTxFinalizedZetaHeight != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutBoundTxFinalizedZetaHeight))
+	if len(m.OutboundTxBallotIndex) > 0 {
+		i -= len(m.OutboundTxBallotIndex)
+		copy(dAtA[i:], m.OutboundTxBallotIndex)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutboundTxBallotIndex)))
 		i--
-		dAtA[i] = 0x48
+		dAtA[i] = 0x4a
 	}
-	if len(m.OutBoundTXBallotIndex) > 0 {
-		i -= len(m.OutBoundTXBallotIndex)
-		copy(dAtA[i:], m.OutBoundTXBallotIndex)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutBoundTXBallotIndex)))
+	if len(m.OutboundTxHash) > 0 {
+		i -= len(m.OutboundTxHash)
+		copy(dAtA[i:], m.OutboundTxHash)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutboundTxHash)))
 		i--
 		dAtA[i] = 0x42
 	}
-	if len(m.OutBoundTxGasPrice) > 0 {
-		i -= len(m.OutBoundTxGasPrice)
-		copy(dAtA[i:], m.OutBoundTxGasPrice)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutBoundTxGasPrice)))
+	if len(m.OutboundTxGasPrice) > 0 {
+		i -= len(m.OutboundTxGasPrice)
+		copy(dAtA[i:], m.OutboundTxGasPrice)
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutboundTxGasPrice)))
 		i--
 		dAtA[i] = 0x3a
 	}
-	if m.OutBoundTxGasLimit != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutBoundTxGasLimit))
+	if m.OutboundTxGasLimit != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutboundTxGasLimit))
 		i--
 		dAtA[i] = 0x30
 	}
-	if m.OutBoundTxTSSNonce != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutBoundTxTSSNonce))
+	if m.OutboundTxTssNonce != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.OutboundTxTssNonce))
 		i--
 		dAtA[i] = 0x28
 	}
-	if len(m.OutBoundTxHash) > 0 {
-		i -= len(m.OutBoundTxHash)
-		copy(dAtA[i:], m.OutBoundTxHash)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.OutBoundTxHash)))
-		i--
-		dAtA[i] = 0x22
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
 	}
-	if m.Broadcaster != 0 {
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.Broadcaster))
+	i--
+	dAtA[i] = 0x22
+	if m.CoinType != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.CoinType))
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.ReceiverChain) > 0 {
-		i -= len(m.ReceiverChain)
-		copy(dAtA[i:], m.ReceiverChain)
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(len(m.ReceiverChain)))
+	if m.ReceiverChainId != 0 {
+		i = encodeVarintCrossChainTx(dAtA, i, uint64(m.ReceiverChainId))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x10
 	}
 	if len(m.Receiver) > 0 {
 		i -= len(m.Receiver)
@@ -676,21 +733,23 @@ func (m *CrossChainTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.OutBoundTxParams != nil {
-		{
-			size, err := m.OutBoundTxParams.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
+	if len(m.OutboundTxParams) > 0 {
+		for iNdEx := len(m.OutboundTxParams) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OutboundTxParams[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
 			}
-			i -= size
-			i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x52
 		}
-		i--
-		dAtA[i] = 0x52
 	}
-	if m.InBoundTxParams != nil {
+	if m.InboundTxParams != nil {
 		{
-			size, err := m.InBoundTxParams.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.InboundTxParams.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -729,26 +788,6 @@ func (m *CrossChainTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x2a
-	{
-		size := m.ZetaMint.Size()
-		i -= size
-		if _, err := m.ZetaMint.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.ZetaBurnt.Size()
-		i -= size
-		if _, err := m.ZetaBurnt.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintCrossChainTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
 	if len(m.Index) > 0 {
 		i -= len(m.Index)
 		copy(dAtA[i:], m.Index)
@@ -777,7 +816,7 @@ func encodeVarintCrossChainTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *InBoundTxParams) Size() (n int) {
+func (m *InboundTxParams) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -787,28 +826,40 @@ func (m *InBoundTxParams) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	l = len(m.SenderChain)
+	if m.SenderChainId != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.SenderChainId))
+	}
+	l = len(m.TxOrigin)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	l = len(m.InBoundTxObservedHash)
+	if m.CoinType != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.CoinType))
+	}
+	l = len(m.Asset)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	if m.InBoundTxObservedExternalHeight != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.InBoundTxObservedExternalHeight))
-	}
-	if m.InBoundTxFinalizedZetaHeight != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.InBoundTxFinalizedZetaHeight))
-	}
-	l = len(m.InBoundTXBallotIndex)
+	l = m.Amount.Size()
+	n += 1 + l + sovCrossChainTx(uint64(l))
+	l = len(m.InboundTxObservedHash)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
+	}
+	if m.InboundTxObservedExternalHeight != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.InboundTxObservedExternalHeight))
+	}
+	l = len(m.InboundTxBallotIndex)
+	if l > 0 {
+		n += 1 + l + sovCrossChainTx(uint64(l))
+	}
+	if m.InboundTxFinalizedZetaHeight != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.InboundTxFinalizedZetaHeight))
 	}
 	return n
 }
 
-func (m *OutBoundTxParams) Size() (n int) {
+func (m *OutboundTxParams) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -818,36 +869,34 @@ func (m *OutBoundTxParams) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	l = len(m.ReceiverChain)
+	if m.ReceiverChainId != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.ReceiverChainId))
+	}
+	if m.CoinType != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.CoinType))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovCrossChainTx(uint64(l))
+	if m.OutboundTxTssNonce != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.OutboundTxTssNonce))
+	}
+	if m.OutboundTxGasLimit != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.OutboundTxGasLimit))
+	}
+	l = len(m.OutboundTxGasPrice)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	if m.Broadcaster != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.Broadcaster))
-	}
-	l = len(m.OutBoundTxHash)
+	l = len(m.OutboundTxHash)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	if m.OutBoundTxTSSNonce != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.OutBoundTxTSSNonce))
-	}
-	if m.OutBoundTxGasLimit != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.OutBoundTxGasLimit))
-	}
-	l = len(m.OutBoundTxGasPrice)
+	l = len(m.OutboundTxBallotIndex)
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	l = len(m.OutBoundTXBallotIndex)
-	if l > 0 {
-		n += 1 + l + sovCrossChainTx(uint64(l))
-	}
-	if m.OutBoundTxFinalizedZetaHeight != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.OutBoundTxFinalizedZetaHeight))
-	}
-	if m.OutBoundTxObservedExternalHeight != 0 {
-		n += 1 + sovCrossChainTx(uint64(m.OutBoundTxObservedExternalHeight))
+	if m.OutboundTxObservedExternalHeight != 0 {
+		n += 1 + sovCrossChainTx(uint64(m.OutboundTxObservedExternalHeight))
 	}
 	return n
 }
@@ -885,10 +934,6 @@ func (m *CrossChainTx) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	l = m.ZetaBurnt.Size()
-	n += 1 + l + sovCrossChainTx(uint64(l))
-	l = m.ZetaMint.Size()
-	n += 1 + l + sovCrossChainTx(uint64(l))
 	l = m.ZetaFees.Size()
 	n += 1 + l + sovCrossChainTx(uint64(l))
 	l = len(m.RelayedMessage)
@@ -899,13 +944,15 @@ func (m *CrossChainTx) Size() (n int) {
 		l = m.CctxStatus.Size()
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	if m.InBoundTxParams != nil {
-		l = m.InBoundTxParams.Size()
+	if m.InboundTxParams != nil {
+		l = m.InboundTxParams.Size()
 		n += 1 + l + sovCrossChainTx(uint64(l))
 	}
-	if m.OutBoundTxParams != nil {
-		l = m.OutBoundTxParams.Size()
-		n += 1 + l + sovCrossChainTx(uint64(l))
+	if len(m.OutboundTxParams) > 0 {
+		for _, e := range m.OutboundTxParams {
+			l = e.Size()
+			n += 1 + l + sovCrossChainTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -916,7 +963,7 @@ func sovCrossChainTx(x uint64) (n int) {
 func sozCrossChainTx(x uint64) (n int) {
 	return sovCrossChainTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
+func (m *InboundTxParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -939,10 +986,10 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: InBoundTxParams: wiretype end group for non-group")
+			return fmt.Errorf("proto: InboundTxParams: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: InBoundTxParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: InboundTxParams: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -978,10 +1025,10 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SenderChain", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SenderChainId", wireType)
 			}
-			var stringLen uint64
+			m.SenderChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -991,27 +1038,14 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.SenderChainId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SenderChain = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InBoundTxObservedHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TxOrigin", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1039,13 +1073,13 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InBoundTxObservedHash = string(dAtA[iNdEx:postIndex])
+			m.TxOrigin = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InBoundTxObservedExternalHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoinType", wireType)
 			}
-			m.InBoundTxObservedExternalHeight = 0
+			m.CoinType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1055,33 +1089,14 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.InBoundTxObservedExternalHeight |= uint64(b&0x7F) << shift
+				m.CoinType |= common.CoinType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InBoundTxFinalizedZetaHeight", wireType)
-			}
-			m.InBoundTxFinalizedZetaHeight = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCrossChainTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.InBoundTxFinalizedZetaHeight |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InBoundTXBallotIndex", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Asset", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1109,8 +1124,144 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InBoundTXBallotIndex = string(dAtA[iNdEx:postIndex])
+			m.Asset = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCrossChainTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundTxObservedHash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCrossChainTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InboundTxObservedHash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundTxObservedExternalHeight", wireType)
+			}
+			m.InboundTxObservedExternalHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCrossChainTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InboundTxObservedExternalHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundTxBallotIndex", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCrossChainTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InboundTxBallotIndex = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundTxFinalizedZetaHeight", wireType)
+			}
+			m.InboundTxFinalizedZetaHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCrossChainTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InboundTxFinalizedZetaHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCrossChainTx(dAtA[iNdEx:])
@@ -1132,7 +1283,7 @@ func (m *InBoundTxParams) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
+func (m *OutboundTxParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1155,10 +1306,10 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: OutBoundTxParams: wiretype end group for non-group")
+			return fmt.Errorf("proto: OutboundTxParams: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OutBoundTxParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: OutboundTxParams: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1194,10 +1345,10 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 			m.Receiver = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReceiverChain", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReceiverChainId", wireType)
 			}
-			var stringLen uint64
+			m.ReceiverChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1207,29 +1358,16 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.ReceiverChainId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReceiverChain = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Broadcaster", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoinType", wireType)
 			}
-			m.Broadcaster = 0
+			m.CoinType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1239,14 +1377,14 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Broadcaster |= uint64(b&0x7F) << shift
+				m.CoinType |= common.CoinType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1274,13 +1412,15 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OutBoundTxHash = string(dAtA[iNdEx:postIndex])
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxTSSNonce", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxTssNonce", wireType)
 			}
-			m.OutBoundTxTSSNonce = 0
+			m.OutboundTxTssNonce = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1290,16 +1430,16 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutBoundTxTSSNonce |= uint64(b&0x7F) << shift
+				m.OutboundTxTssNonce |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 6:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxGasLimit", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxGasLimit", wireType)
 			}
-			m.OutBoundTxGasLimit = 0
+			m.OutboundTxGasLimit = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1309,14 +1449,14 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutBoundTxGasLimit |= uint64(b&0x7F) << shift
+				m.OutboundTxGasLimit |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxGasPrice", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxGasPrice", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1344,11 +1484,11 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OutBoundTxGasPrice = string(dAtA[iNdEx:postIndex])
+			m.OutboundTxGasPrice = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTXBallotIndex", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxHash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1376,13 +1516,13 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OutBoundTXBallotIndex = string(dAtA[iNdEx:postIndex])
+			m.OutboundTxHash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxFinalizedZetaHeight", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxBallotIndex", wireType)
 			}
-			m.OutBoundTxFinalizedZetaHeight = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1392,16 +1532,29 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutBoundTxFinalizedZetaHeight |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCrossChainTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OutboundTxBallotIndex = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 10:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxObservedExternalHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxObservedExternalHeight", wireType)
 			}
-			m.OutBoundTxObservedExternalHeight = 0
+			m.OutboundTxObservedExternalHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowCrossChainTx
@@ -1411,7 +1564,7 @@ func (m *OutBoundTxParams) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.OutBoundTxObservedExternalHeight |= uint64(b&0x7F) << shift
+				m.OutboundTxObservedExternalHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1650,74 +1803,6 @@ func (m *CrossChainTx) Unmarshal(dAtA []byte) error {
 			}
 			m.Index = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ZetaBurnt", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCrossChainTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ZetaBurnt.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ZetaMint", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCrossChainTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCrossChainTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ZetaMint.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ZetaFees", wireType)
@@ -1822,7 +1907,7 @@ func (m *CrossChainTx) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 9:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InBoundTxParams", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InboundTxParams", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1849,16 +1934,16 @@ func (m *CrossChainTx) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.InBoundTxParams == nil {
-				m.InBoundTxParams = &InBoundTxParams{}
+			if m.InboundTxParams == nil {
+				m.InboundTxParams = &InboundTxParams{}
 			}
-			if err := m.InBoundTxParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.InboundTxParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 10:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutBoundTxParams", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OutboundTxParams", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1885,10 +1970,8 @@ func (m *CrossChainTx) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.OutBoundTxParams == nil {
-				m.OutBoundTxParams = &OutBoundTxParams{}
-			}
-			if err := m.OutBoundTxParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.OutboundTxParams = append(m.OutboundTxParams, &OutboundTxParams{})
+			if err := m.OutboundTxParams[len(m.OutboundTxParams)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

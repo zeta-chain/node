@@ -1,25 +1,31 @@
 package zetaclient
 
 import (
+	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcutil"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	math2 "math"
 	"math/big"
 	"os"
+	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcutil"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 var _ ChainClient = &BitcoinChainClient{}
@@ -27,103 +33,141 @@ var _ ChainClient = &BitcoinChainClient{}
 // Chain configuration struct
 // Filled with above constants depending on chain
 type BitcoinChainClient struct {
-	chain       common.Chain
-	endpoint    string
-	rpcClient   *rpcclient.Client
-	zetaClient  *ZetaCoreBridge
-	Tss         TSSSigner
-	lastBlock   uint64
-	confCount   uint64 // must wait this many blocks to be considered "confirmed"
-	BlockTime   uint64 // block time in seconds
-	txWatchList map[ethcommon.Hash]string
-	mu          *sync.Mutex
-	//db          *leveldb.DB
-	metrics *metricsPkg.Metrics
-	stop    chan struct{}
-	logger  zerolog.Logger
+	*ChainMetrics
+
+	chain        common.Chain
+	endpoint     string
+	rpcClient    *rpcclient.Client
+	zetaClient   *ZetaCoreBridge
+	Tss          TSSSigner
+	lastBlock    int64
+	confCount    int64                                   // must wait this many blocks to be considered "confirmed"
+	BlockTime    uint64                                  // block time in seconds
+	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
+	mu           *sync.Mutex
+	utxos        []btcjson.ListUnspentResult
+	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
+	stop         chan struct{}
+	logger       zerolog.Logger
 }
+
+const (
+	minConfirmations = 1
+	chunkSize        = 500
+)
 
 // Return configuration based on supplied target chain
 func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainClient, error) {
-	ob := BitcoinChainClient{}
+	ob := BitcoinChainClient{
+		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
 	if !chain.IsBitcoinChain() {
-		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain)
+		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}
 	ob.logger = log.With().Str("chain", chain.String()).Logger()
 	ob.zetaClient = bridge
-	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.metrics = metrics
 	ob.confCount = 0
+	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
-	ob.endpoint = config.Chains[chain.String()].Endpoint
+	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
+	db, err := leveldb.OpenFile(path, nil)
+	if err != nil {
+		return nil, err
+	}
+	ob.pendingUtxos = db
+	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
-	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain, ob.endpoint)
-
+	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
-		User:         "user",
-		Pass:         "pass",
+		User:         config.BitcoinConfig.RPCUsername,
+		Pass:         config.BitcoinConfig.RPCPassword,
 		HTTPPostMode: true,
 		DisableTLS:   true,
+		Params:       config.BitcoinConfig.RPCParams,
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating rpc client: %s", err)
 	}
 	ob.rpcClient = client
+	err = client.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+	}
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return nil, fmt.Errorf("error getting block count: %s", err)
 	}
 
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain, bn)
+	ob.logger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
 
 	envvar := ob.chain.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
 		ob.logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == "latest" {
-			ob.SetLastBlockHeight(uint64(bn))
+		if scanFromBlock == clienttypes.EnvVarLatest {
+			ob.SetLastBlockHeight(bn)
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			ob.SetLastBlockHeight(uint64(scanFromBlockInt))
+			ob.SetLastBlockHeight(scanFromBlockInt)
 		}
+	}
+	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
+		ob.SetLastBlockHeight(100)
 	}
 
 	return &ob, nil
 }
 
 func (ob *BitcoinChainClient) Start() {
+	ob.logger.Info().Msgf("BitcoinChainClient is starting")
 	go ob.WatchInTx()
+	go ob.observeOutTx()
+	go ob.WatchUTXOS()
+	go ob.WatchGasPrice()
 }
 
 func (ob *BitcoinChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain)
+	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	//
-	//ob.logger.Info().Msg("closing ob.db")
-	//err := ob.db.Close()
+	//ob.Logger.Info().Msg("closing ob.pendingUtxos")
+	//err := ob.pendingUtxos.Close()
 	//if err != nil {
-	//	ob.logger.Error().Err(err).Msg("error closing db")
+	//	ob.Logger.Error().Err(err).Msg("error closing pendingUtxos")
 	//}
 	//
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain)
+	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeight(block uint64) {
-	atomic.StoreUint64(&ob.lastBlock, block)
+func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
+	if block < 0 {
+		panic("lastBlock is negative")
+	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	atomic.StoreInt64(&ob.lastBlock, block)
 }
 
-func (ob *BitcoinChainClient) GetLastBlockHeight() uint64 {
-	return atomic.LoadUint64(&ob.lastBlock)
+func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
+	height := atomic.LoadInt64(&ob.lastBlock)
+	if height < 0 {
+		panic("lastBlock is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
+	return height
 }
 
 // TODO
@@ -132,7 +176,8 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ticker := time.NewTicker(30 * time.Second)
+	ob.logger.Info().Msgf("WatchInTx to TSS Address %s", ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress())
+	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -150,17 +195,26 @@ func (ob *BitcoinChainClient) WatchInTx() {
 
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
+	permssions, err := ob.zetaClient.GetInboundPermissions()
+	if err != nil {
+		return err
+	}
+	if !permssions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
+	}
 	lastBN := ob.GetLastBlockHeight()
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
-	currentBlock := uint64(cnt)
+	if cnt < 0 || cnt >= math2.MaxInt64 {
+		return fmt.Errorf("block count is out of range: %d", cnt)
+	}
 	// query incoming gas asset
-	if currentBlock > lastBN {
+	if cnt > lastBN {
 		bn := lastBN + 1
-		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, currentBlock, lastBN)
-		hash, err := ob.rpcClient.GetBlockHash(int64(bn))
+		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
+		hash, err := ob.rpcClient.GetBlockHash(bn)
 		if err != nil {
 			return err
 		}
@@ -169,29 +223,41 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		if err != nil {
 			return err
 		}
+		ob.logger.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
+		if len(block.Tx) > 1 {
+			for idx, tx := range block.Tx {
+				fmt.Printf("tx %d: %s\n", idx, tx.Txid)
+				for vidx, vout := range tx.Vout {
+					fmt.Printf("  vout %d\n", vidx)
+					fmt.Printf("    value: %v\n", vout.Value)
+					fmt.Printf("    scriptPubKey: %v\n", vout.ScriptPubKey.Hex)
+				}
+			}
+		}
 
 		tssAddress := ob.Tss.BTCAddress()
 		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger)
 
 		for _, inTx := range inTxs {
-			//ob.logger.Info().Msgf("incoming tx %v", inTx)
+			//ob.Logger.Info().Msgf("incoming tx %v", inTx)
 			amount := big.NewFloat(inTx.Value)
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)
 			message := hex.EncodeToString(inTx.MemoBytes)
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
-				ob.chain.String(),
+				ob.chain.ChainId,
 				inTx.FromAddress,
-				"ZETA",
-				amountInt.String(),
-				amountInt.String(),
+				inTx.FromAddress,
+				common.ZetaChain().ChainId,
+				math.NewUintFromBigInt(amountInt),
 				message,
 				inTx.TxHash,
 				inTx.BlockNumber,
 				0,
 				common.CoinType_Gas,
 				PostSendEVMGasLimit,
+				"",
 			)
 			if err != nil {
 				ob.logger.Error().Err(err).Msg("error posting to zeta core")
@@ -200,23 +266,60 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
-		ob.SetLastBlockHeight((bn))
+		ob.SetLastBlockHeight(bn)
 	}
 
 	return nil
 }
 
-// TODO
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, fromOrToZeta bool) (bool, bool, error) {
+// returns isIncluded, isConfirmed, Error
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType) (bool, bool, error) {
+	chain := ob.chain.ChainId
+	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
+	ob.logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
+
+	res, found := ob.submittedTx[outTxID]
+	if !found {
+		return false, false, nil
+	}
+	if res.Confirmations == 0 {
+		return true, false, nil
+	} else if res.Confirmations > 0 { // FIXME: use configured block confirmation
+		amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
+		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+			sendHash,
+			res.TxID,
+			uint64(res.BlockIndex),
+			amountInSat,
+			common.ReceiveStatus_Success,
+			ob.chain,
+			nonce,
+			common.CoinType_Gas,
+		)
+		if err != nil {
+			ob.logger.Error().Err(err).Msgf("error posting to zeta core")
+		} else {
+			ob.logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+		}
+		return true, true, nil
+	}
 	return false, false, nil
 }
 
+// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
+// by the client to easily identify the cctx outbound command
 func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
+	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
+	if err != nil {
+		ob.logger.Error().Err(err).Msgf("error posting nonce to zeta core")
+		return err
+	}
+	ob.logger.Info().Msgf("PostNonce zeta tx: %s", zetaHash)
 	return nil
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	gasTicker := time.NewTicker(60 * time.Second)
+	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
 		select {
 		case <-gasTicker.C:
@@ -233,14 +336,38 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	//
-	//
-	//_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
-	//if err != nil {
-	//	ob.logger.Err(err).Msg("PostGasPrice:")
-	//	return err
-	//}
-
+	if ob.chain.ChainId == 18444 { //bitcoin regtest
+		bn, err := ob.rpcClient.GetBlockCount()
+		if err != nil {
+			return err
+		}
+		_, err = ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		if err != nil {
+			ob.logger.Err(err).Msg("PostGasPrice:")
+			return err
+		}
+		return nil
+	}
+	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	if err != nil {
+		return err
+	}
+	if feeResult.Errors != nil || feeResult.FeeRate == nil {
+		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
+	}
+	gasPrice := big.NewFloat(0)
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
+	bn, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return err
+	}
+	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	if err != nil {
+		ob.logger.Err(err).Msg("PostGasPrice:")
+		return err
+	}
+	_ = feeResult
 	return nil
 }
 
@@ -272,7 +399,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 				if err != nil {
 					continue
 				}
-				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.TestNet3Params)
+				wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 				if err != nil {
 					continue
 				}
@@ -299,7 +426,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					}
 					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
 					if err != nil {
-						logger.Warn().Err(err).Msg("error b64 decoding memo")
+						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", (memoStr))
 						continue
 					}
 					memo = memoBytes
@@ -322,7 +449,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						break
 					}
 					hash := btcutil.Hash160(pkBytes)
-					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, &chaincfg.TestNet3Params)
+					addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
 					if err != nil {
 						logger.Warn().Msgf("error decoding pubkey hash: %s", err)
 						break
@@ -341,4 +468,151 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 		}
 	}
 	return inTxs
+}
+
+func (ob *BitcoinChainClient) WatchUTXOS() {
+	ob.logger.Info().Msgf("WatchUTXOS started")
+	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			err := ob.fetchUTXOS()
+			if err != nil {
+				ob.logger.Error().Err(err).Msg("error fetching btc utxos")
+				continue
+			}
+		case <-ob.stop:
+			ob.logger.Info().Msg("WatchUTXOS stopped")
+			return
+		}
+	}
+}
+
+func (ob *BitcoinChainClient) fetchUTXOS() error {
+	// get the current block height.
+	bh, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return fmt.Errorf("btc: error getting block height : %v", err)
+	}
+	maxConfirmations := int(bh)
+
+	// List unspent.
+	tssAddr := ob.Tss.BTCAddress()
+	address, err := btcutil.DecodeAddress(tssAddr, config.BitconNetParams)
+	if err != nil {
+		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
+	}
+	addresses := []btcutil.Address{address}
+	var utxos []btcjson.ListUnspentResult
+
+	// populate utxos array
+	for i := minConfirmations; i < maxConfirmations; i += chunkSize {
+		unspents, err := ob.rpcClient.ListUnspentMinMaxAddresses(i, i+chunkSize, addresses)
+		if err != nil {
+			return err
+		}
+		utxos = append(utxos, unspents...)
+		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
+		//for idx, utxo := range unspents {
+		//	fmt.Printf("utxo %d\n", idx)
+		//	fmt.Printf("  txid: %s\n", utxo.TxID)
+		//	fmt.Printf("  address: %s\n", utxo.Address)
+		//	fmt.Printf("  amount: %f\n", utxo.Amount)
+		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
+		//}
+	}
+	// filter pending
+	var filtered []btcjson.ListUnspentResult
+	for _, utxo := range utxos {
+		pending, err := ob.isPending(utxoKey(utxo))
+		if err != nil {
+			return fmt.Errorf("btc: error accessing pending utxos pendingUtxos: %v", err.Error())
+		}
+		if !pending {
+			filtered = append(filtered, utxo)
+		}
+	}
+	// sort by value
+	sort.Slice(filtered, func(i, j int) bool {
+		return filtered[i].Amount < filtered[j].Amount
+	})
+	ob.utxos = filtered
+	// remove completed from pending pendingUtxos
+	ob.housekeepPending()
+	return nil
+}
+
+func (ob *BitcoinChainClient) housekeepPending() {
+	// create map with utxos
+	utxosMap := make(map[string]bool, len(ob.utxos))
+	for _, utxo := range ob.utxos {
+		utxosMap[utxoKey(utxo)] = true
+	}
+
+	// traverse pending pendingUtxos
+	var removed int64
+	iter := ob.pendingUtxos.NewIterator(nil, nil)
+	for iter.Next() {
+		key := iter.Key()
+		// if key not in utxos map, remove from pendingUtxos
+		if !utxosMap[string(key)] {
+			if err := ob.pendingUtxos.Delete(key, nil); err != nil {
+				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
+			}
+		}
+	}
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		ob.logger.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
+	}
+	if removed > 0 {
+		ob.logger.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
+	}
+}
+
+func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
+	if _, err := ob.pendingUtxos.Get([]byte(utxoKey), nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func (ob *BitcoinChainClient) observeOutTx() {
+	ticker := time.NewTicker(2 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			if err != nil {
+				ob.logger.Error().Err(err).Msg("error GetAllOutTxTrackerByChain")
+				continue
+			}
+			for _, tracker := range trackers {
+				outTxID := fmt.Sprintf("%d-%d", tracker.ChainId, tracker.Nonce)
+				ob.logger.Info().Msgf("tracker outTxID: %s", outTxID)
+				for _, txHash := range tracker.HashList {
+					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
+					if err != nil {
+						ob.logger.Error().Err(err).Msg("error NewHashFromStr")
+						continue
+					}
+					getTxResult, err := ob.rpcClient.GetTransaction(hash)
+					if err != nil {
+						ob.logger.Warn().Err(err).Msg("error GetTransaction")
+						continue
+					}
+					if getTxResult.Confirmations >= 0 {
+						ob.submittedTx[outTxID] = *getTxResult
+					}
+				}
+			}
+		case <-ob.stop:
+			ob.logger.Info().Msg("observeOutTx stopped")
+			return
+		}
+	}
 }

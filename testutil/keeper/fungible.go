@@ -16,6 +16,7 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	"testing"
 )
 
@@ -25,8 +26,8 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
-	stateStore.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, sdk.StoreTypeMemory, nil)
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
@@ -42,6 +43,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	bankkeeper := bankkeeper2.BaseKeeper{}
 	authkeeper := authkeeper2.AccountKeeper{}
 	evmKeeper := evmkeeper.Keeper{}
+	zetaObserverKeeper := zetaObserverModuleKeeper.Keeper{}
 	keeper := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
 		storeKey,
@@ -50,6 +52,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		authkeeper,
 		evmKeeper,
 		bankkeeper,
+		zetaObserverKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
