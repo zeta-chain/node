@@ -143,8 +143,8 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return true;
     }
 
-    // returns the ZRC4 address for gas on the same chain of this ZRC4,
-    // and calculate the gas fee for withdraw()
+    // returns the ZRC20 address for gas on the same chain of this ZRC20,
+    // and calculates the gas fee for withdraw()
     function withdrawGasFee() public override view returns (address,uint256) {
         address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC20ByChainId(CHAIN_ID);
         require(gasZRC20 != address(0), "gas coin not set");
@@ -155,7 +155,7 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     }
 
     // this function causes cctx module to send out outbound tx to the outbound chain
-    // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
+    // this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
         (address gasZRC20, uint256 gasFee)= withdrawGasFee();
         require(IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE), "transfer gas fee failed");
