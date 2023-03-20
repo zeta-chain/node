@@ -104,6 +104,7 @@ jobs:
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
         cd contrib/localnet
+        docker compose down || echo "not running or error"
         docker compose build zetacore0 eth && docker compose build orchestrator
         docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
