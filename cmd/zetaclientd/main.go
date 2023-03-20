@@ -15,7 +15,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/app"
 )
 
@@ -50,10 +49,12 @@ func SetupConfigForTest() {
 
 }
 
-func initLogLevel(debug bool) {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if debug {
-		log.Info().Msgf("zerolog global log level: DEBUG")
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
+func InitLogger(level zerolog.Level) zerolog.Logger {
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+		Level(level).
+		With().
+		Timestamp().
+		Logger().
+		Sample(&zerolog.BasicSampler{N: 5})
+	return logger
 }

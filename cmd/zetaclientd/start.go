@@ -32,41 +32,33 @@ var StartCmd = &cobra.Command{
 
 var startArgs = startArguments{}
 
-type startArguments struct {
-	debug bool
-}
+type startArguments struct{}
 
 func init() {
 	RootCmd.AddCommand(StartCmd)
-	StartCmd.Flags().BoolVar(&startArgs.debug, "debug", false, "debug mode: lower zerolog level to DEBUG")
 }
 
 func start(_ *cobra.Command, _ []string) error {
 	setHomeDir()
 	SetupConfigForTest()
-	initLogLevel(startArgs.debug)
-
 	//Load Config file given path
 	configData, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
 		return err
 	}
-
+	log.Logger = InitLogger(configData.LogLevel)
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
-
+	log.Info().Msgf("ZetaCore is ready")
 	// first signer & bridge
 
 	bridge1, done := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
 	if done {
 		return nil
 	}
+	log.Debug().Msgf("ZetaBridge is ready")
 
 	bridge1.SetAccountNumber(common.ObserverGranteeKey)
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("Unable to set account number for observer key :" + err.Error())
-	//	return err
-	//}
 
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
 		bridge1.GetKeys().GetAddress(common.ObserverGranteeKey))
@@ -185,7 +177,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 func waitForZetaCore(configData *config.Config) {
 	// wait until zetacore is up
-	log.Info().Msg("Waiting for ZetaCore to open 9090 port...")
+	log.Debug().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
 			fmt.Sprintf("%s:9090", configData.ZetaCoreURL),
@@ -198,7 +190,6 @@ func waitForZetaCore(configData *config.Config) {
 			break
 		}
 	}
-	log.Info().Msgf("ZetaCore to open 9090 port...")
 }
 
 func initPeers(peer string) (p2p.AddrList, error) {

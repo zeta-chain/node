@@ -4,6 +4,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	common2 "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 )
 
@@ -45,6 +46,7 @@ type Config struct {
 	ValidatorName string
 	Peer          string
 	LogConsole    bool
+	LogLevel      zerolog.Level
 	PreParamsPath string
 	KeygenBlock   int64
 	ChainID       string

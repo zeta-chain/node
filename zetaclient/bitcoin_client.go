@@ -410,7 +410,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					}
 					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
 					if err != nil {
-						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", (memoStr))
+						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", memoStr)
 						continue
 					}
 					memo = memoBytes
@@ -496,7 +496,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
-		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
+		ob.logger.Debug().Msgf("btc: fetched %d utxos", len(unspents))
 		//for idx, utxo := range unspents {
 		//	fmt.Printf("utxo %d\n", idx)
 		//	fmt.Printf("  txid: %s\n", utxo.TxID)
