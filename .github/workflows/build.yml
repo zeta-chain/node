@@ -151,11 +151,6 @@ jobs:
         zetavisor_version: "zetavisor-v0.1.3"
         workspace_dir: "${{ env.WORKSPACE_DIR }}"
 
-    - name: install awscli
-      uses: ./.github/actions/install-awscli
-      with:
-        download_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
-
     - uses: actions/download-artifact@v3
       with:
         name: binaries-${{ github.sha }}
@@ -168,10 +163,10 @@ jobs:
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Debug step
+    - name: Binary Docker Test
       run: |
-        pwd
-        ls -lah ./
+        echo "Test binary version to see if it runs in docker"
+        ./zetacored version
 
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
