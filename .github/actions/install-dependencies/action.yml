@@ -20,6 +20,11 @@ runs:
 
     - uses: chrisdickinson/setup-yq@latest
 
+    - id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@v1
+      with:
+        version: 2
+
     - name: Dependencies.
       shell: bash
       run: |
