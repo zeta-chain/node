@@ -1,5 +1,5 @@
 name: 'INSTALL:DEPENDENCIES'
-description: 'Install Dependencies for Running Jobs.'
+description: 'Install Dependencies for Running Jobs'
 inputs:
   github_token:
     description: "github token to use to call the api"
