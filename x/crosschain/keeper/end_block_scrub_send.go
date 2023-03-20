@@ -37,12 +37,13 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 		k.cdc.MustUnmarshal(iterator.Value(), &cctx)
 		// if the status of send is pending, which means Finalized/Revert
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			if ctx.BlockHeight()-int64(cctx.InboundTxParams.InboundTxFinalizedZetaHeight) > 100 { // stuck send
-				var chainID int64
+			if uint64(ctx.BlockHeight()) <= cctx.InboundTxParams.InboundTxFinalizedZetaHeight { // not stuck send
+				continue
+			}
+			if uint64(ctx.BlockHeight())-cctx.InboundTxParams.InboundTxFinalizedZetaHeight > 100 { // stuck send
 				currentOutTxParam := cctx.GetCurrentOutTxParam()
-				chainID = currentOutTxParam.ReceiverChainId
-
-				gasPrice, isFound := k.GetGasPrice(ctx, chainID)
+				receiverChainID := currentOutTxParam.ReceiverChainId
+				gasPrice, isFound := k.GetGasPrice(ctx, receiverChainID)
 				if !isFound {
 					continue
 				}
@@ -67,7 +68,7 @@ func (k Keeper) ScrubUtility(ctx sdk.Context, store sdk.KVStore, p []byte) {
 				currentOutTxParam.OutboundTxGasPrice = newGasPrice.String()
 				// No need to migrate as this function does not change the status of Send
 				k.SetCrossChainTx(ctx, cctx)
-				EmitCCTXScrubbed(ctx, cctx, chainID, oldGasPrice.String(), newGasPrice.String())
+				EmitCCTXScrubbed(ctx, cctx, receiverChainID, oldGasPrice.String(), newGasPrice.String())
 			}
 		}
 	}

@@ -62,14 +62,14 @@ func start(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	bridge1.SetAccountNumber(common.ObserverGranteeKey)
+	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
 	//if err != nil {
 	//	log.Fatal().Err(err).Msg("Unable to set account number for observer key :" + err.Error())
 	//	return err
 	//}
 
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
-		bridge1.GetKeys().GetAddress(common.ObserverGranteeKey))
+		bridge1.GetKeys().GetAddress(common.ZetaClientGranteeKey))
 
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
 	if err != nil {
@@ -245,7 +245,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			log.Error().Err(err).Msg("GetZetaBlockHeight error")
 			return
 		}
-		if int64(bn)+3 > height {
+		if bn+3 > height {
 			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", height, bn)
 			return
 		}
@@ -265,7 +265,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 				log.Error().Err(err).Msg("GetZetaBlockHeight error")
 				return
 			}
-			if int64(bn) == height {
+			if bn == height {
 				break
 			}
 		}

@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -77,7 +76,7 @@ func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signer
 func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	cliDir := zetaCoreHome
 	if len(zetaCoreHome) == 0 {
-		return nil, errors.New(fmt.Sprintf("zetaCoreHome is empty"))
+		return nil, fmt.Errorf("zetaCoreHome is empty")
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!

@@ -25,9 +25,9 @@ func CmdLastZetaHeight() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryLastMetaHeightRequest{}
+			params := &types.QueryLastZetaHeightRequest{}
 
-			res, err := queryClient.LastMetaHeight(cmd.Context(), params)
+			res, err := queryClient.LastZetaHeight(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

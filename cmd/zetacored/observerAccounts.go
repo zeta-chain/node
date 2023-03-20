@@ -46,9 +46,9 @@ func AddObserverAccountsCmd() *cobra.Command {
 				}
 			}
 			// Generate observer mappers for each chain
-			for chainId, observers := range observersforChain {
+			for chainID, observers := range observersforChain {
 				observers = removeDuplicate(observers)
-				chain := common.GetChainFromChainID(chainId)
+				chain := common.GetChainFromChainID(chainID)
 				mapper := types.ObserverMapper{
 					ObserverChain: chain,
 					ObserverList:  observers,

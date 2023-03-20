@@ -30,8 +30,8 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 		return "", err
 	}
 
-	if int64(blockHeight) > b.blockHeight {
-		b.blockHeight = int64(blockHeight)
+	if blockHeight > b.blockHeight {
+		b.blockHeight = blockHeight
 		accountNumber, seqNumber, err := b.GetAccountNumberAndSequenceNumber(authzSigner.KeyType)
 		if err != nil {
 			return "", err
@@ -71,7 +71,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	// broadcast to a Tendermint node
 	commit, err := ctx.BroadcastTxSync(txBytes)
 	if err != nil {
-		b.logger.Error().Err(err).Msgf("fail to broadcast tx", err)
+		b.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
 		return "", err
 	}
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero

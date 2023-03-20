@@ -51,7 +51,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 			InboundTxObservedExternalHeight: uint64(i),
 			InboundTxFinalizedZetaHeight:    uint64(i),
 		}
-		items[i].OutboundTxParams = []*types.OutboundTxParams{&types.OutboundTxParams{
+		items[i].OutboundTxParams = []*types.OutboundTxParams{{
 			Receiver:                         fmt.Sprintf("%d", i),
 			ReceiverChainId:                  int64(i),
 			OutboundTxHash:                   fmt.Sprintf("%d", i),

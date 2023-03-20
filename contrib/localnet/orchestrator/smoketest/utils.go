@@ -6,10 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
