@@ -21,7 +21,7 @@ var signers map[string]AuthZSigner
 func init() {
 	signersList := make(map[string]AuthZSigner)
 	for _, tx := range crosschaintypes.GetAllAuthzTxTypes() {
-		signersList[tx] = AuthZSigner{KeyType: common.ObserverGranteeKey}
+		signersList[tx] = AuthZSigner{KeyType: common.ZetaClientGranteeKey}
 	}
 	signers = signersList
 }
@@ -34,6 +34,6 @@ func SetupAuthZSignerList(granter string, grantee sdk.AccAddress) {
 	}
 }
 
-func GetSigner(msgUrl string) AuthZSigner {
-	return signers[msgUrl]
+func GetSigner(msgURL string) AuthZSigner {
+	return signers[msgURL]
 }

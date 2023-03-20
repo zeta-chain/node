@@ -159,8 +159,8 @@ service Query {
 	}
 
 	// Queries a list of lastMetaHeight items.
-	rpc LastMetaHeight(QueryLastMetaHeightRequest) returns (QueryLastMetaHeightResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/lastMetaHeight";
+	rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
 	}
 
 }
@@ -358,11 +358,11 @@ message QueryAllNodeAccountResponse {
 	repeated NodeAccount NodeAccount = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryLastMetaHeightRequest {
+message QueryLastZetaHeightRequest {
 }
 
-message QueryLastMetaHeightResponse {
-	uint64 Height = 1;
+message QueryLastZetaHeightResponse {
+	int64 Height = 1;
 }
 
 message QueryConvertGasToZetaRequest {

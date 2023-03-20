@@ -103,9 +103,9 @@ func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.L
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetZetaBlockHeight() (uint64, error) {
+func (b *ZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.LastMetaHeight(context.Background(), &types.QueryLastMetaHeightRequest{})
+	resp, err := client.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
 	if err != nil {
 		return 0, err
 	}

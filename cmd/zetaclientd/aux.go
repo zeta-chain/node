@@ -22,7 +22,7 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 	signerPass := "password"
 	chainIP := config.ZetaCoreURL
 
-	kb, err := zetaclient.GetKeyringKeybase([]common.KeyType{common.ObserverGranteeKey, common.TssSignerKey}, chainHomeFolder, signerName, signerPass)
+	kb, err := zetaclient.GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey, common.TssSignerKey}, chainHomeFolder, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		return nil, true
@@ -33,7 +33,7 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 		return nil, true
 	}
 	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, signerName, signerPass)
-	authzSignerName := zetaclient.GetGranteeKeyName(common.ObserverGranteeKey, signerName)
+	authzSignerName := zetaclient.GetGranteeKeyName(common.ZetaClientGranteeKey, signerName)
 	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, authzSignerName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("NewZetaCoreBridge")

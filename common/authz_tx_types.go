@@ -16,13 +16,13 @@ func (t TxType) String() string {
 type KeyType string
 
 const (
-	TssSignerKey        KeyType = "tss_signer"
-	ValidatorGranteeKey KeyType = "validator_grantee"
-	ObserverGranteeKey  KeyType = "zetaclient_grantee"
+	TssSignerKey         KeyType = "tss_signer"
+	ValidatorGranteeKey  KeyType = "validator_grantee"
+	ZetaClientGranteeKey KeyType = "zetaclient_grantee"
 )
 
 func GetAllKeyTypes() []KeyType {
-	return []KeyType{ValidatorGranteeKey, ObserverGranteeKey, TssSignerKey}
+	return []KeyType{ValidatorGranteeKey, ZetaClientGranteeKey, TssSignerKey}
 }
 
 func (k KeyType) String() string {

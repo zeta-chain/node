@@ -49,6 +49,9 @@ func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	if msg.OutTxChain < 0 {
+		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
+	}
 	return nil
 }
 
