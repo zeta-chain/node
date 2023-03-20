@@ -81,6 +81,25 @@ jobs:
     - name: install-docker-compose
       uses: ./.github/actions/install-docker-compose
 
+    - name: Install Docker Compose
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release
+        
+        echo "download docker compose."
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        
+        echo "check docker compose downloaded"
+        ls -lah /usr/local/bin/docker-compose
+        
+        echo "change permissions on docker compose"
+        sudo chmod +x /usr/local/bin/docker-compose
+
     - name: Start Private Network
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
       run: |
