@@ -3,7 +3,6 @@ description: 'Utilized for installing docker-compose'
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v3
 
     - name: Install Docker Compose
       shell: bash
@@ -15,7 +14,6 @@ runs:
           curl \
           gnupg \
           lsb-release
-        
         
         echo "download docker compose."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
