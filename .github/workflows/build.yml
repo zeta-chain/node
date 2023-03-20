@@ -78,8 +78,22 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: install-docker-compose
-      uses: ./.github/actions/install-docker-compose
+    - name: Install Docker Compose
+      shell: bash
+      run: |        
+        sudo apt-get update
+        sudo apt-get install \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release -y
+        sudo mkdir -p /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --no-tty --batch -o /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install docker-compose-plugin -y
 
     - name: Start Private Network
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
