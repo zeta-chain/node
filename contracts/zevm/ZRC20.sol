@@ -13,7 +13,7 @@ interface ZRC20Errors {
 }
 
 contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
-    // @dev: Fungible address is always the same, it's on protocol level
+    // @dev: Fungible address is always the same, maintained at the protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
@@ -154,8 +154,10 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return (gasZRC20, gasFee);
     }
 
-    // this function causes cctx module to send out outbound tx to the outbound chain
-    // this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee
+    /**
+    * @dev this function causes cctx module to send out outbound tx to the outbound chain
+    * this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
+    */
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
         (address gasZRC20, uint256 gasFee)= withdrawGasFee();
         require(IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE), "transfer gas fee failed");

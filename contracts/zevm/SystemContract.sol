@@ -74,14 +74,14 @@ contract SystemContract is SystemContractErrors {
         zContract(target).onCrossChainCall(zrc20, amount, message);
     }
 
-    // returns sorted token addresses, used to handle return values from pairs sorted in this order.
+    /// @notice returns sorted token addresses, used to handle return values from pairs sorted in this order.
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
         if (tokenA == tokenB) revert CantBeIdenticalAddresses();
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         if (token0 == address(0)) revert CantBeZeroAddress();
     }
 
-    // calculates the CREATE2 address for a pair without making any external calls.
+    /// @notice calculates the CREATE2 address for a pair without making any external calls.
     function uniswapv2PairFor(
         address factory,
         address tokenA,
@@ -104,21 +104,21 @@ contract SystemContract is SystemContractErrors {
         );
     }
 
-    // fungible module updates the gas price oracle periodically.
+    /// @dev fungible module updates the gas price oracle periodically.
     function setGasPrice(uint256 chainID, uint256 price) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         gasPriceByChainId[chainID] = price;
         emit SetGasPrice(chainID, price);
     }
 
-    // @dev: Setter for gasCoinZRC20ByChainId map.
+    /// @notice Setter for gasCoinZRC20ByChainId map.
     function setGasCoinZRC20(uint256 chainID, address zrc20) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         gasCoinZRC20ByChainId[chainID] = zrc20;
         emit SetGasCoin(chainID, zrc20);
     }
 
-    // set the pool wzeta/erc20 address.
+    /// @notice set the pool wzeta/erc20 address.
     function setGasZetaPool(uint256 chainID, address erc20) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         address pool = uniswapv2PairFor(uniswapv2FactoryAddress, wZetaContractAddress, erc20);
@@ -126,13 +126,14 @@ contract SystemContract is SystemContractErrors {
         emit SetGasZetaPool(chainID, pool);
     }
 
-    // @dev: Setter for wrapped ZETA address.
+    /// @notice Setter for wrapped ZETA address.
     function setWZETAContractAddress(address addr) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         wZetaContractAddress = addr;
         emit SetWZeta(wZetaContractAddress);
     }
 
+    /// @notice Setter for zetaConnector ZEVM Address
     function setConnectorZEVMAddress(address addr) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         zetaConnectorZEVMAddress = addr;

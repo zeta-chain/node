@@ -48,8 +48,9 @@ interface IZRC20Metadata is IZRC20 {
 }
 
 
+/// @dev Zeta value should not be used
 enum CoinType {
-    Zeta, // this should not be used
+    Zeta, 
     Gas,
     ERC20
 }
