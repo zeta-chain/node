@@ -166,6 +166,7 @@ jobs:
     - name: Binary Docker Test
       run: |
         echo "Test binary version to see if it runs in docker"
+        chmod a+x ./zetacored
         ./zetacored version
 
     - name: upload-files-to-s3
