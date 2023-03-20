@@ -26,14 +26,14 @@ contract SystemContract is SystemContractErrors {
     mapping(uint256 => uint256) public gasPriceByChainId;
     // @dev: Map to know the ZRC20 address of a token given a chain id, ex zETH, zBNB etc.
     mapping(uint256 => address) public gasCoinZRC20ByChainId;
-    // @dev: Map to know uniswap pool of ZETA/ZRC20 given a chain id. This refer to the build in uniswap deployed at genesis.
+    // @dev: Map to know uniswap V2 pool of ZETA/ZRC20 given a chain id. This refer to the build in uniswap deployed at genesis.
     mapping(uint256 => address) public gasZetaPoolByChainId;
 
     // @dev: Fungible address is always the same, it's on protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
-    // @dev: Address of the wrapped ZETA to interact with Uniswap
+    // @dev: Address of the wrapped ZETA to interact with Uniswap V2
     address public wZetaContractAddress;
-    // @dev: Uniswap addresses
+    // @dev: Uniswap V2 addresses
     address public uniswapv2FactoryAddress;
     address public uniswapv2Router02Address;
     address public zetaConnectorZEVMAddress;

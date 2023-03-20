@@ -156,7 +156,7 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
 
     /**
     * @dev this function causes cctx module to send out outbound tx to the outbound chain
-    * this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
+    * this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee
     */
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
         (address gasZRC20, uint256 gasFee)= withdrawGasFee();
