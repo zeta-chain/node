@@ -17,29 +17,25 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	zetaclient.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, bool) {
+func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, error) {
 	signerName := config.ValidatorName
 	signerPass := "password"
 	chainIP := config.ZetaCoreURL
-
 	kb, err := zetaclient.GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey, common.TssSignerKey}, chainHomeFolder, signerName, signerPass)
 	if err != nil {
-		log.Fatal().Err(err).Msg("fail to get keyring keybase")
-		return nil, true
+		return nil, err
 	}
 	granterAddreess, err := cosmos.AccAddressFromBech32(config.AuthzGranter)
 	if err != nil {
-		log.Fatal().Err(err).Msg("fail to parse AuthzGranter string to address ")
-		return nil, true
+		return nil, err
 	}
 	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, signerName, signerPass)
 	authzSignerName := zetaclient.GetGranteeKeyName(common.ZetaClientGranteeKey, signerName)
 	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, authzSignerName)
 	if err != nil {
-		log.Fatal().Err(err).Msg("NewZetaCoreBridge")
-		return nil, true
+		return nil, err
 	}
-	return bridge, false
+	return bridge, nil
 }
 
 func CreateSignerMap(tss zetaclient.TSSSigner) (map[common.Chain]zetaclient.ChainSigner, error) {

@@ -50,11 +50,11 @@ func SetupConfigForTest() {
 }
 
 func InitLogger(level zerolog.Level) zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
 		Level(level).
 		With().
 		Timestamp().
-		Logger().
-		Sample(&zerolog.BasicSampler{N: 5})
+		Logger()
+	//Sample(&zerolog.BasicSampler{N: 5})
 	return logger
 }

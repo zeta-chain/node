@@ -52,21 +52,25 @@ func start(_ *cobra.Command, _ []string) error {
 	log.Info().Msgf("ZetaCore is ready")
 	// first signer & bridge
 
-	bridge1, done := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
-	if done {
-		return nil
+	bridge1, err := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
+	if err != nil {
+		panic(err)
 	}
-	log.Debug().Msgf("ZetaBridge is ready")
+	log.Info().Msgf("ZetaBridge is ready")
 
 	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
 
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
 		bridge1.GetKeys().GetAddress(common.ZetaClientGranteeKey))
 
+	log.Debug().Msgf("CreateAuthzSigner is ready")
+
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
 	if err != nil {
 		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
+
+	log.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
 		errMsg := fmt.Sprintf("key bytes len %d != 32", len(bridgePk.Bytes()))
 		log.Error().Msgf(errMsg)
@@ -74,20 +78,25 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	var priKey secp256k1.PrivKey
 	priKey = bridgePk.Bytes()[:32]
-
-	log.Info().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
+	log.Debug().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
 	peers, err := initPeers(configData.Peer)
 	if err != nil {
 		log.Error().Err(err).Msg("peer address error")
 	}
-
+	log.Debug().Msgf("Peers :", peers)
 	initPreParams(configData.PreParamsPath)
 	tss, err := mc.NewTSS(peers, priKey, preParams)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
+	err = tss.Validate()
+	if err != nil {
+		log.Error().Err(err).Msg("tss.Validate error")
+		return err
+	}
 
+	log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
 	consKey := ""
 	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
 	if err != nil {
@@ -96,14 +105,14 @@ func start(_ *cobra.Command, _ []string) error {
 	for {
 		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
 		if err != nil {
-			log.Error().Err(err).Msgf("SetNodeKey error : %s; waiting for 2s", err.Error())
+			log.Debug().Msgf("SetNodeKey failed : %s; waiting for 2s", err.Error())
 			time.Sleep(2 * time.Second)
-		} else {
-			log.Info().Msgf("SetNodeKey success: %s", ztx)
-			log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
-			break
+			continue
 		}
+		log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
+		break
 	}
+
 	log.Info().Msg("wait for 20s for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 

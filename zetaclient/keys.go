@@ -10,6 +10,7 @@ import (
 	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
@@ -62,7 +63,7 @@ func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signer
 	}()
 	os.Stdin = nil
 	for _, keyType := range requireKeytypes {
-		fmt.Printf("Checking if key for keyType: %s is present ", keyType.String())
+		log.Debug().Msgf("Checking for Key: %s  \n", keyType.String())
 		_, err = kb.Key(GetGranteeKeyName(keyType, signerName))
 		if err != nil {
 			return nil, fmt.Errorf("key not presnt with name (%s): %w", GetGranteeKeyName(keyType, signerName), err)
