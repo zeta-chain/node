@@ -49,6 +49,10 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: Build zetacored and zetaclientd
+      env:
+        CGO_ENABLED: 0
+        GOOS: linux
+        GOARCH: amd64
       run: |
         make install
         cp "$HOME"/go/bin/* ./
