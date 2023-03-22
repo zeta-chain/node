@@ -23,9 +23,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee   = 2000000000000000000
-	BlocksPerDay  = 17280
-	BlocksPerHour = 720
+	ProtocolFee = 2000000000000000000
 )
 
 func GetProtocolFee() sdk.Uint {

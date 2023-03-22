@@ -4,6 +4,11 @@ import (
 	"strings"
 )
 
+const (
+	BlocksPerDay  = 17280
+	BlocksPerHour = 720
+)
+
 var (
 	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
 	SigningAlgoEd25519   = SigninAlgo("ed25519")
