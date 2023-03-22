@@ -20,7 +20,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb 
-
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags PRIVNET,pebbledb 
 
