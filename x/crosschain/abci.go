@@ -41,7 +41,7 @@ func IsCCTXExpired(ctx sdk.Context, cctx *types.CrossChainTx) bool {
 }
 
 func IsOutTxTrackerExpired(ctx sdk.Context, outTxTracker types.OutTxTracker) bool {
-	if int64(outTxTracker.CreationHeight)+common.BlocksPerDay <= ctx.BlockHeight() {
+	if outTxTracker.CreationHeight+common.BlocksPerDay <= ctx.BlockHeight() {
 		return true
 	}
 	return false
