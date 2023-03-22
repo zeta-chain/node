@@ -34,6 +34,8 @@ var startArgs = startArguments{}
 
 type startArguments struct{}
 
+const maxRetryCountSetNodeKey = 10
+
 func init() {
 	RootCmd.AddCommand(StartCmd)
 }
@@ -102,18 +104,24 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		log.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
+	retryCount := 0
 	for {
+
 		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
 		if err != nil {
-			log.Debug().Msgf("SetNodeKey failed : %s; waiting for 2s", err.Error())
+			log.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
 			time.Sleep(2 * time.Second)
+			retryCount++
+			if retryCount > maxRetryCountSetNodeKey {
+				panic(err)
+			}
 			continue
 		}
 		log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
 		break
 	}
 
-	log.Info().Msg("wait for 20s for all node to SetNodeKey")
+	log.Info().Msg("wait for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 
 	//Check if keygen block is set and generate new keys at specified height
