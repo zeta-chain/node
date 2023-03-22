@@ -9,10 +9,10 @@ on:
       - v*
       - athens2-*
   pull_request:
-    branches: 
+    branches:
       - develop
-      - athens2-develop 
-    types: 
+      - athens2-develop
+    types:
       - synchronize
       - opened
       - reopened
@@ -50,7 +50,7 @@ jobs:
 
     - name: Build zetacored and zetaclientd
       env:
-        CGO_ENABLED: 0
+        CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
       run: |
@@ -75,7 +75,7 @@ jobs:
         path: |
             zetacored
             zetaclientd
-        
+
   smoke-test:
     runs-on: ["zeta-runners"]
     timeout-minutes: 30
@@ -106,7 +106,7 @@ jobs:
   upload:
     runs-on: ["zeta-runners"]
     timeout-minutes: 15
-    needs: 
+    needs:
       - build-and-test
       - smoke-test
 
@@ -116,7 +116,7 @@ jobs:
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
       with:
-        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
     - name: Install Pipeline Dependencies
       uses:  ./.github/actions/install-dependencies
@@ -164,7 +164,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}       
+        aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Binary Docker Test
