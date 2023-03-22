@@ -30,6 +30,8 @@ const (
 	CCTXIndex              = "CCTXIndex"
 	BallotObservationHash  = "BallotObservationHash"
 	BallotObservationChain = "BallotObservationChain"
+	BallotVotes            = "BallotVotes"
+	BallotObservationType  = "BallotObservationType"
 )
 
 const (
@@ -40,6 +42,7 @@ const (
 	BallotCreated        = "crosschain/BallotCreated"
 	ZetaWithdrawCreated  = "crosschain/ZetaWithdrawCreated"
 	InboundFinalized     = "crosschain/InboundFinalized"
+	InboundFailed        = "crosschain/InboundFailed"
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"
 	CctxScrubbed         = "crosschain/CCTXScrubbed"

@@ -36,4 +36,5 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
   repeated ObserverParams observer_params =1;
   repeated Admin_Policy admin_policy= 2;
+  int64 balllot_max_age = 3;
 }

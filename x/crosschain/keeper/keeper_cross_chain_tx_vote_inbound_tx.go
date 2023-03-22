@@ -67,23 +67,22 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain.IsZetaChain() {
 		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			EmitEventInboundFailed(ctx, &cctx)
+			return nil, err
 		}
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 	} else { // Cross Chain SWAP
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			EmitEventInboundFailed(ctx, &cctx)
+			return nil, err
 		}
-
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	}
 	EmitEventInboundFinalized(ctx, &cctx)
+	EmitEventBallotFinalized(ctx, ballot, observationChain.String())
 	k.SetCrossChainTx(ctx, cctx)
+	k.zetaObserverKeeper.RemoveBallot(ctx, ballot.Index)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 

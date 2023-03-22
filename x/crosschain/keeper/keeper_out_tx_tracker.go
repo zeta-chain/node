@@ -175,10 +175,11 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 	if !found {
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
-			Index:    "",
-			ChainId:  chain.ChainId,
-			Nonce:    msg.Nonce,
-			HashList: []*types.TxHashList{&hash},
+			Index:          "",
+			ChainId:        chain.ChainId,
+			Nonce:          msg.Nonce,
+			HashList:       []*types.TxHashList{&hash},
+			CreationHeight: ctx.BlockHeight(),
 		})
 		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}

@@ -12,6 +12,7 @@ message OutTxTracker {
   int64 chain_id = 2;
   uint64 nonce = 3;
   repeated TxHashList hash_list = 4;
+  int64 creation_height = 5;
 }
 
 

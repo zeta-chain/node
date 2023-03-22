@@ -9,6 +9,28 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func EmitEventInboundFailed(ctx sdk.Context, cctx *types.CrossChainTx) {
+	currentOutParam := cctx.GetCurrentOutTxParam()
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.InboundFailed,
+			sdk.NewAttribute(types.CctxIndex, cctx.Index),
+			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
+			sdk.NewAttribute(types.SenderChain, fmt.Sprintf("%d", cctx.InboundTxParams.SenderChainId)),
+			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
+			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
+			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
+			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InboundTxParams.InboundTxObservedExternalHeight)),
+			sdk.NewAttribute(types.Receiver, currentOutParam.Receiver),
+			sdk.NewAttribute(types.ReceiverChain, fmt.Sprintf("%d", currentOutParam.ReceiverChainId)),
+			sdk.NewAttribute(types.Amount, cctx.InboundTxParams.Amount.String()),
+			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
+			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
+			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
+			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
+		),
+	)
+}
+
 func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	currentOutParam := cctx.GetCurrentOutTxParam()
 	ctx.EventManager().EmitEvent(
@@ -73,6 +95,17 @@ func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, ob
 			sdk.NewAttribute(types.BallotIdentifier, ballot.BallotIdentifier),
 			sdk.NewAttribute(types.CCTXIndex, ballot.BallotIdentifier),
 			sdk.NewAttribute(types.BallotObservationHash, observationHash),
+			sdk.NewAttribute(types.BallotObservationChain, obserVationChain),
+		),
+	)
+}
+
+func EmitEventBallotFinalized(ctx sdk.Context, ballot zetaObserverTypes.Ballot, obserVationChain string) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.BallotCreated,
+			sdk.NewAttribute(types.BallotIdentifier, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.CCTXIndex, ballot.BallotIdentifier),
+			sdk.NewAttribute(types.BallotObservationType, ballot.ObservationType.String()),
 			sdk.NewAttribute(types.BallotObservationChain, obserVationChain),
 		),
 	)

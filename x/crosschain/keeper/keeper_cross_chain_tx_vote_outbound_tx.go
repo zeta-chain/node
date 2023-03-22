@@ -68,17 +68,19 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		//cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 		ctx.Logger().Error(err.Error())
-		k.SetCrossChainTx(ctx, cctx)
+		//k.SetCrossChainTx(ctx, cctx)
 		// Remove OutTX tracker and change CCTX prefix store
-		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+		//k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+		//k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return nil, err
 	}
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+	EmitEventBallotFinalized(ctx, ballot, observationChain.String())
+	k.zetaObserverKeeper.RemoveBallot(ctx, ballot.Index)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 

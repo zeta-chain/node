@@ -25,7 +25,7 @@ func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, 
 
 // SetCrossChainTx set a specific send in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, send.CctxStatus.Status))
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, send.CctxStatus.Status))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
@@ -39,7 +39,7 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 
 // GetCrossChainTx returns a send from its index
 func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) (val types.CrossChainTx, found bool) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, status))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	b := store.Get(types.KeyPrefix(index))
@@ -53,14 +53,14 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string, status types.Cctx
 
 // RemoveCrossChainTx removes a send from the store
 func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, status))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	store.Delete(types.KeyPrefix(index))
 }
 
 func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status []types.CctxStatus) (val types.CrossChainTx, found bool) {
 	for _, s := range status {
-		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, s))
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 		send := store.Get(types.KeyPrefix(index))
 		if send != nil {
@@ -75,7 +75,7 @@ func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status 
 func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus) (list []*types.CrossChainTx) {
 	var sends []*types.CrossChainTx
 	for _, s := range status {
-		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
+		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, s))
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 		iterator := sdk.KVStorePrefixIterator(store, []byte{})
 		defer iterator.Close()
@@ -98,7 +98,7 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.SendKey))
+	sendStore := prefix.NewStore(store, types.KeyPrefix(types.CctxKey))
 
 	pageRes, err := query.Paginate(sendStore, req.Pagination, func(key []byte, value []byte) error {
 		var send types.CrossChainTx

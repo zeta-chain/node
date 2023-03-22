@@ -79,6 +79,7 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 			ObservationType:  observationType,
 			BallotThreshold:  obsParams.BallotThreshold,
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+			CreationHeight:   ctx.BlockHeight(),
 		}
 		isNew = true
 	}

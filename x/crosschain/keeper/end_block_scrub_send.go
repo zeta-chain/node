@@ -22,7 +22,7 @@ func (k Keeper) ScrubGasPriceOfStuckOutTx(goCtx context.Context) {
 		scrubingStatus := []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert}
 		for _, status := range scrubingStatus {
 			store := ctx.KVStore(k.storeKey)
-			p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+			p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.CctxKey, status))
 			k.ScrubUtility(ctx, store, p)
 		}
 	}

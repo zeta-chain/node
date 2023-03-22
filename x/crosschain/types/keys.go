@@ -23,7 +23,9 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 2000000000000000000
+	ProtocolFee   = 2000000000000000000
+	BlocksPerDay  = 17280
+	BlocksPerHour = 720
 )
 
 func GetProtocolFee() sdk.Uint {
@@ -35,20 +37,11 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	TxinKey              = "Txin-value-"
-	TxinVoterKey         = "TxinVoter-value-"
-	NodeAccountKey       = "NodeAccount-value-"
-	TxoutKey             = "Txout-value-"
-	TxoutCountKey        = "Txout-count-"
-	TxoutConfirmationKey = "TxoutConfirmation-value-"
-	SendKey              = "Send-value-"
-	VoteCounterKey       = "VoteCounter-value-"
-	ReceiveKey           = "Receive-value-"
-	LastBlockHeightKey   = "LastBlockHeight-value-"
-	ChainNoncesKey       = "ChainNonces-value-"
-	GasPriceKey          = "GasPrice-value-"
-
-	GasBalanceKey         = "GasBalance-value-"
+	NodeAccountKey        = "NodeAccount-value-"
+	CctxKey               = "Send-value-"
+	LastBlockHeightKey    = "LastBlockHeight-value-"
+	ChainNoncesKey        = "ChainNonces-value-"
+	GasPriceKey           = "GasPrice-value-"
 	TSSKey                = "TSS-value-"
 	TSSVoterKey           = "TSSVoter-value-"
 	KeygenKey             = "Keygen-value-"

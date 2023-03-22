@@ -26,6 +26,11 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string) (val types.Ballot, foun
 	return val, true
 }
 
+func (k Keeper) RemoveBallot(ctx sdk.Context, index string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
+	store.Delete(types.KeyPrefix(index))
+}
+
 func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
