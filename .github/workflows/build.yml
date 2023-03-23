@@ -89,7 +89,15 @@ jobs:
 
     - uses: jirutka/setup-alpine@v1
       with:
-        branch: v3.15
+        arch: x86_64
+        packages: >
+          build-base
+          pkgconf
+          lld
+          go 
+          gcc 
+          g++
+        shell-name: alpine.sh
 
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
@@ -110,14 +118,14 @@ jobs:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
-      shell: alpine-x86_64.sh {0}
+      shell: alpine.sh
       run: |
-        apk add --no-cache --update go gcc g++
+        apk add --no-cache --update 
         make install
         cp "$HOME"/go/bin/* ./
 
     - name: Binary Docker Test
-      shell: alpine-x86_64.sh {0}
+      shell: alpine.sh
       run: |
         chmod a+x ./zetacored
         ./zetacored version
