@@ -47,6 +47,7 @@ jobs:
 
     - name: Build zetacored and zetaclientd
       run: |
+        go version
         make install
         cp "$HOME"/go/bin/* ./
 

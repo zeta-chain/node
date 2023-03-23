@@ -1,7 +1,7 @@
 ################
 # BUILD ZETAVISOR
 ################
-FROM golang:1.18 AS cosmovisor
+FROM golang:1.19 AS cosmovisor
 
 ENV GOBIN=/go/bin
 ENV GOPATH=/go
