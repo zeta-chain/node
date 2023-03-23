@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -31,6 +32,10 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			return err
 		}
 		// TODO : Return error if TX failed ?
+
+		if tx.Failed() && cctx.GetCurrentOutTxParam().ReceiverChainId != common.ZetaChain().ChainId {
+			return fmt.Errorf("external chain tx failed")
+		}
 
 		if !tx.Failed() && len(msg.Message) > 0 {
 			logs := evmtypes.LogsToEthereum(tx.Logs)
