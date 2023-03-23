@@ -181,6 +181,7 @@ jobs:
     needs:
       - build-and-test
       - smoke-test
+      - build-and-test-alpine
 
     steps:
     - uses: actions/checkout@v3
