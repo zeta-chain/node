@@ -7,5 +7,5 @@
         with:
           run-tests: ${{ env.GITHUB_REF_NAME != 'develop' }}
           build-indexer: false
-          go-version: '1.1'
+          go-version: '1.19'
 ```
