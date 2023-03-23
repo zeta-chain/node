@@ -118,14 +118,14 @@ jobs:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
-      shell: alpine.sh
+      shell: alpine.sh {0}
       run: |
         apk add --no-cache --update 
         make install
         cp "$HOME"/go/bin/* ./
 
     - name: Binary Docker Test
-      shell: alpine.sh
+      shell: alpine.sh {0}
       run: |
         chmod a+x ./zetacored
         ./zetacored version
