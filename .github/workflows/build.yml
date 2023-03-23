@@ -76,8 +76,8 @@ jobs:
             zetacored
             zetaclientd
 
-  build-and-test-alpine:
-    runs-on: ["ubuntu-latest"]
+  build-alpine:
+    runs-on: ubuntu-latest
     needs: build-and-test
     timeout-minutes: 30
     steps:
@@ -181,7 +181,7 @@ jobs:
     needs:
       - build-and-test
       - smoke-test
-      - build-and-test-alpine
+      - build-alpine
 
     steps:
     - uses: actions/checkout@v3
