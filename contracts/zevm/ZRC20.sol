@@ -2,13 +2,18 @@
 pragma solidity ^0.8.7;
 import "./Interfaces.sol";
 
+/**
+ * @dev Custom errors for ZRC20
+ */
 interface ZRC20Errors {
+    // @dev: Error thrown when caller is not the fungible module
     error CallerIsNotFungibleModule();
 
     error InvalidSender();
 }
 
 contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
+    // @dev: Fungible address is always the same, maintained at the protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
     uint256 public CHAIN_ID;
@@ -26,6 +31,9 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     string private _symbol;
     uint8 private _decimals;
 
+    /**
+     * @dev The only one allowed to deploy new ZRC20 is fungible address
+     */
     constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_, address systemContractAddress_) {
         if(msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         _name = name_;
@@ -135,8 +143,8 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return true;
     }
 
-    // returns the ZRC4 address for gas on the same chain of this ZRC4,
-    // and calculate the gas fee for withdraw()
+    // returns the ZRC20 address for gas on the same chain of this ZRC20,
+    // and calculates the gas fee for withdraw()
     function withdrawGasFee() public override view returns (address,uint256) {
         address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC20ByChainId(CHAIN_ID);
         require(gasZRC20 != address(0), "gas coin not set");
@@ -146,8 +154,10 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return (gasZRC20, gasFee);
     }
 
-    // this function causes cctx module to send out outbound tx to the outbound chain
-    // this contract should be given enough allowance of the gas ZRC4 to pay for outbound tx gas fee
+    /**
+    * @dev this function causes cctx module to send out outbound tx to the outbound chain
+    * this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee
+    */
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
         (address gasZRC20, uint256 gasFee)= withdrawGasFee();
         require(IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE), "transfer gas fee failed");
@@ -157,16 +167,25 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         return true;
     }
 
+    /**
+     * @dev System contract address can be updated only by fungible module
+     */
     function updateSystemContractAddress(address addr) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         SYSTEM_CONTRACT_ADDRESS = addr;
     }
 
+    /**
+     * @dev Gas limit can be updated only by fungible module
+     */
     function updateGasLimit(uint256 gasLimit) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         GAS_LIMIT = gasLimit;
     }
 
+    /**
+     * @dev Protocol flat fee can be updated only by fungible module
+     */
     function updateProtocolFlatFee(uint256 protocolFlatFee) external {
         require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
         PROTOCOL_FLAT_FEE = protocolFlatFee;
