@@ -141,7 +141,6 @@ jobs:
 
     - name: Install Docker Compose
       shell: bash
-      if: ${{ env.ACT }}
       run: |
         sudo apt-get update
         sudo apt-get install \
