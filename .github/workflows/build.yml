@@ -110,12 +110,14 @@ jobs:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
+      shell: alpine-x86_64.sh {0}
       run: |
         apk add --no-cache --update go gcc g++
         make install
         cp "$HOME"/go/bin/* ./
 
     - name: Binary Docker Test
+      shell: alpine-x86_64.sh {0}
       run: |
         chmod a+x ./zetacored
         ./zetacored version
@@ -138,23 +140,6 @@ jobs:
 
     - name: install-docker-compose
       uses: ./.github/actions/install-docker-compose
-
-    - name: Install Docker Compose
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install \
-          ca-certificates \
-          curl \
-          gnupg \
-          lsb-release -y
-        sudo mkdir -p /etc/apt/keyrings
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --no-tty --batch --dearmor --yes -o /etc/apt/keyrings/docker.gpg
-        echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get update
-        sudo apt-get install docker-compose-plugin build-essential -y
 
     - name: Start Private Network
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
