@@ -152,8 +152,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: install-docker-compose
-      uses: ./.github/actions/install-docker-compose
+    - name: Install Pipeline Dependencies
+      uses:  ./.github/actions/install-dependencies
 
     - name: Start Private Network
       if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
