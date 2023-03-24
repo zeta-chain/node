@@ -41,6 +41,7 @@ func GetGranteeKeyName(keyType common.KeyType, signerName string) string {
 
 // GetKeyringKeybase return keyring and key info
 func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signerName, password string) (ckeys.Keyring, error) {
+	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
 	if len(signerName) == 0 {
 		return nil, fmt.Errorf("signer name is empty")
 	}
@@ -63,7 +64,7 @@ func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signer
 	}()
 	os.Stdin = nil
 	for _, keyType := range requireKeytypes {
-		log.Debug().Msgf("Checking for Key: %s  \n", keyType.String())
+		logger.Debug().Msgf("Checking for Key: %s  \n", GetGranteeKeyName(keyType, signerName))
 		_, err = kb.Key(GetGranteeKeyName(keyType, signerName))
 		if err != nil {
 			return nil, fmt.Errorf("key not presnt with name (%s): %w", GetGranteeKeyName(keyType, signerName), err)

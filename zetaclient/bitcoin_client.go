@@ -67,7 +67,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}
-	ob.logger = log.With().Str("chain", chain.String()).Logger()
+	ob.logger = log.With().Str("chain ", chain.String()).Logger()
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.confCount = 0
@@ -130,6 +130,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 func (ob *BitcoinChainClient) Start() {
 	ob.logger.Info().Msgf("BitcoinChainClient is starting")
+	ob.logger = ob.logger.With().Str("chain", ob.chain.String()).Logger()
 	go ob.WatchInTx()
 	go ob.observeOutTx()
 	go ob.WatchUTXOS()
@@ -176,7 +177,7 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ob.logger.Info().Msgf("WatchInTx to TSS Address %s", ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress())
+	//ob.logger = ob.logger.With().Str("module", "WatchInTx").Logger()
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
@@ -226,11 +227,9 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		ob.logger.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
 		if len(block.Tx) > 1 {
 			for idx, tx := range block.Tx {
-				fmt.Printf("tx %d: %s\n", idx, tx.Txid)
+				ob.logger.Info().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
 				for vidx, vout := range tx.Vout {
-					fmt.Printf("  vout %d\n", vidx)
-					fmt.Printf("    value: %v\n", vout.Value)
-					fmt.Printf("    scriptPubKey: %v\n", vout.ScriptPubKey.Hex)
+					ob.logger.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
 				}
 			}
 		}
@@ -239,7 +238,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger)
 
 		for _, inTx := range inTxs {
-			//ob.Logger.Info().Msgf("incoming tx %v", inTx)
+			ob.logger.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
 			amount := big.NewFloat(inTx.Value)
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)
@@ -319,6 +318,8 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
+	//ob.logger = ob.logger.With().Str("module", "WatchGasPrice").Logger()
+
 	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
 		select {
@@ -341,11 +342,12 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		if err != nil {
 			return err
 		}
-		_, err = ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
 		if err != nil {
 			ob.logger.Err(err).Msg("PostGasPrice:")
 			return err
 		}
+		ob.logger.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
@@ -362,11 +364,12 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if err != nil {
 		return err
 	}
-	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
+	ob.logger.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 	_ = feeResult
 	return nil
 }
@@ -471,7 +474,8 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	ob.logger.Info().Msgf("WatchUTXOS started")
+	//ob.logger = ob.logger.With().Str("module", "WatchUTXOS").Logger()
+
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
 	for {
 		select {
@@ -582,6 +586,7 @@ func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
+	//ob.logger = ob.logger.With().Str("module", "ObserveOutTx").Logger()
 	ticker := time.NewTicker(2 * time.Second)
 	for {
 		select {

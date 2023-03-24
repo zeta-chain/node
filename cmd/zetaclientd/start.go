@@ -51,28 +51,30 @@ func start(_ *cobra.Command, _ []string) error {
 	log.Logger = InitLogger(configData.LogLevel)
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
-	log.Info().Msgf("ZetaCore is ready")
+	masterLogger := log.Logger
+	startLogger := masterLogger.With().Str("module", "startup").Logger()
+	startLogger.Info().Msgf("ZetaCore is ready")
 	// first signer & bridge
 
 	bridge1, err := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
 	if err != nil {
 		panic(err)
 	}
-	log.Info().Msgf("ZetaBridge is ready")
+	startLogger.Info().Msgf("ZetaBridge is ready")
 
 	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
 
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
 		bridge1.GetKeys().GetAddress(common.ZetaClientGranteeKey))
 
-	log.Debug().Msgf("CreateAuthzSigner is ready")
+	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
 	if err != nil {
-		log.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
 
-	log.Debug().Msgf("bridgePk %s", bridgePk.String())
+	startLogger.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
 		errMsg := fmt.Sprintf("key bytes len %d != 32", len(bridgePk.Bytes()))
 		log.Error().Msgf(errMsg)
@@ -80,36 +82,38 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	var priKey secp256k1.PrivKey
 	priKey = bridgePk.Bytes()[:32]
-	log.Debug().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
+
+	startLogger.Debug().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
+
 	peers, err := initPeers(configData.Peer)
 	if err != nil {
 		log.Error().Err(err).Msg("peer address error")
 	}
-	log.Debug().Msgf("Peers :", peers)
+	startLogger.Debug().Msgf("Peers :", peers)
 	initPreParams(configData.PreParamsPath)
 	tss, err := mc.NewTSS(peers, priKey, preParams)
 	if err != nil {
-		log.Error().Err(err).Msg("NewTSS error")
+		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	err = tss.Validate()
-	if err != nil {
-		log.Error().Err(err).Msg("tss.Validate error")
-		return err
-	}
+	//err = tss.Validate()
+	//if err != nil {
+	//	log.Error().Err(err).Msg("tss.Validate error")
+	//	return err
+	//}
 
-	log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
+	//log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
 	consKey := ""
 	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
 	if err != nil {
-		log.Error().Err(err).Msgf("Get Pubkey Set Error")
+		startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
 	retryCount := 0
 	for {
 
 		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
 		if err != nil {
-			log.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
+			startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
 			time.Sleep(2 * time.Second)
 			retryCount++
 			if retryCount > maxRetryCountSetNodeKey {
@@ -117,11 +121,11 @@ func start(_ *cobra.Command, _ []string) error {
 			}
 			continue
 		}
-		log.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
+		startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
 		break
 	}
 
-	log.Info().Msg("wait for all node to SetNodeKey")
+	startLogger.Info().Msg("wait for all node to SetNodeKey")
 	time.Sleep(12 * time.Second)
 
 	//Check if keygen block is set and generate new keys at specified height
@@ -136,9 +140,9 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
 		if err != nil {
-			log.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
+			startLogger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 		}
-		log.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
+		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 
 	}
 	signerMap1, err := CreateSignerMap(tss)
@@ -158,14 +162,14 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics)
 	if err != nil {
-		log.Err(err).Msg("CreateSignerMap")
+		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
 	for _, v := range chainClientMap1 {
 		v.Start()
 	}
 
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss)
+	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss, masterLogger)
 
 	mo1.MonitorCore()
 
@@ -173,16 +177,21 @@ func start(_ *cobra.Command, _ []string) error {
 	for _, chain := range config.ChainsEnabled {
 		err = (chainClientMap1)[chain].PostNonceIfNotRecorded()
 		if err != nil {
-			log.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+			startLogger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 		}
 	}
+	err = tss.Validate()
+	if err != nil {
+		return err
+	}
+	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// wait....
-	log.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
+	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-ch
-	log.Info().Msgf("stop signal received: %s", sig)
+	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
 	for _, chain := range config.ChainsEnabled {

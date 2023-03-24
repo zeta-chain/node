@@ -38,7 +38,6 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	if err != nil {
 		return "", err
 	}
-	b.logger.Debug().Str("zetaTxHash", zetaTxHash).Msg("PostGasPrice broadcast success")
 
 	return zetaTxHash, nil
 }
