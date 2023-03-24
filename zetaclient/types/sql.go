@@ -1,9 +1,12 @@
 package types
 
 import (
+	"github.com/btcsuite/btcd/btcjson"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"gorm.io/gorm"
 )
+
+// EVM Chain client types ----------------------------------->
 
 const LastBlockNumId = 0xBEEF
 
@@ -43,4 +46,12 @@ func ToLastBlockSQLType(lastBlock int64) *LastBlockSQLType {
 		Model: gorm.Model{ID: LastBlockNumId},
 		Num:   lastBlock,
 	}
+}
+
+// BTC Chain client types ----------------------------------->
+
+type PendingUTXOSQLType struct {
+	gorm.Model
+	Key  string
+	UTXO btcjson.ListUnspentResult `gorm:"embedded"`
 }

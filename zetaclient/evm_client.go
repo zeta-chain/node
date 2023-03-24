@@ -721,7 +721,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	}
 	// ============= end of query the incoming tx to TSS address ==============
 	ob.SetLastBlockHeight(toBlock)
-	if dbc := ob.db.Create(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())); dbc.Error != nil {
+	if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
 		ob.logger.Error().Err(err).Msg("error writing toBlock to db")
 	}
 	return nil
@@ -879,7 +879,7 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 		}
 	} else { // last observed block
 		var lastBlockNum clienttypes.LastBlockSQLType
-		if dbf := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumId); dbf.Error != nil {
+		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumId).Error; err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
 			ob.SetLastBlockHeight(ob.getLastHeight())
 			// if ZetaCore does not have last heard block height, then use current
@@ -890,7 +890,7 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 				}
 				ob.SetLastBlockHeight(header.Number.Int64())
 			}
-			if dbc := ob.db.Create(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())); dbc.Error != nil {
+			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())); dbc.Error != nil {
 				logger.Error().Err(dbc.Error).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	math2 "math"
 	"math/big"
 	"os"
@@ -21,7 +23,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -35,20 +36,20 @@ var _ ChainClient = &BitcoinChainClient{}
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain        common.Chain
-	endpoint     string
-	rpcClient    *rpcclient.Client
-	zetaClient   *ZetaCoreBridge
-	Tss          TSSSigner
-	lastBlock    int64
-	confCount    int64                                   // must wait this many blocks to be considered "confirmed"
-	BlockTime    uint64                                  // block time in seconds
-	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
-	mu           *sync.Mutex
-	utxos        []btcjson.ListUnspentResult
-	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
-	stop         chan struct{}
-	logger       zerolog.Logger
+	chain       common.Chain
+	endpoint    string
+	rpcClient   *rpcclient.Client
+	zetaClient  *ZetaCoreBridge
+	Tss         TSSSigner
+	lastBlock   int64
+	confCount   int64                                   // must wait this many blocks to be considered "confirmed"
+	BlockTime   uint64                                  // block time in seconds
+	submittedTx map[string]btcjson.GetTransactionResult // key: chain-nonce
+	mu          *sync.Mutex
+	utxos       []btcjson.ListUnspentResult
+	db          *gorm.DB
+	stop        chan struct{}
+	logger      zerolog.Logger
 }
 
 const (
@@ -74,11 +75,11 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
 	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
-	db, err := leveldb.OpenFile(path, nil)
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
-		return nil, err
+		panic("failed to connect database")
 	}
-	ob.pendingUtxos = db
+	ob.db = db
 	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
@@ -550,30 +551,31 @@ func (ob *BitcoinChainClient) housekeepPending() {
 	}
 
 	// traverse pending pendingUtxos
-	var removed int64
-	iter := ob.pendingUtxos.NewIterator(nil, nil)
-	for iter.Next() {
-		key := iter.Key()
+	removed := 0
+	var utxos []clienttypes.PendingUTXOSQLType
+	if err := ob.db.Find(&utxos).Error; err != nil {
+		ob.logger.Error().Err(err).Msg("error querying pending UTXOs from db")
+		return
+	}
+	for _, utxo := range utxos {
+		key := utxo.Key
 		// if key not in utxos map, remove from pendingUtxos
-		if !utxosMap[string(key)] {
-			if err := ob.pendingUtxos.Delete(key, nil); err != nil {
-				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
+		if !utxosMap[key] {
+			if err := ob.db.Where("Key = ?", key).Delete(&utxo).Error; err != nil {
+				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending UTXos", key)
+				continue
 			}
+			removed++
 		}
 	}
-	iter.Release()
-	err := iter.Error()
-	if err != nil {
-		ob.logger.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
-	}
 	if removed > 0 {
-		ob.logger.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
+		ob.logger.Info().Msgf("btc : %d txs purged from pending pending UTXOs", removed)
 	}
 }
 
 func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
-	if _, err := ob.pendingUtxos.Get([]byte(utxoKey), nil); err != nil {
-		if err == leveldb.ErrNotFound {
+	if _, err := getPendingUTXO(ob.db, utxoKey); err != nil {
+		if err == gorm.ErrRecordNotFound {
 			return false, nil
 		}
 		return false, err
@@ -615,4 +617,12 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			return
 		}
 	}
+}
+
+func getPendingUTXO(db *gorm.DB, key string) (*btcjson.ListUnspentResult, error) {
+	var utxo clienttypes.PendingUTXOSQLType
+	if err := db.Where("Key = ?", key).First(&utxo).Error; err != nil {
+		return nil, err
+	}
+	return &utxo.UTXO, nil
 }
