@@ -28,7 +28,7 @@ env:
 
 jobs:
   start-stop-processes:
-    runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.ENVIRONMENT }}
     steps:
       - uses: actions/checkout@v3
