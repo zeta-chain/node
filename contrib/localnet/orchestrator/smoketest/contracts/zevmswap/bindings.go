@@ -1,5 +1,8 @@
-//go:generate sh -c "solc  ZEVMSwapApp.sol --combined-json abi,bin --base-path ../ --include-path interfaces/ | jq '.contracts.\"zevmswap/ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
-//go:generate sh -c "cat ZEVMSwapApp.json | jq .abi | abigen --abi - --pkg zevmswap --type ZEVMSwapApp --out ZEVMSwapApp.go"
+//go:generate sh -c " solc --allow-paths ..,  --combined-json abi,bin --base-path .. ZEVMSwapApp.sol     | jq '.contracts.\"ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
+//go:generate sh -c "cat ZEVMSwapApp.json | jq .abi > ZEVMSwapApp.abi"
+//go:generate sh -c "cat ZEVMSwapApp.json | jq .bin  | tr -d '\"'  > ZEVMSwapApp.bin"
+
+//go:generate sh -c "abigen --abi ZEVMSwapApp.abi --bin ZEVMSwapApp.bin --pkg zevmswap --type ZEVMSwapApp --out ZEVMSwapApp.go"
 
 package zevmswap
 

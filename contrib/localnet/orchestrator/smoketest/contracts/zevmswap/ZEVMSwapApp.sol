@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "../interfaces/IUniswapV2Router02.sol";
+import "interfaces/IUniswapV2Router02.sol";
 
 interface zContract {
     function onCrossChainCall(
@@ -58,6 +58,11 @@ contract ZEVMSwapApp is zContract {
         router02 = router02_;
         systemContract = systemContract_;
     }
+
+    function encodeMemo(address targetZRC20,  bytes calldata recipient, uint256 minAmountOut) pure external returns (bytes memory) {
+        return abi.encode(targetZRC20, recipient, minAmountOut);
+    }
+
     
     // Call this function to perform a cross-chain swap
     function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external override {
@@ -65,9 +70,9 @@ contract ZEVMSwapApp is zContract {
             revert InvalidSender();
         }
         address targetZRC20;
-        address recipient;
+        bytes memory recipient;
         uint256 minAmountOut; 
-        (targetZRC20, recipient, minAmountOut) = abi.decode(message, (address,address,uint256));
+        (targetZRC20, recipient, minAmountOut) = abi.decode(message, (address,bytes,uint256));
         address[] memory path;
         path = new address[](2);
         path[0] = zrc20;
@@ -82,6 +87,6 @@ contract ZEVMSwapApp is zContract {
             revert LowAmount();
         }
         IZRC20(targetZRC20).approve(address(targetZRC20), gasFee);
-        IZRC20(targetZRC20).withdraw(bytes("bcrt1qlj8pkmftahy9pxj290lu32k2w8um2vkdnu35w6"), amounts[1] - gasFee);
+        IZRC20(targetZRC20).withdraw(recipient, amounts[1] - gasFee);
     }
 }

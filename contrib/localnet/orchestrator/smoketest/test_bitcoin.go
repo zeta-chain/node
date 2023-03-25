@@ -4,7 +4,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -36,8 +35,15 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
 	}()
 
+	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.SystemContract = SystemContract
+	sm.SystemContractAddr = HexToAddress(SystemContractAddr)
+
 	btc := sm.btcRPCClient
-	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
+	_, err = btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		panic(err)
 	}
@@ -106,22 +112,17 @@ func (sm *SmokeTest) DepositBTC() {
 		fmt.Printf("utxo: %+v\n", utxo)
 	}
 
-	err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, 1.1, utxos[:2], btc)
+	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
 	}
-	err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
 
-	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.SystemContract = SystemContract
 	// check if the deposit is successful
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {
@@ -276,7 +277,7 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 	}
 }
 
-func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client) error {
+func SendToTSSFromDeployerToDeposit(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client) error {
 	utxos := inputUTXOs
 
 	inputs := make([]btcjson.TransactionInput, len(utxos))
@@ -304,11 +305,90 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 	// [ OP_RETURN(6a) <length of memo> <memo> ]
 	// where <memo> is ASCII encoding of the base64 bytes (!we do this because popular bitcoin wallet
 	// only input ASCII characters, and we need to encode binary data. We pick base64 StdEncoding).
-	addrB64Str := base64.StdEncoding.EncodeToString(DeployerAddress.Bytes())
 
-	addrB64StrLen := len(addrB64Str)
-	fmt.Printf("addrB64StrLen: %d\naddrB64Str: %s\naddrB64StrASCII: %x\n", addrB64StrLen, addrB64Str, []byte(addrB64Str))
-	nulldata, err := txscript.NullDataScript([]byte(addrB64Str)) // this adds a OP_RETURN + single BYTE len prefix to the data
+	//addrB64Str := base64.StdEncoding.EncodeToString(DeployerAddress.Bytes())
+
+	//addrB64StrLen := len(addrB64Str)
+	//fmt.Printf("addrB64StrLen: %d\naddrB64Str: %s\naddrB64StrASCII: %x\n", addrB64StrLen, addrB64Str, []byte(addrB64Str))
+	nulldata, err := txscript.NullDataScript(DeployerAddress.Bytes()) // this adds a OP_RETURN + single BYTE len prefix to the data
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("nulldata (len %d): %x\n", len(nulldata), nulldata)
+	if err != nil {
+		panic(err)
+	}
+	memoOutput := wire.TxOut{Value: 0, PkScript: nulldata}
+	tx.TxOut = append(tx.TxOut, &memoOutput)
+	tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
+
+	fmt.Printf("raw transaction: \n")
+	for idx, txout := range tx.TxOut {
+		fmt.Printf("txout %d\n", idx)
+		fmt.Printf("  value: %d\n", txout.Value)
+		fmt.Printf("  PkScript: %x\n", txout.PkScript)
+	}
+	stx, signed, err := btc.SignRawTransactionWithWallet(tx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("signed tx: all inputs signed?: %+v\n", signed)
+	txid, err := btc.SendRawTransaction(stx, true)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("txid: %+v\n", txid)
+	_, err = btc.GenerateToAddress(6, BTCDeployerAddress, nil)
+	if err != nil {
+		panic(err)
+	}
+	gtx, err := btc.GetTransaction(txid)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("rawtx confirmation: %d\n", gtx.BlockIndex)
+	rawtx, err := btc.GetRawTransactionVerbose(txid)
+	if err != nil {
+		panic(err)
+	}
+
+	events := zetaclient.FilterAndParseIncomingTx([]btcjson.TxRawResult{*rawtx}, 0, BTCTSSAddress.EncodeAddress(), &log.Logger)
+	fmt.Printf("bitcoin intx events:\n")
+	for _, event := range events {
+		fmt.Printf("  TxHash: %s\n", event.TxHash)
+		fmt.Printf("  From: %s\n", event.FromAddress)
+		fmt.Printf("  To: %s\n", event.ToAddress)
+		fmt.Printf("  Amount: %f\n", event.Value)
+		fmt.Printf("  Memo: %x\n", event.MemoBytes)
+	}
+	return nil
+}
+
+func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client, memo []byte) error {
+	utxos := inputUTXOs
+
+	inputs := make([]btcjson.TransactionInput, len(utxos))
+	inputSats := btcutil.Amount(0)
+	for i, utxo := range utxos {
+		inputs[i] = btcjson.TransactionInput{utxo.TxID, utxo.Vout}
+		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
+	}
+	feeSats := btcutil.Amount(0.0001 * btcutil.SatoshiPerBitcoin)
+	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
+	change := inputSats - feeSats - amountSats
+	if change < 0 {
+		return fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
+	}
+	amounts := map[btcutil.Address]btcutil.Amount{
+		to:                 amountSats,
+		BTCDeployerAddress: change,
+	}
+	tx, err := btc.CreateRawTransaction(inputs, amounts, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	nulldata, err := txscript.NullDataScript(memo) // this adds a OP_RETURN + single BYTE len prefix to the data
 	if err != nil {
 		panic(err)
 	}

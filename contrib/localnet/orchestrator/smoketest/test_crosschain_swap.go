@@ -20,6 +20,8 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	// Firstly, deposit 1.15 BTC into Zeta for liquidity
 	//sm.DepositBTC()
 	// Secondly, deposit 1000.0 USDT into Zeta for liquidity
+	LoudPrintf("Depositing 1000 USDT & 1.15 BTC for liquidity\n")
+
 	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
@@ -70,22 +72,29 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 
 	btcMinOutAmount := big.NewInt(0)
 	msg := []byte{}
-	for i := 0; i < 20-len(HexToAddress(ZEVMSwapAppAddr).Bytes()); i++ {
-		msg = append(msg, 0)
+	msg = append(msg, sm.ZEVMSwapAppAddr.Bytes()...)
+
+	swapapp := sm.ZEVMSwapApp
+	memobytes, err := swapapp.EncodeMemo(&bind.CallOpts{}, sm.BTCZRC20Addr, []byte(BTCDeployerAddress.EncodeAddress()), btcMinOutAmount)
+	if err != nil {
+		panic(err)
 	}
-	msg = append(msg, HexToAddress(ZEVMSwapAppAddr).Bytes()...)
-	for i := 0; i < 32-len(sm.BTCZRC20Addr.Bytes()); i++ {
-		msg = append(msg, 0)
-	}
-	msg = append(msg, sm.BTCZRC20Addr.Bytes()...)
-	for i := 0; i < 32-len(DeployerAddress.Bytes()); i++ {
-		msg = append(msg, 0)
-	}
-	msg = append(msg, DeployerAddress.Bytes()...)
-	for i := 0; i < 32-len(btcMinOutAmount.Bytes()); i++ {
-		msg = append(msg, 0)
-	}
-	msg = append(msg, btcMinOutAmount.Bytes()...)
+	fmt.Printf("memobytes(%d) %x\n", len(memobytes), memobytes)
+	msg = append(msg, memobytes...)
+
+	//msg = append(msg, HexToAddress(ZEVMSwapAppAddr).Bytes()...)
+	//for i := 0; i < 32-len(sm.BTCZRC20Addr.Bytes()); i++ {
+	//	msg = append(msg, 0)
+	//}
+	//msg = append(msg, sm.BTCZRC20Addr.Bytes()...)
+	//for i := 0; i < 32-len(DeployerAddress.Bytes()); i++ {
+	//	msg = append(msg, 0)
+	//}
+	//msg = append(msg, DeployerAddress.Bytes()...)
+	//for i := 0; i < 32-len(btcMinOutAmount.Bytes()); i++ {
+	//	msg = append(msg, 0)
+	//}
+	//msg = append(msg, btcMinOutAmount.Bytes()...)
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
 	cctx1 := WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
@@ -97,4 +106,17 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
 	cctx2 := WaitCctxMinedByInTxHash(cctx1.Index, sm.cctxClient)
 	_ = cctx2
+	fmt.Printf("cctx2 outbound tx hash %s\n", cctx2.GetCurrentOutTxParam().OutboundTxHash)
+
+	fmt.Printf("Second leg: BTC -> USDT\n")
+	utxos, err := sm.btcRPCClient.ListUnspent()
+	if err != nil {
+		panic(err)
+	}
+	for _, utxo := range utxos {
+		fmt.Printf("utxo: %+v\n", utxo)
+	}
+	fmt.Printf("Unimplemented!\n")
+	//err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, big.NewInt(1e5), utxos[0:2], sm.btcRPCClient, memo)
+
 }
