@@ -113,10 +113,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	if err != nil {
 		panic(err)
 	}
-	for _, utxo := range utxos {
-		fmt.Printf("utxo: %+v\n", utxo)
-	}
-	fmt.Printf("Unimplemented!\n")
-	//err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, big.NewInt(1e5), utxos[0:2], sm.btcRPCClient, memo)
+	fmt.Printf("#utxos %d\n", len(utxos))
+	//fmt.Printf("Unimplemented!\n")
+	memo := []byte{}
+
+	err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
 
 }

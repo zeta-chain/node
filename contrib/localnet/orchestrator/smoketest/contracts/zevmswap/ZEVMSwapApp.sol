@@ -63,6 +63,18 @@ contract ZEVMSwapApp is zContract {
         return abi.encode(targetZRC20, recipient, minAmountOut);
     }
 
+    // data
+    function decodeMemo(bytes calldata data) pure public returns (address, bytes memory) {
+        bytes memory decodedBytes;
+        uint256 size;
+        size = data.length;
+        address addr;
+        addr = address(uint160(bytes20(data[0:20])));
+        decodedBytes = data[20:];
+
+        return (addr, decodedBytes);
+    }
+
     
     // Call this function to perform a cross-chain swap
     function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external override {
@@ -71,8 +83,7 @@ contract ZEVMSwapApp is zContract {
         }
         address targetZRC20;
         bytes memory recipient;
-        uint256 minAmountOut; 
-        (targetZRC20, recipient, minAmountOut) = abi.decode(message, (address,bytes,uint256));
+        (targetZRC20, recipient) = decodeMemo(message);
         address[] memory path;
         path = new address[](2);
         path[0] = zrc20;
