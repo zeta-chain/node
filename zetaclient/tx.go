@@ -110,8 +110,8 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 }
 
 func (b *ZetaCoreBridge) SetNodeKey(tssPubkeySet common.PubKeySet, conskey string) (string, error) {
-	operatorAddress := b.keys.GetOperatorAddress()
-	msg := types.NewMsgSetNodeKeys(operatorAddress.String(), tssPubkeySet, conskey)
+	tssAddress := b.keys.GetAddress(common.TssSignerKey)
+	msg := types.NewMsgSetNodeKeys(tssAddress.String(), tssPubkeySet, conskey)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -38,15 +39,15 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 	return bridge, nil
 }
 
-func CreateSignerMap(tss zetaclient.TSSSigner) (map[common.Chain]zetaclient.ChainSigner, error) {
+func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger) (map[common.Chain]zetaclient.ChainSigner, error) {
 	signerMap := make(map[common.Chain]zetaclient.ChainSigner)
 	for _, chain := range config.ChainsEnabled {
 		if chain.IsEVMChain() {
 			mpiAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
 			erc20CustodyAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
-			signer, err := zetaclient.NewEVMSigner(chain, config.ChainConfigs[chain.ChainName.String()].Endpoint, tss, config.ConnectorAbiString, config.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress)
+			signer, err := zetaclient.NewEVMSigner(chain, config.ChainConfigs[chain.ChainName.String()].Endpoint, tss, config.ConnectorAbiString, config.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress, logger)
 			if err != nil {
-				log.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
+				logger.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 				return nil, err
 			}
 			signerMap[chain] = signer
@@ -64,9 +65,9 @@ func CreateSignerMap(tss zetaclient.TSSSigner) (map[common.Chain]zetaclient.Chai
 			if err != nil {
 				return nil, fmt.Errorf("error creating rpc client: %s", err)
 			}
-			signer, err := zetaclient.NewBTCSigner(tss, client)
+			signer, err := zetaclient.NewBTCSigner(tss, client, logger)
 			if err != nil {
-				log.Fatal().Err(err).Msgf("%s: NewBitcoinSigner Bitcoin error ", chain.String())
+				logger.Fatal().Err(err).Msgf("%s: NewBitcoinSigner Bitcoin error ", chain.String())
 				return nil, err
 			}
 			signerMap[chain] = signer
@@ -76,16 +77,16 @@ func CreateSignerMap(tss zetaclient.TSSSigner) (map[common.Chain]zetaclient.Chai
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics) (map[common.Chain]zetaclient.ChainClient, error) {
+func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics, logger zerolog.Logger) (map[common.Chain]zetaclient.ChainClient, error) {
 	clientMap := make(map[common.Chain]zetaclient.ChainClient)
 	for _, chain := range config.ChainsEnabled {
-		log.Info().Msgf("starting observer for : %s ", chain.String())
+		logger.Info().Msgf("starting observer for : %s ", chain.String())
 		var co zetaclient.ChainClient
 		var err error
 		if chain.IsEVMChain() {
-			co, err = zetaclient.NewEVMChainClient(chain, bridge, tss, dbpath, metrics)
+			co, err = zetaclient.NewEVMChainClient(chain, bridge, tss, dbpath, metrics, logger)
 		} else {
-			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics)
+			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger)
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())

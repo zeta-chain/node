@@ -30,10 +30,6 @@ var StartCmd = &cobra.Command{
 	RunE:  start,
 }
 
-var startArgs = startArguments{}
-
-type startArguments struct{}
-
 const maxRetryCountSetNodeKey = 10
 
 func init() {
@@ -89,7 +85,6 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		log.Error().Err(err).Msg("peer address error")
 	}
-	startLogger.Debug().Msgf("Peers :", peers)
 	initPreParams(configData.PreParamsPath)
 	tss, err := mc.NewTSS(peers, priKey, preParams)
 	if err != nil {
@@ -145,7 +140,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 
 	}
-	signerMap1, err := CreateSignerMap(tss)
+	signerMap1, err := CreateSignerMap(tss, masterLogger)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -160,7 +155,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics)
+	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics, masterLogger)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
@@ -175,11 +170,12 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// report TSS address nonce on ETHish chains
 	for _, chain := range config.ChainsEnabled {
-		err = (chainClientMap1)[chain].PostNonceIfNotRecorded()
+		err = (chainClientMap1)[chain].PostNonceIfNotRecorded(startLogger)
 		if err != nil {
-			startLogger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 		}
 	}
+
 	err = tss.Validate()
 	if err != nil {
 		return err

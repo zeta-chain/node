@@ -28,30 +28,40 @@ const (
 	OutboundTxSignCount = "zetaclient_Outbound_tx_sign_count"
 )
 
+type ZetaCoreLog struct {
+	ChainLogger      zerolog.Logger
+	ZetaChainWatcher zerolog.Logger
+}
+
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
 	tss       *TSS
-	logger    zerolog.Logger
+	logger    ZetaCoreLog
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger) *CoreObserver {
 	co := CoreObserver{}
-	co.logger = logger.With().
+	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()
+	co.logger = ZetaCoreLog{
+		ChainLogger:      chainLogger,
+		ZetaChainWatcher: chainLogger.With().Str("module", "ZetaChainWatcher").Logger(),
+	}
+
 	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 
 	co.clientMap = clientMap
 	co.metrics = metrics
-	co.logger.Info().Msg("starting core observer")
+	co.logger.ChainLogger.Info().Msg("starting core observer")
 	err := metrics.RegisterCounter(OutboundTxSignCount, "number of Outbound tx signed")
 	if err != nil {
-		co.logger.Error().Err(err).Msg("error registering counter")
+		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
 	}
 
 	return &co
@@ -66,10 +76,8 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	co.logger = co.logger.With().
-		Str("module", "MonitorCore").Logger()
 	myid := co.bridge.keys.GetAddress(common.TssSignerKey)
-	co.logger.Info().Msgf("Starting Send Scheduler for %s", myid)
+	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
 	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
 	if noKeygen == "" {
@@ -78,9 +86,9 @@ func (co *CoreObserver) MonitorCore() {
 }
 
 func (co *CoreObserver) keygenObserve() {
-	co.logger = co.logger.With().
+	logger := co.logger.ChainLogger.With().
 		Str("module", "KeygenObserve").Logger()
-	log.Info().Msgf("keygen observe started")
+	logger.Info().Msgf("keygen observe started")
 	observeTicker := time.NewTicker(2 * time.Second)
 	for range observeTicker.C {
 		kg, err := co.bridge.GetKeyGen()
@@ -99,14 +107,14 @@ func (co *CoreObserver) keygenObserve() {
 				req = keygen.NewRequest(kg.Pubkeys, kg.BlockNumber, "0.14.0")
 				res, err := co.tss.Server.Keygen(req)
 				if err != nil || res.Status != tsscommon.Success {
-					co.logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+					logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 					continue
 				}
 				// Keygen succeed! Report TSS address
-				co.logger.Info().Msgf("Keygen success! keygen response: %v...", res)
+				logger.Info().Msgf("Keygen success! keygen response: %v...", res)
 				err = co.tss.InsertPubKey(res.PubKey)
 				if err != nil {
-					co.logger.Error().Msgf("InsertPubKey fail")
+					logger.Error().Msgf("InsertPubKey fail")
 					continue
 				}
 				co.tss.CurrentPubkey = res.PubKey
@@ -114,19 +122,19 @@ func (co *CoreObserver) keygenObserve() {
 				for _, chain := range config.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
+						logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 					}
 				}
 
 				// Keysign test: sanity test
-				co.logger.Info().Msgf("test keysign...")
+				logger.Info().Msgf("test keysign...")
 				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
-				co.logger.Info().Msg("test keysign finished. exit keygen loop. ")
+				logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
-					err = co.clientMap[chain].PostNonceIfNotRecorded()
+					err = co.clientMap[chain].PostNonceIfNotRecorded(logger)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+						co.logger.ChainLogger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
 					}
 				}
 
@@ -140,17 +148,14 @@ func (co *CoreObserver) keygenObserve() {
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule.
 func (co *CoreObserver) startSendScheduler() {
-	co.logger = co.logger.With().
-		Str("module", "SendScheduler").Logger()
-	outTxMan := NewOutTxProcessorManager(co.logger)
+	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
 	go outTxMan.StartMonitorHealth()
-
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
-			co.logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
+			co.logger.ZetaChainWatcher.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
 		}
 		if lastBlockNum == 0 {
@@ -159,12 +164,12 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1
 			if bn%10 == 0 {
-				co.logger.Debug().Msgf("ZetaCore heart beat: %d", bn)
+				co.logger.ZetaChainWatcher.Debug().Msgf("ZetaCore heart beat: %d", bn)
 			}
 			//tStart := time.Now()
 			sendList, err := co.bridge.GetAllPendingCctx()
 			if err != nil {
-				co.logger.Error().Err(err).Msg("error requesting sends from zetacore")
+				co.logger.ZetaChainWatcher.Error().Err(err).Msg("error requesting sends from zetacore")
 				continue
 			}
 			//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
@@ -183,18 +188,18 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 				}
 				if !found {
-					co.logger.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
+					co.logger.ZetaChainWatcher.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
 					continue
 				}
 				if bn%10 == 0 {
-					co.logger.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce, sendList[len(sendList)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
+					co.logger.ZetaChainWatcher.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce, sendList[len(sendList)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
 				}
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
 				for idx, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
 						continue
 					}
 					// update metrics
@@ -206,13 +211,14 @@ func (co *CoreObserver) startSendScheduler() {
 					//		pTxs.Set(float64(len(sendList)))
 					//	}
 					//}
-					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType)
+					// Monitor Core Logger for OutboundTxTssNonce
+					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
 					if err != nil {
-						co.logger.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
 						continue
 					}
 					if included {
-						co.logger.Info().Msgf("send outTx already included; do not schedule")
+						co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 						continue
 					}
 					chain := GetTargetChain(send)
@@ -226,7 +232,7 @@ func (co *CoreObserver) startSendScheduler() {
 					currentHeight := uint64(bn)
 					if nonce%1 == currentHeight%1 && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
-						co.logger.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
+						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
 					if idx > 60 { // only look at 50 sends per chain
