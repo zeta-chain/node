@@ -1,8 +1,10 @@
 FROM golang:1.19-alpine AS builder
 
-RUN apk --no-cache add git make build-base jq
-
 ENV GOPATH /go
+
+RUN apk --no-cache add git make build-base jq openssh
+RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
+
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
@@ -16,13 +18,14 @@ FROM golang:1.19-alpine
 
 RUN apk --no-cache add openssh jq tmux vim curl bash
 RUN ssh-keygen -A
-RUN mkdir /root/.ssh
 
+COPY --from=builder /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
+COPY --from=builder /root/.ssh/localtest.pem.pub /root/.ssh/localtest.pem.pub
+COPY --from=builder /root/.ssh/localtest.pem /root/.ssh/localtest.pem
 COPY --from=builder /go/bin/zetaclientd /usr/local/bin
 COPY --from=builder /go/bin/zetacored /usr/local/bin
 COPY --from=builder /go/bin/smoketest /usr/local/bin
-COPY ../../../Library/Application%20Support/JetBrains/IntelliJIdea2022.1/scratches/Zeta/meta.pem.pub /root/.ssh/authorized_keys
-COPY ../../../Library/Application%20Support/JetBrains/IntelliJIdea2022.1/scratches/Zeta/meta.pem /root/.ssh/meta.pem
+
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams
 COPY contrib/localnet/ssh_config /root/.ssh/config

@@ -4,6 +4,9 @@ pragma solidity 0.8.7;
 import "../interfaces/zContract.sol";
 import "../interfaces/IZRC20.sol";
 
+/**
+ * @dev Custom errors for SystemContract
+ */
 interface SystemContractErrors {
     error CallerIsNotFungibleModule();
 
@@ -14,13 +17,23 @@ interface SystemContractErrors {
     error CantBeZeroAddress();
 }
 
+/**
+ * @dev The system contract it's called by the protocol to interact with the blockchain.
+ * Also includes a lot of tools to make easier to interact with ZetaChain.
+ */
 contract SystemContract is SystemContractErrors {
+    // @dev: Map to know the gas price of each chain given a chain id.
     mapping(uint256 => uint256) public gasPriceByChainId;
+    // @dev: Map to know the ZRC20 address of a token given a chain id, ex zETH, zBNB etc.
     mapping(uint256 => address) public gasCoinZRC20ByChainId;
+    // @dev: Map to know uniswap V2 pool of ZETA/ZRC20 given a chain id. This refer to the build in uniswap deployed at genesis.
     mapping(uint256 => address) public gasZetaPoolByChainId;
 
+    // @dev: Fungible address is always the same, it's on protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
+    // @dev: Address of the wrapped ZETA to interact with Uniswap V2
     address public wZetaContractAddress;
+    // @dev: Uniswap V2 addresses
     address public uniswapv2FactoryAddress;
     address public uniswapv2Router02Address;
     address public zetaConnectorZEVMAddress;
@@ -32,6 +45,9 @@ contract SystemContract is SystemContractErrors {
     event SetWZeta(address);
     event SetConnectorZEVM(address);
 
+    /**
+     * @dev Only fungible module can deploy a system contract.
+     */
     constructor(
         address wzeta_,
         address uniswapv2Factory_,
@@ -58,14 +74,14 @@ contract SystemContract is SystemContractErrors {
         zContract(target).onCrossChainCall(zrc20, amount, message);
     }
 
-    // returns sorted token addresses, used to handle return values from pairs sorted in this order
+    /// @notice returns sorted token addresses, used to handle return values from pairs sorted in this order.
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
         if (tokenA == tokenB) revert CantBeIdenticalAddresses();
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         if (token0 == address(0)) revert CantBeZeroAddress();
     }
 
-    // calculates the CREATE2 address for a pair without making any external calls
+    /// @notice calculates the CREATE2 address for a pair without making any external calls.
     function uniswapv2PairFor(
         address factory,
         address tokenA,
@@ -88,20 +104,21 @@ contract SystemContract is SystemContractErrors {
         );
     }
 
-    // fungible module updates the gas price oracle periodically
+    /// @dev fungible module updates the gas price oracle periodically.
     function setGasPrice(uint256 chainID, uint256 price) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         gasPriceByChainId[chainID] = price;
         emit SetGasPrice(chainID, price);
     }
 
+    /// @notice Setter for gasCoinZRC20ByChainId map.
     function setGasCoinZRC20(uint256 chainID, address zrc20) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         gasCoinZRC20ByChainId[chainID] = zrc20;
         emit SetGasCoin(chainID, zrc20);
     }
 
-    // set the pool wzeta/erc20 address
+    /// @notice set the pool wzeta/erc20 address.
     function setGasZetaPool(uint256 chainID, address erc20) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         address pool = uniswapv2PairFor(uniswapv2FactoryAddress, wZetaContractAddress, erc20);
@@ -109,12 +126,14 @@ contract SystemContract is SystemContractErrors {
         emit SetGasZetaPool(chainID, pool);
     }
 
+    /// @notice Setter for wrapped ZETA address.
     function setWZETAContractAddress(address addr) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         wZetaContractAddress = addr;
         emit SetWZeta(wZetaContractAddress);
     }
 
+    /// @notice Setter for zetaConnector ZEVM Address
     function setConnectorZEVMAddress(address addr) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         zetaConnectorZEVMAddress = addr;

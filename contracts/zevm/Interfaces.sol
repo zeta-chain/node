@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
+
+/**
+ * @dev Interfaces of SystemContract and ZRC20 to make easier to import.
+ */
 interface ISystem {
     function FUNGIBLE_MODULE_ADDRESS() external view returns (address);
     function wZetaContractAddress() external view returns (address);
@@ -44,12 +48,17 @@ interface IZRC20Metadata is IZRC20 {
 }
 
 
+/// @dev Zeta value should not be used
 enum CoinType {
-    Zeta, // this should not be used
+    Zeta, 
     Gas,
     ERC20
 }
 
+/**
+ * @dev Any ZetaChain Contract must implement this interface to allow SystemContract to interact with. 
+ * This is only required if the contract wants to interact with other chains.
+ */
 interface zContract {
     function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external;
 }
