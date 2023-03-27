@@ -5,6 +5,7 @@ from libraries.zetaops import GithubBinaryDownload
 from libraries.zetaops import Utilities
 from libraries.zetaops import Logger
 import sys
+import re
 
 logger = Logger()
 
@@ -17,6 +18,27 @@ command_runner.logger = logger.log
 command_runner.NODE = os.environ["NODE"]
 command_runner.MONIKER = os.environ["MONIKER"]
 command_runner.CHAIN_ID = os.environ["CHAIN_ID"]
+
+git_tags = command_runner.run_command("git tag --list > git_tags && cat git_tags && rm -rf git_tags").split("\n")
+p = re.compile(r'[a-z][0-9].[0-9].[0-9][0-9]')
+tag_list = []
+for tag in git_tags:
+    if p.match(tag):
+        print(tag)
+        tag_list.append(tag)
+tag_list.sort()
+upgrades_json = open("upgrades.json", "r").read()
+upgrades_json = json.loads(upgrades_json)
+binary_download_list = []
+for tag in tag_list:
+    binary_download_list.append([f"https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/{tag}", "zetacored"])
+upgrades_json["binary_versions"] = binary_download_list
+tag_list.pop(0)
+upgrades_json["upgrade_versions"] = tag_list
+upgrades_json_write = open("upgrades.json", "w")
+print(upgrades_json)
+upgrades_json_write.write(json.dumps(upgrades_json))
+upgrades_json_write.close()
 
 logger.log.info("**************************Generate Wallet For Test**************************")
 command_runner.generate_wallet()
