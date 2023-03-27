@@ -21,8 +21,8 @@ RUN mkdir /root/.ssh
 COPY --from=builder /go/bin/zetaclientd /usr/local/bin
 COPY --from=builder /go/bin/zetacored /usr/local/bin
 COPY --from=builder /go/bin/smoketest /usr/local/bin
-COPY contrib/localnet/meta.pem.pub /root/.ssh/authorized_keys
-COPY contrib/localnet/meta.pem /root/.ssh/meta.pem
+COPY ../../../Library/Application%20Support/JetBrains/IntelliJIdea2022.1/scratches/Zeta/meta.pem.pub /root/.ssh/authorized_keys
+COPY ../../../Library/Application%20Support/JetBrains/IntelliJIdea2022.1/scratches/Zeta/meta.pem /root/.ssh/meta.pem
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams
 COPY contrib/localnet/ssh_config /root/.ssh/config
