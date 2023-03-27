@@ -175,6 +175,10 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge) {
+	signer.logger = signer.logger.With().
+		Str("Module", "BtcTryProcessOutTx").
+		Str("outTxID", outTxID).
+		Logger()
 	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
 	if err != nil {
 		signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)

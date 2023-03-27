@@ -74,12 +74,14 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 // given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
 func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
+	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes)
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	log.Debug().Msgf("Sign: Signature: %s", hex.EncodeToString(sig[:]))
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
 		signer.logger.Error().Err(err).Msgf("SigToPub error")
@@ -200,14 +202,13 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 
 func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge) {
 	logger := signer.logger.With().
-		Str("sendHash", send.Index).
+		Str("module", fmt.Sprintf("%sTryProcessOutTx", signer.chain.ChainName.String())).
 		Str("outTxID", outTxID).
 		Logger()
 	logger.Info().Msgf("start processing outTxID %s", outTxID)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
-	// TODO check Signer
 	myid := zetaBridge.keys.GetOperatorAddress()
 
 	var to ethcommon.Address
@@ -358,7 +359,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 
 	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce)
 	if err != nil {
-		return nil, fmt.Errorf("Sign error: %w", err)
+		return nil, fmt.Errorf("sign error: %w", err)
 	}
 
 	return tx, nil

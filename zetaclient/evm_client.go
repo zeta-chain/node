@@ -375,7 +375,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
-	logger := ob.logger
+	//ob.logger = ob.logger.With().
+	//	Str("module", "ObserveOutTx").
+	//	Logger()
 	ticker := time.NewTicker(3 * time.Second) // FIXME: config this
 	for {
 		select {
@@ -393,7 +395,7 @@ func (ob *EVMChainClient) observeOutTx() {
 					inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
-						logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
+						ob.logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
@@ -403,12 +405,12 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedTransaction[int(nonceInt)] = transaction
 							value, err := receipt.MarshalJSON()
 							if err != nil {
-								logger.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
+								ob.logger.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
 							}
 							ob.mu.Unlock()
 							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
 							if err != nil {
-								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+								ob.logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
 							break TXHASHLOOP
 						}
@@ -417,7 +419,7 @@ func (ob *EVMChainClient) observeOutTx() {
 				}
 			}
 		case <-ob.stop:
-			logger.Info().Msg("observeOutTx: stopped")
+			ob.logger.Info().Msg("observeOutTx: stopped")
 			return
 		}
 	}
@@ -480,6 +482,10 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
+	//ob.logger = ob.logger.With().
+	//	Str("module", "ExternalChainWatcher").
+	//	Logger()
+
 	ob.logger.Info().Msg("ExternalChainWatcher started")
 	for {
 		select {
@@ -812,6 +818,9 @@ func (ob *EVMChainClient) PostNonceIfNotRecorded() error {
 }
 
 func (ob *EVMChainClient) WatchGasPrice() {
+	//ob.logger = ob.logger.With().
+	//	Str("module", "WatchGasPrice").
+	//	Logger()
 	err := ob.PostGasPrice()
 	if err != nil {
 		ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
@@ -849,11 +858,12 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	var supply string // lockedAmount on ETH, totalSupply on other chains
 	supply = "100"
 
-	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
+	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
 		ob.logger.Err(err).Msg("PostGasPrice:")
 		return err
 	}
+	ob.logger.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 
 	return nil
 }
