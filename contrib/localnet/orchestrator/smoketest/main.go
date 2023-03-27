@@ -193,6 +193,7 @@ func main() {
 	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
 	smokeTest.TestCrosschainSwap()
+	smokeTest.TestCrosschainRevert()
 	smokeTest.TestMessagePassingRevertFail()
 	smokeTest.TestMessagePassingRevertSuccess()
 
