@@ -24,10 +24,13 @@ env:
 
 jobs:
   deploy-cosmovisor-upgrade:
-    runs-on: ubuntu-latest
+    runs-on: ["zeta-runners"]
     environment: ${{ github.event.inputs.ENVIRONMENT }}
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install Pipeline Dependencies
+        uses:  ./.github/actions/install-dependencies
 
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2.0.8
