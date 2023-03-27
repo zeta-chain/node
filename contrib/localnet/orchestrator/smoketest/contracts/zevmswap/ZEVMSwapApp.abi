@@ -60,11 +60,6 @@
         "internalType": "bytes",
         "name": "recipient",
         "type": "bytes"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minAmountOut",
-        "type": "uint256"
       }
     ],
     "name": "encodeMemo",

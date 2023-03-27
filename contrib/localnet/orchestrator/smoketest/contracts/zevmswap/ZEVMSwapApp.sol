@@ -59,8 +59,9 @@ contract ZEVMSwapApp is zContract {
         systemContract = systemContract_;
     }
 
-    function encodeMemo(address targetZRC20,  bytes calldata recipient, uint256 minAmountOut) pure external returns (bytes memory) {
-        return abi.encode(targetZRC20, recipient, minAmountOut);
+    function encodeMemo(address targetZRC20,  bytes calldata recipient) pure external returns (bytes memory) {
+//        return abi.encode(targetZRC20, recipient, minAmountOut);
+        return abi.encodePacked(targetZRC20, recipient);
     }
 
     // data
@@ -92,12 +93,11 @@ contract ZEVMSwapApp is zContract {
         IZRC20(zrc20).approve(address(router02), amount);
         // Swap for your target token
         uint256[] memory amounts = IUniswapV2Router02(router02).swapExactTokensForTokens(amount, 0, path, address(this), _DEADLINE);
-        // Withdraw amount to target recipient
-        (, uint256 gasFee) = IZRC20(targetZRC20).withdrawGasFee();
-        if (gasFee > amounts[1]) {
-            revert LowAmount();
-        }
-        IZRC20(targetZRC20).approve(address(targetZRC20), gasFee);
-        IZRC20(targetZRC20).withdraw(recipient, amounts[1] - gasFee);
+
+        // this contract subsides withdraw gas fee
+        (address gasZRC20Addr,uint256 gasFee) = IZRC20(targetZRC20).withdrawGasFee();
+        IZRC20(gasZRC20Addr).approve(address(targetZRC20), gasFee);
+        IZRC20(targetZRC20).approve(address(targetZRC20), amounts[1]); // this does not seem to be necessary
+        IZRC20(targetZRC20).withdraw(recipient, amounts[1]);
     }
 }

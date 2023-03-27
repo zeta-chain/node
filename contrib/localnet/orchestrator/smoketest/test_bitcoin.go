@@ -364,7 +364,7 @@ func SendToTSSFromDeployerToDeposit(to btcutil.Address, amount float64, inputUTX
 	return nil
 }
 
-func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client, memo []byte) error {
+func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXOs []btcjson.ListUnspentResult, btc *rpcclient.Client, memo []byte) (*chainhash.Hash, error) {
 	utxos := inputUTXOs
 
 	inputs := make([]btcjson.TransactionInput, len(utxos))
@@ -377,7 +377,7 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 	amountSats := btcutil.Amount(amount * btcutil.SatoshiPerBitcoin)
 	change := inputSats - feeSats - amountSats
 	if change < 0 {
-		return fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
+		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
 	}
 	amounts := map[btcutil.Address]btcutil.Amount{
 		to:                 amountSats,
@@ -439,5 +439,5 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		fmt.Printf("  Amount: %f\n", event.Value)
 		fmt.Printf("  Memo: %x\n", event.MemoBytes)
 	}
-	return nil
+	return txid, nil
 }

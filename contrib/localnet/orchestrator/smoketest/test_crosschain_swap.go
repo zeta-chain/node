@@ -70,31 +70,38 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("Add liquidity receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
-	btcMinOutAmount := big.NewInt(0)
+	fmt.Printf("Funding contracts ZEVMSwapApp with gas ZRC20s; 1e7 ETH, 1e6 BTC\n")
+	// Fund ZEVMSwapApp with gas ZRC20s
+	tx, err = sm.ETHZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e7))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	fmt.Printf("  USDT ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+	bal1, _ := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	fmt.Printf("  ZEVMSwapApp ETHZRC20 balance %d", bal1)
+	tx, err = sm.BTCZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	fmt.Printf("  BTC ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+	bal2, _ := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	fmt.Printf("  ZEVMSwapApp BTCZRC20 balance %d", bal2)
+
+	// msg would be [ZEVMSwapAppAddr, memobytes]
+	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
 	msg := []byte{}
 	msg = append(msg, sm.ZEVMSwapAppAddr.Bytes()...)
+	memobytes, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, sm.BTCZRC20Addr, []byte(BTCDeployerAddress.EncodeAddress()))
 
-	swapapp := sm.ZEVMSwapApp
-	memobytes, err := swapapp.EncodeMemo(&bind.CallOpts{}, sm.BTCZRC20Addr, []byte(BTCDeployerAddress.EncodeAddress()), btcMinOutAmount)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("memobytes(%d) %x\n", len(memobytes), memobytes)
 	msg = append(msg, memobytes...)
 
-	//msg = append(msg, HexToAddress(ZEVMSwapAppAddr).Bytes()...)
-	//for i := 0; i < 32-len(sm.BTCZRC20Addr.Bytes()); i++ {
-	//	msg = append(msg, 0)
-	//}
-	//msg = append(msg, sm.BTCZRC20Addr.Bytes()...)
-	//for i := 0; i < 32-len(DeployerAddress.Bytes()); i++ {
-	//	msg = append(msg, 0)
-	//}
-	//msg = append(msg, DeployerAddress.Bytes()...)
-	//for i := 0; i < 32-len(btcMinOutAmount.Bytes()); i++ {
-	//	msg = append(msg, 0)
-	//}
-	//msg = append(msg, btcMinOutAmount.Bytes()...)
+	fmt.Printf("***** First test: USDT -> BTC\n")
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
 	cctx1 := WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
@@ -108,15 +115,35 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	_ = cctx2
 	fmt.Printf("cctx2 outbound tx hash %s\n", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
-	fmt.Printf("Second leg: BTC -> USDT\n")
+	fmt.Printf("******* Second test: BTC -> USDT\n")
 	utxos, err := sm.btcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("#utxos %d\n", len(utxos))
 	//fmt.Printf("Unimplemented!\n")
-	memo := []byte{}
+	memo, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, sm.USDTZRC20Addr, DeployerAddress.Bytes())
+	if err != nil {
+		panic(err)
+	}
+	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
+	fmt.Printf("memo length %d\n", len(memo))
 
-	err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+	fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
+	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+	if err != nil {
+		panic(err)
+	}
 
+	cctx3 := WaitCctxMinedByInTxHash(txid.String(), sm.cctxClient)
+	fmt.Printf("cctx3 index %s\n", cctx3.Index)
+	fmt.Printf("  inboudn tx hash %s\n", cctx3.InboundTxParams.InboundTxObservedHash)
+	fmt.Printf("  status %s\n", cctx3.CctxStatus.Status.String())
+	fmt.Printf("  status msg: %s\n", cctx3.CctxStatus.StatusMessage)
+
+	cctx4 := WaitCctxMinedByInTxHash(cctx3.Index, sm.cctxClient)
+	fmt.Printf("cctx4 index %s\n", cctx4.Index)
+	fmt.Printf("  outbound tx hash %s\n", cctx4.GetCurrentOutTxParam().OutboundTxHash)
+	fmt.Printf("  status %s\n", cctx4.CctxStatus.Status.String())
 }
