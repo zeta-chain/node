@@ -39,7 +39,6 @@ runs:
         CHAIN_ID: "test_1001-1"
         NODE: "http://127.0.0.1:26657"
         GO_PATH: "/home/runner/work/zeta-node/zeta-node/"
-        STARTING_VERSION: "v1.1.11"
         BLOCK_TIME_SECONDS: "4"
         PROPOSAL_TIME_SECONDS: "60"
         GAS_PRICES: "0.1azeta"
@@ -63,11 +62,12 @@ runs:
         echo "***********Change Permission of Zetacored*********************"
         chmod a+x zetacored*
         chmod -R 777 zetacored*
+        mv zetacored-ubuntu zetacored
+        export PATH=$(pwd):$PATH
+        ls -lah | grep zetacored
         
+        echo "***********Change Directories into the Upgrade Testing Directory.*********************"
         cd .github/actions/upgrade-testing/
-
-        export END_VERSION=${GITHUB_REF##*/}
-        echo "***********END VERSION: ${END_VERSION}*********************"
         
         echo "***********Pip install requirements*********************"
         pip install -r requirements.txt
@@ -75,6 +75,7 @@ runs:
         echo "***********Execute Testing*********************"
         python run_upgrade_proposals.py
         
+        echo "***********Change Directory Back to Workspace.*********************"
         cd $current_directory
 
 

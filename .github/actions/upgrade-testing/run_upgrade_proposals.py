@@ -23,7 +23,7 @@ p = re.compile(r'[a-z][0-9].[0-9].[0-9][0-9]')
 tag_list = []
 for tag in git_tags:
     if p.match(tag):
-        print(tag)
+        logger.log.info(tag)
         tag_list.append(tag)
 tag_list.sort()
 upgrades_json = open("upgrades.json", "r").read()
@@ -31,11 +31,18 @@ upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 for tag in tag_list:
     binary_download_list.append([f"{tag}", "zetacored-ubuntu"])
+
+os.environ["STARTING_VERSION"] = tag_list[0]
+os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
+logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
+logger.log.info(f"End Version Version: {os.environ['END_VERSION']}")
+
 tag_list.pop(0)
+
 upgrades_json["binary_versions"] = binary_download_list
 upgrades_json["upgrade_versions"] = tag_list
 upgrades_json_write = open("upgrades.json", "w")
-print(upgrades_json)
+logger.log.info(upgrades_json)
 upgrades_json_write.write(json.dumps(upgrades_json))
 upgrades_json_write.close()
 
