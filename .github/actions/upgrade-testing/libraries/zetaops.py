@@ -26,28 +26,31 @@ class GithubBinaryDownload:
 
     def download_testing_binaries(self):
         load_upgrades = json.loads(open(self.upgrades_file_location, "r").read())
-        for asset_url, binary_name in load_upgrades["binary_versions"]:
-            headers = {"Accept": "application/vnd.github+json",
-                       "Authorization": f"Bearer {self.github_token}"}
-            response = requests.get(asset_url, headers=headers).json()
-            for asset in response["assets"]:
-                if asset["name"].lower() == binary_name.lower():
-                    binary_url = asset["browser_download_url"]
-                    asset_id = asset["id"]
-                    headers = {"Accept": "application/octet-stream",
-                               "Authorization": f"Bearer {self.github_token}",
-                               "X-GitHub-Api-Version": "2022-11-28"}
-                    url_to_download = f"https://api.github.com/repos/{self.github_owner}/{self.github_repo}/releases/assets/{asset_id}"
-                    response = requests.get(url_to_download, stream=True, headers=headers)
-                    upgrade_version_name = binary_url.split("/")[7].replace("v.", "v")
-                    try:
-                        os.makedirs("upgrades/", exist_ok=True)
-                        os.makedirs("upgrades/" + upgrade_version_name, exist_ok=True)
-                        os.makedirs("upgrades/" + upgrade_version_name + "/bin", exist_ok=True)
-                    except Exception as e:
-                        print(e)
-                    with open("upgrades/" + upgrade_version_name + "/bin/zetacored", "wb") as handle:
-                        handle.write(response.content)
+        for asset_tag, binary_name in load_upgrades["binary_versions"]:
+            headers = {"Accept": "application/vnd.github+json","Authorization": f"Bearer {self.github_token}"}
+            releases = requests.get(f"https://api.github.com/repos/{self.github_owner}/{self.github_repo}/releases",headers=headers).json()
+            for release in releases:
+                if asset_tag in release["tag_name"]:
+                    for asset in release["assets"]:
+                        if asset["name"].lower() == binary_name.lower():
+                            binary_url = asset["browser_download_url"]
+                            asset_id = asset["id"]
+                            headers = {"Accept": "application/octet-stream",
+                                       "Authorization": f"Bearer {self.github_token}",
+                                       "X-GitHub-Api-Version": "2022-11-28"}
+                            response = requests.get(asset["url"], stream=True, headers=headers)
+                            upgrade_version_name = binary_url.split("/")[7].replace("v.", "v")
+                            try:
+                                print("create upgrades folder.")
+                                os.makedirs("upgrades/", exist_ok=True)
+                                print(f"version folder: {upgrade_version_name}")
+                                os.makedirs("upgrades/" + upgrade_version_name, exist_ok=True)
+                                os.makedirs("upgrades/" + upgrade_version_name + "/bin", exist_ok=True)
+                            except Exception as e:
+                                print(e)
+
+                            with open("upgrades/" + upgrade_version_name + "/bin/zetacored", "wb") as handle:
+                                handle.write(response.content)
 
 class Utilities:
     def __init__(self, go_path):
@@ -197,6 +200,7 @@ class Utilities:
 
     def build_docker_image(self, docker_file_location):
         self.logger.info("Build Docker Image")
+        #docker_build_output = self.run_command(f'docker buildx build --platform linux/amd64 -t local/upgrade-test:latest {docker_file_location}')
         docker_build_output = self.run_command(f'docker build -t local/upgrade-test:latest {docker_file_location}')
         self.logger.info(docker_build_output)
         docker_image_list = self.run_command("docker image list")
@@ -241,6 +245,7 @@ class Utilities:
         self.logger.info("kill running containers.")
         self.kill_docker_containers()
         self.logger.info("Start local network contianer.")
+        #docker_command = f'docker run {DOCKER_ENVS} --platform=linux/amd64 -d -p 26657:26657 local/upgrade-test:latest'
         docker_command = f'docker run {DOCKER_ENVS} -d -p 26657:26657 local/upgrade-test:latest'
         self.logger.info(docker_command)
         self.run_command(docker_command)

@@ -31,9 +31,9 @@ upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 for tag in tag_list:
-    binary_download_list.append([f"https://api.github.com/repos/zeta-chain/zeta-node/releases/tags/{tag}", "zetacored"])
-upgrades_json["binary_versions"] = binary_download_list
+    binary_download_list.append([f"{tag}", "zetacored-ubuntu"])
 tag_list.pop(0)
+upgrades_json["binary_versions"] = binary_download_list
 upgrades_json["upgrade_versions"] = tag_list
 upgrades_json_write = open("upgrades.json", "w")
 print(upgrades_json)
@@ -70,6 +70,7 @@ command_runner.start_docker_container(os.environ["GAS_PRICES"],
 time.sleep(10)
 logger.log.info("**************************check docker containers**************************")
 command_runner.docker_ps()
+command_runner.get_docker_container_logs()
 
 logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
