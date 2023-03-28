@@ -65,26 +65,26 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// Aborts is any of the updates fail
 
 	if receiverChain.IsZetaChain() {
-		cachedCtx, write := ctx.CacheContext()
-		err = k.HandleEVMDeposit(cachedCtx, &cctx, *msg, observationChain)
+		//cachedCtx, write := ctx.CacheContext()
+		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
 			EmitEventInboundFailed(ctx, &cctx)
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		write()
+		//write()
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 	} else { // Cross Chain SWAP
-		cachedCtx, write := ctx.CacheContext()
-		err = k.FinalizeInbound(cachedCtx, &cctx, *receiverChain, len(ballot.VoterList))
+		//cachedCtx, write := ctx.CacheContext()
+		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
 			EmitEventInboundFailed(ctx, &cctx)
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		write()
+		//write()
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	}
 	EmitEventInboundFinalized(ctx, &cctx)

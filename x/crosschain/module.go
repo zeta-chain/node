@@ -8,8 +8,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -179,9 +177,9 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	if ctx.BlockHeight()%common.BlocksPerHour == 0 {
-		CleanupState(ctx, am.keeper)
-	}
+	//if ctx.BlockHeight()%common.BlocksPerHour == 0 {
+	//	CleanupState(ctx, am.keeper)
+	//}
 	am.keeper.ScrubGasPriceOfStuckOutTx(sdk.WrapSDKContext(ctx))
 	return []abci.ValidatorUpdate{}
 }
