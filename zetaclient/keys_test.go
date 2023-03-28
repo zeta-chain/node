@@ -75,7 +75,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	_, err := GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey}, "/Users/tanmay/.zetacored/", "bob", "")
+	_, err := GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey}, "/Users/test/.zetacored/", "bob", "")
 	c.Assert(err, NotNil)
 }
 
