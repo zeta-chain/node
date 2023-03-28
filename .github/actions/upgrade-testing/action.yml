@@ -14,15 +14,6 @@ runs:
       with:
         python-version: 'pypy3.9'
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
     - uses: actions/download-artifact@v3
       with:
         name: binaries-${{ github.sha }}

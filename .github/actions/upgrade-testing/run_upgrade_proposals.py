@@ -76,7 +76,8 @@ command_runner.start_docker_container(os.environ["GAS_PRICES"],
 time.sleep(10)
 logger.log.info("**************************check docker containers**************************")
 command_runner.docker_ps()
-command_runner.get_docker_container_logs()
+#Uncomment to debug.
+#command_runner.get_docker_container_logs()
 
 logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
@@ -112,10 +113,9 @@ for version in UPGRADE_DATA["upgrade_versions"]:
     **************************UPGRADE INFO**************************""")
     time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
     command_runner.docker_ps()
-    command_runner.get_docker_container_logs()
 
+logger.info("Check docker process is still running for debug purposes.")
 command_runner.docker_ps()
-command_runner.get_docker_container_logs()
 
 if command_runner.version_check(os.environ["END_VERSION"]):
     logger.log.info("**************************Version is what was expected.**************************")
