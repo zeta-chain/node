@@ -8,10 +8,10 @@ import sys
 import re
 
 logger = Logger()
-logger.log.info("**************************Initiate GitHub Binary Downloader**************************")
+logger.info("**************************Initiate GitHub Binary Downloader**************************")
 binary_downloader = GithubBinaryDownload(os.environ["GITHUB_TOKEN"], os.environ["GITHUB_OWNER"], os.environ["GITHUB_REPO"])
 
-logger.log.info("Initiate Utilities")
+logger.info("Initiate Utilities")
 command_runner = Utilities(os.environ["GO_PATH"])
 command_runner.logger = logger.log
 command_runner.NODE = os.environ["NODE"]
@@ -23,7 +23,7 @@ p = re.compile(r'[a-z][0-9].[0-9].[0-9][0-9]')
 tag_list = []
 for tag in git_tags:
     if p.match(tag):
-        logger.log.info(tag)
+        logger.info(tag)
         tag_list.append(tag)
 tag_list.sort()
 upgrades_json = open("upgrades.json", "r").read()
@@ -34,29 +34,29 @@ for tag in tag_list:
 
 os.environ["STARTING_VERSION"] = tag_list[0]
 os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
-logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
-logger.log.info(f"End Version Version: {os.environ['END_VERSION']}")
+logger.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
+logger.info(f"End Version Version: {os.environ['END_VERSION']}")
 
 tag_list.pop(0)
 
 upgrades_json["binary_versions"] = binary_download_list
 upgrades_json["upgrade_versions"] = tag_list
 upgrades_json_write = open("upgrades.json", "w")
-logger.log.info(upgrades_json)
+logger.info(upgrades_json)
 upgrades_json_write.write(json.dumps(upgrades_json))
 upgrades_json_write.close()
 
-logger.log.info("**************************Generate Wallet For Test**************************")
+logger.info("**************************Generate Wallet For Test**************************")
 command_runner.generate_wallet()
 command_runner.load_key()
 
-logger.log.info("**************************Download Github Binaries from upgrades.json**************************")
+logger.info("**************************Download Github Binaries from upgrades.json**************************")
 binary_downloader.download_testing_binaries()
 
-logger.log.info("**************************Build Docker Image**************************")
+logger.info("**************************Build Docker Image**************************")
 command_runner.build_docker_image(os.environ["DOCKER_FILE_LOCATION"])
 
-logger.log.info("**************************Start Docker Container and Sleep for 60 Seconds**************************")
+logger.info("**************************Start Docker Container and Sleep for 60 Seconds**************************")
 command_runner.start_docker_container(os.environ["GAS_PRICES"],
                                os.environ["DAEMON_HOME"],
                                os.environ["DAEMON_NAME"],
@@ -74,34 +74,34 @@ command_runner.start_docker_container(os.environ["GAS_PRICES"],
                                os.environ["CLIENT_START_PROCESS"])
 
 time.sleep(10)
-logger.log.info("**************************check docker containers**************************")
+logger.info("**************************check docker containers**************************")
 command_runner.docker_ps()
 #Uncomment to debug.
 #command_runner.get_docker_container_logs()
 
-logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
+logger.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
 
 for version in UPGRADE_DATA["upgrade_versions"]:
-    logger.log.info(f"**************************starting upgrade for version: {version}**************************")
+    logger.info(f"**************************starting upgrade for version: {version}**************************")
     VERSION=version
     BLOCK_TIME_SECONDS = int(os.environ["BLOCK_TIME_SECONDS"])
     PROPOSAL_TIME_SECONDS = int(os.environ["PROPOSAL_TIME_SECONDS"])
     UPGRADE_INFO = '{}'
 
-    logger.log.info("**************************raise governance proposal**************************")
+    logger.info("**************************raise governance proposal**************************")
     GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
 
-    logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
+    logger.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
     time.sleep(10)
 
-    logger.log.info("**************************get proposal id**************************")
+    logger.info("**************************get proposal id**************************")
     PROPOSAL_ID = command_runner.get_proposal_id()
-    logger.log.info(PROPOSAL_ID)
+    logger.info(PROPOSAL_ID)
 
-    logger.log.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
+    logger.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
     vote_output = command_runner.raise_governance_vote(PROPOSAL_ID)
-    logger.log.info(f"""**************************UPGRADE INFO**************************
+    logger.info(f"""**************************UPGRADE INFO**************************
         MONIKER: {command_runner.MONIKER}
         NODE: {command_runner.NODE}
         PROPOSAL_ID: {PROPOSAL_ID}
@@ -118,26 +118,26 @@ logger.info("Check docker process is still running for debug purposes.")
 command_runner.docker_ps()
 
 if command_runner.version_check(os.environ["END_VERSION"]):
-    logger.log.info("**************************Version is what was expected.**************************")
+    logger.info("**************************Version is what was expected.**************************")
     current_block = command_runner.current_block()
-    logger.log.info("**************************Check to see if chain is still processing blocks.**************************")
+    logger.info("**************************Check to see if chain is still processing blocks.**************************")
     time.sleep(10)
     end_block = command_runner.current_block()
     if abs(end_block - current_block) > 0:
-        logger.log.info("**************************chain still processing blocks upgrade path looks good**************************")
-        logger.log.info("**************************kill running docker containers and cleanup.**************************")
+        logger.info("**************************chain still processing blocks upgrade path looks good**************************")
+        logger.info("**************************kill running docker containers and cleanup.**************************")
         command_runner.get_docker_container_logs()
         command_runner.kill_docker_containers()
         sys.exit(0)
     else:
-        logger.log.info("**************************Chain doesn't seem to be processign blocks upgrade path was a failure.**************************")
-        logger.log.info("**************************kill running docker containers and cleanup.**************************")
+        logger.info("**************************Chain doesn't seem to be processign blocks upgrade path was a failure.**************************")
+        logger.info("**************************kill running docker containers and cleanup.**************************")
         command_runner.get_docker_container_logs()
         command_runner.kill_docker_containers()
         sys.exit(1)
 else:
-    logger.log.info("**************************Version didn't match what was expected.**************************")
-    logger.log.info("**************************kill running docker containers and cleanup.**************************")
+    logger.info("**************************Version didn't match what was expected.**************************")
+    logger.info("**************************kill running docker containers and cleanup.**************************")
     command_runner.get_docker_container_logs()
     command_runner.kill_docker_containers()
     sys.exit(1)
