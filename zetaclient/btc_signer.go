@@ -272,7 +272,7 @@ func (signer *BTCSigner) updatePendingUTXOs(db *gorm.DB, utxos []btcjson.ListUns
 		// If record doesn't exist, it will be created by the Save function
 		pendingUTXO.UTXO = utxo
 		pendingUTXO.Key = utxoKey(utxo)
-		if err := db.Save(pendingUTXO).Error; err != nil {
+		if err := db.Save(&pendingUTXO).Error; err != nil {
 			return err
 		}
 	}

@@ -907,7 +907,7 @@ func (ob *EVMChainClient) BuildReceiptsMap() {
 
 	if dbf.Error == nil {
 		for _, receipt := range receipts {
-			ob.outTXConfirmedReceipts[receipt.Nonce] = &receipt.Receipt
+			ob.outTXConfirmedReceipts[receipt.Nonce] = clienttypes.FromReceiptDBType(receipt.Receipt)
 		}
 	} else {
 		logger.Error().Err(dbf.Error).Msg("error iterating over db")
@@ -921,7 +921,7 @@ func (ob *EVMChainClient) BuildTransactionsMap() {
 
 	if dbf.Error == nil {
 		for _, transaction := range transactions {
-			ob.outTXConfirmedTransaction[transaction.Nonce] = &transaction.Transaction
+			ob.outTXConfirmedTransaction[transaction.Nonce] = clienttypes.FromTransactionDBType(transaction.Transaction)
 		}
 	} else {
 		logger.Error().Err(dbf.Error).Msg("error iterating over db")
