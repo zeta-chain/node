@@ -22,7 +22,7 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
+func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	startTime := time.Now()
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))

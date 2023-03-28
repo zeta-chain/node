@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"cosmossdk.io/math"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -419,14 +418,9 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						logger.Warn().Msgf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
 						continue
 					}
-					memoStr, err := hex.DecodeString(script[4:])
+					memoBytes, err := hex.DecodeString(script[4:])
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
-						continue
-					}
-					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
-					if err != nil {
-						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", (memoStr))
 						continue
 					}
 					memo = memoBytes
