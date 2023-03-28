@@ -45,29 +45,9 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 			sdk.NewAttribute(types.Receiver, currentOutParam.Receiver),
 			sdk.NewAttribute(types.ReceiverChain, fmt.Sprintf("%d", currentOutParam.ReceiverChainId)),
 			sdk.NewAttribute(types.Amount, cctx.InboundTxParams.Amount.String()),
-			//sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint.String()),
 			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
 			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
 			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
-		),
-	)
-}
-
-// FIXME: fix the events
-func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.CctxCreated,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
-			//sdk.NewAttribute(types.SenderChain, cctx.InboundTxParams.SenderChain),
-			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
-			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
-			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
-			//sdk.NewAttribute(types.Receiver, cctx.OutboundTxParams.Receiver),
-			//sdk.NewAttribute(types.ReceiverChain, cctx.OutboundTxParams.ReceiverChain),
-			//sdk.NewAttribute(types.Amount, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
 			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
 		),
 	)
@@ -127,7 +107,7 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	)
 }
 
-func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
+func EmitOutboundSuccessFinalized(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
 	event := sdk.NewEvent(types.OutboundTxSuccessful,
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		//sdk.NewAttribute(types.OutTxHash, cctx.OutboundTxParams.OutboundTxHash),
@@ -140,7 +120,7 @@ func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 	ctx.EventManager().EmitEvent(event)
 }
 
-func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
+func EmitOutboundFailureFinalized(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
 	event := sdk.NewEvent(types.OutboundTxFailed,
 		sdk.NewAttribute(types.CctxIndex, cctx.Index),
 		//sdk.NewAttribute(types.OutTxHash, cctx.OutboundTxParams.OutboundTxHash),

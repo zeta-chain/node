@@ -66,21 +66,21 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	oldStatus := cctx.CctxStatus.Status
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
-	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
+	cachedCtx, write := ctx.CacheContext()
+	err = FinalizeOutbound(k, cachedCtx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
-		//cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-		ctx.Logger().Error(err.Error())
-		//k.SetCrossChainTx(ctx, cctx)
-		// Remove OutTX tracker and change CCTX prefix store
-		//k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-		//k.CctxChangePrefixStore(ctx, cctx, oldStatus)
-		return nil, err
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		//Remove OutTX tracker and change CCTX prefix store
+		k.SetCrossChainTx(ctx, cctx)
+		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
+	write()
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 	EmitEventBallotFinalized(ctx, ballot, observationChain.String())
-	k.zetaObserverKeeper.RemoveBallot(ctx, ballot.Index)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
@@ -119,7 +119,7 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 				return err
 			}
 		}
-		EmitOutboundSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
+		EmitOutboundSuccessFinalized(ctx, msg, oldStatus.String(), newStatus, cctx)
 	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
@@ -147,7 +147,7 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 
 		}
 		newStatus := cctx.CctxStatus.Status.String()
-		EmitOutboundFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
+		EmitOutboundFailureFinalized(ctx, msg, oldStatus.String(), newStatus, cctx)
 	}
 	return nil
 }
