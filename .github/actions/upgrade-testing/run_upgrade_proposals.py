@@ -8,7 +8,6 @@ import sys
 import re
 
 logger = Logger()
-
 logger.log.info("**************************Initiate GitHub Binary Downloader**************************")
 binary_downloader = GithubBinaryDownload(os.environ["GITHUB_TOKEN"], os.environ["GITHUB_OWNER"], os.environ["GITHUB_REPO"])
 
@@ -105,6 +104,11 @@ for version in UPGRADE_DATA["upgrade_versions"]:
         LATEST_BLOCK: {command_runner.CURRENT_HEIGHT}
     **************************UPGRADE INFO**************************""")
     time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
+    command_runner.docker_ps()
+    command_runner.get_docker_container_logs()
+
+command_runner.docker_ps()
+command_runner.get_docker_container_logs()
 
 if command_runner.version_check(os.environ["END_VERSION"]):
     logger.log.info("**************************Version is what was expected.**************************")

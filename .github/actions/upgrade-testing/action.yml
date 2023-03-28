@@ -39,7 +39,7 @@ runs:
         CHAIN_ID: "test_1001-1"
         NODE: "http://127.0.0.1:26657"
         GO_PATH: "/home/runner/work/zeta-node/zeta-node/"
-        STARTING_VERSION: "athens2-v1.1.15"
+        STARTING_VERSION: "v1.1.11"
         BLOCK_TIME_SECONDS: "4"
         PROPOSAL_TIME_SECONDS: "60"
         GAS_PRICES: "0.1azeta"
