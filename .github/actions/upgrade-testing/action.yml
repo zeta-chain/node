@@ -56,18 +56,23 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
       run: |
+        
         current_directory=$(pwd)
         export PATH=${current_directory}:${PATH}
-        chmod a+x zetacored
-        chmod -R 777 zetacored
+        
+        echo "***********Change Permission of Zetacored*********************"
+        chmod a+x zetacored*
+        chmod -R 777 zetacored*
         
         cd .github/actions/upgrade-testing/
 
         export END_VERSION=${GITHUB_REF##*/}
         echo "***********END VERSION: ${END_VERSION}*********************"
         
+        echo "***********Pip install requirements*********************"
         pip install -r requirements.txt
         
+        echo "***********Execute Testing*********************"
         python run_upgrade_proposals.py
         
         cd $current_directory
