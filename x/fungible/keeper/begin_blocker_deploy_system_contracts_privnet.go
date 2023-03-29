@@ -99,11 +99,11 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	}
 	ctx.Logger().Info("Deployed USDT ZRC20 at " + USDTZRC20Addr.String())
 	// for localnet only: ZEVM Swap App
-	ZEVMSwapAddress, err := k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
-	}
-	ctx.Logger().Info("Deployed ZEVM Swap App at " + ZEVMSwapAddress.String())
+	//ZEVMSwapAddress, err := k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
+	//if err != nil {
+	//	return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
+	//}
+	//ctx.Logger().Info("Deployed ZEVM Swap App at " + ZEVMSwapAddress.String())
 	fmt.Println("Successfully deployed contracts")
 	return nil
 }
