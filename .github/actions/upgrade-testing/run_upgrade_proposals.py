@@ -25,7 +25,7 @@ for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
         tag_list.append(tag)
-        
+
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
 
