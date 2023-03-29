@@ -25,7 +25,12 @@ for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
         tag_list.append(tag)
+        
+if len(tag_list) == 0 or len(tag_list) == 1:
+    sys.exit(0)
+
 tag_list.sort()
+
 upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
