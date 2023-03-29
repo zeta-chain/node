@@ -6,6 +6,11 @@ import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
+message ClientParams {
+  int64 confirmation_count = 1;
+  int64 gas_price = 2;
+}
+
 message ObserverParams {
     common.Chain chain =1;
     string ballot_threshold =3 [
@@ -17,12 +22,14 @@ message ObserverParams {
       (gogoproto.nullable) = false
     ];
     bool is_supported=5;
+    ClientParams client_params = 6;
 }
 
 enum Policy_Type {
   option (gogoproto.goproto_enum_stringer) = true;
   stop_inbound_cctx = 0; // some observer sees inbound tx
   deploy_fungible_coin = 1;
+  update_client_params = 2;
 }
 
 message Admin_Policy {
