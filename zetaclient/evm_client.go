@@ -397,10 +397,23 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedTransaction[int(nonceInt)] = transaction
 							ob.mu.Unlock()
 
-							if dbc := ob.db.Create(clienttypes.ToReceiptSQLType(receipt, int(nonceInt))); dbc.Error != nil {
+							// Convert to DB types
+							rec, err := clienttypes.ToReceiptSQLType(receipt, int(nonceInt))
+							if err != nil {
+								logger.Error().Err(err).Msgf("error converting receipt to db type")
+								continue
+							}
+							trans, err := clienttypes.ToTransactionSQLType(transaction, int(nonceInt))
+							if err != nil {
+								logger.Error().Err(err).Msgf("error converting transaction to db type")
+								continue
+							}
+
+							//Save to DB
+							if dbc := ob.db.Create(rec); dbc.Error != nil {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
 							}
-							if dbc := ob.db.Create(clienttypes.ToTransactionSQLType(transaction, int(nonceInt))); dbc.Error != nil {
+							if dbc := ob.db.Create(trans); dbc.Error != nil {
 								logger.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
 							}
 
@@ -900,32 +913,39 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 	return nil
 }
 
-func (ob *EVMChainClient) BuildReceiptsMap() {
+func (ob *EVMChainClient) BuildReceiptsMap() error {
 	logger := ob.logger
 	var receipts []clienttypes.ReceiptSQLType
-	dbf := ob.db.Find(&receipts)
-
-	if dbf.Error == nil {
-		for _, receipt := range receipts {
-			ob.outTXConfirmedReceipts[receipt.Nonce] = clienttypes.FromReceiptDBType(receipt.Receipt)
-		}
-	} else {
-		logger.Error().Err(dbf.Error).Msg("error iterating over db")
+	if err := ob.db.Find(&receipts).Error; err != nil {
+		logger.Error().Err(err).Msg("error iterating over db")
+		return err
 	}
+	for _, receipt := range receipts {
+		r, err := clienttypes.FromReceiptDBType(receipt.Receipt)
+		if err != nil {
+			return err
+		}
+		ob.outTXConfirmedReceipts[receipt.Nonce] = r
+	}
+
+	return nil
 }
 
-func (ob *EVMChainClient) BuildTransactionsMap() {
+func (ob *EVMChainClient) BuildTransactionsMap() error {
 	logger := ob.logger
 	var transactions []clienttypes.TransactionSQLType
-	dbf := ob.db.Find(&transactions)
-
-	if dbf.Error == nil {
-		for _, transaction := range transactions {
-			ob.outTXConfirmedTransaction[transaction.Nonce] = clienttypes.FromTransactionDBType(transaction.Transaction)
-		}
-	} else {
-		logger.Error().Err(dbf.Error).Msg("error iterating over db")
+	if err := ob.db.Find(&transactions).Error; err != nil {
+		logger.Error().Err(err).Msg("error iterating over db")
+		return err
 	}
+	for _, transaction := range transactions {
+		trans, err := clienttypes.FromTransactionDBType(transaction.Transaction)
+		if err != nil {
+			return err
+		}
+		ob.outTXConfirmedTransaction[transaction.Nonce] = trans
+	}
+	return nil
 }
 
 // LoadDB open sql database and load data into EVMChainClient
@@ -949,8 +969,17 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 		if err != nil {
 			return err
 		}
-		ob.BuildReceiptsMap()
-		ob.BuildTransactionsMap()
+
+		err = ob.BuildReceiptsMap()
+		if err != nil {
+			return err
+		}
+
+		err = ob.BuildTransactionsMap()
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }

@@ -56,7 +56,8 @@ func (suite *EVMClientTestSuite) SetupTest() {
 			BlockNumber:       nil,
 			TransactionIndex:  uint(i),
 		}
-		dbc := suite.db.Create(clienttypes.ToReceiptSQLType(receipt, i))
+		r, _ := clienttypes.ToReceiptSQLType(receipt, i)
+		dbc := suite.db.Create(r)
 		suite.NoError(dbc.Error)
 		suite.outTXConfirmedReceipts[i] = receipt
 	}
@@ -64,7 +65,8 @@ func (suite *EVMClientTestSuite) SetupTest() {
 	//Create some transaction entries in the DB
 	for i := 0; i < NumOfEntries; i++ {
 		transaction := legacyTx(i)
-		dbc := suite.db.Create(clienttypes.ToTransactionSQLType(transaction, i))
+		trans, _ := clienttypes.ToTransactionSQLType(transaction, i)
+		dbc := suite.db.Create(trans)
 		suite.NoError(dbc.Error)
 		suite.outTXConfirmedTransaction[i] = transaction
 	}
@@ -78,7 +80,8 @@ func (suite *EVMClientTestSuite) TestEVMReceipts() {
 		var receipt clienttypes.ReceiptSQLType
 		suite.db.Where("Nonce = ?", key).First(&receipt)
 
-		suite.Equal(*clienttypes.FromReceiptDBType(receipt.Receipt), *value)
+		r, _ := clienttypes.FromReceiptDBType(receipt.Receipt)
+		suite.Equal(*r, *value)
 	}
 }
 
@@ -87,7 +90,9 @@ func (suite *EVMClientTestSuite) TestEVMTransactions() {
 		var transaction clienttypes.TransactionSQLType
 		suite.db.Where("Nonce = ?", key).First(&transaction)
 
-		have := clienttypes.FromTransactionDBType(transaction.Transaction).Hash()
+		trans, _ := clienttypes.FromTransactionDBType(transaction.Transaction)
+
+		have := trans.Hash()
 		want := value.Hash()
 
 		suite.Equal(want, have)

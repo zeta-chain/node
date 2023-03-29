@@ -71,8 +71,11 @@ type LastBlockSQLType struct {
 
 // Type translation functions:
 
-func ToReceiptDBType(receipt *ethtypes.Receipt) ReceiptDB {
-	logs, _ := json.Marshal(receipt.Logs)
+func ToReceiptDBType(receipt *ethtypes.Receipt) (ReceiptDB, error) {
+	logs, err := json.Marshal(receipt.Logs)
+	if err != nil {
+		return ReceiptDB{}, err
+	}
 	return ReceiptDB{
 		Type:              receipt.Type,
 		PostState:         receipt.PostState,
@@ -86,10 +89,10 @@ func ToReceiptDBType(receipt *ethtypes.Receipt) ReceiptDB {
 		BlockHash:         receipt.BlockHash,
 		BlockNumber:       receipt.BlockNumber,
 		TransactionIndex:  receipt.TransactionIndex,
-	}
+	}, nil
 }
 
-func FromReceiptDBType(receipt ReceiptDB) *ethtypes.Receipt {
+func FromReceiptDBType(receipt ReceiptDB) (*ethtypes.Receipt, error) {
 	res := &ethtypes.Receipt{
 		Type:              receipt.Type,
 		PostState:         receipt.PostState,
@@ -104,19 +107,26 @@ func FromReceiptDBType(receipt ReceiptDB) *ethtypes.Receipt {
 		BlockNumber:       receipt.BlockNumber,
 		TransactionIndex:  receipt.TransactionIndex,
 	}
-	_ = json.Unmarshal(receipt.Logs, &res.Logs)
-	return res
+	err := json.Unmarshal(receipt.Logs, &res.Logs)
+	return res, err
 }
 
-func ToReceiptSQLType(receipt *ethtypes.Receipt, nonce int) *ReceiptSQLType {
+func ToReceiptSQLType(receipt *ethtypes.Receipt, nonce int) (*ReceiptSQLType, error) {
+	r, err := ToReceiptDBType(receipt)
+	if err != nil {
+		return nil, err
+	}
 	return &ReceiptSQLType{
 		Nonce:   nonce,
-		Receipt: ToReceiptDBType(receipt),
-	}
+		Receipt: r,
+	}, nil
 }
 
-func ToTransactionDBType(transaction *ethtypes.Transaction) TransactionDB {
-	data, _ := transaction.MarshalBinary()
+func ToTransactionDBType(transaction *ethtypes.Transaction) (TransactionDB, error) {
+	data, err := transaction.MarshalBinary()
+	if err != nil {
+		return TransactionDB{}, err
+	}
 	return TransactionDB{
 		Type:            transaction.Type(),
 		ChainId:         transaction.ChainId(),
@@ -124,20 +134,24 @@ func ToTransactionDBType(transaction *ethtypes.Transaction) TransactionDB {
 		To:              transaction.To(),
 		Hash:            transaction.Hash(),
 		TransactionData: data,
-	}
+	}, nil
 }
 
-func FromTransactionDBType(transaction TransactionDB) *ethtypes.Transaction {
+func FromTransactionDBType(transaction TransactionDB) (*ethtypes.Transaction, error) {
 	res := &ethtypes.Transaction{}
-	_ = res.UnmarshalBinary(transaction.TransactionData)
-	return res
+	err := res.UnmarshalBinary(transaction.TransactionData)
+	return res, err
 }
 
-func ToTransactionSQLType(transaction *ethtypes.Transaction, nonce int) *TransactionSQLType {
+func ToTransactionSQLType(transaction *ethtypes.Transaction, nonce int) (*TransactionSQLType, error) {
+	trans, err := ToTransactionDBType(transaction)
+	if err != nil {
+		return nil, err
+	}
 	return &TransactionSQLType{
 		Nonce:       nonce,
-		Transaction: ToTransactionDBType(transaction),
-	}
+		Transaction: trans,
+	}, nil
 }
 
 func ToLastBlockSQLType(lastBlock int64) *LastBlockSQLType {
