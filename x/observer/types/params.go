@@ -27,6 +27,10 @@ func DefaultParams() Params {
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+			ClientParams: &ClientParams{
+				ConfirmationCount: 10,
+				GasPriceTicker:    5,
+			},
 		}
 	}
 	adminPolicy := []*Admin_Policy{
@@ -130,6 +134,16 @@ func (p Params) IsChainSupported(checkChain common.Chain) bool {
 	chains := p.GetSupportedChains()
 	for _, chain := range chains {
 		if checkChain.IsEqual(*chain) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p Params) IsChainIDSupported(checkChainID int64) bool {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if chain.ChainId == checkChainID {
 			return true
 		}
 	}
