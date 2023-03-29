@@ -35,11 +35,8 @@ require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
-	github.com/buger/jsonparser v1.1.1
 	github.com/cosmos/ibc-go/v3 v3.2.0
 	github.com/evmos/ethermint v0.19.3
-	github.com/lib/pq v1.10.6
-	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/tendermint/spm v0.1.9
@@ -138,6 +135,7 @@ require (
 	github.com/koron/go-ssdp v0.0.0-20191105050749-2e1c40ed0b5d // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/libp2p/go-addr-util v0.0.2 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
@@ -260,3 +258,5 @@ replace github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
 replace github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.1
+
+replace gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230329162931-c785674800e8
