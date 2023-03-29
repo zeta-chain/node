@@ -15,7 +15,6 @@ func (k msgServer) UpdateClientParams(goCtx context.Context, msg *types.MsgUpdat
 	if k.GetParams(ctx).IsChainIDSupported(msg.ChainId) {
 		return &types.MsgUpdateClientParamsResponse{}, types.ErrSupportedChains
 	}
-	k.UpdateClientParamsForChain(ctx, msg.ChainId, msg.ClientParams)
-
+	k.SetClientParamsByChainID(ctx, msg.ChainId, *msg.ClientParams)
 	return &types.MsgUpdateClientParamsResponse{}, nil
 }

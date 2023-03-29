@@ -22,7 +22,6 @@ message ObserverParams {
       (gogoproto.nullable) = false
     ];
     bool is_supported=5;
-    ClientParams client_params = 6;
 }
 
 enum Policy_Type {

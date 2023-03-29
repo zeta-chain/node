@@ -18,6 +18,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
 	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
+
+func DefaultClientParams() ClientParams {
+	return ClientParams{ConfirmationCount: 10, GasPriceTicker: 5}
+}
+
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
 	observerParams := make([]*ObserverParams, len(chains))
@@ -27,10 +32,6 @@ func DefaultParams() Params {
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
-			ClientParams: &ClientParams{
-				ConfirmationCount: 10,
-				GasPriceTicker:    5,
-			},
 		}
 	}
 	adminPolicy := []*Admin_Policy{
@@ -97,6 +98,15 @@ func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
 func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	for _, ObserverParam := range p.GetObserverParams() {
 		if ObserverParam.Chain.IsEqual(*chain) {
+			return *ObserverParam
+		}
+	}
+	return ObserverParams{}
+}
+
+func (p Params) GetParamsForChainID(chainID int64) ObserverParams {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain.ChainId == chainID {
 			return *ObserverParam
 		}
 	}
