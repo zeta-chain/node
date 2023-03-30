@@ -228,6 +228,20 @@ func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager()
 	//go outTxMan.StartMonitorHealth()
 
+	var untilBlock uint64 = 0
+	for {
+		time.Sleep(5 * time.Second)
+		bn, err := co.bridge.GetBlockHeight()
+		if err != nil {
+			logger.Error().Err(err)
+			continue
+		} else {
+			untilBlock = (bn + 49) / 50 * 50
+			logger.Info().Msgf("new starting block number %d; wait until block %d to start scheduling outbound txs", bn, untilBlock)
+			break
+		}
+	}
+
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum uint64
 	for range observeTicker.C {
@@ -235,6 +249,13 @@ func (co *CoreObserver) startSendScheduler() {
 		if err != nil {
 			logger.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 			continue
+		}
+		if bn < untilBlock {
+			logger.Info().Msgf("wait until block %d to start scheduling outbound txs", untilBlock)
+			continue
+		}
+		if bn == untilBlock {
+			logger.Info().Msgf("start scheduling outbound txs")
 		}
 		if lastBlockNum == 0 {
 			lastBlockNum = bn - 1
@@ -309,7 +330,7 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 12 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 10 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
