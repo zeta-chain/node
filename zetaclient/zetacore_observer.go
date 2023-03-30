@@ -253,9 +253,18 @@ func (co *CoreObserver) startSendScheduler() {
 			logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 			sendMap := SplitAndSortSendListByChain(sendList)
 
+			// this ensures that we always process the chains in the same order
+			// because range sendMap is not deterministic
+			chainArray := make([]string, 0)
+			for chain := range sendMap {
+				chainArray = append(chainArray, chain)
+			}
+			sort.Strings(chainArray)
+
 			// schedule sends
-			numSend := 0
-			for chain, sendList := range sendMap {
+			numSends := 0
+			for _, chain := range chainArray {
+				sendList := sendMap[chain]
 				c, _ := common.ParseChain(chain)
 				found := false
 				for _, enabledChain := range config.ChainsEnabled {
@@ -300,12 +309,12 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSend < 16 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 12 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
-						numSend++
+						numSends++
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if idx > 40 { // only look at 50 sends per chain
 						break
 					}
 				}
