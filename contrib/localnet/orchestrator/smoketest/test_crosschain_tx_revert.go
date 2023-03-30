@@ -21,10 +21,10 @@ func (sm *SmokeTest) TestCrosschainRevert() {
 
 	btcMinOutAmount := big.NewInt(0)
 	msg := []byte{}
-	for i := 0; i < 20-len(HexToAddress(ZEVMSwapAppAddr).Bytes()); i++ {
+	for i := 0; i < 20-len(sm.ZEVMSwapAppAddr.Bytes()); i++ {
 		msg = append(msg, 0)
 	}
-	msg = append(msg, HexToAddress(ZEVMSwapAppAddr).Bytes()...)
+	msg = append(msg, sm.ZEVMSwapAppAddr.Bytes()...)
 	for i := 0; i < 32-len(sm.BTCZRC20Addr.Bytes()); i++ {
 		msg = append(msg, 0)
 	}

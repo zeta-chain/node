@@ -6,11 +6,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
