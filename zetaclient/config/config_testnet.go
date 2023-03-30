@@ -46,8 +46,8 @@ var ChainConfigs = map[string]*ChainETHish{
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
 		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
 		BlockTime:                EthBlockTime,
-		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                15,
+		Endpoint:                 "",
+		ConfCount:                14,
 	},
 	common.BscTestnetChain().ChainName.String(): {
 		Chain:                       common.BscTestnetChain(),
@@ -55,7 +55,7 @@ var ChainConfigs = map[string]*ChainETHish{
 		ZETATokenContractAddress:    "0x33580e10212342d0aA66C9de3F6F6a4AfefA144C",
 		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
 		BlockTime:                   BscBlockTime,
-		Endpoint:                    "https://bsc-sh285ns91n5975.athens.zetachain.com",
+		Endpoint:                    "",
 		ConfCount:                   15,
 	},
 	common.MumbaiChain().ChainName.String(): {
@@ -64,7 +64,7 @@ var ChainConfigs = map[string]*ChainETHish{
 		ZETATokenContractAddress:    "0xBaEF590c5Aef9881b0a5C86e18D35432218C64D5",
 		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
 		BlockTime:                   PolygonBlockTime,
-		Endpoint:                    "https://mumbai-sh285ns91n5975.athens.zetachain.com",
+		Endpoint:                    "",
 		ConfCount:                   128,
 	},
 	common.BaobabChain().ChainName.String(): {
@@ -73,8 +73,8 @@ var ChainConfigs = map[string]*ChainETHish{
 		ZETATokenContractAddress:    "0x000080383847bD75F91c168269Aa74004877592f",
 		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
 		BlockTime:                   EthBlockTime,
-		Endpoint:                    "https://baobab-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                   15,
+		Endpoint:                    "",
+		ConfCount:                   24,
 	},
 
 	common.ZetaChain().ChainName.String(): {
