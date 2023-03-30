@@ -40,9 +40,9 @@ var (
 
 var ChainsEnabled = []common.Chain{}
 
-var ChainConfigs = map[string]*ChainETHish{}
+var ChainConfigs = map[string]*EVMConfig{}
 
-var BitcoinConfig = &ChainBitcoinish{
+var BitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",

@@ -51,7 +51,7 @@ var (
 
 var ChainsEnabled = []common.Chain{}
 
-var ChainConfigs = map[string]*ChainETHish{
+var ChainConfigs = map[string]*EVMConfig{
 	common.GoerliChain().ChainName.String(): {
 		Chain:                    common.GoerliChain(),
 		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
@@ -96,7 +96,7 @@ var ChainConfigs = map[string]*ChainETHish{
 	},
 }
 
-var BitcoinConfig = &ChainBitcoinish{
+var BitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",

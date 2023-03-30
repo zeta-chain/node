@@ -44,6 +44,7 @@ type BitcoinChainClient struct {
 	*ChainMetrics
 
 	chain        common.Chain
+	chainConfig  config.BTCConfig
 	endpoint     string
 	rpcClient    *rpcclient.Client
 	zetaClient   *ZetaCoreBridge

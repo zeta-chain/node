@@ -67,6 +67,7 @@ type EVMChainClient struct {
 	*ChainMetrics
 
 	chain                     common.Chain
+	chainConfig               config.EVMConfig
 	endpoint                  string
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector

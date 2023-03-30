@@ -16,7 +16,7 @@ type ClientConfiguration struct {
 	SignerPasswd    string
 }
 
-type ChainETHish struct {
+type EVMConfig struct {
 	ConnectorABI                abi.ABI
 	ConnectorContractAddress    string
 	ZETATokenContractAddress    string
@@ -30,7 +30,7 @@ type ChainETHish struct {
 	OutTxObservePeriod          uint64
 }
 
-type ChainBitcoinish struct {
+type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
 	RPCPassword string
@@ -54,6 +54,6 @@ type Config struct {
 	AuthzGranter  string
 
 	ChainsEnabled []common.Chain
-	ChainConfigs  map[string]*ChainETHish
-	BitcoinConfig *ChainBitcoinish
+	ChainConfigs  map[string]*EVMConfig
+	BitcoinConfig *BTCConfig
 }
