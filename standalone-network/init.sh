@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CHAINID="athens_101-1"
+CHAINID="localnet_101-1"
 KEYRING="test"
 export DAEMON_HOME=$HOME/.zetacored
 export DAEMON_NAME=zetacored

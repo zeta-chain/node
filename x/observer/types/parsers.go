@@ -17,6 +17,7 @@ type ObserverInfoReader struct {
 	StakingValidatorAllowList []string `json:"StakingValidatorAllowList"`
 	SpendGranteeAddress       string   `json:"SpendGranteeAddress"`
 	SpendMaxTokens            string   `json:"SpendMaxTokens"`
+	GovGranteeAddress         string   `json:"GovGranteeAddress"`
 }
 
 func ParsefileToObserverDetails(fp string) ([]ObserverInfoReader, error) {

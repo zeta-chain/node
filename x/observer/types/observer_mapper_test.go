@@ -10,15 +10,16 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {
 	file := "tmp.json"
-	//defer func(t *testing.T, fp string) {
-	//	err := os.RemoveAll(fp)
-	//	assert.NoError(t, err)
-	//}(t, file)
+	defer func(t *testing.T, fp string) {
+		err := os.RemoveAll(fp)
+		assert.NoError(t, err)
+	}(t, file)
 	createObserverList(file)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	assert.NoError(t, err)
@@ -28,9 +29,6 @@ func TestParsefileToObserverMapper(t *testing.T) {
 }
 
 func createObserverList(fp string) {
-	//list = append(append(append(list, CreateObserverMapperList(1, common.GoerliLocalNetChain())...),
-	//	CreateObserverMapperList(1, common.BtcRegtestChain())...),
-	//	CreateObserverMapperList(1, common.ZetaChain())...)
 	var listReader []ObserverInfoReader
 	listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
@@ -44,6 +42,7 @@ func createObserverList(fp string) {
 		StakingMaxTokens:          "100000000",
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",
+		GovGranteeAddress:         commonGrantAddress.String(),
 	}
 	listReader = append(listReader, info)
 

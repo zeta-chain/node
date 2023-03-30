@@ -13,7 +13,8 @@
    "zetavaloper1syavy2npfyt9tcncdtsdzf7kny9lh777nep4tq"
   ],
   "SpendGranteeAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
-  "SpendMaxTokens": "100000000"
+  "SpendMaxTokens": "100000000",
+  "GovGranteeAddress" : "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"
  },
  {
   "SupportedChainsList": [
@@ -29,6 +30,7 @@
    "zetavaloper1syavy2npfyt9tcncdtsdzf7kny9lh777nep4tq"
   ],
   "SpendGranteeAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
-  "SpendMaxTokens": "100000000"
+  "SpendMaxTokens": "100000000",
+  "GovGranteeAddress" : "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50"
  }
 ]

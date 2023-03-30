@@ -11,6 +11,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
@@ -113,9 +115,11 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 
 func generateGrants(info types.ObserverInfoReader) (grants []authz.GrantAuthorization) {
 
-	grants = append(append(append(grants, addStakingGrants(grants, info)...),
+	grants = append(append(append(append(grants, addStakingGrants(grants, info)...),
 		addSpendingGrants(grants, info)...),
-		addZetaClientGrants(grants, info)...)
+		addZetaClientGrants(grants, info)...),
+		addGovGrants(grants, info)...)
+
 	return grants
 }
 
@@ -129,6 +133,32 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverI
 		grants = append(grants, authz.GrantAuthorization{
 			Granter:       info.ObserverAddress,
 			Grantee:       info.ZetaClientGranteeAddress,
+			Authorization: auth,
+			Expiration:    nil,
+		})
+	}
+	return grants
+}
+
+func addGovGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+
+	txTypes := []string{sdk.MsgTypeURL(&v1beta1.MsgVote{}),
+		sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}),
+		sdk.MsgTypeURL(&v1beta1.MsgDeposit{}),
+		sdk.MsgTypeURL(&v1beta1.MsgVoteWeighted{}),
+		sdk.MsgTypeURL(&v1.MsgVote{}),
+		sdk.MsgTypeURL(&v1.MsgSubmitProposal{}),
+		sdk.MsgTypeURL(&v1.MsgDeposit{}),
+		sdk.MsgTypeURL(&v1.MsgVoteWeighted{}),
+	}
+	for _, txType := range txTypes {
+		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
+		if err != nil {
+			panic(err)
+		}
+		grants = append(grants, authz.GrantAuthorization{
+			Granter:       info.ObserverAddress,
+			Grantee:       info.GovGranteeAddress,
 			Authorization: auth,
 			Expiration:    nil,
 		})
