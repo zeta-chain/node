@@ -5,9 +5,9 @@ from libraries.zetaops import GithubBinaryDownload
 from libraries.zetaops import Utilities
 from libraries.zetaops import Logger
 import sys
+import re
 
 logger = Logger()
-
 logger.log.info("**************************Initiate GitHub Binary Downloader**************************")
 binary_downloader = GithubBinaryDownload(os.environ["GITHUB_TOKEN"], os.environ["GITHUB_OWNER"], os.environ["GITHUB_REPO"])
 
@@ -17,6 +17,39 @@ command_runner.logger = logger.log
 command_runner.NODE = os.environ["NODE"]
 command_runner.MONIKER = os.environ["MONIKER"]
 command_runner.CHAIN_ID = os.environ["CHAIN_ID"]
+
+git_tags = command_runner.run_command("git tag --list > git_tags && cat git_tags && rm -rf git_tags").split("\n")
+p = re.compile(r'[a-z][0-9].[0-9].[0-9][0-9]')
+tag_list = []
+for tag in git_tags:
+    if p.match(tag):
+        logger.log.info(tag)
+        tag_list.append(tag)
+
+if len(tag_list) == 0 or len(tag_list) == 1:
+    sys.exit(0)
+
+tag_list.sort()
+
+upgrades_json = open("upgrades.json", "r").read()
+upgrades_json = json.loads(upgrades_json)
+binary_download_list = []
+for tag in tag_list:
+    binary_download_list.append([f"{tag}", "zetacored-ubuntu"])
+
+os.environ["STARTING_VERSION"] = tag_list[0]
+os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
+logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
+logger.log.info(f"End Version Version: {os.environ['END_VERSION']}")
+
+tag_list.pop(0)
+
+upgrades_json["binary_versions"] = binary_download_list
+upgrades_json["upgrade_versions"] = tag_list
+upgrades_json_write = open("upgrades.json", "w")
+logger.log.info(upgrades_json)
+upgrades_json_write.write(json.dumps(upgrades_json))
+upgrades_json_write.close()
 
 logger.log.info("**************************Generate Wallet For Test**************************")
 command_runner.generate_wallet()
@@ -48,6 +81,8 @@ command_runner.start_docker_container(os.environ["GAS_PRICES"],
 time.sleep(10)
 logger.log.info("**************************check docker containers**************************")
 command_runner.docker_ps()
+#Uncomment to debug.
+#command_runner.get_docker_container_logs()
 
 logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
@@ -82,7 +117,11 @@ for version in UPGRADE_DATA["upgrade_versions"]:
         LATEST_BLOCK: {command_runner.CURRENT_HEIGHT}
     **************************UPGRADE INFO**************************""")
     time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
+    command_runner.docker_ps()
 
+logger.log.info("Check docker process is still running for debug purposes.")
+command_runner.docker_ps()
+time.sleep(30)
 if command_runner.version_check(os.environ["END_VERSION"]):
     logger.log.info("**************************Version is what was expected.**************************")
     current_block = command_runner.current_block()
@@ -92,7 +131,6 @@ if command_runner.version_check(os.environ["END_VERSION"]):
     if abs(end_block - current_block) > 0:
         logger.log.info("**************************chain still processing blocks upgrade path looks good**************************")
         logger.log.info("**************************kill running docker containers and cleanup.**************************")
-        command_runner.get_docker_container_logs()
         command_runner.kill_docker_containers()
         sys.exit(0)
     else:
