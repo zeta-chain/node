@@ -309,12 +309,12 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 12 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 18 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
 					}
-					if idx > 40 { // only look at 50 sends per chain
+					if idx > 60 { // only look at 50 sends per chain
 						break
 					}
 				}
