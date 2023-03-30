@@ -455,6 +455,9 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	if err != nil {
 		return nil, nil, err
 	}
+	if transaction.Nonce() != uint64(nonce) {
+		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
+	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.confCount
 	if confHeight < 0 || confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")

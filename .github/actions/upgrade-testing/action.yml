@@ -14,15 +14,6 @@ runs:
       with:
         python-version: 'pypy3.9'
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
     - uses: actions/download-artifact@v3
       with:
         name: binaries-${{ github.sha }}
@@ -39,7 +30,6 @@ runs:
         CHAIN_ID: "test_1001-1"
         NODE: "http://127.0.0.1:26657"
         GO_PATH: "/home/runner/work/zeta-node/zeta-node/"
-        STARTING_VERSION: "athens2-v1.1.15"
         BLOCK_TIME_SECONDS: "4"
         PROPOSAL_TIME_SECONDS: "60"
         GAS_PRICES: "0.1azeta"
@@ -56,20 +46,27 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
       run: |
+        
         current_directory=$(pwd)
         export PATH=${current_directory}:${PATH}
-        chmod a+x zetacored
-        chmod -R 777 zetacored
         
+        echo "***********Change Permission of Zetacored*********************"
+        chmod a+x zetacored*
+        chmod -R 777 zetacored*
+        mv zetacored-ubuntu zetacored
+        export PATH=$(pwd):$PATH
+        ls -lah | grep zetacored
+        
+        echo "***********Change Directories into the Upgrade Testing Directory.*********************"
         cd .github/actions/upgrade-testing/
-
-        export END_VERSION=${GITHUB_REF##*/}
-        echo "***********END VERSION: ${END_VERSION}*********************"
         
+        echo "***********Pip install requirements*********************"
         pip install -r requirements.txt
         
+        echo "***********Execute Testing*********************"
         python run_upgrade_proposals.py
         
+        echo "***********Change Directory Back to Workspace.*********************"
         cd $current_directory
 
 

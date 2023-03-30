@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"cosmossdk.io/math"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -192,7 +191,6 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	//ob.logger = ob.logger.With().Str("module", "WatchInTx").Logger()
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
@@ -332,7 +330,6 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) erro
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	//ob.logger = ob.logger.With().Str("module", "WatchGasPrice").Logger()
 
 	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
@@ -436,14 +433,9 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						logger.Warn().Msgf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
 						continue
 					}
-					memoStr, err := hex.DecodeString(script[4:])
+					memoBytes, err := hex.DecodeString(script[4:])
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
-						continue
-					}
-					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
-					if err != nil {
-						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", memoStr)
 						continue
 					}
 					memo = memoBytes
@@ -488,7 +480,6 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	//ob.logger = ob.logger.With().Str("module", "WatchUTXOS").Logger()
 
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
 	for {
