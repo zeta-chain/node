@@ -1,7 +1,7 @@
 ################
 # BUILD ZETAVISOR
 ################
-FROM golang:1.18 AS cosmovisor
+FROM golang:1.19 AS cosmovisor
 
 ENV GOBIN=/go/bin
 ENV GOPATH=/go
@@ -12,7 +12,8 @@ RUN apt update && \
     apt install unzip wget -y && \
     wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
     unzip main.zip && \
-    cd cosmos-sdk-main/cosmovisor && \
+    cd cosmos-sdk-main/tools/cosmovisor && \
+    make cosmovisor && \
     go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
     go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
 
