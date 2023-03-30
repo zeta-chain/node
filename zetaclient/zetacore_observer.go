@@ -288,6 +288,9 @@ func (co *CoreObserver) startSendScheduler() {
 				chainArray = append(chainArray, chain)
 			}
 			sort.Strings(chainArray)
+			// rotate to give fair change to each chain
+			offset := bn % uint64(len(chainArray))
+			chainArray = append(chainArray[offset:], chainArray[:offset]...)
 
 			// schedule sends
 			numSends := 0
@@ -337,12 +340,12 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends <= 8 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends <= 10 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
 					}
-					if outTxMan.NumActiveProcessor() > 100 {
+					if outTxMan.NumActiveProcessor() > 120 {
 						untilBlock := (bn + 49) / 50 * 50
 						logger.Warn().Msgf("too many active processors at block %d; wait until block %d", bn, untilBlock)
 						break
