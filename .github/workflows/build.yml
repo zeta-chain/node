@@ -67,8 +67,8 @@ jobs:
       run: |
         chmod a+x ./zetacored
         ./zetacored version
-        mv zetacored zetacored-ubuntu
-        mv zetaclientd zetaclientd-ubuntu
+        cp zetacored zetacored-ubuntu
+        cp zetaclientd zetaclientd-ubuntu
 
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
@@ -202,7 +202,6 @@ jobs:
       run: |
         echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
         echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
-        ls -lah ./
 
     - name: set-branch-name
       uses: ./.github/actions/set-branch-name
@@ -240,12 +239,6 @@ jobs:
         aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Binary Docker Test
-      run: |
-        echo "Test binary version to see if it runs in docker"
-        chmod a+x ./zetacored
-        ./zetacored version
-
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
       with:
@@ -253,8 +246,8 @@ jobs:
         release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
-          zetacored
-          zetaclientd
+          zetacored-ubuntu
+          zetaclientd-ubuntu
           zetacored-alpine
           zetaclientd-alpine
 
