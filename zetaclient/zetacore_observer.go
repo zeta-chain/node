@@ -186,6 +186,13 @@ func (outTxMan *OutTxProcessorManager) IsOutTxActive(outTxID string) bool {
 	return found
 }
 
+func (outTxMan *OutTxProcessorManager) NumActiveProcessor() int64 {
+	outTxMan.mu.Lock()
+	n := outTxMan.numActiveProcessor
+	outTxMan.mu.Unlock()
+	return n
+}
+
 func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Duration {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
@@ -251,11 +258,11 @@ func (co *CoreObserver) startSendScheduler() {
 			continue
 		}
 		if bn < untilBlock {
-			logger.Info().Msgf("wait until block %d to start scheduling outbound txs", untilBlock)
+			logger.Info().Msgf("wait until block %d to start scheduling outbound txs; numActiveProcessor %d", untilBlock, outTxMan.NumActiveProcessor())
 			continue
 		}
 		if bn == untilBlock {
-			logger.Info().Msgf("start scheduling outbound txs")
+			logger.Info().Msgf("start scheduling outbound txs at block %d", bn)
 		}
 		if lastBlockNum == 0 {
 			lastBlockNum = bn - 1
@@ -330,10 +337,15 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends < 10 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends <= 8 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
+					}
+					if outTxMan.NumActiveProcessor() > 50 {
+						untilBlock := (bn + 49) / 50 * 50
+						logger.Warn().Msgf("too many active processors at block %d; wait until block %d", bn, untilBlock)
+						break
 					}
 					if idx > 60 { // only look at 50 sends per chain
 						break
