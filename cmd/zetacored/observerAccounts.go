@@ -114,7 +114,10 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 }
 
 func generateGrants(info types.ObserverInfoReader) (grants []authz.GrantAuthorization) {
-
+	sdk.MustAccAddressFromBech32(info.SpendGranteeAddress)
+	sdk.MustAccAddressFromBech32(info.ObserverAddress)
+	sdk.MustAccAddressFromBech32(info.ZetaClientGranteeAddress)
+	sdk.MustAccAddressFromBech32(info.GovGranteeAddress)
 	grants = append(append(append(append(grants, addStakingGrants(grants, info)...),
 		addSpendingGrants(grants, info)...),
 		addZetaClientGrants(grants, info)...),
