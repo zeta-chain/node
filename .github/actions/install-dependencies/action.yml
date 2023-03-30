@@ -34,10 +34,6 @@ runs:
     - name: Install Docker Compose
       shell: bash
       run: |
-
-    - name: Install Docker Compose
-      shell: bash
-      run: |
         sudo apt-get update || echo "Issue running apt-get update."
         sudo apt-get install \
           ca-certificates \
