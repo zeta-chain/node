@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
 	"sync"
@@ -45,8 +46,8 @@ var (
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
 	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
-	ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
-	HexToAddress         = ethcommon.HexToAddress
+	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
+	HexToAddress = ethcommon.HexToAddress
 )
 
 type SmokeTest struct {
@@ -78,8 +79,11 @@ type SmokeTest struct {
 	UniswapV2RouterAddr  ethcommon.Address
 	UniswapV2Router      *contracts.UniswapV2Router02
 	TestDAppAddr         ethcommon.Address
+	ZEVMSwapAppAddr      ethcommon.Address
+	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
 
-	SystemContract *contracts.SystemContract
+	SystemContract     *contracts.SystemContract
+	SystemContractAddr ethcommon.Address
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
@@ -176,9 +180,23 @@ func main() {
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
 	smokeTest.TestBitcoinSetup()
-	smokeTest.TestSetupZetaTokenAndConnectorContracts()
+	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
+
+	zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	if receipt.Status != 1 {
+		panic("ZEVMSwapApp deployment failed")
+	}
+	zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
+	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
+	smokeTest.ZEVMSwapApp = zevmSwapApp
+
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
 	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
 	fmt.Printf("##   Ether on Ethereum private net\n")
