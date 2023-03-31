@@ -198,6 +198,18 @@ func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
 	return sigBytes, nil
 }
 
+func (tss *TSS) Validate() error {
+	evmAddress := tss.EVMAddress()
+	blankAddress := ethcommon.Address{}
+	if evmAddress == blankAddress {
+		return fmt.Errorf("invalid evm address : %s", evmAddress.String())
+	}
+	if tss.BTCAddressWitnessPubkeyHash() == nil {
+		return fmt.Errorf("invalid btc pub key hash : %s", tss.BTCAddress())
+	}
+	return nil
+}
+
 func (tss *TSS) EVMAddress() ethcommon.Address {
 	addr, err := getKeyAddr(tss.CurrentPubkey)
 	if err != nil {
@@ -261,7 +273,6 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 	}
 
 	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
-	//keyAddr = ethcommon.BytesToAddress(keyAddrBytes)
 
 	return keyAddr, nil
 }
@@ -299,6 +310,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 		Keys:   make(map[string]*TSSKey),
 		logger: log.With().Str("module", "tss_signer").Logger(),
 	}
+	// TODO : Move to config
 	tsspath := os.Getenv(("TSSPATH"))
 	if len(tsspath) == 0 {
 		home, err := os.UserHomeDir()

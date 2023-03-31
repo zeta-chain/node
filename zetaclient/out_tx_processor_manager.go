@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"syscall"
 	"time"
@@ -17,13 +16,13 @@ type OutTxProcessorManager struct {
 	numActiveProcessor int64
 }
 
-func NewOutTxProcessorManager() *OutTxProcessorManager {
+func NewOutTxProcessorManager(logger zerolog.Logger) *OutTxProcessorManager {
 	return &OutTxProcessorManager{
 		outTxStartTime:     make(map[string]time.Time),
 		outTxEndTime:       make(map[string]time.Time),
 		outTxActive:        make(map[string]struct{}),
 		mu:                 sync.Mutex{},
-		Logger:             log.With().Str("module", "OutTxProcessorManager").Logger(),
+		Logger:             logger.With().Str("module", "OutTxProcessorManager").Logger(),
 		numActiveProcessor: 0,
 	}
 }
@@ -64,8 +63,7 @@ func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 
 // suicide whole zetaclient if keysign appears deadlocked.
 func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
-	logger := outTxMan.Logger
-	logger.Info().Msgf("StartMonitorHealth")
+	outTxMan.Logger.Info().Msgf("StartMonitorHealth")
 	ticker := time.NewTicker(60 * time.Second)
 	for range ticker.C {
 		count := 0
@@ -75,14 +73,14 @@ func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
 			}
 		}
 		if count > 0 {
-			logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
+			outTxMan.Logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
 		} else {
-			logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
+			outTxMan.Logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
 		}
 		if count > 10 {
 			// suicide:
-			logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
-			logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
+			outTxMan.Logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
+			outTxMan.Logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
 			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		}
 	}

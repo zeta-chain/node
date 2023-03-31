@@ -1,0 +1,17 @@
+[
+ {
+  "SupportedChainsList": [
+   1337,
+   18444,
+   101
+  ],
+  "ObserverAddress": "cosmos1jtkmr875jh9fvj2am6vnf54eqtcwxyu0gaptwz",
+  "ObserverGranteeAddress": "cosmos1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxguq6za7",
+  "StakingGranteeAddress": "cosmos1h5vgfy5ytyqc9vpx0vxjswqw0hezwrxguq6za7",
+  "StakingMaxTokens": "100000000",
+  "StakingValidatorAllowList": [
+   "cosmosvaloper1tfzf7z4ccu338u7t0wemhy793kfla6kyx2rge8"
+  ],
+  "SpendMaxTokens": "100000000"
+ }
+]

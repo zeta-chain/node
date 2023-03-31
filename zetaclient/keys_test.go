@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -10,6 +9,8 @@ import (
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
@@ -66,15 +67,16 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	cdc := codec.NewProtoCodec(registry)
 	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
-	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+
+	_, _, err = kb.NewMnemonic(GetGranteeKeyName(common.ZetaClientGranteeKey, signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	_, info, err := GetKeyringKeybase("/Users/tanmay/.zetacored/", "bob", "")
-	fmt.Println(info, err)
+	_, err := GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey}, "/Users/test/.zetacored/", "bob", "")
+	c.Assert(err, NotNil)
 }
 
 func (ks *KeysSuite) TestNewKeys(c *C) {
@@ -89,15 +91,15 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 		c.Assert(err, IsNil)
 	}()
 
-	k, info, err := GetKeyringKeybase(folder, signerNameForTest, signerPasswordForTest)
+	k, err := GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey}, folder, signerNameForTest, signerPasswordForTest)
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
-	c.Assert(info, NotNil)
-	ki := NewKeysWithKeybase(k, signerNameForTest, signerPasswordForTest)
-	kInfo := ki.GetSignerInfo()
+	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
+	ki := NewKeysWithKeybase(k, granter, signerNameForTest, signerPasswordForTest)
+	kInfo := ki.GetSignerInfo(common.ZetaClientGranteeKey)
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)
-	priKey, err := ki.GetPrivateKey()
+	priKey, err := ki.GetPrivateKey(common.ZetaClientGranteeKey)
 	c.Assert(err, IsNil)
 	c.Assert(priKey, NotNil)
 	c.Assert(priKey.Bytes(), HasLen, 32)
@@ -107,7 +109,7 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	msg := "hello"
 	signedMsg, err := priKey.Sign([]byte(msg))
 	c.Assert(err, IsNil)
-	pubKey, err := ki.GetSignerInfo().GetPubKey()
+	pubKey, err := ki.GetSignerInfo(common.ZetaClientGranteeKey).GetPubKey()
 	c.Assert(err, IsNil)
 	c.Assert(pubKey.VerifySignature([]byte(msg), signedMsg), Equals, true)
 }

@@ -5,7 +5,9 @@ package types
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/common"
 	"io/ioutil"
 	"os"
@@ -18,26 +20,32 @@ func TestParsefileToObserverMapper(t *testing.T) {
 		err := os.RemoveAll(fp)
 		assert.NoError(t, err)
 	}(t, file)
-	expectedList := createObserverList(file)
-	obsListReadFromFile, err := ParsefileToObserverMapper(file)
+	createObserverList(file)
+	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	assert.NoError(t, err)
-	assert.Equal(t, expectedList, obsListReadFromFile)
+	for _, obs := range obsListReadFromFile {
+		assert.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
+	}
 }
 
-func createObserverList(fp string) (list []*ObserverMapper) {
-	list = append(append(append(list, CreateObserverMapperList(1, common.GoerliLocalNetChain())...),
-		CreateObserverMapperList(1, common.BtcRegtestChain())...),
-		CreateObserverMapperList(1, common.ZetaChain())...)
-	listReader := make([]ObserverMapperReader, len(list))
-	for i, mapper := range list {
-		listReader[i] = ObserverMapperReader{
-			Index:             mapper.Index,
-			ObserverChainName: mapper.ObserverChain.ChainName.String(),
-			ObserverChainID:   mapper.ObserverChain.ChainId,
-			ObserverList:      mapper.ObserverList,
-		}
+func createObserverList(fp string) {
+	var listReader []ObserverInfoReader
+	listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
+	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
+	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
+	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))
+	info := ObserverInfoReader{
+		SupportedChainsList:       listChainID,
+		ObserverAddress:           observerAddress.String(),
+		ZetaClientGranteeAddress:  commonGrantAddress.String(),
+		StakingGranteeAddress:     commonGrantAddress.String(),
+		StakingMaxTokens:          "100000000",
+		StakingValidatorAllowList: []string{validatorAddress.String()},
+		SpendMaxTokens:            "100000000",
+		GovGranteeAddress:         commonGrantAddress.String(),
 	}
+	listReader = append(listReader, info)
+
 	file, _ := json.MarshalIndent(listReader, "", " ")
 	_ = ioutil.WriteFile(fp, file, 0600)
-	return list
 }

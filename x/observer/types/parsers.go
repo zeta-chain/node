@@ -8,15 +8,20 @@ import (
 	"path/filepath"
 )
 
-type ObserverMapperReader struct {
-	Index             string   `json:"index"`
-	ObserverChainName string   `json:"observerChainName"`
-	ObserverChainID   int64    `json:"observerChainId"`
-	ObserverList      []string `json:"observerList"`
+type ObserverInfoReader struct {
+	SupportedChainsList       []int64  `json:"SupportedChainsList"`
+	ObserverAddress           string   `json:"ObserverAddress"`
+	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
+	StakingGranteeAddress     string   `json:"StakingGranteeAddress"`
+	StakingMaxTokens          string   `json:"StakingMaxTokens"`
+	StakingValidatorAllowList []string `json:"StakingValidatorAllowList"`
+	SpendGranteeAddress       string   `json:"SpendGranteeAddress"`
+	SpendMaxTokens            string   `json:"SpendMaxTokens"`
+	GovGranteeAddress         string   `json:"GovGranteeAddress"`
 }
 
-func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
-	var observers []ObserverMapperReader
+func ParsefileToObserverDetails(fp string) ([]ObserverInfoReader, error) {
+	var observers []ObserverInfoReader
 	file, err := filepath.Abs(fp)
 	if err != nil {
 		return nil, err
@@ -30,20 +35,7 @@ func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	observerMappers := make([]*ObserverMapper, len(observers))
-	for i, readerValue := range observers {
-		chain := &common.Chain{
-			ChainName: common.ParseChainName(readerValue.ObserverChainName),
-			ChainId:   readerValue.ObserverChainID,
-		}
-		observerMappers[i] = &ObserverMapper{
-			Index:         readerValue.Index,
-			ObserverChain: chain,
-			ObserverList:  readerValue.ObserverList,
-		}
-	}
-	return observerMappers, nil
+	return observers, nil
 }
 
 func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {
