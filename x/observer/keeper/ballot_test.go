@@ -2,21 +2,36 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"testing"
 )
 
 func TestKeeper_GetBallot(t *testing.T) {
-	k, ctx := SetupKeeper(t)
-	identifier := "0x9ea007f0f60e32d58577a8cf25678942d2b10791c2a34f48e237b76a7e998e4d"
-	k.SetBallot(ctx, &types.Ballot{
-		Index:            "",
-		BallotIdentifier: identifier,
-		VoterList:        nil,
-		ObservationType:  0,
-		BallotThreshold:  sdk.Dec{},
-		BallotStatus:     0,
-	})
-
-	k.GetBallot(ctx, identifier)
+	tt := []struct {
+		name               string
+		identifierInserted string
+		identifierQueried  string
+		assert             assert.BoolAssertionFunc
+	}{
+		{"test1", "identifier1", "identifier1", assert.True},
+		{"test2", "identifier2", "identifier1", assert.False},
+	}
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			k, ctx := SetupKeeper(t)
+			k.SetBallot(ctx, &types.Ballot{
+				Index:            "",
+				BallotIdentifier: test.identifierInserted,
+				VoterList:        nil,
+				Votes:            nil,
+				ObservationType:  0,
+				BallotThreshold:  sdk.Dec{},
+				BallotStatus:     0,
+				CreationHeight:   10,
+			})
+			_, found := k.GetBallot(ctx, test.identifierQueried)
+			test.assert(t, found)
+		})
+	}
 }
