@@ -1,6 +1,6 @@
 FROM zetanode:latest as zeta
 FROM ethereum/client-go:v1.10.26 as geth
-FROM golang:1.18-alpine as orchestrator
+FROM golang:1.19-alpine as orchestrator
 
 RUN apk --no-cache add jq curl bash make git build-base
 
