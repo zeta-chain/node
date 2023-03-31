@@ -33,29 +33,13 @@ zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=te
 zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 zetacored add-genesis-account $(zetacored keys show executer -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
 
-
-ADDR1=$(zetacored keys show zeta -a --keyring-backend=test)
-observer+=$ADDR1
-observer+=","
-ADDR2=$(zetacored keys show mario -a --keyring-backend=test)
-observer+=$ADDR2
-observer+=","
-
-
-observer_list=$(echo $observer | rev | cut -c2- | rev)
-
-echo $observer_list
-
-
-
-zetacored add-observer 1337 "$observer_list" #goerli
-zetacored add-observer 101  "$observer_list" #goerli
+zetacored add-observer-list standalone-network/observers.json
 
 
 
 
 
-zetacored gentx zeta 1000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=test
 
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json

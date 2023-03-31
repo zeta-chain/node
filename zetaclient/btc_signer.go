@@ -18,7 +18,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -32,11 +31,13 @@ type BTCSigner struct {
 
 var _ ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client) (*BTCSigner, error) {
+func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerolog.Logger) (*BTCSigner, error) {
 	return &BTCSigner{
 		tssSigner: tssSigner,
 		rpcClient: rpcClient,
-		logger:    log.With().Str("module", "BTCSigner").Logger(),
+		logger: logger.With().
+			Str("chain", "BTC").
+			Str("module", "BTCSigner").Logger(),
 	}, nil
 }
 
@@ -175,30 +176,30 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge) {
+	logger := signer.logger.With().
+		Str("OutTxID", outTxID).
+		Str("SendHash", send.Index).
+		Logger()
 	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
 	if err != nil {
-		signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
+		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
 		return
 	}
-	fmt.Printf("BTC TryProcessOutTx: %s, value %d to %s\n", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
+	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
 	btcClient, ok := chainclient.(*BitcoinChainClient)
 	if !ok {
-		signer.logger.Error().Msgf("chain client is not a bitcoin client")
+		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
 
-	logger := signer.logger.With().
-		Str("sendHash", send.Index).
-		Logger()
-
-	myid := zetaBridge.keys.GetAddress().String()
+	myid := zetaBridge.keys.GetAddress(common.TssSignerKey)
 
 	// Early return if the send is already processed
 	// FIXME: handle revert case
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), common.CoinType_Gas)
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), common.CoinType_Gas, logger)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return

@@ -3,9 +3,10 @@ package zetaclient
 import (
 	"cosmossdk.io/math"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/pkg/errors"
+
 	math2 "math"
 	"math/big"
 	"os"
@@ -19,7 +20,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -28,6 +28,14 @@ import (
 )
 
 var _ ChainClient = &BitcoinChainClient{}
+
+type BTCLog struct {
+	ChainLogger   zerolog.Logger
+	WatchInTx     zerolog.Logger
+	ObserveOutTx  zerolog.Logger
+	WatchUTXOS    zerolog.Logger
+	WatchGasPrice zerolog.Logger
+}
 
 // Chain configuration struct
 // Filled with above constants depending on chain
@@ -47,7 +55,7 @@ type BitcoinChainClient struct {
 	utxos        []btcjson.ListUnspentResult
 	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
 	stop         chan struct{}
-	logger       zerolog.Logger
+	logger       BTCLog
 }
 
 const (
@@ -56,7 +64,7 @@ const (
 )
 
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
 	}
@@ -66,7 +74,15 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}
-	ob.logger = log.With().Str("chain", chain.String()).Logger()
+	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
+	ob.logger = BTCLog{
+		ChainLogger:   chainLogger,
+		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),
+		ObserveOutTx:  chainLogger.With().Str("module", "observeOutTx").Logger(),
+		WatchUTXOS:    chainLogger.With().Str("module", "WatchUTXOS").Logger(),
+		WatchGasPrice: chainLogger.With().Str("module", "WatchGasPrice").Logger(),
+	}
+
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.confCount = 0
@@ -81,7 +97,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
-	ob.logger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
+	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         ob.endpoint,
 		User:         config.BitcoinConfig.RPCUsername,
@@ -104,12 +120,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("error getting block count: %s", err)
 	}
 
-	ob.logger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
+	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
 
 	envvar := ob.chain.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
-		ob.logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
+		ob.logger.ChainLogger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
 			ob.SetLastBlockHeight(bn)
 		} else {
@@ -128,7 +144,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 }
 
 func (ob *BitcoinChainClient) Start() {
-	ob.logger.Info().Msgf("BitcoinChainClient is starting")
+	ob.logger.ChainLogger.Info().Msgf("BitcoinChainClient is starting")
 	go ob.WatchInTx()
 	go ob.observeOutTx()
 	go ob.WatchUTXOS()
@@ -136,7 +152,7 @@ func (ob *BitcoinChainClient) Start() {
 }
 
 func (ob *BitcoinChainClient) Stop() {
-	ob.logger.Info().Msgf("ob %s is stopping", ob.chain.String())
+	ob.logger.ChainLogger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 	//
 	//ob.Logger.Info().Msg("closing ob.pendingUtxos")
@@ -145,7 +161,7 @@ func (ob *BitcoinChainClient) Stop() {
 	//	ob.Logger.Error().Err(err).Msg("error closing pendingUtxos")
 	//}
 	//
-	ob.logger.Info().Msgf("%s observer stopped", ob.chain.String())
+	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
 func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
@@ -175,18 +191,17 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ob.logger.Info().Msgf("WatchInTx to TSS Address %s", ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress())
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			err := ob.observeInTx()
 			if err != nil {
-				ob.logger.Error().Err(err).Msg("error observing in tx")
+				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")
 				continue
 			}
 		case <-ob.stop:
-			ob.logger.Info().Msg("WatchInTx stopped")
+			ob.logger.WatchInTx.Info().Msg("WatchInTx stopped")
 			return
 		}
 	}
@@ -212,7 +227,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// query incoming gas asset
 	if cnt > lastBN {
 		bn := lastBN + 1
-		ob.logger.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
+		ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
 		hash, err := ob.rpcClient.GetBlockHash(bn)
 		if err != nil {
 			return err
@@ -222,23 +237,21 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		if err != nil {
 			return err
 		}
-		ob.logger.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
+		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
 		if len(block.Tx) > 1 {
 			for idx, tx := range block.Tx {
-				fmt.Printf("tx %d: %s\n", idx, tx.Txid)
+				ob.logger.WatchInTx.Info().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
 				for vidx, vout := range tx.Vout {
-					fmt.Printf("  vout %d\n", vidx)
-					fmt.Printf("    value: %v\n", vout.Value)
-					fmt.Printf("    scriptPubKey: %v\n", vout.ScriptPubKey.Hex)
+					ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
 				}
 			}
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
-		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger)
+		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
 
 		for _, inTx := range inTxs {
-			//ob.Logger.Info().Msgf("incoming tx %v", inTx)
+			ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
 			amount := big.NewFloat(inTx.Value)
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)
@@ -259,10 +272,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				"",
 			)
 			if err != nil {
-				ob.logger.Error().Err(err).Msg("error posting to zeta core")
+				ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 				continue
 			}
-			ob.logger.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+			ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
 		ob.SetLastBlockHeight(bn)
@@ -272,10 +285,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	chain := ob.chain.ChainId
 	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
-	ob.logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
+	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
 	res, found := ob.submittedTx[outTxID]
 	if !found {
@@ -296,9 +309,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 			common.CoinType_Gas,
 		)
 		if err != nil {
-			ob.logger.Error().Err(err).Msgf("error posting to zeta core")
+			logger.Error().Err(err).Msgf("error posting to zeta core")
 		} else {
-			ob.logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+			logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
 		}
 		return true, true, nil
 	}
@@ -307,28 +320,28 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 // FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
 // by the client to easily identify the cctx outbound command
-func (ob *BitcoinChainClient) PostNonceIfNotRecorded() error {
+func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
 	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
 	if err != nil {
-		ob.logger.Error().Err(err).Msgf("error posting nonce to zeta core")
-		return err
+		return errors.Wrap(err, "error posting nonce to zeta core")
 	}
-	ob.logger.Info().Msgf("PostNonce zeta tx: %s", zetaHash)
+	logger.Info().Msgf("PostNonce zeta tx %s , signer %s , nonce %d", zetaHash, ob.zetaClient.keys.GetOperatorAddress(), 0)
 	return nil
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
+
 	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
 		select {
 		case <-gasTicker.C:
 			err := ob.PostGasPrice()
 			if err != nil {
-				ob.logger.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 				continue
 			}
 		case <-ob.stop:
-			ob.logger.Info().Msg("WatchGasPrice stopped")
+			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return
 		}
 	}
@@ -340,11 +353,12 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		if err != nil {
 			return err
 		}
-		_, err = ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
 		if err != nil {
-			ob.logger.Err(err).Msg("PostGasPrice:")
+			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 			return err
 		}
+		ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
@@ -361,11 +375,12 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if err != nil {
 		return err
 	}
-	_, err = ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
 	if err != nil {
-		ob.logger.Err(err).Msg("PostGasPrice:")
+		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
 	}
+	ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 	_ = feeResult
 	return nil
 }
@@ -465,18 +480,18 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	ob.logger.Info().Msgf("WatchUTXOS started")
+
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			err := ob.fetchUTXOS()
 			if err != nil {
-				ob.logger.Error().Err(err).Msg("error fetching btc utxos")
+				ob.logger.WatchUTXOS.Error().Err(err).Msg("error fetching btc utxos")
 				continue
 			}
 		case <-ob.stop:
-			ob.logger.Info().Msg("WatchUTXOS stopped")
+			ob.logger.WatchUTXOS.Info().Msg("WatchUTXOS stopped")
 			return
 		}
 	}
@@ -506,7 +521,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
-		ob.logger.Info().Msgf("btc: fetched %d utxos", len(unspents))
+		ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
 		//for idx, utxo := range unspents {
 		//	fmt.Printf("utxo %d\n", idx)
 		//	fmt.Printf("  txid: %s\n", utxo.TxID)
@@ -551,17 +566,17 @@ func (ob *BitcoinChainClient) housekeepPending() {
 		// if key not in utxos map, remove from pendingUtxos
 		if !utxosMap[string(key)] {
 			if err := ob.pendingUtxos.Delete(key, nil); err != nil {
-				ob.logger.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
+				ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
 			}
 		}
 	}
 	iter.Release()
 	err := iter.Error()
 	if err != nil {
-		ob.logger.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
+		ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
 	}
 	if removed > 0 {
-		ob.logger.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
+		ob.logger.WatchUTXOS.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
 	}
 }
 
@@ -582,21 +597,21 @@ func (ob *BitcoinChainClient) observeOutTx() {
 		case <-ticker.C:
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
 			if err != nil {
-				ob.logger.Error().Err(err).Msg("error GetAllOutTxTrackerByChain")
+				ob.logger.ObserveOutTx.Error().Err(err).Msg("error GetAllOutTxTrackerByChain")
 				continue
 			}
 			for _, tracker := range trackers {
 				outTxID := fmt.Sprintf("%d-%d", tracker.ChainId, tracker.Nonce)
-				ob.logger.Info().Msgf("tracker outTxID: %s", outTxID)
+				ob.logger.ObserveOutTx.Info().Msgf("tracker outTxID: %s", outTxID)
 				for _, txHash := range tracker.HashList {
 					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
 					if err != nil {
-						ob.logger.Error().Err(err).Msg("error NewHashFromStr")
+						ob.logger.ObserveOutTx.Error().Err(err).Msg("error NewHashFromStr")
 						continue
 					}
 					getTxResult, err := ob.rpcClient.GetTransaction(hash)
 					if err != nil {
-						ob.logger.Warn().Err(err).Msg("error GetTransaction")
+						ob.logger.ObserveOutTx.Warn().Err(err).Msg("error GetTransaction")
 						continue
 					}
 					if getTxResult.Confirmations >= 0 {
@@ -605,7 +620,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				}
 			}
 		case <-ob.stop:
-			ob.logger.Info().Msg("observeOutTx stopped")
+			ob.logger.ObserveOutTx.Info().Msg("observeOutTx stopped")
 			return
 		}
 	}
