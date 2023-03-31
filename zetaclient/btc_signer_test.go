@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rs/zerolog"
 	. "gopkg.in/check.v1"
 )
 
@@ -35,7 +36,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(&tss, nil)
+	s.btcSigner, err = NewBTCSigner(&tss, nil, zerolog.Logger{})
 	c.Assert(err, IsNil)
 }
 

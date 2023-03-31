@@ -10,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"testing"
@@ -21,13 +23,15 @@ func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	kb := keyring.NewInMemory(cdc)
 	path := sdk.GetConfig().GetFullBIP44Path()
-	_, err := kb.NewAccount("signerName", testdata.TestMnemonic, "", path, hd.Secp256k1)
+	//_, err := kb.NewAccount("signerName", testdata.TestMnemonic, "", path, hd.Secp256k1)
+	//require.NoError(t, err)
+	_, err := kb.NewAccount(mc.GetGranteeKeyName(common.ZetaClientGranteeKey, "signerName"), testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
-
-	k := mc.NewKeysWithKeybase(kb, "signerName", "")
-	pubKeySet, err := k.GetPubKeySet()
+	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granterAddress")))
+	k := mc.NewKeysWithKeybase(kb, granterAddress, "signerName", "")
+	pubKeySet, err := k.GetPubKeySet(common.ZetaClientGranteeKey)
 	assert.NoError(t, err)
-	addr, err := k.GetSignerInfo().GetAddress()
+	addr, err := k.GetSignerInfo(common.ZetaClientGranteeKey).GetAddress()
 	assert.NoError(t, err)
 	msg := types.MsgSetNodeKeys{
 		Creator:                  addr.String(),

@@ -45,7 +45,6 @@ func (msg *MsgSetNodeKeys) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-
 	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, msg.PubkeySet.Secp256k1.String())
 	if err != nil {
 		return sdkerrors.Wrapf(ErrInvalidPubKeySet, err.Error())
