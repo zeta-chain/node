@@ -1,6 +1,8 @@
 FROM golang:1.19-alpine AS builder
 
 ENV GOPATH /go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
 
 RUN apk --no-cache add git make build-base jq openssh
 RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
