@@ -15,6 +15,8 @@ COPY contrib/localnet/orchestrator/start.sh /work/
 RUN chmod +x /work/start.sh
 
 ENV GOPATH /go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
