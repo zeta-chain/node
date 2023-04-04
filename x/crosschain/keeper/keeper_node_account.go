@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
 )
 
 // SetNodeAccount set a specific nodeAccount in the store from its index
@@ -105,6 +106,11 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s not valid", msg.Creator))
+	}
+
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !IsBondedValidator(strings.ToUpper(msg.Creator), validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("msg Creator %s is not a bonded validator", msg.Creator))
 	}
 	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
