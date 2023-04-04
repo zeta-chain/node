@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -18,8 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"io"
-	"os"
 )
 
 func AddTssToGenesisCmd() *cobra.Command {
@@ -106,46 +99,4 @@ func GetPubKeySet(clientctx client.Context, tssAccountName, password string) (co
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, address, nil
-}
-
-func GetKeyringKeybase(chainHomeFolder, tssKeyName, password string) (ckeys.Keyring, error) {
-
-	if len(tssKeyName) == 0 {
-		return nil, fmt.Errorf("signer name is empty")
-	}
-	if len(password) == 0 {
-		return nil, fmt.Errorf("password is empty")
-	}
-
-	buf := bytes.NewBufferString(password)
-	// the library used by keyring is using ReadLine , which expect a new line
-	buf.WriteByte('\n')
-	buf.WriteString(password)
-	buf.WriteByte('\n')
-	kb, err := getKeybase(chainHomeFolder, buf)
-	if err != nil {
-		return nil, fmt.Errorf("fail to get keybase,err:%w", err)
-	}
-	oldStdIn := os.Stdin
-	defer func() {
-		os.Stdin = oldStdIn
-	}()
-	os.Stdin = nil
-	_, err = kb.Key(tssKeyName)
-	if err != nil {
-		return nil, err
-	}
-	return kb, nil
-}
-
-// getKeybase will create an instance of Keybase
-func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
-	cliDir := zetaCoreHome
-	if len(zetaCoreHome) == 0 {
-		return nil, fmt.Errorf("zetaCoreHome is empty")
-	}
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, cdc)
 }
