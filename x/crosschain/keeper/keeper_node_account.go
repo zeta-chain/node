@@ -103,7 +103,7 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 
 func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	addr, err := sdk.AccAddressFromBech32(msg.TssSigner_Address)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s not valid", msg.Creator))
 	}
@@ -122,9 +122,6 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 			NodeStatus:  types.NodeStatus_Unknown,
 		}
 		k.SetNodeAccount(ctx, na)
-	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s already has a node account", msg.Creator))
 	}
-
 	return &types.MsgSetNodeKeysResponse{}, nil
 }

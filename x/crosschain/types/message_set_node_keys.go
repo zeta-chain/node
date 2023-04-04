@@ -11,11 +11,11 @@ import (
 
 var _ sdk.Msg = &MsgSetNodeKeys{}
 
-func NewMsgSetNodeKeys(creator string, pubkeySet common.PubKeySet, validatorConsensusPubkey string) *MsgSetNodeKeys {
+func NewMsgSetNodeKeys(creator string, pubkeySet common.PubKeySet, tssSignerAddress string) *MsgSetNodeKeys {
 	return &MsgSetNodeKeys{
-		Creator:                  creator,
-		PubkeySet:                &pubkeySet,
-		ValidatorConsensusPubkey: validatorConsensusPubkey,
+		Creator:           creator,
+		PubkeySet:         &pubkeySet,
+		TssSigner_Address: tssSignerAddress,
 	}
 }
 
@@ -41,7 +41,7 @@ func (msg *MsgSetNodeKeys) GetSignBytes() []byte {
 }
 
 func (msg *MsgSetNodeKeys) ValidateBasic() error {
-	accAddressCreator, err := sdk.AccAddressFromBech32(msg.Creator)
+	accAddressCreator, err := sdk.AccAddressFromBech32(msg.TssSigner_Address)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}

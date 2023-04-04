@@ -109,9 +109,10 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return "", fmt.Errorf("post receive failed after %d retries", maxRetries)
 }
 
-func (b *ZetaCoreBridge) SetNodeKey(tssPubkeySet common.PubKeySet, conskey string) (string, error) {
-	tssAddress := b.keys.GetAddress(common.TssSignerKey)
-	msg := types.NewMsgSetNodeKeys(tssAddress.String(), tssPubkeySet, conskey)
+func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string, error) {
+	tssSignerAddress := b.keys.GetAddress(common.TssSignerKey)
+	signerAddress := b.keys.GetOperatorAddress().String()
+	msg := types.NewMsgSetNodeKeys(signerAddress, tssSignerPubkeySet, tssSignerAddress.String())
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
 	if err != nil {

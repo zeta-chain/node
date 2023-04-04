@@ -126,7 +126,7 @@ message MsgVoteOnObservedInboundTxResponse {
 message MsgSetNodeKeys {
   string creator = 1;
   common.PubKeySet pubkeySet = 2;
-  string validatorConsensusPubkey = 3;
+  string tss_signer_Address = 3;
 }
 
 message MsgSetNodeKeysResponse {

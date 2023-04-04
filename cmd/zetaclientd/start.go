@@ -107,7 +107,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if configData.SetNodeKey {
 		retryCount := 0
 		for {
-			ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
+			ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet)
 			if err != nil {
 				startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
 				time.Sleep(2 * time.Second)

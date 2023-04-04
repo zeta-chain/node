@@ -17,7 +17,7 @@ import (
 
 func AddTssToGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gentss [tssKeyName] [Password]",
+		Use:   "gentss [tssKeyName] [Password] [operatorAddress]",
 		Short: "Add your tss address to the genesis file",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -35,11 +35,12 @@ func AddTssToGenesisCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			sdk.MustAccAddressFromBech32(args[2])
 
 			zetaCrossChainGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = append(zetaCrossChainGenState.NodeAccountList, &types.NodeAccount{
-				Creator:     address.String(),
-				Index:       address.String(),
+				Creator:     args[2],
+				Index:       args[2],
 				NodeAddress: address,
 				PubkeySet:   &pubKeySet,
 				NodeStatus:  types.NodeStatus_Unknown,
