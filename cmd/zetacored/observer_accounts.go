@@ -113,22 +113,37 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 	return list
 }
 
-func generateGrants(info types.ObserverInfoReader) (grants []authz.GrantAuthorization) {
-	sdk.MustAccAddressFromBech32(info.SpendGranteeAddress)
+func generateGrants(info types.ObserverInfoReader) []authz.GrantAuthorization {
 	sdk.MustAccAddressFromBech32(info.ObserverAddress)
-	sdk.MustAccAddressFromBech32(info.ZetaClientGranteeAddress)
-	sdk.MustAccAddressFromBech32(info.GovGranteeAddress)
-	sdk.MustAccAddressFromBech32(info.StakingGranteeAddress)
-	grants = append(append(append(append(grants, addStakingGrants(grants, info)...),
-		addSpendingGrants(grants, info)...),
-		addZetaClientGrants(grants, info)...),
-		addGovGrants(grants, info)...)
+	var grants []authz.GrantAuthorization
+	if info.ZetaClientGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.ZetaClientGranteeAddress)
+		grants = append(grants, addZetaClientGrants(grants, info)...)
+	}
+	if info.SpendGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.SpendGranteeAddress)
+		grants = append(grants, addSpendingGrants(grants, info)...)
+	}
+	if info.StakingGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.StakingGranteeAddress)
+		grants = append(grants, addStakingGrants(grants, info)...)
+	}
+
+	if info.TssSignerAddress != "" {
+		sdk.MustAccAddressFromBech32(info.TssSignerAddress)
+		grants = append(grants, addTssGrants(grants, info)...)
+	}
+
+	if info.GovGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.GovGranteeAddress)
+		grants = append(grants, addGovGrants(grants, info)...)
+	}
 
 	return grants
 }
 
 func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
-	txTypes := crosschaintypes.GetAllAuthzTxTypes()
+	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
 		if err != nil {
@@ -136,6 +151,23 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverI
 		}
 		grants = append(grants, authz.GrantAuthorization{
 			Granter:       info.ObserverAddress,
+			Grantee:       info.ZetaClientGranteeAddress,
+			Authorization: auth,
+			Expiration:    nil,
+		})
+	}
+	return grants
+}
+
+func addTssGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+	txTypes := crosschaintypes.GetAllAuthzTssTxTypes()
+	for _, txType := range txTypes {
+		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
+		if err != nil {
+			panic(err)
+		}
+		grants = append(grants, authz.GrantAuthorization{
+			Granter:       info.TssSignerAddress,
 			Grantee:       info.ZetaClientGranteeAddress,
 			Authorization: auth,
 			Expiration:    nil,

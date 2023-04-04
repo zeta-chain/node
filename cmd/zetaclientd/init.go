@@ -24,6 +24,7 @@ type initArguments struct {
 	validatorName string
 	peer          string
 	logConsole    bool
+	setNodeKey    bool
 	preParamsPath string
 	keygen        int64
 	chainID       string
@@ -40,6 +41,7 @@ func init() {
 	InitCmd.Flags().StringVar(&initArgs.validatorName, "val", "alice", "validator name")
 	InitCmd.Flags().StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	InitCmd.Flags().BoolVar(&initArgs.logConsole, "log-console", false, "")
+	InitCmd.Flags().BoolVar(&initArgs.setNodeKey, "set-node-key", true, "Set it to false if node key is set through genesis file")
 	InitCmd.Flags().StringVar(&initArgs.preParamsPath, "pre-params", "", "pre-params file path")
 	InitCmd.Flags().Int64Var(&initArgs.keygen, "keygen-block", 0, "keygen at block height (default: 0 means no keygen")
 	InitCmd.Flags().StringVar(&initArgs.chainID, "chain-id", "athens-1", "chain id")
@@ -61,6 +63,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ValidatorName = initArgs.validatorName
 	configData.Peer = initArgs.peer
 	configData.LogConsole = initArgs.logConsole
+	configData.SetNodeKey = initArgs.setNodeKey
 	configData.PreParamsPath = initArgs.preParamsPath
 	configData.KeygenBlock = initArgs.keygen
 	configData.ChainID = initArgs.chainID

@@ -20,7 +20,7 @@ var signers map[string]AuthZSigner
 
 func init() {
 	signersList := make(map[string]AuthZSigner)
-	for _, tx := range crosschaintypes.GetAllAuthzTxTypes() {
+	for _, tx := range crosschaintypes.GetAllAuthzZetaclientTxTypes() {
 		signersList[tx] = AuthZSigner{KeyType: common.ZetaClientGranteeKey}
 	}
 	signers = signersList

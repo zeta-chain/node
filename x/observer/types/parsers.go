@@ -12,6 +12,7 @@ type ObserverInfoReader struct {
 	SupportedChainsList       []int64  `json:"SupportedChainsList"`
 	ObserverAddress           string   `json:"ObserverAddress"`
 	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
+	TssSignerAddress          string   `json:"TssSignerAddress"`
 	StakingGranteeAddress     string   `json:"StakingGranteeAddress"`
 	StakingMaxTokens          string   `json:"StakingMaxTokens"`
 	StakingValidatorAllowList []string `json:"StakingValidatorAllowList"`

@@ -39,6 +39,7 @@ func createObserverList(fp string) {
 		ObserverAddress:           observerAddress.String(),
 		ZetaClientGranteeAddress:  commonGrantAddress.String(),
 		StakingGranteeAddress:     commonGrantAddress.String(),
+		TssSignerAddress:          commonGrantAddress.String(),
 		StakingMaxTokens:          "100000000",
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",

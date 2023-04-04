@@ -103,21 +103,23 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}
-	retryCount := 0
-	for {
 
-		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
-		if err != nil {
-			startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
-			time.Sleep(2 * time.Second)
-			retryCount++
-			if retryCount > maxRetryCountSetNodeKey {
-				panic(err)
+	if configData.SetNodeKey {
+		retryCount := 0
+		for {
+			ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
+			if err != nil {
+				startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
+				time.Sleep(2 * time.Second)
+				retryCount++
+				if retryCount > maxRetryCountSetNodeKey {
+					panic(err)
+				}
+				continue
 			}
-			continue
+			startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
+			break
 		}
-		startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
-		break
 	}
 
 	startLogger.Info().Msg("wait for all node to SetNodeKey")
