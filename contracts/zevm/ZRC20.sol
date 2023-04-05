@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity 0.8.7;
 import "./Interfaces.sol";
 
 /**
@@ -16,7 +16,7 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     // @dev: Fungible address is always the same, maintained at the protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
     address public SYSTEM_CONTRACT_ADDRESS;
-    uint256 public CHAIN_ID;
+    uint256 immutable public CHAIN_ID;
     CoinType public COIN_TYPE;
     uint256 public GAS_LIMIT;
     uint256 public PROTOCOL_FLAT_FEE = 0;
@@ -76,6 +76,17 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
 
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
         _approve(_msgSender(), spender, amount);
+        return true;
+    }
+
+    function increaseAllowance(address spender, uint256 amount) external virtual returns (bool) {
+        _allowances[spender][_msgSender()] += amount;
+        return true;
+    }
+
+    function decreaseAllowance(address spender, uint256 amount) external virtual returns (bool) {
+        require(_allowances[spender][_msgSender()] >= amount, "ERC20: decreased allowance below zero");
+        _allowances[spender][_msgSender()] -= amount;
         return true;
     }
 

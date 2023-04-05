@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // v1.0, 2023-01-10
-pragma solidity ^0.8.7;
+pragma solidity 0.8.7;
 
 // This ERC20 interface comes from OpenZeppelin
 // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol
