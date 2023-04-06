@@ -1,0 +1,39 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+import "gogoproto/gogo.proto";
+import "zetacore/observer/observer.proto";
+import "zetacore/common/common.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message ObserverParams {
+    common.Chain chain =1;
+    string ballot_threshold =3 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable) = false
+    ];
+    string min_observer_delegation = 4 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable) = false
+    ];
+    bool is_supported=5;
+}
+
+enum Policy_Type {
+  option (gogoproto.goproto_enum_stringer) = true;
+  stop_inbound_cctx = 0; // some observer sees inbound tx
+  deploy_fungible_coin = 1;
+}
+
+message Admin_Policy {
+  Policy_Type policy_type = 1;
+  string address =2 ;
+}
+
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  repeated ObserverParams observer_params =1;
+  repeated Admin_Policy admin_policy= 2;
+}

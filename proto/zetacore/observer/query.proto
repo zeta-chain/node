@@ -1,0 +1,81 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "gogoproto/gogo.proto";
+import "zetacore/observer/params.proto";
+import "zetacore/observer/observer.proto";
+import "zetacore/observer/ballot.proto";
+import "zetacore/common/common.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+// Query defines the gRPC querier service.
+service Query {
+	// Parameters queries the parameters of the module.
+	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+		option (google.api.http).get = "/zetachain/observer/params";
+	}
+	// Queries a list of VoterByIdentifier items.
+	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
+	}
+
+// Queries a list of ObserversByChainAndType items.
+	rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
+	}
+	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
+	}
+
+	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/supportedChains";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+	// params holds all the parameters of this module.
+	Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryBallotByIdentifierRequest {
+  string ballot_identifier = 1;
+}
+
+message QueryBallotByIdentifierResponse {
+  Ballot ballot = 1;
+}
+
+message QueryObserversByChainRequest {
+  string observation_chain = 1;
+}
+
+message QueryObserversByChainResponse {
+  repeated string observers = 1;
+}
+
+message QueryAllObserverMappersRequest {
+}
+message QueryAllObserverMappersResponse {
+	repeated ObserverMapper observer_mappers = 1;
+}
+
+
+message QuerySupportedChains {
+}
+
+message QuerySupportedChainsResponse {
+	repeated common.Chain chains = 1;
+}
+
+
+// this line is used by starport scaffolding # 3

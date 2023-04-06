@@ -1,0 +1,34 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "gogoproto/gogo.proto";
+import "zetacore/observer/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+enum VoteType {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SuccessObservation = 0;
+  FailureObservation = 1; // Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.
+  NotYetVoted = 2;
+}
+
+enum BallotStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  BallotFinalized_SuccessObservation = 0;
+  BallotFinalized_FailureObservation = 1;
+  BallotInProgress = 2;
+}
+
+message Ballot {
+  string index =1;
+  string ballot_identifier =2 ;
+  repeated string voter_list =3;
+  repeated VoteType votes = 4;
+  ObservationType observation_type =5;
+  string BallotThreshold = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  BallotStatus ballot_status =7;
+}
