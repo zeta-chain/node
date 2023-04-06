@@ -3,6 +3,4 @@ package zetacore.crosschain;
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-message PermissionFlags {
-  bool isInboundEnabled = 1;
-}
+message PermissionFlags { bool isInboundEnabled = 1; }

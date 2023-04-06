@@ -19,7 +19,8 @@ enum NodeStatus {
 message NodeAccount {
   string creator = 1;
   string index = 2;
-  bytes nodeAddress = 3  [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes nodeAddress = 3 [ (gogoproto.casttype) =
+                              "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
   common.PubKeySet pubkeySet = 4;
   NodeStatus nodeStatus = 5;
 }

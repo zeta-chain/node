@@ -19,17 +19,18 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-		Params params = 1 [(gogoproto.nullable) = false];
-		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
-		Keygen keygen = 3;
-		repeated TSSVoter tSSVoterList = 4;
-		repeated TSS tSSList = 5;
-		repeated GasPrice gasPriceList = 7;
-		repeated ChainNonces chainNoncesList = 8;
-		repeated CrossChainTx CrossChainTxs = 9;
-		repeated NodeAccount nodeAccountList = 11;
-		repeated LastBlockHeight lastBlockHeightList = 12;
-	repeated InTxHashToCctx inTxHashToCctxList = 13 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated OutTxTracker outTxTrackerList = 2 [ (gogoproto.nullable) = false ];
+  Keygen keygen = 3;
+  repeated TSSVoter tSSVoterList = 4;
+  repeated TSS tSSList = 5;
+  repeated GasPrice gasPriceList = 7;
+  repeated ChainNonces chainNoncesList = 8;
+  repeated CrossChainTx CrossChainTxs = 9;
+  repeated NodeAccount nodeAccountList = 11;
+  repeated LastBlockHeight lastBlockHeightList = 12;
+  repeated InTxHashToCctx inTxHashToCctxList = 13
+      [ (gogoproto.nullable) = false ];
   PermissionFlags permissionFlags = 14;
   // this line is used by starport scaffolding # genesis/proto/state
 }

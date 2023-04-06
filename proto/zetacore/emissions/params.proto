@@ -8,12 +8,12 @@ option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  string max_bond_factor  =1 ;
-  string min_bond_factor  =2;
-  string avg_block_time  =3 ;
-  string target_bond_ratio  =4;
-  string validator_emission_percentage=5;
-  string observer_emission_percentage=6;
-  string tss_signer_emission_percentage=7;
-  string duration_factor_constant=8;
+  string max_bond_factor = 1;
+  string min_bond_factor = 2;
+  string avg_block_time = 3;
+  string target_bond_ratio = 4;
+  string validator_emission_percentage = 5;
+  string observer_emission_percentage = 6;
+  string tss_signer_emission_percentage = 7;
+  string duration_factor_constant = 8;
 }

@@ -3,7 +3,4 @@ package zetacore.fungible;
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
-
-message SystemContract {
-  string systemContract = 1;
-}
+message SystemContract { string systemContract = 1; }

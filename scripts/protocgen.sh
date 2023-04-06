@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
+# Install the required protoc execution tools.
 go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
@@ -20,9 +21,6 @@ generate_proto() {
     fi
   done
 }
-
-# Install the required protoc execution tools.
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
 
 # Generate Gogo proto code.
 cd proto

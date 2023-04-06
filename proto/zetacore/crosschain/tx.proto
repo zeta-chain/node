@@ -11,18 +11,22 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
-  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
+  rpc AddToOutTxTracker(MsgAddToOutTxTracker)
+      returns (MsgAddToOutTxTrackerResponse);
+  rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker)
+      returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
-  rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
-  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
+  rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx)
+      returns (MsgVoteOnObservedOutboundTxResponse);
+  rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx)
+      returns (MsgVoteOnObservedInboundTxResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
-  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
-// this line is used by starport scaffolding # proto/tx/rpc
+  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags)
+      returns (MsgUpdatePermissionFlagsResponse);
+  // this line is used by starport scaffolding # proto/tx/rpc
 }
-
 
 message MsgAddToOutTxTracker {
   string creator = 1;
@@ -31,8 +35,7 @@ message MsgAddToOutTxTracker {
   string tx_hash = 4;
 }
 
-message MsgAddToOutTxTrackerResponse {
-}
+message MsgAddToOutTxTrackerResponse {}
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
@@ -40,9 +43,7 @@ message MsgRemoveFromOutTxTracker {
   uint64 nonce = 3;
 }
 
-message MsgRemoveFromOutTxTrackerResponse {
-}
-
+message MsgRemoveFromOutTxTrackerResponse {}
 
 message MsgUpdatePermissionFlags {
   string creator = 1;
@@ -58,7 +59,7 @@ message MsgCreateTSSVoter {
   string pubkey = 5;
 }
 
-message MsgCreateTSSVoterResponse { }
+message MsgCreateTSSVoterResponse {}
 
 message MsgGasPriceVoter {
   string creator = 1;
@@ -68,8 +69,7 @@ message MsgGasPriceVoter {
   string supply = 5;
 }
 
-message MsgGasPriceVoterResponse {
-}
+message MsgGasPriceVoterResponse {}
 
 message MsgNonceVoter {
   string creator = 1;
@@ -77,18 +77,17 @@ message MsgNonceVoter {
   uint64 nonce = 3;
 }
 
-message MsgNonceVoterResponse {
-}
+message MsgNonceVoterResponse {}
 
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
-  string zeta_minted = 5[
-  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
-  (gogoproto.nullable) = false,
-  (gogoproto.moretags) = "yaml:\"zeta_minted\""
+  string zeta_minted = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"zeta_minted\""
   ];
   common.ReceiveStatus status = 6;
   int64 outTx_chain = 7;
@@ -96,8 +95,7 @@ message MsgVoteOnObservedOutboundTx {
   common.CoinType coin_type = 9;
 }
 
-message MsgVoteOnObservedOutboundTxResponse {
-}
+message MsgVoteOnObservedOutboundTxResponse {}
 
 message MsgVoteOnObservedInboundTx {
   string creator = 1;
@@ -105,12 +103,12 @@ message MsgVoteOnObservedInboundTx {
   int64 sender_chain_id = 3;
   string receiver = 4;
   int64 receiver_chain = 5;
-//  string zeta_burnt = 6;
+  //  string zeta_burnt = 6;
   string amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
-//  string mMint = 7;
+  //  string mMint = 7;
   string message = 8;
   string in_tx_hash = 9;
   uint64 in_block_height = 10;
@@ -120,8 +118,7 @@ message MsgVoteOnObservedInboundTx {
   string asset = 14;
 }
 
-message MsgVoteOnObservedInboundTxResponse {
-}
+message MsgVoteOnObservedInboundTxResponse {}
 
 message MsgSetNodeKeys {
   string creator = 1;
@@ -129,5 +126,4 @@ message MsgSetNodeKeys {
   string validatorConsensusPubkey = 3;
 }
 
-message MsgSetNodeKeysResponse {
-}
+message MsgSetNodeKeysResponse {}

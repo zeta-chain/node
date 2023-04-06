@@ -3,7 +3,6 @@ package zetacore.crosschain;
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-
 message Keygen {
   string creator = 1;
   uint64 status = 2; // 0--to generate key; 1--generated; 2--error
