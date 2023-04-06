@@ -43,7 +43,7 @@ func (msg *MsgSetNodeKeys) GetSignBytes() []byte {
 func (msg *MsgSetNodeKeys) ValidateBasic() error {
 	accAddressCreator, err := sdk.AccAddressFromBech32(msg.TssSigner_Address)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tss signer address (%s)", err)
 	}
 	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, msg.PubkeySet.Secp256k1.String())
 	if err != nil {
@@ -51,6 +51,10 @@ func (msg *MsgSetNodeKeys) ValidateBasic() error {
 	}
 	if bytes.Compare(accAddressCreator.Bytes(), pubkey.Address().Bytes()) != 0 {
 		return sdkerrors.Wrapf(ErrInvalidPubKeySet, fmt.Sprintf("Creator : %s , PubkeySet %s", accAddressCreator.String(), pubkey.Address().String()))
+	}
+	_, err = sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	return nil

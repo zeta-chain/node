@@ -33,12 +33,13 @@ func AddObserverAccountsCmd() *cobra.Command {
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-			observerInfo, err := types.ParsefileToObserverDetails(args[0])
+			observerInfo, err := ParsefileToObserverDetails(args[0])
 			if err != nil {
 				return err
 			}
 			var observerMapper []*types.ObserverMapper
 			var grantAuthorizations []authz.GrantAuthorization
+			var nodeAccounts []*crosschaintypes.NodeAccount
 			observersforChain := map[int64][]string{}
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
@@ -46,7 +47,20 @@ func AddObserverAccountsCmd() *cobra.Command {
 				for _, chain := range info.SupportedChainsList {
 					observersforChain[chain] = append(observersforChain[chain], info.ObserverAddress)
 				}
+				if info.NodeAccount.Creator != "" {
+					if info.NodeAccount.Creator != info.ObserverAddress {
+						panic("observer address and node account creator address are not the same")
+					}
+					na := crosschaintypes.NodeAccount{
+						Creator:          info.NodeAccount.Creator,
+						TssSignerAddress: info.NodeAccount.TssSignerAddress,
+						PubkeySet:        info.NodeAccount.PubkeySet,
+						NodeStatus:       crosschaintypes.NodeStatus_Active,
+					}
+					nodeAccounts = append(nodeAccounts, &na)
+				}
 			}
+
 			// Generate observer mappers for each chain
 			for chainID, observers := range observersforChain {
 				observers = removeDuplicate(observers)
@@ -63,8 +77,16 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
+
+			// Add node accounts to cross chain genesis state
+			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
+			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+
+			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaObserverGenState.Observers = observerMapper
+
+			// Add grant authorizations to authz genesis state
 			var authzGenState authz.GenesisState
 			if appState[authz.ModuleName] != nil {
 				err := cdc.UnmarshalJSON(appState[authz.ModuleName], &authzGenState)
@@ -75,11 +97,15 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 			authzGenState.Authorization = grantAuthorizations
 
+			// Marshal modified states into genesis file
+			zetaCrossChainStateBz, err := json.Marshal(zetaCrossChainGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
+			}
 			zetaObserverStateBz, err := json.Marshal(zetaObserverGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
 			}
-
 			err = codectypes.UnpackInterfaces(authzGenState, cdc)
 			if err != nil {
 				return fmt.Errorf("failed to authz grants into upackeder: %w", err)
@@ -90,6 +116,9 @@ func AddObserverAccountsCmd() *cobra.Command {
 			}
 			appState[types.ModuleName] = zetaObserverStateBz
 			appState[authz.ModuleName] = authZStateBz
+			appState[crosschaintypes.ModuleName] = zetaCrossChainStateBz
+
+			// Create new genesis file
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
@@ -113,7 +142,7 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 	return list
 }
 
-func generateGrants(info types.ObserverInfoReader) []authz.GrantAuthorization {
+func generateGrants(info ObserverInfoReader) []authz.GrantAuthorization {
 	sdk.MustAccAddressFromBech32(info.ObserverAddress)
 	var grants []authz.GrantAuthorization
 	if info.ZetaClientGranteeAddress != "" {
@@ -142,7 +171,7 @@ func generateGrants(info types.ObserverInfoReader) []authz.GrantAuthorization {
 	return grants
 }
 
-func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
@@ -159,7 +188,7 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverI
 	return grants
 }
 
-func addTssGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addTssGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	txTypes := crosschaintypes.GetAllAuthzTssTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
@@ -176,7 +205,7 @@ func addTssGrants(grants []authz.GrantAuthorization, info types.ObserverInfoRead
 	return grants
 }
 
-func addGovGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 
 	txTypes := []string{sdk.MsgTypeURL(&v1beta1.MsgVote{}),
 		sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}),
@@ -202,7 +231,7 @@ func addGovGrants(grants []authz.GrantAuthorization, info types.ObserverInfoRead
 	return grants
 }
 
-func addSpendingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	spendMaxTokens, ok := sdk.NewIntFromString(info.SpendMaxTokens)
 	if !ok {
 		panic("Failed to parse spend max tokens")
@@ -222,7 +251,7 @@ func addSpendingGrants(grants []authz.GrantAuthorization, info types.ObserverInf
 	return grants
 }
 
-func addStakingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	stakingMaxTokens, ok := sdk.NewIntFromString(info.StakingMaxTokens)
 	if !ok {
 		panic("Failed to parse staking max tokens")

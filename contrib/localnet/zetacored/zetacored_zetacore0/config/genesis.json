@@ -173,16 +173,14 @@
       "nodeAccountList": [
         {
           "creator": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-          "index": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
-          "nodeAddress": "zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99",
+          "tssSignerAddress": "zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99",
           "pubkeySet": {
             "secp256k1": "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0"
           }
         },
         {
           "creator": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
-          "index": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
-          "nodeAddress": "zeta1m0lynuvgfwlnh07x56yucrg6l32scvsdg4ss9t",
+          "tssSignerAddress": "zeta1m0lynuvgfwlnh07x56yucrg6l32scvsdg4ss9t",
           "pubkeySet": {
             "secp256k1": "zetapub1addwnpepqgftdffck8595feppsd2rydnym5x6gunz2n0m642klzfhecznftxgqc0245"
           }

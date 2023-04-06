@@ -34,9 +34,9 @@ func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {
 	addr, err := k.GetSignerInfo(common.ZetaClientGranteeKey).GetAddress()
 	assert.NoError(t, err)
 	msg := types.MsgSetNodeKeys{
-		Creator:                  addr.String(),
-		PubkeySet:                &pubKeySet,
-		ValidatorConsensusPubkey: "",
+		Creator:           addr.String(),
+		TssSigner_Address: addr.String(),
+		PubkeySet:         &pubKeySet,
 	}
 	err = msg.ValidateBasic()
 	assert.NoError(t, err)

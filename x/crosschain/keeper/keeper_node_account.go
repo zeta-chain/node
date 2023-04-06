@@ -17,7 +17,7 @@ import (
 func (k Keeper) SetNodeAccount(ctx sdk.Context, nodeAccount types.NodeAccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeAccountKey))
 	b := k.cdc.MustMarshal(&nodeAccount)
-	store.Set(types.KeyPrefix(nodeAccount.Index), b)
+	store.Set(types.KeyPrefix(nodeAccount.Creator), b)
 }
 
 // GetNodeAccount returns a nodeAccount from its index
@@ -103,11 +103,6 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 
 func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := sdk.AccAddressFromBech32(msg.TssSigner_Address)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s not valid", msg.Creator))
-	}
-
 	validators := k.StakingKeeper.GetAllValidators(ctx)
 	if !IsBondedValidator(strings.ToUpper(msg.Creator), validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("msg Creator %s is not a bonded validator", msg.Creator))
@@ -115,11 +110,10 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 	_, found := k.GetNodeAccount(ctx, msg.Creator)
 	if !found {
 		na := types.NodeAccount{
-			Creator:     msg.Creator,
-			Index:       msg.Creator,
-			NodeAddress: addr,
-			PubkeySet:   msg.PubkeySet,
-			NodeStatus:  types.NodeStatus_Unknown,
+			Creator:          msg.Creator,
+			TssSignerAddress: msg.TssSigner_Address,
+			PubkeySet:        msg.PubkeySet,
+			NodeStatus:       types.NodeStatus_Active,
 		}
 		k.SetNodeAccount(ctx, na)
 	}
