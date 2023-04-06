@@ -2,6 +2,10 @@
 
 set -eo pipefail
 
+go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
+
 # Define a shell function for generating proto code.
 generate_proto() {
   local dir="$1"
