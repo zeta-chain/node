@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.observer;
+package zetacore.observer;
 
 
 import "google/api/annotations.proto";
@@ -74,7 +74,7 @@ message QuerySupportedChains {
 }
 
 message QuerySupportedChainsResponse {
-	repeated common.Chain chains = 1;
+	repeated .zetacore.common.Chain chains = 1;
 }
 
 

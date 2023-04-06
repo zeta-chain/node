@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.emissions;
+package zetacore.emissions;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -29,7 +29,7 @@ message QueryParamsRequest {}
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  .zetacore.emissions.Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryListPoolAddressesRequest {

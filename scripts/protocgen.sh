@@ -29,5 +29,5 @@ done
 cd ..
 
 # Move proto files to the right places.
-# cp -r github.com/lavanet/lava/* ./
-# rm -rf github.com
+cp -r github.com/zeta-chain/zetacore/* ./
+rm -rf github.com

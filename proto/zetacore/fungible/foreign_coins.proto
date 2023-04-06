@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.fungible;
+package zetacore.fungible;
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -14,7 +14,6 @@ message ForeignCoins {
   uint32 decimals = 5;
   string name = 6; 
   string symbol = 7;
-  common.CoinType coin_type = 8;
-  
+  .zetacore.common.CoinType coin_type = 8; 
 }
 

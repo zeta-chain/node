@@ -1,5 +1,5 @@
 syntax = "proto3";
-package zetachain.zetacore.emissions;
+package zetacore.emissions;
 
 import "gogoproto/gogo.proto";
 
