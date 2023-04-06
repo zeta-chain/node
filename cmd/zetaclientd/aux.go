@@ -19,10 +19,9 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 }
 
 func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, error) {
-	signerName := config.ValidatorName
 	signerPass := "password"
 	chainIP := config.ZetaCoreURL
-	kb, err := zetaclient.GetKeyringKeybase([]common.KeyType{common.ZetaClientGranteeKey, common.TssSignerKey}, chainHomeFolder, signerName, signerPass)
+	kb, err := zetaclient.GetKeyringKeybase(config.AuthzHotkey, chainHomeFolder, signerPass)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +29,8 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 	if err != nil {
 		return nil, err
 	}
-	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, signerName, signerPass)
-	authzSignerName := zetaclient.GetGranteeKeyName(common.ZetaClientGranteeKey, signerName)
+	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, config.AuthzHotkey, signerPass)
+	authzSignerName := zetaclient.GetGranteeKeyName(common.ZetaClientGranteeKey, config.AuthzHotkey)
 	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, authzSignerName)
 	if err != nil {
 		return nil, err

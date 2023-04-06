@@ -26,6 +26,7 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner
 	msgURL := sdk.MsgTypeURL(msg)
 	authzSigner := GetSigner(msgURL)
 	authzMessage := authz.NewMsgExec(authzSigner.GranteeAddress, []sdk.Msg{msg})
+	fmt.Println("authzSigner", authzSigner.String())
 	return &authzMessage, authzSigner
 }
 

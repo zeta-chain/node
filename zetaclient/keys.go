@@ -35,14 +35,14 @@ func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, name, p
 	}
 }
 
-func GetGranteeKeyName(keyType common.KeyType, signerName string) string {
-	return fmt.Sprintf("%s_%s", signerName, keyType.String())
+func GetGranteeKeyName(_ common.KeyType, signerName string) string {
+	return fmt.Sprintf("%s", signerName)
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signerName, password string) (ckeys.Keyring, error) {
+func GetKeyringKeybase(hotkeyName, chainHomeFolder, password string) (ckeys.Keyring, error) {
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
-	if len(signerName) == 0 {
+	if len(hotkeyName) == 0 {
 		return nil, fmt.Errorf("signer name is empty")
 	}
 	if len(password) == 0 {
@@ -63,12 +63,11 @@ func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signer
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-	for _, keyType := range requireKeytypes {
-		logger.Debug().Msgf("Checking for Key: %s  \n", GetGranteeKeyName(keyType, signerName))
-		_, err = kb.Key(GetGranteeKeyName(keyType, signerName))
-		if err != nil {
-			return nil, fmt.Errorf("key not presnt with name (%s): %w", GetGranteeKeyName(keyType, signerName), err)
-		}
+
+	logger.Debug().Msgf("Checking for Key: %s  \n , Folder %s \n,Backend %s \n", hotkeyName, chainHomeFolder, kb.Backend())
+	_, err = kb.Key(hotkeyName)
+	if err != nil {
+		return nil, fmt.Errorf("key not presnt with name (%s): %w", hotkeyName, err)
 	}
 
 	return kb, nil
