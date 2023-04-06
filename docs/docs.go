@@ -25,13 +25,19 @@ func RegisterOpenAPIService(router *mux.Router) {
 }
 
 func openAPIHandler() http.HandlerFunc {
-	tmpl, _ := template.ParseFS(templateFS, indexFile)
+	tmpl, err := template.ParseFS(templateFS, indexFile)
+	if err != nil {
+		panic(err)
+	}
 
 	return func(w http.ResponseWriter, req *http.Request) {
-		tmpl.Execute(w, struct {
+		err := tmpl.Execute(w, struct {
 			URL string
 		}{
 			apiFile,
 		})
+		if err != nil {
+			http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		}
 	}
 }
