@@ -15,6 +15,8 @@ interface SystemContractErrors {
     error CantBeIdenticalAddresses();
 
     error CantBeZeroAddress();
+
+    error ZeroAddress();
 }
 
 /**
@@ -129,6 +131,8 @@ contract SystemContract is SystemContractErrors {
     /// @notice Setter for wrapped ZETA address.
     function setWZETAContractAddress(address addr) external {
         if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
+        if (addr == address(0)) revert ZeroAddress();
+
         wZetaContractAddress = addr;
         emit SetWZeta(wZetaContractAddress);
     }
