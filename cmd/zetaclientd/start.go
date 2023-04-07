@@ -59,14 +59,12 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("ZetaBridge is ready")
 
 	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
-	//zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz->zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99
-	//zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52 -> zeta1m0lynuvgfwlnh07x56yucrg6l32scvsdg4ss9t
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
-		bridge1.GetKeys().GetAddress(common.ZetaClientGranteeKey))
+		bridge1.GetKeys().GetAddress())
 
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
-	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
+	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
@@ -100,7 +98,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	//log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
 	consKey := ""
-	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
+	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet()
 	if err != nil {
 		startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
 	}

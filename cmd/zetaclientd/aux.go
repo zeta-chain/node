@@ -30,8 +30,7 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 		return nil, err
 	}
 	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, config.AuthzHotkey, signerPass)
-	authzSignerName := zetaclient.GetGranteeKeyName(common.ZetaClientGranteeKey, config.AuthzHotkey)
-	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, authzSignerName)
+	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, config.AuthzHotkey)
 	if err != nil {
 		return nil, err
 	}

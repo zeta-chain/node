@@ -26,12 +26,10 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner
 	msgURL := sdk.MsgTypeURL(msg)
 	authzSigner := GetSigner(msgURL)
 	authzMessage := authz.NewMsgExec(authzSigner.GranteeAddress, []sdk.Msg{msg})
-	fmt.Println("authzSigner", authzSigner.String())
 	return &authzMessage, authzSigner
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
-
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
@@ -39,7 +37,6 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	if err != nil {
 		return "", err
 	}
-
 	return zetaTxHash, nil
 }
 
@@ -111,7 +108,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 }
 
 func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string, error) {
-	tssSignerAddress := b.keys.GetAddress(common.TssSignerKey)
+	tssSignerAddress := b.keys.GetAddress()
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgSetNodeKeys(signerAddress, tssSignerPubkeySet, tssSignerAddress.String())
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)

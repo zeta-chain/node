@@ -26,23 +26,23 @@ type Keys struct {
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, name, password string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName, password string) *Keys {
 	return &Keys{
-		signerName:      name,
+		signerName:      granteeName,
 		password:        password,
 		kb:              kb,
 		operatorAddress: granterAddress,
 	}
 }
 
-func GetGranteeKeyName(_ common.KeyType, signerName string) string {
+func GetGranteeKeyName(signerName string) string {
 	return fmt.Sprintf("%s", signerName)
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(hotkeyName, chainHomeFolder, password string) (ckeys.Keyring, error) {
+func GetKeyringKeybase(granteeName, chainHomeFolder, password string) (ckeys.Keyring, error) {
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
-	if len(hotkeyName) == 0 {
+	if len(granteeName) == 0 {
 		return nil, fmt.Errorf("signer name is empty")
 	}
 	if len(password) == 0 {
@@ -64,10 +64,10 @@ func GetKeyringKeybase(hotkeyName, chainHomeFolder, password string) (ckeys.Keyr
 	}()
 	os.Stdin = nil
 
-	logger.Debug().Msgf("Checking for Key: %s  \n , Folder %s \n,Backend %s \n", hotkeyName, chainHomeFolder, kb.Backend())
-	_, err = kb.Key(hotkeyName)
+	logger.Debug().Msgf("Checking for Signer Key: %s  \nFolder %s \nBackend %s \n", granteeName, chainHomeFolder, kb.Backend())
+	_, err = kb.Key(granteeName)
 	if err != nil {
-		return nil, fmt.Errorf("key not presnt with name (%s): %w", hotkeyName, err)
+		return nil, fmt.Errorf("key not presnt with name (%s): %w", granteeName, err)
 	}
 
 	return kb, nil
@@ -81,10 +81,7 @@ func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!
-	//op := func(options *ckeys.Options) {
-	//	options.SupportedAlgos = append(options.SupportedAlgos, hd.EthSecp256k1)
-	//	options.SupportedAlgosLedger = append(options.SupportedAlgosLedger, hd.EthSecp256k1)
-	//}
+
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
@@ -92,8 +89,8 @@ func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 }
 
 // GetSignerInfo return signer info
-func (k *Keys) GetSignerInfo(keyType common.KeyType) *ckeys.Record {
-	signer := GetGranteeKeyName(keyType, k.signerName)
+func (k *Keys) GetSignerInfo() *ckeys.Record {
+	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
 		panic(err)
@@ -105,8 +102,8 @@ func (k *Keys) GetOperatorAddress() sdk.AccAddress {
 	return k.operatorAddress
 }
 
-func (k *Keys) GetAddress(keyType common.KeyType) sdk.AccAddress {
-	signer := GetGranteeKeyName(keyType, k.signerName)
+func (k *Keys) GetAddress() sdk.AccAddress {
+	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
 		panic(err)
@@ -116,9 +113,9 @@ func (k *Keys) GetAddress(keyType common.KeyType) sdk.AccAddress {
 }
 
 // GetPrivateKey return the private key
-func (k *Keys) GetPrivateKey(keyType common.KeyType) (cryptotypes.PrivKey, error) {
+func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
 	// return k.kb.ExportPrivateKeyObject(k.signerName)
-	signer := GetGranteeKeyName(keyType, k.signerName)
+	signer := GetGranteeKeyName(k.signerName)
 	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, k.password)
 	if err != nil {
 		return nil, err
@@ -135,13 +132,13 @@ func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
 }
 
-func (k *Keys) GetPubKeySet(keyType common.KeyType) (common.PubKeySet, error) {
+func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 	pubkeySet := common.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
 
-	pK, err := k.GetPrivateKey(keyType)
+	pK, err := k.GetPrivateKey()
 	if err != nil {
 		return pubkeySet, err
 	}
