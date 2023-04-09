@@ -340,7 +340,7 @@ func (co *CoreObserver) startSendScheduler() {
 					nonce := send.OutBoundTxParams.OutBoundTxTSSNonce
 					//sinceBlock := int64(bn) - int64(send.InBoundTxParams.InBoundTxFinalizedZetaHeight)
 
-					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends <= 10 {
+					if nonce%20 == bn%20 && !outTxMan.IsOutTxActive(outTxID) && numSends <= 8 {
 						outTxMan.StartTryProcess(outTxID)
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
@@ -350,7 +350,7 @@ func (co *CoreObserver) startSendScheduler() {
 						logger.Warn().Msgf("too many active processors at block %d; wait until block %d", bn, untilBlock)
 						break
 					}
-					if idx > 60 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
