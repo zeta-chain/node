@@ -345,11 +345,7 @@ func (co *CoreObserver) startSendScheduler() {
 						go co.TryProcessOutTx(send, outTxMan)
 						numSends++
 					}
-					if outTxMan.NumActiveProcessor() > 120 {
-						untilBlock := (bn + 49) / 50 * 50
-						logger.Warn().Msgf("too many active processors at block %d; wait until block %d", bn, untilBlock)
-						break
-					}
+
 					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
