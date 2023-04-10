@@ -2,12 +2,10 @@ package zetaclient
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	math2 "math"
 	"math/big"
 	"os"
@@ -16,6 +14,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -614,7 +615,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		Start:   uint64(startBlock),
 		End:     &toB,
 		Context: context.TODO(),
-	})
+	}, []ethcommon.Address{})
 
 	if err != nil {
 		return err
