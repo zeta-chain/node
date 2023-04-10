@@ -17,6 +17,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "_zetaMaxFee",
+        "type": "uint256"
+      },
+      {
         "internalType": "contract IERC20",
         "name": "_zeta",
         "type": "address"
@@ -61,6 +66,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "ZetaMaxFeeExceeded",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -70,7 +80,7 @@
         "type": "bytes"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
@@ -121,7 +131,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
@@ -134,7 +144,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
@@ -147,13 +157,13 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "recipient",
         "type": "address"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "contract IERC20",
         "name": "asset",
         "type": "address"
@@ -366,6 +376,19 @@
   {
     "inputs": [],
     "name": "zetaFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetaMaxFee",
     "outputs": [
       {
         "internalType": "uint256",

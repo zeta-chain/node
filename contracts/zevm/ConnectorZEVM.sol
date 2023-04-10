@@ -71,11 +71,13 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
     }
 
     // the contract will receive ZETA from WETH9.withdraw()
-    receive() external payable {}
+    receive() external payable {
+        require(msg.sender == wzeta, "only wzeta allowed");
+    }
 
     function send(ZetaInterfaces.SendInput calldata input) external {
         // transfer wzeta to "fungible" module, which will be burnt by the protocol post processing via hooks.
-        require(WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
+        require(WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas), "wzeta.transferFrom fail");
         WZETA(wzeta).withdraw(input.zetaValueAndGas);
         (bool sent,) = FUNGIBLE_MODULE_ADDRESS.call{value: input.zetaValueAndGas}("");
         require(sent, "Failed to send Ether");
