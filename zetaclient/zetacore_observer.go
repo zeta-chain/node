@@ -346,7 +346,7 @@ func (co *CoreObserver) startSendScheduler() {
 						numSends++
 					}
 
-					if idx > 70 { // only look at 50 sends per chain
+					if idx > 75 { // only look at 50 sends per chain
 						break
 					}
 				}
