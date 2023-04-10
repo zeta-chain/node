@@ -122,7 +122,7 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain, observationType str
 
 func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(2 * 32 * 1024 * 1024)
 	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{}, maxSizeOption)
 	if err != nil {
 		b.logger.Error().Err(err).Msg("query CctxAllPending error")
