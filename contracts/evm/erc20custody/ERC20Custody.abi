@@ -3,27 +3,27 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_TSSAddress",
+        "name": "TSSAddress_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_TSSAddressUpdater",
+        "name": "TSSAddressUpdater_",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "_zetaFee",
+        "name": "zetaFee_",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_zetaMaxFee",
+        "name": "zetaMaxFee_",
         "type": "uint256"
       },
       {
         "internalType": "contract IERC20",
-        "name": "_zeta",
+        "name": "zeta_",
         "type": "address"
       }
     ],
@@ -120,6 +120,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "TSSAddressUpdater_",
+        "type": "address"
+      }
+    ],
+    "name": "RenouncedTSSUpdater",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "sender",
         "type": "address"
       }
@@ -138,6 +151,32 @@
       }
     ],
     "name": "Unwhitelisted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "TSSAddress_",
+        "type": "address"
+      }
+    ],
+    "name": "UpdatedTSSAddress",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "zetaFee_",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdatedZetaFee",
     "type": "event"
   },
   {
@@ -283,7 +322,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_address",
+        "name": "TSSAddress_",
         "type": "address"
       }
     ],
@@ -296,7 +335,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_zetaFee",
+        "name": "zetaFee_",
         "type": "uint256"
       }
     ],

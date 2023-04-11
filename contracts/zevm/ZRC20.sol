@@ -8,34 +8,49 @@ import "./Interfaces.sol";
 interface ZRC20Errors {
     // @dev: Error thrown when caller is not the fungible module
     error CallerIsNotFungibleModule();
-
-    error InvalidSender();
+    error InvalidSender(); 
+    error GasFeeTransferFailed();
+    error ZeroGasCoin();
+    error ZeroGasPrice();   
+    error LowAllowance();
+    error LowBalance();
+    error ZeroAddress();
 }
 
 contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
-    // @dev: Fungible address is always the same, maintained at the protocol level
+    /// @notice Fungible address is always the same, maintained at the protocol level
     address public constant FUNGIBLE_MODULE_ADDRESS = 0x735b14BB79463307AAcBED86DAf3322B1e6226aB;
-    address public SYSTEM_CONTRACT_ADDRESS;
+    /// @notice Chain id.abi
     uint256 immutable public CHAIN_ID;
-    CoinType public COIN_TYPE;
+    /// @notice Coin type, checkout Interfaces.sol.
+    CoinType immutable public COIN_TYPE;
+    /// @notice System contract address.
+    address public SYSTEM_CONTRACT_ADDRESS;
+    /// @notice Gas limit.
     uint256 public GAS_LIMIT;
-    uint256 public PROTOCOL_FLAT_FEE = 0;
+    /// @notice Protocol flat fee.
+    uint256 public PROTOCOL_FLAT_FEE;
 
     mapping(address => uint256) private _balances;
-
     mapping(address => mapping(address => uint256)) private _allowances;
-
     uint256 private _totalSupply;
-
     string private _name;
     string private _symbol;
     uint8 private _decimals;
 
+    /** 
+     * @dev Only fungible module modifier.
+     */
+    modifier onlyFungible() {
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
+        _;
+    }
+
     /**
-     * @dev The only one allowed to deploy new ZRC20 is fungible address
+     * @dev The only one allowed to deploy new ZRC20 is fungible address.
      */
     constructor(string memory name_, string memory symbol_, uint8 decimals_, uint256 chainid_, CoinType coinType_, uint256 gasLimit_, address systemContractAddress_) {
-        if(msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert CallerIsNotFungibleModule();
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
@@ -45,73 +60,134 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
         SYSTEM_CONTRACT_ADDRESS = systemContractAddress_;
     }
 
+    /**
+     * @dev ZRC20 name
+     * @return name as string
+     */
     function name() public view virtual override returns (string memory) {
         return _name;
     }
 
+    /**
+     * @dev ZRC20 symbol.
+     * @return symbol as string.
+     */
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
 
+    /**
+     * @dev ZRC20 decimals.
+     * @return returns uint8 decimals.
+     */
     function decimals() public view virtual override returns (uint8) {
         return _decimals;
     }
 
+    /**
+     * @dev ZRC20 total supply.
+     * @return returns uint256 total supply.
+     */
     function totalSupply() public view virtual override returns (uint256) {
         return _totalSupply;
     }
 
+    /**
+     * @dev Returns ZRC20 balance of an account.
+     * @param account, account address for which balance is requested.
+     * @return uint256 account balance.
+     */
     function balanceOf(address account) public view virtual override returns (uint256) {
         return _balances[account];
     }
 
+    /**
+     * @dev Returns ZRC20 balance of an account.
+     * @param recipient, recipiuent address to which transfer is done.
+     * @return true/false if transfer succeeded/failed.
+     */
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
+    /**
+     * @dev Returns token allowance from owner to spender.
+     * @param owner, owner address.
+     * @return uint256 allowance.
+     */
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
+    /**
+     * @dev Approves amount transferFrom for spender.
+     * @param spender, spender address.
+     * @param amount, amount to approve.
+     * @return true/false if succeeded/failed.
+     */
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
+    /**
+     * @dev Increases allowance by amount for spender.
+     * @param spender, spender address.
+     * @param amount, amount by which to increase allownace.
+     * @return true/false if succeeded/failed.
+     */
     function increaseAllowance(address spender, uint256 amount) external virtual returns (bool) {
         _allowances[spender][_msgSender()] += amount;
         return true;
     }
 
+    /**
+     * @dev Decreases allowance by amount for spender.
+     * @param spender, spender address.
+     * @param amount, amount by which to decrease allownace.
+     * @return true/false if succeeded/failed.
+     */
     function decreaseAllowance(address spender, uint256 amount) external virtual returns (bool) {
-        require(_allowances[spender][_msgSender()] >= amount, "ERC20: decreased allowance below zero");
+        if (_allowances[spender][_msgSender()] < amount) revert LowAllowance();
         _allowances[spender][_msgSender()] -= amount;
         return true;
     }
 
+    /**
+     * @dev Transfers tokens from sender to recipient.
+     * @param sender, sender address.
+     * @param recipient, recipient address.
+     * @param amount, amount to transfer.
+     * @return true/false if succeeded/failed.
+     */
     function transferFrom(address sender,address recipient,uint256 amount) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = _allowances[sender][_msgSender()];
-        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        if (currentAllowance < amount) revert LowAllowance();
 
         _approve(sender, _msgSender(), currentAllowance - amount);
 
         return true;
     }
 
+    /**
+     * @dev Burns an amount of tokens.
+     * @param amount, amount to burn.
+     * @return true/false if succeeded/failed.
+     */
     function burn(uint256 amount) external returns (bool) {
         _burn(msg.sender, amount);
         return true;
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+        if (sender == address(0)) revert ZeroAddress();
+        if (recipient == address(0)) revert ZeroAddress();
 
         uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        if (senderBalance < amount) revert LowBalance();
 
         _balances[sender] = senderBalance - amount;
         _balances[recipient] += amount;
@@ -120,7 +196,7 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     }
 
     function _mint(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: mint to the zero address");
+        if (account == address(0)) revert ZeroAddress();
 
         _totalSupply += amount;
         _balances[account] += amount;
@@ -128,10 +204,10 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     }
 
     function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: burn from the zero address");
+        if (account == address(0)) revert ZeroAddress();
 
         uint256 accountBalance = _balances[account];
-        require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
+        if (accountBalance < amount) revert LowBalance();
 
         _balances[account] = accountBalance - amount;
         _totalSupply -= amount;
@@ -140,65 +216,83 @@ contract ZRC20 is Context, IZRC20, IZRC20Metadata, ZRC20Errors {
     }
 
     function _approve(address owner, address spender, uint256 amount) internal virtual {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        if (owner == address(0)) revert ZeroAddress();
+        if (spender == address(0)) revert ZeroAddress();
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
+    /**
+     * @dev Deposits corresponding tokens from external chain, only callable by Fungible module.
+     * @param to, recipient address.
+     * @param amount, amount to deposit.
+     * @return true/false if succeeded/failed.
+     */
     function deposit(address to, uint256 amount) external override returns (bool) {
-        if(msg.sender != FUNGIBLE_MODULE_ADDRESS && msg.sender != SYSTEM_CONTRACT_ADDRESS) revert InvalidSender();
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS && msg.sender != SYSTEM_CONTRACT_ADDRESS) revert InvalidSender();
         _mint(to, amount);
         emit Deposit(abi.encodePacked(FUNGIBLE_MODULE_ADDRESS), to, amount);
         return true;
     }
 
-    // returns the ZRC20 address for gas on the same chain of this ZRC20,
-    // and calculates the gas fee for withdraw()
+    /**
+     * @dev Withdraws gas fees.
+     * @return returns the ZRC20 address for gas on the same chain of this ZRC20, and calculates the gas fee for withdraw()
+     */
     function withdrawGasFee() public override view returns (address,uint256) {
         address gasZRC20 = ISystem(SYSTEM_CONTRACT_ADDRESS).gasCoinZRC20ByChainId(CHAIN_ID);
-        require(gasZRC20 != address(0), "gas coin not set");
+        if (gasZRC20 == address(0)) {
+            revert ZeroGasCoin();
+        }
         uint256 gasPrice = ISystem(SYSTEM_CONTRACT_ADDRESS).gasPriceByChainId(CHAIN_ID);
-        require(gasPrice > 0, "gas price not set");
+        if (gasPrice == 0) {
+            revert ZeroGasPrice();
+        }
         uint256 gasFee = gasPrice * GAS_LIMIT + PROTOCOL_FLAT_FEE;
         return (gasZRC20, gasFee);
     }
 
     /**
-    * @dev this function causes cctx module to send out outbound tx to the outbound chain
-    * this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee
-    */
+     * @dev Withraws ZRC20 tokens to external chains, this function causes cctx module to send out outbound tx to the outbound chain
+     * this contract should be given enough allowance of the gas ZRC20 to pay for outbound tx gas fee.
+     * @param to, recipient address.
+     * @param amount, amount to deposit.
+     * @return true/false if succeeded/failed.
+     */
     function withdraw(bytes memory to, uint256 amount) external override returns (bool) {
-        (address gasZRC20, uint256 gasFee)= withdrawGasFee();
-        require(IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE), "transfer gas fee failed");
-
+        (address gasZRC20, uint256 gasFee) = withdrawGasFee();
+        if (!IZRC20(gasZRC20).transferFrom(msg.sender, FUNGIBLE_MODULE_ADDRESS, gasFee+PROTOCOL_FLAT_FEE)) {
+            revert GasFeeTransferFailed();
+        }
         _burn(msg.sender, amount);
         emit Withdrawal(msg.sender, to, amount, gasFee, PROTOCOL_FLAT_FEE);
         return true;
     }
 
     /**
-     * @dev System contract address can be updated only by fungible module
+     * @dev Updates system contract address. Can only be updated by the fungible module.
+     * @param addr, new system contract address.
      */
-    function updateSystemContractAddress(address addr) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+    function updateSystemContractAddress(address addr) external onlyFungible {
         SYSTEM_CONTRACT_ADDRESS = addr;
+        emit UpdatedSystemContract(addr);
     }
 
     /**
-     * @dev Gas limit can be updated only by fungible module
+     * @dev Updates gas limit. Can only be updated by the fungible module.
+     * @param gasLimit, new gas limit.
      */
-    function updateGasLimit(uint256 gasLimit) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+    function updateGasLimit(uint256 gasLimit) external onlyFungible {
         GAS_LIMIT = gasLimit;
+        emit UpdatedGasLimit(gasLimit);
     }
 
     /**
-     * @dev Protocol flat fee can be updated only by fungible module
+     * @dev Updates protocol flat fee. Can only be updated by the fungible module.
+     * @param protocolFlatFee, new protocol flat fee.
      */
-    function updateProtocolFlatFee(uint256 protocolFlatFee) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "permission error");
+    function updateProtocolFlatFee(uint256 protocolFlatFee) external onlyFungible {
         PROTOCOL_FLAT_FEE = protocolFlatFee;
+        emit UpdatedProtocolFlatFee(protocolFlatFee);
     }
 }
