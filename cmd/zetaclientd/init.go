@@ -21,9 +21,7 @@ var initArgs = initArguments{}
 
 type initArguments struct {
 	enabledChains string
-	validatorName string
 	peer          string
-	logConsole    bool
 	setNodeKey    bool
 	preParamsPath string
 	keygen        int64
