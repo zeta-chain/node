@@ -40,12 +40,13 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var observerMapper []*types.ObserverMapper
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*crosschaintypes.NodeAccount
-			observersforChain := map[int64][]string{}
+			observersForChain := map[int64][]string{}
+			supportedChains := common.DefaultChainsList()
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
 				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
-				for _, chain := range info.SupportedChainsList {
-					observersforChain[chain] = append(observersforChain[chain], info.ObserverAddress)
+				for _, chain := range supportedChains {
+					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
 				}
 				if info.NodeAccount.Creator != "" {
 					if info.NodeAccount.Creator != info.ObserverAddress {
@@ -62,7 +63,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			}
 
 			// Generate observer mappers for each chain
-			for chainID, observers := range observersforChain {
+			for chainID, observers := range observersForChain {
 				observers = removeDuplicate(observers)
 				chain := common.GetChainFromChainID(chainID)
 				mapper := types.ObserverMapper{

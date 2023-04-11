@@ -33,12 +33,11 @@ func TestParsefileToObserverMapper(t *testing.T) {
 
 func createObserverList(fp string) {
 	var listReader []ObserverInfoReader
-	listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
+	//listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
 	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
 	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))
 	info := ObserverInfoReader{
-		SupportedChainsList:       listChainID,
 		ObserverAddress:           observerAddress.String(),
 		ZetaClientGranteeAddress:  commonGrantAddress.String(),
 		StakingGranteeAddress:     commonGrantAddress.String(),
@@ -49,7 +48,7 @@ func createObserverList(fp string) {
 		GovGranteeAddress:         commonGrantAddress.String(),
 		NodeAccount: crosschaintypes.NodeAccount{
 			Creator:          observerAddress.String(),
-			TssSignerAddress: commonGrantAddress,
+			TssSignerAddress: commonGrantAddress.String(),
 			PubkeySet: &common.PubKeySet{
 				Secp256k1: "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
 			},
