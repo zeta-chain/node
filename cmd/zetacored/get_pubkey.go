@@ -4,45 +4,24 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func AddTssToGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-node-account [tssKeyName] [Password] [operatorAddress]",
+		Use:   "get-pubkey [tssKeyName] [Password]",
 		Short: "Get you node account",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			tssKeyName := args[0]
-			operatorAddress := args[2]
 			pubKeySet, err := GetPubKeySet(clientCtx, tssKeyName, args[1])
 			if err != nil {
 				return err
 			}
-			sdk.MustAccAddressFromBech32(operatorAddress)
-
-			k, err := clientCtx.Keyring.Key(tssKeyName)
-			if err != nil {
-				return err
-			}
-
-			address, err := k.GetAddress()
-			if err != nil {
-				return err
-			}
-
-			nodeAccount := types.NodeAccount{
-				Creator:          args[2],
-				TssSignerAddress: address.String(),
-				PubkeySet:        &pubKeySet,
-			}
-			info := ObserverInfoReader{NodeAccount: nodeAccount}
-			fmt.Println(info.String())
+			fmt.Println(pubKeySet.String())
 			return nil
 		},
 	}
