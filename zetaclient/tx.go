@@ -120,7 +120,7 @@ func (b *ZetaCoreBridge) SetNodeKey(tssPubkeySet common.PubKeySet, conskey strin
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey string) (string, error) {
+func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey string, message string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), tssAddress, tssPubkey)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
