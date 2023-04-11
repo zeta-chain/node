@@ -26,7 +26,6 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
-	_ = abi.ConvertType
 )
 
 // ZetaInterfacesSendInput is an auto generated low-level Go binding around an user-defined struct.
@@ -41,7 +40,7 @@ type ZetaInterfacesSendInput struct {
 
 // ZetaConnectorZEVMMetaData contains all meta data concerning the ZetaConnectorZEVM contract.
 var ZetaConnectorZEVMMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wzeta\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sourceTxOriginAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"internalType\":\"structZetaInterfaces.SendInput\",\"name\":\"input\",\"type\":\"tuple\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wzeta\",\"type\":\"address\"}],\"name\":\"setWzetaAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wzeta\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_wzeta\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"FailedZetaSent\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyFungibleModule\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyWZETA\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WZETATransferFailed\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"}],\"name\":\"SetWZETA\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sourceTxOriginAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"zetaTxSenderAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"name\":\"ZetaSent\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"FUNGIBLE_MODULE_ADDRESS\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"destinationChainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"destinationAddress\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"destinationGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"zetaValueAndGas\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"zetaParams\",\"type\":\"bytes\"}],\"internalType\":\"structZetaInterfaces.SendInput\",\"name\":\"input\",\"type\":\"tuple\"}],\"name\":\"send\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wzeta_\",\"type\":\"address\"}],\"name\":\"setWzetaAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wzeta\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
 }
 
 // ZetaConnectorZEVMABI is the input ABI used to generate the binding from.
@@ -145,11 +144,11 @@ func NewZetaConnectorZEVMFilterer(address common.Address, filterer bind.Contract
 
 // bindZetaConnectorZEVM binds a generic wrapper to an already deployed contract.
 func bindZetaConnectorZEVM(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := ZetaConnectorZEVMMetaData.GetAbi()
+	parsed, err := abi.JSON(strings.NewReader(ZetaConnectorZEVMABI))
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -275,23 +274,23 @@ func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactorSession) Send(input ZetaInt
 
 // SetWzetaAddress is a paid mutator transaction binding the contract method 0xeb3bacbd.
 //
-// Solidity: function setWzetaAddress(address _wzeta) returns()
-func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactor) SetWzetaAddress(opts *bind.TransactOpts, _wzeta common.Address) (*types.Transaction, error) {
-	return _ZetaConnectorZEVM.contract.Transact(opts, "setWzetaAddress", _wzeta)
+// Solidity: function setWzetaAddress(address wzeta_) returns()
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactor) SetWzetaAddress(opts *bind.TransactOpts, wzeta_ common.Address) (*types.Transaction, error) {
+	return _ZetaConnectorZEVM.contract.Transact(opts, "setWzetaAddress", wzeta_)
 }
 
 // SetWzetaAddress is a paid mutator transaction binding the contract method 0xeb3bacbd.
 //
-// Solidity: function setWzetaAddress(address _wzeta) returns()
-func (_ZetaConnectorZEVM *ZetaConnectorZEVMSession) SetWzetaAddress(_wzeta common.Address) (*types.Transaction, error) {
-	return _ZetaConnectorZEVM.Contract.SetWzetaAddress(&_ZetaConnectorZEVM.TransactOpts, _wzeta)
+// Solidity: function setWzetaAddress(address wzeta_) returns()
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMSession) SetWzetaAddress(wzeta_ common.Address) (*types.Transaction, error) {
+	return _ZetaConnectorZEVM.Contract.SetWzetaAddress(&_ZetaConnectorZEVM.TransactOpts, wzeta_)
 }
 
 // SetWzetaAddress is a paid mutator transaction binding the contract method 0xeb3bacbd.
 //
-// Solidity: function setWzetaAddress(address _wzeta) returns()
-func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactorSession) SetWzetaAddress(_wzeta common.Address) (*types.Transaction, error) {
-	return _ZetaConnectorZEVM.Contract.SetWzetaAddress(&_ZetaConnectorZEVM.TransactOpts, _wzeta)
+// Solidity: function setWzetaAddress(address wzeta_) returns()
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactorSession) SetWzetaAddress(wzeta_ common.Address) (*types.Transaction, error) {
+	return _ZetaConnectorZEVM.Contract.SetWzetaAddress(&_ZetaConnectorZEVM.TransactOpts, wzeta_)
 }
 
 // Receive is a paid mutator transaction binding the contract receive function.
@@ -313,6 +312,140 @@ func (_ZetaConnectorZEVM *ZetaConnectorZEVMSession) Receive() (*types.Transactio
 // Solidity: receive() payable returns()
 func (_ZetaConnectorZEVM *ZetaConnectorZEVMTransactorSession) Receive() (*types.Transaction, error) {
 	return _ZetaConnectorZEVM.Contract.Receive(&_ZetaConnectorZEVM.TransactOpts)
+}
+
+// ZetaConnectorZEVMSetWZETAIterator is returned from FilterSetWZETA and is used to iterate over the raw logs and unpacked data for SetWZETA events raised by the ZetaConnectorZEVM contract.
+type ZetaConnectorZEVMSetWZETAIterator struct {
+	Event *ZetaConnectorZEVMSetWZETA // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ZetaConnectorZEVMSetWZETAIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ZetaConnectorZEVMSetWZETA)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ZetaConnectorZEVMSetWZETA)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ZetaConnectorZEVMSetWZETAIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ZetaConnectorZEVMSetWZETAIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ZetaConnectorZEVMSetWZETA represents a SetWZETA event raised by the ZetaConnectorZEVM contract.
+type ZetaConnectorZEVMSetWZETA struct {
+	Wzeta common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// FilterSetWZETA is a free log retrieval operation binding the contract event 0x7325870b05f8f3412c318a35fc6a74feca51ea15811ec7a257676ca4db9d4176.
+//
+// Solidity: event SetWZETA(address wzeta_)
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMFilterer) FilterSetWZETA(opts *bind.FilterOpts) (*ZetaConnectorZEVMSetWZETAIterator, error) {
+
+	logs, sub, err := _ZetaConnectorZEVM.contract.FilterLogs(opts, "SetWZETA")
+	if err != nil {
+		return nil, err
+	}
+	return &ZetaConnectorZEVMSetWZETAIterator{contract: _ZetaConnectorZEVM.contract, event: "SetWZETA", logs: logs, sub: sub}, nil
+}
+
+// WatchSetWZETA is a free log subscription operation binding the contract event 0x7325870b05f8f3412c318a35fc6a74feca51ea15811ec7a257676ca4db9d4176.
+//
+// Solidity: event SetWZETA(address wzeta_)
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMFilterer) WatchSetWZETA(opts *bind.WatchOpts, sink chan<- *ZetaConnectorZEVMSetWZETA) (event.Subscription, error) {
+
+	logs, sub, err := _ZetaConnectorZEVM.contract.WatchLogs(opts, "SetWZETA")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ZetaConnectorZEVMSetWZETA)
+				if err := _ZetaConnectorZEVM.contract.UnpackLog(event, "SetWZETA", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSetWZETA is a log parse operation binding the contract event 0x7325870b05f8f3412c318a35fc6a74feca51ea15811ec7a257676ca4db9d4176.
+//
+// Solidity: event SetWZETA(address wzeta_)
+func (_ZetaConnectorZEVM *ZetaConnectorZEVMFilterer) ParseSetWZETA(log types.Log) (*ZetaConnectorZEVMSetWZETA, error) {
+	event := new(ZetaConnectorZEVMSetWZETA)
+	if err := _ZetaConnectorZEVM.contract.UnpackLog(event, "SetWZETA", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
 
 // ZetaConnectorZEVMZetaSentIterator is returned from FilterZetaSent and is used to iterate over the raw logs and unpacked data for ZetaSent events raised by the ZetaConnectorZEVM contract.
