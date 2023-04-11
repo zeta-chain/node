@@ -7,6 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -14,6 +15,9 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethermint "github.com/evmos/ethermint/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
@@ -21,6 +25,11 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"strconv"
 	"strings"
+)
+
+const (
+	ObserverBalance = "1000000000000000000000"
+	HotkeyBalance   = "100000000000000000000"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
@@ -32,7 +41,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
+			serverConfig := serverCtx.Config
 			observerInfo, err := ParsefileToObserverDetails(args[0])
 			if err != nil {
 				return err
@@ -42,8 +51,22 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var nodeAccounts []*crosschaintypes.NodeAccount
 			observersForChain := map[int64][]string{}
 			supportedChains := common.DefaultChainsList()
+			balances := []banktypes.Balance{}
+			commonCoins, ok := sdk.NewIntFromString(ObserverBalance)
+			if !ok {
+				panic("Failed to parse string to int for observer")
+			}
+			commonHotkeyCoins, ok := sdk.NewIntFromString(HotkeyBalance)
+			if !ok {
+				panic("Failed to parse string to int for hotkey")
+			}
+			commonObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonCoins))
+			commonHotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonHotkeyCoins))
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
+				if info.ZetaClientGranteeAddress == "" || info.ObserverAddress == "" {
+					panic("ZetaClientGranteeAddress or ObserverAddress is empty")
+				}
 				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
 				for _, chain := range supportedChains {
 					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
@@ -57,6 +80,14 @@ func AddObserverAccountsCmd() *cobra.Command {
 					}
 					nodeAccounts = append(nodeAccounts, &na)
 				}
+				balances = append(balances, banktypes.Balance{
+					Address: info.ObserverAddress,
+					Coins:   commonObserverBalance,
+				})
+				balances = append(balances, banktypes.Balance{
+					Address: info.ZetaClientGranteeAddress,
+					Coins:   commonHotkeyBalance,
+				})
 			}
 
 			// Generate observer mappers for each chain
@@ -70,7 +101,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 				observerMapper = append(observerMapper, &mapper)
 			}
 
-			genFile := config.GenesisFile()
+			genFile := serverConfig.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
@@ -115,13 +146,18 @@ func AddObserverAccountsCmd() *cobra.Command {
 			appState[types.ModuleName] = zetaObserverStateBz
 			appState[authz.ModuleName] = authZStateBz
 			appState[crosschaintypes.ModuleName] = zetaCrossChainStateBz
-
+			modifiedAppState, err := AddGenesisAccount(clientCtx, balances, appState)
+			if err != nil {
+				panic(err)
+			}
 			// Create new genesis file
-			appStateJSON, err := json.Marshal(appState)
+			appStateJSON, err := json.Marshal(modifiedAppState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}
+
 			genDoc.AppState = appStateJSON
+
 			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
@@ -339,4 +375,63 @@ func AddObserverAccountCmd() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, appState map[string]json.RawMessage) (map[string]json.RawMessage, error) {
+	var genAccount authtypes.GenesisAccount
+	totalBalanceAdded := sdk.Coins{}
+	genAccounts := make([]authtypes.GenesisAccount, len(balances))
+	for i, balance := range balances {
+		totalBalanceAdded = totalBalanceAdded.Add(balance.Coins...)
+		accAddress := sdk.MustAccAddressFromBech32(balance.Address)
+		baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
+		genAccount = &ethermint.EthAccount{
+			BaseAccount: baseAccount,
+			CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
+		}
+		if err := genAccount.Validate(); err != nil {
+			return appState, fmt.Errorf("failed to validate new genesis account: %w", err)
+		}
+		genAccounts[i] = genAccount
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return appState, fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	for _, genAc := range genAccounts {
+		addr := genAc.GetAddress()
+		if accs.Contains(addr) {
+			return appState, fmt.Errorf("cannot add account at existing address %s", addr)
+		}
+		accs = append(accs, genAc)
+		accs = authtypes.SanitizeGenesisAccounts(accs)
+	}
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return appState, fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+	authGenState.Accounts = genAccs
+
+	authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
+	if err != nil {
+		return appState, fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+	appState[authtypes.ModuleName] = authGenStateBz
+	bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+	bankGenState.Balances = append(bankGenState.Balances, balances...)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+	bankGenState.Supply = bankGenState.Supply.Add(totalBalanceAdded...)
+
+	bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
+	if err != nil {
+		return appState, fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	return appState, nil
 }

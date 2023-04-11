@@ -12,10 +12,10 @@
   },
   {
     "ObserverAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
-    "ZetaClientGranteeAddress": "zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99",
+    "ZetaClientGranteeAddress": "zeta1670kf63ny6pltexn5xkkwpk9vqqf6jkvq0ap77",
     "NodeAccount": {
       "creator": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
-      "tssSignerAddress": "zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99",
+      "tssSignerAddress": "zeta1670kf63ny6pltexn5xkkwpk9vqqf6jkvq0ap77",
       "pubkeySet": {
         "secp256k1": "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0"
       }
