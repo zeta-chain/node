@@ -12,16 +12,18 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"io/ioutil"
+	"os"
+
 	//"os"
 	"testing"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {
 	file := "tmp.json"
-	//defer func(t *testing.T, fp string) {
-	//	err := os.RemoveAll(fp)
-	//	assert.NoError(t, err)
-	//}(t, file)
+	defer func(t *testing.T, fp string) {
+		err := os.RemoveAll(fp)
+		assert.NoError(t, err)
+	}(t, file)
 	app.SetConfig()
 	createObserverList(file)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
@@ -41,7 +43,6 @@ func createObserverList(fp string) {
 		ObserverAddress:           observerAddress.String(),
 		ZetaClientGranteeAddress:  commonGrantAddress.String(),
 		StakingGranteeAddress:     commonGrantAddress.String(),
-		TssSignerAddress:          commonGrantAddress.String(),
 		StakingMaxTokens:          "100000000",
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",

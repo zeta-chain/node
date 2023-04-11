@@ -21,11 +21,6 @@ func GetAllAuthzZetaclientTxTypes() []string {
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
-	}
-}
-
-func GetAllAuthzTssTxTypes() []string {
-	return []string{
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 	}
 }

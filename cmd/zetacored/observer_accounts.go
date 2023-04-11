@@ -48,13 +48,10 @@ func AddObserverAccountsCmd() *cobra.Command {
 				for _, chain := range supportedChains {
 					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
 				}
-				if info.NodeAccount.Creator != "" {
-					if info.NodeAccount.Creator != info.ObserverAddress {
-						panic("observer address and node account creator address are not the same")
-					}
+				if info.NodeAccount.PubkeySet != nil {
 					na := crosschaintypes.NodeAccount{
-						Creator:          info.NodeAccount.Creator,
-						TssSignerAddress: info.NodeAccount.TssSignerAddress,
+						Creator:          info.ObserverAddress,
+						TssSignerAddress: info.ZetaClientGranteeAddress,
 						PubkeySet:        info.NodeAccount.PubkeySet,
 						NodeStatus:       crosschaintypes.NodeStatus_Active,
 					}
@@ -159,11 +156,6 @@ func generateGrants(info ObserverInfoReader) []authz.GrantAuthorization {
 		grants = append(grants, addStakingGrants(grants, info)...)
 	}
 
-	if info.TssSignerAddress != "" {
-		sdk.MustAccAddressFromBech32(info.TssSignerAddress)
-		grants = append(grants, addTssGrants(grants, info)...)
-	}
-
 	if info.GovGranteeAddress != "" {
 		sdk.MustAccAddressFromBech32(info.GovGranteeAddress)
 		grants = append(grants, addGovGrants(grants, info)...)
@@ -181,23 +173,6 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoRea
 		}
 		grants = append(grants, authz.GrantAuthorization{
 			Granter:       info.ObserverAddress,
-			Grantee:       info.ZetaClientGranteeAddress,
-			Authorization: auth,
-			Expiration:    nil,
-		})
-	}
-	return grants
-}
-
-func addTssGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
-	txTypes := crosschaintypes.GetAllAuthzTssTxTypes()
-	for _, txType := range txTypes {
-		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
-		if err != nil {
-			panic(err)
-		}
-		grants = append(grants, authz.GrantAuthorization{
-			Granter:       info.TssSignerAddress,
 			Grantee:       info.ZetaClientGranteeAddress,
 			Authorization: auth,
 			Expiration:    nil,

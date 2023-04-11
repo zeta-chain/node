@@ -10,13 +10,12 @@ import (
 type ObserverInfoReader struct {
 	ObserverAddress           string                      `json:"ObserverAddress"`
 	ZetaClientGranteeAddress  string                      `json:"ZetaClientGranteeAddress"`
-	TssSignerAddress          string                      `json:"TssSignerAddress"`
-	StakingGranteeAddress     string                      `json:"StakingGranteeAddress"`
-	StakingMaxTokens          string                      `json:"StakingMaxTokens"`
-	StakingValidatorAllowList []string                    `json:"StakingValidatorAllowList"`
-	SpendGranteeAddress       string                      `json:"SpendGranteeAddress"`
-	SpendMaxTokens            string                      `json:"SpendMaxTokens"`
-	GovGranteeAddress         string                      `json:"GovGranteeAddress"`
+	StakingGranteeAddress     string                      `json:"StakingGranteeAddress,omitempty"`
+	StakingMaxTokens          string                      `json:"StakingMaxTokens,omitempty"`
+	StakingValidatorAllowList []string                    `json:"StakingValidatorAllowList,omitempty"`
+	SpendGranteeAddress       string                      `json:"SpendGranteeAddress,omitempty"`
+	SpendMaxTokens            string                      `json:"SpendMaxTokens,omitempty"`
+	GovGranteeAddress         string                      `json:"GovGranteeAddress,omitempty"`
 	NodeAccount               crosschaintypes.NodeAccount `json:"NodeAccount"`
 }
 
