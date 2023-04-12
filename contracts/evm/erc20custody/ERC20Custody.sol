@@ -172,7 +172,7 @@ contract ERC20Custody {
             zeta.safeTransferFrom(msg.sender, TSSAddress, zetaFee);
         }
         uint256 oldBalance = asset.balanceOf(address(this));
-        asset.safeTransferFrom(msg.sender, address(this), amount);
+        asset.transferFrom(msg.sender, address(this), amount);
         // In case if there is a fee on a token transfer, we might not receive a full exepected amount 
         // and we need to correctly process that, o we subtract an old balance from a new balance, which should be an actual received amount.
         emit Deposited(recipient, asset, asset.balanceOf(address(this)) - oldBalance, message);
