@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/pelletier/go-toml"
+	"github.com/zeta-chain/zetacore/cmd"
 	"os"
 	"path/filepath"
 )
@@ -47,6 +48,7 @@ func Load(path string) (*Config, error) {
 	ChainsEnabled = result.ChainsEnabled
 	ChainConfigs = result.ChainConfigs
 	BitcoinConfig = result.BitcoinConfig
+	cmd.CHAINID = result.ChainID
 
 	return result, nil
 }
