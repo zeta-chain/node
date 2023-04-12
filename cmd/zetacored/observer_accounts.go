@@ -19,10 +19,12 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -35,14 +37,21 @@ const (
 func AddObserverAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
-		Short: "Add a list of observers to the observer mapper",
-		Args:  cobra.ExactArgs(1),
+		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/observer_info.json",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			serverConfig := serverCtx.Config
-			observerInfo, err := ParsefileToObserverDetails(args[0])
+
+			defaultHome := app.DefaultNodeHome
+			defaultFile := filepath.Join(defaultHome, "os_info", "observer_info.json")
+			if len(args) == 0 {
+				args = append(args, defaultFile)
+			}
+			file := args[0]
+			observerInfo, err := ParsefileToObserverDetails(file)
 			if err != nil {
 				return err
 			}
@@ -71,11 +80,19 @@ func AddObserverAccountsCmd() *cobra.Command {
 				for _, chain := range supportedChains {
 					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
 				}
-				if info.NodeAccount.PubkeySet != nil {
+				if info.ZetaClientGranteePubKey != "" {
+					pubkey, err := common.NewPubKey(info.ZetaClientGranteePubKey)
+					if err != nil {
+						panic(err)
+					}
+					pubkeySet := common.PubKeySet{
+						Secp256k1: pubkey,
+						Ed25519:   "",
+					}
 					na := crosschaintypes.NodeAccount{
 						Creator:          info.ObserverAddress,
 						TssSignerAddress: info.ZetaClientGranteeAddress,
-						PubkeySet:        info.NodeAccount.PubkeySet,
+						PubkeySet:        &pubkeySet,
 						NodeStatus:       crosschaintypes.NodeStatus_Active,
 					}
 					nodeAccounts = append(nodeAccounts, &na)

@@ -13,10 +13,13 @@ func AddTssToGenesisCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-pubkey [tssKeyName] [Password]",
 		Short: "Get you node account",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			tssKeyName := args[0]
+			if len(args) == 1 {
+				args = append(args, "")
+			}
 			pubKeySet, err := GetPubKeySet(clientCtx, tssKeyName, args[1])
 			if err != nil {
 				return err

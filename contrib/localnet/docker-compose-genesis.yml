@@ -1,0 +1,41 @@
+version: "3"
+
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+
+services:
+  zetacore0:
+    image: zetanode:latest
+    container_name: zetacore0
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetacore0
+    ports:
+      - "1317:1317"
+      - "9545:8545"
+      - "9546:8546"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.11
+    entrypoint: /root/genesis.sh
+
+
+  zetacore1:
+    image: zetanode:latest
+    container_name: zetacore1
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetacore1
+    ports:
+      - "22:22"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.12
+    entrypoint: /root/genesis.sh
+
