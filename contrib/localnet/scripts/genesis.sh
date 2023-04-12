@@ -1,5 +1,7 @@
 #!/bin/bash
 
+/usr/sbin/sshd
+
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
