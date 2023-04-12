@@ -74,12 +74,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.confCount = 0
 	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
-	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	//Load btc chain client DB
+	err := ob.loadDB(dbpath)
 	if err != nil {
-		panic("failed to connect database")
+		return nil, err
 	}
-	ob.db = db
+
 	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
@@ -609,6 +609,15 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					}
 					if getTxResult.Confirmations >= 0 {
 						ob.submittedTx[outTxID] = *getTxResult
+
+						//Save to db
+						tx, err := clienttypes.ToTransactionResultSQLType(*getTxResult, outTxID)
+						if err != nil {
+							continue
+						}
+						if err := ob.db.Create(tx).Error; err != nil {
+							ob.logger.Error().Err(err).Msg("observeOutTx: error saving submitted tx")
+						}
 					}
 				}
 			}
@@ -625,4 +634,59 @@ func getPendingUTXO(db *gorm.DB, key string) (*btcjson.ListUnspentResult, error)
 		return nil, err
 	}
 	return &utxo.UTXO, nil
+}
+
+func (ob *BitcoinChainClient) BuildPendingUTXOList() error {
+	logger := ob.logger
+	var pendingUtxos []clienttypes.PendingUTXOSQLType
+	if err := ob.db.Find(&pendingUtxos).Error; err != nil {
+		logger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, entry := range pendingUtxos {
+		ob.utxos = append(ob.utxos, entry.UTXO)
+	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
+	logger := ob.logger
+	var submittedTransactions []clienttypes.TransactionResultSQLType
+	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
+		logger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, txResult := range submittedTransactions {
+		r, err := clienttypes.FromTransactionResultSQLType(txResult)
+		if err != nil {
+			return err
+		}
+		ob.submittedTx[txResult.Key] = r
+	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) loadDB(dbpath string) error {
+	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	ob.db = db
+
+	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{}, &clienttypes.TransactionResultSQLType{})
+	if err != nil {
+		return err
+	}
+
+	//Load pending utxos
+	err = ob.BuildPendingUTXOList()
+	if err != nil {
+		return err
+	}
+
+	//Load submitted transactions
+	err = ob.BuildSubmittedTxMap()
+
+	return err
 }

@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-const DbPath = "file::memory:?cache=shared"
+const TempSQLiteDbPath = "file::memory:?cache=shared"
 const NumOfEntries = 2
 
 type EVMClientTestSuite struct {
@@ -30,7 +30,7 @@ func (suite *EVMClientTestSuite) SetupTest() {
 	suite.outTXConfirmedReceipts = map[int]*ethtypes.Receipt{}
 	suite.outTXConfirmedTransaction = map[int]*ethtypes.Transaction{}
 
-	db, err := gorm.Open(sqlite.Open(DbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(TempSQLiteDbPath), &gorm.Config{})
 	suite.NoError(err)
 
 	suite.db = db

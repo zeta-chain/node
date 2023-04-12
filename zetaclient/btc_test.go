@@ -51,7 +51,7 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	addr := suite.testSigner.BTCAddressWitnessPubkeyHash()
 	suite.T().Logf("segwit addr: %s", addr)
 
-	db, err := gorm.Open(sqlite.Open(DbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(TempSQLiteDbPath), &gorm.Config{})
 	suite.NoError(err)
 
 	suite.db = db
@@ -119,6 +119,10 @@ func (suite *BTCSignTestSuite) TestPendingUTXO() {
 	//Assert utxos in db are Equal to utxos in memory
 	want := suite.utxos
 	suite.Equal(want, have)
+}
+
+func (suite *BTCSignTestSuite) TestSubmittedTx() {
+
 }
 
 func TestBTCSign(t *testing.T) {

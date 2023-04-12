@@ -14,7 +14,7 @@ type TransactionResultDB struct {
 	BlockIndex      int64
 	BlockTime       int64
 	TxID            string
-	WalletConflicts []string
+	WalletConflicts []byte
 	Time            int64
 	TimeReceived    int64
 	Details         []byte // btcjson.GetTransactionDetailsResult
@@ -38,6 +38,10 @@ func ToTransactionResultDB(txResult btcjson.GetTransactionResult) (TransactionRe
 	if err != nil {
 		return TransactionResultDB{}, err
 	}
+	conflicts, err := json.Marshal(txResult.WalletConflicts)
+	if err != nil {
+		return TransactionResultDB{}, err
+	}
 	return TransactionResultDB{
 		Amount:          txResult.Amount,
 		Fee:             txResult.Fee,
@@ -46,7 +50,7 @@ func ToTransactionResultDB(txResult btcjson.GetTransactionResult) (TransactionRe
 		BlockIndex:      txResult.BlockIndex,
 		BlockTime:       txResult.BlockTime,
 		TxID:            txResult.TxID,
-		WalletConflicts: txResult.WalletConflicts,
+		WalletConflicts: conflicts,
 		Time:            txResult.Time,
 		TimeReceived:    txResult.TimeReceived,
 		Details:         details,
@@ -63,12 +67,31 @@ func FromTransactionResultDB(txResult TransactionResultDB) (btcjson.GetTransacti
 		BlockIndex:      txResult.BlockIndex,
 		BlockTime:       txResult.BlockTime,
 		TxID:            txResult.TxID,
-		WalletConflicts: txResult.WalletConflicts,
+		WalletConflicts: nil,
 		Time:            txResult.Time,
 		TimeReceived:    txResult.TimeReceived,
 		Details:         nil,
 		Hex:             txResult.Hex,
 	}
-	err := json.Unmarshal(txResult.Details, &res.Details)
+	err := json.Unmarshal(txResult.WalletConflicts, &res.WalletConflicts)
+	if err != nil {
+		return res, err
+	}
+	err = json.Unmarshal(txResult.Details, &res.Details)
 	return res, err
+}
+
+func ToTransactionResultSQLType(txResult btcjson.GetTransactionResult, key string) (TransactionResultSQLType, error) {
+	txDB, err := ToTransactionResultDB(txResult)
+	if err != nil {
+		return TransactionResultSQLType{}, err
+	}
+	return TransactionResultSQLType{
+		Key: key,
+		Tx:  txDB,
+	}, nil
+}
+
+func FromTransactionResultSQLType(txSQL TransactionResultSQLType) (btcjson.GetTransactionResult, error) {
+	return FromTransactionResultDB(txSQL.Tx)
 }
