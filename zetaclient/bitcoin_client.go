@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	math2 "math"
 	"math/big"
@@ -646,10 +647,9 @@ func getPendingUTXO(db *gorm.DB, key string) (*btcjson.ListUnspentResult, error)
 }
 
 func (ob *BitcoinChainClient) BuildPendingUTXOList() error {
-	logger := ob.logger
 	var pendingUtxos []clienttypes.PendingUTXOSQLType
 	if err := ob.db.Find(&pendingUtxos).Error; err != nil {
-		logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
 		return err
 	}
 	for _, entry := range pendingUtxos {
@@ -659,10 +659,9 @@ func (ob *BitcoinChainClient) BuildPendingUTXOList() error {
 }
 
 func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
-	logger := ob.logger
 	var submittedTransactions []clienttypes.TransactionResultSQLType
 	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
-		logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
 		return err
 	}
 	for _, txResult := range submittedTransactions {
@@ -683,7 +682,7 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 		}
 	}
 	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		panic("failed to connect database")
 	}
