@@ -30,7 +30,7 @@ var StartCmd = &cobra.Command{
 	RunE:  start,
 }
 
-const maxRetryCountSetNodeKey = 10
+const maxRetryCount = 10
 
 func init() {
 	RootCmd.AddCommand(StartCmd)
@@ -97,32 +97,43 @@ func start(_ *cobra.Command, _ []string) error {
 	//}
 
 	//log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
-	consKey := ""
-	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet()
-	if err != nil {
-		startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
-	}
-
-	if configData.SetNodeKey {
-		retryCount := 0
-		for {
-			ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet)
-			if err != nil {
-				startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
-				time.Sleep(2 * time.Second)
-				retryCount++
-				if retryCount > maxRetryCountSetNodeKey {
-					panic(err)
-				}
-				continue
-			}
-			startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
+	//tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet()
+	//if err != nil {
+	//	startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
+	//}
+	//
+	//if configData.SetNodeKey {
+	//	retryCount := 0
+	//	for {
+	//		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet)
+	//		if err != nil {
+	//			startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
+	//			time.Sleep(2 * time.Second)
+	//			retryCount++
+	//			if retryCount > maxRetryCountSetNodeKey {
+	//				panic(err)
+	//			}
+	//			continue
+	//		}
+	//		startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), ztx)
+	//		break
+	//	}
+	//}
+	retryCount := 0
+	for {
+		block, err := bridge1.GetLatestZetaBlock()
+		if err == nil && block.Header.Height > 1 {
+			startLogger.Info().Msgf("Zetacore height: %d", block.Header.Height)
 			break
 		}
-	}
+		retryCount++
+		startLogger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
+		if retryCount > 10 {
+			panic("ZetaCore is not ready , Waited for 60s")
+		}
+		time.Sleep(6 * time.Second)
 
-	startLogger.Info().Msg("wait for all node to SetNodeKey")
-	time.Sleep(12 * time.Second)
+	}
 
 	//Check if keygen block is set and generate new keys at specified height
 	genNewKeysAtBlock(configData.KeygenBlock, bridge1, tss)

@@ -35,6 +35,9 @@ const (
 	NodeStatus_Disabled    NodeStatus = 5
 )
 
+// Genesis
+// NonGenesis
+
 var NodeStatus_name = map[int32]string{
 	0: "Unknown",
 	1: "Whitelisted",

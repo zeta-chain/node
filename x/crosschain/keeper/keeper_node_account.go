@@ -2,15 +2,12 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 )
 
 // SetNodeAccount set a specific nodeAccount in the store from its index
@@ -101,21 +98,6 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 
 // MESSAGES
 
-func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(strings.ToUpper(msg.Creator), validators) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("msg Creator %s is not a bonded validator", msg.Creator))
-	}
-	_, found := k.GetNodeAccount(ctx, msg.Creator)
-	if !found {
-		na := types.NodeAccount{
-			Creator:          msg.Creator,
-			TssSignerAddress: msg.TssSigner_Address,
-			PubkeySet:        msg.PubkeySet,
-			NodeStatus:       types.NodeStatus_Active,
-		}
-		k.SetNodeAccount(ctx, na)
-	}
+func (k msgServer) SetNodeKeys(_ context.Context, _ *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
 	return &types.MsgSetNodeKeysResponse{}, nil
 }
