@@ -1,0 +1,49 @@
+name: 'INSTALL:DEPENDENCIES'
+description: 'Install Dependencies for Running Jobs'
+inputs:
+  github_token:
+    description: "github token to use to call the api"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: '1.19.0'
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 'pypy3.9'
+
+    - uses: chrisdickinson/setup-yq@latest
+
+    - id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@v1
+      with:
+        version: 2
+
+    - name: Dependencies.
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install wget jq -y
+
+    - name: Install Docker Compose
+      shell: bash
+      run: |
+        sudo apt-get update || echo "Issue running apt-get update."
+        sudo apt-get install \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release -y || echo "issue installing dependencies"
+        sudo mkdir -p /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --no-tty --batch --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update || echo "Issue running apt-get update."
+        sudo apt-get install docker-compose-plugin -y || echo "Issue installing docker compose"

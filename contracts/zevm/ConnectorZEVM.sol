@@ -51,9 +51,17 @@ interface WZETA {
     function withdraw(uint wad) external;
 }
 
-contract ZetaConnectorZEVM is ZetaInterfaces{
-    address public wzeta;
+contract ZetaConnectorZEVM is ZetaInterfaces {
+    /// @notice Contract custom errors.
+    error OnlyWZETA();
+    error WZETATransferFailed();
+    error OnlyFungibleModule();
+    error FailedZetaSent();
+
+    /// @notice Fungible module address.
     address public constant FUNGIBLE_MODULE_ADDRESS = payable(0x735b14BB79463307AAcBED86DAf3322B1e6226aB);
+    /// @notice WZETA token address.
+    address public wzeta;
 
     event ZetaSent(
         address sourceTxOriginAddress,
@@ -65,20 +73,27 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
         bytes message,
         bytes zetaParams
     );
+    event SetWZETA(address wzeta_);
 
     constructor(address _wzeta) {
         wzeta = _wzeta;
     }
 
-    // the contract will receive ZETA from WETH9.withdraw()
-    receive() external payable {}
+    /// @dev Receive function to receive ZETA from WETH9.withdraw().
+    receive() external payable {
+        if (msg.sender != wzeta) revert OnlyWZETA();
+    }
 
+    /**
+     * @dev Sends ZETA and bytes messages (to execute it) crosschain.
+     * @param input, SendInput struct, checkout above.
+     */
     function send(ZetaInterfaces.SendInput calldata input) external {
-        // transfer wzeta to "fungible" module, which will be burnt by the protocol post processing via hooks.
-        require(WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas) == true, "wzeta.transferFrom fail");
+        // Transfer wzeta to "fungible" module, which will be burnt by the protocol post processing via hooks.
+        if (!WZETA(wzeta).transferFrom(msg.sender, address(this), input.zetaValueAndGas)) revert WZETATransferFailed();
         WZETA(wzeta).withdraw(input.zetaValueAndGas);
         (bool sent,) = FUNGIBLE_MODULE_ADDRESS.call{value: input.zetaValueAndGas}("");
-        require(sent, "Failed to send Ether");
+        if (!sent) revert FailedZetaSent();
         emit ZetaSent(
             tx.origin,
             msg.sender,
@@ -91,8 +106,13 @@ contract ZetaConnectorZEVM is ZetaInterfaces{
         );
     }
 
-    function setWzetaAddress(address _wzeta) external {
-        require(msg.sender == FUNGIBLE_MODULE_ADDRESS, "only fungible module can set wzeta address");
-        wzeta = _wzeta;
+    /**
+     * @dev Sends ZETA and bytes messages (to execute it) crosschain.
+     * @param wzeta_, new WZETA address.
+     */
+    function setWzetaAddress(address wzeta_) external {
+        if (msg.sender != FUNGIBLE_MODULE_ADDRESS) revert OnlyFungibleModule();
+        wzeta = wzeta_;
+        emit SetWZETA(wzeta_);
     }
 }

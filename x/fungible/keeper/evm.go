@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"strconv"
 
@@ -221,38 +220,6 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy UniswapV2Router02Contract contract")
-	}
-
-	return contractAddr, nil
-}
-
-func (k Keeper) DeployZEVMSwapApp(ctx sdk.Context, router common.Address, systemContract common.Address) (common.Address, error) {
-	zevmSwapABI, err := zevmswap.ZEVMSwapAppMetaData.GetAbi()
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
-	}
-	ctorArgs, err := zevmSwapABI.Pack(
-		"", // function--empty string for constructor
-		router,
-		systemContract,
-	)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZEVMSwapApp constructor arguments: %s", err.Error())
-	}
-
-	data := make([]byte, len(zevmswap.ZEVMSwapAppContract.Bin)+len(ctorArgs))
-	copy(data[:len(zevmswap.ZEVMSwapAppContract.Bin)], zevmswap.ZEVMSwapAppContract.Bin)
-	copy(data[len(zevmswap.ZEVMSwapAppContract.Bin):], ctorArgs)
-
-	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapAppContract contract")
 	}
 
 	return contractAddr, nil

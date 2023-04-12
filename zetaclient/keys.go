@@ -5,48 +5,48 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"io"
 	"os"
-	"os/user"
-	"path/filepath"
-
-	"github.com/cosmos/cosmos-sdk/crypto"
-	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	metachainCliFolderPath = `.meta-chaind`
-)
-
-// Keys manages all the keys used by metachain
+// Keys manages all the keys used by zeta client
 type Keys struct {
-	signerName string
-	password   string // TODO this is a bad way , need to fix it
-	kb         ckeys.Keyring
+	signerName      string
+	password        string // TODO this is a bad way , need to fix it
+	kb              ckeys.Keyring
+	operatorAddress sdk.AccAddress
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, name, password string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, name, password string) *Keys {
 	return &Keys{
-		signerName: name,
-		password:   password,
-		kb:         kb,
+		signerName:      name,
+		password:        password,
+		kb:              kb,
+		operatorAddress: granterAddress,
 	}
 }
 
+func GetGranteeKeyName(keyType common.KeyType, signerName string) string {
+	return fmt.Sprintf("%s_%s", signerName, keyType.String())
+}
+
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyring, ckeys.Record, error) {
+func GetKeyringKeybase(requireKeytypes []common.KeyType, chainHomeFolder, signerName, password string) (ckeys.Keyring, error) {
+	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
 	if len(signerName) == 0 {
-		return nil, ckeys.Record{}, fmt.Errorf("signer name is empty")
+		return nil, fmt.Errorf("signer name is empty")
 	}
 	if len(password) == 0 {
-		return nil, ckeys.Record{}, fmt.Errorf("password is empty")
+		return nil, fmt.Errorf("password is empty")
 	}
 
 	buf := bytes.NewBufferString(password)
@@ -56,32 +56,29 @@ func GetKeyringKeybase(chainHomeFolder, signerName, password string) (ckeys.Keyr
 	buf.WriteByte('\n')
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
-		return nil, ckeys.Record{}, fmt.Errorf("fail to get keybase,err:%w", err)
+		return nil, fmt.Errorf("fail to get keybase,err:%w", err)
 	}
-
-	// the keyring library which used by cosmos sdk , will use interactive terminal if it detect it has one
-	// this will temporary trick it think there is no interactive terminal, thus will read the password from the buffer provided
 	oldStdIn := os.Stdin
 	defer func() {
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-	si, err := kb.Key(signerName)
-	if err != nil {
-		return nil, ckeys.Record{}, fmt.Errorf("fail to get signer info(%s): %w;", signerName, err)
+	for _, keyType := range requireKeytypes {
+		logger.Debug().Msgf("Checking for Key: %s  \n", GetGranteeKeyName(keyType, signerName))
+		_, err = kb.Key(GetGranteeKeyName(keyType, signerName))
+		if err != nil {
+			return nil, fmt.Errorf("key not presnt with name (%s): %w", GetGranteeKeyName(keyType, signerName), err)
+		}
 	}
-	return kb, *si, nil
+
+	return kb, nil
 }
 
 // getKeybase will create an instance of Keybase
-func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
-	cliDir := metacoreHome
-	if len(metacoreHome) == 0 {
-		usr, err := user.Current()
-		if err != nil {
-			return nil, fmt.Errorf("fail to get current user,err:%w", err)
-		}
-		cliDir = filepath.Join(usr.HomeDir, metachainCliFolderPath)
+func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
+	cliDir := zetaCoreHome
+	if len(zetaCoreHome) == 0 {
+		return nil, fmt.Errorf("zetaCoreHome is empty")
 	}
 	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
 	// Change to BackendFile with password!
@@ -96,16 +93,22 @@ func getKeybase(metacoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 }
 
 // GetSignerInfo return signer info
-func (k *Keys) GetSignerInfo() *ckeys.Record {
-	info, err := k.kb.Key(k.signerName)
+func (k *Keys) GetSignerInfo(keyType common.KeyType) *ckeys.Record {
+	signer := GetGranteeKeyName(keyType, k.signerName)
+	info, err := k.kb.Key(signer)
 	if err != nil {
 		panic(err)
 	}
 	return info
 }
 
-func (k *Keys) GetAddress() sdk.AccAddress {
-	info, err := k.kb.Key(k.signerName)
+func (k *Keys) GetOperatorAddress() sdk.AccAddress {
+	return k.operatorAddress
+}
+
+func (k *Keys) GetAddress(keyType common.KeyType) sdk.AccAddress {
+	signer := GetGranteeKeyName(keyType, k.signerName)
+	info, err := k.kb.Key(signer)
 	if err != nil {
 		panic(err)
 	}
@@ -114,9 +117,10 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 }
 
 // GetPrivateKey return the private key
-func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
+func (k *Keys) GetPrivateKey(keyType common.KeyType) (cryptotypes.PrivKey, error) {
 	// return k.kb.ExportPrivateKeyObject(k.signerName)
-	privKeyArmor, err := k.kb.ExportPrivKeyArmor(k.signerName, k.password)
+	signer := GetGranteeKeyName(keyType, k.signerName)
+	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, k.password)
 	if err != nil {
 		return nil, err
 	}
@@ -132,12 +136,13 @@ func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
 }
 
-func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
+func (k *Keys) GetPubKeySet(keyType common.KeyType) (common.PubKeySet, error) {
 	pubkeySet := common.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
-	pK, err := k.GetPrivateKey()
+
+	pK, err := k.GetPrivateKey(keyType)
 	if err != nil {
 		return pubkeySet, err
 	}
@@ -148,7 +153,7 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 	}
 	pubkey, err := common.NewPubKey(s)
 	if err != nil {
-		return pubkeySet, errors.Wrap(ErrNewPubKey, fmt.Sprintf("Pubkey %s", pK.PubKey().String()))
+		return pubkeySet, ErrNewPubKey
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil

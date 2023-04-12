@@ -3,6 +3,7 @@ package emissions
 import (
 	"encoding/json"
 	"fmt"
+
 	// this line is used by starport scaffolding # 1
 
 	"github.com/gorilla/mux"
@@ -127,7 +128,7 @@ func (am AppModule) Name() string {
 
 // Route returns the capability module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper, am.bankKeeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the capability module's query routing key.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity 0.8.7;
 
 /**
  * @dev Interfaces of SystemContract and ZRC20 to make easier to import.
@@ -29,6 +29,9 @@ interface IZRC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Deposit(bytes from, address indexed to, uint256 value);
     event Withdrawal(address indexed from, bytes to, uint256 value, uint256 gasfee, uint256 protocolFlatFee);
+    event UpdatedSystemContract(address systemContract);
+    event UpdatedGasLimit(uint256 gasLimit);
+    event UpdatedProtocolFlatFee(uint256 protocolFlatFee);
 }
 
 abstract contract Context {
@@ -48,7 +51,7 @@ interface IZRC20Metadata is IZRC20 {
 }
 
 
-/// @dev Zeta value should not be used
+/// @dev Coin types for ZRC20. Zeta value should not be used.
 enum CoinType {
     Zeta, 
     Gas,

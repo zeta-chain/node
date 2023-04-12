@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"time"
 
 	"sync"
@@ -36,16 +37,16 @@ import (
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger              zerolog.Logger
-	blockHeight         int64
-	accountNumber       uint64
-	seqNumber           uint64
-	grpcConn            *grpc.ClientConn
-	httpClient          *retryablehttp.Client
-	cfg                 config.ClientConfiguration
-	keys                *Keys
-	broadcastLock       *sync.RWMutex
-	ChainNonces         map[string]uint64 // FIXME: Remove this?
+	logger        zerolog.Logger
+	blockHeight   int64
+	accountNumber map[common.KeyType]uint64
+	seqNumber     map[common.KeyType]uint64
+	grpcConn      *grpc.ClientConn
+	httpClient    *retryablehttp.Client
+	cfg           config.ClientConfiguration
+	keys          *Keys
+	broadcastLock *sync.RWMutex
+	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
 }
 
@@ -72,15 +73,22 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		log.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
+	accountsMap := make(map[common.KeyType]uint64)
+	seqMap := make(map[common.KeyType]uint64)
+	for _, keyType := range common.GetAllKeyTypes() {
+		accountsMap[keyType] = 0
+		seqMap[keyType] = 0
+	}
 
 	return &ZetaCoreBridge{
 		logger:              logger,
 		grpcConn:            grpcConn,
 		httpClient:          httpClient,
+		accountNumber:       accountsMap,
+		seqNumber:           seqMap,
 		cfg:                 cfg,
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
-		ChainNonces:         map[string]uint64{},
 		lastOutTxReportTime: map[string]time.Time{},
 	}, nil
 }
@@ -95,10 +103,24 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
-func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
-	ctx := b.GetContext()
-	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetAddress())
+func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
+	ctx := b.GetContext(keyType)
+	address := b.keys.GetAddress(keyType)
+	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
+
+func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
+	ctx := b.GetContext(keyType)
+	address := b.keys.GetAddress(keyType)
+	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	b.accountNumber[keyType] = accN
+	b.seqNumber[keyType] = seq
+}
+
+//func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {
+//	ctx := b.GetContext()
+//	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetOperatorAddress())
+//}
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys

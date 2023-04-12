@@ -15,8 +15,8 @@ chmod -R 777 /app_version
 cp /app_version/${STARTING_VERSION}/bin/${DAEMON_NAME} /usr/bin/${DAEMON_NAME}
 echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend test --recover
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
-cp /app_version/app.toml ${DAEMON_HOME}/config/app.toml
-cp /app_version/config.toml ${DAEMON_HOME}/config/config.toml
+cp /app_version/app.toml ${DAEMON_HOME}config/app.toml
+cp /app_version/config.toml ${DAEMON_HOME}config/config.toml
 mkdir -p ${DAEMON_HOME}/cosmovisor/genesis/bin
 mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades
 
