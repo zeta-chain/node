@@ -624,7 +624,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 						if err != nil {
 							continue
 						}
-						if err := ob.db.Create(tx).Error; err != nil {
+						if err := ob.db.Create(&tx).Error; err != nil {
 							ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving submitted tx")
 						}
 					}
@@ -676,6 +676,12 @@ func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
 }
 
 func (ob *BitcoinChainClient) loadDB(dbpath string) error {
+	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
+		err := os.MkdirAll(dbpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {

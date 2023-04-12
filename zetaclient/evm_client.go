@@ -967,7 +967,13 @@ func (ob *EVMChainClient) BuildTransactionsMap() error {
 // LoadDB open sql database and load data into EVMChainClient
 func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 	if dbPath != "" {
-		path := fmt.Sprintf("%s/%s", dbPath, chain.String()) //Use "file::memory:?cache=shared" for temp db
+		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+			err := os.MkdirAll(dbPath, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+		path := fmt.Sprintf("%s/%s", dbPath, chain.ChainName.String()) //Use "file::memory:?cache=shared" for temp db
 		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 		if err != nil {
 			panic("failed to connect database")
