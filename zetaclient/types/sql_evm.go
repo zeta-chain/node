@@ -10,7 +10,7 @@ import (
 
 // EVM Chain client types ----------------------------------->
 
-const LastBlockNumId = 0xBEEF
+const LastBlockNumID = 0xBEEF
 
 // ReceiptDB : A modified receipt struct that the relational mapping can translate
 type ReceiptDB struct {
@@ -40,7 +40,7 @@ type ReceiptDB struct {
 type TransactionDB struct {
 	// Data that can be used for queries
 	Type    byte
-	ChainId *big.Int `gorm:"embedded"`
+	ChainID *big.Int `gorm:"embedded"`
 	Nonce   uint64
 	To      *common.Address
 	Hash    common.Hash
@@ -128,7 +128,7 @@ func ToTransactionDBType(transaction *ethtypes.Transaction) (TransactionDB, erro
 	}
 	return TransactionDB{
 		Type:            transaction.Type(),
-		ChainId:         transaction.ChainId(),
+		ChainID:         transaction.ChainId(),
 		Nonce:           transaction.Nonce(),
 		To:              transaction.To(),
 		Hash:            transaction.Hash(),
@@ -155,7 +155,7 @@ func ToTransactionSQLType(transaction *ethtypes.Transaction, nonce int) (*Transa
 
 func ToLastBlockSQLType(lastBlock int64) *LastBlockSQLType {
 	return &LastBlockSQLType{
-		Model: gorm.Model{ID: LastBlockNumId},
+		Model: gorm.Model{ID: LastBlockNumID},
 		Num:   lastBlock,
 	}
 }

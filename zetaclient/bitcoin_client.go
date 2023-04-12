@@ -567,11 +567,11 @@ func (ob *BitcoinChainClient) housekeepPending() {
 		ob.logger.WatchUTXOS.Error().Err(err).Msg("error querying pending UTXOs from db")
 		return
 	}
-	for _, utxo := range utxos {
-		key := utxo.Key
+	for i := range utxos {
+		key := utxos[i].Key
 		// if key not in utxos map, remove from pendingUtxos
 		if !utxosMap[key] {
-			if err := ob.db.Where("Key = ?", key).Delete(&utxo).Error; err != nil {
+			if err := ob.db.Where("Key = ?", key).Delete(&utxos[i]).Error; err != nil {
 				ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
 				continue
 			}

@@ -77,7 +77,6 @@ type EVMChainClient struct {
 	txWatchList               map[ethcommon.Hash]string
 	mu                        *sync.Mutex
 	db                        *gorm.DB
-	sampleLogger              *zerolog.Logger
 	outTXConfirmedReceipts    map[int]*ethtypes.Receipt
 	outTXConfirmedTransaction map[int]*ethtypes.Transaction
 	MinNonce                  int64
@@ -904,7 +903,7 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 		}
 	} else { // last observed block
 		var lastBlockNum clienttypes.LastBlockSQLType
-		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumId).Error; err != nil {
+		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
 			lastheight, err := ob.getLastHeight()
 			if err != nil {
