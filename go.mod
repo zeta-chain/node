@@ -41,7 +41,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/tendermint/spm v0.1.9
 	gopkg.in/yaml.v2 v2.4.0
 )
 

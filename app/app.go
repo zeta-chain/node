@@ -1,6 +1,8 @@
 package app
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -23,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	"github.com/tendermint/spm/openapiconsole"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -34,7 +35,6 @@ import (
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	"time"
 
 	"io"
 	"net/http"
@@ -99,6 +99,7 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -703,11 +704,8 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register app's OpenAPI routes.
-	apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
-	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
-	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+		docs.RegisterOpenAPIService(apiSvr.Router)
 	}
 }
 
