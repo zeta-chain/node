@@ -107,23 +107,15 @@ func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys)
 	if !IsBondedValidator(strings.ToUpper(msg.Creator), validators) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("msg Creator %s is not a bonded validator", msg.Creator))
 	}
-	//_, found := k.GetNodeAccount(ctx, msg.Creator)
-	//if !found {
-	//	na := types.NodeAccount{
-	//		Creator:          msg.Creator,
-	//		TssSignerAddress: msg.TssSigner_Address,
-	//		PubkeySet:        msg.PubkeySet,
-	//		NodeStatus:       types.NodeStatus_Active,
-	//	}
-	//	k.SetNodeAccount(ctx, na)
-	//}
-	na := types.NodeAccount{
-		Creator:          msg.Creator,
-		TssSignerAddress: msg.TssSigner_Address,
-		PubkeySet:        msg.PubkeySet,
-		NodeStatus:       types.NodeStatus_Active,
+	_, found := k.GetNodeAccount(ctx, msg.Creator)
+	if !found {
+		na := types.NodeAccount{
+			Creator:          msg.Creator,
+			TssSignerAddress: msg.TssSigner_Address,
+			PubkeySet:        msg.PubkeySet,
+			NodeStatus:       types.NodeStatus_Active,
+		}
+		k.SetNodeAccount(ctx, na)
 	}
-	k.SetNodeAccount(ctx, na)
-
 	return &types.MsgSetNodeKeysResponse{}, nil
 }
