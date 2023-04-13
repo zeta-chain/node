@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// AddObserverAccountCmd Deprecated : Use AddObserverAccountsCmd instead
 func AddrConversionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "addr-conversion [zeta address]",
