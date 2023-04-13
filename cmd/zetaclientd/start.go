@@ -271,7 +271,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			return
 		}
 		if bn+3 > height {
-			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", height, bn)
+			log.Warn().Msgf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at the later block", height, bn)
 			return
 		}
 		nodeAccounts, err := bridge.GetAllNodeAccounts()
@@ -293,6 +293,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			if bn == height {
 				break
 			}
+			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, bn)
 		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)

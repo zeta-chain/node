@@ -8,10 +8,16 @@ KEYRING="test"
 HOSTNAME=$(hostname)
 NODES="zetacore1"
 echo "HOSTNAME: $HOSTNAME"
-zetacored init Zetanode-Localnet --chain-id=$CHAINID
 
-zetacored config keyring-backend $KEYRING --home ~/.zetacored
-zetacored config chain-id $CHAINID --home ~/.zetacored
+mkdir -p ~/.backup/config
+zetacored init Zetanode-Localnet --chain-id=$CHAINID
+rm -rf ~/.zetacored/config/config.toml
+rm -rf ~/.zetacored/config/app.toml
+rm -rf ~/.zetacored/config/client.toml
+cp -r ~/zetacored/zetacored_"$HOSTNAME"/config/config.toml ~/.zetacored/config/
+cp -r ~/zetacored/zetacored_"$HOSTNAME"/config/app.toml ~/.zetacored/config/
+cp -r ~/zetacored/zetacored_"$HOSTNAME"/config/client.toml ~/.zetacored/config/
+
 
 
 zetacored keys add operator --algo=secp256k1 --keyring-backend=$KEYRING
@@ -59,9 +65,9 @@ then
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
-  pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
-  pps=${pp:1:58}
-  sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+#  pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
+#  pps=${pp:1:58}
+#  sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
   zetacored collect-gentxs
   zetacored validate-genesis
   for NODE in $NODES; do
@@ -76,10 +82,8 @@ fi
 
 if [ $HOSTNAME == "zetacore0" ]
 then
-  ssh zetaclient0 rm ~/.zetacored/keyring-test/*
   scp ~/.zetacored/keyring-test/* zetaclient0:~/.zetacored/keyring-test/
 else
-  ssh zetaclient1 rm ~/.zetacored/keyring-test/*
   scp ~/.zetacored/keyring-test/* zetaclient1:~/.zetacored/keyring-test/
 fi
 
