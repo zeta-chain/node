@@ -26,39 +26,62 @@ mkdir ~/.zetacored/os_info
 jq -n --arg operator_address "$operator_address" --arg hotkey_address "$hotkey_address" --arg pubkey "$pubkey" '{"ObserverAddress":$operator_address,"ZetaClientGranteeAddress":$hotkey_address,"ZetaClientGranteePubKey":$pubkey}' > ~/.zetacored/os_info/os.json
 
 
-
+if [ $HOSTNAME != "zetacore0" ]
+then
+  echo "Waiting for zetacore0 to create genesis.json"
+  sleep 6
+  echo "genesis.json created"
+fi
 
 if [ $HOSTNAME == "zetacore0" ]
 then
   for NODE in $NODES; do
     scp $NODE:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z1.json
   done
+    scp ~/.zetacored/os_info/os.json zetaclient0:~/.zetacored/os.json
+    scp ~/.zetacored/os_info/os_z1.json zetaclient1:~/.zetacored/os.json
   zetacored collect-observer-info
   zetacored add-observer-list
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
+
+  zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+  mkdir ~/.zetacored/config/gentx/z2gentx
+  for NODE in $NODES; do
+      ssh $NODE rm -rf ~/.zetacored/genesis.json
+      scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
+      ssh $NODE zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+      scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
+      scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
+  done
+  pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
+  pps=${pp:1:58}
+  sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+  zetacored collect-gentxs
+  zetacored validate-genesis
+  for NODE in $NODES; do
+      ssh $NODE rm -rf ~/.zetacored/genesis.json
+      scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
+  done
+   sleep 2
+   pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
+   pps=${pp:1:58}
+   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-sleep infinity
-#  for i in {1..4} ; do
-#  scp zetacored$i:~/.zetacored/os.json os$i.json
-#  done
-#
-## concatenate OS JSON files
-#
-#
-## create genesis file
-#
-#for i in {1..4} ; do
-#  scp genesis.json zetacored$i:~/genesis.json
-#done
-#
-#sleep 10
-#
-#zetacored gentx ...
+if [ $HOSTNAME == "zetacore0" ]
+then
+  ssh zetaclient0 rm ~/.zetacored/keyring-test/*
+  scp ~/.zetacored/keyring-test/* zetaclient0:~/.zetacored/keyring-test/
+else
+  ssh zetaclient1 rm ~/.zetacored/keyring-test/*
+  scp ~/.zetacored/keyring-test/* zetaclient1:~/.zetacored/keyring-test/
+fi
 
 
-# start the network
-
-# set peer addresses in config.toml
-#jq ".fdlasjkf=sd;lfja" config.toml > config.toml
-#
-#zetcored start ...
+exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored

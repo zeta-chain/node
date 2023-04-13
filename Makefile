@@ -105,12 +105,12 @@ proto-go:
 
 zetanode:
 	@echo "Building zetanode"
-	@docker build --no-cache -t zetanode -f ./Dockerfile .
+	@docker build -t zetanode -f ./Dockerfile .
 .PHONY: zetanode
 
 smoketest:
 	@echo "--> Building smoketest image"
-	$(DOCKER) build --no-cache -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
 .PHONY: smoketest
 
 start-smoketest:

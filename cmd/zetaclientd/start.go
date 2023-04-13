@@ -188,10 +188,10 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	err = tss.Validate()
-	if err != nil {
-		return err
-	}
+	//err = tss.Validate()
+	//if err != nil {
+	//	return err
+	//}
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// wait....

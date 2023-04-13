@@ -32,10 +32,46 @@ services:
       context: ../../.
       dockerfile: Dockerfile
     hostname: zetacore1
-    ports:
-      - "22:22"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
     entrypoint: /root/genesis.sh
 
+  zetaclient0:
+    image: zetanode:latest
+    container_name: zetaclient0
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetaclient0
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.21
+    entrypoint: /root/start-zetaclientd-genesis.sh
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
+
+  zetaclient1:
+    image: zetanode:latest
+    container_name: zetaclient1
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    hostname: zetaclient1
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.22
+    entrypoint: /root/start-zetaclientd-genesis.sh
+    environment:
+      - ETHDEV_ENDPOINT=http://eth:8545
+
+  eth:
+    image: ethereum/client-go:v1.10.26
+    container_name: eth
+    hostname: eth
+    ports:
+      - "8545:8545"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.100
+    entrypoint: [ "geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2" ]
