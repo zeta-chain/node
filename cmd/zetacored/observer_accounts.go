@@ -30,14 +30,14 @@ import (
 )
 
 const (
-	ObserverBalance = "1000000000000000000000"
+	ObserverBalance = "100000000000000000000000"
 	HotkeyBalance   = "100000000000000000000"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
-		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/observer_info.json",
+		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -59,8 +59,9 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*crosschaintypes.NodeAccount
 			observersForChain := map[int64][]string{}
+			// DefaultChainsList is based on Build Flags
 			supportedChains := common.DefaultChainsList()
-			balances := []banktypes.Balance{}
+			var balances []banktypes.Balance
 			commonCoins, ok := sdk.NewIntFromString(ObserverBalance)
 			if !ok {
 				panic("Failed to parse string to int for observer")

@@ -90,40 +90,11 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	//err = tss.Validate()
-	//if err != nil {
-	//	log.Error().Err(err).Msg("tss.Validate error")
-	//	return err
-	//}
-
-	//log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
-	//tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet()
-	//if err != nil {
-	//	startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
-	//}
-	//
-	//if configData.SetNodeKey {
-	//	retryCount := 0
-	//	for {
-	//		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet)
-	//		if err != nil {
-	//			startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
-	//			time.Sleep(2 * time.Second)
-	//			retryCount++
-	//			if retryCount > maxRetryCountSetNodeKey {
-	//				panic(err)
-	//			}
-	//			continue
-	//		}
-	//		startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), ztx)
-	//		break
-	//	}
-	//}
 	retryCount := 0
 	for {
 		block, err := bridge1.GetLatestZetaBlock()
 		if err == nil && block.Header.Height > 1 {
-			startLogger.Info().Msgf("Zetacore height: %d", block.Header.Height)
+			startLogger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
 			break
 		}
 		retryCount++
@@ -188,13 +159,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	//err = tss.Validate()
-	//if err != nil {
-	//	return err
-	//}
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-
-	// wait....
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -271,7 +236,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			return
 		}
 		if bn+3 > height {
-			log.Warn().Msgf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at the later block", height, bn)
+			log.Fatal().Msgf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn)
 			return
 		}
 		nodeAccounts, err := bridge.GetAllNodeAccounts()

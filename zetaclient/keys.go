@@ -64,7 +64,7 @@ func GetKeyringKeybase(granteeName, chainHomeFolder, password string) (ckeys.Key
 	}()
 	os.Stdin = nil
 
-	logger.Debug().Msgf("Checking for Signer Key: %s  \nFolder %s \nBackend %s \n", granteeName, chainHomeFolder, kb.Backend())
+	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
 	_, err = kb.Key(granteeName)
 	if err != nil {
 		return nil, fmt.Errorf("key not presnt with name (%s): %w", granteeName, err)
