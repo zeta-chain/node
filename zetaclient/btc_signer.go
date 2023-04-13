@@ -195,7 +195,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	myid := zetaBridge.keys.GetAddress(common.TssSignerKey)
+	myid := zetaBridge.keys.GetAddress()
 
 	// Early return if the send is already processed
 	// FIXME: handle revert case

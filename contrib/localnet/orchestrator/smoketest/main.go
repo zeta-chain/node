@@ -34,8 +34,8 @@ import (
 var (
 	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
-	TSSAddress         = ethcommon.HexToAddress("0x695A0F5f660E7B014766D7599Ed7F18F74A3dA75")
-	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q2hz66eruddn5he7euy704azqd2j46cwr0gk6zu", config.BitconNetParams)
+	TSSAddress         = ethcommon.HexToAddress("0x5f676f4B862b2F3F2D21B56E0c8Ec92614d45392")
+	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q5t6vyg2qer32qusfjtjc75cmqlcttngs88ryg6", config.BitconNetParams)
 
 	BLOCK                = 5 * time.Second // should be 2x block time
 	BigZero              = big.NewInt(0)

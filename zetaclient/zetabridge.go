@@ -105,13 +105,13 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
 	ctx := b.GetContext(keyType)
-	address := b.keys.GetAddress(keyType)
+	address := b.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 	ctx := b.GetContext(keyType)
-	address := b.keys.GetAddress(keyType)
+	address := b.keys.GetAddress()
 	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	b.accountNumber[keyType] = accN
 	b.seqNumber[keyType] = seq
