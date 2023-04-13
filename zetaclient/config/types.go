@@ -46,7 +46,6 @@ type Config struct {
 	ValidatorName string
 	Peer          string
 	LogConsole    bool
-	SetNodeKey    bool
 	LogLevel      zerolog.Level
 	PreParamsPath string
 	KeygenBlock   int64
