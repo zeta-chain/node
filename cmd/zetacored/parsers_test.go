@@ -1,16 +1,20 @@
 //go:build PRIVNET
 // +build PRIVNET
 
-package types
+package main
 
 import (
 	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/common"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"io/ioutil"
 	"os"
+
+	//"os"
 	"testing"
 )
 
@@ -20,6 +24,7 @@ func TestParsefileToObserverMapper(t *testing.T) {
 		err := os.RemoveAll(fp)
 		assert.NoError(t, err)
 	}(t, file)
+	app.SetConfig()
 	createObserverList(file)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	assert.NoError(t, err)
@@ -30,12 +35,11 @@ func TestParsefileToObserverMapper(t *testing.T) {
 
 func createObserverList(fp string) {
 	var listReader []ObserverInfoReader
-	listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
+	//listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
 	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
 	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))
 	info := ObserverInfoReader{
-		SupportedChainsList:       listChainID,
 		ObserverAddress:           observerAddress.String(),
 		ZetaClientGranteeAddress:  commonGrantAddress.String(),
 		StakingGranteeAddress:     commonGrantAddress.String(),
@@ -43,6 +47,13 @@ func createObserverList(fp string) {
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",
 		GovGranteeAddress:         commonGrantAddress.String(),
+		NodeAccount: crosschaintypes.NodeAccount{
+			Creator:          observerAddress.String(),
+			TssSignerAddress: commonGrantAddress.String(),
+			PubkeySet: &common.PubKeySet{
+				Secp256k1: "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
+			},
+		},
 	}
 	listReader = append(listReader, info)
 
