@@ -19,7 +19,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb 
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb
+TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
+
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags PRIVNET,pebbledb 
 
@@ -49,6 +51,11 @@ test:
 
 gosec:
 	gosec  -exclude-dir=localnet ./...
+
+install-testnet: go.sum
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
