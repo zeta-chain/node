@@ -47,13 +47,12 @@ func MumbaiChain() Chain {
 
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
-		BtcRegtestChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
 		BaobabChain(),
 		BscTestnetChain(),
 		GoerliChain(),
-		GoerliLocalNetChain(),
+		//GoerliLocalNetChain(),
 		ZetaChain(),
 	}
 	var c []*Chain

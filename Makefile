@@ -19,7 +19,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb 
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb
+TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
+
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags PRIVNET,pebbledb 
 
@@ -49,6 +51,18 @@ test:
 
 gosec:
 	gosec  -exclude-dir=localnet ./...
+
+install-testnet: go.sum
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
+
+build-testnet-ubuntu: go.sum
+		docker build -t zetacore-ubuntu --platform linux/amd64 -f ./Dockerfile-athens3-ubuntu .
+		docker create --name temp-container zetanode-ubuntu
+		docker cp temp-container:/go/bin/zetaclientd .
+		docker cp temp-container:/go/bin/zetacored .
+		docker rm temp-container
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
