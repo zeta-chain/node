@@ -2,11 +2,11 @@ package zetaclient
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"gorm.io/gorm"
 	"math/big"
 	"math/rand"
 	"time"
@@ -18,9 +18,9 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 type BTCSigner struct {
@@ -42,16 +42,16 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, pendingUTXOs *leveldb.DB) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, db *gorm.DB) (*wire.MsgTx, error) {
 	var total float64
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
 	estimateFee := 0.00001 // FIXME: proper fee estimation
 	for _, utxo := range utxos {
-		// check for pending utxBos
-		if _, err := pendingUTXOs.Get([]byte(utxoKey(utxo)), nil); err != nil {
-			if err == leveldb.ErrNotFound {
+		// check for pending utxos
+		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
+			if err == gorm.ErrRecordNotFound {
 				total = total + utxo.Amount
 				prevOuts = append(prevOuts, utxo)
 
@@ -157,7 +157,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	}
 
 	// update pending utxos pendingUtxos
-	err = signer.updatePendingUTXOs(pendingUTXOs, prevOuts)
+	err = signer.updatePendingUTXOs(db, prevOuts)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64()/1e8)
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	// FIXME: gas price?
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.pendingUtxos)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.db)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
@@ -264,14 +264,16 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 }
 
-func (signer *BTCSigner) updatePendingUTXOs(pendingDB *leveldb.DB, utxos []btcjson.ListUnspentResult) error {
+func (signer *BTCSigner) updatePendingUTXOs(db *gorm.DB, utxos []btcjson.ListUnspentResult) error {
 	for _, utxo := range utxos {
-		bytes, err := json.Marshal(utxo)
-		if err != nil {
-			return err
-		}
-		err = pendingDB.Put([]byte(utxoKey(utxo)), bytes, nil)
-		if err != nil {
+		// Try to find existing record in DB to populate primary key
+		var pendingUTXO clienttypes.PendingUTXOSQLType
+		db.Where("Key = ?", utxoKey(utxo)).First(&pendingUTXO)
+
+		// If record doesn't exist, it will be created by the Save function
+		pendingUTXO.UTXO = utxo
+		pendingUTXO.Key = utxoKey(utxo)
+		if err := db.Save(&pendingUTXO).Error; err != nil {
 			return err
 		}
 	}
