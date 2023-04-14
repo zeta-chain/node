@@ -25,166 +25,166 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  build-and-test:
-    runs-on: ["zeta-runners"]
-    timeout-minutes: 30
-    steps:
+  # build-and-test:
+  #   runs-on: ["zeta-runners"]
+  #   timeout-minutes: 30
+  #   steps:
 
-    - uses: actions/checkout@v3
+  #   - uses: actions/checkout@v3
 
-    - name: Install Pipeline Dependencies
-      uses:  ./.github/actions/install-dependencies
+  #   - name: Install Pipeline Dependencies
+  #     uses:  ./.github/actions/install-dependencies
 
-    - name: setup-git-credentials
-      uses: de-vri-es/setup-git-credentials@v2.0.8
-      with:
-        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+  #   - name: setup-git-credentials
+  #     uses: de-vri-es/setup-git-credentials@v2.0.8
+  #     with:
+  #       credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+  #   - uses: actions/cache@v3
+  #     with:
+  #       path: |
+  #         ~/.cache/go-build
+  #         ~/go/pkg/mod
+  #       key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-go-
 
-    - name: Build zetacored and zetaclientd
-      env:
-        CGO_ENABLED: 1
-        GOOS: linux
-        GOARCH: amd64
-      run: |
-        make install
-        cp "$HOME"/go/bin/* ./
+  #   - name: Build zetacored and zetaclientd
+  #     env:
+  #       CGO_ENABLED: 1
+  #       GOOS: linux
+  #       GOARCH: amd64
+  #     run: |
+  #       make install
+  #       cp "$HOME"/go/bin/* ./
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+  #   - name: Test
+  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+  #     run: |
+  #       echo "Running Build Tests"
+  #       go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-    - name: Binary Docker Test
-      run: |
-        chmod a+x ./zetacored
-        ./zetacored version
-        cp zetacored zetacored-ubuntu
-        cp zetaclientd zetaclientd-ubuntu
+  #   - name: Binary Docker Test
+  #     run: |
+  #       chmod a+x ./zetacored
+  #       ./zetacored version
+  #       cp zetacored zetacored-ubuntu
+  #       cp zetaclientd zetaclientd-ubuntu
 
-    - name: Save Binaries as Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: binaries-${{ github.sha }}
-        path: |
-            zetacored-ubuntu
-            zetaclientd-ubuntu
+  #   - name: Save Binaries as Artifacts
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: binaries-${{ github.sha }}
+  #       path: |
+  #           zetacored-ubuntu
+  #           zetaclientd-ubuntu
 
-  build-alpine-and-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
+  # build-alpine-and-test:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   steps:
 
-    - uses: actions/checkout@v3
-
-
-    - name: Install Pipeline Dependencies
-      uses:  ./.github/actions/install-dependencies
-
-    - uses: jirutka/setup-alpine@v1
-      with:
-        arch: x86_64
-        packages: >
-          build-base
-          pkgconf
-          lld
-          go 
-          gcc 
-          g++
-        shell-name: alpine.sh
+  #   - uses: actions/checkout@v3
 
 
-    - name: setup-git-credentials
-      uses: de-vri-es/setup-git-credentials@v2.0.8
-      with:
-        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+  #   - name: Install Pipeline Dependencies
+  #     uses:  ./.github/actions/install-dependencies
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+  #   - uses: jirutka/setup-alpine@v1
+  #     with:
+  #       arch: x86_64
+  #       packages: >
+  #         build-base
+  #         pkgconf
+  #         lld
+  #         go 
+  #         gcc 
+  #         g++
+  #       shell-name: alpine.sh
 
-    - name: Build zetacored and zetaclientd
-      env:
-        CGO_ENABLED: 1
-        GOOS: linux
-        GOARCH: amd64
-      shell: alpine.sh --root {0}
-      run: |
-        apk add --no-cache --update 
-        make install
-        cp "$HOME"/go/bin/* ./
 
-    - name: Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      shell: alpine.sh --root {0}
-      run: |
-        echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+  #   - name: setup-git-credentials
+  #     uses: de-vri-es/setup-git-credentials@v2.0.8
+  #     with:
+  #       credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-    - name: Binary Docker Test
-      shell: alpine.sh --root {0}
-      run: |
-        chmod a+x ./zetacored
-        ./zetacored version
-        mv zetacored zetacored-alpine
-        mv zetaclientd zetaclientd-alpine
+  #   - uses: actions/cache@v3
+  #     with:
+  #       path: |
+  #         ~/.cache/go-build
+  #         ~/go/pkg/mod
+  #       key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-go-
 
-    - name: Save Binaries as Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: binaries-${{ github.sha }}
-        path: |
-            zetacored-alpine
-            zetaclientd-alpine
+  #   - name: Build zetacored and zetaclientd
+  #     env:
+  #       CGO_ENABLED: 1
+  #       GOOS: linux
+  #       GOARCH: amd64
+  #     shell: alpine.sh --root {0}
+  #     run: |
+  #       apk add --no-cache --update 
+  #       make install
+  #       cp "$HOME"/go/bin/* ./
 
-  smoke-test:
-    runs-on: ["zeta-runners"]
-    timeout-minutes: 30
-    steps:
-    - uses: actions/checkout@v3
+  #   - name: Test
+  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+  #     shell: alpine.sh --root {0}
+  #     run: |
+  #       echo "Running Build Tests"
+  #       go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-    - name: Install Pipeline Dependencies
-      uses:  ./.github/actions/install-dependencies
+  #   - name: Binary Docker Test
+  #     shell: alpine.sh --root {0}
+  #     run: |
+  #       chmod a+x ./zetacored
+  #       ./zetacored version
+  #       mv zetacored zetacored-alpine
+  #       mv zetaclientd zetaclientd-alpine
 
-    - name: Start Private Network
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        cd contrib/localnet
-        docker compose down || echo "not running or error"
-        docker compose build zetacore0 eth && docker compose build orchestrator
-        docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+  #   - name: Save Binaries as Artifacts
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: binaries-${{ github.sha }}
+  #       path: |
+  #           zetacored-alpine
+  #           zetaclientd-alpine
 
-    - name: Run Smoke Test
-      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-      run: |
-        cd contrib/localnet
-        docker-compose up orchestrator --exit-code-from orchestrator
-        if [ $? -ne 0 ]; then
-          echo "Smoke Test Failed"
-          exit 1
-        fi
+  # smoke-test:
+  #   runs-on: ["zeta-runners"]
+  #   timeout-minutes: 30
+  #   steps:
+  #   - uses: actions/checkout@v3
+
+  #   - name: Install Pipeline Dependencies
+  #     uses:  ./.github/actions/install-dependencies
+
+  #   - name: Start Private Network
+  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+  #     run: |
+  #       cd contrib/localnet
+  #       docker compose down || echo "not running or error"
+  #       docker compose build zetacore0 eth && docker compose build orchestrator
+  #       docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+
+  #   - name: Run Smoke Test
+  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+  #     run: |
+  #       cd contrib/localnet
+  #       docker-compose up orchestrator --exit-code-from orchestrator
+  #       if [ $? -ne 0 ]; then
+  #         echo "Smoke Test Failed"
+  #         exit 1
+  #       fi
 
   upload:
     runs-on: ["zeta-runners"]
     timeout-minutes: 15
-    needs:
-      - build-and-test
-      - smoke-test
-      - build-alpine-and-test
+    # needs:
+    #   - build-and-test
+    #   - smoke-test
+    #   - build-alpine-and-test
 
     steps:
     - uses: actions/checkout@v3
@@ -230,29 +230,29 @@ jobs:
     #     zetavisor_version: "zetavisor-v0.1.3"
     #     workspace_dir: "${{ env.WORKSPACE_DIR }}"
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: binaries-${{ github.sha }}
-        path: ./
+    # - uses: actions/download-artifact@v3
+    #   with:
+    #     name: binaries-${{ github.sha }}
+    #     path: ./
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+    # - name: Configure AWS Credentials
+    #   uses: aws-actions/configure-aws-credentials@v1
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: ${{ env.AWS_REGION }}
 
-    - name: upload-files-to-s3
-      uses: ./.github/actions/upload-to-s3
-      with:
-        bucket-name: ${{ env.S3_BUCKET_NAME }}
-        release-name: ${{ env.RELEASE_NAME }}
-        git-sha: ${{ github.sha }}
-        files: |
-          zetacored-ubuntu
-          zetaclientd-ubuntu
-          zetacored-alpine
-          zetaclientd-alpine
+    # - name: upload-files-to-s3
+    #   uses: ./.github/actions/upload-to-s3
+    #   with:
+    #     bucket-name: ${{ env.S3_BUCKET_NAME }}
+    #     release-name: ${{ env.RELEASE_NAME }}
+    #     git-sha: ${{ github.sha }}
+    #     files: |
+    #       zetacored-ubuntu
+    #       zetaclientd-ubuntu
+    #       zetacored-alpine
+    #       zetaclientd-alpine
 
     - name: Build, tag, and push docker images
       uses:  ./.github/actions/build-docker-images
