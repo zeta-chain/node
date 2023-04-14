@@ -123,7 +123,8 @@ jobs:
         GOARCH: amd64
       shell: alpine.sh --root {0}
       run: |
-        apk add --no-cache --update 
+        apk add --no-cache --update
+        go mod tidy
         make install
         cp "$HOME"/go/bin/* ./
 
