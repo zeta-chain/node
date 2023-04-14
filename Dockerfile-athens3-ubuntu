@@ -1,4 +1,4 @@
-FROM 1.19-bullseye AS zetanode-ubuntu
+FROM golang:1.19-bullseye
 
 ENV GOPATH /go
 ENV GOOS=linux
