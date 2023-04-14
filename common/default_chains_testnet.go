@@ -27,7 +27,7 @@ func BaobabChain() Chain {
 func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_mainnet,
-		ChainId:   101,
+		ChainId:   7001,
 	}
 }
 
