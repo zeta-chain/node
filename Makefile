@@ -58,7 +58,7 @@ install-testnet: go.sum
 		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
 
 build-testnet-ubuntu: go.sum
-		docker build -t zetacore-ubuntu -f ./Dockerfile-athens3-ubuntu .
+		docker build -t zetacore-ubuntu --platform linux/amd64 -f ./Dockerfile-athens3-ubuntu .
 		docker create --name temp-container zetanode-ubuntu
 		docker cp temp-container:/go/bin/zetaclientd .
 		docker cp temp-container:/go/bin/zetacored .
