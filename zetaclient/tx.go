@@ -30,7 +30,6 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
-
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
@@ -38,7 +37,6 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	if err != nil {
 		return "", err
 	}
-
 	return zetaTxHash, nil
 }
 
@@ -109,9 +107,10 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return "", fmt.Errorf("post receive failed after %d retries", maxRetries)
 }
 
-func (b *ZetaCoreBridge) SetNodeKey(tssPubkeySet common.PubKeySet, conskey string) (string, error) {
-	tssAddress := b.keys.GetAddress(common.TssSignerKey)
-	msg := types.NewMsgSetNodeKeys(tssAddress.String(), tssPubkeySet, conskey)
+func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string, error) {
+	tssSignerAddress := b.keys.GetAddress()
+	signerAddress := b.keys.GetOperatorAddress().String()
+	msg := types.NewMsgSetNodeKeys(signerAddress, tssSignerPubkeySet, tssSignerAddress.String())
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
 	if err != nil {

@@ -85,7 +85,8 @@ init:
 run:
 	./standalone-network/run.sh
 
-init-run: clean install-zetacore init run
+chain-init: clean install-zetacore init
+chain-run: clean install-zetacore init run
 
 lint-pre:
 	@test -z $(gofmt -l .)

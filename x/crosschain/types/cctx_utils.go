@@ -12,7 +12,7 @@ func (m *CrossChainTx) GetCurrentOutTxParam() *OutboundTxParams {
 	return m.OutboundTxParams[len(m.OutboundTxParams)-1]
 }
 
-func GetAllAuthzTxTypes() []string {
+func GetAllAuthzZetaclientTxTypes() []string {
 	return []string{
 		sdk.MsgTypeURL(&MsgNonceVoter{}),
 		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
@@ -21,5 +21,6 @@ func GetAllAuthzTxTypes() []string {
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
+		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 	}
 }
