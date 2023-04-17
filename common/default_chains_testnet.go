@@ -52,7 +52,6 @@ func DefaultChainsList() []*Chain {
 		BaobabChain(),
 		BscTestnetChain(),
 		GoerliChain(),
-		//GoerliLocalNetChain(),
 		ZetaChain(),
 	}
 	var c []*Chain
