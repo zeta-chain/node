@@ -248,7 +248,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
-		ticker := time.NewTicker(time.Second * 2)
+		ticker := time.NewTicker(time.Second * 5)
 		for range ticker.C {
 			bn, err := bridge.GetZetaBlockHeight()
 			if err != nil {
