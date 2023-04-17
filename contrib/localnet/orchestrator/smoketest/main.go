@@ -6,28 +6,31 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/erc20custody.sol"
+	zetaeth "github.com/zeta-chain/protocol/pkg/contracts/evm/zeta.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.eth.sol"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/uniswapV2factory.sol"
+	uniswapv2router "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"google.golang.org/grpc"
 )
 
@@ -69,20 +72,20 @@ type SmokeTest struct {
 	USDTERC20Addr        ethcommon.Address
 	USDTERC20            *erc20.USDT
 	USDTZRC20Addr        ethcommon.Address
-	USDTZRC20            *contracts.ZRC20
+	USDTZRC20            *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
-	ETHZRC20             *contracts.ZRC20
+	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
-	BTCZRC20             *contracts.ZRC20
+	BTCZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
-	UniswapV2Factory     *contracts.UniswapV2Factory
+	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
-	UniswapV2Router      *contracts.UniswapV2Router02
+	UniswapV2Router      *uniswapv2router.UniswapV2Router02
 	TestDAppAddr         ethcommon.Address
 	ZEVMSwapAppAddr      ethcommon.Address
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
 
-	SystemContract     *contracts.SystemContract
+	SystemContract     *systemcontract.SystemContract
 	SystemContractAddr ethcommon.Address
 }
 
