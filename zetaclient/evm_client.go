@@ -24,7 +24,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/erc20custody.sol"
 	zetainterfaces "github.com/zeta-chain/protocol/pkg/contracts/evm/interfaces/zetainterfaces.sol"
-	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.eth.sol"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
@@ -148,7 +147,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	}
 
 	// initialize the connector
-	connector, err := zetaconnector.NewConnector(addr, ob.EvmClient)
+	connector, err := zetainterfaces.NewZetaConnector(addr, ob.EvmClient)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("Connector")
 		return nil, err
@@ -260,7 +259,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				// TODO rewrite this to return early if not confirmed
-				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(*vLog)
+				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
@@ -292,7 +291,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
-				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
+				revertedLog, err := ob.Connector.ZetaConnectorFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
