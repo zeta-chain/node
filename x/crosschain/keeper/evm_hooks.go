@@ -12,8 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
-	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ConnectorZEVM.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 
@@ -164,8 +164,8 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
-func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*connectorzevm.ZRC20Withdrawal, error) {
-	zrc20ZEVM, err := connectorzevm.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
+func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
+	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
 	}
