@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	math2 "math"
 	"math/big"
 	"os"
@@ -16,13 +14,17 @@ import (
 	"sync/atomic"
 	"time"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/contracts/evm"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
+	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/ERC20Custody.sol"
+	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/ZetaConnector.eth.sol"
+	zetainterfaces "github.com/zeta-chain/protocol/pkg/contracts/evm/interfaces/ZetaInterfaces.sol"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
@@ -63,7 +65,7 @@ type EVMChainClient struct {
 	chain                     common.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
-	Connector                 *evm.Connector
+	Connector                 *zetainterfaces.ZetaConnector
 	ConnectorAddress          ethcommon.Address
 	ERC20Custody              *erc20custody.ERC20Custody
 	ERC20CustodyAddress       ethcommon.Address
@@ -146,7 +148,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	}
 
 	// initialize the connector
-	connector, err := evm.NewConnector(addr, ob.EvmClient)
+	connector, err := zetaconnector.NewConnector(addr, ob.EvmClient)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("Connector")
 		return nil, err

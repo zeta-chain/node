@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
 )
 
 // sets gas price on the system contract in zEVM; return the gasUsed and error code
@@ -19,7 +20,7 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	if oracle == common.HexToAddress("0x0") {
 		return 0, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.SystemContractMetaData.GetAbi()
+	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return 0, sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
@@ -40,7 +41,7 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 	if oracle == common.HexToAddress("0x0") {
 		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.SystemContractMetaData.GetAbi()
+	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
@@ -61,7 +62,7 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Ad
 	if oracle == common.HexToAddress("0x0") {
 		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
-	abi, err := contracts.SystemContractMetaData.GetAbi()
+	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}

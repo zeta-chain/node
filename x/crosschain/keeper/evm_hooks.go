@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,9 +12,11 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -63,7 +66,7 @@ func (k Keeper) PostTxProcessing(
 
 func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
 	for _, log := range logs {
-		var event *contracts.ZRC20Withdrawal
+		var event *zrc20.ZRC20Withdrawal
 		event, err := ParseZRC20WithdrawalEvent(*log)
 		if err != nil {
 			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
@@ -76,7 +79,7 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 	return nil
 }
 
-func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
 	// TODO , change to using GetAllForeignCoins for Chain .
@@ -114,7 +117,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *contracts.ZR
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
-func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *contracts.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {
 
 	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
@@ -161,8 +164,8 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
-func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, error) {
-	zrc20ZEVM, err := contracts.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
+func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*connectorzevm.ZRC20Withdrawal, error) {
+	zrc20ZEVM, err := connectorzevm.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +177,8 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*contracts.ZRC20Withdrawal, er
 	return event, nil
 }
 
-func ParseZetaSentEvent(log ethtypes.Log) (*contracts.ZetaConnectorZEVMZetaSent, error) {
-	zetaConnectorZEVM, err := contracts.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
+func ParseZetaSentEvent(log ethtypes.Log) (*connectorzevm.ZetaConnectorZEVMZetaSent, error) {
+	zetaConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
 	}

@@ -2,14 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
+	uniswapv2router02 "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/UniswapV2Router02.sol"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 // setup gas ZRC20, and ZETA/gas pool for a chain
@@ -57,7 +60,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
 	}
-	systemABI, err := contracts.SystemContractMetaData.GetAbi()
+	systemABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get system contract abi")
 	}
@@ -71,11 +74,11 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
 	}
-	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get uniswap router abi")
 	}
-	zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
+	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc20")
 	}

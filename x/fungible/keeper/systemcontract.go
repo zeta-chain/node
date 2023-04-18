@@ -6,7 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ConnectorZEVM.sol"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
+	uniswapv2router02 "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/UniswapV2Router02.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -32,7 +35,7 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
+	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
 
 	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "wZetaContractAddress")
 	if err != nil {
@@ -54,7 +57,7 @@ func (k *Keeper) GetUniswapv2FacotryAddress(ctx sdk.Context) (ethcommon.Address,
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
+	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
 
 	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "uniswapv2FactoryAddress")
 	if err != nil {
@@ -76,7 +79,7 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
+	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
 
 	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "uniswapv2Router02Address")
 	if err != nil {
@@ -97,7 +100,7 @@ func (k *Keeper) CallWZetaDeposit(ctx sdk.Context, sender ethcommon.Address, amo
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to get wzeta contract address")
 	}
-	wzetaABI, _ := contracts.WZETAMetaData.GetAbi()
+	wzetaABI, _ := connectorzevm.WZETAMetaData.GetAbi()
 	gasLimit := big.NewInt(70_000) // for some reason, GasEstimate for this contract call is always insufficient
 	_, err = k.CallEVM(ctx, *wzetaABI, sender, wzetaAddress, amount, gasLimit, true, "deposit")
 	if err != nil {
@@ -111,7 +114,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to get wzeta contract address")
 	}
-	wzetaABI, _ := contracts.WZETAMetaData.GetAbi()
+	wzetaABI, _ := connectorzevm.WZETAMetaData.GetAbi()
 	res, err := k.CallEVM(ctx, *wzetaABI, addr, wzetaAddress, big.NewInt(0), nil, false, "balanceOf", addr)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to call balanceOf")
@@ -132,7 +135,7 @@ func (k *Keeper) QuerySystemContractGasCoinZRC4(ctx sdk.Context, chainid *big.In
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := contracts.SystemContractMetaData.GetAbi()
+	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
 
 	res, err := k.CallEVM(ctx, *sysABI, types.ModuleAddressEVM, systemAddress, BigIntZero, nil, false, "gasCoinZRC20ByChainId", chainid)
 	if err != nil {
@@ -150,7 +153,7 @@ func (k *Keeper) QuerySystemContractGasCoinZRC4(ctx sdk.Context, chainid *big.In
 
 // returns the amount [in, out]
 func (k *Keeper) CallUniswapv2RouterSwapExactETHForToken(ctx sdk.Context, sender ethcommon.Address, to ethcommon.Address, amountIn *big.Int, outZRC4 ethcommon.Address) ([]*big.Int, error) {
-	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to get router abi")
 	}
@@ -180,7 +183,7 @@ func (k *Keeper) CallUniswapv2RouterSwapExactETHForToken(ctx sdk.Context, sender
 
 func (k *Keeper) CallUniswapv2RouterSwapEthForExactToken(ctx sdk.Context, sender ethcommon.Address, to ethcommon.Address, maxAmountIn *big.Int, amountOut *big.Int, outZRC4 ethcommon.Address) ([]*big.Int, error) {
 
-	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to get router abi")
 	}
@@ -209,7 +212,7 @@ func (k *Keeper) CallUniswapv2RouterSwapEthForExactToken(ctx sdk.Context, sender
 }
 
 func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 ethcommon.Address) (*big.Int, error) {
-	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "failed to get router abi")
 	}
@@ -238,12 +241,12 @@ func (k *Keeper) QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *bi
 	return (*amounts)[0], nil
 }
 
-func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20 ethcommon.Address, amount *big.Int) error {
-	zrc20ABI, err := contracts.ZRC20MetaData.GetAbi()
+func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20address ethcommon.Address, amount *big.Int) error {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
 	}
-	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20, big.NewInt(0), big.NewInt(100_000), true,
+	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20address, big.NewInt(0), big.NewInt(100_000), true,
 		"burn", amount)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to CallEVM method burn")

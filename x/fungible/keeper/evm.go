@@ -6,6 +6,11 @@ import (
 	"strconv"
 
 	tmtypes "github.com/tendermint/tendermint/types"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ConnectorZEVM.sol"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/UniswapV2Factory.sol"
+	uniswapv2router02 "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/UniswapV2Router02.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
@@ -21,7 +26,6 @@ import (
 
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	zetacommon "github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 )
 
 // TODO USE string constant
@@ -48,7 +52,7 @@ func (k Keeper) DeployZRC20Contract(
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
-	abi, err := contracts.ZRC20MetaData.GetAbi()
+	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZRC4 ABI: %s", err.Error())
 	}
@@ -70,9 +74,9 @@ func (k Keeper) DeployZRC20Contract(
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "coin constructor is invalid %s: %s", name, err.Error())
 	}
-	data := make([]byte, len(contracts.ZRC20Contract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.ZRC20Contract.Bin)], contracts.ZRC20Contract.Bin)
-	copy(data[len(contracts.ZRC20Contract.Bin):], ctorArgs)
+	data := make([]byte, len(zrc20.ZRC20MetaData.Bin)+len(ctorArgs))
+	copy(data[:len(zrc20.ZRC20MetaData.Bin)], zrc20.ZRC20MetaData.Bin)
+	copy(data[len(zrc20.ZRC20MetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -101,7 +105,7 @@ func (k Keeper) DeployZRC20Contract(
 }
 
 func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address, router02 common.Address) (common.Address, error) {
-	abi, err := contracts.SystemContractMetaData.GetAbi()
+	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get SystemContract ABI: %s", err.Error())
 	}
@@ -116,9 +120,9 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing SystemContract constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.SystemContractContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.SystemContractContract.Bin)], contracts.SystemContractContract.Bin)
-	copy(data[len(contracts.SystemContractContract.Bin):], ctorArgs)
+	data := make([]byte, len(systemcontract.SystemContractMetaData.Bin)+len(ctorArgs))
+	copy(data[:len(systemcontract.SystemContractMetaData.Bin)], systemcontract.SystemContractMetaData.Bin)
+	copy(data[len(systemcontract.SystemContractMetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -141,7 +145,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	// TODO : Change to
 	// GET all supported chains
 	// Get all coins for al chains
-	//zrc4ABI, err := contracts.ZRC20MetaData.GetAbi()
+	//zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	//coins := k.GetAllForeignCoins(ctx)
 	//for _, coin := range coins {
 	//	if len(coin.Zrc20ContractAddress) != 0 {
@@ -157,7 +161,7 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 }
 
 func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) {
-	abi, err := contracts.UniswapV2FactoryMetaData.GetAbi()
+	abi, err := uniswapv2factory.UniswapV2FactoryMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2FactoryMetaData ABI: %s", err.Error())
 	}
@@ -169,9 +173,9 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing UniswapV2Factory constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.UniswapV2FactoryContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.UniswapV2FactoryContract.Bin)], contracts.UniswapV2FactoryContract.Bin)
-	copy(data[len(contracts.UniswapV2FactoryContract.Bin):], ctorArgs)
+	data := make([]byte, len(uniswapv2factory.UniswapV2FactoryMetaData.Bin)+len(ctorArgs))
+	copy(data[:len(uniswapv2factory.UniswapV2FactoryMetaData.Bin)], uniswapv2factory.UniswapV2FactoryMetaData.Bin)
+	copy(data[len(uniswapv2factory.UniswapV2FactoryMetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -196,7 +200,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 }
 
 func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address, wzeta common.Address) (common.Address, error) {
-	routerABI, err := contracts.UniswapV2Router02MetaData.GetAbi()
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get UniswapV2Router02MetaData ABI: %s", err.Error())
 	}
@@ -207,9 +211,9 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing UniswapV2Router02 constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.UniswapV2Router02Contract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.UniswapV2Router02Contract.Bin)], contracts.UniswapV2Router02Contract.Bin)
-	copy(data[len(contracts.UniswapV2Router02Contract.Bin):], ctorArgs)
+	data := make([]byte, len(uniswapv2router02.UniswapV2Router02Contract.Bin)+len(ctorArgs))
+	copy(data[:len(uniswapv2router02.UniswapV2Router02MetaData.Bin)], uniswapv2router02.UniswapV2Router02MetaData.Bin)
+	copy(data[len(uniswapv2router02.UniswapV2Router02MetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -226,7 +230,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 }
 
 func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
-	abi, err := contracts.WZETAMetaData.GetAbi()
+	abi, err := connectorzevm.WZETAMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get WZETAMetaData ABI: %s", err.Error())
 	}
@@ -237,9 +241,9 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing WZETA constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.WZETAContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.WZETAContract.Bin)], contracts.WZETAContract.Bin)
-	copy(data[len(contracts.WZETAContract.Bin):], ctorArgs)
+	data := make([]byte, len(connectorzevm.WZETAMetaData.Bin)+len(ctorArgs))
+	copy(data[:len(connectorzevm.WZETAMetaData.Bin)], connectorzevm.WZETAMetaData.Bin)
+	copy(data[len(connectorzevm.WZETAMetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -256,7 +260,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 }
 
 func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
-	abi, err := contracts.ZetaConnectorZEVMMetaData.GetAbi()
+	abi, err := connectorzevm.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get ZetaConnectorZEVMMetaData ABI: %s", err.Error())
 	}
@@ -268,9 +272,9 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing ZetaConnectorZEVM constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(contracts.ConnectorZEVMContract.Bin)+len(ctorArgs))
-	copy(data[:len(contracts.ConnectorZEVMContract.Bin)], contracts.ConnectorZEVMContract.Bin)
-	copy(data[len(contracts.ConnectorZEVMContract.Bin):], ctorArgs)
+	data := make([]byte, len(connectorzevm.ZetaConnectorZEVMMetaData.Bin)+len(ctorArgs))
+	copy(data[:len(connectorzevm.ZetaConnectorZEVMMetaData.Bin)], connectorzevm.ZetaConnectorZEVMMetaData.Bin)
+	copy(data[len(connectorzevm.ZetaConnectorZEVMMetaData.Bin):], ctorArgs)
 
 	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
 	if err != nil {
@@ -294,8 +298,8 @@ func (k Keeper) DepositZRC20(
 	to common.Address,
 	amount *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	//abi, err := contracts.ZRC4MetaData.GetAbi()
-	abi, err := contracts.ZRC20MetaData.GetAbi()
+	//abi, err := zrc20.ZRC4MetaData.GetAbi()
+	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +324,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 
-	abi, err := contracts.SystemContractMetaData.GetAbi()
+	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +348,7 @@ func (k Keeper) QueryZRC4Data(
 		decimalRes types.ZRC20Uint8Response
 	)
 
-	zrc4 := contracts.ZRC20Contract.ABI
+	zrc4 := zrc20.ZRC20Contract.ABI
 
 	// Name
 	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
@@ -390,7 +394,7 @@ func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
 	contract, account common.Address,
 ) *big.Int {
-	abi, err := contracts.ZRC20MetaData.GetAbi()
+	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil
 	}

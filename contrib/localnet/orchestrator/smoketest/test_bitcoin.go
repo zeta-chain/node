@@ -19,8 +19,9 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -35,7 +36,7 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
 	}()
 
-	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
+	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -130,7 +131,7 @@ func (sm *SmokeTest) DepositBTC() {
 	}
 	sm.BTCZRC20Addr = BTCZRC20Addr
 	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
-	BTCZRC20, err := contracts.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -169,7 +170,7 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 
 func (sm *SmokeTest) WithdrawBitcoin() {
 	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
-	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
+	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -180,7 +181,7 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 		panic(err)
 	}
 	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
-	BTCZRC20, err := contracts.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}

@@ -11,7 +11,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 )
 
@@ -23,7 +23,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	LoudPrintf("Deposit USDT ERC20 into ZEVM\n")
 	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
-	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
+	usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +94,7 @@ func (sm *SmokeTest) WithdrawERC20() {
 	goerliClient := sm.goerliClient
 	cctxClient := sm.cctxClient
 
-	usdtZRC20, err := contracts.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
+	usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +118,7 @@ func (sm *SmokeTest) WithdrawERC20() {
 	}
 	fmt.Printf("gasZRC20: %s, gasFee: %d\n", gasZRC20.Hex(), gasFee)
 
-	ethZRC20, err := contracts.NewZRC20(gasZRC20, zevmClient)
+	ethZRC20, err := zrc20.NewZRC20(gasZRC20, zevmClient)
 	if err != nil {
 		panic(err)
 	}
