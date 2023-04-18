@@ -22,8 +22,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
+	// "github.com/zeta-chain/zetacore/contracts/evm"
+	// "github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
 	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/erc20custody.sol"
-	zetainterfaces "github.com/zeta-chain/protocol/pkg/contracts/evm/interfaces/zetainterfaces.sol"
+	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
@@ -64,7 +67,7 @@ type EVMChainClient struct {
 	chain                     common.Chain
 	endpoint                  string
 	ticker                    *time.Ticker
-	Connector                 *zetainterfaces.ZetaConnector
+	Connector                 *zetaconnector.ZetaConnectorNonEth
 	ConnectorAddress          ethcommon.Address
 	ERC20Custody              *erc20custody.ERC20Custody
 	ERC20CustodyAddress       ethcommon.Address
@@ -147,7 +150,7 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 	}
 
 	// initialize the connector
-	connector, err := zetainterfaces.NewZetaConnector(addr, ob.EvmClient)
+	connector, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.EvmClient)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("Connector")
 		return nil, err
@@ -259,7 +262,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				// TODO rewrite this to return early if not confirmed
-				receivedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReceived(vLog)
+				receivedLog, err := ob.Connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
@@ -291,7 +294,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.confCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
-				revertedLog, err := ob.Connector.ZetaConnectorFilterer.ParseZetaReverted(*vLog)
+				revertedLog, err := ob.Connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
