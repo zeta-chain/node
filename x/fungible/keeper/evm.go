@@ -6,11 +6,11 @@ import (
 	"strconv"
 
 	tmtypes "github.com/tendermint/tendermint/types"
-	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ConnectorZEVM.sol"
-	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
-	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
-	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/UniswapV2Factory.sol"
-	uniswapv2router02 "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/UniswapV2Router02.sol"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/connectorzevm.sol"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router02 "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
@@ -348,10 +348,10 @@ func (k Keeper) QueryZRC4Data(
 		decimalRes types.ZRC20Uint8Response
 	)
 
-	zrc4 := zrc20.ZRC20MetaData.ABI
+	zrc4, _ := zrc20.ZRC20MetaData.GetAbi()
 
 	// Name
-	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
+	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -363,7 +363,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "symbol")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "symbol")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -375,7 +375,7 @@ func (k Keeper) QueryZRC4Data(
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "decimals")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "decimals")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}

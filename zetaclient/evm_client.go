@@ -22,9 +22,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/ERC20Custody.sol"
-	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/ZetaConnector.eth.sol"
-	zetainterfaces "github.com/zeta-chain/protocol/pkg/contracts/evm/interfaces/ZetaInterfaces.sol"
+	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/erc20custody.sol"
+	zetainterfaces "github.com/zeta-chain/protocol/pkg/contracts/evm/interfaces/zetainterfaces.sol"
+	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.eth.sol"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"

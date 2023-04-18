@@ -26,7 +26,7 @@ import (
 	zetaconnectoreth "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.eth.sol"
 	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
-	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/uniswapV2factory.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"

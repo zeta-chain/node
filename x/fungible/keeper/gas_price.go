@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
-	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/SystemContract.sol"
+	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 

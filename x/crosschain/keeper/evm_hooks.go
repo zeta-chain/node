@@ -12,8 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/ConnectorZEVM.sol"
-	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/ZRC20.sol"
+	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/connectorzevm.sol"
+	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 
