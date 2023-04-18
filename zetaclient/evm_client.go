@@ -23,8 +23,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	// "github.com/zeta-chain/zetacore/contracts/evm"
-	// "github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
 	erc20custody "github.com/zeta-chain/protocol/pkg/contracts/evm/erc20custody.sol"
 	zetaconnector "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
