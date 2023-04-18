@@ -1,24 +1,28 @@
 //go:build PRIVNET
 // +build PRIVNET
 
-package types
+package main
 
 import (
 	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/app"
 	"io/ioutil"
+	"os"
+
+	//"os"
 	"testing"
 )
 
 func TestParsefileToObserverMapper(t *testing.T) {
 	file := "tmp.json"
-	//defer func(t *testing.T, fp string) {
-	//	err := os.RemoveAll(fp)
-	//	assert.NoError(t, err)
-	//}(t, file)
+	defer func(t *testing.T, fp string) {
+		err := os.RemoveAll(fp)
+		assert.NoError(t, err)
+	}(t, file)
+	app.SetConfig()
 	createObserverList(file)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
 	assert.NoError(t, err)
@@ -28,22 +32,20 @@ func TestParsefileToObserverMapper(t *testing.T) {
 }
 
 func createObserverList(fp string) {
-	//list = append(append(append(list, CreateObserverMapperList(1, common.GoerliLocalNetChain())...),
-	//	CreateObserverMapperList(1, common.BtcRegtestChain())...),
-	//	CreateObserverMapperList(1, common.ZetaChain())...)
 	var listReader []ObserverInfoReader
-	listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
+	//listChainID := []int64{common.GoerliLocalNetChain().ChainId, common.BtcRegtestChain().ChainId, common.ZetaChain().ChainId}
 	commonGrantAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress")))
 	observerAddress := sdk.AccAddress(crypto.AddressHash([]byte("ObserverAddress")))
 	validatorAddress := sdk.ValAddress(crypto.AddressHash([]byte("ValidatorAddress")))
 	info := ObserverInfoReader{
-		SupportedChainsList:       listChainID,
 		ObserverAddress:           observerAddress.String(),
 		ZetaClientGranteeAddress:  commonGrantAddress.String(),
 		StakingGranteeAddress:     commonGrantAddress.String(),
 		StakingMaxTokens:          "100000000",
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",
+		GovGranteeAddress:         commonGrantAddress.String(),
+		ZetaClientGranteePubKey:   "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
 	}
 	listReader = append(listReader, info)
 

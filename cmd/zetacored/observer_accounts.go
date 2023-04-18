@@ -7,46 +7,109 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethermint "github.com/evmos/ethermint/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
+	"path/filepath"
 	"strconv"
 	"strings"
+)
+
+const (
+	ObserverBalance = "100000000000000000000000"
+	HotkeyBalance   = "100000000000000000000"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
-		Short: "Add a list of observers to the observer mapper",
-		Args:  cobra.ExactArgs(1),
+		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-			observerInfo, err := types.ParsefileToObserverDetails(args[0])
+			serverConfig := serverCtx.Config
+
+			defaultHome := app.DefaultNodeHome
+			defaultFile := filepath.Join(defaultHome, "os_info", "observer_info.json")
+			if len(args) == 0 {
+				args = append(args, defaultFile)
+			}
+			file := args[0]
+			observerInfo, err := ParsefileToObserverDetails(file)
 			if err != nil {
 				return err
 			}
 			var observerMapper []*types.ObserverMapper
 			var grantAuthorizations []authz.GrantAuthorization
-			observersforChain := map[int64][]string{}
+			var nodeAccounts []*crosschaintypes.NodeAccount
+			observersForChain := map[int64][]string{}
+			// DefaultChainsList is based on Build Flags
+			supportedChains := common.DefaultChainsList()
+			var balances []banktypes.Balance
+			commonCoins, ok := sdk.NewIntFromString(ObserverBalance)
+			if !ok {
+				panic("Failed to parse string to int for observer")
+			}
+			commonHotkeyCoins, ok := sdk.NewIntFromString(HotkeyBalance)
+			if !ok {
+				panic("Failed to parse string to int for hotkey")
+			}
+			commonObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonCoins))
+			commonHotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonHotkeyCoins))
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
-				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
-				for _, chain := range info.SupportedChainsList {
-					observersforChain[chain] = append(observersforChain[chain], info.ObserverAddress)
+				if info.ZetaClientGranteeAddress == "" || info.ObserverAddress == "" {
+					panic("ZetaClientGranteeAddress or ObserverAddress is empty")
 				}
+				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
+				for _, chain := range supportedChains {
+					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
+				}
+				if info.ZetaClientGranteePubKey != "" {
+					pubkey, err := common.NewPubKey(info.ZetaClientGranteePubKey)
+					if err != nil {
+						panic(err)
+					}
+					pubkeySet := common.PubKeySet{
+						Secp256k1: pubkey,
+						Ed25519:   "",
+					}
+					na := crosschaintypes.NodeAccount{
+						Creator:          info.ObserverAddress,
+						TssSignerAddress: info.ZetaClientGranteeAddress,
+						PubkeySet:        &pubkeySet,
+						NodeStatus:       crosschaintypes.NodeStatus_Active,
+					}
+					nodeAccounts = append(nodeAccounts, &na)
+				}
+				balances = append(balances, banktypes.Balance{
+					Address: info.ObserverAddress,
+					Coins:   commonObserverBalance,
+				})
+				balances = append(balances, banktypes.Balance{
+					Address: info.ZetaClientGranteeAddress,
+					Coins:   commonHotkeyBalance,
+				})
 			}
+
 			// Generate observer mappers for each chain
-			for chainID, observers := range observersforChain {
+			for chainID, observers := range observersForChain {
 				observers = removeDuplicate(observers)
 				chain := common.GetChainFromChainID(chainID)
 				mapper := types.ObserverMapper{
@@ -56,13 +119,21 @@ func AddObserverAccountsCmd() *cobra.Command {
 				observerMapper = append(observerMapper, &mapper)
 			}
 
-			genFile := config.GenesisFile()
+			genFile := serverConfig.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
+
+			// Add node accounts to cross chain genesis state
+			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
+			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+
+			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaObserverGenState.Observers = observerMapper
+
+			// Add grant authorizations to authz genesis state
 			var authzGenState authz.GenesisState
 			if appState[authz.ModuleName] != nil {
 				err := cdc.UnmarshalJSON(appState[authz.ModuleName], &authzGenState)
@@ -73,11 +144,15 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 			authzGenState.Authorization = grantAuthorizations
 
+			// Marshal modified states into genesis file
+			zetaCrossChainStateBz, err := json.Marshal(zetaCrossChainGenState)
+			if err != nil {
+				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
+			}
 			zetaObserverStateBz, err := json.Marshal(zetaObserverGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
 			}
-
 			err = codectypes.UnpackInterfaces(authzGenState, cdc)
 			if err != nil {
 				return fmt.Errorf("failed to authz grants into upackeder: %w", err)
@@ -88,11 +163,19 @@ func AddObserverAccountsCmd() *cobra.Command {
 			}
 			appState[types.ModuleName] = zetaObserverStateBz
 			appState[authz.ModuleName] = authZStateBz
-			appStateJSON, err := json.Marshal(appState)
+			appState[crosschaintypes.ModuleName] = zetaCrossChainStateBz
+			modifiedAppState, err := AddGenesisAccount(clientCtx, balances, appState)
+			if err != nil {
+				panic(err)
+			}
+			// Create new genesis file
+			appStateJSON, err := json.Marshal(modifiedAppState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}
+
 			genDoc.AppState = appStateJSON
+
 			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
@@ -111,16 +194,32 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 	return list
 }
 
-func generateGrants(info types.ObserverInfoReader) (grants []authz.GrantAuthorization) {
+func generateGrants(info ObserverInfoReader) []authz.GrantAuthorization {
+	sdk.MustAccAddressFromBech32(info.ObserverAddress)
+	var grants []authz.GrantAuthorization
+	if info.ZetaClientGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.ZetaClientGranteeAddress)
+		grants = append(grants, addZetaClientGrants(grants, info)...)
+	}
+	if info.SpendGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.SpendGranteeAddress)
+		grants = append(grants, addSpendingGrants(grants, info)...)
+	}
+	if info.StakingGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.StakingGranteeAddress)
+		grants = append(grants, addStakingGrants(grants, info)...)
+	}
 
-	grants = append(append(append(grants, addStakingGrants(grants, info)...),
-		addSpendingGrants(grants, info)...),
-		addZetaClientGrants(grants, info)...)
+	if info.GovGranteeAddress != "" {
+		sdk.MustAccAddressFromBech32(info.GovGranteeAddress)
+		grants = append(grants, addGovGrants(grants, info)...)
+	}
+
 	return grants
 }
 
-func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
-	txTypes := crosschaintypes.GetAllAuthzTxTypes()
+func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
 		if err != nil {
@@ -136,7 +235,33 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info types.ObserverI
 	return grants
 }
 
-func addSpendingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+
+	txTypes := []string{sdk.MsgTypeURL(&v1beta1.MsgVote{}),
+		sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}),
+		sdk.MsgTypeURL(&v1beta1.MsgDeposit{}),
+		sdk.MsgTypeURL(&v1beta1.MsgVoteWeighted{}),
+		sdk.MsgTypeURL(&v1.MsgVote{}),
+		sdk.MsgTypeURL(&v1.MsgSubmitProposal{}),
+		sdk.MsgTypeURL(&v1.MsgDeposit{}),
+		sdk.MsgTypeURL(&v1.MsgVoteWeighted{}),
+	}
+	for _, txType := range txTypes {
+		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
+		if err != nil {
+			panic(err)
+		}
+		grants = append(grants, authz.GrantAuthorization{
+			Granter:       info.ObserverAddress,
+			Grantee:       info.GovGranteeAddress,
+			Authorization: auth,
+			Expiration:    nil,
+		})
+	}
+	return grants
+}
+
+func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	spendMaxTokens, ok := sdk.NewIntFromString(info.SpendMaxTokens)
 	if !ok {
 		panic("Failed to parse spend max tokens")
@@ -156,7 +281,7 @@ func addSpendingGrants(grants []authz.GrantAuthorization, info types.ObserverInf
 	return grants
 }
 
-func addStakingGrants(grants []authz.GrantAuthorization, info types.ObserverInfoReader) []authz.GrantAuthorization {
+func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
 	stakingMaxTokens, ok := sdk.NewIntFromString(info.StakingMaxTokens)
 	if !ok {
 		panic("Failed to parse staking max tokens")
@@ -268,4 +393,63 @@ func AddObserverAccountCmd() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, appState map[string]json.RawMessage) (map[string]json.RawMessage, error) {
+	var genAccount authtypes.GenesisAccount
+	totalBalanceAdded := sdk.Coins{}
+	genAccounts := make([]authtypes.GenesisAccount, len(balances))
+	for i, balance := range balances {
+		totalBalanceAdded = totalBalanceAdded.Add(balance.Coins...)
+		accAddress := sdk.MustAccAddressFromBech32(balance.Address)
+		baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
+		genAccount = &ethermint.EthAccount{
+			BaseAccount: baseAccount,
+			CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
+		}
+		if err := genAccount.Validate(); err != nil {
+			return appState, fmt.Errorf("failed to validate new genesis account: %w", err)
+		}
+		genAccounts[i] = genAccount
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return appState, fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	for _, genAc := range genAccounts {
+		addr := genAc.GetAddress()
+		if accs.Contains(addr) {
+			return appState, fmt.Errorf("cannot add account at existing address %s", addr)
+		}
+		accs = append(accs, genAc)
+		accs = authtypes.SanitizeGenesisAccounts(accs)
+	}
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return appState, fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+	authGenState.Accounts = genAccs
+
+	authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
+	if err != nil {
+		return appState, fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+	appState[authtypes.ModuleName] = authGenStateBz
+	bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+	bankGenState.Balances = append(bankGenState.Balances, balances...)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+	bankGenState.Supply = bankGenState.Supply.Add(totalBalanceAdded...)
+
+	bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
+	if err != nil {
+		return appState, fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	return appState, nil
 }

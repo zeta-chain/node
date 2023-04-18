@@ -2,12 +2,11 @@ package zetaclient
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	math2 "math"
 	"math/big"
 	"os"
@@ -17,9 +16,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/syndtr/goleveldb/leveldb/util"
+	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/contracts/evm"
 	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
@@ -30,17 +30,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-)
-
-const (
-	PosKey           = "PosKey"
-	NonceTxKeyPrefix = "NonceTx-"
 )
 
 type TxHashEnvelope struct {
@@ -67,7 +61,6 @@ type EVMChainClient struct {
 	*ChainMetrics
 
 	chain                     common.Chain
-	chainConfig               config.EVMConfig
 	endpoint                  string
 	ticker                    *time.Ticker
 	Connector                 *evm.Connector
@@ -83,7 +76,7 @@ type EVMChainClient struct {
 	BlockTime                 uint64 // block time in seconds
 	txWatchList               map[ethcommon.Hash]string
 	mu                        *sync.Mutex
-	db                        *leveldb.DB
+	db                        *gorm.DB
 	outTXConfirmedReceipts    map[int]*ethtypes.Receipt
 	outTXConfirmedTransaction map[int]*ethtypes.Transaction
 	MinNonce                  int64
@@ -184,14 +177,11 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 
 	ob.SetChainDetails(chain)
 
-	if dbpath != "" {
-		err := ob.BuildBlockIndex(dbpath, chain.String())
-		if err != nil {
-			return nil, err
-		}
-		ob.BuildReceiptsMap()
-
+	err = ob.LoadDB(dbpath, chain)
+	if err != nil {
+		return nil, err
 	}
+
 	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", chain.String(), ob.GetLastBlockHeight())
 
 	return &ob, nil
@@ -200,15 +190,19 @@ func NewEVMChainClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner
 func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
-	go ob.observeOutTx()
+	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
 }
 
 func (ob *EVMChainClient) Stop() {
 	ob.logger.ChainLogger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
-	ob.logger.ChainLogger.Info().Msg("closing ob.pendingUtxos")
-	err := ob.db.Close()
+	ob.logger.ChainLogger.Info().Msg("closing ob.db")
+	dbInst, err := ob.db.DB()
+	if err != nil {
+		ob.logger.ChainLogger.Info().Msg("error getting database instance")
+	}
+	err = dbInst.Close()
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("error closing pendingUtxos")
 	}
@@ -411,15 +405,28 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[int(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[int(nonceInt)] = transaction
-							value, err := receipt.MarshalJSON()
-							if err != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("receipt marshal error %s", receipt.TxHash.Hex())
-							}
 							ob.mu.Unlock()
-							err = ob.db.Put([]byte(NonceTxKeyPrefix+fmt.Sprintf("%d", nonceInt)), value, nil)
+
+							// Convert to DB types
+							rec, err := clienttypes.ToReceiptSQLType(receipt, int(nonceInt))
 							if err != nil {
-								ob.logger.ObserveOutTx.Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+								ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
+								continue
 							}
+							trans, err := clienttypes.ToTransactionSQLType(transaction, int(nonceInt))
+							if err != nil {
+								ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
+								continue
+							}
+
+							//Save to DB
+							if dbc := ob.db.Create(rec); dbc.Error != nil {
+								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+							}
+							if dbc := ob.db.Create(trans); dbc.Error != nil {
+								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
+							}
+
 							break TXHASHLOOP
 						}
 						<-inTimeout
@@ -455,6 +462,9 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	transaction, _, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		return nil, nil, err
+	}
+	if transaction.Nonce() != uint64(nonce) {
+		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.confCount
 	if confHeight < 0 || confHeight >= math2.MaxInt64 {
@@ -612,7 +622,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		Start:   uint64(startBlock),
 		End:     &toB,
 		Context: context.TODO(),
-	})
+	}, []ethcommon.Address{})
 
 	if err != nil {
 		return err
@@ -738,13 +748,8 @@ func (ob *EVMChainClient) observeInTX() error {
 		}
 	}
 	// ============= end of query the incoming tx to TSS address ==============
-
-	//ob.LastBlock = toBlock
 	ob.SetLastBlockHeight(toBlock)
-	buf := make([]byte, binary.MaxVarintLen64)
-	n := binary.PutUvarint(buf, uint64(toBlock))
-	err = ob.db.Put([]byte(PosKey), buf[:n], nil)
-	if err != nil {
+	if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error writing toBlock to db")
 	}
 	return nil
@@ -877,14 +882,8 @@ func (ob *EVMChainClient) getLastHeight() (int64, error) {
 	return int64(lastheight.LastSendHeight), nil
 }
 
-func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
+func (ob *EVMChainClient) BuildBlockIndex() error {
 	logger := ob.logger.ChainLogger.With().Str("module", "BuildBlockIndex").Logger()
-	path := fmt.Sprintf("%s/%s", dbpath, chain) // e.g. ~/.zetaclient/ETH
-	db, err := leveldb.OpenFile(path, nil)
-	if err != nil {
-		return err
-	}
-	ob.db = db
 	envvar := ob.chain.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
@@ -903,8 +902,8 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 			ob.SetLastBlockHeight(scanFromBlockInt)
 		}
 	} else { // last observed block
-		buf, err := db.Get([]byte(PosKey), nil)
-		if err != nil {
+		var lastBlockNum clienttypes.LastBlockSQLType
+		if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
 			logger.Info().Msg("db PosKey does not exist; read from ZetaCore")
 			lastheight, err := ob.getLastHeight()
 			if err != nil {
@@ -919,43 +918,91 @@ func (ob *EVMChainClient) BuildBlockIndex(dbpath, chain string) error {
 				}
 				ob.SetLastBlockHeight(header.Number.Int64())
 			}
-			buf2 := make([]byte, binary.MaxVarintLen64)
-			n := binary.PutUvarint(buf2, uint64(ob.GetLastBlockHeight()))
-			err = db.Put([]byte(PosKey), buf2[:n], nil)
-			if err != nil {
-				logger.Error().Err(err).Msg("error writing ob.LastBlock to db: ")
+			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())); dbc.Error != nil {
+				logger.Error().Err(dbc.Error).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
-			lastBlock, _ := binary.Uvarint(buf)
-			ob.SetLastBlockHeight(int64(lastBlock))
+			ob.SetLastBlockHeight(lastBlockNum.Num)
 		}
 	}
 	return nil
 }
 
-func (ob *EVMChainClient) BuildReceiptsMap() {
-	logger := ob.logger.ChainLogger.With().Str("module", "BuildReceiptsMap").Logger()
-	iter := ob.db.NewIterator(util.BytesPrefix([]byte(NonceTxKeyPrefix)), nil)
-	for iter.Next() {
-		key := string(iter.Key())
-		nonce, err := strconv.ParseInt(key[len(NonceTxKeyPrefix):], 10, 64)
-		if err != nil {
-			logger.Error().Err(err).Msgf("error parsing nonce: %s", key)
-			continue
-		}
-		var receipt ethtypes.Receipt
-		err = receipt.UnmarshalJSON(iter.Value())
-		if err != nil {
-			logger.Error().Err(err).Msgf("error unmarshalling receipt: %s", key)
-			continue
-		}
-		ob.outTXConfirmedReceipts[int(nonce)] = &receipt
-		//log.Info().Msgf("chain %s reading nonce %d with receipt of tx %s", ob.chain, nonce, receipt.TxHash.Hex())
+func (ob *EVMChainClient) BuildReceiptsMap() error {
+	logger := ob.logger
+	var receipts []clienttypes.ReceiptSQLType
+	if err := ob.db.Find(&receipts).Error; err != nil {
+		logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		return err
 	}
-	iter.Release()
-	if err := iter.Error(); err != nil {
-		logger.Error().Err(err).Msg("error iterating over db")
+	for _, receipt := range receipts {
+		r, err := clienttypes.FromReceiptDBType(receipt.Receipt)
+		if err != nil {
+			return err
+		}
+		ob.outTXConfirmedReceipts[receipt.Nonce] = r
 	}
+
+	return nil
+}
+
+func (ob *EVMChainClient) BuildTransactionsMap() error {
+	logger := ob.logger
+	var transactions []clienttypes.TransactionSQLType
+	if err := ob.db.Find(&transactions).Error; err != nil {
+		logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, transaction := range transactions {
+		trans, err := clienttypes.FromTransactionDBType(transaction.Transaction)
+		if err != nil {
+			return err
+		}
+		ob.outTXConfirmedTransaction[transaction.Nonce] = trans
+	}
+	return nil
+}
+
+// LoadDB open sql database and load data into EVMChainClient
+func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
+	if dbPath != "" {
+		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+			err := os.MkdirAll(dbPath, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+		path := fmt.Sprintf("%s/%s", dbPath, chain.ChainName.String()) //Use "file::memory:?cache=shared" for temp db
+		db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+		if err != nil {
+			panic("failed to connect database")
+		}
+
+		err = db.AutoMigrate(&clienttypes.ReceiptSQLType{},
+			&clienttypes.TransactionSQLType{},
+			&clienttypes.LastBlockSQLType{})
+		if err != nil {
+			return err
+		}
+
+		ob.db = db
+		err = ob.BuildBlockIndex()
+		if err != nil {
+			return err
+		}
+
+		err = ob.BuildReceiptsMap()
+		if err != nil {
+			return err
+		}
+
+		err = ob.BuildTransactionsMap()
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
 }
 
 func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {

@@ -22,7 +22,7 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
+func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	startTime := time.Now()
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
@@ -75,7 +75,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorContracts() {
 	if err := CheckNonce(goerliClient, DeployerAddress, 2); err != nil {
 		panic(err)
 	}
-	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), ethcommon.HexToAddress("0x"))
+	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), big.NewInt(1e18), ethcommon.HexToAddress("0x"))
 	if err != nil {
 		panic(err)
 	}

@@ -2,11 +2,13 @@ package zetaclient
 
 import (
 	"cosmossdk.io/math"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	math2 "math"
 	"math/big"
@@ -21,7 +23,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -43,21 +44,20 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain        common.Chain
-	chainConfig  config.BTCConfig
-	endpoint     string
-	rpcClient    *rpcclient.Client
-	zetaClient   *ZetaCoreBridge
-	Tss          TSSSigner
-	lastBlock    int64
-	confCount    int64                                   // must wait this many blocks to be considered "confirmed"
-	BlockTime    uint64                                  // block time in seconds
-	submittedTx  map[string]btcjson.GetTransactionResult // key: chain-nonce
-	mu           *sync.Mutex
-	utxos        []btcjson.ListUnspentResult
-	pendingUtxos *leveldb.DB // key is txid_outpoint, value is ListUnspentResult
-	stop         chan struct{}
-	logger       BTCLog
+	chain       common.Chain
+	endpoint    string
+	rpcClient   *rpcclient.Client
+	zetaClient  *ZetaCoreBridge
+	Tss         TSSSigner
+	lastBlock   int64
+	confCount   int64                                   // must wait this many blocks to be considered "confirmed"
+	BlockTime   uint64                                  // block time in seconds
+	submittedTx map[string]btcjson.GetTransactionResult // key: chain-nonce
+	mu          *sync.Mutex
+	utxos       []btcjson.ListUnspentResult
+	db          *gorm.DB
+	stop        chan struct{}
+	logger      BTCLog
 }
 
 const (
@@ -90,12 +90,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.confCount = 0
 	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
-	path := fmt.Sprintf("%s/btc_utxos.pendingUtxos", dbpath)
-	db, err := leveldb.OpenFile(path, nil)
+	//Load btc chain client DB
+	err := ob.loadDB(dbpath)
 	if err != nil {
 		return nil, err
 	}
-	ob.pendingUtxos = db
+
 	ob.endpoint = config.BitcoinConfig.RPCEndpoint
 
 	// initialize the Client
@@ -193,7 +193,6 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	//ob.logger = ob.logger.With().Str("module", "WatchInTx").Logger()
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
 	for {
 		select {
@@ -333,7 +332,6 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) erro
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	//ob.logger = ob.logger.With().Str("module", "WatchGasPrice").Logger()
 
 	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
 	for {
@@ -437,14 +435,9 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						logger.Warn().Msgf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
 						continue
 					}
-					memoStr, err := hex.DecodeString(script[4:])
+					memoBytes, err := hex.DecodeString(script[4:])
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
-						continue
-					}
-					memoBytes, err := base64.StdEncoding.DecodeString(string(memoStr))
-					if err != nil {
-						logger.Warn().Err(err).Msgf("error b64 decoding memoStr %x", memoStr)
 						continue
 					}
 					memo = memoBytes
@@ -489,7 +482,6 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	//ob.logger = ob.logger.With().Str("module", "WatchUTXOS").Logger()
 
 	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
 	for {
@@ -569,21 +561,22 @@ func (ob *BitcoinChainClient) housekeepPending() {
 	}
 
 	// traverse pending pendingUtxos
-	var removed int64
-	iter := ob.pendingUtxos.NewIterator(nil, nil)
-	for iter.Next() {
-		key := iter.Key()
-		// if key not in utxos map, remove from pendingUtxos
-		if !utxosMap[string(key)] {
-			if err := ob.pendingUtxos.Delete(key, nil); err != nil {
-				ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
-			}
-		}
+	removed := 0
+	var utxos []clienttypes.PendingUTXOSQLType
+	if err := ob.db.Find(&utxos).Error; err != nil {
+		ob.logger.WatchUTXOS.Error().Err(err).Msg("error querying pending UTXOs from db")
+		return
 	}
-	iter.Release()
-	err := iter.Error()
-	if err != nil {
-		ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: pending utxos housekeeping")
+	for i := range utxos {
+		key := utxos[i].Key
+		// if key not in utxos map, remove from pendingUtxos
+		if !utxosMap[key] {
+			if err := ob.db.Where("Key = ?", key).Delete(&utxos[i]).Error; err != nil {
+				ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
+				continue
+			}
+			removed++
+		}
 	}
 	if removed > 0 {
 		ob.logger.WatchUTXOS.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
@@ -591,8 +584,8 @@ func (ob *BitcoinChainClient) housekeepPending() {
 }
 
 func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
-	if _, err := ob.pendingUtxos.Get([]byte(utxoKey), nil); err != nil {
-		if err == leveldb.ErrNotFound {
+	if _, err := getPendingUTXO(ob.db, utxoKey); err != nil {
+		if err == gorm.ErrRecordNotFound {
 			return false, nil
 		}
 		return false, err
@@ -626,6 +619,15 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					}
 					if getTxResult.Confirmations >= 0 {
 						ob.submittedTx[outTxID] = *getTxResult
+
+						//Save to db
+						tx, err := clienttypes.ToTransactionResultSQLType(*getTxResult, outTxID)
+						if err != nil {
+							continue
+						}
+						if err := ob.db.Create(&tx).Error; err != nil {
+							ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving submitted tx")
+						}
 					}
 				}
 			}
@@ -634,4 +636,71 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			return
 		}
 	}
+}
+
+func getPendingUTXO(db *gorm.DB, key string) (*btcjson.ListUnspentResult, error) {
+	var utxo clienttypes.PendingUTXOSQLType
+	if err := db.Where("Key = ?", key).First(&utxo).Error; err != nil {
+		return nil, err
+	}
+	return &utxo.UTXO, nil
+}
+
+func (ob *BitcoinChainClient) BuildPendingUTXOList() error {
+	var pendingUtxos []clienttypes.PendingUTXOSQLType
+	if err := ob.db.Find(&pendingUtxos).Error; err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, entry := range pendingUtxos {
+		ob.utxos = append(ob.utxos, entry.UTXO)
+	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
+	var submittedTransactions []clienttypes.TransactionResultSQLType
+	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, txResult := range submittedTransactions {
+		r, err := clienttypes.FromTransactionResultSQLType(txResult)
+		if err != nil {
+			return err
+		}
+		ob.submittedTx[txResult.Key] = r
+	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) loadDB(dbpath string) error {
+	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
+		err := os.MkdirAll(dbpath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	path := fmt.Sprintf("%s/btc_chain_client", dbpath)
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	ob.db = db
+
+	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{}, &clienttypes.TransactionResultSQLType{})
+	if err != nil {
+		return err
+	}
+
+	//Load pending utxos
+	err = ob.BuildPendingUTXOList()
+	if err != nil {
+		return err
+	}
+
+	//Load submitted transactions
+	err = ob.BuildSubmittedTxMap()
+
+	return err
 }

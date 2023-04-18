@@ -16,12 +16,14 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
+	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb
+TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS :=  -tags PRIVNET
+TEST_BUILD_FLAGS := -tags PRIVNET,pebbledb 
 
 clean: clean-binaries clean-dir
 
@@ -50,6 +52,18 @@ test:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
+install-testnet: go.sum
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
+
+build-testnet-ubuntu: go.sum
+		docker build -t zetacore-ubuntu --platform linux/amd64 -f ./Dockerfile-athens3-ubuntu .
+		docker create --name temp-container zetacore-ubuntu
+		docker cp temp-container:/go/bin/zetaclientd .
+		docker cp temp-container:/go/bin/zetacored .
+		docker rm temp-container
+
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
@@ -68,10 +82,6 @@ install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
-install-indexer: go.sum
-		@echo "--> Installing indexer"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
-
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"
 		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
@@ -79,6 +89,7 @@ install-smoketest: go.sum
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
+
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
@@ -88,8 +99,8 @@ init:
 run:
 	./standalone-network/run.sh
 
-init-run: clean install-zetacore init run
-
+chain-init: clean install-zetacore init
+chain-run: clean install-zetacore init run
 
 lint-pre:
 	@test -z $(gofmt -l .)
@@ -105,6 +116,7 @@ proto-go:
 ###############################################################################
 ###                                Docker Images                             ###
 ###############################################################################
+
 zetanode:
 	@echo "Building zetanode"
 	@docker build -t zetanode -f ./Dockerfile .

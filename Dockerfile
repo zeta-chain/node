@@ -1,6 +1,8 @@
 FROM golang:1.19-alpine AS builder
 
 ENV GOPATH /go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
 
 RUN apk --no-cache add git make build-base jq openssh
 RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
@@ -35,6 +37,8 @@ COPY contrib/localnet/tss /root/tss
 RUN chmod 755 /root/reset-testnet.sh
 RUN chmod 755 /root/start-zetacored.sh
 RUN chmod 755 /root/start-zetaclientd.sh
+RUN chmod 755 /root/start-zetaclientd-genesis.sh
+RUN chmod 755 /root/genesis.sh
 RUN chmod 755 /root/seed.sh
 RUN chmod 755 /root/keygen.sh
 

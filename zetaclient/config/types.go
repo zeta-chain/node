@@ -52,8 +52,13 @@ type Config struct {
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
+	AuthzHotkey   string
 
 	ChainsEnabled []common.Chain
 	ChainConfigs  map[string]*EVMConfig
 	BitcoinConfig *BTCConfig
+}
+
+func (c Config) GetAuthzHotkey() string {
+	return c.AuthzHotkey
 }

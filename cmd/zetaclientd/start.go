@@ -30,7 +30,7 @@ var StartCmd = &cobra.Command{
 	RunE:  start,
 }
 
-const maxRetryCountSetNodeKey = 10
+const maxRetryCount = 10
 
 func init() {
 	RootCmd.AddCommand(StartCmd)
@@ -59,13 +59,12 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("ZetaBridge is ready")
 
 	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
-
 	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
-		bridge1.GetKeys().GetAddress(common.ZetaClientGranteeKey))
+		bridge1.GetKeys().GetAddress())
 
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
-	bridgePk, err := bridge1.GetKeys().GetPrivateKey(common.TssSignerKey)
+	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
@@ -91,37 +90,21 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	//err = tss.Validate()
-	//if err != nil {
-	//	log.Error().Err(err).Msg("tss.Validate error")
-	//	return err
-	//}
-
-	//log.Debug().Msgf("NewTSS success : %s", tss.EVMAddress())
-	consKey := ""
-	tssSignerPubkeySet, err := bridge1.GetKeys().GetPubKeySet(common.TssSignerKey)
-	if err != nil {
-		startLogger.Error().Err(err).Msgf("Get Pubkey Set Error")
-	}
 	retryCount := 0
 	for {
-
-		ztx, err := bridge1.SetNodeKey(tssSignerPubkeySet, consKey)
-		if err != nil {
-			startLogger.Debug().Msgf("SetNodeKey failed , Retry : %d/%d", retryCount, maxRetryCountSetNodeKey)
-			time.Sleep(2 * time.Second)
-			retryCount++
-			if retryCount > maxRetryCountSetNodeKey {
-				panic(err)
-			}
-			continue
+		block, err := bridge1.GetLatestZetaBlock()
+		if err == nil && block.Header.Height > 1 {
+			startLogger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			break
 		}
-		startLogger.Info().Msgf("SetNodeKey: %s by node %s zeta tx %s", tssSignerPubkeySet.Secp256k1.String(), consKey, ztx)
-		break
-	}
+		retryCount++
+		startLogger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
+		if retryCount > 10 {
+			panic("ZetaCore is not ready , Waited for 60s")
+		}
+		time.Sleep(6 * time.Second)
 
-	startLogger.Info().Msg("wait for all node to SetNodeKey")
-	time.Sleep(12 * time.Second)
+	}
 
 	//Check if keygen block is set and generate new keys at specified height
 	genNewKeysAtBlock(configData.KeygenBlock, bridge1, tss)
@@ -176,13 +159,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	err = tss.Validate()
-	if err != nil {
-		return err
-	}
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-
-	// wait....
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -259,7 +236,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			return
 		}
 		if bn+3 > height {
-			log.Warn().Msgf("Keygen at blocknum %d, but current blocknum %d", height, bn)
+			log.Fatal().Msgf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn)
 			return
 		}
 		nodeAccounts, err := bridge.GetAllNodeAccounts()
@@ -271,7 +248,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
-		ticker := time.NewTicker(time.Second * 2)
+		ticker := time.NewTicker(time.Second * 5)
 		for range ticker.C {
 			bn, err := bridge.GetZetaBlockHeight()
 			if err != nil {
@@ -281,6 +258,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 			if bn == height {
 				break
 			}
+			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, bn)
 		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)

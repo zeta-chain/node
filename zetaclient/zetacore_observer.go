@@ -76,7 +76,7 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetAddress(common.TssSignerKey)
+	myid := co.bridge.keys.GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
 	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
