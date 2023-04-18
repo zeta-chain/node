@@ -37,6 +37,8 @@ COPY contrib/localnet/tss /root/tss
 RUN chmod 755 /root/reset-testnet.sh
 RUN chmod 755 /root/start-zetacored.sh
 RUN chmod 755 /root/start-zetaclientd.sh
+RUN chmod 755 /root/start-zetaclientd-genesis.sh
+RUN chmod 755 /root/genesis.sh
 RUN chmod 755 /root/seed.sh
 RUN chmod 755 /root/keygen.sh
 
