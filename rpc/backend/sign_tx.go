@@ -64,6 +64,20 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 	}
 
 	signer := ethtypes.MakeSigner(b.ChainConfig(), new(big.Int).SetUint64(uint64(bn)))
+	// Additional checks before signing.
+	if signer.ChainID().Cmp(b.chainID) != 0 {
+		return common.Hash{}, fmt.Errorf("invalid chain id: %s", signer.ChainID().String())
+	}
+	_, err = signer.Sender(msg.AsTransaction())
+	if err != nil {
+		b.logger.Debug("signer error", "error", err.Error())
+		return common.Hash{}, err
+	}
+	_, err = msg.GetSender(b.chainID)
+	if err != nil {
+		b.logger.Debug("signer error", "error", err.Error())
+		return common.Hash{}, err
+	}
 
 	// Sign transaction
 	if err := msg.Sign(signer, b.clientCtx.Keyring); err != nil {
