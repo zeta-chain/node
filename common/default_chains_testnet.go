@@ -26,8 +26,8 @@ func BaobabChain() Chain {
 
 func ZetaChain() Chain {
 	return Chain{
-		ChainName: ChainName_zeta_mainnet,
-		ChainId:   101,
+		ChainName: ChainName_zeta_testnet,
+		ChainId:   7001,
 	}
 }
 
@@ -47,13 +47,11 @@ func MumbaiChain() Chain {
 
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
-		BtcRegtestChain(),
 		BtcTestNetChain(),
 		MumbaiChain(),
 		BaobabChain(),
 		BscTestnetChain(),
 		GoerliChain(),
-		GoerliLocalNetChain(),
 		ZetaChain(),
 	}
 	var c []*Chain

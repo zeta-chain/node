@@ -2,21 +2,20 @@ package main
 
 import (
 	"encoding/json"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"io/ioutil"
 	"path/filepath"
 )
 
 type ObserverInfoReader struct {
-	ObserverAddress           string                      `json:"ObserverAddress"`
-	ZetaClientGranteeAddress  string                      `json:"ZetaClientGranteeAddress"`
-	StakingGranteeAddress     string                      `json:"StakingGranteeAddress,omitempty"`
-	StakingMaxTokens          string                      `json:"StakingMaxTokens,omitempty"`
-	StakingValidatorAllowList []string                    `json:"StakingValidatorAllowList,omitempty"`
-	SpendGranteeAddress       string                      `json:"SpendGranteeAddress,omitempty"`
-	SpendMaxTokens            string                      `json:"SpendMaxTokens,omitempty"`
-	GovGranteeAddress         string                      `json:"GovGranteeAddress,omitempty"`
-	NodeAccount               crosschaintypes.NodeAccount `json:"NodeAccount"`
+	ObserverAddress           string   `json:"ObserverAddress"`
+	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
+	StakingGranteeAddress     string   `json:"StakingGranteeAddress,omitempty"`
+	StakingMaxTokens          string   `json:"StakingMaxTokens,omitempty"`
+	StakingValidatorAllowList []string `json:"StakingValidatorAllowList,omitempty"`
+	SpendGranteeAddress       string   `json:"SpendGranteeAddress,omitempty"`
+	SpendMaxTokens            string   `json:"SpendMaxTokens,omitempty"`
+	GovGranteeAddress         string   `json:"GovGranteeAddress,omitempty"`
+	ZetaClientGranteePubKey   string   `json:"ZetaClientGranteePubKey"`
 }
 
 func (o ObserverInfoReader) String() string {

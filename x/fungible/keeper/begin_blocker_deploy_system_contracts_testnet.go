@@ -4,7 +4,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,10 +81,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_localnet.String(), "ETH", "gETH", 18)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
-	}
+
 	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_bsc_testnet.String(), "BNB", "tBNB", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
@@ -103,15 +99,15 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	// for localnet only: USDT ZRC20
 	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	_, err = k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliLocalNetChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
+	_, err = k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.ChainName_goerli_testnet.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
 	}
 	// for localnet only: ZEVM Swap App
-	_, err = k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
-	}
-	fmt.Println("Successfully deployed contracts")
+	//_, err = k.DeployZEVMSwapApp(ctx, router, SystemContractAddress)
+	//if err != nil {
+	//	return sdkerrors.Wrapf(err, "failed to deploy ZEVMSwapApp")
+	//}
+	//fmt.Println("Successfully deployed contracts")
 	return nil
 }
