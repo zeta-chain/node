@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/cosmos/cosmos-sdk v0.46.8
-	github.com/ethereum/go-ethereum v1.11.5
+	github.com/ethereum/go-ethereum v1.10.26
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
@@ -59,10 +59,10 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
-	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
+	github.com/prometheus/tsdb v0.7.1 // indirect
+	github.com/rjeczalik/notify v0.9.1 // indirect
 )
 
 require (

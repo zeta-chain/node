@@ -211,7 +211,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error packing UniswapV2Router02 constructor arguments: %s", err.Error())
 	}
 
-	data := make([]byte, len(uniswapv2router02.UniswapV2Router02Contract.Bin)+len(ctorArgs))
+	data := make([]byte, len(uniswapv2router02.UniswapV2Router02MetaData.Bin)+len(ctorArgs))
 	copy(data[:len(uniswapv2router02.UniswapV2Router02MetaData.Bin)], uniswapv2router02.UniswapV2Router02MetaData.Bin)
 	copy(data[len(uniswapv2router02.UniswapV2Router02MetaData.Bin):], ctorArgs)
 
@@ -348,7 +348,7 @@ func (k Keeper) QueryZRC4Data(
 		decimalRes types.ZRC20Uint8Response
 	)
 
-	zrc4 := zrc20.ZRC20Contract.ABI
+	zrc4 := zrc20.ZRC20MetaData.ABI
 
 	// Name
 	res, err := k.CallEVM(ctx, zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
