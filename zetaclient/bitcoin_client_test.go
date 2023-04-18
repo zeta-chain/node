@@ -64,7 +64,6 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	for _, u := range utxo {
 		suite.T().Logf("utxo: %s %f", u.Address, u.Amount)
 	}
-
 }
 
 func (suite *BitcoinClientTestSuite) TearDownSuite() {

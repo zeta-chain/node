@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
@@ -16,7 +14,7 @@ import (
 func (k Keeper) SetNodeAccount(ctx sdk.Context, nodeAccount types.NodeAccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeAccountKey))
 	b := k.cdc.MustMarshal(&nodeAccount)
-	store.Set(types.KeyPrefix(nodeAccount.Index), b)
+	store.Set(types.KeyPrefix(nodeAccount.Creator), b)
 }
 
 // GetNodeAccount returns a nodeAccount from its index
@@ -100,25 +98,6 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 
 // MESSAGES
 
-func (k msgServer) SetNodeKeys(goCtx context.Context, msg *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	addr, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s not valid", msg.Creator))
-	}
-	_, found := k.GetNodeAccount(ctx, msg.Creator)
-	if !found {
-		na := types.NodeAccount{
-			Creator:     msg.Creator,
-			Index:       msg.Creator,
-			NodeAddress: addr,
-			PubkeySet:   msg.PubkeySet,
-			NodeStatus:  types.NodeStatus_Unknown,
-		}
-		k.SetNodeAccount(ctx, na)
-	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("msg creator %s already has a node account", msg.Creator))
-	}
-
+func (k msgServer) SetNodeKeys(_ context.Context, _ *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
 	return &types.MsgSetNodeKeysResponse{}, nil
 }

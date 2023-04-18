@@ -18,9 +18,15 @@ enum NodeStatus {
 
 message NodeAccount {
   string creator = 1;
+<<<<<<< HEAD:proto/zetacore/crosschain/node_account.proto
   string index = 2;
   bytes nodeAddress = 3 [ (gogoproto.casttype) =
                               "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
   common.PubKeySet pubkeySet = 4;
   NodeStatus nodeStatus = 5;
+=======
+  string tssSignerAddress = 2;
+  common.PubKeySet pubkeySet = 3;
+  NodeStatus nodeStatus = 4;
+>>>>>>> develop:proto/crosschain/node_account.proto
 }

@@ -5,8 +5,12 @@ package types
 
 import (
 	fmt "fmt"
+<<<<<<< HEAD
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
+=======
+	_ "github.com/gogo/protobuf/gogoproto"
+>>>>>>> develop
 	proto "github.com/gogo/protobuf/proto"
 	common "github.com/zeta-chain/zetacore/common"
 	io "io"
@@ -36,6 +40,9 @@ const (
 	NodeStatus_Disabled    NodeStatus = 5
 )
 
+// Genesis
+// NonGenesis
+
 var NodeStatus_name = map[int32]string{
 	0: "Unknown",
 	1: "Whitelisted",
@@ -63,11 +70,18 @@ func (NodeStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type NodeAccount struct {
+<<<<<<< HEAD
 	Creator     string                                        `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Index       string                                        `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
 	NodeAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=nodeAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"nodeAddress,omitempty"`
 	PubkeySet   *common.PubKeySet                             `protobuf:"bytes,4,opt,name=pubkeySet,proto3" json:"pubkeySet,omitempty"`
 	NodeStatus  NodeStatus                                    `protobuf:"varint,5,opt,name=nodeStatus,proto3,enum=zetacore.crosschain.NodeStatus" json:"nodeStatus,omitempty"`
+=======
+	Creator          string            `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	TssSignerAddress string            `protobuf:"bytes,2,opt,name=tssSignerAddress,proto3" json:"tssSignerAddress,omitempty"`
+	PubkeySet        *common.PubKeySet `protobuf:"bytes,3,opt,name=pubkeySet,proto3" json:"pubkeySet,omitempty"`
+	NodeStatus       NodeStatus        `protobuf:"varint,4,opt,name=nodeStatus,proto3,enum=zetachain.zetacore.crosschain.NodeStatus" json:"nodeStatus,omitempty"`
+>>>>>>> develop
 }
 
 func (m *NodeAccount) Reset()         { *m = NodeAccount{} }
@@ -110,18 +124,11 @@ func (m *NodeAccount) GetCreator() string {
 	return ""
 }
 
-func (m *NodeAccount) GetIndex() string {
+func (m *NodeAccount) GetTssSignerAddress() string {
 	if m != nil {
-		return m.Index
+		return m.TssSignerAddress
 	}
 	return ""
-}
-
-func (m *NodeAccount) GetNodeAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.NodeAddress
-	}
-	return nil
 }
 
 func (m *NodeAccount) GetPubkeySet() *common.PubKeySet {
@@ -147,6 +154,7 @@ func init() {
 	proto.RegisterFile("zetacore/crosschain/node_account.proto", fileDescriptor_10b3c7d9388b75aa)
 }
 
+<<<<<<< HEAD
 var fileDescriptor_10b3c7d9388b75aa = []byte{
 	// 402 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x92, 0x41, 0x6b, 0xd4, 0x40,
@@ -175,6 +183,33 @@ var fileDescriptor_10b3c7d9388b75aa = []byte{
 	0xa3, 0xa1, 0xb5, 0x4d, 0x2f, 0xfa, 0x03, 0xb8, 0xdf, 0xe0, 0xcd, 0xf8, 0x2c, 0xba, 0x19, 0xe6,
 	0x87, 0xdd, 0x1e, 0x5f, 0xfd, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x53, 0x0c, 0xbb, 0x3b, 0x3a, 0x02,
 	0x00, 0x00,
+=======
+var fileDescriptor_ea30ee4c0fac150c = []byte{
+	// 361 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x51, 0xcd, 0x6a, 0xdb, 0x40,
+	0x18, 0xd4, 0xfa, 0xb7, 0xfe, 0x54, 0x5a, 0x75, 0xdb, 0x83, 0x30, 0x58, 0x98, 0x9e, 0x5c, 0x43,
+	0x25, 0xea, 0x3e, 0x81, 0x43, 0x2e, 0xc1, 0x60, 0x82, 0x44, 0x08, 0xe4, 0x12, 0x56, 0xda, 0x0f,
+	0x59, 0xd8, 0xde, 0x35, 0xda, 0x55, 0x12, 0xe5, 0x29, 0xf2, 0x10, 0x39, 0xe4, 0x51, 0x72, 0x8b,
+	0x8f, 0x39, 0x06, 0xfb, 0x45, 0x82, 0xa4, 0x38, 0x36, 0x04, 0x72, 0xda, 0x6f, 0xbf, 0x99, 0xd9,
+	0x9d, 0x61, 0xa0, 0x17, 0xa5, 0x52, 0xa9, 0x68, 0xc6, 0x12, 0xe1, 0x09, 0xc9, 0xf1, 0x92, 0x45,
+	0x91, 0xcc, 0x84, 0x76, 0x57, 0xa9, 0xd4, 0x92, 0xf6, 0x6e, 0x51, 0xb3, 0x12, 0x75, 0xcb, 0x49,
+	0xa6, 0xe8, 0xee, 0x15, 0xdd, 0x5f, 0xb1, 0x8c, 0x65, 0xc9, 0xf4, 0x8a, 0xa9, 0x12, 0x75, 0x7f,
+	0x46, 0x72, 0xb9, 0x94, 0xc2, 0xab, 0x8e, 0x6a, 0xf9, 0xfb, 0x89, 0x80, 0x39, 0x95, 0x1c, 0xc7,
+	0xd5, 0xfb, 0xd4, 0x86, 0x76, 0x94, 0x22, 0xd3, 0x32, 0xb5, 0x49, 0x9f, 0x0c, 0x3a, 0xfe, 0xee,
+	0x4a, 0x87, 0x60, 0x69, 0xa5, 0x82, 0x24, 0x16, 0x98, 0x8e, 0x39, 0x4f, 0x51, 0x29, 0xbb, 0x56,
+	0x52, 0x3e, 0xec, 0xa9, 0x07, 0x9d, 0x55, 0x16, 0xce, 0x31, 0x0f, 0x50, 0xdb, 0xf5, 0x3e, 0x19,
+	0x98, 0xa3, 0x1f, 0xee, 0xdb, 0xbf, 0xa7, 0x59, 0x38, 0x29, 0x01, 0x7f, 0xcf, 0xa1, 0x27, 0x00,
+	0x45, 0xcc, 0x40, 0x33, 0x9d, 0x29, 0xbb, 0xd1, 0x27, 0x83, 0x6f, 0xa3, 0x3f, 0xee, 0xa7, 0x29,
+	0xdd, 0xe9, 0xbb, 0xc0, 0x3f, 0x10, 0x0f, 0x43, 0x80, 0x3d, 0x42, 0x4d, 0x68, 0x9f, 0x89, 0xb9,
+	0x90, 0xd7, 0xc2, 0x32, 0xe8, 0x77, 0x30, 0xcf, 0x67, 0x89, 0xc6, 0x45, 0xa2, 0x34, 0x72, 0x8b,
+	0x14, 0x68, 0xa0, 0x99, 0xe0, 0x61, 0x6e, 0xd5, 0x68, 0x07, 0x9a, 0x3e, 0x32, 0x9e, 0x5b, 0x75,
+	0x0a, 0xd0, 0x1a, 0x47, 0x3a, 0xb9, 0x42, 0xab, 0x41, 0xbf, 0xc2, 0x97, 0xe3, 0x44, 0xb1, 0x70,
+	0x81, 0xdc, 0x6a, 0x76, 0x1b, 0x0f, 0xf7, 0x0e, 0x39, 0x9a, 0x3c, 0x6e, 0x1c, 0xb2, 0xde, 0x38,
+	0xe4, 0x65, 0xe3, 0x90, 0xbb, 0xad, 0x63, 0xac, 0xb7, 0x8e, 0xf1, 0xbc, 0x75, 0x8c, 0x8b, 0x7f,
+	0x71, 0xa2, 0x67, 0x59, 0x58, 0x84, 0xf5, 0x0a, 0xd3, 0x7f, 0xab, 0x0e, 0x77, 0xfe, 0xbd, 0x1b,
+	0xef, 0xa0, 0x59, 0x9d, 0xaf, 0x50, 0x85, 0xad, 0xb2, 0x89, 0xff, 0xaf, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x98, 0x54, 0xb2, 0xff, 0xf4, 0x01, 0x00, 0x00,
+>>>>>>> develop
 }
 
 func (m *NodeAccount) Marshal() (dAtA []byte, err error) {
@@ -200,7 +235,7 @@ func (m *NodeAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.NodeStatus != 0 {
 		i = encodeVarintNodeAccount(dAtA, i, uint64(m.NodeStatus))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x20
 	}
 	if m.PubkeySet != nil {
 		{
@@ -212,19 +247,12 @@ func (m *NodeAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintNodeAccount(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.NodeAddress) > 0 {
-		i -= len(m.NodeAddress)
-		copy(dAtA[i:], m.NodeAddress)
-		i = encodeVarintNodeAccount(dAtA, i, uint64(len(m.NodeAddress)))
-		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Index) > 0 {
-		i -= len(m.Index)
-		copy(dAtA[i:], m.Index)
-		i = encodeVarintNodeAccount(dAtA, i, uint64(len(m.Index)))
+	if len(m.TssSignerAddress) > 0 {
+		i -= len(m.TssSignerAddress)
+		copy(dAtA[i:], m.TssSignerAddress)
+		i = encodeVarintNodeAccount(dAtA, i, uint64(len(m.TssSignerAddress)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -259,11 +287,7 @@ func (m *NodeAccount) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNodeAccount(uint64(l))
 	}
-	l = len(m.Index)
-	if l > 0 {
-		n += 1 + l + sovNodeAccount(uint64(l))
-	}
-	l = len(m.NodeAddress)
+	l = len(m.TssSignerAddress)
 	if l > 0 {
 		n += 1 + l + sovNodeAccount(uint64(l))
 	}
@@ -346,7 +370,7 @@ func (m *NodeAccount) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TssSignerAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -374,43 +398,9 @@ func (m *NodeAccount) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Index = string(dAtA[iNdEx:postIndex])
+			m.TssSignerAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NodeAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNodeAccount
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthNodeAccount
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthNodeAccount
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NodeAddress = append(m.NodeAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.NodeAddress == nil {
-				m.NodeAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PubkeySet", wireType)
 			}
@@ -446,7 +436,7 @@ func (m *NodeAccount) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NodeStatus", wireType)
 			}

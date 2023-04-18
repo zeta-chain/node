@@ -46,14 +46,20 @@ type Config struct {
 	ValidatorName string
 	Peer          string
 	LogConsole    bool
+	SetNodeKey    bool
 	LogLevel      zerolog.Level
 	PreParamsPath string
 	KeygenBlock   int64
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
+	AuthzHotkey   string
 
 	ChainsEnabled []common.Chain
 	ChainConfigs  map[string]*ChainETHish
 	BitcoinConfig *ChainBitcoinish
+}
+
+func (c Config) GetAuthzHotkey() string {
+	return c.AuthzHotkey
 }
