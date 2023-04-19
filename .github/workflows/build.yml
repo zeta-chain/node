@@ -54,7 +54,7 @@ jobs:
         GOOS: linux
         GOARCH: amd64
       run: |
-        make install
+        make install-testnet
         cp "$HOME"/go/bin/* ./
 
     - name: Test
@@ -125,7 +125,7 @@ jobs:
       run: |
         apk add --no-cache --update
         go mod tidy
-        make install
+        make install-testnet
         cp "$HOME"/go/bin/* ./
 
     - name: Test
