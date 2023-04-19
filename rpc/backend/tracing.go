@@ -37,7 +37,6 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, err
 	}
 
-	fmt.Printf("LET\n")
 	// check if block number is 0
 	if transaction.Height == 0 {
 		return nil, errors.New("genesis is not traceable")
@@ -98,7 +97,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 			From: additional.Sender.Hex(),
 		}
 	}
-	fmt.Printf("LOL\n")
+
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
 		Msg:             ethMessage,
 		Predecessors:    predecessors,
@@ -120,15 +119,11 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		contextHeight = 1
 	}
 
-	fmt.Printf("DATTT %s\n", ethMessage.From)
-	fmt.Printf("DATT %s\n", ethMessage.Hash)
-	fmt.Printf("DAT %d\n", contextHeight)
 	traceResult, err := b.queryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("POT\n")
 	// Response format is unknown due to custom tracer config param
 	// More information can be found here https://geth.ethereum.org/docs/dapp/tracing-filtered
 	var decodedResult interface{}
