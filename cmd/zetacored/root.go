@@ -118,6 +118,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		AddObserverAccountCmd(),
 		AddObserverAccountsCmd(),
 		AddTssToGenesisCmd(),
+		CollectObserverInfoCmd(),
 		AddrConversionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),

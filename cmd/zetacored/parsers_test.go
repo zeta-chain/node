@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/common"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"io/ioutil"
 	"os"
 
@@ -47,13 +45,7 @@ func createObserverList(fp string) {
 		StakingValidatorAllowList: []string{validatorAddress.String()},
 		SpendMaxTokens:            "100000000",
 		GovGranteeAddress:         commonGrantAddress.String(),
-		NodeAccount: crosschaintypes.NodeAccount{
-			Creator:          observerAddress.String(),
-			TssSignerAddress: commonGrantAddress.String(),
-			PubkeySet: &common.PubKeySet{
-				Secp256k1: "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
-			},
-		},
+		ZetaClientGranteePubKey:   "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0",
 	}
 	listReader = append(listReader, info)
 

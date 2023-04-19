@@ -54,7 +54,7 @@ jobs:
         GOOS: linux
         GOARCH: amd64
       run: |
-        make install
+        make install-testnet
         cp "$HOME"/go/bin/* ./
 
     - name: Test
@@ -123,8 +123,9 @@ jobs:
         GOARCH: amd64
       shell: alpine.sh --root {0}
       run: |
-        apk add --no-cache --update 
-        make install
+        apk add --no-cache --update
+        go mod tidy
+        make install-testnet
         cp "$HOME"/go/bin/* ./
 
     - name: Test
@@ -281,8 +282,9 @@ jobs:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
     needs:
-      - upload
-
+      - build-and-test
+      - build-alpine-and-test
+      
     steps:
     - uses: actions/checkout@v3
       with:
