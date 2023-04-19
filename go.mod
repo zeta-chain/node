@@ -41,7 +41,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol v0.0.0-00010101000000-000000000000
+	github.com/zeta-chain/protocol-contracts v0.0.0-20230419044603-516ce359c381
 	gopkg.in/yaml.v2 v2.4.0
 )
 

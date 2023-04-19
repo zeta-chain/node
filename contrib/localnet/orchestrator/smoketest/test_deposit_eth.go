@@ -13,8 +13,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
-	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )

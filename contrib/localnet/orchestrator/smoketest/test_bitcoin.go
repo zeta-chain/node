@@ -19,8 +19,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
-	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
-	zrc20 "github.com/zeta-chain/protocol/pkg/contracts/zevm/zrc20.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )

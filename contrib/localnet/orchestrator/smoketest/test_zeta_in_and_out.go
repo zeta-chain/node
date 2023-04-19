@@ -10,8 +10,8 @@ import (
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	zetaconnectoreth "github.com/zeta-chain/protocol/pkg/contracts/evm/zetaconnector.eth.sol"
-	connectorzevm "github.com/zeta-chain/protocol/pkg/contracts/zevm/connectorzevm.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 )
 
 func (sm *SmokeTest) TestSendZetaIn() {

@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	zetaeth "github.com/zeta-chain/protocol/pkg/contracts/evm/zeta.eth.sol"
-	systemcontract "github.com/zeta-chain/protocol/pkg/contracts/zevm/systemcontract.sol"
+	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 )
 
 var (
