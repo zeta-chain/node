@@ -282,8 +282,9 @@ jobs:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
     needs:
-      - upload
-
+      - build-and-test
+      - build-alpine-and-test
+      
     steps:
     - uses: actions/checkout@v3
       with:
