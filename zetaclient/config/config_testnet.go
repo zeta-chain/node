@@ -42,46 +42,24 @@ var ChainsEnabled = []common.Chain{}
 
 var ChainConfigs = map[string]*EVMConfig{
 	common.GoerliChain().ChainName.String(): {
-		Chain:                    common.GoerliChain(),
-		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
-		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
-		BlockTime:                EthBlockTime,
-		Endpoint:                 "",
-		ConfCount:                14,
+		Chain:    common.GoerliChain(),
+		Endpoint: "",
 	},
 	common.BscTestnetChain().ChainName.String(): {
-		Chain:                       common.BscTestnetChain(),
-		ConnectorContractAddress:    "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
-		ZETATokenContractAddress:    "0x33580e10212342d0aA66C9de3F6F6a4AfefA144C",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   BscBlockTime,
-		Endpoint:                    "",
-		ConfCount:                   15,
+		Chain:    common.BscTestnetChain(),
+		Endpoint: "",
 	},
 	common.MumbaiChain().ChainName.String(): {
-		Chain:                       common.MumbaiChain(),
-		ConnectorContractAddress:    "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
-		ZETATokenContractAddress:    "0xBaEF590c5Aef9881b0a5C86e18D35432218C64D5",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   PolygonBlockTime,
-		Endpoint:                    "",
-		ConfCount:                   128,
+		Chain:    common.MumbaiChain(),
+		Endpoint: "",
 	},
 	common.BaobabChain().ChainName.String(): {
-		Chain:                       common.BaobabChain(),
-		ConnectorContractAddress:    "0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c",
-		ZETATokenContractAddress:    "0x000080383847bD75F91c168269Aa74004877592f",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   EthBlockTime,
-		Endpoint:                    "",
-		ConfCount:                   24,
+		Chain:    common.BaobabChain(),
+		Endpoint: "",
 	},
 
 	common.ZetaChain().ChainName.String(): {
-		Chain:                    common.ZetaChain(),
-		BlockTime:                6,
-		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
-		ConfCount:                3,
+		Chain: common.ZetaChain(),
 	},
 }
 
@@ -98,8 +76,8 @@ var BitcoinConfig = &BTCConfig{
 
 func New() Config {
 	return Config{
-		ChainsEnabled: ChainsEnabled,
-		ChainConfigs:  ChainConfigs,
-		BitcoinConfig: BitcoinConfig,
+		ChainsEnabled:   ChainsEnabled,
+		EVMChainConfigs: ChainConfigs,
+		BitcoinConfig:   BitcoinConfig,
 	}
 }

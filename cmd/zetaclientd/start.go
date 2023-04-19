@@ -44,6 +44,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	log.Logger = InitLogger(configData.LogLevel)
 	//Wait until zetacore has started
 	waitForZetaCore(configData)

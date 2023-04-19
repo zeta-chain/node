@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	common2 "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
@@ -16,18 +15,28 @@ type ClientConfiguration struct {
 	SignerPasswd    string
 }
 
-type EVMConfig struct {
-	ConnectorABI                abi.ABI
+type EVMCommonConfig struct {
+	ChainID                     int64
+	BlockTimeExternalChain      uint64
+	BlockTimeZetaChain          uint64
+	GasPriceTicker              uint64
+	ConfCount                   uint64
 	ConnectorContractAddress    string
 	ZETATokenContractAddress    string
 	ERC20CustodyContractAddress string
-	Client                      *ethclient.Client
-	Chain                       common.Chain
-	Topics                      [][]common2.Hash
-	BlockTime                   uint64
-	ConfCount                   uint64
-	Endpoint                    string
-	OutTxObservePeriod          uint64
+}
+type EVMConfig struct {
+	ConnectorABI abi.ABI
+	Client       *ethclient.Client
+	Chain        common.Chain
+	Endpoint     string
+	CommonConfig *EVMCommonConfig
+}
+
+type BTCConfigConfig struct {
+	WatchInTxPeriod     uint64
+	WatchGasPricePeriod uint64
+	WatchUTXOSPeriod    uint64
 }
 
 type BTCConfig struct {
@@ -40,6 +49,7 @@ type BTCConfig struct {
 	WatchInTxPeriod     uint64
 	WatchGasPricePeriod uint64
 	WatchUTXOSPeriod    uint64
+	CommonConfig        *BTCConfigConfig
 }
 
 type Config struct {
@@ -54,9 +64,9 @@ type Config struct {
 	AuthzGranter  string
 	AuthzHotkey   string
 
-	ChainsEnabled []common.Chain
-	ChainConfigs  map[string]*EVMConfig
-	BitcoinConfig *BTCConfig
+	ChainsEnabled   []common.Chain
+	EVMChainConfigs map[string]*EVMConfig // TODO : chain to chain id
+	BitcoinConfig   *BTCConfig
 }
 
 func (c Config) GetAuthzHotkey() string {

@@ -180,3 +180,12 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	}
 	return resp.OutTxTracker, nil
 }
+
+func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetClientParamsForChainResponse, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetClientParamsForChain(context.Background(), &zetaObserverTypes.QueryGetClientParamsForChainRequest{ChainID: chainID})
+	if err != nil {
+		return zetaObserverTypes.QueryGetClientParamsForChainResponse{}, err
+	}
+	return *resp, nil
+}

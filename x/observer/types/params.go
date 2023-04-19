@@ -20,7 +20,10 @@ func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Pa
 }
 
 func DefaultClientParams() ClientParams {
-	return ClientParams{ConfirmationCount: 10, GasPriceTicker: 5}
+	return ClientParams{
+		ConfirmationCount: 10,
+		GasPriceTicker:    5,
+	}
 }
 
 func DefaultParams() Params {

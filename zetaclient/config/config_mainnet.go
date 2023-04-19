@@ -55,8 +55,8 @@ var BitcoinConfig = &BTCConfig{
 
 func New() Config {
 	return Config{
-		ChainsEnabled: ChainsEnabled,
-		ChainConfigs:  ChainConfigs,
-		BitcoinConfig: BitcoinConfig,
+		ChainsEnabled:   ChainsEnabled,
+		EVMChainConfigs: ChainConfigs,
+		BitcoinConfig:   BitcoinConfig,
 	}
 }

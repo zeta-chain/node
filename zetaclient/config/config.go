@@ -46,7 +46,7 @@ func Load(path string) (*Config, error) {
 
 	// Initialize Global config variables
 	ChainsEnabled = result.ChainsEnabled
-	ChainConfigs = result.ChainConfigs
+	ChainConfigs = result.EVMChainConfigs
 	BitcoinConfig = result.BitcoinConfig
 	cmd.CHAINID = result.ChainID
 

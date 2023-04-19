@@ -36,18 +36,11 @@ var ChainsEnabled = []common.Chain{}
 var ChainConfigs = map[string]*EVMConfig{
 
 	common.GoerliLocalNetChain().ChainName.String(): {
-		Chain:                       common.GoerliLocalNetChain(),
-		Endpoint:                    "http://eth:8545",
-		BlockTime:                   2,
-		ZETATokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
-		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
-		ERC20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
-		OutTxObservePeriod:          5,
+		Chain:    common.GoerliLocalNetChain(),
+		Endpoint: "http://eth:8545",
 	},
 	common.ZetaChain().ChainName.String(): {
-		Chain:                    common.ZetaChain(),
-		BlockTime:                6,
-		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
+		Chain: common.ZetaChain(),
 	},
 }
 
@@ -64,8 +57,8 @@ var BitcoinConfig = &BTCConfig{
 
 func New() Config {
 	return Config{
-		ChainsEnabled: ChainsEnabled,
-		ChainConfigs:  ChainConfigs,
-		BitcoinConfig: BitcoinConfig,
+		ChainsEnabled:   ChainsEnabled,
+		EVMChainConfigs: ChainConfigs,
+		BitcoinConfig:   BitcoinConfig,
 	}
 }

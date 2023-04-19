@@ -91,5 +91,5 @@ func initChainID(configData *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	configData.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId = ZEVMChainID.Int64()
+	configData.EVMChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId = ZEVMChainID.Int64()
 }
