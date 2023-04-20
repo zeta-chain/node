@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type ClientConfiguration struct {
@@ -15,7 +17,7 @@ type ClientConfiguration struct {
 	SignerPasswd    string
 }
 
-type EVMCommonConfig struct {
+type EVMChainsCoreParams struct {
 	ChainID                     int64
 	BlockTimeExternalChain      uint64
 	BlockTimeZetaChain          uint64
@@ -25,12 +27,36 @@ type EVMCommonConfig struct {
 	ZETATokenContractAddress    string
 	ERC20CustodyContractAddress string
 }
+
+func NewCoreParams() *EVMChainsCoreParams {
+	return &EVMChainsCoreParams{
+		ChainID:                     0,
+		BlockTimeExternalChain:      0,
+		BlockTimeZetaChain:          0,
+		GasPriceTicker:              0,
+		ConfCount:                   0,
+		ConnectorContractAddress:    "",
+		ZETATokenContractAddress:    "",
+		ERC20CustodyContractAddress: "",
+	}
+}
+
+func (c *EVMChainsCoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.ClientParams) {
+	c.BlockTimeZetaChain = newConfig.BlockTimeZeta
+	c.BlockTimeExternalChain = newConfig.BlockTimeExternal
+	c.GasPriceTicker = newConfig.GasPriceTicker
+	c.ConfCount = newConfig.ConfirmationCount
+	c.ConnectorContractAddress = newConfig.ConnectorContractAddress
+	c.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
+	c.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
+}
+
 type EVMConfig struct {
 	ConnectorABI abi.ABI
 	Client       *ethclient.Client
 	Chain        common.Chain
 	Endpoint     string
-	CommonConfig *EVMCommonConfig
+	CoreParams   *EVMChainsCoreParams
 }
 
 type BTCConfigConfig struct {
@@ -71,4 +97,9 @@ type Config struct {
 
 func (c Config) GetAuthzHotkey() string {
 	return c.AuthzHotkey
+}
+
+func (c Config) String() string {
+	s, _ := json.MarshalIndent(c, "", "\t")
+	return string(s)
 }

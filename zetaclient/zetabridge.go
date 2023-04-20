@@ -117,6 +117,24 @@ func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 	b.seqNumber[keyType] = seq
 }
 
+func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
+	retryCount := 0
+	maxRetryCount := 10
+	for {
+		block, err := b.GetLatestZetaBlock()
+		if err == nil && block.Header.Height > 1 {
+			b.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			break
+		}
+		retryCount++
+		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
+		if retryCount > maxRetryCount {
+			panic("ZetaCore is not ready , Waited for 60s")
+		}
+		time.Sleep(6 * time.Second)
+	}
+}
+
 //func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {
 //	ctx := b.GetContext()
 //	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetOperatorAddress())
@@ -128,10 +146,10 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 
 func (b *ZetaCoreBridge) UpdateCommonConfig(config *config.EVMConfig) error {
 
-	chainConfig, err := b.GetClientConfig(config.CommonConfig.ChainID)
+	chainConfig, err := b.GetClientConfig(config.Chain.ChainId)
 	if err != nil {
 		return err
 	}
-	config.CommonConfig.ConfCount = uint64(chainConfig.ConfirmationCount)
+	config.CoreParams.UpdateFromCoreResponse(*chainConfig)
 	return nil
 }

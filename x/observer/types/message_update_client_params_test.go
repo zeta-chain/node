@@ -18,12 +18,20 @@ func TestMsgUpdateClientParams_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: MsgUpdateClientParams{
 				Creator: "invalid_address",
+				ClientParams: &ClientParams{
+					ConfirmationCount: 1,
+					GasPriceTicker:    1,
+				},
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgUpdateClientParams{
 				Creator: sample.AccAddress(),
+				ClientParams: &ClientParams{
+					ConfirmationCount: 1,
+					GasPriceTicker:    1,
+				},
 			},
 		},
 	}

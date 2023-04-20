@@ -31,24 +31,27 @@ func Save(config *Config, path string) error {
 func Load(path string) (*Config, error) {
 	file := filepath.Join(path, filename)
 	file = filepath.Clean(file)
-	result := &Config{}
+	cfg := &Config{}
 	fp, err := os.Open(file)
 	if err != nil {
-		return result, err
+		return cfg, err
 	}
-	if err := toml.NewDecoder(fp).Decode(result); err != nil {
-		return result, err
+	if err := toml.NewDecoder(fp).Decode(cfg); err != nil {
+		return cfg, err
 	}
 	if err := fp.Close(); err != nil {
 		// failed to close the file
-		return result, err
+		return cfg, err
 	}
 
 	// Initialize Global config variables
-	ChainsEnabled = result.ChainsEnabled
-	ChainConfigs = result.EVMChainConfigs
-	BitcoinConfig = result.BitcoinConfig
-	cmd.CHAINID = result.ChainID
+	BitcoinConfig = cfg.BitcoinConfig
+	cmd.CHAINID = cfg.ChainID
+	for _, chain := range cfg.ChainsEnabled {
+		if chain.IsEVMChain() {
+			cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams = NewCoreParams()
+		}
+	}
 
-	return result, nil
+	return cfg, nil
 }

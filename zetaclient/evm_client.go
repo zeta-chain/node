@@ -81,17 +81,17 @@ type EVMChainClient struct {
 	stop                      chan struct{}
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    EVMLog
-	chainConfig               *config.EVMConfig
+	cfg                       *config.Config
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, chainConfig *config.EVMConfig) (*EVMChainClient, error) {
+func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain) (*EVMChainClient, error) {
 	ob := EVMChainClient{
-		ChainMetrics: NewChainMetrics(chainConfig.Chain.ChainName.String(), metrics),
+		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 	}
-	chainLogger := logger.With().Str("chain", chainConfig.Chain.ChainName.String()).Logger()
+	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = EVMLog{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
@@ -99,9 +99,9 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 		ConfigUpdater:        chainLogger.With().Str("module", "ConfigUpdater").Logger(),
 	}
-	ob.chainConfig = chainConfig
+	ob.cfg = cfg
 	ob.stop = make(chan struct{})
-	ob.chain = chainConfig.Chain
+	ob.chain = chain
 	ob.mu = &sync.Mutex{}
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
@@ -181,19 +181,23 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 }
 
 func (ob *EVMChainClient) Chain() common.Chain {
-	return ob.chainConfig.Chain
+	return ob.GetChainConfig().Chain
 }
 
 func (ob *EVMChainClient) EndPoint() string {
-	return ob.chainConfig.Endpoint
+	return ob.GetChainConfig().Endpoint
+}
+
+func (ob *EVMChainClient) GetChainConfig() *config.EVMConfig {
+	return ob.cfg.EVMChainConfigs[ob.chain.ChainName.String()]
 }
 
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
-	return ethcommon.HexToAddress(ob.chainConfig.CommonConfig.ConnectorContractAddress)
+	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ConnectorContractAddress)
 }
 
 func (ob *EVMChainClient) ERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.HexToAddress(ob.chainConfig.CommonConfig.ERC20CustodyContractAddress)
+	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ERC20CustodyContractAddress)
 }
 
 func (ob *EVMChainClient) Start() {
@@ -263,7 +267,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
-				confHeight := vLog.BlockNumber + ob.chainConfig.CommonConfig.ConfCount
+				confHeight := vLog.BlockNumber + ob.GetChainConfig().CoreParams.ConfCount
 				if confHeight < 0 || confHeight >= math2.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
@@ -297,7 +301,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.chainConfig.CommonConfig.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 				revertedLog, err := ob.Connector.ConnectorFilterer.ParseZetaReverted(*vLog)
@@ -328,7 +332,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.chainConfig.CommonConfig.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
@@ -351,7 +355,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			}
 			for _, vLog := range logs {
 				event, err := ERC20Custody.ParseWithdrawn(*vLog)
-				confHeight := vLog.BlockNumber + ob.chainConfig.CommonConfig.ConfCount
+				confHeight := vLog.BlockNumber + ob.GetChainConfig().CoreParams.ConfCount
 				if confHeight < 0 || confHeight >= math2.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
@@ -377,7 +381,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
 						return true, true, nil
 					}
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.chainConfig.CommonConfig.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
@@ -476,7 +480,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	if transaction.Nonce() != uint64(nonce) {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
-	confHeight := receipt.BlockNumber.Uint64() + ob.chainConfig.CommonConfig.ConfCount
+	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainConfig().CoreParams.ConfCount
 	if confHeight < 0 || confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
@@ -515,7 +519,7 @@ func (ob *EVMChainClient) UpdateConfig() {
 		// Ticker uses externchain blocktime to update config at each block of the external chain
 		// TODO: test to figure out wether we should be updating at every block for zetacore instead
 		case <-ob.ticker.C:
-			err := ob.zetaClient.UpdateCommonConfig(ob.chainConfig)
+			err := ob.zetaClient.UpdateCommonConfig(ob.GetChainConfig())
 			if err != nil {
 				ob.logger.ConfigUpdater.Err(err).Msg("UpdateConfig error")
 				return
@@ -565,7 +569,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	counter.Inc()
 
 	// "confirmed" current block number
-	confirmedBlockNum := header.Number.Uint64() - ob.chainConfig.CommonConfig.ConfCount
+	confirmedBlockNum := header.Number.Uint64() - ob.GetChainConfig().CoreParams.ConfCount
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
@@ -614,7 +618,8 @@ func (ob *EVMChainClient) observeInTX() error {
 		destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
-		if strings.EqualFold(destAddr, config.ChainConfigs[destChain.ChainName.String()].CommonConfig.ZETATokenContractAddress) {
+		// TODO : refactor this to not use GLOBAL Config
+		if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainName.String()].CoreParams.ZETATokenContractAddress) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 		zetaHash, err := ob.zetaClient.PostSend(
@@ -672,7 +677,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.chain.ChainId,
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
-			config.ChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
+			ob.cfg.EVMChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
 			math.NewUintFromBigInt(event.Amount),
 			hex.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
@@ -719,7 +724,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 					if err != nil {
 						ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-						chainConf, found := config.ChainConfigs[ob.chain.String()]
+						chainConf, found := ob.cfg.EVMChainConfigs[ob.chain.String()]
 						if !found || chainConf == nil {
 							ob.logger.ExternalChainWatcher.Error().Msgf("chain %s not found in config", ob.chain.String())
 							continue
@@ -1036,7 +1041,7 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 
 func (ob *EVMChainClient) SetChainDetails() {
 	MinObInterval := 24
-	ob.ticker = time.NewTicker(time.Duration(MaxInt(int(ob.chainConfig.CommonConfig.BlockTimeExternalChain), MinObInterval)) * time.Second)
+	ob.ticker = time.NewTicker(time.Duration(MaxInt(int(ob.GetChainConfig().CoreParams.BlockTimeExternalChain), MinObInterval)) * time.Second)
 }
 
 func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {

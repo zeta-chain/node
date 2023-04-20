@@ -19,13 +19,6 @@ func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Pa
 	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
 
-func DefaultClientParams() ClientParams {
-	return ClientParams{
-		ConfirmationCount: 10,
-		GasPriceTicker:    5,
-	}
-}
-
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
 	observerParams := make([]*ObserverParams, len(chains))

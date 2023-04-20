@@ -38,9 +38,33 @@ var (
 	BitconNetParams = &chaincfg.TestNet3Params
 )
 
-var ChainsEnabled = []common.Chain{}
+func GetConnectorABI() string {
+	return ConnectorAbiString
+}
+func GetERC20CustodyABI() string {
+	return ERC20CustodyAbiString
+}
 
-var ChainConfigs = map[string]*EVMConfig{
+var BitcoinConfig = &BTCConfig{
+	RPCUsername: "smoketest",
+	RPCPassword: "123",
+	RPCEndpoint: "bitcoin:18443",
+	RPCParams:   "regtest",
+
+	WatchInTxPeriod:     5,
+	WatchGasPricePeriod: 5,
+	WatchUTXOSPeriod:    5,
+}
+
+func New() Config {
+	return Config{
+		BitcoinConfig:   BitcoinConfig,
+		EVMChainConfigs: evmChainsConfig,
+		ChainsEnabled:   []common.Chain{},
+	}
+}
+
+var evmChainsConfig = map[string]*EVMConfig{
 	common.GoerliChain().ChainName.String(): {
 		Chain:    common.GoerliChain(),
 		Endpoint: "",
@@ -59,25 +83,7 @@ var ChainConfigs = map[string]*EVMConfig{
 	},
 
 	common.ZetaChain().ChainName.String(): {
-		Chain: common.ZetaChain(),
+		Chain:      common.ZetaChain(),
+		CoreParams: NewCoreParams(),
 	},
-}
-
-var BitcoinConfig = &BTCConfig{
-	RPCUsername: "smoketest",
-	RPCPassword: "123",
-	RPCEndpoint: "bitcoin:18443",
-	RPCParams:   "regtest",
-
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
-}
-
-func New() Config {
-	return Config{
-		ChainsEnabled:   ChainsEnabled,
-		EVMChainConfigs: ChainConfigs,
-		BitcoinConfig:   BitcoinConfig,
-	}
 }
