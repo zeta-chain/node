@@ -41,7 +41,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol-contracts v0.0.0-20230419044603-516ce359c381
+	github.com/zeta-chain/protocol-contracts v0.0.0-20230420172525-44e280259ee8
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -306,4 +306,4 @@ replace github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
 
 replace gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7
 
-replace github.com/zeta-chain/protocol => ../../fadeev/protocol
+//replace github.com/zeta-chain/protocol => ../../fadeev/protocol

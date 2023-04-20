@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	wzeta "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 )
 
 func (sm *SmokeTest) TestSendZetaIn() {
@@ -90,7 +91,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	}
 	//SystemContractAddr := ethcommon.HexToAddress("0x91d18e54DAf4F677cB28167158d6dd21F6aB3921")
 	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
-	wzeta, err := connectorzevm.NewWZETA(wzetaAddr, zevmClient)
+	wzeta, err := wzeta.NewWETH9(wzetaAddr, zevmClient)
 	if err != nil {
 		panic(err)
 	}
