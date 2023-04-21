@@ -27,18 +27,6 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/crosschain/params";
 	}
 
-	rpc ZEVMGetTransactionReceipt(QueryZEVMGetTransactionReceiptRequest) returns (QueryZEVMGetTransactionReceiptResponse) {
-		option (google.api.http).get = "/zeta-chain/zevm/zevm_getTransactionReceipt/{hash}";
-	}
-
-	rpc ZEVMGetTransaction(QueryZEVMGetTransactionRequest) returns (QueryZEVMGetTransactionResponse) {
-		option (google.api.http).get = "/zeta-chain/zevm/zevm_getTransactionByHash/{hash}";
-	}
-
-	rpc ZEVMGetBlock(QueryZEVMGetBlockByNumberRequest) returns (QueryZEVMGetBlockByNumberResponse) {
-		option (google.api.http).get = "/zeta-chain/zevm/zevm_getBlockByNumber/{height}";
-	}
-
 // Queries a OutTxTracker by index.
 	rpc OutTxTracker(QueryGetOutTxTrackerRequest) returns (QueryGetOutTxTrackerResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}";
