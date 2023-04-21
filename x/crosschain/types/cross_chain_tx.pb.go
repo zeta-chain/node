@@ -63,7 +63,8 @@ func (CctxStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type InboundTxParams struct {
-	Sender                          string                                  `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// the Connector.send()
 	SenderChainId                   int64                                   `protobuf:"varint,2,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
 	TxOrigin                        string                                  `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
 	CoinType                        common.CoinType                         `protobuf:"varint,4,opt,name=coin_type,json=coinType,proto3,enum=zetacore.common.CoinType" json:"coin_type,omitempty"`

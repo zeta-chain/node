@@ -29,7 +29,9 @@ type VoteType int32
 const (
 	VoteType_SuccessObservation VoteType = 0
 	VoteType_FailureObservation VoteType = 1
-	VoteType_NotYetVoted        VoteType = 2
+	// this voter is observing failed / reverted . It does
+	// not mean it was unable to observe.
+	VoteType_NotYetVoted VoteType = 2
 )
 
 var VoteType_name = map[int32]string{
