@@ -5,7 +5,7 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	common "github.com/zeta-chain/zetacore/common"
 	io "io"
@@ -34,9 +34,6 @@ const (
 	NodeStatus_Active      NodeStatus = 4
 	NodeStatus_Disabled    NodeStatus = 5
 )
-
-// Genesis
-// NonGenesis
 
 var NodeStatus_name = map[int32]string{
 	0: "Unknown",
