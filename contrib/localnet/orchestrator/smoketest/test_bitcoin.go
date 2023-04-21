@@ -19,7 +19,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
-	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient"
@@ -36,15 +35,8 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
 	}()
 
-	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.SystemContract = SystemContract
-	sm.SystemContractAddr = HexToAddress(SystemContractAddr)
-
 	btc := sm.btcRPCClient
-	_, err = btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
+	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		panic(err)
 	}
@@ -170,11 +162,7 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 
 func (sm *SmokeTest) WithdrawBitcoin() {
 	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
-	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.SystemContract = SystemContract
+
 	// check if the deposit is successful
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {

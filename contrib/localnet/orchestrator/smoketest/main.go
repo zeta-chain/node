@@ -48,7 +48,7 @@ var (
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
-	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress = ethcommon.HexToAddress
 )
@@ -93,15 +93,29 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
+	// query system contract address
+	systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("System contract address: %s", systemContractAddr)
+
+	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractAddr.SystemContract.SystemContract), zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
 	return &SmokeTest{
-		zevmClient:     zevmClient,
-		goerliClient:   goerliClient,
-		cctxClient:     cctxClient,
-		fungibleClient: fungibleClient,
-		wg:             sync.WaitGroup{},
-		goerliAuth:     goerliAuth,
-		zevmAuth:       zevmAuth,
-		btcRPCClient:   btcRPCClient,
+		zevmClient:         zevmClient,
+		goerliClient:       goerliClient,
+		cctxClient:         cctxClient,
+		fungibleClient:     fungibleClient,
+		wg:                 sync.WaitGroup{},
+		goerliAuth:         goerliAuth,
+		zevmAuth:           zevmAuth,
+		btcRPCClient:       btcRPCClient,
+		SystemContract:     SystemContract,
+		SystemContractAddr: SystemContractAddr,
 	}
 }
 
@@ -179,6 +193,7 @@ func main() {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
+
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
