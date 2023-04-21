@@ -6,11 +6,13 @@ package main
 import (
 	"context"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contracts/zevm"
 	"math/big"
 	"time"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	wzeta "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 )
 
 func (sm *SmokeTest) TestSendZetaIn() {
@@ -83,13 +85,13 @@ func (sm *SmokeTest) TestSendZetaOut() {
 
 	LoudPrintf("Step 4: Sending ZETA from ZEVM to Ethereum\n")
 	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
-	ConnectorZEVM, err := zevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
+	ConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
 	if err != nil {
 		panic(err)
 	}
 	//SystemContractAddr := ethcommon.HexToAddress("0x91d18e54DAf4F677cB28167158d6dd21F6aB3921")
 	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
-	wzeta, err := zevm.NewWZETA(wzetaAddr, zevmClient)
+	wzeta, err := wzeta.NewWETH9(wzetaAddr, zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +120,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	fmt.Printf("wzeta.approve tx hash: %s\n", tx.Hash().Hex())
 	receipt = MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("approve tx receipt: status %d\n", receipt.Status)
-	tx, err = ConnectorZEVM.Send(zauth, zevm.ZetaInterfacesSendInput{
+	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337),
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
