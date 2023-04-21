@@ -246,17 +246,21 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
-		ticker := time.NewTicker(time.Second * 5)
+		ticker := time.NewTicker(time.Second * 1)
+		lastBlock := bn
 		for range ticker.C {
-			bn, err := bridge.GetZetaBlockHeight()
+			currentBlock, err := bridge.GetZetaBlockHeight()
 			if err != nil {
 				log.Error().Err(err).Msg("GetZetaBlockHeight error")
 				return
 			}
-			if bn == height {
+			if currentBlock == height {
 				break
 			}
-			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, bn)
+			if currentBlock > lastBlock {
+				lastBlock = currentBlock
+				log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, currentBlock)
+			}
 		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)
