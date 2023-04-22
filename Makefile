@@ -127,6 +127,10 @@ smoketest:
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
 .PHONY: smoketest
 
+smoketest-fastbuild:
+	@echo "--> Building smoketest image; copying from zetanode image"
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+
 start-smoketest:
 	@echo "--> Starting smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
