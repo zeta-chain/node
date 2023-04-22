@@ -111,7 +111,11 @@ lint: lint-pre
 
 proto-go:
 	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+	@sh ./scripts/protocgen.sh
+
+openapi:
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/generate_openapi.sh
 
 ###############################################################################
 ###                                Docker Images                             ###

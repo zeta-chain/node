@@ -6,6 +6,7 @@ set -eo pipefail
 go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 
 # Define a shell function for generating proto code.
 generate_proto() {
