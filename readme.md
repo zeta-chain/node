@@ -5,8 +5,7 @@ ZetaChain is an EVM-compatible L1 blockchain that enables omnichain, generic sma
 ## Prerequisites
 
 * [Go](https://golang.org/doc/install) 1.19
-* [Docker](https://docs.docker.com/install/) (optional, for running tests locally)
-* [Docker Compose](https://docs.docker.com/compose/install/) (optional, for running tests locally)
+* [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/) (optional, for running tests locally)
 * [buf](https://buf.build/) (optional, for processing protocol buffer files)
 * [jq](https://stedolan.github.io/jq/download/) (optional, for running scripts)
 
