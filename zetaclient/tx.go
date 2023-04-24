@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"time"
 
@@ -128,4 +129,41 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey
 		return "", err
 	}
 	return zetaTxHash, nil
+}
+
+func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
+	b.logger.Info().Msg("UpdateConfig started")
+	ticker := time.NewTicker(6 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			b.logger.Info().Msg("Running Updater")
+			err := b.UpdateConfig(cfg)
+			if err != nil {
+				b.logger.Err(err).Msg("UpdateConfig error")
+				return
+			}
+		case <-b.stop:
+			b.logger.Info().Msg("UpdateConfig stopped")
+			return
+		}
+	}
+}
+
+func (b *ZetaCoreBridge) UpdateConfig(cfg *config.Config) error {
+	err := b.UpdateSupportedChainsFromCore(cfg)
+	if err != nil {
+		return err
+	}
+	for _, chain := range cfg.ChainsEnabled {
+		if chain.IsEVMChain() || chain.IsZetaChain() {
+			cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams = config.NewCoreParams()
+			err := b.UpdateConfigFromCore(cfg.EVMChainConfigs[chain.ChainName.String()])
+			if err != nil {
+				b.logger.Error().Err(err).Msgf("UpdateCommonConfig fail %s", chain.String())
+				return err
+			}
+		}
+	}
+	return nil
 }

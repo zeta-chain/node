@@ -35,6 +35,9 @@ func (chain Chain) IsEqual(c Chain) bool {
 func (chain Chain) IsZetaChain() bool {
 	return chain.IsEqual(ZetaChain())
 }
+func (chain Chain) IsExternalChain() bool {
+	return !chain.IsEqual(ZetaChain())
+}
 
 func (chain Chain) IsEVMChain() bool {
 	return chain.ChainId == 1 || // Ethereum

@@ -48,13 +48,13 @@ type ZetaCoreBridge struct {
 	broadcastLock *sync.RWMutex
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
+	stop                chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
 func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
-
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
 		SignerName:   signerName,
@@ -90,6 +90,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
+		stop:                make(chan struct{}),
 	}, nil
 }
 
@@ -101,6 +102,11 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	cosmos.RegisterCodec(cdc)
 	stypes.RegisterCodec(cdc)
 	return cdc
+}
+
+func (b *ZetaCoreBridge) Stop() {
+	b.logger.Info().Msgf("ZetaBridge is stopping")
+	close(b.stop) // this notifies all configupdater to stop
 }
 
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
@@ -144,12 +150,27 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateCommonConfig(config *config.EVMConfig) error {
+func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.EVMConfig) error {
 
 	chainConfig, err := b.GetClientConfig(config.Chain.ChainId)
 	if err != nil {
 		return err
 	}
 	config.CoreParams.UpdateFromCoreResponse(*chainConfig)
+	return nil
+}
+
+func (b *ZetaCoreBridge) UpdateSupportedChainsFromCore(config *config.Config) error {
+	supportedChains := []common.Chain{}
+	params, err := b.GetObserverParams()
+	if err != nil {
+		return err
+	}
+	for _, obsParams := range params.ObserverParams {
+		if obsParams.IsSupported {
+			supportedChains = append(supportedChains, *obsParams.Chain)
+		}
+	}
+	config.ChainsEnabled = supportedChains
 	return nil
 }

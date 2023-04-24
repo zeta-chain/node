@@ -47,11 +47,5 @@ func Load(path string) (*Config, error) {
 	// Initialize Global config variables
 	BitcoinConfig = cfg.BitcoinConfig
 	cmd.CHAINID = cfg.ChainID
-	for _, chain := range cfg.ChainsEnabled {
-		if chain.IsEVMChain() {
-			cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams = NewCoreParams()
-		}
-	}
-
 	return cfg, nil
 }

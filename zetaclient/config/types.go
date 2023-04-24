@@ -103,3 +103,18 @@ func (c Config) String() string {
 	s, _ := json.MarshalIndent(c, "", "\t")
 	return string(s)
 }
+
+func (c Config) PrintEVMConfigs() string {
+	s, _ := json.MarshalIndent(c.EVMChainConfigs, "", "\t")
+	return string(s)
+}
+
+func (c Config) PrintBTCConfigs() string {
+	s, _ := json.MarshalIndent(c.BitcoinConfig, "", "\t")
+	return string(s)
+}
+
+func (c Config) PrintSupportedChains() string {
+	s, _ := json.MarshalIndent(c.ChainsEnabled, "", "\t")
+	return string(s)
+}

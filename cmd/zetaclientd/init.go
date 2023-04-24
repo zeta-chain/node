@@ -6,9 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
-	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"strings"
 )
 
 var InitCmd = &cobra.Command{
@@ -35,7 +33,6 @@ type initArguments struct {
 func init() {
 	RootCmd.AddCommand(InitCmd)
 
-	InitCmd.Flags().StringVar(&initArgs.enabledChains, "enable-chains", "GOERLI,BSCTESTNET,MUMBAI,ROPSTEN,BAOBAB", "enable chains, comma separated list")
 	InitCmd.Flags().StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	InitCmd.Flags().StringVar(&initArgs.preParamsPath, "pre-params", "", "pre-params file path")
 	InitCmd.Flags().Int64Var(&initArgs.keygen, "keygen-block", 0, "keygen at block height (default: 0 means no keygen")
@@ -54,7 +51,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData := config.New()
 
 	//Populate new struct with cli arguments
-	initEnabledChains(&configData)
 	initChainID(&configData)
 	configData.Peer = initArgs.peer
 	configData.PreParamsPath = initArgs.preParamsPath
@@ -67,23 +63,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
-}
-
-func initEnabledChains(configData *config.Config) {
-	chains := strings.Split(initArgs.enabledChains, ",")
-	chainList := []common.Chain{}
-	supportedChains := mc.GetSupportedChains()
-	for _, chain := range chains {
-		for _, supportedChain := range supportedChains {
-			if supportedChain.ChainName.String() == chain {
-				if !initArgs.devMode && supportedChain.ChainId == 1337 {
-					panic("GoerliLocalNetChain can only be enabled in Dev Mode ")
-				}
-				chainList = append(chainList, *supportedChain)
-			}
-		}
-	}
-	configData.ChainsEnabled = chainList
 }
 
 func initChainID(configData *config.Config) {

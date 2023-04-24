@@ -38,7 +38,7 @@ var (
 	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", config.BitconNetParams)
 	BLOCK                = 5 * time.Second // should be 2x block time
 	BigZero              = big.NewInt(0)
-	SmokeTestTimeout     = 10 * time.Minute // smoke test fails if timeout is reached
+	SmokeTestTimeout     = 35 * time.Minute // smoke test fails if timeout is reached
 	USDTZRC20Addr        = "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
 	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"

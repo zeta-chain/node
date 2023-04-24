@@ -63,18 +63,12 @@ func start(_ *cobra.Command, _ []string) error {
 	CreateAuthzSigner(zetaBridge.GetKeys().GetOperatorAddress().String(), zetaBridge.GetKeys().GetAddress())
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
-	for _, chain := range cfg.ChainsEnabled {
-		if chain.IsEVMChain() {
-			fmt.Println("Updating FOR :", chain.ChainName)
-			err := zetaBridge.UpdateCommonConfig(cfg.EVMChainConfigs[chain.ChainName.String()])
-			if err != nil {
-				startLogger.Error().Err(err).Msgf("UpdateCommonConfig fail %s", chain.String())
-				return err
-			}
-		}
-	}
-
-	fmt.Println(cfg.String())
+	go zetaBridge.ConfigUpdater(cfg)
+	time.Sleep(7 * time.Second)
+	startLogger.Info().Msgf("Config is updated from ZetaCore")
+	startLogger.Info().Msgf("EVM Chain Configs: %s", cfg.PrintEVMConfigs())
+	startLogger.Info().Msgf("BTC Chain Configs: %s", cfg.PrintBTCConfigs())
+	startLogger.Info().Msgf("Supported Chains List: %s", cfg.PrintSupportedChains())
 
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {
@@ -110,7 +104,7 @@ func start(_ *cobra.Command, _ []string) error {
 		var tssAddr string
 		if chain.IsEVMChain() {
 			tssAddr = tss.EVMAddress().Hex()
-		} else {
+		} else if chain.IsBitcoinChain() {
 			tssAddr = tss.BTCAddress()
 		}
 		zetaTx, err := zetaBridge.SetTSS(chain, tssAddr, tss.CurrentPubkey)
@@ -135,24 +129,26 @@ func start(_ *cobra.Command, _ []string) error {
 
 	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	chainClientMap1, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg)
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
-	for _, v := range chainClientMap1 {
+	for _, v := range chainClientMap {
 		v.Start()
 	}
 
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap1, metrics, tss, masterLogger, cfg)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 
 	mo1.MonitorCore()
 
-	// report TSS address nonce on ETHish chains
+	// report TSS address nonce on all chains except zeta
 	for _, chain := range cfg.ChainsEnabled {
-		err = (chainClientMap1)[chain].PostNonceIfNotRecorded(startLogger)
-		if err != nil {
-			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+		if chain.IsExternalChain() {
+			err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
+			if err != nil {
+				startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+			}
 		}
 	}
 
@@ -165,8 +161,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// stop zetacore observer
 	for _, chain := range cfg.ChainsEnabled {
-		(chainClientMap1)[chain].Stop()
+		(chainClientMap)[chain].Stop()
 	}
+	zetaBridge.Stop()
 
 	return nil
 }

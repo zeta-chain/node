@@ -1,0 +1,6 @@
+{
+  "block_time_zeta" : 10,
+  "block_time_external" : 10,
+  "confirmation_count" : 10,
+  "gas_price_ticker" : 10
+}

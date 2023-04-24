@@ -201,7 +201,7 @@ func (ob *EVMChainClient) ERC20CustodyAddress() ethcommon.Address {
 }
 
 func (ob *EVMChainClient) Start() {
-	go ob.UpdateConfig()         // Updates common configuration for the client
+	//go ob.UpdateConfig()         // Updates common configuration for the client
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
@@ -519,7 +519,7 @@ func (ob *EVMChainClient) UpdateConfig() {
 		// Ticker uses externchain blocktime to update config at each block of the external chain
 		// TODO: test to figure out wether we should be updating at every block for zetacore instead
 		case <-ob.ticker.C:
-			err := ob.zetaClient.UpdateCommonConfig(ob.GetChainConfig())
+			err := ob.zetaClient.UpdateConfigFromCore(ob.GetChainConfig())
 			if err != nil {
 				ob.logger.ConfigUpdater.Err(err).Msg("UpdateConfig error")
 				return
@@ -867,6 +867,8 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	for {
 		select {
 		case <-gasTicker.C:
+			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice tick")
+			ob.logger.WatchGasPrice.Info().Msgf("Config Blocktime %d", ob.cfg.EVMChainConfigs[common.ZetaChain().ChainName.String()].CoreParams.BlockTimeZetaChain)
 			err := ob.PostGasPrice()
 			if err != nil {
 				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())

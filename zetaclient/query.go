@@ -28,7 +28,15 @@ func (b *ZetaCoreBridge) GetClientConfig(externalChainID int64) (*zetaObserverTy
 		return &zetaObserverTypes.ClientParams{}, err
 	}
 	return resp.ClientParams, nil
+}
 
+func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Params(context.Background(), &zetaObserverTypes.QueryParamsRequest{})
+	if err != nil {
+		return zetaObserverTypes.Params{}, err
+	}
+	return resp.Params, nil
 }
 
 //func (b *ZetaCoreBridge) GetAccountDetails(address string) (string, error) {
