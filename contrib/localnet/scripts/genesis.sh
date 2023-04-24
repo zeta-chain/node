@@ -33,8 +33,10 @@ mkdir -p ~/.backup/config
 zetacored init Zetanode-Localnet --chain-id=$CHAINID
 rm -rf ~/.zetacored/config/app.toml
 rm -rf ~/.zetacored/config/client.toml
+rm -rf ~/.zetacored/config/config.toml
 cp -r ~/zetacored/common/app.toml ~/.zetacored/config/
 cp -r ~/zetacored/common/client.toml ~/.zetacored/config/
+cp -r ~/zetacored/common/config.toml ~/.zetacored/config/
 sed -i -e "/moniker =/s/=.*/= \"$HOSTNAME\"/" "$HOME"/.zetacored/config/config.toml
 
 # Add two new keys for operator and hotkey and create the required json structure for os_info
