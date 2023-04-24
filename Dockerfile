@@ -41,6 +41,7 @@ RUN chmod 755 /root/start-zetaclientd-genesis.sh
 RUN chmod 755 /root/genesis.sh
 RUN chmod 755 /root/seed.sh
 RUN chmod 755 /root/keygen.sh
+RUN chmod 755 /root/os-info.sh
 
 WORKDIR /usr/local/bin
 ENV SHELL /bin/sh

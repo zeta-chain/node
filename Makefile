@@ -134,3 +134,9 @@ start-smoketest:
 stop-smoketest:
 	@echo "--> Stopping smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+stress-test: zetanode
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
+
+stop-stress-test:
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans

@@ -7,11 +7,11 @@ HOSTNAME=$(hostname)
 cp  /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
-mv  /root/zetacored/zetacored_$node /root/.zetacored
-mv /root/tss/$HOSTNAME /root/.tss
+#mv  /root/zetacored/zetacored_$node /root/.zetacored
+#mv /root/tss/$HOSTNAME /root/.tss
 
 echo "Wait for zetacore to exchange genesis file"
-sleep 10
+sleep 30
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"

@@ -29,6 +29,8 @@ then
   exit 1
 fi
 
+
+
 # Init a new node to generate genesis file.
 # Copy config files from existing folders which get copied via Docker Copy when building images
 mkdir -p ~/.backup/config
