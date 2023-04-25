@@ -99,7 +99,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.3 // indirect
+	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ibc-go/v6 v6.1.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
@@ -292,18 +292,11 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-//replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
-
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-replace github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
-
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-
-replace github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.1
-
-replace github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
-
-replace gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7
-
-//replace github.com/zeta-chain/protocol => ../../fadeev/protocol
+replace (
+	github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.1
+	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
+	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7
+)
