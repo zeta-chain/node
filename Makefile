@@ -122,13 +122,12 @@ proto:
 
 zetanode:
 	@echo "Building zetanode"
-	@docker build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
 smoketest:
-	@echo "--> Building smoketest image"
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
-.PHONY: smoketest
+	@echo "DEPRECATED: NO-OP: Building smoketest"
 
 start-smoketest:
 	@echo "--> Starting smoketest"

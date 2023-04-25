@@ -8,6 +8,17 @@ networks:
 
 
 services:
+  rosetta:
+    image: zetanode:latest
+    container_name: rosetta
+    hostname: rosetta
+    ports:
+      - "8080:8080"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.200
+    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
