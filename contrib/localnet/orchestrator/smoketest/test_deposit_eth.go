@@ -10,13 +10,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
@@ -26,7 +23,6 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	goerliClient := sm.goerliClient
-	fungibleClient := sm.fungibleClient
 	LoudPrintf("Deposit Ether into ZEVM\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
@@ -85,13 +81,8 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	go func() {
 		defer sm.wg.Done()
 		<-c
-		systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("system contract address: %s\n", systemContractAddr.SystemContract.SystemContract)
-		addr := ethcommon.HexToAddress(systemContractAddr.SystemContract.SystemContract)
-		systemContract, err := systemcontract.NewSystemContract(addr, sm.zevmClient)
+
+		systemContract := sm.SystemContract
 		if err != nil {
 			panic(err)
 		}

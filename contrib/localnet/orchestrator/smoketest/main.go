@@ -98,7 +98,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("System contract address: %s", systemContractAddr)
+	fmt.Printf("System contract address: %s\n", systemContractAddr)
 
 	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractAddr.SystemContract.SystemContract), zevmClient)
 	if err != nil {
