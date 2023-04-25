@@ -394,7 +394,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
-	ticker := time.NewTicker(3 * time.Second) // FIXME: config this
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -533,11 +533,11 @@ func (ob *EVMChainClient) UpdateConfig() {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
-
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.InTxTicker) * time.Second)
 	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher started")
 	for {
 		select {
-		case <-ob.ticker.C:
+		case <-ticker.C:
 			err := ob.observeInTX()
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Err(err).Msg("observeInTX error")
@@ -863,10 +863,10 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 	}
-	gasTicker := time.NewTicker(5 * time.Second) // FIXME: configure this in chainconfig
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.GasPriceTicker) * time.Second)
 	for {
 		select {
-		case <-gasTicker.C:
+		case <-ticker.C:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice tick")
 			ob.logger.WatchGasPrice.Info().Msgf("Config Blocktime %d", ob.cfg.EVMChainConfigs[common.ZetaChain().ChainName.String()].CoreParams.BlockTimeZetaChain)
 			err := ob.PostGasPrice()

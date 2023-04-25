@@ -22,9 +22,9 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	VoterKey              = "Voter-value-"
-	ClientParamsByChainID = "ClientParams"
-	ObserverMapperKey     = "Observer-value-"
-	ObserverParamsKey     = "ObserverParams"
-	AdminPolicyParamsKey  = "AdminParams"
+	VoterKey             = "Voter-value-"
+	AllCoreParams        = "CoreParams"
+	ObserverMapperKey    = "Observer-value-"
+	ObserverParamsKey    = "ObserverParams"
+	AdminPolicyParamsKey = "AdminParams"
 )

@@ -17,23 +17,29 @@ type ClientConfiguration struct {
 	SignerPasswd    string
 }
 
-type EVMChainsCoreParams struct {
+type CoreParams struct {
 	ChainID                     int64
 	BlockTimeExternalChain      uint64
 	BlockTimeZetaChain          uint64
 	GasPriceTicker              uint64
+	InTxTicker                  uint64
+	OutTxTicker                 uint64
+	WatchUTXOTicker             uint64
 	ConfCount                   uint64
 	ConnectorContractAddress    string
 	ZETATokenContractAddress    string
 	ERC20CustodyContractAddress string
 }
 
-func NewCoreParams() *EVMChainsCoreParams {
-	return &EVMChainsCoreParams{
+func NewCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainID:                     0,
 		BlockTimeExternalChain:      0,
 		BlockTimeZetaChain:          0,
 		GasPriceTicker:              0,
+		InTxTicker:                  5,
+		OutTxTicker:                 3,
+		WatchUTXOTicker:             5,
 		ConfCount:                   0,
 		ConnectorContractAddress:    "",
 		ZETATokenContractAddress:    "",
@@ -41,7 +47,7 @@ func NewCoreParams() *EVMChainsCoreParams {
 	}
 }
 
-func (c *EVMChainsCoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.ClientParams) {
+func (c *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CoreParams) {
 	c.BlockTimeZetaChain = newConfig.BlockTimeZeta
 	c.BlockTimeExternalChain = newConfig.BlockTimeExternal
 	c.GasPriceTicker = newConfig.GasPriceTicker
@@ -56,13 +62,7 @@ type EVMConfig struct {
 	Client       *ethclient.Client
 	Chain        common.Chain
 	Endpoint     string
-	CoreParams   *EVMChainsCoreParams
-}
-
-type BTCConfigConfig struct {
-	WatchInTxPeriod     uint64
-	WatchGasPricePeriod uint64
-	WatchUTXOSPeriod    uint64
+	CoreParams   *CoreParams
 }
 
 type BTCConfig struct {
@@ -72,10 +72,7 @@ type BTCConfig struct {
 	RPCEndpoint string
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 
-	WatchInTxPeriod     uint64
-	WatchGasPricePeriod uint64
-	WatchUTXOSPeriod    uint64
-	CommonConfig        *BTCConfigConfig
+	CoreParams *CoreParams
 }
 
 type Config struct {

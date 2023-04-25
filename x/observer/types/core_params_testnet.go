@@ -5,8 +5,8 @@ package types
 
 import "github.com/zeta-chain/zetacore/common"
 
-func GetClientParams() map[int64]ClientParams {
-	return map[int64]ClientParams{
+func GetCoreParams() map[int64]CoreParams {
+	return map[int64]CoreParams{
 		common.GoerliChain().ChainId: {
 			ConfirmationCount:           14,
 			GasPriceTicker:              5,
@@ -45,6 +45,15 @@ func GetClientParams() map[int64]ClientParams {
 		},
 
 		common.ZetaChain().ChainId: {
+			ConfirmationCount:           3,
+			GasPriceTicker:              5,
+			ZetaTokenContractAddress:    "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
+			ConnectorContractAddress:    "",
+			Erc20CustodyContractAddress: "",
+			BlockTimeExternal:           6,
+			BlockTimeZeta:               6,
+		},
+		common.BtcTestNetChain().ChainId: {
 			ConfirmationCount:           3,
 			GasPriceTicker:              5,
 			ZetaTokenContractAddress:    "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",

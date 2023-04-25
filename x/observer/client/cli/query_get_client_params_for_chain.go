@@ -13,8 +13,8 @@ var _ = strconv.Itoa(0)
 
 func CmdGetClientParamsForChain() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-client-params [chain-id]",
-		Short: "Query GetClientParamsForChain",
+		Use:   "show-core-params [chain-id]",
+		Short: "Query GetCoreParamsForChain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqChainID, err := strconv.ParseInt(args[0], 10, 64)
@@ -27,10 +27,10 @@ func CmdGetClientParamsForChain() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetClientParamsForChainRequest{
+			params := &types.QueryGetCoreParamsForChainRequest{
 				ChainID: reqChainID,
 			}
-			res, err := queryClient.GetClientParamsForChain(cmd.Context(), params)
+			res, err := queryClient.GetCoreParamsForChain(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -21,13 +21,13 @@ func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) 
 
 }
 
-func (b *ZetaCoreBridge) GetClientConfig(externalChainID int64) (*zetaObserverTypes.ClientParams, error) {
+func (b *ZetaCoreBridge) GetClientConfig(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetClientParamsForChain(context.Background(), &zetaObserverTypes.QueryGetClientParamsForChainRequest{ChainID: externalChainID})
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: externalChainID})
 	if err != nil {
-		return &zetaObserverTypes.ClientParams{}, err
+		return &zetaObserverTypes.CoreParams{}, err
 	}
-	return resp.ClientParams, nil
+	return resp.CoreParams, nil
 }
 
 func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
@@ -189,11 +189,11 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	return resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetClientParamsForChainResponse, error) {
+func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetCoreParamsForChainResponse, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetClientParamsForChain(context.Background(), &zetaObserverTypes.QueryGetClientParamsForChainRequest{ChainID: chainID})
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: chainID})
 	if err != nil {
-		return zetaObserverTypes.QueryGetClientParamsForChainResponse{}, err
+		return zetaObserverTypes.QueryGetCoreParamsForChainResponse{}, err
 	}
 	return *resp, nil
 }

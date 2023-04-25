@@ -7,16 +7,19 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func GetClientParams() map[int64]ClientParams {
-	return map[int64]ClientParams{
+func GetCoreParams() map[int64]CoreParams {
+	return map[int64]CoreParams{
 		common.GoerliLocalNetChain().ChainId: {
 			ConfirmationCount:           14,
-			GasPriceTicker:              5,
 			ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
 			ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 			Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 			BlockTimeExternal:           2,
 			BlockTimeZeta:               6,
+			InTxTicker:                  24,
+			OutTxTicker:                 3,
+			WatchUtxoTicker:             0,
+			GasPriceTicker:              5,
 		},
 
 		common.ZetaChain().ChainId: {
@@ -27,6 +30,18 @@ func GetClientParams() map[int64]ClientParams {
 			Erc20CustodyContractAddress: "",
 			BlockTimeExternal:           6,
 			BlockTimeZeta:               6,
+		},
+		common.BtcRegtestChain().ChainId: {
+			ConfirmationCount:           0,
+			ZetaTokenContractAddress:    "",
+			ConnectorContractAddress:    "",
+			Erc20CustodyContractAddress: "",
+			BlockTimeExternal:           6,
+			BlockTimeZeta:               6,
+			GasPriceTicker:              5,
+			WatchUtxoTicker:             5,
+			InTxTicker:                  5,
+			OutTxTicker:                 2,
 		},
 	}
 

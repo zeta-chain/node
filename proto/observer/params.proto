@@ -6,14 +6,17 @@ import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
-message ClientParams {
+message CoreParams {
   uint64 confirmation_count = 1;
   uint64 gas_price_ticker = 2;
-  string zeta_token_contract_address = 3;
-  string connector_contract_address = 4;
-  string erc20_custody_contract_address = 5;
+  uint64 in_tx_ticker = 3;
+  uint64 out_tx_ticker = 4;
+  uint64 watch_utxo_ticker = 5;
   uint64 block_time_external = 6;
   uint64 block_time_zeta = 7;
+  string zeta_token_contract_address = 8;
+  string connector_contract_address = 9;
+  string erc20_custody_contract_address = 10;
 }
 
 message ObserverParams {

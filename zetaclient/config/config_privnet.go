@@ -44,9 +44,9 @@ var BitcoinConfig = &BTCConfig{
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
 
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
+	//WatchInTxPeriod:     5,
+	//WatchGasPricePeriod: 5,
+	//WatchUTXOSPeriod:    5,
 }
 
 func New() Config {

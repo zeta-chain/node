@@ -90,7 +90,7 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 		if chain.IsEVMChain() {
 			co, err = zetaclient.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, chain)
 		} else if chain.IsBitcoinChain() {
-			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger)
+			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger, cfg)
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())

@@ -7,25 +7,25 @@ import (
 
 const TypeMsgUpdateClientParams = "update_client_params"
 
-var _ sdk.Msg = &MsgUpdateClientParams{}
+var _ sdk.Msg = &MsgUpdateCoreParams{}
 
-func NewMsgUpdateClientParams(creator string, chainId int64, clientParams *ClientParams) *MsgUpdateClientParams {
-	return &MsgUpdateClientParams{
-		Creator:      creator,
-		ChainId:      chainId,
-		ClientParams: clientParams,
+func NewMsgUpdateCoreParams(creator string, chainId int64, clientParams *CoreParams) *MsgUpdateCoreParams {
+	return &MsgUpdateCoreParams{
+		Creator:    creator,
+		ChainId:    chainId,
+		CoreParams: clientParams,
 	}
 }
 
-func (msg *MsgUpdateClientParams) Route() string {
+func (msg *MsgUpdateCoreParams) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgUpdateClientParams) Type() string {
+func (msg *MsgUpdateCoreParams) Type() string {
 	return TypeMsgUpdateClientParams
 }
 
-func (msg *MsgUpdateClientParams) GetSigners() []sdk.AccAddress {
+func (msg *MsgUpdateCoreParams) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -33,20 +33,20 @@ func (msg *MsgUpdateClientParams) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgUpdateClientParams) GetSignBytes() []byte {
+func (msg *MsgUpdateCoreParams) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgUpdateClientParams) ValidateBasic() error {
+func (msg *MsgUpdateCoreParams) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if msg.ClientParams.ConfirmationCount == 0 {
+	if msg.CoreParams.ConfirmationCount == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
 	}
-	if msg.ClientParams.GasPriceTicker == 0 {
+	if msg.CoreParams.GasPriceTicker == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker must be greater than 0")
 	}
 	return nil

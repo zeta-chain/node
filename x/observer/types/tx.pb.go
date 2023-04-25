@@ -34,24 +34,24 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //	 int64 chain_id=2;
 //	 common.ChainName ChainName=3;
 //	}
-type MsgUpdateClientParams struct {
-	Creator      string        `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	ChainId      int64         `protobuf:"varint,2,opt,name=chainId,proto3" json:"chainId,omitempty"`
-	ClientParams *ClientParams `protobuf:"bytes,3,opt,name=clientParams,proto3" json:"clientParams,omitempty"`
+type MsgUpdateCoreParams struct {
+	Creator    string      `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ChainId    int64       `protobuf:"varint,2,opt,name=chainId,proto3" json:"chainId,omitempty"`
+	CoreParams *CoreParams `protobuf:"bytes,3,opt,name=coreParams,proto3" json:"coreParams,omitempty"`
 }
 
-func (m *MsgUpdateClientParams) Reset()         { *m = MsgUpdateClientParams{} }
-func (m *MsgUpdateClientParams) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateClientParams) ProtoMessage()    {}
-func (*MsgUpdateClientParams) Descriptor() ([]byte, []int) {
+func (m *MsgUpdateCoreParams) Reset()         { *m = MsgUpdateCoreParams{} }
+func (m *MsgUpdateCoreParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateCoreParams) ProtoMessage()    {}
+func (*MsgUpdateCoreParams) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1bcd40fa296a2b1d, []int{0}
 }
-func (m *MsgUpdateClientParams) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateCoreParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdateClientParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateCoreParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdateClientParams.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateCoreParams.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -61,54 +61,54 @@ func (m *MsgUpdateClientParams) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdateClientParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateClientParams.Merge(m, src)
+func (m *MsgUpdateCoreParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateCoreParams.Merge(m, src)
 }
-func (m *MsgUpdateClientParams) XXX_Size() int {
+func (m *MsgUpdateCoreParams) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdateClientParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateClientParams.DiscardUnknown(m)
+func (m *MsgUpdateCoreParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateCoreParams.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdateClientParams proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateCoreParams proto.InternalMessageInfo
 
-func (m *MsgUpdateClientParams) GetCreator() string {
+func (m *MsgUpdateCoreParams) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgUpdateClientParams) GetChainId() int64 {
+func (m *MsgUpdateCoreParams) GetChainId() int64 {
 	if m != nil {
 		return m.ChainId
 	}
 	return 0
 }
 
-func (m *MsgUpdateClientParams) GetClientParams() *ClientParams {
+func (m *MsgUpdateCoreParams) GetCoreParams() *CoreParams {
 	if m != nil {
-		return m.ClientParams
+		return m.CoreParams
 	}
 	return nil
 }
 
-type MsgUpdateClientParamsResponse struct {
+type MsgUpdateCoreParamsResponse struct {
 }
 
-func (m *MsgUpdateClientParamsResponse) Reset()         { *m = MsgUpdateClientParamsResponse{} }
-func (m *MsgUpdateClientParamsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateClientParamsResponse) ProtoMessage()    {}
-func (*MsgUpdateClientParamsResponse) Descriptor() ([]byte, []int) {
+func (m *MsgUpdateCoreParamsResponse) Reset()         { *m = MsgUpdateCoreParamsResponse{} }
+func (m *MsgUpdateCoreParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateCoreParamsResponse) ProtoMessage()    {}
+func (*MsgUpdateCoreParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1bcd40fa296a2b1d, []int{1}
 }
-func (m *MsgUpdateClientParamsResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateCoreParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdateClientParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateCoreParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdateClientParamsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateCoreParamsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -118,17 +118,17 @@ func (m *MsgUpdateClientParamsResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdateClientParamsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateClientParamsResponse.Merge(m, src)
+func (m *MsgUpdateCoreParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateCoreParamsResponse.Merge(m, src)
 }
-func (m *MsgUpdateClientParamsResponse) XXX_Size() int {
+func (m *MsgUpdateCoreParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdateClientParamsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateClientParamsResponse.DiscardUnknown(m)
+func (m *MsgUpdateCoreParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateCoreParamsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdateClientParamsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateCoreParamsResponse proto.InternalMessageInfo
 
 // this line is used by starport scaffolding # proto/tx/message
 //
@@ -231,8 +231,8 @@ func (m *MsgAddObserverResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAddObserverResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgUpdateClientParams)(nil), "zetachain.zetacore.observer.MsgUpdateClientParams")
-	proto.RegisterType((*MsgUpdateClientParamsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateClientParamsResponse")
+	proto.RegisterType((*MsgUpdateCoreParams)(nil), "zetachain.zetacore.observer.MsgUpdateCoreParams")
+	proto.RegisterType((*MsgUpdateCoreParamsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateCoreParamsResponse")
 	proto.RegisterType((*MsgAddObserver)(nil), "zetachain.zetacore.observer.MsgAddObserver")
 	proto.RegisterType((*MsgAddObserverResponse)(nil), "zetachain.zetacore.observer.MsgAddObserverResponse")
 }
@@ -240,31 +240,31 @@ func init() {
 func init() { proto.RegisterFile("observer/tx.proto", fileDescriptor_1bcd40fa296a2b1d) }
 
 var fileDescriptor_1bcd40fa296a2b1d = []byte{
-	// 376 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0x41, 0x4b, 0xf3, 0x30,
-	0x1c, 0xc6, 0x97, 0x77, 0xf0, 0xbe, 0xaf, 0x99, 0x4c, 0xac, 0x4e, 0x6b, 0xc5, 0x3a, 0x7a, 0x9a,
-	0xa8, 0x0d, 0x74, 0x37, 0x6f, 0xea, 0x69, 0x87, 0x32, 0x29, 0xea, 0xc1, 0x8b, 0x64, 0x6d, 0xe8,
-	0x0a, 0xb6, 0x29, 0x49, 0x94, 0xcd, 0xb3, 0x1f, 0xc0, 0xb3, 0xe0, 0xf7, 0xf1, 0xb8, 0xa3, 0x47,
-	0xd9, 0x3e, 0x87, 0x20, 0x4b, 0x97, 0xb9, 0xba, 0x51, 0xd9, 0xa9, 0xff, 0xe4, 0xc9, 0xf3, 0x3c,
-	0xbf, 0xd2, 0x06, 0xae, 0xd3, 0x0e, 0x27, 0xec, 0x81, 0x30, 0x24, 0x7a, 0x76, 0xca, 0xa8, 0xa0,
-	0xda, 0xee, 0x23, 0x11, 0xd8, 0xef, 0xe2, 0x28, 0xb1, 0xe5, 0x44, 0x19, 0xb1, 0xd5, 0x29, 0x63,
-	0xc3, 0xa7, 0x71, 0x4c, 0x13, 0x94, 0x3d, 0x32, 0x87, 0xb1, 0x19, 0xd2, 0x90, 0xca, 0x11, 0x8d,
-	0xa7, 0xc9, 0xee, 0xf6, 0x34, 0x5a, 0x0d, 0x13, 0xa1, 0x36, 0x15, 0x52, 0xcc, 0x70, 0xcc, 0xb3,
-	0x6d, 0xeb, 0x05, 0xc0, 0x9a, 0xcb, 0xc3, 0xab, 0x34, 0xc0, 0x82, 0x9c, 0xdf, 0x45, 0x24, 0x11,
-	0x17, 0x52, 0xd7, 0x74, 0xf8, 0xcf, 0x67, 0x04, 0x0b, 0xca, 0x74, 0x50, 0x07, 0x8d, 0x15, 0x4f,
-	0x2d, 0xa5, 0x32, 0x26, 0x6d, 0x05, 0xfa, 0x9f, 0x3a, 0x68, 0x94, 0x3d, 0xb5, 0xd4, 0x5c, 0xb8,
-	0xea, 0xcf, 0x64, 0xe8, 0xe5, 0x3a, 0x68, 0x54, 0x9c, 0x03, 0xbb, 0xe0, 0xe5, 0xec, 0xd9, 0x52,
-	0x2f, 0x67, 0xb7, 0xf6, 0xe1, 0xde, 0x42, 0x36, 0x8f, 0xf0, 0x94, 0x26, 0x9c, 0x58, 0xaf, 0x00,
-	0x56, 0x5d, 0x1e, 0x9e, 0x06, 0x41, 0x7b, 0x12, 0x57, 0x80, 0xbd, 0x03, 0xff, 0x4b, 0x86, 0xdb,
-	0x68, 0x8e, 0xfb, 0x1a, 0xae, 0x65, 0x3c, 0x58, 0x44, 0x34, 0xb9, 0xec, 0xa7, 0x44, 0xa2, 0x57,
-	0x9d, 0xa3, 0x42, 0xf4, 0x76, 0xde, 0xe3, 0xfd, 0x0c, 0xb1, 0x74, 0xb8, 0x95, 0xc7, 0x53, 0xe4,
-	0xce, 0x27, 0x80, 0x65, 0x97, 0x87, 0x1a, 0x85, 0x95, 0x59, 0xfa, 0xc3, 0xc2, 0xbe, 0x7c, 0x96,
-	0xd1, 0x5c, 0xe2, 0xb0, 0x2a, 0xd6, 0x9e, 0x00, 0xd4, 0x16, 0x7c, 0x6d, 0xe7, 0xb7, 0xac, 0x79,
-	0x8f, 0x71, 0xb2, 0xbc, 0x47, 0x61, 0x9c, 0xb5, 0xde, 0x86, 0x26, 0x18, 0x0c, 0x4d, 0xf0, 0x31,
-	0x34, 0xc1, 0xf3, 0xc8, 0x2c, 0x0d, 0x46, 0x66, 0xe9, 0x7d, 0x64, 0x96, 0x6e, 0x50, 0x18, 0x89,
-	0xee, 0x7d, 0xc7, 0xf6, 0x69, 0x8c, 0xc6, 0xa9, 0xc7, 0xb2, 0x00, 0xa9, 0x02, 0xd4, 0x43, 0xdf,
-	0xb7, 0xa7, 0x9f, 0x12, 0xde, 0xf9, 0x2b, 0xff, 0xe4, 0xe6, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x56, 0x6c, 0xc0, 0x8f, 0x56, 0x03, 0x00, 0x00,
+	// 373 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcc, 0x4f, 0x2a, 0x4e,
+	0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0xae,
+	0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x03, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0x60,
+	0xaa, 0xa4, 0x84, 0x93, 0xf3, 0x73, 0x73, 0xf3, 0xf3, 0xf4, 0x21, 0x14, 0x44, 0x87, 0x94, 0x48,
+	0x7a, 0x7e, 0x7a, 0x3e, 0x98, 0xa9, 0x0f, 0x62, 0x41, 0x45, 0xc5, 0xe1, 0x46, 0xc3, 0x18, 0x50,
+	0x09, 0x51, 0xb8, 0x44, 0x41, 0x62, 0x51, 0x62, 0x6e, 0x31, 0x44, 0x58, 0x69, 0x12, 0x23, 0x97,
+	0xb0, 0x6f, 0x71, 0x7a, 0x68, 0x41, 0x4a, 0x62, 0x49, 0xaa, 0x73, 0x7e, 0x51, 0x6a, 0x00, 0x58,
+	0x56, 0x48, 0x82, 0x8b, 0x3d, 0xb9, 0x28, 0x35, 0xb1, 0x24, 0xbf, 0x48, 0x82, 0x51, 0x81, 0x51,
+	0x83, 0x33, 0x08, 0xc6, 0x05, 0xcb, 0x80, 0xdc, 0xe9, 0x99, 0x22, 0xc1, 0xa4, 0xc0, 0xa8, 0xc1,
+	0x1c, 0x04, 0xe3, 0x0a, 0xb9, 0x73, 0x71, 0x25, 0xc3, 0x4d, 0x90, 0x60, 0x56, 0x60, 0xd4, 0xe0,
+	0x36, 0x52, 0xd7, 0xc3, 0xe3, 0x31, 0x3d, 0x84, 0x85, 0x41, 0x48, 0x5a, 0x95, 0x64, 0xb9, 0xa4,
+	0xb1, 0xb8, 0x29, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0x69, 0x2e, 0x23, 0x17, 0x9f,
+	0x6f, 0x71, 0xba, 0x63, 0x4a, 0x8a, 0x3f, 0xd4, 0x20, 0x3c, 0xce, 0x95, 0xe4, 0xe2, 0x00, 0xdb,
+	0x1e, 0x9f, 0x89, 0xe1, 0xde, 0x30, 0x2e, 0x7e, 0x88, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x42,
+	0x2a, 0x0b, 0x52, 0xc1, 0x8e, 0xe6, 0x33, 0xd2, 0xc1, 0xeb, 0x68, 0x7f, 0x54, 0x3d, 0x41, 0xe8,
+	0x86, 0x28, 0x49, 0x70, 0x89, 0xa1, 0x3a, 0x0f, 0xe6, 0x72, 0xa3, 0x6f, 0x8c, 0x5c, 0xcc, 0xbe,
+	0xc5, 0xe9, 0x42, 0xf9, 0x5c, 0xdc, 0xc8, 0xae, 0xd7, 0xc6, 0x6b, 0x1f, 0xaa, 0x59, 0x52, 0xc6,
+	0x24, 0x28, 0x86, 0x59, 0x2c, 0x54, 0xc7, 0x25, 0x80, 0x11, 0xc5, 0x06, 0x84, 0x0c, 0x42, 0xd7,
+	0x21, 0x65, 0x41, 0xaa, 0x0e, 0x98, 0xfd, 0x4e, 0x9e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24,
+	0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78,
+	0x2c, 0xc7, 0x10, 0xa5, 0x9f, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x0f,
+	0x32, 0x53, 0x17, 0x6c, 0xbc, 0x3e, 0xcc, 0x78, 0xfd, 0x0a, 0x7d, 0x44, 0x66, 0xa9, 0x2c, 0x48,
+	0x2d, 0x4e, 0x62, 0x03, 0x27, 0x5c, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x06, 0x71, 0x70,
+	0x61, 0x45, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -281,7 +281,7 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error)
-	UpdateClientParams(ctx context.Context, in *MsgUpdateClientParams, opts ...grpc.CallOption) (*MsgUpdateClientParamsResponse, error)
+	UpdateCoreParams(ctx context.Context, in *MsgUpdateCoreParams, opts ...grpc.CallOption) (*MsgUpdateCoreParamsResponse, error)
 }
 
 type msgClient struct {
@@ -301,9 +301,9 @@ func (c *msgClient) AddObserver(ctx context.Context, in *MsgAddObserver, opts ..
 	return out, nil
 }
 
-func (c *msgClient) UpdateClientParams(ctx context.Context, in *MsgUpdateClientParams, opts ...grpc.CallOption) (*MsgUpdateClientParamsResponse, error) {
-	out := new(MsgUpdateClientParamsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateClientParams", in, out, opts...)
+func (c *msgClient) UpdateCoreParams(ctx context.Context, in *MsgUpdateCoreParams, opts ...grpc.CallOption) (*MsgUpdateCoreParamsResponse, error) {
+	out := new(MsgUpdateCoreParamsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateCoreParams", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (c *msgClient) UpdateClientParams(ctx context.Context, in *MsgUpdateClientP
 type MsgServer interface {
 	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
-	UpdateClientParams(context.Context, *MsgUpdateClientParams) (*MsgUpdateClientParamsResponse, error)
+	UpdateCoreParams(context.Context, *MsgUpdateCoreParams) (*MsgUpdateCoreParamsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -324,8 +324,8 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) AddObserver(ctx context.Context, req *MsgAddObserver) (*MsgAddObserverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddObserver not implemented")
 }
-func (*UnimplementedMsgServer) UpdateClientParams(ctx context.Context, req *MsgUpdateClientParams) (*MsgUpdateClientParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateClientParams not implemented")
+func (*UnimplementedMsgServer) UpdateCoreParams(ctx context.Context, req *MsgUpdateCoreParams) (*MsgUpdateCoreParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCoreParams not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -350,20 +350,20 @@ func _Msg_AddObserver_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdateClientParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateClientParams)
+func _Msg_UpdateCoreParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateCoreParams)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdateClientParams(ctx, in)
+		return srv.(MsgServer).UpdateCoreParams(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.observer.Msg/UpdateClientParams",
+		FullMethod: "/zetachain.zetacore.observer.Msg/UpdateCoreParams",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateClientParams(ctx, req.(*MsgUpdateClientParams))
+		return srv.(MsgServer).UpdateCoreParams(ctx, req.(*MsgUpdateCoreParams))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -377,15 +377,15 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_AddObserver_Handler,
 		},
 		{
-			MethodName: "UpdateClientParams",
-			Handler:    _Msg_UpdateClientParams_Handler,
+			MethodName: "UpdateCoreParams",
+			Handler:    _Msg_UpdateCoreParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "observer/tx.proto",
 }
 
-func (m *MsgUpdateClientParams) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateCoreParams) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -395,19 +395,19 @@ func (m *MsgUpdateClientParams) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdateClientParams) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateCoreParams) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdateClientParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateCoreParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.ClientParams != nil {
+	if m.CoreParams != nil {
 		{
-			size, err := m.ClientParams.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.CoreParams.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -432,7 +432,7 @@ func (m *MsgUpdateClientParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdateClientParamsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateCoreParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -442,12 +442,12 @@ func (m *MsgUpdateClientParamsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdateClientParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateCoreParamsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdateClientParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateCoreParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -529,7 +529,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgUpdateClientParams) Size() (n int) {
+func (m *MsgUpdateCoreParams) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -542,14 +542,14 @@ func (m *MsgUpdateClientParams) Size() (n int) {
 	if m.ChainId != 0 {
 		n += 1 + sovTx(uint64(m.ChainId))
 	}
-	if m.ClientParams != nil {
-		l = m.ClientParams.Size()
+	if m.CoreParams != nil {
+		l = m.CoreParams.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
 
-func (m *MsgUpdateClientParamsResponse) Size() (n int) {
+func (m *MsgUpdateCoreParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -592,7 +592,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgUpdateClientParams) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateCoreParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -615,10 +615,10 @@ func (m *MsgUpdateClientParams) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateClientParams: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateCoreParams: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateClientParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateCoreParams: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -674,7 +674,7 @@ func (m *MsgUpdateClientParams) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientParams", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoreParams", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -701,10 +701,10 @@ func (m *MsgUpdateClientParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ClientParams == nil {
-				m.ClientParams = &ClientParams{}
+			if m.CoreParams == nil {
+				m.CoreParams = &CoreParams{}
 			}
-			if err := m.ClientParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.CoreParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -729,7 +729,7 @@ func (m *MsgUpdateClientParams) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdateClientParamsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateCoreParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -752,10 +752,10 @@ func (m *MsgUpdateClientParamsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateClientParamsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateCoreParamsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateClientParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateCoreParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

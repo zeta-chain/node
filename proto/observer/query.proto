@@ -36,7 +36,7 @@ service Query {
 	}
 
 // Queries a list of GetClientParamsForChain items.
-	rpc GetClientParamsForChain(QueryGetClientParamsForChainRequest) returns (QueryGetClientParamsForChainResponse) {
+	rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
 	}
 
@@ -82,12 +82,12 @@ message QuerySupportedChainsResponse {
 }
 
 
-message QueryGetClientParamsForChainRequest {
+message QueryGetCoreParamsForChainRequest {
   int64 chainID = 1;
 }
 
-message QueryGetClientParamsForChainResponse {
-	ClientParams client_params = 1;
+message QueryGetCoreParamsForChainResponse {
+	CoreParams core_params = 1;
 }
 
 // this line is used by starport scaffolding # 3

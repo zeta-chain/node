@@ -15,7 +15,7 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdUpdateClientParams() *cobra.Command {
+func CmdUpdateCoreParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-client-params [chain-id] [client-params.json]",
 		Short: "Broadcast message updateClientParams",
@@ -32,7 +32,7 @@ func CmdUpdateClientParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var clientParams types.ClientParams
+			var clientParams types.CoreParams
 			file, err := filepath.Abs(argClientParams)
 			if err != nil {
 				return err
@@ -47,7 +47,7 @@ func CmdUpdateClientParams() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdateClientParams(
+			msg := types.NewMsgUpdateCoreParams(
 				clientCtx.GetFromAddress().String(),
 				chainid,
 				&clientParams,

@@ -17,16 +17,16 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 		Params: k.GetParams(ctx)}, nil
 }
 
-func (k Keeper) GetClientParamsForChain(goCtx context.Context, req *types.QueryGetClientParamsForChainRequest) (*types.QueryGetClientParamsForChainResponse, error) {
+func (k Keeper) GetCoreParamsForChain(goCtx context.Context, req *types.QueryGetCoreParamsForChainRequest) (*types.QueryGetCoreParamsForChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	clientParams, found := k.GetClientParamsByChainID(ctx, req.ChainID)
+	clientParams, found := k.GetCoreParamsByChainID(ctx, req.ChainID)
 	if !found {
 		return nil, status.Error(codes.NotFound, "client params not found")
 	}
-	return &types.QueryGetClientParamsForChainResponse{
-		ClientParams: &clientParams,
+	return &types.QueryGetCoreParamsForChainResponse{
+		CoreParams: &clientParams,
 	}, nil
 }

@@ -15,9 +15,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, mapper := range genesisObservers {
 		k.SetObserverMapper(ctx, mapper)
 	}
-	allClientParams := types.GetClientParams()
+	allCoreParams := types.GetCoreParams()
 	for _, chain := range common.DefaultChainsList() {
-		k.SetClientParamsByChainID(ctx, chain.ChainId, allClientParams[chain.ChainId])
+		if _, ok := allCoreParams[chain.ChainId]; !ok {
+			panic("Core params not found for chain id : " + chain.ChainName.String())
+		}
+		k.SetCoreParamsByChainID(ctx, chain.ChainId, allCoreParams[chain.ChainId])
 	}
 	k.SetParams(ctx, types.DefaultParams())
 }
