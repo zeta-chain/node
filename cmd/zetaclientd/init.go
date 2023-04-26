@@ -26,7 +26,6 @@ type initArguments struct {
 	zetacoreURL   string
 	authzGranter  string
 	authzHotkey   string
-	devMode       bool
 	level         int8
 }
 
@@ -40,7 +39,6 @@ func init() {
 	InitCmd.Flags().StringVar(&initArgs.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
 	InitCmd.Flags().StringVar(&initArgs.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
 	InitCmd.Flags().StringVar(&initArgs.authzHotkey, "hotkey", "", "hotkey for zetaclient this key is used for TSS and ZetaClient operations")
-	InitCmd.Flags().BoolVar(&initArgs.devMode, "dev", false, "dev mode: geth private network as goerli testnet")
 	InitCmd.Flags().Int8Var(&initArgs.level, "log-level", int8(zerolog.InfoLevel), "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic , 6: NoLevel , 7: Disable)")
 }
 

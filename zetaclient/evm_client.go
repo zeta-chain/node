@@ -848,8 +848,6 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	for {
 		select {
 		case <-ticker.C:
-			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice tick")
-			ob.logger.WatchGasPrice.Info().Msgf("Config Blocktime %d", ob.cfg.EVMChainConfigs[common.ZetaChain().ChainId].CoreParams.BlockTimeZetaChain)
 			err := ob.PostGasPrice()
 			if err != nil {
 				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())

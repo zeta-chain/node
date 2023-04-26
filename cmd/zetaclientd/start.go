@@ -69,6 +69,10 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("EVM Chain Configs: %s", cfg.PrintEVMConfigs())
 	startLogger.Info().Msgf("BTC Chain Configs: %s", cfg.PrintBTCConfigs())
 	startLogger.Info().Msgf("Supported Chains List: %s", cfg.PrintSupportedChains())
+	if len(cfg.ChainsEnabled) == 0 {
+		startLogger.Info().Msgf("No chains enabled, exiting")
+		return nil
+	}
 
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {

@@ -137,7 +137,7 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 	for {
 		select {
 		case <-ticker.C:
-			b.logger.Info().Msg("Running Updater")
+			b.logger.Debug().Msg("Running Updater")
 			err := b.UpdateConfigFromCore(cfg)
 			if err != nil {
 				b.logger.Err(err).Msg("UpdateConfig error")
