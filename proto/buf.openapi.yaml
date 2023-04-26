@@ -1,0 +1,9 @@
+# The OpenAPI plugin is configured separately in this file because it is
+# utilizing the "strategy: all" option, which requires buf to be executed
+# separately in order to generate the OpenAPI.
+version: v1
+plugins:
+  - name: openapiv2
+    out: .
+    strategy: all
+    opt: allow_merge=true,merge_file_name=zetachain,output_format=yaml
