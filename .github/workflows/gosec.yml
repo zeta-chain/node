@@ -11,7 +11,7 @@ env:
   
 jobs:
   gosec:
-    runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
     env:
       GO111MODULE: on
     steps:
@@ -25,8 +25,8 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-      - name: Install Pipeline Dependencies
-        uses:  ./.github/actions/install-dependencies
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
 
       - name: Run Gosec Security Scanner
         run: |

@@ -11,15 +11,15 @@ env:
   
 jobs:
   lint:
-    runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
 
-      - name: Install Pipeline Dependencies
-        uses:  ./.github/actions/install-dependencies
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
 
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2.0.8
