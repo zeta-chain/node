@@ -43,16 +43,16 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 		if chain.IsZetaChain() {
 			continue
 		}
-		if chain.IsEVMChain() {
-			mpiAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams.ConnectorContractAddress)
-			erc20CustodyAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams.ERC20CustodyContractAddress)
-			signer, err := zetaclient.NewEVMSigner(chain, cfg.EVMChainConfigs[chain.ChainName.String()].Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger)
+		if common.IsEVMChain(chain.ChainId) {
+			mpiAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainId].CoreParams.ConnectorContractAddress)
+			erc20CustodyAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainId].CoreParams.ERC20CustodyContractAddress)
+			signer, err := zetaclient.NewEVMSigner(chain, cfg.EVMChainConfigs[chain.ChainId].Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger)
 			if err != nil {
 				logger.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 				return nil, err
 			}
 			signerMap[chain] = signer
-		} else if chain.IsBitcoinChain() {
+		} else if common.IsBitcoinChain(chain.ChainId) {
 			// FIXME: move the construction of rpcclient to somewhere else
 			connCfg := &rpcclient.ConnConfig{
 				Host:         cfg.BitcoinConfig.RPCEndpoint,
@@ -87,9 +87,9 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 		logger.Info().Msgf("starting observer for : %s ", chain.String())
 		var co zetaclient.ChainClient
 		var err error
-		if chain.IsEVMChain() {
+		if common.IsEVMChain(chain.ChainId) {
 			co, err = zetaclient.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, chain)
-		} else if chain.IsBitcoinChain() {
+		} else if common.IsBitcoinChain(chain.ChainId) {
 			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger, cfg)
 		}
 		if err != nil {

@@ -102,9 +102,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	for _, chain := range cfg.ChainsEnabled {
 		var tssAddr string
-		if chain.IsEVMChain() {
+		if common.IsEVMChain(chain.ChainId) {
 			tssAddr = tss.EVMAddress().Hex()
-		} else if chain.IsBitcoinChain() {
+		} else if common.IsBitcoinChain(chain.ChainId) {
 			tssAddr = tss.BTCAddress()
 		}
 		zetaTx, err := zetaBridge.SetTSS(chain, tssAddr, tss.CurrentPubkey)

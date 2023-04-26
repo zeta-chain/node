@@ -19,4 +19,5 @@ var (
 	ErrSelfDelegation          = sdkerrors.Register(ModuleName, 1109, "Self Delegation for operator not found")
 	ErrCheckObserverDelegation = sdkerrors.Register(ModuleName, 1110, "Observer delegation not sufficient")
 	ErrNotAuthorizedPolicy     = sdkerrors.Register(ModuleName, 1111, "Msg Sender is not the authorized policy")
+	ErrCoreParamsNotSet        = sdkerrors.Register(ModuleName, 1112, "Core params has not been set")
 )

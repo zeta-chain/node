@@ -49,7 +49,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 
 	//Create new config struct
 	configData := config.New()
-
 	//Populate new struct with cli arguments
 	initChainID(&configData)
 	configData.Peer = initArgs.peer
@@ -60,7 +59,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.AuthzHotkey = initArgs.authzHotkey
 	configData.AuthzGranter = initArgs.authzGranter
 	configData.LogLevel = zerolog.Level(initArgs.level)
-
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
 }
@@ -70,5 +68,5 @@ func initChainID(configData *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	configData.EVMChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId = ZEVMChainID.Int64()
+	configData.EVMChainConfigs[common.ZetaChain().ChainId].Chain.ChainId = ZEVMChainID.Int64()
 }

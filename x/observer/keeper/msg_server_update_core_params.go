@@ -14,6 +14,18 @@ func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateC
 	if !k.GetParams(ctx).IsChainIDSupported(msg.ChainId) {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrSupportedChains
 	}
-	k.SetCoreParamsByChainID(ctx, msg.ChainId, *msg.CoreParams)
+	coreParams, found := k.GetAllCoreParams(ctx)
+	if !found {
+		return &types.MsgUpdateCoreParamsResponse{}, types.ErrCoreParamsNotSet
+	}
+	newCoreParams := make([]*types.CoreParams, len(coreParams.CoreParams))
+	for i, cp := range coreParams.CoreParams {
+		if cp.ChainId == msg.CoreParams.ChainId {
+			newCoreParams[i] = msg.CoreParams
+			continue
+		}
+		newCoreParams[i] = cp
+	}
+	k.SetCoreParams(ctx, types.CoreParamsList{CoreParams: newCoreParams})
 	return &types.MsgUpdateCoreParamsResponse{}, nil
 }

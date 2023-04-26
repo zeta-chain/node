@@ -45,21 +45,10 @@ var (
 	BitconNetParams = &chaincfg.RegressionNetParams
 )
 
-var BitcoinConfig = &BTCConfig{
-	RPCUsername: "smoketest",
-	RPCPassword: "123",
-	RPCEndpoint: "bitcoin:18443",
-	RPCParams:   "regtest",
-
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
-}
-
 func New() Config {
 	return Config{
-		EVMChainConfigs: map[string]*EVMConfig{},
-		BitcoinConfig:   BitcoinConfig,
+		EVMChainConfigs: map[int64]*EVMConfig{},
+		BitcoinConfig:   *BTCConfig{},
 		ChainsEnabled:   []common.Chain{},
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdGetClientParamsForChain() *cobra.Command {
+func CmdGetCoreParamsForChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-core-params [chain-id]",
 		Short: "Query GetCoreParamsForChain",
@@ -38,6 +38,35 @@ func CmdGetClientParamsForChain() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdGetCoreParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-core-params",
+		Short: "Query GetCoreParams",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryGetCoreParamsRequest{}
+			res, err := queryClient.GetCoreParams(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

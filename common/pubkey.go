@@ -76,7 +76,7 @@ func (pubKey PubKey) GetAddress(chain Chain) (Address, error) {
 		return NoAddress, nil
 	}
 
-	if chain.IsEVMChain() {
+	if IsEVMChain(chain.ChainId) {
 		// retrieve compressed pubkey bytes from bechh32 encoded str
 		pk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, string(pubKey))
 		if err != nil {

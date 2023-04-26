@@ -21,13 +21,22 @@ func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) 
 
 }
 
-func (b *ZetaCoreBridge) GetClientConfig(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
+func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: externalChainID})
 	if err != nil {
 		return &zetaObserverTypes.CoreParams{}, err
 	}
 	return resp.CoreParams, nil
+}
+
+func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CoreParams.CoreParams, nil
 }
 
 func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {

@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
@@ -58,11 +57,10 @@ func (c *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CorePara
 }
 
 type EVMConfig struct {
-	ConnectorABI abi.ABI
-	Client       *ethclient.Client
-	Chain        common.Chain
-	Endpoint     string
-	CoreParams   *CoreParams
+	Client     *ethclient.Client
+	Chain      common.Chain
+	Endpoint   string
+	CoreParams *CoreParams
 }
 
 type BTCConfig struct {
@@ -88,7 +86,7 @@ type Config struct {
 	AuthzHotkey   string
 
 	ChainsEnabled   []common.Chain
-	EVMChainConfigs map[string]*EVMConfig // TODO : chain to chain id
+	EVMChainConfigs map[int64]*EVMConfig // TODO : chain to chain id
 	BitcoinConfig   *BTCConfig
 }
 
@@ -114,4 +112,19 @@ func (c Config) PrintBTCConfigs() string {
 func (c Config) PrintSupportedChains() string {
 	s, _ := json.MarshalIndent(c.ChainsEnabled, "", "\t")
 	return string(s)
+}
+
+func (cp *CoreParams) UpdateCoreParams(params *zetaObserverTypes.CoreParams) {
+	cp.ChainID = params.ChainId
+	cp.BlockTimeExternalChain = params.BlockTimeExternal
+	cp.BlockTimeZetaChain = params.BlockTimeZeta
+	cp.GasPriceTicker = params.GasPriceTicker
+	cp.InTxTicker = params.InTxTicker
+	cp.OutTxTicker = params.OutTxTicker
+	cp.WatchUTXOTicker = params.WatchUtxoTicker
+	cp.ConfCount = params.ConfirmationCount
+	cp.ConnectorContractAddress = params.ConnectorContractAddress
+	cp.ZETATokenContractAddress = params.ZetaTokenContractAddress
+	cp.ERC20CustodyContractAddress = params.Erc20CustodyContractAddress
+
 }

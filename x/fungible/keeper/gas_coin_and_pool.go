@@ -24,7 +24,7 @@ func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName
 	}
 
 	transferGasLimit := big.NewInt(21_000)
-	if chain.IsBitcoinChain() {
+	if common.IsBitcoinChain(chain.ChainId) {
 		transferGasLimit = big.NewInt(100) // 100B for a typical tx
 	}
 

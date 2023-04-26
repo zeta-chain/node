@@ -189,7 +189,7 @@ func (ob *EVMChainClient) EndPoint() string {
 }
 
 func (ob *EVMChainClient) GetChainConfig() *config.EVMConfig {
-	return ob.cfg.EVMChainConfigs[ob.chain.ChainName.String()]
+	return ob.cfg.EVMChainConfigs[ob.chain.ChainId]
 }
 
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
@@ -512,25 +512,6 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	return height
 }
 
-func (ob *EVMChainClient) UpdateConfig() {
-	ob.logger.ConfigUpdater.Info().Msg("UpdateConfig started")
-	for {
-		select {
-		// Ticker uses externchain blocktime to update config at each block of the external chain
-		// TODO: test to figure out wether we should be updating at every block for zetacore instead
-		case <-ob.ticker.C:
-			err := ob.zetaClient.UpdateConfigFromCore(ob.GetChainConfig())
-			if err != nil {
-				ob.logger.ConfigUpdater.Err(err).Msg("UpdateConfig error")
-				return
-			}
-		case <-ob.stop:
-			ob.logger.ConfigUpdater.Info().Msg("UpdateConfig stopped")
-			return
-		}
-	}
-}
-
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.InTxTicker) * time.Second)
@@ -619,7 +600,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 		// TODO : refactor this to not use GLOBAL Config
-		if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainName.String()].CoreParams.ZETATokenContractAddress) {
+		if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainId].CoreParams.ZETATokenContractAddress) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 		zetaHash, err := ob.zetaClient.PostSend(
@@ -677,7 +658,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.chain.ChainId,
 			"",
 			clienttypes.BytesToEthHex(event.Recipient),
-			ob.cfg.EVMChainConfigs[common.ZetaChain().ChainName.String()].Chain.ChainId,
+			ob.cfg.EVMChainConfigs[common.ZetaChain().ChainId].Chain.ChainId,
 			math.NewUintFromBigInt(event.Amount),
 			hex.EncodeToString(event.Message),
 			event.Raw.TxHash.Hex(),
@@ -724,7 +705,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 					if err != nil {
 						ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-						chainConf, found := ob.cfg.EVMChainConfigs[ob.chain.String()]
+						chainConf, found := ob.cfg.EVMChainConfigs[ob.chain.ChainId]
 						if !found || chainConf == nil {
 							ob.logger.ExternalChainWatcher.Error().Msgf("chain %s not found in config", ob.chain.String())
 							continue
@@ -868,7 +849,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		select {
 		case <-ticker.C:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice tick")
-			ob.logger.WatchGasPrice.Info().Msgf("Config Blocktime %d", ob.cfg.EVMChainConfigs[common.ZetaChain().ChainName.String()].CoreParams.BlockTimeZetaChain)
+			ob.logger.WatchGasPrice.Info().Msgf("Config Blocktime %d", ob.cfg.EVMChainConfigs[common.ZetaChain().ChainId].CoreParams.BlockTimeZetaChain)
 			err := ob.PostGasPrice()
 			if err != nil {
 				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())

@@ -138,7 +138,7 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 		select {
 		case <-ticker.C:
 			b.logger.Info().Msg("Running Updater")
-			err := b.UpdateConfig(cfg)
+			err := b.UpdateConfigFromCore(cfg)
 			if err != nil {
 				b.logger.Err(err).Msg("UpdateConfig error")
 				return
@@ -148,22 +148,4 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 			return
 		}
 	}
-}
-
-func (b *ZetaCoreBridge) UpdateConfig(cfg *config.Config) error {
-	err := b.UpdateSupportedChainsFromCore(cfg)
-	if err != nil {
-		return err
-	}
-	for _, chain := range cfg.ChainsEnabled {
-		if chain.IsEVMChain() || chain.IsZetaChain() {
-			cfg.EVMChainConfigs[chain.ChainName.String()].CoreParams = config.NewCoreParams()
-			err := b.UpdateConfigFromCore(cfg.EVMChainConfigs[chain.ChainName.String()])
-			if err != nil {
-				b.logger.Error().Err(err).Msgf("UpdateCommonConfig fail %s", chain.String())
-				return err
-			}
-		}
-	}
-	return nil
 }

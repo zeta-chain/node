@@ -40,6 +40,11 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
 	}
 
+// Queries a list of GetCoreParams items.
+	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -88,6 +93,13 @@ message QueryGetCoreParamsForChainRequest {
 
 message QueryGetCoreParamsForChainResponse {
 	CoreParams core_params = 1;
+}
+
+message QueryGetCoreParamsRequest {
+}
+
+message QueryGetCoreParamsResponse {
+	CoreParamsList core_params = 1;
 }
 
 // this line is used by starport scaffolding # 3

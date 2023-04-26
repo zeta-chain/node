@@ -38,32 +38,31 @@ var (
 	BitconNetParams = &chaincfg.RegressionNetParams
 )
 
-var BitcoinConfig = &BTCConfig{
+var bitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
-
-	//WatchInTxPeriod:     5,
-	//WatchGasPricePeriod: 5,
-	//WatchUTXOSPeriod:    5,
+	CoreParams:  NewCoreParams(),
 }
 
 func New() Config {
 	return Config{
 		ChainsEnabled:   []common.Chain{},
 		EVMChainConfigs: evmChainConfigs,
-		BitcoinConfig:   BitcoinConfig,
+		BitcoinConfig:   bitcoinConfig,
 	}
 }
 
-var evmChainConfigs = map[string]*EVMConfig{
+var evmChainConfigs = map[int64]*EVMConfig{
 
-	common.GoerliLocalNetChain().ChainName.String(): {
-		Chain:    common.GoerliLocalNetChain(),
-		Endpoint: "http://eth:8545",
+	common.GoerliLocalNetChain().ChainId: {
+		Chain:      common.GoerliLocalNetChain(),
+		Endpoint:   "http://eth:8545",
+		CoreParams: NewCoreParams(),
 	},
-	common.ZetaChain().ChainName.String(): {
-		Chain: common.ZetaChain(),
+	common.ZetaChain().ChainId: {
+		Chain:      common.ZetaChain(),
+		CoreParams: NewCoreParams(),
 	},
 }

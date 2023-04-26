@@ -150,27 +150,21 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.EVMConfig) error {
-
-	chainConfig, err := b.GetClientConfig(config.Chain.ChainId)
+func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
+	coreParams, err := b.GetCoreParams()
 	if err != nil {
 		return err
 	}
-	config.CoreParams.UpdateFromCoreResponse(*chainConfig)
-	return nil
-}
-
-func (b *ZetaCoreBridge) UpdateSupportedChainsFromCore(config *config.Config) error {
-	supportedChains := []common.Chain{}
-	params, err := b.GetObserverParams()
-	if err != nil {
-		return err
-	}
-	for _, obsParams := range params.ObserverParams {
-		if obsParams.IsSupported {
-			supportedChains = append(supportedChains, *obsParams.Chain)
+	var chains []common.Chain
+	for _, params := range coreParams {
+		chains = append(chains, *common.GetChainFromChainID(params.ChainId))
+		if common.IsBitcoinChain(params.ChainId) {
+			config.BitcoinConfig.CoreParams.UpdateCoreParams(params)
+			continue
 		}
+		config.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
 	}
-	config.ChainsEnabled = supportedChains
+	config.ChainsEnabled = chains
+
 	return nil
 }

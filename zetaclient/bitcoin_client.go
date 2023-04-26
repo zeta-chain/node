@@ -80,7 +80,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.cfg = cfg
 	ob.stop = make(chan struct{})
 	ob.chain = chain
-	if !chain.IsBitcoinChain() {
+	if !common.IsBitcoinChain(chain.ChainId) {
 		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}

@@ -50,10 +50,6 @@ var BitcoinConfig = &BTCConfig{
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
-
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
 }
 
 func New() Config {
@@ -64,25 +60,29 @@ func New() Config {
 	}
 }
 
-var evmChainsConfig = map[string]*EVMConfig{
-	common.GoerliChain().ChainName.String(): {
-		Chain:    common.GoerliChain(),
-		Endpoint: "",
+var evmChainsConfig = map[int64]*EVMConfig{
+	common.GoerliChain().ChainId: {
+		Chain:      common.GoerliChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
 	},
-	common.BscTestnetChain().ChainName.String(): {
-		Chain:    common.BscTestnetChain(),
-		Endpoint: "",
+	common.BscTestnetChain().ChainId: {
+		Chain:      common.BscTestnetChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
 	},
-	common.MumbaiChain().ChainName.String(): {
-		Chain:    common.MumbaiChain(),
-		Endpoint: "",
+	common.MumbaiChain().ChainId: {
+		Chain:      common.MumbaiChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
 	},
-	common.BaobabChain().ChainName.String(): {
-		Chain:    common.BaobabChain(),
-		Endpoint: "",
+	common.BaobabChain().ChainId: {
+		Chain:      common.BaobabChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
 	},
 
-	common.ZetaChain().ChainName.String(): {
+	common.ZetaChain().ChainId: {
 		Chain:      common.ZetaChain(),
 		CoreParams: NewCoreParams(),
 	},
