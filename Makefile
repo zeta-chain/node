@@ -109,9 +109,12 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-proto-go:
-	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+proto:
+	@echo "--> Generating Go from protocol buffer files"
+	@sh ./scripts/protoc-gen-go.sh
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/protoc-gen-openapi.sh
+.PHONY: proto
 
 ###############################################################################
 ###                                Docker Images                             ###
@@ -119,13 +122,12 @@ proto-go:
 
 zetanode:
 	@echo "Building zetanode"
-	@docker build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
 smoketest:
-	@echo "--> Building smoketest image"
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
-.PHONY: smoketest
+	@echo "DEPRECATED: NO-OP: Building smoketest"
 
 start-smoketest:
 	@echo "--> Starting smoketest"

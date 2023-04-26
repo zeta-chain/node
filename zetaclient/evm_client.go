@@ -382,7 +382,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
-	ticker := time.NewTicker(3 * time.Second) // FIXME: config this
+	ticker := time.NewTicker(2 * time.Second) // FIXME: config this
 	for {
 		select {
 		case <-ticker.C:
@@ -1008,7 +1008,7 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 }
 
 func (ob *EVMChainClient) SetChainDetails(chain common.Chain) {
-	MinObInterval := 24
+	MinObInterval := 2
 	chainconfig := config.ChainConfigs[chain.ChainName.String()]
 	ob.confCount = chainconfig.ConfCount
 	ob.BlockTime = chainconfig.BlockTime

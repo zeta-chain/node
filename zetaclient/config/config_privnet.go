@@ -46,7 +46,7 @@ var ChainConfigs = map[string]*ChainETHish{
 	},
 	common.ZetaChain().ChainName.String(): {
 		Chain:                    common.ZetaChain(),
-		BlockTime:                6,
+		BlockTime:                2,
 		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 	},
 }
@@ -57,9 +57,9 @@ var BitcoinConfig = &ChainBitcoinish{
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
 
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
+	WatchInTxPeriod:     1,
+	WatchGasPricePeriod: 1,
+	WatchUTXOSPeriod:    1,
 }
 
 func New() Config {
