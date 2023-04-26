@@ -20,30 +20,28 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 	}
 
 	// Send minted coins to the receiver
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins); err != nil {
+	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins)
+
+	if err == nil {
+		// Check expected receiver balance after transfer
+		balanceCoinAfter := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
+		expCoin := balanceCoin.Add(coins[0])
+
+		if ok := balanceCoinAfter.IsEqual(expCoin); !ok {
+			err = sdkerrors.Wrapf(
+				types.ErrBalanceInvariance,
+				"invalid coin balance - expected: %v, actual: %v",
+				expCoin, balanceCoinAfter,
+			)
+		}
+	}
+
+	if err != nil {
 		// Revert minting if an error is found.
-		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins)
-		if err != nil {
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins); err != nil {
 			return err
 		}
 		return err
-	}
-
-	// Check expected receiver balance after transfer
-	balanceCoinAfter := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
-	expCoin := balanceCoin.Add(coins[0])
-
-	if ok := balanceCoinAfter.IsEqual(expCoin); !ok {
-		// Revert minting if an error is found.
-		err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins)
-		if err != nil {
-			return err
-		}
-		return sdkerrors.Wrapf(
-			types.ErrBalanceInvariance,
-			"invalid coin balance - expected: %v, actual: %v",
-			expCoin, balanceCoinAfter,
-		)
 	}
 
 	return nil
