@@ -58,6 +58,8 @@ type Config struct {
 	ChainsEnabled []common.Chain
 	ChainConfigs  map[string]*ChainETHish
 	BitcoinConfig *ChainBitcoinish
+
+	P2PDiagnostic bool
 }
 
 func (c Config) GetAuthzHotkey() string {
