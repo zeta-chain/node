@@ -131,9 +131,13 @@ start-smoketest:
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
 start-smoketest-p2p-diag:
-	@echo "--> Starting smoketest"
+	@echo "--> Starting smoketest in p2p diagnostic mode"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
 
 stop-smoketest:
 	@echo "--> Stopping smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+stop-smoketest-p2p-diag:
+	@echo "--> Stopping smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
