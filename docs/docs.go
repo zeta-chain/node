@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	apiFile   = "/static/openapi.yml"
+	apiFile   = "/static/openapi.swagger.yaml"
 	indexFile = "template/index.tpl"
 )
 
