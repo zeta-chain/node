@@ -2,8 +2,7 @@ name: Linter
 on:
   push:
     tags:
-      - v*
-      - athens2-*
+      - '*'
   pull_request:
 
 env: 
