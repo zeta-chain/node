@@ -149,6 +149,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+
+	// Wait for Genesis and keygen to be completed. ~ height 10
+	time.Sleep(time.Second * 20)
+	for {
+		response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		if response.Height >= 10 {
+			break
+		}
+	}
+
 	// get the clients for tests
 	var zevmClient *ethclient.Client
 	for {
@@ -168,12 +185,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-	cctxClient := types.NewQueryClient(grpcConn)
-	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
 	// The following deployment must happen here and in this order, please do not change

@@ -127,3 +127,18 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.100
     entrypoint: [ "geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2" ]
+
+  orchestrator:
+    image: orchestrator:latest
+    container_name: orchestrator
+    build:
+      context: ../../.
+      dockerfile: contrib/localnet/orchestrator/Dockerfile
+    depends_on:
+      - zetacore0
+      - eth
+    hostname: orchestrator
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.2
+    entrypoint: /work/start.sh
