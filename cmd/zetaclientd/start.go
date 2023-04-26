@@ -63,9 +63,11 @@ func start(_ *cobra.Command, _ []string) error {
 	log.Logger = InitLogger(configData.LogLevel)
 
 	//Validate Peer eg. /ip4/172.0.2.1/tcp/6668/p2p/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp
-	err = validatePeer(configData.Peer)
-	if err != nil {
-		return err
+	if len(configData.Peer) != 0 {
+		err := validatePeer(configData.Peer)
+		if err != nil {
+			return err
+		}
 	}
 
 	//Wait until zetacore has started
