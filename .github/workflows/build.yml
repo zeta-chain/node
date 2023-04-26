@@ -5,9 +5,9 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd/remove-excessive-uploads
     tags:
-      - v*
-      - athens2-*
+      - "*"
   pull_request:
     branches:
       - develop
@@ -19,7 +19,7 @@ on:
       - ready_for_review
 
 env:
-  S3_BUCKET_NAME: "zetachain-deployment-files"
+  S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
@@ -181,6 +181,7 @@ jobs:
   upload:
     runs-on: ["zeta-runners"]
     timeout-minutes: 15
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
       - build-and-test
       - smoke-test
@@ -239,7 +240,7 @@ jobs:
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
       with:
-        bucket-name: ${{ env.S3_BUCKET_NAME }}
+        bucket-name: ${{ env.S3_BUCKET_PATH }}
         release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
@@ -260,7 +261,7 @@ jobs:
     # # Approval will be required closer to mainnet
     # - name: Require Approval To Create a Release
     #   uses: softprops/action-gh-release@v1
-    #   if: startsWith(github.ref, 'refs/tags/athens')
+    #   if: startsWith(github.ref, 'refs/tags/v')
     #   with:
     #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
     #     files: |
@@ -269,7 +270,7 @@ jobs:
 
     - name: Create GitHub Release for ZetaCore/ZetaClient
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/v')
       with:
         token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
         files: |
@@ -281,6 +282,7 @@ jobs:
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
       - build-and-test
       - build-alpine-and-test
@@ -291,7 +293,6 @@ jobs:
         fetch-depth: 0
 
     - name: upgrade-path-testing
-      if: startsWith(github.ref, 'refs/tags/')
       uses: ./.github/actions/upgrade-testing
       with:
         github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
