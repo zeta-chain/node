@@ -19,7 +19,7 @@ on:
           - binary_replacement
 
 env:
-  S3_BUCKET_NAME: "zetachain-deployment-files"
+  S3_BUCKET_PATH: "zetachain-deployment-files/zeta-node-builds"
   AWS_REGION: "us-east-1"
 
 jobs:
@@ -78,7 +78,7 @@ jobs:
         uses:  ./.github/actions/deploy-binaries
         if:  ${{ github.event.inputs.DEPLOYMENT_METHOD == 'binary_replacement' }}
         with:
-          S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          S3_BUCKET_PATH: ${{ env.S3_BUCKET_PATH }}
           TAKE_SNAPSHOTS: true
           BRANCH_OR_TAG_NAME: ${{ github.ref_name }}
 
@@ -104,8 +104,8 @@ jobs:
       - name: Get Checksum
         if: ${{ github.event.inputs.DEPLOYMENT_METHOD == 'cosmovisor' }}
         run: |
-          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetacored ./ || exit 1
-          aws s3 cp s3://${{ env.S3_BUCKET_NAME }}/${{ github.ref_name }}/zetaclientd ./ || exit 1
+          aws s3 cp s3://${{ env.S3_BUCKET_PATH }}/${{ github.ref_name }}/zetacored ./ || exit 1
+          aws s3 cp s3://${{ env.S3_BUCKET_PATH }}/${{ github.ref_name }}/zetaclientd ./ || exit 1
           ZETACORED_CHECKSUM=$(shasum -b -a 256 zetacored | cut -d ' ' -f 1)
           ZETACLIENTD_CHECKSUM=$(shasum -b -a 256 zetaclientd | cut -d ' ' -f 1)
           echo "ZETACORED_CHECKSUM=$ZETACORED_CHECKSUM" >> $GITHUB_ENV
@@ -119,8 +119,8 @@ jobs:
           CHAIN_ID: ${{ env.CHAIN_ID }}
           DESCRIPTION: ${{ github.event.inputs.UPGRADE_NAME }}
           ZETACORED_CHECKSUM: ${{ env.ZETACORED_CHECKSUM }}
-          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ github.ref_name }}/zetacored"
           ZETACLIENTD_CHECKSUM: ${{ env.ZETACLIENTD_CHECKSUM }}
-          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ github.ref_name }}/zetaclientd"
           API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
           UPGRADE_BLOCK_HEIGHT: ${{ github.event.inputs.UPGRADE_BLOCK_HEIGHT }}
