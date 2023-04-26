@@ -104,6 +104,10 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Warn().Msg("P2P Diagnostic mode enabled")
 		startLogger.Warn().Msgf("seed peer: %s", peers)
 		pubkeyBech32, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, bridgePk.PubKey())
+		if err != nil {
+			startLogger.Error().Err(err).Msg("Bech32ifyPubKey error")
+			return err
+		}
 		startLogger.Warn().Msgf("my pubkey %s", pubkeyBech32)
 
 		var s *mc.HTTPServer
@@ -144,6 +148,10 @@ func start(_ *cobra.Command, _ []string) error {
 				return addrs
 			}),
 		)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("fail to create host")
+			return err
+		}
 		startLogger.Info().Msgf("host created: ID %s", host.ID().String())
 		if len(peers) == 0 {
 			s = mc.NewHTTPServer(host.ID().String())
