@@ -109,9 +109,12 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-proto-go:
-	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+proto:
+	@echo "--> Generating Go from protocol buffer files"
+	@sh ./scripts/protoc-gen-go.sh
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/protoc-gen-openapi.sh
+.PHONY: proto
 
 ###############################################################################
 ###                                Docker Images                             ###
