@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -31,7 +32,6 @@ import (
 	"syscall"
 	"time"
 
-	coskey "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 )
@@ -101,13 +101,10 @@ func start(_ *cobra.Command, _ []string) error {
 	initPreParams(configData.PreParamsPath)
 
 	if configData.P2PDiagnostic {
-		pk := coskey.PubKey{
-			Key: priKey.PubKey().Bytes()[:],
-		}
 		startLogger.Warn().Msg("P2P Diagnostic mode enabled")
-		startLogger.Warn().Msgf("My peer: %")
 		startLogger.Warn().Msgf("seed peer: %s", peers)
-		startLogger.Warn().Msgf("my pubkey %s", pk.String())
+		pubkeyBech32, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, bridgePk.PubKey())
+		startLogger.Warn().Msgf("my pubkey %s", pubkeyBech32)
 
 		var s *mc.HTTPServer
 		if len(peers) == 0 {
