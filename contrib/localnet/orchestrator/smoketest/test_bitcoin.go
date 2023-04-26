@@ -86,11 +86,11 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		panic(err)
 	}
 	fmt.Printf("balances: \n")
-	fmt.Printf("  mine: %+v\n", bals.Mine)
+	fmt.Printf("  mine (Deployer): %+v\n", bals.Mine)
 	if bals.WatchOnly != nil {
-		fmt.Printf("  watchonly: %+v\n", bals.WatchOnly)
+		fmt.Printf("  watchonly (TSSAddress): %+v\n", bals.WatchOnly)
 	}
-	fmt.Printf("TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
+	fmt.Printf("  TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
 
 	sm.DepositBTC()
 }
@@ -101,10 +101,18 @@ func (sm *SmokeTest) DepositBTC() {
 	if err != nil {
 		panic(err)
 	}
+	spendableAmount := 0.0
+	spendableUTXOs := 0
 	for _, utxo := range utxos {
-		fmt.Printf("utxo: %+v\n", utxo)
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
 	}
-
+	fmt.Printf("ListUnspent:\n")
+	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
+	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
+	fmt.Printf("Now sending two txs to TSS address...\n")
 	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
@@ -313,8 +321,8 @@ func SendToTSSFromDeployerToDeposit(to btcutil.Address, amount float64, inputUTX
 
 	fmt.Printf("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
-		fmt.Printf("txout %d\n", idx)
-		fmt.Printf("  value: %d\n", txout.Value)
+		fmt.Printf("  txout %d", idx)
+		fmt.Printf("  value: %d", txout.Value)
 		fmt.Printf("  PkScript: %x\n", txout.PkScript)
 	}
 	stx, signed, err := btc.SignRawTransactionWithWallet(tx)
