@@ -25,9 +25,11 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"google.golang.org/grpc"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -59,6 +61,13 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	log.Logger = InitLogger(configData.LogLevel)
+
+	//validate peer
+	err = validatePeer(configData.Peer)
+	if err != nil {
+		return err
+	}
+
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
 	masterLogger := log.Logger
@@ -433,4 +442,28 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
+}
+
+func validatePeer(seedPeer string) error {
+	parsedPeer := strings.Split(seedPeer, "/")
+
+	if len(parsedPeer) < 7 {
+		log.Error().Msgf("seed peer is malformed: %s", seedPeer)
+		return errors.New("seed peer missing IP or ID")
+	}
+
+	seedIP := parsedPeer[2]
+	seedID := parsedPeer[6]
+
+	if net.ParseIP(seedIP) == nil {
+		log.Error().Msgf("invalid seed IP address: %s", seedIP)
+		return errors.New("invalid seed IP address")
+	}
+
+	if len(seedID) == 0 {
+		log.Error().Msgf("seed id is empty")
+		return errors.New("seed id is empty")
+	}
+
+	return nil
 }
