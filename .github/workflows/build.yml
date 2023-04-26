@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd/remove-excessive-uploads
     tags:
       - "*"
   pull_request:
@@ -18,7 +19,7 @@ on:
       - ready_for_review
 
 env:
-  S3_BUCKET_NAME: "zetachain-deployment-files"
+  S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
@@ -239,7 +240,7 @@ jobs:
     - name: upload-files-to-s3
       uses: ./.github/actions/upload-to-s3
       with:
-        bucket-name: ${{ env.S3_BUCKET_NAME }}
+        bucket-name: ${{ env.S3_BUCKET_PATH }}
         release-name: ${{ env.RELEASE_NAME }}
         git-sha: ${{ github.sha }}
         files: |
