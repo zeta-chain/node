@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -111,7 +112,15 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	chainNonce, isFound := k.GetChainNonces(ctx, chain.ChainName.String())
 
 	if isFound {
-		chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
+		isExisting := false
+		for _, signer := range chainNonce.Signers {
+			if signer == msg.Creator {
+				isExisting = true
+			}
+		}
+		if !isExisting {
+			chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
+		}
 		chainNonce.Nonce = msg.Nonce
 	} else if !isFound {
 		chainNonce = types.ChainNonces{

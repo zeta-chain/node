@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
 )
 
 // Mint ZETA (gas token) to the given address
@@ -20,6 +21,11 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 
 	// Send minted coins to the receiver
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins); err != nil {
+		// Revert minting if an error is found.
+		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
@@ -28,6 +34,11 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 	expCoin := balanceCoin.Add(coins[0])
 
 	if ok := balanceCoinAfter.IsEqual(expCoin); !ok {
+		// Revert minting if an error is found.
+		err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins)
+		if err != nil {
+			return err
+		}
 		return sdkerrors.Wrapf(
 			types.ErrBalanceInvariance,
 			"invalid coin balance - expected: %v, actual: %v",

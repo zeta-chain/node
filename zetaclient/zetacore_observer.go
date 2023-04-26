@@ -128,7 +128,11 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				logger.Info().Msgf("test keysign...")
-				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
+				err = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
+				if err != nil {
+					logger.Error().Msgf("TestKeysign fail")
+					continue
+				}
 				logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
 				for _, chain := range config.ChainsEnabled {
@@ -282,7 +286,16 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 		sendMap[chain] = sends[start:]
 		log.Debug().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].GetCurrentOutTxParam().OutboundTxTssNonce)
 	}
-	return sendMap
+	keys := make([]string, 0)
+	for key := range sendMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	sortedSendMap := make(map[string][]*types.CrossChainTx)
+	for _, key := range keys {
+		sortedSendMap[key] = sendMap[key]
+	}
+	return sortedSendMap
 }
 
 func GetTargetChain(send *types.CrossChainTx) string {

@@ -1,9 +1,10 @@
 package zetaclient
 
 import (
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -286,6 +287,27 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	return nil
 }
 
+// Returns number of required Bitcoin confirmations depending on sent BTC amount.
+// TODO: reach consensus on threasholds.
+func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
+	if amount.Cmp(big.NewInt(100000000)) >= 0 {
+		return 6
+	}
+	if amount.Cmp(big.NewInt(50000000)) >= 0 {
+		return 5
+	}
+	if amount.Cmp(big.NewInt(30000000)) >= 0 {
+		return 4
+	}
+	if amount.Cmp(big.NewInt(10000000)) >= 0 {
+		return 3
+	}
+	if amount.Cmp(big.NewInt(1000000)) >= 0 {
+		return 2
+	}
+	return 1
+}
+
 // returns isIncluded, isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	chain := ob.chain.ChainId
@@ -296,10 +318,10 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	if !found {
 		return false, false, nil
 	}
+	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
 	if res.Confirmations == 0 {
 		return true, false, nil
-	} else if res.Confirmations > 0 { // FIXME: use configured block confirmation
-		amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
+	} else if res.Confirmations > ob.ConfirmationsThreshold(amountInSat) {
 		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
 			res.TxID,
