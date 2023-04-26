@@ -19,7 +19,7 @@ on:
           - binary_replacement
 
 env:
-  S3_BUCKET_PATH: "zetachain-deployment-files/zeta-node-builds"
+  S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   AWS_REGION: "us-east-1"
 
 jobs:
