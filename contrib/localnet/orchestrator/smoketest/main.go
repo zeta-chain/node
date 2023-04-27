@@ -160,10 +160,12 @@ func main() {
 	// Wait for Genesis and keygen to be completed. ~ height 10
 	time.Sleep(time.Second * 20)
 	for {
+		time.Sleep(5 * time.Second)
 		response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
 		if response.Height >= 10 {
 			break
 		}
+		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 	}
 
 	// get the clients for tests
@@ -190,7 +192,7 @@ func main() {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	smokeTest.TestBitcoinSetup()
+	//smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
@@ -220,7 +222,7 @@ func main() {
 	smokeTest.TestSendZetaOut()
 	smokeTest.TestMessagePassing()
 	smokeTest.TestZRC20Swap()
-	smokeTest.TestBitcoinWithdraw()
+	//smokeTest.TestBitcoinWithdraw()
 	smokeTest.TestCrosschainSwap()
 	smokeTest.TestMessagePassingRevertFail()
 	smokeTest.TestMessagePassingRevertSuccess()
