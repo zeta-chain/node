@@ -25,8 +25,64 @@ env:
 
 jobs:
 
-  build-and-test-arm:
+  build-and-test-x86-jet:
     runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 30
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Install Pipeline Dependencies
+      uses:  ./.github/actions/install-dependencies
+
+    - name: setup-git-credentials
+      uses: de-vri-es/setup-git-credentials@v2.0.8
+      with:
+        credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build zetacored and zetaclientd
+      env:
+        CGO_ENABLED: 1
+        GOOS: linux
+        GOARCH: amd64
+      run: |
+        make install-testnet
+        cp "$HOME"/go/bin/* ./
+
+    - name: Test
+      if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
+      run: |
+        echo "Running Build Tests"
+        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+
+    - name: Binary Docker Test
+      run: |
+        chmod a+x ./zetacored
+        ./zetacored version
+        cp zetacored zetacored-ubuntu
+        cp zetaclientd zetaclientd-ubuntu
+
+    - name: Save Binaries as Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries-${{ github.sha }}
+        path: |
+            zetacored-ubuntu
+            zetaclientd-ubuntu
+
+
+
+  build-and-test-buildjet-arm:
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
     timeout-minutes: 30
     steps:
 
