@@ -44,8 +44,6 @@ var StartCmd = &cobra.Command{
 	RunE:  start,
 }
 
-const maxRetryCount = 10
-
 func init() {
 	RootCmd.AddCommand(StartCmd)
 }

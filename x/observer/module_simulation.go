@@ -23,6 +23,7 @@ var (
 	_ = baseapp.Paramspace
 )
 
+/* #nosec */
 const (
 	opWeightMsgUpdateClientParams = "op_weight_msg_update_client_params"
 	// TODO: Determine the simulation weight value

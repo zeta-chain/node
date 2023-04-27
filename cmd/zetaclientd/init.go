@@ -18,7 +18,6 @@ var InitCmd = &cobra.Command{
 var initArgs = initArguments{}
 
 type initArguments struct {
-	enabledChains string
 	peer          string
 	preParamsPath string
 	keygen        int64

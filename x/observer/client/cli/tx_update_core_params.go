@@ -19,21 +19,17 @@ func CmdUpdateCoreParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-client-params [chain-id] [client-params.json]",
 		Short: "Broadcast message updateClientParams",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argChainID := args[0]
-			argClientParams := args[1]
+
+			argCoreParams := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			chainid, err := strconv.ParseInt(argChainID, 10, 64)
-			if err != nil {
-				return err
-			}
 			var clientParams types.CoreParams
-			file, err := filepath.Abs(argClientParams)
+			file, err := filepath.Abs(argCoreParams)
 			if err != nil {
 				return err
 			}
@@ -49,7 +45,6 @@ func CmdUpdateCoreParams() *cobra.Command {
 
 			msg := types.NewMsgUpdateCoreParams(
 				clientCtx.GetFromAddress().String(),
-				chainid,
 				&clientParams,
 			)
 			if err := msg.ValidateBasic(); err != nil {

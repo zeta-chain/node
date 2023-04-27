@@ -11,7 +11,7 @@ func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateC
 	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_update_client_params) {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrNotAuthorizedPolicy
 	}
-	if !k.GetParams(ctx).IsChainIDSupported(msg.ChainId) {
+	if !k.GetParams(ctx).IsChainIDSupported(msg.CoreParams.ChainId) {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrSupportedChains
 	}
 	coreParams, found := k.GetAllCoreParams(ctx)

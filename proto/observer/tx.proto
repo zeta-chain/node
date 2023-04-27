@@ -28,8 +28,7 @@ service Msg {
 //}
 message MsgUpdateCoreParams {
   string creator = 1;
-  int64 chainId = 2;
-  CoreParams coreParams = 3;
+  CoreParams coreParams = 2;
 }
 
 message MsgUpdateCoreParamsResponse {

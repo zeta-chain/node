@@ -155,7 +155,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	var chains []common.Chain
+	chains := make([]common.Chain, len(coreParams))
 	for _, params := range coreParams {
 		chains = append(chains, *common.GetChainFromChainID(params.ChainId))
 		if common.IsBitcoinChain(params.ChainId) {
