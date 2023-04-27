@@ -35,8 +35,14 @@ jobs:
     - name: set cpu architecture
       shell: bash
       run: |
-        echo "CPU_ARCH=$(uname -m)" >> $GITHUB_ENV
-        echo $CPU_ARCH
+        if [ "$(uname -m)" == "aarch64" ]; then
+          echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+        elif [ "$(uname -m)" == "x86_64" ]; then
+          echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+        else
+          echo "Unsupported architecture" >&2
+          exit 1
+        fi
 
     - name: Install Pipeline Dependencies
       uses:  ./.github/actions/install-dependencies
