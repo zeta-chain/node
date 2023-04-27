@@ -249,7 +249,10 @@ func start(_ *cobra.Command, _ []string) error {
 					_, err = stream.Write([]byte(message))
 					if err != nil {
 						startLogger.Error().Err(err).Msgf("fail to write to stream to peer %s", peer)
-						stream.Close()
+						err = stream.Close()
+						if err != nil {
+							startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+						}
 						continue
 					}
 					//startLogger.Debug().Msgf("wrote %d bytes", nw)
@@ -257,12 +260,18 @@ func start(_ *cobra.Command, _ []string) error {
 					nr, err := stream.Read(buf)
 					if err != nil {
 						startLogger.Error().Err(err).Msgf("fail to read from stream to peer %s", peer)
-						stream.Close()
+						err = stream.Close()
+						if err != nil {
+							startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+						}
 						continue
 					}
 					//startLogger.Debug().Msgf("read %d bytes", nr)
 					startLogger.Debug().Msgf("echoed message: %s", string(buf[:nr]))
-					stream.Close()
+					err = stream.Close()
+					if err != nil {
+						startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+					}
 
 					if string(buf[:nr]) != message {
 						startLogger.Error().Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
