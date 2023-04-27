@@ -25,7 +25,6 @@ env:
 
 jobs:
 
-
   build-and-test-buildjet-arm:
     runs-on: [ buildjet-8vcpu-ubuntu-2204-arm ] # [buildjet-2vcpu-ubuntu-2204-arm, buildjet-4vcpu-ubuntu-2204-arm, buildjet-8vcpu-ubuntu-2204-arm, buildjet-16vcpu-ubuntu-2204-arm, buildjet-32vcpu-ubuntu-2204-arm ]
     timeout-minutes: 30
@@ -39,6 +38,9 @@ jobs:
       uses:  ./.github/actions/install-dependencies
       with:
         cpu_architecture: ${{ env.CPU_ARCH }}
+        skip_python: "true"
+        skip_aws_cli: "true"
+        skip_docker_compose: "true"
 
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
@@ -79,12 +81,9 @@ jobs:
         cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
         cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
 
-        # cp zetacored zetacored-ubuntu-22-arm64
-        # cp zetaclientd zetaclientd-ubuntu-22-arm64
-        ls 
-
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
+      # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
       with:
         name: binaries-${{ github.sha }}
         path: |
@@ -170,7 +169,6 @@ jobs:
   #         gcc 
   #         g++
   #       shell-name: alpine.sh
-
 
   #   - name: setup-git-credentials
   #     uses: de-vri-es/setup-git-credentials@v2.0.8

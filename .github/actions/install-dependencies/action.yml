@@ -8,6 +8,18 @@ inputs:
     description: "CPU architecture"
     required: false
     default: "amd64"
+  skip_python:
+    description: "Skip Python installation"
+    required: false
+    default: "false"
+  skip_aws_cli:
+    description: "Skip AWS CLI installation"
+    required: false
+    default: "false"
+  skip_docker_compose:
+    description: "Skip Docker Compose installation"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -32,25 +44,19 @@ runs:
         echo ${{ github.event.inputs.cpu_architecture }}
 
     - uses: actions/setup-python@v4
-      if: ${{ inputs.cpu_architecture == 'amd64' }}
+      # if: ${{ inputs.cpu_architecture == 'amd64' }}
+      if: ${{ inputs.skip_python == 'false' }}
       with:
         python-version: 'pypy3.9'
 
     - uses: chrisdickinson/setup-yq@latest
 
-    # - id: install-aws-cli
-    #   uses: unfor19/install-aws-cli-action@v1
-    #   with:
-    #     version: 2
-    #     arch: "amd64" # ${{ github.event.inputs.cpu_architecture }}
-
-    # - name: install-aws-cli
-    #   shell: bash
-    #   run: |
-    #     curl -L -o install-aws.sh https://raw.githubusercontent.com/unfor19/install-aws-cli-action/master/entrypoint.sh && \
-    #     chmod +x install-aws.sh
-    #     ./install-aws.sh "v2" "$INPUT_CPU_ARCHITECTURE"
-    #     rm install-aws.sh  
+    - id: install-aws-cli
+      if: ${{ inputs.skip_aws_cli == 'false' }}
+      uses: unfor19/install-aws-cli-action@v1
+      with:
+        version: 2
+        arch: ${{ inputs.cpu_architecture }}
 
     - name: Dependencies.
       shell: bash
@@ -59,9 +65,9 @@ runs:
         sudo apt-get install wget jq -y
 
     - name: Install Docker Compose
+      if: ${{ inputs.skip_docker_compose == 'false' }}
       shell: bash
       run: |
-
         sudo apt-get update || echo "Issue running apt-get update."
         sudo apt-get install \
           ca-certificates \
