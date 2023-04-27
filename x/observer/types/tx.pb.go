@@ -6,7 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/zeta-chain/zetacore/common"
@@ -279,7 +279,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error)
 	UpdateCoreParams(ctx context.Context, in *MsgUpdateCoreParams, opts ...grpc.CallOption) (*MsgUpdateCoreParamsResponse, error)
 }
@@ -312,7 +312,7 @@ func (c *msgClient) UpdateCoreParams(ctx context.Context, in *MsgUpdateCoreParam
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
+	//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
 	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
 	UpdateCoreParams(context.Context, *MsgUpdateCoreParams) (*MsgUpdateCoreParamsResponse, error)
 }

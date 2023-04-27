@@ -411,16 +411,15 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		log.Error().Err(err).Msg("tss server start error")
 	}
 
-	s := NewHTTPServer()
+	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
+
+	s := NewHTTPServer(tssServer.GetLocalPeerID())
 	go func() {
 		log.Info().Msg("Starting TSS HTTP Server...")
 		if err := s.Start(); err != nil {
 			fmt.Println(err)
 		}
 	}()
-
-	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
-	s.p2pid = tssServer.GetLocalPeerID()
 	return tssServer, s, nil
 }
 

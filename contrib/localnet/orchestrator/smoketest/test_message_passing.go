@@ -6,12 +6,13 @@ package main
 import (
 	"context"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestMessagePassing() {

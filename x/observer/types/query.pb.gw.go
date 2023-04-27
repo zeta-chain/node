@@ -619,19 +619,19 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zetachain", "observer", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "ballot_by_identifier", "ballot_identifier"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "ballot_by_identifier", "ballot_identifier"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ObserversByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "observers_by_chain", "observation_chain"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ObserversByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "observers_by_chain", "observation_chain"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllObserverMappers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "all_observer_mappers"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllObserverMappers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "all_observer_mappers"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SupportedChains_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "supportedChains"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SupportedChains_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "supportedChains"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetCoreParamsForChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "observer", "get_client_params_for_chain", "chainID"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetCoreParamsForChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "observer", "get_client_params_for_chain", "chainID"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetCoreParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "observer", "get_core_params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetCoreParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "observer", "get_core_params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

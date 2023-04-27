@@ -19,8 +19,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -35,15 +35,8 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
 	}()
 
-	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.SystemContract = SystemContract
-	sm.SystemContractAddr = HexToAddress(SystemContractAddr)
-
 	btc := sm.btcRPCClient
-	_, err = btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
+	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		panic(err)
 	}
@@ -93,11 +86,11 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		panic(err)
 	}
 	fmt.Printf("balances: \n")
-	fmt.Printf("  mine: %+v\n", bals.Mine)
+	fmt.Printf("  mine (Deployer): %+v\n", bals.Mine)
 	if bals.WatchOnly != nil {
-		fmt.Printf("  watchonly: %+v\n", bals.WatchOnly)
+		fmt.Printf("  watchonly (TSSAddress): %+v\n", bals.WatchOnly)
 	}
-	fmt.Printf("TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
+	fmt.Printf("  TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
 
 	sm.DepositBTC()
 }
@@ -108,10 +101,18 @@ func (sm *SmokeTest) DepositBTC() {
 	if err != nil {
 		panic(err)
 	}
+	spendableAmount := 0.0
+	spendableUTXOs := 0
 	for _, utxo := range utxos {
-		fmt.Printf("utxo: %+v\n", utxo)
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
 	}
-
+	fmt.Printf("ListUnspent:\n")
+	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
+	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
+	fmt.Printf("Now sending two txs to TSS address...\n")
 	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
@@ -130,7 +131,7 @@ func (sm *SmokeTest) DepositBTC() {
 	}
 	sm.BTCZRC20Addr = BTCZRC20Addr
 	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
-	BTCZRC20, err := contracts.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -169,18 +170,14 @@ func (sm *SmokeTest) TestBitcoinWithdraw() {
 
 func (sm *SmokeTest) WithdrawBitcoin() {
 	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
-	SystemContract, err := contracts.NewSystemContract(HexToAddress(SystemContractAddr), sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.SystemContract = SystemContract
+
 	// check if the deposit is successful
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
-	BTCZRC20, err := contracts.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -324,8 +321,8 @@ func SendToTSSFromDeployerToDeposit(to btcutil.Address, amount float64, inputUTX
 
 	fmt.Printf("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
-		fmt.Printf("txout %d\n", idx)
-		fmt.Printf("  value: %d\n", txout.Value)
+		fmt.Printf("  txout %d", idx)
+		fmt.Printf("  value: %d", txout.Value)
 		fmt.Printf("  PkScript: %x\n", txout.PkScript)
 	}
 	stx, signed, err := btc.SignRawTransactionWithWallet(tx)

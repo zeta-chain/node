@@ -27,6 +27,8 @@ type initArguments struct {
 	authzGranter  string
 	authzHotkey   string
 	level         int8
+
+	p2pDiagnostic bool
 }
 
 func init() {
@@ -40,6 +42,7 @@ func init() {
 	InitCmd.Flags().StringVar(&initArgs.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
 	InitCmd.Flags().StringVar(&initArgs.authzHotkey, "hotkey", "", "hotkey for zetaclient this key is used for TSS and ZetaClient operations")
 	InitCmd.Flags().Int8Var(&initArgs.level, "log-level", int8(zerolog.InfoLevel), "log level (0:debug, 1:info, 2:warn, 3:error, 4:fatal, 5:panic , 6: NoLevel , 7: Disable)")
+	InitCmd.Flags().BoolVar(&initArgs.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
@@ -57,6 +60,8 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.AuthzHotkey = initArgs.authzHotkey
 	configData.AuthzGranter = initArgs.authzGranter
 	configData.LogLevel = zerolog.Level(initArgs.level)
+	configData.P2PDiagnostic = initArgs.p2pDiagnostic
+
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
 }

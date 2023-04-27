@@ -10,9 +10,9 @@ Creates a cosmovisor upgrade proposal and then issues a vote on all validators
           DESCRIPTION: "Upgrade Description Goes Here"
           CHAIN_ID: ${{ env.CHAIN_ID }}
           ZETACORED_CHECKSUM: "1234567" #SHA256 
-          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/develop/zetacored"
+          ZETACORED_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/builds/zeta-node/develop/zetacored"
           ZETACLIENTD_CHECKSUM: "1234567" #SHA256 
-          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/develop/zetaclientd"
+          ZETACLIENTD_URL: "https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/builds/zeta-node/develop/zetaclientd"
           CHAIN_ID: ${{ github.event.inputs.CHAIN_ID }}
           API_ENDPOINT: "https://api.${{ github.event.inputs.ENVIRONMENT }}.zetachain.com"
           UPGRADE_BLOCK_HEIGHT: 999999

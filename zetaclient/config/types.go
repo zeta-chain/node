@@ -88,6 +88,7 @@ type Config struct {
 	ChainsEnabled   []common.Chain
 	EVMChainConfigs map[int64]*EVMConfig // TODO : chain to chain id
 	BitcoinConfig   *BTCConfig
+	P2PDiagnostic   bool
 }
 
 func (c Config) GetAuthzHotkey() string {

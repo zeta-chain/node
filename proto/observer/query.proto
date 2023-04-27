@@ -16,7 +16,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Query {
 	// Parameters queries the parameters of the module.
 	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-		option (google.api.http).get = "/zetachain/observer/params";
+		option (google.api.http).get = "/zeta-chain/observer/params";
 	}
 	// Queries a list of VoterByIdentifier items.
 	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {

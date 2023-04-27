@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
