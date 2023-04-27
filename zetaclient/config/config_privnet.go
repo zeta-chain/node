@@ -56,8 +56,8 @@ func New() Config {
 
 var evmChainConfigs = map[int64]*EVMConfig{
 
-	common.GoerliLocalNetChain().ChainId: {
-		Chain:      common.GoerliLocalNetChain(),
+	common.GoerliChain().ChainId: {
+		Chain:      common.GoerliChain(),
 		Endpoint:   "http://eth:8545",
 		CoreParams: NewCoreParams(),
 	},

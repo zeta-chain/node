@@ -21,14 +21,14 @@ func CmdUpdateCoreParams() *cobra.Command {
 		Short: "Broadcast message updateClientParams",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argChainId := args[0]
+			argChainID := args[0]
 			argClientParams := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			chainid, err := strconv.ParseInt(argChainId, 10, 64)
+			chainid, err := strconv.ParseInt(argChainID, 10, 64)
 			if err != nil {
 				return err
 			}

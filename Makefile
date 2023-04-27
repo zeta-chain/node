@@ -24,6 +24,7 @@ TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
 
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags TESTNET,pebbledb
+PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb
 
 clean: clean-binaries clean-dir
 
@@ -48,6 +49,9 @@ coverage-report: test-coverage
 
 test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
+
+test-priv:
+	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}
 
 gosec:
 	gosec  -exclude-dir=localnet ./...

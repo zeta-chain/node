@@ -15,8 +15,6 @@ message CoreParams {
   uint64 in_tx_ticker = 3;
   uint64 out_tx_ticker = 4;
   uint64 watch_utxo_ticker = 5;
-  uint64 block_time_external = 6;
-  uint64 block_time_zeta = 7;
   string zeta_token_contract_address = 8;
   string connector_contract_address = 9;
   string erc20_custody_contract_address = 10;

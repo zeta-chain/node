@@ -18,8 +18,6 @@ type ClientConfiguration struct {
 
 type CoreParams struct {
 	ChainID                     int64
-	BlockTimeExternalChain      uint64
-	BlockTimeZetaChain          uint64
 	GasPriceTicker              uint64
 	InTxTicker                  uint64
 	OutTxTicker                 uint64
@@ -33,8 +31,6 @@ type CoreParams struct {
 func NewCoreParams() *CoreParams {
 	return &CoreParams{
 		ChainID:                     0,
-		BlockTimeExternalChain:      0,
-		BlockTimeZetaChain:          0,
 		GasPriceTicker:              0,
 		InTxTicker:                  5,
 		OutTxTicker:                 3,
@@ -46,14 +42,12 @@ func NewCoreParams() *CoreParams {
 	}
 }
 
-func (c *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CoreParams) {
-	c.BlockTimeZetaChain = newConfig.BlockTimeZeta
-	c.BlockTimeExternalChain = newConfig.BlockTimeExternal
-	c.GasPriceTicker = newConfig.GasPriceTicker
-	c.ConfCount = newConfig.ConfirmationCount
-	c.ConnectorContractAddress = newConfig.ConnectorContractAddress
-	c.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
-	c.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
+func (cp *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CoreParams) {
+	cp.GasPriceTicker = newConfig.GasPriceTicker
+	cp.ConfCount = newConfig.ConfirmationCount
+	cp.ConnectorContractAddress = newConfig.ConnectorContractAddress
+	cp.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
+	cp.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
 }
 
 type EVMConfig struct {
@@ -117,8 +111,6 @@ func (c Config) PrintSupportedChains() string {
 
 func (cp *CoreParams) UpdateCoreParams(params *zetaObserverTypes.CoreParams) {
 	cp.ChainID = params.ChainId
-	cp.BlockTimeExternalChain = params.BlockTimeExternal
-	cp.BlockTimeZetaChain = params.BlockTimeZeta
 	cp.GasPriceTicker = params.GasPriceTicker
 	cp.InTxTicker = params.InTxTicker
 	cp.OutTxTicker = params.OutTxTicker

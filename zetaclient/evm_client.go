@@ -62,7 +62,6 @@ type EVMLog struct {
 // Filled with above constants depending on chain
 type EVMChainClient struct {
 	*ChainMetrics
-	ticker                    *time.Ticker
 	chain                     common.Chain
 	Connector                 *zetaconnector.ZetaConnectorNonEth
 	ERC20Custody              *erc20custody.ERC20Custody
@@ -169,8 +168,6 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	if err != nil {
 		return nil, err
 	}
-
-	ob.SetChainDetails()
 
 	err = ob.LoadDB(dbpath, ob.chain)
 	if err != nil {
@@ -1020,11 +1017,6 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 
 	}
 	return nil
-}
-
-func (ob *EVMChainClient) SetChainDetails() {
-	MinObInterval := 24
-	ob.ticker = time.NewTicker(time.Duration(MaxInt(int(ob.GetChainConfig().CoreParams.BlockTimeExternalChain), MinObInterval)) * time.Second)
 }
 
 func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {

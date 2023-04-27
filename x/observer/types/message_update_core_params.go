@@ -9,10 +9,10 @@ const TypeMsgUpdateClientParams = "update_client_params"
 
 var _ sdk.Msg = &MsgUpdateCoreParams{}
 
-func NewMsgUpdateCoreParams(creator string, chainId int64, clientParams *CoreParams) *MsgUpdateCoreParams {
+func NewMsgUpdateCoreParams(creator string, chainID int64, clientParams *CoreParams) *MsgUpdateCoreParams {
 	return &MsgUpdateCoreParams{
 		Creator:    creator,
-		ChainId:    chainId,
+		ChainId:    chainID,
 		CoreParams: clientParams,
 	}
 }

@@ -5,7 +5,6 @@ package config
 
 import (
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/zeta-chain/zetacore/common"
 )
 
 const (
@@ -47,8 +46,8 @@ var (
 
 func New() Config {
 	return Config{
-		EVMChainConfigs: map[int64]*EVMConfig{},
-		BitcoinConfig:   *BTCConfig{},
-		ChainsEnabled:   []common.Chain{},
+		EVMChainConfigs: nil,
+		BitcoinConfig:   nil,
+		ChainsEnabled:   nil,
 	}
 }
