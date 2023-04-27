@@ -8,9 +8,9 @@ import (
 
 func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateCoreParams) (*types.MsgUpdateCoreParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	//if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_update_client_params) {
-	//	return &types.MsgUpdateClientParamsResponse{}, types.ErrNotAuthorizedPolicy
-	//}
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_update_client_params) {
+		return &types.MsgUpdateCoreParamsResponse{}, types.ErrNotAuthorizedPolicy
+	}
 	if !k.GetParams(ctx).IsChainIDSupported(msg.ChainId) {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrSupportedChains
 	}
