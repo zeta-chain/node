@@ -30,21 +30,7 @@ runs:
       with:
         go-version: '1.19.0'
 
-    - shell: bash
-      env:         
-        CPU_ARCH: ${{ inputs.cpu_architecture }}
-      run: |
-        echo $CPU_ARCH
-        echo ${{ inputs.cpu_architecture }}
-
-    - shell: bash
-      if:  ${{ inputs.cpu_architecture == 'arm64' }}
-      run: |
-        echo "IS ARM CPU"
-        echo ${{ inputs.cpu_architecture }}
-
     - uses: actions/setup-python@v4
-      # if: ${{ inputs.cpu_architecture == 'amd64' }}
       if: ${{ inputs.skip_python == 'false' }}
       with:
         python-version: 'pypy3.9'
