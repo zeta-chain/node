@@ -133,7 +133,7 @@ jobs:
       shell: alpine.sh --root {0}
       run: |
         echo "Running Build Tests"
-        go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+        make test
 
     - name: Binary Docker Test
       shell: alpine.sh --root {0}
