@@ -34,14 +34,14 @@ runs:
       env:         
         CPU_ARCH: ${{ inputs.cpu_architecture }}
       run: |
-        echo $cpu_architecture
-        echo ${{ github.event.inputs.CPU_ARCHITECTURE }}
+        echo $CPU_ARCH
+        echo ${{ inputs.cpu_architecture }}
 
     - shell: bash
       if:  ${{ inputs.cpu_architecture == 'arm64' }}
       run: |
         echo "IS ARM CPU"
-        echo ${{ github.event.inputs.cpu_architecture }}
+        echo ${{ inputs.cpu_architecture }}
 
     - uses: actions/setup-python@v4
       # if: ${{ inputs.cpu_architecture == 'amd64' }}

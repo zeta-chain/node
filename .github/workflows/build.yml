@@ -28,11 +28,15 @@ jobs:
   build-and-test-buildjet-arm:
     runs-on: [ buildjet-8vcpu-ubuntu-2204-arm ] # [buildjet-2vcpu-ubuntu-2204-arm, buildjet-4vcpu-ubuntu-2204-arm, buildjet-8vcpu-ubuntu-2204-arm, buildjet-16vcpu-ubuntu-2204-arm, buildjet-32vcpu-ubuntu-2204-arm ]
     timeout-minutes: 30
-    env:
-      CPU_ARCH: $(uname -m)
-
+    
     steps:
     - uses: actions/checkout@v3
+
+    - name: set cpu architecture
+      shell: bash
+      run: |
+        echo "CPU_ARCH=$(uname -m)" >> $GITHUB_ENV
+        ::set-env name=CPU_ARCH::$CPU_ARCH
 
     - name: Install Pipeline Dependencies
       uses:  ./.github/actions/install-dependencies
