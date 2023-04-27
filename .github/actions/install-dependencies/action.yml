@@ -4,6 +4,10 @@ inputs:
   github_token:
     description: "github token to use to call the api"
     required: true
+  cpu_architecture:
+    description: "CPU architecture"
+    required: false
+    default: "amd64"
 
 runs:
   using: "composite"
@@ -14,7 +18,14 @@ runs:
       with:
         go-version: '1.19.0'
 
+    - shell: bash
+      run: |
+        echo $INPUT_CPU_ARCHITECTURE
+        echo ${{ github.event.inputs.cpu_architecture }}
+
+
     - uses: actions/setup-python@v4
+      if: ${{ github.event.inputs.cpu_architecture == 'amd64' }}
       with:
         python-version: 'pypy3.9'
 
@@ -24,6 +35,7 @@ runs:
       uses: unfor19/install-aws-cli-action@v1
       with:
         version: 2
+        arch: amd64 # ${{ github.event.inputs.cpu_architecture }}
 
     - name: Dependencies.
       shell: bash
