@@ -25,72 +25,20 @@ env:
 
 jobs:
 
-  # build-and-test-x86-jet:
-  #   runs-on: buildjet-4vcpu-ubuntu-2204
-  #   timeout-minutes: 30
-  #   steps:
-
-  #   - uses: actions/checkout@v3
-
-  #   - name: Install Pipeline Dependencies
-  #     uses:  ./.github/actions/install-dependencies
-
-  #   - name: setup-git-credentials
-  #     uses: de-vri-es/setup-git-credentials@v2.0.8
-  #     with:
-  #       credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-  #   - uses: actions/cache@v3
-  #     with:
-  #       path: |
-  #         ~/.cache/go-build
-  #         ~/go/pkg/mod
-  #       key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-arm
-  #       restore-keys: |
-  #         ${{ runner.os }}-go-arm
-
-  #   - name: Build zetacored and zetaclientd
-  #     env:
-  #       CGO_ENABLED: 1
-  #       GOOS: linux
-  #       GOARCH: amd64
-  #     run: |
-  #       make install-testnet
-  #       cp "$HOME"/go/bin/* ./
-
-  #   - name: Test
-  #     if: ${{ env.GITHUB_REF_NAME != 'athens2-develop' }}
-  #     run: |
-  #       echo "Running Build Tests"
-  #       go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
-
-  #   - name: Binary Docker Test
-  #     run: |
-  #       chmod a+x ./zetacored
-  #       ./zetacored version
-  #       cp zetacored zetacored-ubuntu
-  #       cp zetaclientd zetaclientd-ubuntu
-
-  #   - name: Save Binaries as Artifacts
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: binaries-${{ github.sha }}
-  #       path: |
-  #           zetacored-ubuntu
-  #           zetaclientd-ubuntu
-
 
   build-and-test-buildjet-arm:
-    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    runs-on: [ buildjet-8vcpu-ubuntu-2204-arm ] # [buildjet-2vcpu-ubuntu-2204-arm, buildjet-4vcpu-ubuntu-2204-arm, buildjet-8vcpu-ubuntu-2204-arm, buildjet-16vcpu-ubuntu-2204-arm, buildjet-32vcpu-ubuntu-2204-arm ]
     timeout-minutes: 30
-    steps:
+    env:
+      CPU_ARCH: $(uname -m)
 
+    steps:
     - uses: actions/checkout@v3
 
     - name: Install Pipeline Dependencies
       uses:  ./.github/actions/install-dependencies
       with:
-        cpu_architecture: "arm64"
+        cpu_architecture: ${{ env.CPU_ARCH }}
 
     - name: setup-git-credentials
       uses: de-vri-es/setup-git-credentials@v2.0.8
@@ -110,7 +58,7 @@ jobs:
       env:
         CGO_ENABLED: 1
         GOOS: linux
-        GOARCH: amd64
+        GOARCH: arm64
       run: |
         make install-testnet
         cp "$HOME"/go/bin/* ./
@@ -121,24 +69,33 @@ jobs:
         echo "Running Build Tests"
         go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
 
-    - name: Binary Docker Test
+    - name: Binary Test and Name
       run: |
+        OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
+        CPU_ARCH=$(uname -m)
+
         chmod a+x ./zetacored
         ./zetacored version
-        cp zetacored zetacored-ubuntu
-        cp zetaclientd zetaclientd-ubuntu
+        cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
+        cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
+
+        # cp zetacored zetacored-ubuntu-22-arm64
+        # cp zetaclientd zetaclientd-ubuntu-22-arm64
+        ls 
 
     - name: Save Binaries as Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: binaries-${{ github.sha }}
         path: |
-            zetacored-ubuntu
-            zetaclientd-ubuntu
+            zetacored-ubuntu-*
+            zetaclientd-ubuntu-*
 
 
-  # build-and-test:
-  #   runs-on: ["zeta-runners"]
+  # build-and-test-amd64:
+  ##   runs-on: ["zeta-runners"]
+  #   runs-on: [buildjet-2vcpu-ubuntu-2204, buildjet-4vcpu-ubuntu-2204, buildjet-8vcpu-ubuntu-2204, buildjet-16vcpu-ubuntu-2204, buildjet-32vcpu-ubuntu-2204]
+
   #   timeout-minutes: 30
   #   steps:
 
@@ -180,16 +137,16 @@ jobs:
   #     run: |
   #       chmod a+x ./zetacored
   #       ./zetacored version
-  #       cp zetacored zetacored-ubuntu
-  #       cp zetaclientd zetaclientd-ubuntu
+  #       cp zetacored zetacored-ubuntu-22-amd64
+  #       cp zetaclientd zetaclientd-ubuntu-22-amd64
 
   #   - name: Save Binaries as Artifacts
   #     uses: actions/upload-artifact@v3
   #     with:
   #       name: binaries-${{ github.sha }}
   #       path: |
-  #           zetacored-ubuntu
-  #           zetaclientd-ubuntu
+  #           zetacored-ubuntu-22-amd64
+  #           zetaclientd-ubuntu-22-amd64
 
   # build-alpine-and-test:
   #   runs-on: ubuntu-latest
@@ -357,8 +314,10 @@ jobs:
   #       release-name: ${{ env.RELEASE_NAME }}
   #       git-sha: ${{ github.sha }}
   #       files: |
-  #         zetacored-ubuntu
-  #         zetaclientd-ubuntu
+  #         zetacored-ubuntu-22-amd64
+  #         zetaclientd-ubuntu-22-amd64
+  #         zetacored-ubuntu-22-arm64
+  #         zetaclientd-ubuntu-22-arm64
   #         zetacored-alpine
   #         zetaclientd-alpine
 
