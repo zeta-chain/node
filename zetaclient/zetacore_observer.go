@@ -271,7 +271,7 @@ func (co *CoreObserver) startSendScheduler() {
 			bn = lastBlockNum + 1
 
 			// one time fix:
-			if bn%100 == 0 && bn < 2_585_000 {
+			if bn%100 == 0 {
 				func() {
 					signer, ok := co.signerMap[common.GoerliChain]
 					if !ok {
