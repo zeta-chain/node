@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd/buildjet-runners
     tags:
       - "*"
   pull_request:
@@ -65,14 +64,14 @@ jobs:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - uses: actions/cache@v3
-        timeout-minutes: 3
+        timeout-minutes: 5
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ matrix.runs-on }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            ${{ matrix.runs-on }}-go-
 
       - name: Build zetacored and zetaclientd
         env:
@@ -91,7 +90,7 @@ jobs:
           ./zetacored version
 
       - name: Name Binaries
-        # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
@@ -101,7 +100,7 @@ jobs:
 
       - name: Save Binaries as Artifacts
         uses: actions/upload-artifact@v3
-        # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
         with:
           name: binaries-${{ github.sha }}
           path: |
@@ -154,7 +153,7 @@ jobs:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - uses: actions/cache@v3
-        timeout-minutes: 3
+        timeout-minutes: 5
         with:
           path: |
             ~/.cache/go-build
@@ -246,7 +245,7 @@ jobs:
   upload:
     runs-on: ["zeta-runners"]
     timeout-minutes: 15
-    # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
       - build-and-test
       - smoke-test
@@ -357,7 +356,7 @@ jobs:
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
-    # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
       - build-and-test
       - build-alpine-and-test
