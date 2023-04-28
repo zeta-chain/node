@@ -1,7 +1,7 @@
 name: 'Update Nodes'
 description: 'Builds ZetaChain Binaries'
 inputs:
-  S3_BUCKET_NAME:  
+  S3_BUCKET_PATH:  
     description: 'S3 Bucket Name'
     required: true
   TAKE_SNAPSHOTS:  
@@ -19,7 +19,7 @@ runs:
     shell: bash
     run: |
       echo "Running update-nodes Action"
-      echo "S3_BUCKET_NAME=${{ inputs.S3_BUCKET_NAME }}" >> $GITHUB_ENV
+      echo "S3_BUCKET_PATH=${{ inputs.S3_BUCKET_PATH }}" >> $GITHUB_ENV
 
   - name: Get Deployment ID
     shell: bash
@@ -47,11 +47,11 @@ runs:
     run: |
       echo "Copying Package Files from S3 to local node storage"
       source ${{ github.action_path }}/functions
-      COMMAND_ID=$(run_ssm_cmds_validators    "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetaclientd -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd")
+      COMMAND_ID=$(run_ssm_cmds_validators    "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored && wget https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetaclientd -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetaclientd")
       check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_api_nodes     "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored")
+      COMMAND_ID=$(run_ssm_cmds_api_nodes     "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored")
       check_cmd_status $COMMAND_ID
-      COMMAND_ID=$(run_ssm_cmds_archive_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_NAME }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored")
+      COMMAND_ID=$(run_ssm_cmds_archive_nodes "mkdir -p /deployment-files/${{ env.GITHUB_REF_NAME }} && wget https://${{ env.S3_BUCKET_PATH }}.s3.amazonaws.com/${{ env.GITHUB_REF_NAME }}/zetacored -O /deployment-files/${{ env.GITHUB_REF_NAME }}/zetacored")
       check_cmd_status $COMMAND_ID
 
   - name: Stop ZetaChain

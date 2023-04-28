@@ -109,9 +109,12 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-proto-go:
-	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+proto:
+	@echo "--> Generating Go from protocol buffer files"
+	@sh ./scripts/protoc-gen-go.sh
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/protoc-gen-openapi.sh
+.PHONY: proto
 
 ###############################################################################
 ###                                Docker Images                             ###
@@ -130,6 +133,14 @@ start-smoketest:
 	@echo "--> Starting smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-smoketest-p2p-diag:
+	@echo "--> Starting smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
+
 stop-smoketest:
 	@echo "--> Stopping smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+stop-smoketest-p2p-diag:
+	@echo "--> Stopping smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
