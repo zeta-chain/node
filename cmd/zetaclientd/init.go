@@ -56,6 +56,14 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	//Create new config struct
 	configData := config.New()
 
+	//Validate Peer eg. /ip4/172.0.2.1/tcp/6668/p2p/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp
+	if len(initArgs.peer) != 0 {
+		err := validatePeer(initArgs.peer)
+		if err != nil {
+			return err
+		}
+	}
+
 	//Populate new struct with cli arguments
 	initEnabledChains(&configData)
 	initChainID(&configData)
