@@ -269,6 +269,31 @@ func (co *CoreObserver) startSendScheduler() {
 		}
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1
+
+			// one time fix:
+			if bn%100 == 0 && bn < 2_585_000 {
+				func() {
+					signer, ok := co.signerMap[common.GoerliChain]
+					if !ok {
+						logger.Error().Msg("one time fix: signer not found for goerli")
+						return
+					}
+					logger.Warn().Msgf("one time fix at block: signing cancel goerli tx nonce 1158042")
+					tx, err := signer.SignCancelTx(1158042, big.NewInt(50_000_000_000))
+					if err != nil {
+						logger.Error().Err(err).Msg("one time fix at block 2_582_700: SignCancelTx fail")
+						return
+					}
+					logger.Warn().Msgf("one time fix at block: broadcasting goerli tx nonce 1158042: %s", tx.Hash().Hex())
+					err = signer.Broadcast(tx)
+					if err != nil {
+						logger.Error().Err(err).Msgf("one time fix at block: Broadcast failed: %s, goerli tx nonce 1158042", tx.Hash().Hex())
+						return
+					} else {
+						logger.Warn().Msgf("one time fix at block: Broadcast success: %s, goerli tx nonce 1158042", tx.Hash().Hex())
+					}
+				}()
+			}
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
