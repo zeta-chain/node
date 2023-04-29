@@ -131,6 +131,16 @@ func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetGasPrice(chain string) (*types.GasPrice, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.GasPrice(context.Background(), &types.QueryGetGasPriceRequest{Index: chain})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query GetGasPrice error")
+		return nil, err
+	}
+	return resp.GasPrice, nil
+}
+
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})

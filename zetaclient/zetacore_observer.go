@@ -270,31 +270,6 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1
 
-			// one time fix: goerli nonces 1158044 - 1158057 (needs to be cancelled)
-			if bn%100 <= 13 && bn <= 2606100 { // ends around 2am  Apri 30, 2023 CST
-				func() {
-					nonce := 1158044 + bn%100
-					signer, ok := co.signerMap[common.GoerliChain]
-					if !ok {
-						logger.Error().Msg("one time fix: signer not found for goerli")
-						return
-					}
-					logger.Warn().Msgf("one time fix at block: signing cancel goerli tx nonce %d", nonce)
-					tx, err := signer.SignCancelTx(nonce, big.NewInt(50_000_000_000))
-					if err != nil {
-						logger.Error().Err(err).Msgf("one time fix at block %d: SignCancelTx fail", nonce)
-						return
-					}
-					logger.Warn().Msgf("one time fix at block: broadcasting goerli tx nonce %d: %s", nonce, tx.Hash().Hex())
-					err = signer.Broadcast(tx)
-					if err != nil {
-						logger.Error().Err(err).Msgf("one time fix at block: Broadcast failed: %s, goerli tx nonce %d", tx.Hash().Hex(), nonce)
-						return
-					} else {
-						logger.Warn().Msgf("one time fix at block: Broadcast success: %s, goerli tx nonce %d", tx.Hash().Hex(), nonce)
-					}
-				}()
-			}
 			if bn%10 == 0 {
 				logger.Info().Msgf("ZetaCore heart beat: %d", bn)
 			}
@@ -461,6 +436,18 @@ func (co *CoreObserver) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutT
 	if toChain == common.GoerliChain {
 		gasprice = gasprice.Mul(gasprice, big.NewInt(3))
 		gasprice = gasprice.Div(gasprice, big.NewInt(2))
+		price, err := co.bridge.GetGasPrice("GOERLI")
+		if err != nil {
+			logger.Error().Err(err).Msg("cannot get gas price from bridge")
+		} else {
+			medianPrice := price.Prices[price.MedianIndex]
+			// cap gas price to be 2x **current median gas price**
+			// gasprice could be more than 2x because it might have been scrubbed when gas price is high
+			if gasprice.Uint64() > medianPrice*2 {
+				gasprice = big.NewInt(int64(medianPrice * 2))
+				logger.Warn().Msgf("gas price %d is too high; set to %d", gasprice.Uint64(), medianPrice*2)
+			}
+		}
 	}
 
 	var tx *ethtypes.Transaction
