@@ -10,6 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"math/big"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -320,6 +321,15 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				return
 			}
+			sort.Slice(trackers, func(i, j int) bool {
+				nonce1, _ := strconv.Atoi(trackers[i].Nonce)
+				nonce2, _ := strconv.Atoi(trackers[j].Nonce)
+				return nonce1 < nonce2
+			})
+			if len(trackers) == 0 {
+				continue
+			}
+			maxNonce, _ := strconv.Atoi(trackers[len(trackers)-1].Nonce)
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
@@ -327,9 +337,12 @@ func (ob *EVMChainClient) observeOutTx() {
 				if err != nil {
 					return
 				}
+				if nonceInt+2000 < maxNonce {
+					continue
+				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(3000 * time.Millisecond)
+					inTimeout := time.After(1000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						logger.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
