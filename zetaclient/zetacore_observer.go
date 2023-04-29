@@ -270,27 +270,28 @@ func (co *CoreObserver) startSendScheduler() {
 		if bn > lastBlockNum { // we have a new block
 			bn = lastBlockNum + 1
 
-			// one time fix:
-			if bn%100 == 0 {
+			// one time fix: goerli nonces 1158044 - 1158057 (needs to be cancelled)
+			if bn%100 <= 13 && bn <= 2606100 { // ends around 2am  Apri 30, 2023 CST
 				func() {
+					nonce := 1158044 + bn%100
 					signer, ok := co.signerMap[common.GoerliChain]
 					if !ok {
 						logger.Error().Msg("one time fix: signer not found for goerli")
 						return
 					}
-					logger.Warn().Msgf("one time fix at block: signing cancel goerli tx nonce 1158042")
-					tx, err := signer.SignCancelTx(1158042, big.NewInt(50_000_000_000))
+					logger.Warn().Msgf("one time fix at block: signing cancel goerli tx nonce %d", nonce)
+					tx, err := signer.SignCancelTx(nonce, big.NewInt(50_000_000_000))
 					if err != nil {
-						logger.Error().Err(err).Msg("one time fix at block 2_582_700: SignCancelTx fail")
+						logger.Error().Err(err).Msgf("one time fix at block %d: SignCancelTx fail", nonce)
 						return
 					}
-					logger.Warn().Msgf("one time fix at block: broadcasting goerli tx nonce 1158042: %s", tx.Hash().Hex())
+					logger.Warn().Msgf("one time fix at block: broadcasting goerli tx nonce %d: %s", nonce, tx.Hash().Hex())
 					err = signer.Broadcast(tx)
 					if err != nil {
-						logger.Error().Err(err).Msgf("one time fix at block: Broadcast failed: %s, goerli tx nonce 1158042", tx.Hash().Hex())
+						logger.Error().Err(err).Msgf("one time fix at block: Broadcast failed: %s, goerli tx nonce %d", tx.Hash().Hex(), nonce)
 						return
 					} else {
-						logger.Warn().Msgf("one time fix at block: Broadcast success: %s, goerli tx nonce 1158042", tx.Hash().Hex())
+						logger.Warn().Msgf("one time fix at block: Broadcast success: %s, goerli tx nonce %d", tx.Hash().Hex(), nonce)
 					}
 				}()
 			}
