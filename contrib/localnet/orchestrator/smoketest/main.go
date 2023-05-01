@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
@@ -90,6 +91,19 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
+
+	response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+	if err != nil {
+		panic(err)
+	}
+	TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+
+	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
+	if err != nil {
+		panic(err)
+	}
+	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
+
 	return &SmokeTest{
 		zevmClient:     zevmClient,
 		goerliClient:   goerliClient,
@@ -103,6 +117,10 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 }
 
 func main() {
+	var enableGenesis bool
+	flag.BoolVar(&enableGenesis, "genesis", false, "Wait for genesis initialization.")
+	flag.Parse()
+
 	testStartTime := time.Now()
 	defer func() {
 		fmt.Println("Smoke test took", time.Since(testStartTime))
@@ -158,14 +176,17 @@ func main() {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 10
-	time.Sleep(time.Second * 20)
-	for {
-		time.Sleep(5 * time.Second)
-		response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
-		if response.Height >= 10 {
-			break
+	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
+	if !enableGenesis {
+		time.Sleep(time.Second * 20)
+		for {
+			time.Sleep(5 * time.Second)
+			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+			if response.Height >= 10 {
+				break
+			}
+			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 		}
-		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 	}
 
 	// get the clients for tests
@@ -192,7 +213,7 @@ func main() {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	//smokeTest.TestBitcoinSetup()
+	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
@@ -222,7 +243,7 @@ func main() {
 	smokeTest.TestSendZetaOut()
 	smokeTest.TestMessagePassing()
 	smokeTest.TestZRC20Swap()
-	//smokeTest.TestBitcoinWithdraw()
+	smokeTest.TestBitcoinWithdraw()
 	smokeTest.TestCrosschainSwap()
 	smokeTest.TestMessagePassingRevertFail()
 	smokeTest.TestMessagePassingRevertSuccess()
