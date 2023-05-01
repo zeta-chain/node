@@ -54,7 +54,6 @@ type EVMLog struct {
 	ExternalChainWatcher zerolog.Logger // Observes external Chains for incoming trasnactions
 	WatchGasPrice        zerolog.Logger // Observes external Chains for Gas prices and posts to core
 	ObserveOutTx         zerolog.Logger // Observes external Chains for Outgoing transactions
-	ConfigUpdater        zerolog.Logger // Observes external Chains for config updates
 
 }
 
@@ -98,7 +97,6 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
 		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
-		ConfigUpdater:        chainLogger.With().Str("module", "ConfigUpdater").Logger(),
 	}
 	ob.cfg = cfg
 	ob.stop = make(chan struct{})
@@ -200,7 +198,6 @@ func (ob *EVMChainClient) ERC20CustodyAddress() ethcommon.Address {
 }
 
 func (ob *EVMChainClient) Start() {
-	//go ob.UpdateConfig()         // Updates common configuration for the client
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions

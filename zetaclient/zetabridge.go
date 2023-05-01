@@ -46,13 +46,14 @@ type ZetaCoreBridge struct {
 	cfg           config.ClientConfiguration
 	keys          *Keys
 	broadcastLock *sync.RWMutex
+	zetaChainID   string
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
@@ -91,6 +92,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		broadcastLock:       &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
 		stop:                make(chan struct{}),
+		zetaChainID:         chainID,
 	}, nil
 }
 

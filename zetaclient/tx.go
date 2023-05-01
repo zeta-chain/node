@@ -133,7 +133,7 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey
 
 func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 	b.logger.Info().Msg("UpdateConfig started")
-	ticker := time.NewTicker(6 * time.Second)
+	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:

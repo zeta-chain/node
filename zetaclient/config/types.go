@@ -79,10 +79,13 @@ type Config struct {
 	AuthzGranter  string
 	AuthzHotkey   string
 
-	ChainsEnabled   []common.Chain
-	EVMChainConfigs map[int64]*EVMConfig // TODO : chain to chain id
-	BitcoinConfig   *BTCConfig
-	P2PDiagnostic   bool
+	ChainsEnabled       []common.Chain
+	EVMChainConfigs     map[int64]*EVMConfig // TODO : chain to chain id
+	BitcoinConfig       *BTCConfig
+	P2PDiagnostic       bool
+	ConfigUpdateTicker  uint64
+	P2PDiagnosticTicker uint64
+	TssPath             string
 }
 
 func (c Config) GetAuthzHotkey() string {
@@ -91,21 +94,6 @@ func (c Config) GetAuthzHotkey() string {
 
 func (c Config) String() string {
 	s, _ := json.MarshalIndent(c, "", "\t")
-	return string(s)
-}
-
-func (c Config) PrintEVMConfigs() string {
-	s, _ := json.MarshalIndent(c.EVMChainConfigs, "", "\t")
-	return string(s)
-}
-
-func (c Config) PrintBTCConfigs() string {
-	s, _ := json.MarshalIndent(c.BitcoinConfig, "", "\t")
-	return string(s)
-}
-
-func (c Config) PrintSupportedChains() string {
-	s, _ := json.MarshalIndent(c.ChainsEnabled, "", "\t")
 	return string(s)
 }
 

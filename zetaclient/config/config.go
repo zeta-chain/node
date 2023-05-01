@@ -2,9 +2,9 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/zeta-chain/zetacore/cmd"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const filename string = "zeta-client.json"
@@ -46,7 +46,18 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Initialize Global config variables
-	cmd.CHAINID = cfg.ChainID
+	cfg.TssPath = GetPath(cfg.TssPath)
+	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	return cfg, nil
+}
+
+func GetPath(inputPath string) string {
+	path := strings.Split(inputPath, "/")
+	if len(path) > 0 {
+		if path[0] == "~" {
+			home, _ := os.UserHomeDir()
+			path[0] = home
+		}
+	}
+	return filepath.Join(path...)
 }

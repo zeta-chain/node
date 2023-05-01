@@ -10,7 +10,6 @@ import (
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/cmd"
 	"regexp"
 	"strconv"
 	"strings"
@@ -116,7 +115,7 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	addr, _ := b.keys.GetSignerInfo().GetAddress()
 	// TODO : Handle error
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	ctx = ctx.WithChainID(cmd.CHAINID)
+	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
 	ctx = ctx.WithFromAddress(addr)
