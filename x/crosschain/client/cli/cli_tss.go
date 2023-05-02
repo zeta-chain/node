@@ -18,18 +18,14 @@ func CmdListTSS() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
+			//pageReq, err := client.ReadPageRequest(cmd.Flags())
+			//if err != nil {
+			//	return err
+			//}
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllTSSRequest{
-				Pagination: pageReq,
-			}
-
-			res, err := queryClient.TSSAll(context.Background(), params)
+			res, err := queryClient.TSS(context.Background(), &types.QueryGetTSSRequest{})
 			if err != nil {
 				return err
 			}
@@ -39,34 +35,6 @@ func CmdListTSS() *cobra.Command {
 	}
 
 	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-func CmdShowTSS() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "show-tss [index]",
-		Short: "shows a TSS",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			params := &types.QueryGetTSSRequest{
-				Index: args[0],
-			}
-
-			res, err := queryClient.TSS(context.Background(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

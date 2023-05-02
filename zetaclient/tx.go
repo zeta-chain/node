@@ -119,9 +119,9 @@ func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey string) (string, error) {
+func (b *ZetaCoreBridge) SetTSS(tssPubkey string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), tssAddress, tssPubkey)
+	msg := types.NewMsgCreateTSSVoter(signerAddress, "", "", tssPubkey) // TODO: remove chain and address params
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
 	if err != nil {

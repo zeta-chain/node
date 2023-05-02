@@ -10,18 +10,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	TSSSingletonIndex = "TSSSingletonIndex"
+)
+
 // SetTSS set a specific tSS in the store from its index
 func (k Keeper) SetTSS(ctx sdk.Context, tSS types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 	b := k.cdc.MustMarshal(&tSS)
-	store.Set(types.KeyPrefix(tSS.Index), b)
+	store.Set(types.KeyPrefix(TSSSingletonIndex), b)
 }
 
 // GetTSS returns a tSS from its index
-func (k Keeper) GetTSS(ctx sdk.Context, index string) (val types.TSS, found bool) {
+func (k Keeper) GetTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 
-	b := store.Get(types.KeyPrefix(index))
+	b := store.Get(types.KeyPrefix(TSSSingletonIndex))
 	if b == nil {
 		return val, false
 	}
@@ -88,7 +92,7 @@ func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.Qu
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetTSS(ctx, req.Index)
+	val, found := k.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}

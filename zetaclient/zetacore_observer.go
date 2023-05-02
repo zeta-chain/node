@@ -119,12 +119,11 @@ func (co *CoreObserver) keygenObserve() {
 				}
 				co.tss.CurrentPubkey = res.PubKey
 
-				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
-					if err != nil {
-						logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
-					}
+				zetaTx, err := co.bridge.SetTSS(co.tss.CurrentPubkey)
+				if err != nil {
+					logger.Error().Err(err).Msgf("SetTSS fail %s", co.tss.CurrentPubkey)
 				}
+				logger.Info().Msgf("set TSS pubkey to %s, zeta tx hash %s", co.tss.CurrentPubkey, zetaTx)
 
 				// Keysign test: sanity test
 				logger.Info().Msgf("test keysign...")

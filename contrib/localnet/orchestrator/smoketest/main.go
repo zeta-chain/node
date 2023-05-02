@@ -7,7 +7,10 @@ import (
 	"context"
 	"fmt"
 	flag "github.com/spf13/pflag"
+	"github.com/zeta-chain/zetacore/cmd"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/zetaclient"
 	"math/big"
 	"os"
 	"sync"
@@ -106,18 +109,28 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
 
-	response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+	response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{})
 	if err != nil {
 		panic(err)
 	}
-	TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+
+	tssEntries := response.TSS.TssEntries
+	if len(tssEntries) == 0 {
+		panic("No TSS entries found")
+	}
+	pubkey := tssEntries[len(tssEntries)-1].PublicKey
+	fmt.Printf("TSS pubkey: %s\n", pubkey)
+	TSSAddress, err = zetaclient.EthAddressFromZetaPubkey(pubkey)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
 
-	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
+	BTCTSSAddress, err = zetaclient.BtcAddressWitnessPubKeyHashFromZetaPubKey(pubkey)
 	if err != nil {
 		panic(err)
 	}
-	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
 	fmt.Printf("TSS BTCAddress: %s\n", BTCTSSAddress.String())
 
 	return &SmokeTest{
@@ -148,6 +161,13 @@ func main() {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	config := cosmos.GetConfig()
+	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
+	//config.SetCoinType(cmd.MetaChainCoinType)
+	config.SetFullFundraiserPath(cmd.ZetaChainHDPath)
 
 	connCfg := &rpcclient.ConnConfig{
 		Host:         "bitcoin:18443",

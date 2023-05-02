@@ -138,16 +138,26 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 
 	// this needs full consensus on all validators.
 	if len(tssVoter.Signers) == len(tssSigners) {
-		tss := types.TSS{
-			Creator:             "",
-			Index:               tssVoter.Chain,
-			Chain:               tssVoter.Chain,
-			Address:             tssVoter.Address,
-			Pubkey:              tssVoter.Pubkey,
-			Signer:              tssVoter.Signers,
-			FinalizedZetaHeight: uint64(ctx.BlockHeader().Height),
+		singers := make([]string, len(tssSigners))
+		for idx, node := range tssSigners {
+			singers[idx] = node.Creator
 		}
-		k.SetTSS(ctx, tss)
+		tssEntry := types.TSSEntry{
+			TssType:             types.TSSType_ECDSA_Secp256k1,
+			PublicKey:           msg.Pubkey,
+			FinalizedZetaHeight: uint64(ctx.BlockHeader().Height),
+			Signers:             singers,
+		}
+
+		TSS, found := k.GetTSS(ctx)
+		if !found {
+			TSS = types.TSS{
+				TssEntries: []*types.TSSEntry{&tssEntry},
+			}
+		} else {
+			TSS.TssEntries = append(TSS.TssEntries, &tssEntry)
+		}
+		k.SetTSS(ctx, TSS)
 	}
 
 	return &types.MsgCreateTSSVoterResponse{}, nil

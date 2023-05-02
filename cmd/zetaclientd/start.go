@@ -321,20 +321,12 @@ func start(_ *cobra.Command, _ []string) error {
 	//Check if keygen block is set and generate new keys at specified height
 	genNewKeysAtBlock(configData.KeygenBlock, bridge1, tss)
 
-	for _, chain := range config.ChainsEnabled {
-		var tssAddr string
-		if chain.IsEVMChain() {
-			tssAddr = tss.EVMAddress().Hex()
-		} else {
-			tssAddr = tss.BTCAddress()
-		}
-		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
-		if err != nil {
-			startLogger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
-		}
-		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
-
+	zetaTx, err := bridge1.SetTSS(tss.CurrentPubkey)
+	if err != nil {
+		startLogger.Error().Err(err).Msgf("SetTSS fail %s", tss.CurrentPubkey)
 	}
+	startLogger.Info().Msgf("set TSS pubkey to %s, zeta tx hash %s", tss.CurrentPubkey, zetaTx)
+
 	signerMap1, err := CreateSignerMap(tss, masterLogger)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")

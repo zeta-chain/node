@@ -64,14 +64,14 @@ func (gs GenesisState) Validate() error {
 		tSSVoterIndexMap[elem.Index] = true
 	}
 	// Check for duplicated index in tSS
-	tSSIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.TSSList {
-		if _, ok := tSSIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for tSS")
-		}
-		tSSIndexMap[elem.Index] = true
-	}
+	//tSSIndexMap := make(map[string]bool)
+	//
+	//for _, elem := range gs.TSSList {
+	//	if _, ok := tSSIndexMap[elem.Index]; ok {
+	//		return fmt.Errorf("duplicated index for tSS")
+	//	}
+	//	tSSIndexMap[elem.Index] = true
+	//}
 
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)

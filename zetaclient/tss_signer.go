@@ -211,9 +211,9 @@ func (tss *TSS) Validate() error {
 }
 
 func (tss *TSS) EVMAddress() ethcommon.Address {
-	addr, err := getKeyAddr(tss.CurrentPubkey)
+	addr, err := EthAddressFromZetaPubkey(tss.CurrentPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("getKeyAddr error")
+		log.Error().Err(err).Msg("EthAddressFromZetaPubkey error")
 		return ethcommon.Address{}
 	}
 	return addr
@@ -221,16 +221,16 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // generate a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
-	addr, err := getKeyAddrBTC(tss.CurrentPubkey)
+	addr, err := BtcAddressFromZetaPubKey(tss.CurrentPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("getKeyAddr error")
+		log.Error().Err(err).Msg("EthAddressFromZetaPubkey error")
 		return ""
 	}
 	return addr
 }
 
 func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey)
+	addrWPKH, err := BtcAddressWitnessPubKeyHashFromZetaPubKey(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
 		return nil
@@ -257,7 +257,7 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
+func EthAddressFromZetaPubkey(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
@@ -278,8 +278,8 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 }
 
 // FIXME: mainnet/testnet
-func getKeyAddrBTC(tssPubkey string) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
+func BtcAddressFromZetaPubKey(tssPubkey string) (string, error) {
+	addrWPKH, err := BtcAddressWitnessPubKeyHashFromZetaPubKey(tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)
 		return "", err
@@ -288,7 +288,7 @@ func getKeyAddrBTC(tssPubkey string) (string, error) {
 	return addrWPKH.EncodeAddress(), nil
 }
 
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+func BtcAddressWitnessPubKeyHashFromZetaPubKey(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err
