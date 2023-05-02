@@ -22,7 +22,7 @@ then
     export TSSPATH=~/.tss
     zetaclientd init --enable-chains "goerli_localnet,btc_regtest" \
       --pre-params ~/preParams.json  --zetacore-url zetacore0 \
-      --chain-id athens_101-1 --dev --operator "$operatorAddress" --log-level 0 --hotkey=hotkey --keygen-block 7
+      --chain-id athens_101-1 --dev --operator "$operatorAddress" --log-level 0 --hotkey=hotkey --keygen-block 15
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
@@ -33,6 +33,6 @@ else
   zetaclientd init --enable-chains "goerli_localnet,btc_regtest"  \
     --peer /ip4/172.20.0.21/tcp/6668/p2p/$SEED \
     --pre-params ~/preParams.json --zetacore-url $node \
-    --chain-id athens_101-1 --dev --operator "$operatorAddress" --log-level 0 --hotkey=hotkey --keygen-block 7
+    --chain-id athens_101-1 --dev --operator "$operatorAddress" --log-level 0 --hotkey=hotkey --keygen-block 15
   zetaclientd start
 fi

@@ -246,6 +246,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				for vidx, vout := range tx.Vout {
 					ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
 				}
+				//ob.rpcClient.GetTransaction(tx.Txid)
 			}
 		}
 
@@ -360,7 +361,8 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 			return err
 		}
-		ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
+		_ = zetaHash
+		//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
@@ -382,7 +384,8 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
+	_ = zetaHash
+	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 	_ = feeResult
 	return nil
 }
@@ -523,7 +526,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
-		ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
+		//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
 		//for idx, utxo := range unspents {
 		//	fmt.Printf("utxo %d\n", idx)
 		//	fmt.Printf("  txid: %s\n", utxo.TxID)

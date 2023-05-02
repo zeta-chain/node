@@ -111,12 +111,14 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		panic(err)
 	}
 	TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
 
 	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
 	if err != nil {
 		panic(err)
 	}
 	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
+	fmt.Printf("TSS BTCAddress: %s\n", BTCTSSAddress.String())
 
 	return &SmokeTest{
 		zevmClient:         zevmClient,
@@ -198,7 +200,7 @@ func main() {
 		for {
 			time.Sleep(5 * time.Second)
 			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
-			if response.Height >= 10 {
+			if response.Height >= 25 {
 				break
 			}
 			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
