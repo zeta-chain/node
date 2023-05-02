@@ -341,6 +341,15 @@ jobs:
       # zetacored-ubuntu-20-amd64
       # zetaclientd-ubuntu-20-amd64
 
+      - name: Build, tag, and push docker images
+        uses: ./.github/actions/build-docker-images
+        with:
+          DOCKER_FILENAME: Dockerfile
+          REPOSITORY_NAME: zeta-node
+          IMAGE_TAG: ${{ env.TAG_NAME }}
+          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          
       - name: Create GitHub Release for ZetaCore/ZetaClient
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
