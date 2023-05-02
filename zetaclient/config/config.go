@@ -47,7 +47,6 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	cfg.TssPath = GetPath(cfg.TssPath)
-	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	return cfg, nil
 }
 
