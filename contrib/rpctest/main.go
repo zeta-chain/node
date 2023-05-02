@@ -5,18 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
-	"github.com/zeta-chain/zetacore/contracts/zevm"
 	"math/big"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 )
 
 var (
@@ -198,7 +199,7 @@ func main() {
 	}
 
 	// test getLogs
-	sys, err := zevm.NewSystemContract(ethcommon.HexToAddress(SystemContractAddress), zevmClient)
+	sys, err := systemcontract.NewSystemContract(ethcommon.HexToAddress(SystemContractAddress), zevmClient)
 	if err != nil {
 		panic(err)
 	}

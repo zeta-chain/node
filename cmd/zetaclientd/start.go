@@ -1,14 +1,23 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
+	"github.com/libp2p/go-libp2p/core"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/protocol"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -17,12 +26,20 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"google.golang.org/grpc"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
+
+	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 )
+
+type Multiaddr = core.Multiaddr
 
 var StartCmd = &cobra.Command{
 	Use:   "start",
@@ -45,6 +62,15 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	log.Logger = InitLogger(configData.LogLevel)
+
+	//Validate Peer eg. /ip4/172.0.2.1/tcp/6668/p2p/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp
+	if len(configData.Peer) != 0 {
+		err := validatePeer(configData.Peer)
+		if err != nil {
+			return err
+		}
+	}
+
 	//Wait until zetacore has started
 	waitForZetaCore(configData)
 	masterLogger := log.Logger
@@ -85,6 +111,192 @@ func start(_ *cobra.Command, _ []string) error {
 		log.Error().Err(err).Msg("peer address error")
 	}
 	initPreParams(configData.PreParamsPath)
+
+	if configData.P2PDiagnostic {
+		startLogger.Warn().Msg("P2P Diagnostic mode enabled")
+		startLogger.Warn().Msgf("seed peer: %s", peers)
+		pubkeyBech32, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, bridgePk.PubKey())
+		if err != nil {
+			startLogger.Error().Err(err).Msg("Bech32ifyPubKey error")
+			return err
+		}
+		startLogger.Warn().Msgf("my pubkey %s", pubkeyBech32)
+
+		var s *mc.HTTPServer
+		if len(peers) == 0 {
+			startLogger.Warn().Msg("No seed peer specified; assuming I'm the host")
+
+		}
+		p2pPriKey, err := crypto.UnmarshalSecp256k1PrivateKey(priKey[:])
+		if err != nil {
+			startLogger.Error().Err(err).Msg("UnmarshalSecp256k1PrivateKey error")
+			return err
+		}
+		listenAddress, err := maddr.NewMultiaddr(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", 6668))
+		if err != nil {
+			startLogger.Error().Err(err).Msg("NewMultiaddr error")
+			return err
+		}
+		IP := os.Getenv("MYIP")
+		if len(IP) == 0 {
+			log.Warn().Msg("empty env MYIP")
+		}
+		var externalAddr Multiaddr
+		if len(IP) != 0 {
+			externalAddr, err = maddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d", IP, 6668))
+			if err != nil {
+				startLogger.Error().Err(err).Msg("NewMultiaddr error")
+				return err
+			}
+		}
+
+		host, err := libp2p.New(
+			libp2p.ListenAddrs(listenAddress),
+			libp2p.Identity(p2pPriKey),
+			libp2p.AddrsFactory(func(addrs []Multiaddr) []Multiaddr {
+				if externalAddr != nil {
+					return []Multiaddr{externalAddr}
+				}
+				return addrs
+			}),
+			libp2p.DisableRelay(),
+		)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("fail to create host")
+			return err
+		}
+		startLogger.Info().Msgf("host created: ID %s", host.ID().String())
+		if len(peers) == 0 {
+			s = mc.NewHTTPServer(host.ID().String())
+			go func() {
+				log.Info().Msg("Starting TSS HTTP Server...")
+				if err := s.Start(); err != nil {
+					fmt.Println(err)
+				}
+			}()
+		}
+
+		// create stream handler
+		handleStream := func(s network.Stream) {
+			defer s.Close()
+
+			// read the message
+			buf := make([]byte, 1024)
+			n, err := s.Read(buf)
+			if err != nil {
+				log.Error().Err(err).Msg("read stream error")
+				return
+			}
+			// send the message back
+			if _, err := s.Write(buf[:n]); err != nil {
+				log.Error().Err(err).Msg("write stream error")
+				return
+			}
+		}
+		ProtocolID := "/echo/0.3.0"
+		host.SetStreamHandler(protocol.ID(ProtocolID), handleStream)
+
+		kademliaDHT, err := dht.New(context.Background(), host, dht.Mode(dht.ModeServer))
+		if err != nil {
+			return fmt.Errorf("fail to create DHT: %w", err)
+		}
+		startLogger.Info().Msg("Bootstrapping the DHT")
+		if err = kademliaDHT.Bootstrap(context.Background()); err != nil {
+			return fmt.Errorf("fail to bootstrap DHT: %w", err)
+		}
+
+		var wg sync.WaitGroup
+		for _, peerAddr := range peers {
+			peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := host.Connect(context.Background(), *peerinfo); err != nil {
+					startLogger.Warn().Msgf("Connection failed with bootstrap node: %s", *peerinfo)
+				} else {
+					startLogger.Info().Msgf("Connection established with bootstrap node: %s", *peerinfo)
+				}
+			}()
+		}
+		wg.Wait()
+
+		// We use a rendezvous point "meet me here" to announce our location.
+		// This is like telling your friends to meet you at the Eiffel Tower.
+		startLogger.Info().Msgf("Announcing ourselves...")
+		routingDiscovery := drouting.NewRoutingDiscovery(kademliaDHT)
+		dutil.Advertise(context.Background(), routingDiscovery, "ZetaZetaOpenTheDoor")
+		startLogger.Info().Msgf("Successfully announced!")
+
+		// every 1min, print out the p2p diagnostic
+		ticker := time.NewTicker(30 * time.Second)
+		round := 0
+		for {
+			select {
+			case <-ticker.C:
+				round++
+				// Now, look for others who have announced
+				// This is like your friend telling you the location to meet you.
+				startLogger.Info().Msgf("Searching for other peers...")
+				peerChan, err := routingDiscovery.FindPeers(context.Background(), "ZetaZetaOpenTheDoor")
+				if err != nil {
+					panic(err)
+				}
+
+				peerCount := 0
+				okPingPongCount := 0
+				for peer := range peerChan {
+					peerCount++
+					if peer.ID == host.ID() {
+						startLogger.Info().Msgf("Found myself #(%d): %s", peerCount, peer)
+						continue
+					}
+					startLogger.Info().Msgf("Found peer #(%d): %s; pinging the peer...", peerCount, peer)
+					stream, err := host.NewStream(context.Background(), peer.ID, protocol.ID(ProtocolID))
+					if err != nil {
+						startLogger.Error().Err(err).Msgf("fail to create stream to peer %s", peer)
+						continue
+					}
+					message := fmt.Sprintf("round %d %s => %s", round, host.ID().String()[len(host.ID().String())-5:], peer.ID.String()[len(peer.ID.String())-5:])
+					_, err = stream.Write([]byte(message))
+					if err != nil {
+						startLogger.Error().Err(err).Msgf("fail to write to stream to peer %s", peer)
+						err = stream.Close()
+						if err != nil {
+							startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+						}
+						continue
+					}
+					//startLogger.Debug().Msgf("wrote %d bytes", nw)
+					buf := make([]byte, 1024)
+					nr, err := stream.Read(buf)
+					if err != nil {
+						startLogger.Error().Err(err).Msgf("fail to read from stream to peer %s", peer)
+						err = stream.Close()
+						if err != nil {
+							startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+						}
+						continue
+					}
+					//startLogger.Debug().Msgf("read %d bytes", nr)
+					startLogger.Debug().Msgf("echoed message: %s", string(buf[:nr]))
+					err = stream.Close()
+					if err != nil {
+						startLogger.Warn().Err(err).Msgf("fail to close stream to peer %s", peer)
+					}
+
+					if string(buf[:nr]) != message {
+						startLogger.Error().Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
+						continue
+					} else {
+						startLogger.Info().Msgf("ping-pong success with peer #(%d): %s;", peerCount, peer)
+						okPingPongCount++
+					}
+				}
+				startLogger.Info().Msgf("Expect %d peers in total; successful pings (%d/%d)", peerCount, okPingPongCount, peerCount-1)
+			}
+		}
+	}
+
 	tss, err := mc.NewTSS(peers, priKey, preParams)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("NewTSS error")
@@ -248,17 +460,21 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
-		ticker := time.NewTicker(time.Second * 5)
+		ticker := time.NewTicker(time.Second * 1)
+		lastBlock := bn
 		for range ticker.C {
-			bn, err := bridge.GetZetaBlockHeight()
+			currentBlock, err := bridge.GetZetaBlockHeight()
 			if err != nil {
 				log.Error().Err(err).Msg("GetZetaBlockHeight error")
 				return
 			}
-			if bn == height {
+			if currentBlock == height {
 				break
 			}
-			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, bn)
+			if currentBlock > lastBlock {
+				lastBlock = currentBlock
+				log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, currentBlock)
+			}
 		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)
@@ -289,4 +505,28 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
+}
+
+func validatePeer(seedPeer string) error {
+	parsedPeer := strings.Split(seedPeer, "/")
+
+	if len(parsedPeer) < 7 {
+		log.Error().Msgf("seed peer is malformed: %s", seedPeer)
+		return errors.New("seed peer missing IP or ID")
+	}
+
+	seedIP := parsedPeer[2]
+	seedID := parsedPeer[6]
+
+	if net.ParseIP(seedIP) == nil {
+		log.Error().Msgf("invalid seed IP address: %s", seedIP)
+		return errors.New("invalid seed IP address")
+	}
+
+	if len(seedID) == 0 {
+		log.Error().Msgf("seed id is empty")
+		return errors.New("seed id is empty")
+	}
+
+	return nil
 }
