@@ -104,10 +104,9 @@ func (k Keeper) TSSVoter(c context.Context, req *types.QueryGetTSSVoterRequest) 
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	//validators := k.StakingKeeper.GetAllValidators(ctx)
-	tssSigners := k.GetAllNodeAccount(ctx)
-	if _, found := k.GetNodeAccount(ctx, msg.Creator); !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("msg creator %s is not a tss signer", msg.Creator))
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	if !IsBondedValidator(msg.Creator, validators) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
 	}
 
 	msgDigest := msg.Digest()
@@ -137,7 +136,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	k.SetTSSVoter(ctx, tssVoter)
 
 	// this needs full consensus on all validators.
-	if len(tssVoter.Signers) == len(tssSigners) {
+	if len(tssVoter.Signers) == len(validators) {
 		tss := types.TSS{
 			Creator:             "",
 			Index:               tssVoter.Chain,
