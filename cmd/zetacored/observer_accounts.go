@@ -58,6 +58,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var observerMapper []*types.ObserverMapper
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*crosschaintypes.NodeAccount
+			var keygenPubKeys []string
 			observersForChain := map[int64][]string{}
 			// DefaultChainsList is based on Build Flags
 			supportedChains := common.DefaultChainsList()
@@ -106,6 +107,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 					Address: info.ZetaClientGranteeAddress,
 					Coins:   commonHotkeyBalance,
 				})
+				keygenPubKeys = append(keygenPubKeys, info.ZetaClientGranteePubKey)
 			}
 
 			// Generate observer mappers for each chain
@@ -128,6 +130,12 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
+				Creator:     "Genesis Keygen",
+				Status:      crosschaintypes.KeygenStatus_PendingKeygen,
+				Pubkeys:     keygenPubKeys,
+				BlockNumber: 20,
+			}
 
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
