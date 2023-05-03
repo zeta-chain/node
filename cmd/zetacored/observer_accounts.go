@@ -460,6 +460,7 @@ func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, a
 	return appState, nil
 }
 
+
 func isValidatorOnly(isObserver string) bool {
 	if isObserver == "y" {
 		return false
