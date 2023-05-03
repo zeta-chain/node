@@ -11,17 +11,17 @@ import (
 )
 
 // SetTSS set a specific tSS in the store from its index
-func (k Keeper) SetTSS(ctx sdk.Context, tSS types.TSS) {
+func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
-	b := k.cdc.MustMarshal(&tSS)
-	store.Set(types.KeyPrefix(tSS.Index), b)
+	b := k.cdc.MustMarshal(&tss)
+	store.Set([]byte{0}, b)
 }
 
 // GetTSS returns a tSS from its index
 func (k Keeper) GetTSS(ctx sdk.Context, index string) (val types.TSS, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 
-	b := store.Get(types.KeyPrefix(index))
+	b := store.Get([]byte{0})
 	if b == nil {
 		return val, false
 	}
