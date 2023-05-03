@@ -105,12 +105,17 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
 
-	response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
-	if err != nil {
-		panic(err)
+	for {
+		response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+		if err != nil {
+			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
+			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
+			time.Sleep(5 * time.Second)
+		}
+		TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+		fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
+		break
 	}
-	TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
-	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
 
 	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
 	if err != nil {
@@ -189,6 +194,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
@@ -199,7 +205,7 @@ func main() {
 		for {
 			time.Sleep(5 * time.Second)
 			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
-			if response.Height >= 25 {
+			if response.Height >= 30 {
 				break
 			}
 			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
