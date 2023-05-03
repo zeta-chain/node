@@ -63,15 +63,15 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-      - uses: actions/cache@v3
-        timeout-minutes: 5
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ matrix.runs-on }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ matrix.runs-on }}-go-
+      # - uses: actions/cache@v3
+      #   timeout-minutes: 5
+      #   with:
+      #     path: |
+      #       ~/.cache/go-build
+      #       ~/go/pkg/mod
+      #     key: ${{ matrix.runs-on }}-go-${{ hashFiles('**/go.sum') }}
+      #     restore-keys: |
+      #       ${{ matrix.runs-on }}-go-
 
       - name: Build zetacored and zetaclientd
         env:
@@ -152,15 +152,15 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-      - uses: actions/cache@v3
-        timeout-minutes: 5
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-alpine-build-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-alpine-build
+      # - uses: actions/cache@v3
+      #   timeout-minutes: 5
+      #   with:
+      #     path: |
+      #       ~/.cache/go-build
+      #       ~/go/pkg/mod
+      #     key: ${{ runner.os }}-go-alpine-build-${{ hashFiles('**/go.sum') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-go-alpine-build
 
       - name: Build zetacored and zetaclientd
         env:
