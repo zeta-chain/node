@@ -1,7 +1,6 @@
 package app
 
 import (
-	"sort"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -634,14 +633,10 @@ func (app *App) LoadHeight(height int64) error {
 // ModuleAccountAddrs returns all the app's module account addresses.
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
-	keys := make([]string, 0)
 	for acc := range maccPerms {
-		keys = append(keys, authtypes.NewModuleAddress(acc).String())
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
-	sort.Strings(keys)
-	for _, acc := range keys {
-		modAccAddrs[acc] = true
-	}
+
 	return modAccAddrs
 }
 
@@ -743,13 +738,8 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
-	keys := make([]string, 0)
-	for k := range maccPerms {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		dupMaccPerms[k] = maccPerms[k]
+	for k, v := range maccPerms {
+		dupMaccPerms[k] = v
 	}
 	return dupMaccPerms
 }

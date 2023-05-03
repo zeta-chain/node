@@ -40,10 +40,12 @@ type CoreObserver struct {
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    ZetaCoreLog
+	cfg       *config.Config
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config) *CoreObserver {
 	co := CoreObserver{}
+	co.cfg = cfg
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()
@@ -119,7 +121,7 @@ func (co *CoreObserver) keygenObserve() {
 				}
 				co.tss.CurrentPubkey = res.PubKey
 
-				for _, chain := range config.ChainsEnabled {
+				for _, chain := range co.cfg.ChainsEnabled {
 					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
 					if err != nil {
 						logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
@@ -128,14 +130,10 @@ func (co *CoreObserver) keygenObserve() {
 
 				// Keysign test: sanity test
 				logger.Info().Msgf("test keysign...")
-				err = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
-				if err != nil {
-					logger.Error().Msgf("TestKeysign fail")
-					continue
-				}
+				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
 				logger.Info().Msg("test keysign finished. exit keygen loop. ")
 
-				for _, chain := range config.ChainsEnabled {
+				for _, chain := range co.cfg.ChainsEnabled {
 					err = co.clientMap[chain].PostNonceIfNotRecorded(logger)
 					if err != nil {
 						co.logger.ChainLogger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
@@ -286,16 +284,7 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 		sendMap[chain] = sends[start:]
 		log.Debug().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].GetCurrentOutTxParam().OutboundTxTssNonce)
 	}
-	keys := make([]string, 0)
-	for key := range sendMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	sortedSendMap := make(map[string][]*types.CrossChainTx)
-	for _, key := range keys {
-		sortedSendMap[key] = sendMap[key]
-	}
-	return sortedSendMap
+	return sendMap
 }
 
 func GetTargetChain(send *types.CrossChainTx) string {
