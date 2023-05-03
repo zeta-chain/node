@@ -150,7 +150,7 @@ services:
     container_name: orchestrator
     build:
       context: ../../.
-      dockerfile: contrib/localnet/orchestrator/Dockerfile
+      dockerfile: contrib/localnet/orchestrator/Dockerfile.fastbuild
     depends_on:
       - zetacore0
       - eth
