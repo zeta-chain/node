@@ -298,7 +298,7 @@ func genNewTSSAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		err = mc.TestKeysign(res.PubKey, tss.Server)
 		if err != nil {
 			log.Error().Err(err).Msg("TestKeysign error")
-			return
+			//return
 		}
 
 		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)

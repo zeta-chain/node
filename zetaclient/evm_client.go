@@ -682,7 +682,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 				continue
 			}
-			ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+			//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
 			for _, tx := range block.Transactions() {
 				if tx.To() == nil {
 					continue
@@ -878,7 +878,8 @@ func (ob *EVMChainClient) PostGasPrice() error {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
+	_ = zetaHash
+	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 
 	return nil
 }
