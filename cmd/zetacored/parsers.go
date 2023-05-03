@@ -7,6 +7,7 @@ import (
 )
 
 type ObserverInfoReader struct {
+	IsObserver                string   `json:"IsObserver"`
 	ObserverAddress           string   `json:"ObserverAddress"`
 	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
 	StakingGranteeAddress     string   `json:"StakingGranteeAddress,omitempty"`
