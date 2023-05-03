@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"time"
 
@@ -128,4 +129,23 @@ func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey
 		return "", err
 	}
 	return zetaTxHash, nil
+}
+
+func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
+	b.logger.Info().Msg("UpdateConfig started")
+	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			b.logger.Debug().Msg("Running Updater")
+			err := b.UpdateConfigFromCore(cfg)
+			if err != nil {
+				b.logger.Err(err).Msg("UpdateConfig error")
+				return
+			}
+		case <-b.stop:
+			b.logger.Info().Msg("UpdateConfig stopped")
+			return
+		}
+	}
 }
