@@ -85,7 +85,7 @@ jobs:
       - name: Test
         run: |
           echo "Running Build Tests"
-          go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+          make test
           chmod a+x ./zetacored
           ./zetacored version
 
@@ -178,7 +178,7 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           echo "Running Build Tests"
-          go test -v -coverprofile coverage.out  $(go list ./... | grep -v /x/zetacore/)
+          make test
 
       - name: Binary Docker Test
         env:
@@ -228,10 +228,8 @@ jobs:
 
       - name: Start Private Network
         run: |
-          cd contrib/localnet
-          docker compose down || echo "not running or error"
-          docker compose build zetacore0 eth && docker compose build orchestrator
-          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+          make zetanode
+          cd contrib/localnet/ && docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
       - name: Run Smoke Test
         run: |
