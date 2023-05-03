@@ -167,6 +167,16 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
 		config.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
 	}
 	config.ChainsEnabled = chains
-
+	keyGen, err := b.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	if keyGen.Status == stypes.KeygenStatus_PendingKeygen {
+		config.KeygenBlock = keyGen.BlockNumber
+		config.KeyGenPubKeys = keyGen.Pubkeys
+	} else {
+		config.KeygenBlock = 0
+		config.KeyGenPubKeys = nil
+	}
 	return nil
 }

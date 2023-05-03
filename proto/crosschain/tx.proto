@@ -20,6 +20,7 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -50,12 +51,19 @@ message MsgUpdatePermissionFlags {
 }
 message MsgUpdatePermissionFlagsResponse {}
 
+message MsgUpdateKeygen {
+  string creator = 1;
+  int64 block = 2;
+}
+
+message MsgUpdateKeygenResponse {
+}
+
 // this line is used by starport scaffolding # proto/tx/message
 message MsgCreateTSSVoter {
   string creator = 1;
-  string chain = 3;
-  string address = 4;
-  string pubkey = 5;
+  string tss_pubkey = 3;
+  int64 keyGenZetaHeight = 4;
 }
 
 message MsgCreateTSSVoterResponse { }

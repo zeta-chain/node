@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -104,50 +106,47 @@ func (k Keeper) TSSVoter(c context.Context, req *types.QueryGetTSSVoterRequest) 
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	if !k.IsAuthorizedNodeAccount(ctx, msg.Creator) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
 	}
 
 	msgDigest := msg.Digest()
 	sessionID := ctx.BlockHeight() / 1000 * 1000
 	index := crypto.Keccak256Hash([]byte(msgDigest), []byte(fmt.Sprintf("%d", sessionID)))
-	// Check if the value already exists
-	tssVoter, isFound := k.GetTSSVoter(ctx, index.Hex())
+	// Add votes and Set Ballot
+	// GetBallot checks against the supported chains list before querying for Ballot
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index.Hex())
+	if !found {
+		var voterList []string
 
-	if isDuplicateSigner(msg.Creator, tssVoter.Signers) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
-	}
-
-	if isFound {
-		tssVoter.Signers = append(tssVoter.Signers, msg.Creator)
-	} else {
-		tssVoter = types.TSSVoter{
-			Creator:         msg.Creator,
-			Index:           index.Hex(),
-			Chain:           msg.Chain,
-			Address:         msg.Address,
-			Pubkey:          msg.Pubkey,
-			Signers:         []string{msg.Creator},
-			FinalizedHeight: 0,
+		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
+			voterList = append(voterList, nodeAccount.Creator)
 		}
-	}
-
-	k.SetTSSVoter(ctx, tssVoter)
-
-	// this needs full consensus on all validators.
-	if len(tssVoter.Signers) == len(validators) {
-		tss := types.TSS{
-			Creator:             "",
-			Index:               tssVoter.Chain,
-			Chain:               tssVoter.Chain,
-			Address:             tssVoter.Address,
-			Pubkey:              tssVoter.Pubkey,
-			Signer:              tssVoter.Signers,
-			FinalizedZetaHeight: uint64(ctx.BlockHeader().Height),
+		ballot = zetaObserverTypes.Ballot{
+			Index:            "",
+			BallotIdentifier: index.Hex(),
+			VoterList:        voterList,
+			Votes:            zetaObserverTypes.CreateVotes(len(msg.Creator)),
+			ObservationType:  zetaObserverTypes.ObservationType_TSSKeyGen,
+			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
+			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
 		}
-		k.SetTSS(ctx, tss)
+		//EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 
+	ballot, err := k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+	if err != nil {
+		return &types.MsgCreateTSSVoterResponse{}, err
+	}
+	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
+	if !isFinalized {
+		return &types.MsgCreateTSSVoterResponse{}, nil
+	}
+	k.SetTSS(ctx, types.TSS{
+		TssPubkey:           msg.TssPubkey,
+		SignerList:          nil,
+		FinalizedZetaHeight: 0,
+		KeyGenZetaHeight:    msg.KeyGenZetaHeight,
+	})
 	return &types.MsgCreateTSSVoterResponse{}, nil
 }
