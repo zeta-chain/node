@@ -406,6 +406,14 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 	tx.TxOut = append(tx.TxOut, &memoOutput)
 	tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
 
+	// make sure that TxOut[0] is sent to "to" address; TxOut[2] is change to oneself. TxOut[1] is memo.
+	if bytes.Compare(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) != 0 {
+		fmt.Printf("tx.TxOut[0].PkScript: %x\n", tx.TxOut[0].PkScript)
+		fmt.Printf("to.ScriptAddress():   %x\n", to.ScriptAddress())
+		fmt.Printf("swapping txout[0] with txout[2]\n")
+		tx.TxOut[0], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[0]
+	}
+
 	fmt.Printf("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
 		fmt.Printf("txout %d\n", idx)
