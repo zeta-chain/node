@@ -6,12 +6,12 @@ package main
 import (
 	"context"
 	"fmt"
+	flag "github.com/spf13/pflag"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
@@ -104,6 +104,21 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		panic(err)
 	}
 	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
+
+	response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+	if err != nil {
+		panic(err)
+	}
+	TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
+
+	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
+	if err != nil {
+		panic(err)
+	}
+	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
+	fmt.Printf("TSS BTCAddress: %s\n", BTCTSSAddress.String())
+
 	return &SmokeTest{
 		zevmClient:         zevmClient,
 		goerliClient:       goerliClient,
@@ -119,6 +134,10 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 }
 
 func main() {
+	var enableGenesis bool
+	flag.BoolVar(&enableGenesis, "genesis", false, "Wait for genesis initialization.")
+	flag.Parse()
+
 	testStartTime := time.Now()
 	defer func() {
 		fmt.Println("Smoke test took", time.Since(testStartTime))
@@ -165,6 +184,28 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+
+	// Wait for Genesis and keygen to be completed. ~ height 10
+	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
+	if !enableGenesis {
+		time.Sleep(time.Second * 20)
+		for {
+			time.Sleep(5 * time.Second)
+			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+			if response.Height >= 25 {
+				break
+			}
+			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+		}
+	}
+
 	// get the clients for tests
 	var zevmClient *ethclient.Client
 	for {
@@ -184,12 +225,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-	cctxClient := types.NewQueryClient(grpcConn)
-	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
 

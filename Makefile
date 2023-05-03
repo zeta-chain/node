@@ -155,3 +155,9 @@ stop-smoketest:
 stop-smoketest-p2p-diag:
 	@echo "--> Stopping smoketest in p2p diagnostic mode"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
+
+stress-test: zetanode
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
+
+stop-stress-test:
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans
