@@ -20,7 +20,7 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 	var cctxIndex string
 	for {
 		time.Sleep(5 * time.Second)
-
+		fmt.Printf("Waiting for cctx to be mined by inTxHash: %s\n", inTxHash)
 		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
 		if err != nil {
 			continue

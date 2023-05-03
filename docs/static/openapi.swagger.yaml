@@ -32099,3 +32099,39 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}:
+    get:
+      summary: Queries a list of GetClientParamsForChain items.
+      operationId: Query_GetCoreParamsForChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetCoreParamsForChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chainID
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/zetacore/observer/get_core_params:
+    get:
+      summary: Queries a list of GetCoreParams items.
+      operationId: Query_GetCoreParams
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetCoreParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
