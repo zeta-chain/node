@@ -111,6 +111,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
 			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
 			time.Sleep(5 * time.Second)
+			continue
 		}
 		TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
 		fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
