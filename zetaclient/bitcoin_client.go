@@ -45,12 +45,10 @@ type BitcoinChainClient struct {
 	*ChainMetrics
 
 	chain       common.Chain
-	endpoint    string
 	rpcClient   *rpcclient.Client
 	zetaClient  *ZetaCoreBridge
 	Tss         TSSSigner
 	lastBlock   int64
-	confCount   int64                                   // must wait this many blocks to be considered "confirmed"
 	BlockTime   uint64                                  // block time in seconds
 	submittedTx map[string]btcjson.GetTransactionResult // key: chain-nonce
 	mu          *sync.Mutex
@@ -58,6 +56,7 @@ type BitcoinChainClient struct {
 	db          *gorm.DB
 	stop        chan struct{}
 	logger      BTCLog
+	cfg         *config.Config
 }
 
 const (
@@ -65,14 +64,23 @@ const (
 	chunkSize        = 500
 )
 
+func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
+	return ob.cfg.BitcoinConfig
+}
+
+func (ob *BitcoinChainClient) EndPoint() string {
+	return ob.GetChainConfig().RPCEndpoint
+}
+
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
 	}
+	ob.cfg = cfg
 	ob.stop = make(chan struct{})
 	ob.chain = chain
-	if !chain.IsBitcoinChain() {
+	if !common.IsBitcoinChain(chain.ChainId) {
 		return nil, fmt.Errorf("chain %s is not a Bitcoin chain", chain.ChainName)
 	}
 	ob.mu = &sync.Mutex{}
@@ -87,7 +95,6 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
-	ob.confCount = 0
 	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
 
 	//Load btc chain client DB
@@ -96,17 +103,15 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 
-	ob.endpoint = config.BitcoinConfig.RPCEndpoint
-
 	// initialize the Client
-	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.endpoint)
+	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.EndPoint())
 	connCfg := &rpcclient.ConnConfig{
-		Host:         ob.endpoint,
-		User:         config.BitcoinConfig.RPCUsername,
-		Pass:         config.BitcoinConfig.RPCPassword,
+		Host:         ob.EndPoint(),
+		User:         ob.GetChainConfig().RPCUsername,
+		Pass:         ob.GetChainConfig().RPCPassword,
 		HTTPPostMode: true,
 		DisableTLS:   true,
-		Params:       config.BitcoinConfig.RPCParams,
+		Params:       ob.GetChainConfig().RPCParams,
 	}
 	client, err := rpcclient.New(connCfg, nil)
 	if err != nil {
@@ -156,13 +161,6 @@ func (ob *BitcoinChainClient) Start() {
 func (ob *BitcoinChainClient) Stop() {
 	ob.logger.ChainLogger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
-	//
-	//ob.Logger.Info().Msg("closing ob.pendingUtxos")
-	//err := ob.pendingUtxos.Close()
-	//if err != nil {
-	//	ob.Logger.Error().Err(err).Msg("error closing pendingUtxos")
-	//}
-	//
 	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
@@ -193,7 +191,7 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchInTxPeriod) * time.Second)
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.InTxTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -246,6 +244,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				for vidx, vout := range tx.Vout {
 					ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
 				}
+				//ob.rpcClient.GetTransaction(tx.Txid)
 			}
 		}
 
@@ -298,7 +297,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	}
 	if res.Confirmations == 0 {
 		return true, false, nil
-	} else if res.Confirmations > 0 { // FIXME: use configured block confirmation
+	} else if res.Confirmations > int64(ob.GetChainConfig().CoreParams.ConfCount) { // FIXME: use configured block confirmation
 		amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
 		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
@@ -333,7 +332,7 @@ func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) erro
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
 
-	gasTicker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchGasPricePeriod) * time.Second)
+	gasTicker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.GasPriceTicker) * time.Second)
 	for {
 		select {
 		case <-gasTicker.C:
@@ -360,7 +359,8 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 			return err
 		}
-		ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
+		_ = zetaHash
+		//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
@@ -382,7 +382,8 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
 	}
-	ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
+	_ = zetaHash
+	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 	_ = feeResult
 	return nil
 }
@@ -483,7 +484,7 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
 
-	ticker := time.NewTicker(time.Duration(config.BitcoinConfig.WatchUTXOSPeriod) * time.Second)
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.WatchUTXOTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -523,7 +524,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			return err
 		}
 		utxos = append(utxos, unspents...)
-		ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
+		//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
 		//for idx, utxo := range unspents {
 		//	fmt.Printf("utxo %d\n", idx)
 		//	fmt.Printf("  txid: %s\n", utxo.TxID)
@@ -594,7 +595,7 @@ func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
