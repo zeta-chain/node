@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -17,20 +18,22 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"google.golang.org/grpc"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
+
+type Multiaddr = core.Multiaddr
 
 var StartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start ZetaClient Observer",
 	RunE:  start,
 }
-
-const maxRetryCount = 10
 
 func init() {
 	RootCmd.AddCommand(StartCmd)
@@ -40,35 +43,54 @@ func start(_ *cobra.Command, _ []string) error {
 	setHomeDir()
 	SetupConfigForTest()
 	//Load Config file given path
-	configData, err := config.Load(rootArgs.zetaCoreHome)
+	cfg, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
 		return err
 	}
-	log.Logger = InitLogger(configData.LogLevel)
+
+	log.Logger = InitLogger(cfg.LogLevel)
 	//Wait until zetacore has started
-	waitForZetaCore(configData)
+	if len(cfg.Peer) != 0 {
+		err := validatePeer(cfg.Peer)
+		if err != nil {
+			return err
+		}
+	}
+	waitForZetaCore(cfg)
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 	startLogger.Info().Msgf("ZetaCore is ready")
-	// first signer & bridge
-
-	bridge1, err := CreateZetaBridge(rootArgs.zetaCoreHome, configData)
+	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
+	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
+	zetaBridge, err := CreateZetaBridge(rootArgs.zetaCoreHome, cfg)
 	if err != nil {
 		panic(err)
 	}
+	zetaBridge.WaitForCoreToCreateBlocks()
 	startLogger.Info().Msgf("ZetaBridge is ready")
+	zetaBridge.SetAccountNumber(common.ZetaClientGranteeKey)
 
-	bridge1.SetAccountNumber(common.ZetaClientGranteeKey)
-	CreateAuthzSigner(bridge1.GetKeys().GetOperatorAddress().String(),
-		bridge1.GetKeys().GetAddress())
-
+	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
+	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes
+	CreateAuthzSigner(zetaBridge.GetKeys().GetOperatorAddress().String(), zetaBridge.GetKeys().GetAddress())
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
-	bridgePk, err := bridge1.GetKeys().GetPrivateKey()
+	// ConfigUpdater : This runs at every tick to check for configuration from zetacore and updates config if there are any changes . Zetacore stores configuration information which is common across all clients
+	go zetaBridge.ConfigUpdater(cfg)
+	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
+	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
+	if len(cfg.ChainsEnabled) == 0 {
+		startLogger.Info().Msgf("No chains enabled, exiting")
+		return nil
+	}
+
+	// Generate TSS address . Thr Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
+	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
+	// After generating the key , the address is set on the zetacore
+	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
 	}
-
 	startLogger.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
 		errMsg := fmt.Sprintf("key bytes len %d != 32", len(bridgePk.Bytes()))
@@ -78,52 +100,42 @@ func start(_ *cobra.Command, _ []string) error {
 	var priKey secp256k1.PrivKey
 	priKey = bridgePk.Bytes()[:32]
 
-	startLogger.Debug().Msgf("NewTSS: with peer pubkey %s", bridgePk.PubKey())
-
-	peers, err := initPeers(configData.Peer)
+	// Generate pre Params if not present already
+	peers, err := initPeers(cfg.Peer)
 	if err != nil {
 		log.Error().Err(err).Msg("peer address error")
 	}
-	initPreParams(configData.PreParamsPath)
-	tss, err := mc.NewTSS(peers, priKey, preParams)
+	initPreParams(cfg.PreParamsPath)
+	if cfg.P2PDiagnostic {
+		err := RunDiagnostics(startLogger, peers, bridgePk, cfg)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("RunDiagnostics error")
+			return err
+		}
+	}
+	tss, err := mc.NewTSS(peers, priKey, preParams, cfg)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	retryCount := 0
-	for {
-		block, err := bridge1.GetLatestZetaBlock()
-		if err == nil && block.Header.Height > 1 {
-			startLogger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
-			break
-		}
-		retryCount++
-		startLogger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
-		if retryCount > 10 {
-			panic("ZetaCore is not ready , Waited for 60s")
-		}
-		time.Sleep(6 * time.Second)
+	genNewTSSAtBlock(cfg.KeygenBlock, zetaBridge, tss)
 
-	}
-
-	//Check if keygen block is set and generate new keys at specified height
-	genNewKeysAtBlock(configData.KeygenBlock, bridge1, tss)
-
-	for _, chain := range config.ChainsEnabled {
+	for _, chain := range cfg.ChainsEnabled {
 		var tssAddr string
-		if chain.IsEVMChain() {
+		if common.IsEVMChain(chain.ChainId) {
 			tssAddr = tss.EVMAddress().Hex()
-		} else {
+		} else if common.IsBitcoinChain(chain.ChainId) {
 			tssAddr = tss.BTCAddress()
 		}
-		zetaTx, err := bridge1.SetTSS(chain, tssAddr, tss.CurrentPubkey)
+		zetaTx, err := zetaBridge.SetTSS(chain, tssAddr, tss.CurrentPubkey)
 		if err != nil {
 			startLogger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
 		}
 		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
-
 	}
-	signerMap1, err := CreateSignerMap(tss, masterLogger)
+
+	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
+	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -138,24 +150,28 @@ func start(_ *cobra.Command, _ []string) error {
 
 	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-	chainClientMap1, err := CreateChainClientMap(bridge1, tss, dbpath, metrics, masterLogger)
+
+	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
-	for _, v := range chainClientMap1 {
+	for _, v := range chainClientMap {
 		v.Start()
 	}
 
-	mo1 := mc.NewCoreObserver(bridge1, signerMap1, chainClientMap1, metrics, tss, masterLogger)
-
+	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 	mo1.MonitorCore()
 
-	// report TSS address nonce on ETHish chains
-	for _, chain := range config.ChainsEnabled {
-		err = (chainClientMap1)[chain].PostNonceIfNotRecorded(startLogger)
-		if err != nil {
-			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+	// report TSS address nonce on all chains except zeta
+	for _, chain := range cfg.ChainsEnabled {
+		if chain.IsExternalChain() {
+			err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
+			if err != nil {
+				startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+			}
 		}
 	}
 
@@ -167,9 +183,10 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
-	for _, chain := range config.ChainsEnabled {
-		(chainClientMap1)[chain].Stop()
+	for _, chain := range cfg.ChainsEnabled {
+		(chainClientMap)[chain].Stop()
 	}
+	zetaBridge.Stop()
 
 	return nil
 }
@@ -189,6 +206,7 @@ func waitForZetaCore(configData *config.Config) {
 			break
 		}
 	}
+
 }
 
 func initPeers(peer string) (p2p.AddrList, error) {
@@ -227,7 +245,7 @@ func initPreParams(path string) {
 	}
 }
 
-func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
+func genNewTSSAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 	if height > 0 {
 		log.Info().Msgf("Keygen at blocknum %d", height)
 		bn, err := bridge.GetZetaBlockHeight()
@@ -248,17 +266,21 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		for _, na := range nodeAccounts {
 			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
 		}
-		ticker := time.NewTicker(time.Second * 5)
+		ticker := time.NewTicker(time.Second * 1)
+		lastBlock := bn
 		for range ticker.C {
-			bn, err := bridge.GetZetaBlockHeight()
+			currentBlock, err := bridge.GetZetaBlockHeight()
 			if err != nil {
 				log.Error().Err(err).Msg("GetZetaBlockHeight error")
 				return
 			}
-			if bn == height {
+			if currentBlock == height {
 				break
 			}
-			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, bn)
+			if currentBlock > lastBlock {
+				lastBlock = currentBlock
+				log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, currentBlock)
+			}
 		}
 		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
 		log.Info().Msgf("%s", pubkeys)
@@ -276,7 +298,7 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		err = mc.TestKeysign(res.PubKey, tss.Server)
 		if err != nil {
 			log.Error().Err(err).Msg("TestKeysign error")
-			return
+			//return
 		}
 
 		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
@@ -289,4 +311,28 @@ func genNewKeysAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
 		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 		return
 	}
+}
+
+func validatePeer(seedPeer string) error {
+	parsedPeer := strings.Split(seedPeer, "/")
+
+	if len(parsedPeer) < 7 {
+		log.Error().Msgf("seed peer is malformed: %s", seedPeer)
+		return errors.New("seed peer missing IP or ID")
+	}
+
+	seedIP := parsedPeer[2]
+	seedID := parsedPeer[6]
+
+	if net.ParseIP(seedIP) == nil {
+		log.Error().Msgf("invalid seed IP address: %s", seedIP)
+		return errors.New("invalid seed IP address")
+	}
+
+	if len(seedID) == 0 {
+		log.Error().Msgf("seed id is empty")
+		return errors.New("seed id is empty")
+	}
+
+	return nil
 }

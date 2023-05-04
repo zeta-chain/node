@@ -6,12 +6,13 @@ package main
 import (
 	"context"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestMessagePassing() {
@@ -62,6 +63,7 @@ func (sm *SmokeTest) TestMessagePassing() {
 	go func() {
 		defer sm.wg.Done()
 		fmt.Printf("Waiting for ConnectorEth.Send CCTX to be mined...\n")
+		fmt.Printf("  INTX hash: %s\n", receipt.TxHash.String())
 		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
 		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 		if err != nil {

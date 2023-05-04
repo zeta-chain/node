@@ -8,6 +8,17 @@ networks:
 
 
 services:
+  rosetta:
+    image: zetanode:latest
+    container_name: rosetta
+    hostname: rosetta
+    ports:
+      - "8080:8080"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.200
+    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
@@ -22,7 +33,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: /root/start-zetacored.sh
+    entrypoint: ["/root/genesis.sh", "2"]
 
 
   zetacore1:
@@ -35,7 +46,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: /root/start-zetacored.sh
+    entrypoint: ["/root/genesis.sh", "2"]
 
 
   zetaclient0:
@@ -48,7 +59,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
@@ -62,7 +73,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 

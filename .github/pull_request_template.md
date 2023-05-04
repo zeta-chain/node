@@ -19,6 +19,7 @@ Please describe the tests that you ran to verify your changes. Include instructi
 - [ ] Tested in development environment
 - [ ] Go unit tests
 - [ ] Go integration tests
+- [ ] Tested via GitHub Actions 
 
 # Checklist:
 

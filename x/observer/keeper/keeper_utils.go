@@ -38,7 +38,7 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 
 	delegation, found := k.stakingKeeper.GetDelegation(ctx, selfdelAddr, valAddress)
 	if !found {
-		return types.ErrSelfDelgation
+		return types.ErrSelfDelegation
 	}
 	obsParams := k.GetParams(ctx).GetParamsForChain(chain)
 	if !obsParams.IsSupported {

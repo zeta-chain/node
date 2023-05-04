@@ -20,9 +20,10 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer should only listen to the loopback
-func NewHTTPServer() *HTTPServer {
+func NewHTTPServer(p2pid string) *HTTPServer {
 	hs := &HTTPServer{
 		logger: log.With().Str("module", "http").Logger(),
+		p2pid:  p2pid,
 	}
 	s := &http.Server{
 		Addr:              ":8123",
