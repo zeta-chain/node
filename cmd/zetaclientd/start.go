@@ -122,26 +122,21 @@ func start(_ *cobra.Command, _ []string) error {
 	if cfg.KeygenBlock > 0 {
 		err = genNewTSSAtBlock(cfg, zetaBridge, tss)
 		if err != nil {
-			startLogger.Error().Err(err).Msg("genNewTSSAtBlock error")
+			hash, e := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+			if e != nil {
+				panic("Failed to broadcast unsuccessful TSS keygen Vote")
+			}
+			startLogger.Error().Err(err).Msgf("Broadcast Failed TSS vote : %s", hash)
 			return err
 		}
 	}
-	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-
-	// Vote Keygen success
-	for _, chain := range cfg.ChainsEnabled {
-		var tssAddr string
-		if common.IsEVMChain(chain.ChainId) {
-			tssAddr = tss.EVMAddress().Hex()
-		} else if common.IsBitcoinChain(chain.ChainId) {
-			tssAddr = tss.BTCAddress()
-		}
-		zetaTx, err := zetaBridge.SetTSS(chain, tssAddr, tss.CurrentPubkey)
-		if err != nil {
-			startLogger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
-		}
-		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
+	tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
+		return err
 	}
+	startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)

@@ -9,7 +9,6 @@ import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
-import "crosschain/tss_voter.proto";
 import "crosschain/tss.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
@@ -60,17 +59,6 @@ service Query {
 	// Queries a keygen by index.
 	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/keygen";
-	}
-
-
-	// Queries a tSSVoter by index.
-	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter/{index}";
-	}
-
-	// Queries a list of tSSVoter items.
-	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter";
 	}
 
 
@@ -221,22 +209,7 @@ message QueryGetKeygenRequest {}
 message QueryGetKeygenResponse {
 	Keygen Keygen = 1;
 }
-message QueryGetTSSVoterRequest {
-	string index = 1;
-}
 
-message QueryGetTSSVoterResponse {
-	TSSVoter TSSVoter = 1;
-}
-
-message QueryAllTSSVoterRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTSSVoterResponse {
-	repeated TSSVoter TSSVoter = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
 message QueryGetTSSRequest {
 	string index = 1;
 }
