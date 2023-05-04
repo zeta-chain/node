@@ -1,9 +1,9 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
 )
 
@@ -48,8 +48,9 @@ func (msg *MsgCreateTSSVoter) ValidateBasic() error {
 }
 
 func (msg *MsgCreateTSSVoter) Digest() string {
-	m := *msg
-	m.Creator = ""
-	hash := crypto.Keccak256Hash([]byte(m.String()))
-	return hash.Hex()
+	//m := *msg
+	//m.Creator = ""
+	//hash := crypto.Keccak256Hash([]byte(m.String()))
+	//return hash.Hex()
+	return fmt.Sprintf("%d-%s", msg.KeyGenZetaHeight, msg.TssPubkey)
 }

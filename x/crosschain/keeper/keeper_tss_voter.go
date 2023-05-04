@@ -44,7 +44,6 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
 		}
-		//EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	err := error(nil)
 	if msg.Status == common.ReceiveStatus_Success {
