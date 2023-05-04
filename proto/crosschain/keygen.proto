@@ -12,8 +12,7 @@ enum KeygenStatus {
   KeyGenFailed = 3;
 }
 message Keygen {
-  string creator = 1;
   KeygenStatus status = 2; // 0--to generate key; 1--generated; 2--error
-  repeated string pubkeys = 3;
+  repeated string granteePubkeys = 3;
   int64 blockNumber = 4; // the blocknum that the key needs to be generated
 }

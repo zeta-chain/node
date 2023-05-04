@@ -86,10 +86,10 @@ func (gs GenesisState) Validate() error {
 	nodeAccountIndexMap := make(map[string]bool)
 
 	for _, elem := range gs.NodeAccountList {
-		if _, ok := nodeAccountIndexMap[elem.Creator]; ok {
+		if _, ok := nodeAccountIndexMap[elem.GetOperator()]; ok {
 			return fmt.Errorf("duplicated index for nodeAccount")
 		}
-		nodeAccountIndexMap[elem.Creator] = true
+		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
 	return nil

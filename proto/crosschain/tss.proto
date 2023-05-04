@@ -7,7 +7,8 @@ import "gogoproto/gogo.proto";
 
 message TSS {
   string tss_pubkey = 3;
-  repeated string signer_list = 4;
-  int64 finalizedZetaHeight = 5;
-  int64 keyGenZetaHeight = 6;
+  repeated string tss_participant_list = 4;
+  repeated string operator_address_list = 5;
+  int64 finalizedZetaHeight = 6;
+  int64 keyGenZetaHeight = 7;
 }

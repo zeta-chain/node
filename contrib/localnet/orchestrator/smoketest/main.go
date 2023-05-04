@@ -9,7 +9,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	flag "github.com/spf13/pflag"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
@@ -105,9 +104,9 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
 
-	response := &types.QueryGetTSSResponse{}
+	response := &types.QueryGetTssAddressResponse{}
 	for {
-		response, err = cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{})
+		response, err = cctxClient.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
 			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
@@ -117,18 +116,9 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		break
 	}
 
-	TSSAddress, err = zetaclient.GetTssAddrEVM(response.TSS.TssPubkey)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
-
-	BTCTSSAddresString, err := zetaclient.GetTssAddrBTC(response.TSS.TssPubkey)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("TSS BTCAddress String: %s\n", BTCTSSAddress)
-	BTCTSSAddress, _ = btcutil.DecodeAddress(BTCTSSAddresString, config.BitconNetParams)
+	TSSAddress = ethcommon.HexToAddress(response.Eth)
+	BTCTSSAddress, _ = btcutil.DecodeAddress(response.Btc, config.BitconNetParams)
+	fmt.Printf("TSS EthAddress: %s\n TSS BTC address %s\n", response.GetEth(), response.GetBtc())
 
 	return &SmokeTest{
 		zevmClient:         zevmClient,

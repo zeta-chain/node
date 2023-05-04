@@ -33,7 +33,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		var voterList []string
 
 		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
-			voterList = append(voterList, nodeAccount.Creator)
+			voterList = append(voterList, nodeAccount.Operator)
 		}
 		ballot = zetaObserverTypes.Ballot{
 			Index:            "",
@@ -66,7 +66,8 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
-			SignerList:          ballot.VoterList,
+			TssParticipantList:  keygen.GetGranteePubkeys(),
+			OperatorAddressList: ballot.VoterList,
 			FinalizedZetaHeight: ctx.BlockHeight(),
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		})

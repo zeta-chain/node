@@ -37,7 +37,7 @@ func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.CctxNewKeygenBlock,
 			sdk.NewAttribute(types.KeyGenBlock, strconv.Itoa(int(keygen.BlockNumber))),
-			sdk.NewAttribute(types.KeyGenPubKeys, types2.PrettyPrintStruct(keygen.Pubkeys)),
+			sdk.NewAttribute(types.KeyGenPubKeys, types2.PrettyPrintStruct(keygen.GranteePubkeys)),
 		),
 	)
 }

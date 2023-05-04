@@ -31802,6 +31802,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/crosschain/get_tss_address:
+    get:
+      summary: Queries a list of GetTssAddress items.
+      operationId: Query_GetTssAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryGetTssAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/zetacore/crosschain/permission_flags:
     get:
       summary: Queries a PermissionFlags by index.

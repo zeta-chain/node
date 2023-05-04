@@ -54,6 +54,11 @@ service Query {
 	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/crosschain/permission_flags";
 	}
+// Queries a list of GetTssAddress items.
+	rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/crosschain/get_tss_address";
+	}
+
 // this line is used by starport scaffolding # 2
 
 	// Queries a keygen by index.
@@ -199,6 +204,14 @@ message QueryGetPermissionFlagsRequest {}
 message QueryGetPermissionFlagsResponse {
 	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
 }
+message QueryGetTssAddressRequest {
+}
+
+message QueryGetTssAddressResponse {
+	string eth = 1;
+	string btc = 2;
+}
+
 // this line is used by starport scaffolding # 3
 message QueryGetKeygenRequest {}
 

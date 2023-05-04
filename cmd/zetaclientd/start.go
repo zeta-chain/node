@@ -119,6 +119,9 @@ func start(_ *cobra.Command, _ []string) error {
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete , and report weather it's a success or failure
 	// Set TSS block to 0 using genesis file to disable this feature
+	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
+	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
+	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	if cfg.KeygenBlock > 0 {
 		err = genNewTSSAtBlock(cfg, zetaBridge, tss)
 		if err != nil {
