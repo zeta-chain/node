@@ -63,11 +63,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-
+	oldStatus := cctx.CctxStatus.Status
 	if receiverChain.IsZetaChain() {
 		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
-			if _, ok := err.(*ErrEVMReverted); ok {
+			ctx.Logger().Error("HandleEVMDeposit", "error", err.Error())
+			if err1, ok := err.(ErrEVMReverted); ok {
+				ctx.Logger().Info("zEVM contract call reverted", "error", err1.Error(), "cctx", cctx.Index)
 				cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
 					Receiver:           cctx.InboundTxParams.Sender,
 					ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
@@ -84,10 +86,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				if err != nil {
 					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, fmt.Sprintf("zEVM contract call reverted; UpdateNonce: %s", err), cctx.LogIdentifierForCCTX())
 				}
+
 			} else {
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			}
-			k.SetCrossChainTx(ctx, cctx)
+			k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
@@ -102,7 +105,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	}
 	EmitEventInboundFinalized(ctx, &cctx)
-	k.SetCrossChainTx(ctx, cctx)
+	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
