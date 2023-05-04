@@ -33,6 +33,7 @@ type initArguments struct {
 
 func init() {
 	RootCmd.AddCommand(InitCmd)
+	RootCmd.AddCommand(VersionCmd)
 
 	InitCmd.Flags().StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	InitCmd.Flags().StringVar(&initArgs.preParamsPath, "pre-params", "", "pre-params file path")
