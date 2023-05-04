@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
 
@@ -16,7 +17,7 @@ func (sm *SmokeTest) TestCrosschainRevert() {
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
-	LoudPrintf("Testing Crosschain swap failed tx revert...\n")
+	LoudPrintf("Testing Crosschain swap zEVM contract call failed; user deposit should be refunded...\n")
 	sm.zevmAuth.GasLimit = 10000000
 
 	btcMinOutAmount := big.NewInt(0)
@@ -44,22 +45,18 @@ func (sm *SmokeTest) TestCrosschainRevert() {
 	}
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	txhash := sm.DepositERC20(big.NewInt(8e7), msg)
-	_ = WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
-
-	start := time.Now()
-	for {
-		if time.Since(start) > 30*time.Second {
-			panic("waiting tx balance revert timeout")
-		}
-		newBal, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-		if err != nil {
-			panic(err)
-		}
-		diff := oldBal.Sub(oldBal, newBal)
-		if diff.Cmp(big.NewInt(1e5)) < 0 {
-			break
-		}
-		time.Sleep(1 * time.Second)
+	cctx := WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
+	fmt.Printf("cctx status: %s\n", cctx.CctxStatus.Status)
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
+		panic("expected cctx to be reverted")
 	}
+
+	newBal, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	diff := oldBal.Sub(oldBal, newBal)
+	fmt.Printf("bal diff: %d\n", diff)
+
 	LoudPrintf("Passed\n")
 }

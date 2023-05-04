@@ -12,6 +12,14 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+type ErrEVMReverted struct {
+	msg string
+}
+
+func (e ErrEVMReverted) Error() string {
+	return fmt.Sprintf("zEVM call reverted: %s", e.msg)
+}
+
 func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
@@ -27,14 +35,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		tx, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
+			if tx != nil && tx.Failed() {
+				return ErrEVMReverted{tx.VmError}
+			}
 			return err
-		}
-		// TODO : Return error if TX failed ?
-
-		if tx.Failed() && cctx.GetCurrentOutTxParam().ReceiverChainId != common.ZetaChain().ChainId {
-			return fmt.Errorf("external chain tx failed")
 		}
 
 		if !tx.Failed() && len(msg.Message) > 0 {

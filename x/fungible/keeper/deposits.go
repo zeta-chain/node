@@ -17,16 +17,15 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain *common.Chain, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain *common.Chain, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, error) {
 	var tx *evmtypes.MsgEthereumTxResponse
-	withdrawMessage := false
 	var Zrc20Contract eth.Address
 	var coin fungibletypes.ForeignCoins
 	if coinType == common.CoinType_Gas {
 		var found bool
 		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
 		if !found {
-			return tx, false, types.ErrGasCoinNotFound
+			return tx, types.ErrGasCoinNotFound
 		}
 	} else {
 		foreignCoinList := k.GetAllForeignCoinsForChain(ctx, senderChain.ChainId)
@@ -39,31 +38,26 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 			}
 		}
 		if !found {
-			return nil, false, types.ErrForeignCoinNotFound
+			return nil, types.ErrForeignCoinNotFound
 		}
 	}
 	Zrc20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
+	var err error
 	if len(message) == 0 { // no message; transfer
-		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
-		txNoWithdraw, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
+		tx, err = k.DepositZRC20(ctx, Zrc20Contract, to, amount)
 		if err != nil {
-			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
+			return tx, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
-		tx = txNoWithdraw
 	} else { // non-empty message = [contractaddress, calldata]
-		var txWithWithdraw *evmtypes.MsgEthereumTxResponse
-		var err error
 		if len(data) == 0 {
-			txWithWithdraw, err = k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
+			tx, err = k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
 		} else {
-			txWithWithdraw, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
+			tx, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
 		}
 		if err != nil {
-			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
+			return tx, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
-		withdrawMessage = true
-		tx = txWithWithdraw
 	}
-	return tx, withdrawMessage, nil
+	return tx, nil
 
 }

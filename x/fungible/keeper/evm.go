@@ -212,7 +212,7 @@ func (k Keeper) DepositZRC20(
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
 	if err != nil {
-		return nil, err
+		return res, err
 	}
 
 	return res, nil
@@ -239,7 +239,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
 		"depositAndCall", zrc4Contract, amount, targetContract, message)
 	if err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -345,8 +345,9 @@ func (k Keeper) CallEVM(
 
 	k.Logger(ctx).Info("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, value, gasLimit)
+
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
+		return resp, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
 	}
 	return resp, nil
 }
@@ -405,7 +406,7 @@ func (k Keeper) CallEVMWithData(
 		ethtypes.AccessList{}, // AccessList
 		!commit,               // isFake
 	)
-	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
+	k.evmKeeper.WithChainID(ctx) //TODO:  set chainID for signer; should not need to do this; but seems necessary. Why?
 	k.Logger(ctx).Info("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
 	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
 	if err != nil {
@@ -413,7 +414,7 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	if res.Failed() {
-		return nil, sdkerrors.Wrap(evmtypes.ErrVMExecution, res.VmError)
+		return res, sdkerrors.Wrap(evmtypes.ErrVMExecution, res.VmError)
 	}
 
 	msgBytes, _ := json.Marshal(msg)

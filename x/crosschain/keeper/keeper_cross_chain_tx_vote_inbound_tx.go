@@ -67,8 +67,23 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain.IsZetaChain() {
 		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil {
-			if err == fmt.Errorf("external chain tx failed") {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, err.Error(), cctx.LogIdentifierForCCTX())
+			if _, ok := err.(*ErrEVMReverted); ok {
+				cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+					Receiver:           cctx.InboundTxParams.Sender,
+					ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+					Amount:             cctx.InboundTxParams.Amount,
+					CoinType:           cctx.InboundTxParams.CoinType,
+					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+				})
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, fmt.Sprintf("zEVM contract call reverted: %s", err), cctx.LogIdentifierForCCTX())
+				err = k.UpdatePrices(ctx, cctx.InboundTxParams.SenderChainId, &cctx)
+				if err != nil {
+					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, fmt.Sprintf("zEVM contract call reverted; UpdatePrices: %s", err), cctx.LogIdentifierForCCTX())
+				}
+				err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChainId, &cctx)
+				if err != nil {
+					cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, fmt.Sprintf("zEVM contract call reverted; UpdateNonce: %s", err), cctx.LogIdentifierForCCTX())
+				}
 			} else {
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			}

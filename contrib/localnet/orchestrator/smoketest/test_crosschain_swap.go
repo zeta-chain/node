@@ -20,7 +20,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	// Firstly, deposit 1.15 BTC into Zeta for liquidity
 	//sm.DepositBTC()
 	// Secondly, deposit 1000.0 USDT into Zeta for liquidity
-	LoudPrintf("Depositing 1000 USDT & 1.15 BTC for liquidity\n")
+	fmt.Printf("*** Depositing 1000 USDT & 1.15 BTC for liquidity ***\n")
 
 	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
