@@ -64,13 +64,9 @@ service Query {
 
 	// Queries a tSS by index.
 	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSS/{index}";
-	}
-
-	// Queries a list of tSS items.
-	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/TSS";
 	}
+
 
 	// Queries a gasPrice by index.
 	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
@@ -210,21 +206,10 @@ message QueryGetKeygenResponse {
 	Keygen Keygen = 1;
 }
 
-message QueryGetTSSRequest {
-	string index = 1;
-}
+message QueryGetTSSRequest {}
 
 message QueryGetTSSResponse {
 	TSS TSS = 1;
-}
-
-message QueryAllTSSRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTSSResponse {
-	repeated TSS TSS = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 

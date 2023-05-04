@@ -66,8 +66,8 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
-			SignerList:          nil,
-			FinalizedZetaHeight: 0,
+			SignerList:          ballot.VoterList,
+			FinalizedZetaHeight: ctx.BlockHeight(),
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		})
 		keygen.Status = types.KeygenStatus_KeyGenSuccess

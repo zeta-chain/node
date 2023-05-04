@@ -6,17 +6,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcutil"
 	flag "github.com/spf13/pflag"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -105,25 +105,30 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
 
+	response := &types.QueryGetTSSResponse{}
 	for {
-		response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+		response, err = cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
 			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
-		fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
 		break
 	}
 
-	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
+	TSSAddress, err = zetaclient.GetTssAddrEVM(response.TSS.TssPubkey)
 	if err != nil {
 		panic(err)
 	}
-	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
-	fmt.Printf("TSS BTCAddress: %s\n", BTCTSSAddress.String())
+	fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
+
+	BTCTSSAddresString, err := zetaclient.GetTssAddrBTC(response.TSS.TssPubkey)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TSS BTCAddress String: %s\n", BTCTSSAddress)
+	BTCTSSAddress, _ = btcutil.DecodeAddress(BTCTSSAddresString, config.BitconNetParams)
 
 	return &SmokeTest{
 		zevmClient:         zevmClient,
