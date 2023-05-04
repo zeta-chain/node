@@ -23,7 +23,8 @@ BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb
 TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
 
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS := -tags PRIVNET,pebbledb 
+TEST_BUILD_FLAGS := -tags TESTNET,pebbledb
+PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb
 
 clean: clean-binaries clean-dir
 
@@ -48,6 +49,9 @@ coverage-report: test-coverage
 
 test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
+
+test-priv:
+	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}
 
 gosec:
 	gosec  -exclude-dir=localnet ./...
@@ -82,6 +86,10 @@ install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
+install-zetacore-testnet: go.sum
+		@echo "--> Installing zetacored"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
+
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"
 		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
@@ -102,6 +110,9 @@ run:
 chain-init: clean install-zetacore init
 chain-run: clean install-zetacore init run
 
+chain-init-testnet: clean install-zetacore-testnet init
+chain-run-testnet: clean install-zetacore-testnet init run
+
 lint-pre:
 	@test -z $(gofmt -l .)
 	@GOFLAGS=$(GOFLAGS) go mod verify
@@ -109,9 +120,12 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-proto-go:
-	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+proto:
+	@echo "--> Generating Go from protocol buffer files"
+	@sh ./scripts/protoc-gen-go.sh
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/protoc-gen-openapi.sh
+.PHONY: proto
 
 ###############################################################################
 ###                                Docker Images                             ###
@@ -130,6 +144,20 @@ start-smoketest:
 	@echo "--> Starting smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-smoketest-p2p-diag:
+	@echo "--> Starting smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
+
 stop-smoketest:
 	@echo "--> Stopping smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+stop-smoketest-p2p-diag:
+	@echo "--> Stopping smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
+
+stress-test: zetanode
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
+
+stop-stress-test:
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans

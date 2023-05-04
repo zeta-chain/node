@@ -93,7 +93,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	// for localnet only: USDT ZRC20
 	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	USDTZRC20Addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliLocalNetChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
+	USDTZRC20Addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
 	}
