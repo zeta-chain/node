@@ -26,7 +26,7 @@ message MsgDeployFungibleCoinZRC20 {
   string name = 5;
   string symbol = 6;
   common.CoinType coinType = 7;
-  uint64 gasLimit = 8;
+  int64 gasLimit = 8;
 }
 
 message MsgDeployFungibleCoinZRC20Response {

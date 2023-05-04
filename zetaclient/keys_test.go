@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -10,6 +9,7 @@ import (
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
 	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
@@ -66,15 +66,16 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	cdc := codec.NewProtoCodec(registry)
 	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
-	_, _, err = kb.NewMnemonic(signerNameForTest, cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+
+	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	_, info, err := GetKeyringKeybase("/Users/tanmay/.zetacored/", "bob", "")
-	fmt.Println(info, err)
+	_, err := GetKeyringKeybase("bob", "/Users/test/.zetacored/", "")
+	c.Assert(err, NotNil)
 }
 
 func (ks *KeysSuite) TestNewKeys(c *C) {
@@ -89,11 +90,11 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 		c.Assert(err, IsNil)
 	}()
 
-	k, info, err := GetKeyringKeybase(folder, signerNameForTest, signerPasswordForTest)
+	k, err := GetKeyringKeybase(signerNameForTest, folder, signerPasswordForTest)
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
-	c.Assert(info, NotNil)
-	ki := NewKeysWithKeybase(k, signerNameForTest, signerPasswordForTest)
+	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
+	ki := NewKeysWithKeybase(k, granter, signerNameForTest, signerPasswordForTest)
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)

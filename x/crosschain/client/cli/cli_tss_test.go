@@ -2,9 +2,10 @@ package cli_test
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -267,7 +268,10 @@ func TestCreateTSSVoter(t *testing.T) {
 	ctx := val.ClientCtx
 	id := "0"
 
-	fields := []string{"xyz", "xyz"}
+	fields := []string{
+		sdk.MustBech32ifyAddressBytes("cosmos", []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+		sdk.MustBech32ifyAddressBytes("cosmos", []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+	}
 	for _, tc := range []struct {
 		desc string
 		id   string

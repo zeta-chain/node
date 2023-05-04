@@ -6,47 +6,48 @@ package main
 import (
 	"context"
 	"fmt"
+	flag "github.com/spf13/pflag"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"math/big"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"google.golang.org/grpc"
 )
 
 var (
-	DeployerAddress    = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
-	DeployerPrivateKey = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
-	TSSAddress         = ethcommon.HexToAddress("0xF421292cb0d3c97b90EEEADfcD660B893592c6A2")
-	BTCTSSAddress, _   = btcutil.DecodeAddress("bcrt1q7cj32g6scwdaa5sq08t7dqn7jf7ny9lrqhgrwz", config.BitconNetParams)
-
+	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+	TSSAddress           = ethcommon.HexToAddress("0x0Da38EA1B43758F55eB97590D41e244913A00b26")
+	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", config.BitconNetParams)
 	BLOCK                = 5 * time.Second // should be 2x block time
 	BigZero              = big.NewInt(0)
-	SmokeTestTimeout     = 15 * time.Minute // smoke test fails if timeout is reached
+	SmokeTestTimeout     = 35 * time.Minute // smoke test fails if timeout is reached
 	USDTZRC20Addr        = "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
 	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
-	SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress = ethcommon.HexToAddress
 )
@@ -70,20 +71,20 @@ type SmokeTest struct {
 	USDTERC20Addr        ethcommon.Address
 	USDTERC20            *erc20.USDT
 	USDTZRC20Addr        ethcommon.Address
-	USDTZRC20            *contracts.ZRC20
+	USDTZRC20            *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
-	ETHZRC20             *contracts.ZRC20
+	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
-	BTCZRC20             *contracts.ZRC20
+	BTCZRC20             *zrc20.ZRC20
 	UniswapV2FactoryAddr ethcommon.Address
-	UniswapV2Factory     *contracts.UniswapV2Factory
+	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
-	UniswapV2Router      *contracts.UniswapV2Router02
+	UniswapV2Router      *uniswapv2router.UniswapV2Router02
 	TestDAppAddr         ethcommon.Address
 	ZEVMSwapAppAddr      ethcommon.Address
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
 
-	SystemContract     *contracts.SystemContract
+	SystemContract     *systemcontract.SystemContract
 	SystemContractAddr ethcommon.Address
 }
 
@@ -91,19 +92,58 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
+	// query system contract address
+	systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("System contract address: %s\n", systemContractAddr)
+
+	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractAddr.SystemContract.SystemContract), zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
+
+	for {
+		response, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "goerli_localnet"})
+		if err != nil {
+			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
+			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		TSSAddress = ethcommon.HexToAddress(response.TSS.Address)
+		fmt.Printf("TSS EthAddress: %s\n", TSSAddress.String())
+		break
+	}
+
+	btcResponse, err := cctxClient.TSS(context.Background(), &types.QueryGetTSSRequest{Index: "btc_regtest"})
+	if err != nil {
+		panic(err)
+	}
+	BTCTSSAddress, _ = btcutil.DecodeAddress(btcResponse.TSS.Address, config.BitconNetParams)
+	fmt.Printf("TSS BTCAddress: %s\n", BTCTSSAddress.String())
+
 	return &SmokeTest{
-		zevmClient:     zevmClient,
-		goerliClient:   goerliClient,
-		cctxClient:     cctxClient,
-		fungibleClient: fungibleClient,
-		wg:             sync.WaitGroup{},
-		goerliAuth:     goerliAuth,
-		zevmAuth:       zevmAuth,
-		btcRPCClient:   btcRPCClient,
+		zevmClient:         zevmClient,
+		goerliClient:       goerliClient,
+		cctxClient:         cctxClient,
+		fungibleClient:     fungibleClient,
+		wg:                 sync.WaitGroup{},
+		goerliAuth:         goerliAuth,
+		zevmAuth:           zevmAuth,
+		btcRPCClient:       btcRPCClient,
+		SystemContract:     SystemContract,
+		SystemContractAddr: SystemContractAddr,
 	}
 }
 
 func main() {
+	var enableGenesis bool
+	flag.BoolVar(&enableGenesis, "genesis", false, "Wait for genesis initialization.")
+	flag.Parse()
+
 	testStartTime := time.Now()
 	defer func() {
 		fmt.Println("Smoke test took", time.Since(testStartTime))
@@ -150,6 +190,29 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+
+	// Wait for Genesis and keygen to be completed. ~ height 10
+	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
+	if !enableGenesis {
+		time.Sleep(time.Second * 20)
+		for {
+			time.Sleep(5 * time.Second)
+			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+			if response.Height >= 30 {
+				break
+			}
+			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+		}
+	}
+
 	// get the clients for tests
 	var zevmClient *ethclient.Client
 	for {
@@ -169,14 +232,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-	cctxClient := types.NewQueryClient(grpcConn)
-	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
+
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()

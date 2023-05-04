@@ -10,12 +10,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
@@ -25,7 +23,6 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	goerliClient := sm.goerliClient
-	fungibleClient := sm.fungibleClient
 	LoudPrintf("Deposit Ether into ZEVM\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
@@ -84,23 +81,18 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	go func() {
 		defer sm.wg.Done()
 		<-c
-		systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
+
+		systemContract := sm.SystemContract
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("system contract address: %s\n", systemContractAddr.SystemContract.SystemContract)
-		addr := ethcommon.HexToAddress(systemContractAddr.SystemContract.SystemContract)
-		systemContract, err := contracts.NewSystemContract(addr, sm.zevmClient)
-		if err != nil {
-			panic(err)
-		}
-		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalNetChain().ChainId))
+		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliChain().ChainId))
 		if err != nil {
 			panic(err)
 		}
 		sm.ETHZRC20Addr = ethZRC20Addr
 		fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
-		ethZRC20, err := contracts.NewZRC20(ethZRC20Addr, sm.zevmClient)
+		ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.zevmClient)
 		if err != nil {
 			panic(err)
 		}

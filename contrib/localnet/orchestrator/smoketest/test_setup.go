@@ -14,10 +14,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/contracts/evm/erc20custody"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaconnectoreth"
-	"github.com/zeta-chain/zetacore/contracts/evm/zetaeth"
-	contracts "github.com/zeta-chain/zetacore/contracts/zevm"
+	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -75,7 +77,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	if err := CheckNonce(goerliClient, DeployerAddress, 2); err != nil {
 		panic(err)
 	}
-	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), ethcommon.HexToAddress("0x"))
+	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(auth, goerliClient, DeployerAddress, DeployerAddress, big.NewInt(0), big.NewInt(1e18), ethcommon.HexToAddress("0x"))
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +142,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 		panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
 	}
 	sm.USDTZRC20Addr = ethcommon.HexToAddress(zrc20addr)
-	sm.USDTZRC20, err = contracts.NewZRC20(sm.USDTZRC20Addr, sm.zevmClient)
+	sm.USDTZRC20, err = zrc20.NewZRC20(sm.USDTZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -152,12 +154,12 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	sm.USDTERC20 = USDT
 	sm.USDTERC20Addr = usdtAddr
 	sm.UniswapV2FactoryAddr = ethcommon.HexToAddress(UniswapV2FactoryAddr)
-	sm.UniswapV2Factory, err = contracts.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.zevmClient)
+	sm.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
 	sm.UniswapV2RouterAddr = ethcommon.HexToAddress(UniswapV2RouterAddr)
-	sm.UniswapV2Router, err = contracts.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.zevmClient)
+	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}

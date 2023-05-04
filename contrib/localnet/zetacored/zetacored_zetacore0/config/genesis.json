@@ -34,6 +34,32 @@
         {
           "@type": "/ethermint.types.v1.EthAccount",
           "base_account": {
+            "address": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+            "pub_key": {
+              "@type":"/cosmos.crypto.secp256k1.PubKey",
+              "key":"AvUEsFHbsr40nTSmWh7CWYRZHGwf4cpRLtJlaRO4VAoq"
+            },
+            "account_number": "0",
+            "sequence": "0"
+          },
+          "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+        },
+        {
+          "@type": "/ethermint.types.v1.EthAccount",
+          "base_account": {
+            "address": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+            "pub_key": {
+              "@type":"/cosmos.crypto.secp256k1.PubKey",
+              "key":"A0mB4PyE5XeS3sNpFXIX536INyNoJHkMu1DEQ8FgH8Mq"
+            },
+            "account_number": "0",
+            "sequence": "0"
+          },
+          "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+        },
+        {
+          "@type": "/ethermint.types.v1.EthAccount",
+          "base_account": {
             "address": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
             "pub_key": null,
             "account_number": "0",
@@ -70,6 +96,24 @@
       },
       "balances": [
         {
+          "address": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
+        },
+        {
           "address": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
           "coins": [
             {
@@ -100,7 +144,7 @@
       "supply": [
         {
           "denom": "azeta",
-          "amount": "200010000000000000000000000"
+          "amount": "400010000000000000000000000"
         }
       ],
       "denom_metadata": []
@@ -126,7 +170,22 @@
       "gasPriceList": [],
       "chainNoncesList": [],
       "CrossChainTxs": [],
-      "nodeAccountList": [],
+      "nodeAccountList": [
+        {
+          "creator": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "tssSignerAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "pubkeySet": {
+            "secp256k1": "zetapub1addwnpepqt6sfvz3mwetudyaxjn958kztxz9j8rvrlsu55fw6fjkjyac2s9z53lsz4t"
+          }
+        },
+        {
+          "creator": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "tssSignerAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "pubkeySet": {
+            "secp256k1": "zetapub1addwnpepqdycrc8usnjh0yk7cd532ushualgsderdqj8jr9m2rzy8stqrlpj5drvw6u"
+          }
+        }
+      ],
       "lastBlockHeightList": []
     },
     "distribution": {
@@ -581,6 +640,136 @@
       },
       "signing_infos": [],
       "missed_blocks": []
+    },
+    "authz": {
+      "authorization": [
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgNonceVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgGasPriceVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgSetNodeKeys"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgCreateTSSVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz",
+          "grantee": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgAddToOutTxTracker"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgNonceVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgGasPriceVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedInboundTx"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgSetNodeKeys"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgCreateTSSVoter"
+          },
+          "expiration": null
+        },
+        {
+          "granter": "zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52",
+          "grantee": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
+          "authorization": {
+            "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
+            "msg": "/zetachain.zetacore.crosschain.MsgAddToOutTxTracker"
+          },
+          "expiration": null
+        }
+      ]
     },
     "staking": {
       "params": {

@@ -47,17 +47,8 @@ $ docker build -t zetanode .
 The smoke test is in the directory /contrib/localnet/orchestrator/smoketest. 
 It's a Go program that performs various operations on the localnet.
 
-When you update/add tests to the smoke test, you need to rebuild the smoketest
-image: 
-```bash
-$ make smoketest
-```
+The above `make zetanode` should already produced the orchestrator image.
 
-This Makefile rule builds the following two images: **Rebuild if you add/update test cases in zeta-node/contrib/localnet/orchestrator/smoketest**
-```bash
-# in zeta-node/contrib/localnet/orchestrator
-$ docker build -t orchestrator .
-```
 ### Run smoke test
 
 Now we have built all the docker images; we can run the smoke test with make command:

@@ -16,12 +16,15 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
-	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
+	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb
+TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS :=  -tags PRIVNET
+TEST_BUILD_FLAGS := -tags TESTNET,pebbledb
+PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb
 
 clean: clean-binaries clean-dir
 
@@ -47,8 +50,23 @@ coverage-report: test-coverage
 test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
 
+test-priv:
+	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}
+
 gosec:
 	gosec  -exclude-dir=localnet ./...
+
+install-testnet: go.sum
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
+
+build-testnet-ubuntu: go.sum
+		docker build -t zetacore-ubuntu --platform linux/amd64 -f ./Dockerfile-athens3-ubuntu .
+		docker create --name temp-container zetacore-ubuntu
+		docker cp temp-container:/go/bin/zetaclientd .
+		docker cp temp-container:/go/bin/zetacored .
+		docker rm temp-container
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
@@ -68,9 +86,9 @@ install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
-install-indexer: go.sum
-		@echo "--> Installing indexer"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/indexer
+install-zetacore-testnet: go.sum
+		@echo "--> Installing zetacored"
+		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
 
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"
@@ -79,6 +97,7 @@ install-smoketest: go.sum
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
 		GO111MODULE=on go mod verify
+
 test-cctx:
 	./standalone-network/cctx-creator.sh
 
@@ -88,8 +107,11 @@ init:
 run:
 	./standalone-network/run.sh
 
-init-run: clean install-zetacore init run
+chain-init: clean install-zetacore init
+chain-run: clean install-zetacore init run
 
+chain-init-testnet: clean install-zetacore-testnet init
+chain-run-testnet: clean install-zetacore-testnet init run
 
 lint-pre:
 	@test -z $(gofmt -l .)
@@ -98,27 +120,44 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
-proto-go:
-	@echo "--> Generating protobuf files"
-	@ignite generate proto-go -y
+proto:
+	@echo "--> Generating Go from protocol buffer files"
+	@sh ./scripts/protoc-gen-go.sh
+	@echo "--> Generating OpenAPI specs"
+	@sh ./scripts/protoc-gen-openapi.sh
+.PHONY: proto
 
 ###############################################################################
 ###                                Docker Images                             ###
 ###############################################################################
+
 zetanode:
 	@echo "Building zetanode"
-	@docker build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
 smoketest:
-	@echo "--> Building smoketest image"
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile .
-.PHONY: smoketest
+	@echo "DEPRECATED: NO-OP: Building smoketest"
 
 start-smoketest:
 	@echo "--> Starting smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-smoketest-p2p-diag:
+	@echo "--> Starting smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
+
 stop-smoketest:
 	@echo "--> Stopping smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+stop-smoketest-p2p-diag:
+	@echo "--> Stopping smoketest in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
+
+stress-test: zetanode
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
+
+stop-stress-test:
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans

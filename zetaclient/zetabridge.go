@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"time"
 
 	"sync"
@@ -36,24 +37,25 @@ import (
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger              zerolog.Logger
-	blockHeight         int64
-	accountNumber       uint64
-	seqNumber           uint64
-	grpcConn            *grpc.ClientConn
-	httpClient          *retryablehttp.Client
-	cfg                 config.ClientConfiguration
-	keys                *Keys
-	broadcastLock       *sync.RWMutex
-	ChainNonces         map[string]uint64 // FIXME: Remove this?
+	logger        zerolog.Logger
+	blockHeight   int64
+	accountNumber map[common.KeyType]uint64
+	seqNumber     map[common.KeyType]uint64
+	grpcConn      *grpc.ClientConn
+	httpClient    *retryablehttp.Client
+	cfg           config.ClientConfiguration
+	keys          *Keys
+	broadcastLock *sync.RWMutex
+	zetaChainID   string
+	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
+	stop                chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
-
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
 		SignerName:   signerName,
@@ -72,16 +74,25 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		log.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
+	accountsMap := make(map[common.KeyType]uint64)
+	seqMap := make(map[common.KeyType]uint64)
+	for _, keyType := range common.GetAllKeyTypes() {
+		accountsMap[keyType] = 0
+		seqMap[keyType] = 0
+	}
 
 	return &ZetaCoreBridge{
 		logger:              logger,
 		grpcConn:            grpcConn,
 		httpClient:          httpClient,
+		accountNumber:       accountsMap,
+		seqNumber:           seqMap,
 		cfg:                 cfg,
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
-		ChainNonces:         map[string]uint64{},
 		lastOutTxReportTime: map[string]time.Time{},
+		stop:                make(chan struct{}),
+		zetaChainID:         chainID,
 	}, nil
 }
 
@@ -95,11 +106,67 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
-func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber() (uint64, uint64, error) {
-	ctx := b.GetContext()
-	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetAddress())
+func (b *ZetaCoreBridge) Stop() {
+	b.logger.Info().Msgf("ZetaBridge is stopping")
+	close(b.stop) // this notifies all configupdater to stop
 }
+
+func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
+	ctx := b.GetContext()
+	address := b.keys.GetAddress()
+	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+}
+
+func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
+	ctx := b.GetContext()
+	address := b.keys.GetAddress()
+	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	b.accountNumber[keyType] = accN
+	b.seqNumber[keyType] = seq
+}
+
+func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
+	retryCount := 0
+	maxRetryCount := 10
+	for {
+		block, err := b.GetLatestZetaBlock()
+		if err == nil && block.Header.Height > 1 {
+			b.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			break
+		}
+		retryCount++
+		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
+		if retryCount > maxRetryCount {
+			panic("ZetaCore is not ready , Waited for 60s")
+		}
+		time.Sleep(6 * time.Second)
+	}
+}
+
+//func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {
+//	ctx := b.GetContext()
+//	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetOperatorAddress())
+//}
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
+}
+
+func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
+	coreParams, err := b.GetCoreParams()
+	if err != nil {
+		return err
+	}
+	chains := make([]common.Chain, len(coreParams))
+	for i, params := range coreParams {
+		chains[i] = *common.GetChainFromChainID(params.ChainId)
+		if common.IsBitcoinChain(params.ChainId) {
+			config.BitcoinConfig.CoreParams.UpdateCoreParams(params)
+			continue
+		}
+		config.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
+	}
+	config.ChainsEnabled = chains
+
+	return nil
 }

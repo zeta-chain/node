@@ -125,7 +125,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 	}{
 		{
 			name:        "4 ETH InBoundTx Observers",
-			mapper:      types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+			mapper:      types.CreateObserverMapperList(1, common.GoerliChain()),
 			assertChain: common.ChainName_goerli_localnet,
 			isFound:     true,
 		},
@@ -137,14 +137,14 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 		},
 		{
 			name: "Filter out from multiple mappers",
-			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
 				types.CreateObserverMapperList(1, common.ZetaChain())...)),
 			assertChain: common.ChainName_goerli_localnet,
 			isFound:     true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
-			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliLocalNetChain()),
+			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
 				types.CreateObserverMapperList(1, common.ZetaChain())...)),
 			assertChain: common.ChainName_btc_regtest,
 			isFound:     false,

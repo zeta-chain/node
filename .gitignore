@@ -17,7 +17,8 @@ vue/dist
 vue/node_modules
 vue/node_modules
 yarn-error.log
-
+contrib/meta.pem
+contrib/meta.pem.pub
 # GitHub Actions
 dispatch_payload.json
 .github/workflows/local-testing.yml

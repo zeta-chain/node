@@ -39,7 +39,7 @@ func (s *VoterSuite) SetUpTest(c *C) {
 	{
 		signerName := "alice"
 		signerPass := "password"
-		kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+		kb, _, err := GetKeyringKeybase([]common.KeyType{common.ObserverGranteeKey}, chainHomeFoler, signerName, signerPass)
 		if err != nil {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}

@@ -1,50 +1,9 @@
 package types
 
 import (
-	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
-	"io/ioutil"
-	"path/filepath"
 )
-
-type ObserverMapperReader struct {
-	Index             string   `json:"index"`
-	ObserverChainName string   `json:"observerChainName"`
-	ObserverChainID   int64    `json:"observerChainId"`
-	ObserverList      []string `json:"observerList"`
-}
-
-func ParsefileToObserverMapper(fp string) ([]*ObserverMapper, error) {
-	var observers []ObserverMapperReader
-	file, err := filepath.Abs(fp)
-	if err != nil {
-		return nil, err
-	}
-	file = filepath.Clean(file)
-	input, err := ioutil.ReadFile(file) // #nosec G304
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(input, &observers)
-	if err != nil {
-		return nil, err
-	}
-
-	observerMappers := make([]*ObserverMapper, len(observers))
-	for i, readerValue := range observers {
-		chain := &common.Chain{
-			ChainName: common.ParseChainName(readerValue.ObserverChainName),
-			ChainId:   readerValue.ObserverChainID,
-		}
-		observerMappers[i] = &ObserverMapper{
-			Index:         readerValue.Index,
-			ObserverChain: chain,
-			ObserverList:  readerValue.ObserverList,
-		}
-	}
-	return observerMappers, nil
-}
 
 func ConvertReceiveStatusToVoteType(status common.ReceiveStatus) VoteType {
 	switch status {

@@ -9,15 +9,6 @@ import (
 )
 
 const (
-	BtcConfirmationCount     = 1
-	EthConfirmationCount     = 3
-	BscConfirmationCount     = 5
-	PolygonConfirmationCount = 5
-
-	DevEthConfirmationCount = 2
-)
-
-const (
 	TssTestPrivkey = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
 	TssTestAddress = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
 	//TestReceiver  = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
@@ -32,8 +23,6 @@ const (
 	PolygonBlockTime = 2
 	BscBlockTime     = 5
 
-	DevEthBlockTime = 2
-
 	// to catch up:
 	MaxBlocksPerPeriod = 100
 )
@@ -46,71 +35,55 @@ const (
 )
 
 var (
-	BitconNetParams = &chaincfg.Testnet3Params
+	BitconNetParams = &chaincfg.TestNet3Params
 )
 
-var ChainsEnabled = []common.Chain{}
-
-var ChainConfigs = map[string]*ChainETHish{
-	common.GoerliChain().ChainName.String(): {
-		Chain:                    common.GoerliChain(),
-		ConnectorContractAddress: "0x851b2446f225266C4EC3cd665f6801D624626c4D",
-		ZETATokenContractAddress: "0xfF8dee1305D6200791e26606a0b04e12C5292aD8",
-		BlockTime:                EthBlockTime,
-		Endpoint:                 "https://eth-goerli-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                12,
-	},
-	common.BscTestnetChain().ChainName.String(): {
-		Chain:                       common.BscTestnetChain(),
-		ConnectorContractAddress:    "0xcF1B4B432CA02D6418a818044d38b18CDd3682E9",
-		ZETATokenContractAddress:    "0x33580e10212342d0aA66C9de3F6F6a4AfefA144C",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   BscBlockTime,
-		Endpoint:                    "https://bsc-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                   15,
-	},
-	common.MumbaiChain().ChainName.String(): {
-		Chain:                       common.MumbaiChain(),
-		ConnectorContractAddress:    "0xED4d7f8cA6252Ccf85A1eFB5444d7dB794ddD328",
-		ZETATokenContractAddress:    "0xBaEF590c5Aef9881b0a5C86e18D35432218C64D5",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   PolygonBlockTime,
-		Endpoint:                    "https://mumbai-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                   30,
-	},
-	common.BaobabChain().ChainName.String(): {
-		Chain:                       common.BaobabChain(),
-		ConnectorContractAddress:    "0x000054d3A0Bc83Ec7808F52fCdC28A96c89F6C5c",
-		ZETATokenContractAddress:    "0x000080383847bD75F91c168269Aa74004877592f",
-		ERC20CustodyContractAddress: "0x0e141A7e7C0A7E15E7d22713Fc0a6187515Fa9BF",
-		BlockTime:                   EthBlockTime,
-		Endpoint:                    "https://baobab-sh285ns91n5975.athens.zetachain.com",
-		ConfCount:                   5,
-	},
-
-	common.ZetaChain().ChainName.String(): {
-		Chain:                    common.ZetaChain(),
-		BlockTime:                6,
-		ZETATokenContractAddress: "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
-		ConfCount:                3,
-	},
+func GetConnectorABI() string {
+	return ConnectorAbiString
+}
+func GetERC20CustodyABI() string {
+	return ERC20CustodyAbiString
 }
 
-var BitcoinConfig = &ChainBitcoinish{
+var BitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
-
-	WatchInTxPeriod:     5,
-	WatchGasPricePeriod: 5,
-	WatchUTXOSPeriod:    5,
 }
 
 func New() Config {
 	return Config{
-		ChainsEnabled: ChainsEnabled,
-		ChainConfigs:  ChainConfigs,
-		BitcoinConfig: BitcoinConfig,
+		BitcoinConfig:   BitcoinConfig,
+		EVMChainConfigs: evmChainsConfig,
+		ChainsEnabled:   []common.Chain{},
 	}
+}
+
+var evmChainsConfig = map[int64]*EVMConfig{
+	common.GoerliChain().ChainId: {
+		Chain:      common.GoerliChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
+	},
+	common.BscTestnetChain().ChainId: {
+		Chain:      common.BscTestnetChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
+	},
+	common.MumbaiChain().ChainId: {
+		Chain:      common.MumbaiChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
+	},
+	common.BaobabChain().ChainId: {
+		Chain:      common.BaobabChain(),
+		Endpoint:   "",
+		CoreParams: NewCoreParams(),
+	},
+
+	common.ZetaChain().ChainId: {
+		Chain:      common.ZetaChain(),
+		CoreParams: NewCoreParams(),
+	},
 }

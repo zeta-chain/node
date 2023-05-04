@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgNonceVoter{}
@@ -20,7 +21,7 @@ func (msg *MsgNonceVoter) Route() string {
 }
 
 func (msg *MsgNonceVoter) Type() string {
-	return "NonceVoter"
+	return common.NonceVoter.String()
 }
 
 func (msg *MsgNonceVoter) GetSigners() []sdk.AccAddress {
