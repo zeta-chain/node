@@ -272,6 +272,24 @@ func (k Keeper) DepositZRC20(
 	return res, err
 }
 
+func (k Keeper) ZRC20UpdateProtocolFlatFee(
+	ctx sdk.Context,
+	zrc20Addr common.Address,
+	fee *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	//abi, err := contracts.ZRC4MetaData.GetAbi()
+	abi, err := contracts.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, "updateProtocolFlatFee", fee)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, err
+}
+
 // Deposit into ZRC4 and call contract function in a single tx
 // callable from fungible module
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,

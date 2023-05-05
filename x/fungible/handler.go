@@ -17,6 +17,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
+		case *types.MsgUpdateZRC20ProtocolFlatFee:
+			res, err := msgServer.UpdateZRC20ProtocolFlatFee(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgDeployFungibleCoinZRC20:
 			res, err := msgServer.DeployFungibleCoinZRC20(sdk.WrapSDKContext(ctx), msg)

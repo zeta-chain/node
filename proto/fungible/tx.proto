@@ -12,11 +12,18 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
+  rpc UpdateZRC20ProtocolFlatFee(MsgUpdateZRC20ProtocolFlatFee) returns (MsgUpdateZRC20ProtocolFlatFeeResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
+message MsgUpdateZRC20ProtocolFlatFee {
+  string creator = 1;
+  string zrc20_address = 2;
+  string protocol_flat_fee = 3;
+}
 
-
+message MsgUpdateZRC20ProtocolFlatFeeResponse {
+}
 
 message MsgDeployFungibleCoinZRC20 {
   string creator = 1;
