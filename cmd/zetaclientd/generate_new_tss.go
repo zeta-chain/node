@@ -21,7 +21,7 @@ func genNewTSSAtBlock(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS
 		return err
 	}
 	if bn+3 > height {
-		return errors.New(fmt.Sprintf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn))
+		return fmt.Errorf(fmt.Sprintf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn))
 	}
 	ticker := time.NewTicker(time.Second * 1)
 	lastBlock := bn

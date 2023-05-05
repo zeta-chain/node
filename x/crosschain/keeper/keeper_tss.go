@@ -30,9 +30,9 @@ func (k Keeper) GetTSS(ctx sdk.Context) (val types.TSS, found bool) {
 }
 
 // RemoveTSS removes a tSS from the store
-func (k Keeper) RemoveTSS(ctx sdk.Context, index string) {
+func (k Keeper) RemoveTSS(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
-	store.Delete(types.KeyPrefix(index))
+	store.Delete([]byte{0})
 }
 
 // GetAllTSS returns all tSS

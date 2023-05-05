@@ -141,12 +141,3 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	k.SetChainNonces(ctx, chainNonce)
 	return &types.MsgNonceVoterResponse{}, nil
 }
-
-func isDuplicateSigner(creator string, signers []string) bool {
-	for _, v := range signers {
-		if creator == v {
-			return true
-		}
-	}
-	return false
-}

@@ -18,7 +18,7 @@ func CmdShowTSS() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-tss",
 		Short: "shows a TSS",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 

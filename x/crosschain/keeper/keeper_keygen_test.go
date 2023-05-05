@@ -15,7 +15,7 @@ import (
 // Keeper Tests
 func createTestKeygen(keeper *Keeper, ctx sdk.Context) types.Keygen {
 	item := types.Keygen{
-		Creator: "any",
+		BlockNumber: 10,
 	}
 	keeper.SetKeygen(ctx, item)
 	return item
