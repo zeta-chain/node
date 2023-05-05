@@ -63,7 +63,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
-	oldStatus := cctx.CctxStatus.Status
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
@@ -73,12 +72,10 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SetCrossChainTx(ctx, cctx)
 		// Remove OutTX tracker and change CCTX prefix store
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	// Remove OutTX tracker and change CCTX prefix store
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 

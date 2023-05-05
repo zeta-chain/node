@@ -1,0 +1,22 @@
+syntax = "proto3";
+package zetachain.zetacore.crosschain;
+
+option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+
+message PendingTxQueue {
+  uint64 chain_id = 1; // this is the key in the store
+  uint64 count = 2;
+  string head = 3; // empty string is nil
+  string tail = 4;
+}
+
+message PendingTx {
+  string last = 1; // empty string is nil
+  string next = 2;
+  string cctxIndex = 3; // this is the key in the store
+  uint64 chain_id = 4;
+  uint64 nonce = 5; 
+}
+
+
+

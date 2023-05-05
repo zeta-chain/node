@@ -14,18 +14,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
-	// Defensive Programming :Remove first set later
-	_, found := k.GetCrossChainTx(ctx, send.Index, oldStatus)
-	if found {
-		k.RemoveCrossChainTx(ctx, send.Index, oldStatus)
-	}
-	k.SetCrossChainTx(ctx, send)
-}
+//func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
+//	// Defensive Programming :Remove first set later
+//	_, found := k.GetCrossChainTx(ctx, send.Index, oldStatus)
+//	if found {
+//		k.RemoveCrossChainTx(ctx, send.Index, oldStatus)
+//	}
+//	k.SetCrossChainTx(ctx, send)
+//}
 
 // SetCrossChainTx set a specific send in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, send.CctxStatus.Status))
+
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&send)
 	store.Set(types.KeyPrefix(send.Index), b)
@@ -35,11 +36,25 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 		InTxHash:  send.InboundTxParams.InboundTxObservedHash,
 		CctxIndex: send.Index,
 	})
+
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return
+	}
+	// set mapping nonce => cctxIndex
+	if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		k.SetNonceToCctx(ctx, types.NonceToCctx{
+			ChainId:   send.GetCurrentOutTxParam().ReceiverChainId,
+			Nonce:     int64(send.GetCurrentOutTxParam().OutboundTxTssNonce),
+			CctxIndex: send.Index,
+			Tss:       tss.TssPubkey,
+		})
+	}
 }
 
 // GetCrossChainTx returns a send from its index
-func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) (val types.CrossChainTx, found bool) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossChainTx, found bool) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	b := store.Get(types.KeyPrefix(index))
@@ -52,40 +67,10 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string, status types.Cctx
 }
 
 // RemoveCrossChainTx removes a send from the store
-func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string, status types.CctxStatus) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, status))
+func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	store.Delete(types.KeyPrefix(index))
-}
-
-func (k Keeper) GetCctxByIndexAndStatuses(ctx sdk.Context, index string, status []types.CctxStatus) (val types.CrossChainTx, found bool) {
-	for _, s := range status {
-		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
-		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-		send := store.Get(types.KeyPrefix(index))
-		if send != nil {
-			k.cdc.MustUnmarshal(send, &val)
-			return val, true
-		}
-	}
-	return val, false
-}
-
-// GetAllCrossChainTx returns all cctx
-func (k Keeper) GetAllCctxByStatuses(ctx sdk.Context, status []types.CctxStatus) (list []*types.CrossChainTx) {
-	var sends []*types.CrossChainTx
-	for _, s := range status {
-		p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.SendKey, s))
-		store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-		iterator := sdk.KVStorePrefixIterator(store, []byte{})
-		defer iterator.Close()
-		for ; iterator.Valid(); iterator.Next() {
-			var val types.CrossChainTx
-			k.cdc.MustUnmarshal(iterator.Value(), &val)
-			sends = append(sends, &val)
-		}
-	}
-	return sends
 }
 
 // Queries
@@ -122,7 +107,7 @@ func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetCctxByIndexAndStatuses(ctx, req.Index, types.AllStatus())
+	val, found := k.GetCrossChainTx(ctx, req.Index)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
@@ -135,7 +120,28 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
+	_ = ctx
+	//sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
+	sends := make([]*types.CrossChainTx, 0)
+	pendingTxQueue, found := k.GetPendingTxQueue(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+	startIndex := pendingTxQueue.Head
+	// FIXME: use pagination or limit
+	for i := 0; i < 100 && i < int(pendingTxQueue.Count); i++ {
+		cctx, found := k.GetCrossChainTx(ctx, startIndex)
+		if !found {
+			return nil, status.Error(codes.Internal, "cctxIndex not found")
+		}
+		sends = append(sends, &cctx)
+		pendingTx, found := k.GetPendingTx(ctx, cctx.Index)
+		if !found {
+			return nil, status.Error(codes.Internal, "pendingTx not found")
+		}
+		startIndex = pendingTx.Next
+	}
+
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 

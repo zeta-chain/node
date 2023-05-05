@@ -277,7 +277,6 @@ message QueryAllLastBlockHeightResponse {
 
 message QueryGetCctxRequest {
 	string index = 1;
-	int32 status = 2;
 }
 
 message QueryGetCctxResponse {
@@ -294,11 +293,13 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-
+	uint64 chainId = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryAllCctxPendingResponse {
 	repeated CrossChainTx CrossChainTx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetNodeAccountRequest {

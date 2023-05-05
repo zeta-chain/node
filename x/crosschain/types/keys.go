@@ -52,7 +52,12 @@ const (
 	TSSKey                = "TSS-value-"
 	TSSVoterKey           = "TSSVoter-value-"
 	KeygenKey             = "Keygen-value-"
-	OutTxTrackerKeyPrefix = "OutTxTracker/value/"
+	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
+
+	PendingTxQueueKeyPrefix = "PendingTxQueue-value-"
+	PendingTxKeyPrefix      = "PendingTx-value-"
+	NonceToCctxKeyPrefix    = "NonceToCctx-value-"
+	PendingNoncesKeyPrefix  = "PendingNonces-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
