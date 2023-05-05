@@ -74,6 +74,7 @@ type Config struct {
 	LogLevel      zerolog.Level
 	PreParamsPath string
 	KeygenBlock   int64
+	KeyGenPubKeys []string
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string

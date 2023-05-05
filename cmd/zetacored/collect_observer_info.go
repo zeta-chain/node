@@ -20,7 +20,6 @@ func CollectObserverInfoCmd() *cobra.Command {
 				args = append(args, defaultFile)
 			}
 			directory := args[0]
-
 			files, err := os.ReadDir(directory)
 			if err != nil {
 				return err

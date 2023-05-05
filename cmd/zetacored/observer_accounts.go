@@ -32,6 +32,7 @@ import (
 const (
 	ObserverBalance = "100000000000000000000000"
 	HotkeyBalance   = "100000000000000000000"
+	keygenBlock     = "keygen-block"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
@@ -50,6 +51,10 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if len(args) == 0 {
 				args = append(args, defaultFile)
 			}
+			keyGenBlock, err := cmd.Flags().GetInt64("keygen-block")
+			if err != nil {
+				return err
+			}
 			file := args[0]
 			observerInfo, err := ParsefileToObserverDetails(file)
 			if err != nil {
@@ -58,6 +63,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var observerMapper []*types.ObserverMapper
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*crosschaintypes.NodeAccount
+			var keygenPubKeys []string
 			observersForChain := map[int64][]string{}
 			// DefaultChainsList is based on Build Flags
 			supportedChains := common.DefaultChainsList()
@@ -100,10 +106,10 @@ func AddObserverAccountsCmd() *cobra.Command {
 						Ed25519:   "",
 					}
 					na := crosschaintypes.NodeAccount{
-						Creator:          info.ObserverAddress,
-						TssSignerAddress: info.ZetaClientGranteeAddress,
-						PubkeySet:        &pubkeySet,
-						NodeStatus:       crosschaintypes.NodeStatus_Active,
+						Operator:       info.ObserverAddress,
+						GranteeAddress: info.ZetaClientGranteeAddress,
+						GranteePubkey:  &pubkeySet,
+						NodeStatus:     crosschaintypes.NodeStatus_Active,
 					}
 					nodeAccounts = append(nodeAccounts, &na)
 				}
@@ -112,6 +118,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 					Address: info.ZetaClientGranteeAddress,
 					Coins:   commonHotkeyBalance,
 				})
+				keygenPubKeys = append(keygenPubKeys, info.ZetaClientGranteePubKey)
 			}
 
 			// Generate observer mappers for each chain
@@ -134,6 +141,11 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
+				Status:         crosschaintypes.KeygenStatus_PendingKeygen,
+				GranteePubkeys: keygenPubKeys,
+				BlockNumber:    keyGenBlock,
+			}
 
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
@@ -185,6 +197,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
+	cmd.Flags().Int64(keygenBlock, 20, "set keygen block , default is 20")
 	return cmd
 }
 
