@@ -4,7 +4,7 @@ ENV GOPATH /go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
 
-RUN apk --no-cache add git make build-base jq openssh
+RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers
 RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 
 WORKDIR /go/delivery/zeta-node
@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM golang:1.19-alpine
 
-RUN apk --no-cache add openssh jq tmux vim curl bash
+RUN apk --no-cache add openssh jq tmux vim curl bash 
 RUN ssh-keygen -A
 
 COPY --from=builder /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
