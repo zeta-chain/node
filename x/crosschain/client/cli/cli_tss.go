@@ -58,9 +58,9 @@ func CmdCreateTSSVoter() *cobra.Command {
 				return err
 			}
 			var status common.ReceiveStatus
-			if args[1] == "0" {
+			if args[2] == "0" {
 				status = common.ReceiveStatus_Success
-			} else if args[1] == "1" {
+			} else if args[2] == "1" {
 				status = common.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
