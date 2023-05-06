@@ -211,7 +211,7 @@ func (tss *TSS) Validate() error {
 }
 
 func (tss *TSS) EVMAddress() ethcommon.Address {
-	addr, err := getKeyAddr(tss.CurrentPubkey)
+	addr, err := GetTssAddrEVM(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ethcommon.Address{}
@@ -221,7 +221,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // generate a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
-	addr, err := getKeyAddrBTC(tss.CurrentPubkey)
+	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ""
@@ -257,7 +257,7 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
+func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
@@ -278,7 +278,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 }
 
 // FIXME: mainnet/testnet
-func getKeyAddrBTC(tssPubkey string) (string, error) {
+func GetTssAddrBTC(tssPubkey string) (string, error) {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)

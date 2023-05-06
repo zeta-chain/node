@@ -2,8 +2,10 @@ package types
 
 const (
 	// event key
-	SubTypeKey = "SubTypeKey"
-	CctxIndex  = "CctxIndex"
+	SubTypeKey    = "SubTypeKey"
+	CctxIndex     = "CctxIndex"
+	KeyGenBlock   = "KeyGenBlock"
+	KeyGenPubKeys = "KeyGenPubKeys"
 
 	Sender        = "Sender"
 	SenderChain   = "SenderChain"
@@ -43,4 +45,5 @@ const (
 	StatusChanged        = "crosschain/StatusChanged"
 	CctxFinalized        = "crosschain/CctxFinalized"
 	CctxScrubbed         = "crosschain/CCTXScrubbed"
+	CctxNewKeygenBlock   = "crosschain/CCTXNewKeygenBlock"
 )

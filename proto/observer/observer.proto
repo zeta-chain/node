@@ -11,6 +11,7 @@ enum ObservationType {
   EmptyObserverType = 0;
   InBoundTx = 1;
   OutBoundTx = 2;
+  TSSKeyGen = 3;
 }
 
 message ObserverMapper {
