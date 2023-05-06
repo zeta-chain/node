@@ -48,9 +48,6 @@ func (msg *MsgCreateTSSVoter) ValidateBasic() error {
 }
 
 func (msg *MsgCreateTSSVoter) Digest() string {
-	//m := *msg
-	//m.Creator = ""
-	//hash := crypto.Keccak256Hash([]byte(m.String()))
-	//return hash.Hex()
+	// We support only 1 keygen at a particular height
 	return fmt.Sprintf("%d-%s", msg.KeyGenZetaHeight, msg.TssPubkey)
 }

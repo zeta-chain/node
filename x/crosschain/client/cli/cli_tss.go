@@ -18,7 +18,7 @@ func CmdShowTSS() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-tss",
 		Short: "shows a TSS",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -58,9 +58,9 @@ func CmdCreateTSSVoter() *cobra.Command {
 				return err
 			}
 			var status common.ReceiveStatus
-			if args[1] == "0" {
+			if args[2] == "0" {
 				status = common.ReceiveStatus_Success
-			} else if args[1] == "1" {
+			} else if args[2] == "1" {
 				status = common.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")

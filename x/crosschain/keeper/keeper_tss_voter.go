@@ -19,16 +19,19 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if !k.IsAuthorizedNodeAccount(ctx, msg.Creator) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
 	}
-	// No need to create a ballot if keygen does nto exist
+	// No need to create a ballot if keygen does not exist
 	keygen, found := k.GetKeygen(ctx)
 	if !found {
+		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenNotFound
+	}
+	// USE a separate transaction to update KEYGEN status to pending when trying to change the TSS address
+	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
 		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenNotFound
 	}
 	index := msg.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
-	ballot := zetaObserverTypes.Ballot{}
-	ballot, found = k.zetaObserverKeeper.GetBallot(ctx, index)
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
 		var voterList []string
 
@@ -62,7 +65,8 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if !isFinalized {
 		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
-
+	// Set TSS only on success , set Keygen either way.
+	// Keygen block cna be updated using a policy transaction if keygen fails
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
@@ -86,7 +90,6 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			}
 			k.SetPendingNonces(ctx, p)
 		}
-
 	} else if ballot.BallotStatus == zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
 	}

@@ -18,7 +18,11 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 	if !found {
 		return nil, types.ErrKeygenNotFound
 	}
+	if msg.Block <= (ctx.BlockHeight() + 10) {
+		return nil, types.ErrKeygenBlockTooLow
+	}
 	keygen.BlockNumber = msg.Block
+	keygen.Status = types.KeygenStatus_PendingKeygen
 	k.SetKeygen(ctx, keygen)
 	EmitEventKeyGenBlockUpdated(ctx, &keygen)
 	return &types.MsgUpdateKeygenResponse{}, nil
