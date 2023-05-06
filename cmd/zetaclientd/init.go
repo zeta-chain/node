@@ -19,7 +19,6 @@ var initArgs = initArguments{}
 type initArguments struct {
 	peer               string
 	preParamsPath      string
-	keygen             int64
 	chainID            string
 	zetacoreURL        string
 	authzGranter       string
@@ -38,7 +37,6 @@ func init() {
 
 	InitCmd.Flags().StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	InitCmd.Flags().StringVar(&initArgs.preParamsPath, "pre-params", "", "pre-params file path")
-	InitCmd.Flags().Int64Var(&initArgs.keygen, "keygen-block", 0, "keygen at block height (default: 0 means no keygen")
 	InitCmd.Flags().StringVar(&initArgs.chainID, "chain-id", "athens_7001-1", "chain id")
 	InitCmd.Flags().StringVar(&initArgs.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
 	InitCmd.Flags().StringVar(&initArgs.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
@@ -67,7 +65,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	//Populate new struct with cli arguments
 	configData.Peer = initArgs.peer
 	configData.PreParamsPath = initArgs.preParamsPath
-	configData.KeygenBlock = initArgs.keygen
 	configData.ChainID = initArgs.chainID
 	configData.ZetaCoreURL = initArgs.zetacoreURL
 	configData.AuthzHotkey = initArgs.authzHotkey

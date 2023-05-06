@@ -13,8 +13,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"google.golang.org/grpc"
 	"io/ioutil"
@@ -84,7 +82,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// Generate TSS address . Thr Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
+	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
@@ -118,21 +116,30 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	genNewTSSAtBlock(cfg.KeygenBlock, zetaBridge, tss)
-
-	for _, chain := range cfg.ChainsEnabled {
-		var tssAddr string
-		if common.IsEVMChain(chain.ChainId) {
-			tssAddr = tss.EVMAddress().Hex()
-		} else if common.IsBitcoinChain(chain.ChainId) {
-			tssAddr = tss.BTCAddress()
-		}
-		zetaTx, err := zetaBridge.SetTSS(chain, tssAddr, tss.CurrentPubkey)
+	// If Keygen block is set it will try to generate new TSS at the block
+	// This is a blocking thread and will wait until the ceremony is complete , and report weather it's a success or failure
+	// Set TSS block to 0 using genesis file to disable this feature
+	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
+	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
+	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
+	if cfg.KeygenBlock > 0 {
+		err = genNewTSSAtBlock(cfg, zetaBridge, tss)
 		if err != nil {
-			startLogger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
+			hash, e := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+			if e != nil {
+				panic("Failed to broadcast unsuccessful TSS keygen Vote")
+			}
+			startLogger.Error().Err(err).Msgf("Broadcast Failed TSS vote : %s", hash)
+			return err
 		}
-		startLogger.Info().Msgf("chain %s set TSS to %s, zeta tx hash %s", chain.String(), tssAddr, zetaTx)
 	}
+	tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
+		return err
+	}
+	startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)
@@ -175,7 +182,6 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -242,74 +248,6 @@ func initPreParams(path string) {
 				}
 			}
 		}
-	}
-}
-
-func genNewTSSAtBlock(height int64, bridge *mc.ZetaCoreBridge, tss *mc.TSS) {
-	if height > 0 {
-		log.Info().Msgf("Keygen at blocknum %d", height)
-		bn, err := bridge.GetZetaBlockHeight()
-		if err != nil {
-			log.Error().Err(err).Msg("GetZetaBlockHeight error")
-			return
-		}
-		if bn+3 > height {
-			log.Fatal().Msgf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn)
-			return
-		}
-		nodeAccounts, err := bridge.GetAllNodeAccounts()
-		if err != nil {
-			log.Error().Err(err).Msg("GetAllNodeAccounts error")
-			return
-		}
-		pubkeys := make([]string, 0)
-		for _, na := range nodeAccounts {
-			pubkeys = append(pubkeys, na.PubkeySet.Secp256k1.String())
-		}
-		ticker := time.NewTicker(time.Second * 1)
-		lastBlock := bn
-		for range ticker.C {
-			currentBlock, err := bridge.GetZetaBlockHeight()
-			if err != nil {
-				log.Error().Err(err).Msg("GetZetaBlockHeight error")
-				return
-			}
-			if currentBlock == height {
-				break
-			}
-			if currentBlock > lastBlock {
-				lastBlock = currentBlock
-				log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, currentBlock)
-			}
-		}
-		log.Info().Msgf("Keygen with %d TSS signers", len(nodeAccounts))
-		log.Info().Msgf("%s", pubkeys)
-		var req keygen.Request
-		req = keygen.NewRequest(pubkeys, height, "0.14.0")
-		res, err := tss.Server.Keygen(req)
-		if err != nil || res.Status != tsscommon.Success {
-			log.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
-			return
-		}
-		// Keygen succeed! Report TSS address
-		log.Info().Msgf("Keygen success! keygen response: %v...", res)
-
-		log.Info().Msgf("doing a keysign test...")
-		err = mc.TestKeysign(res.PubKey, tss.Server)
-		if err != nil {
-			log.Error().Err(err).Msg("TestKeysign error")
-			//return
-		}
-
-		log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
-		err = tss.InsertPubKey(res.PubKey)
-		tss.CurrentPubkey = res.PubKey
-		if err != nil {
-			log.Error().Msgf("SetPubKey fail")
-			return
-		}
-		log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
-		return
 	}
 }
 

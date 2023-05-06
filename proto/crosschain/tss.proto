@@ -6,11 +6,9 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 import "gogoproto/gogo.proto";
 
 message TSS {
-  string creator = 1;
-  string index = 2;
-  string chain = 3; 
-  string address = 4; 
-  string pubkey = 5; 
-  repeated string signer = 6;
-  uint64 finalizedZetaHeight = 7;
+  string tss_pubkey = 3;
+  repeated string tss_participant_list = 4;
+  repeated string operator_address_list = 5;
+  int64 finalizedZetaHeight = 6;
+  int64 keyGenZetaHeight = 7;
 }
