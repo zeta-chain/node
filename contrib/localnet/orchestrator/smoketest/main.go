@@ -197,10 +197,14 @@ func main() {
 	// Wait for Genesis and keygen to be completed. ~ height 10
 	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
 	if !enableGenesis {
-		time.Sleep(time.Second * 20)
+		// time.Sleep(time.Second * 20)
 		for {
 			time.Sleep(5 * time.Second)
-			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+			response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+			if err != nil {
+				fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
+				continue
+			}
 			if response.Height >= 30 {
 				break
 			}

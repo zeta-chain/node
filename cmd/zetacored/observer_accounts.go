@@ -80,6 +80,15 @@ func AddObserverAccountsCmd() *cobra.Command {
 			commonHotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonHotkeyCoins))
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
+
+				balances = append(balances, banktypes.Balance{
+					Address: info.ObserverAddress,
+					Coins:   commonObserverBalance,
+				})
+				if isValidatorOnly(info.IsObserver) {
+					continue
+				}
+
 				if info.ZetaClientGranteeAddress == "" || info.ObserverAddress == "" {
 					panic("ZetaClientGranteeAddress or ObserverAddress is empty")
 				}
@@ -104,10 +113,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 					}
 					nodeAccounts = append(nodeAccounts, &na)
 				}
-				balances = append(balances, banktypes.Balance{
-					Address: info.ObserverAddress,
-					Coins:   commonObserverBalance,
-				})
+
 				balances = append(balances, banktypes.Balance{
 					Address: info.ZetaClientGranteeAddress,
 					Coins:   commonHotkeyBalance,
@@ -465,4 +471,14 @@ func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, a
 	appState[banktypes.ModuleName] = bankGenStateBz
 
 	return appState, nil
+}
+
+
+func isValidatorOnly(isObserver string) bool {
+	if isObserver == "y" {
+		return false
+	} else if isObserver == "n" {
+		return true
+	}
+	panic("Invalid Input for isObserver field, Check observer_info.json file")
 }
