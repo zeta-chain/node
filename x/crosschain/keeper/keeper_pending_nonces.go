@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // CRUD
@@ -49,7 +52,43 @@ func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainId uint64) (v
 	return val, true
 }
 
+func (k Keeper) GetAllPendingNonces(ctx sdk.Context) (list []*types.PendingNonces) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.PendingNonces
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, &val)
+	}
+
+	return
+}
+
 func (k Keeper) RemovePendingNonces(ctx sdk.Context, pendingNonces types.PendingNonces) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
 	store.Delete(types.KeyPrefix(fmt.Sprintf("%s-%d", pendingNonces.Tss, pendingNonces.ChainId)))
+}
+
+// utility
+func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chainId int64, nonce int64) {
+	p, found := k.GetPendingNonces(ctx, tssPubkey, uint64(chainId))
+	if found {
+		p.NonceLow = nonce + 1
+		k.SetPendingNonces(ctx, p)
+	}
+}
+
+func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNoncesRequest) (*types.QueryAllPendingNoncesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	list := k.GetAllPendingNonces(ctx)
+
+	return &types.QueryAllPendingNoncesResponse{
+		PendingNonces: list,
+	}, nil
 }

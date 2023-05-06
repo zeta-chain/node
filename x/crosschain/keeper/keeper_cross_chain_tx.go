@@ -66,6 +66,23 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 	return val, true
 }
 
+func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx, found bool) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.CrossChainTx
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return list, true
+}
+
 // RemoveCrossChainTx removes a send from the store
 func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
@@ -120,26 +137,30 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	_ = ctx
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.Internal, "pending nonces not found")
+	}
+
+	if p.NonceLow >= p.NonceHigh {
+		return &types.QueryAllCctxPendingResponse{CrossChainTx: []*types.CrossChainTx{}}, nil
+	}
 	//sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
 	sends := make([]*types.CrossChainTx, 0)
-	pendingTxQueue, found := k.GetPendingTxQueue(ctx, req.ChainId)
-	if !found {
-		return nil, status.Error(codes.NotFound, "not found")
-	}
-	startIndex := pendingTxQueue.Head
-	// FIXME: use pagination or limit
-	for i := 0; i < 100 && i < int(pendingTxQueue.Count); i++ {
-		cctx, found := k.GetCrossChainTx(ctx, startIndex)
+	for i := p.NonceLow; i < p.NonceHigh; i++ {
+		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		if !found {
+			return nil, status.Error(codes.Internal, "nonceToCctx not found")
+		}
+		cctx, found := k.GetCrossChainTx(ctx, ntc.CctxIndex)
 		if !found {
 			return nil, status.Error(codes.Internal, "cctxIndex not found")
 		}
 		sends = append(sends, &cctx)
-		pendingTx, found := k.GetPendingTx(ctx, cctx.Index)
-		if !found {
-			return nil, status.Error(codes.Internal, "pendingTx not found")
-		}
-		startIndex = pendingTx.Next
 	}
 
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil

@@ -34,7 +34,7 @@ func (k Keeper) RemovePendingTxQueue(ctx sdk.Context, chainId uint64) {
 }
 
 // GetAllChainNonces returns all chainNonces
-func (k Keeper) GetAllPendingTxQueues(ctx sdk.Context) (list []types.PendingTxQueue) {
+func (k Keeper) GetAllPendingTxQueues(ctx sdk.Context) (list []*types.PendingTxQueue) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingTxQueueKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
@@ -43,7 +43,7 @@ func (k Keeper) GetAllPendingTxQueues(ctx sdk.Context) (list []types.PendingTxQu
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.PendingTxQueue
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
+		list = append(list, &val)
 	}
 
 	return

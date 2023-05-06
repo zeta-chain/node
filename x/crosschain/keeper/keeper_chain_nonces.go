@@ -101,6 +101,7 @@ func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesReq
 
 // MESSAGES
 
+// Should be removed
 func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (*types.MsgNonceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
