@@ -25,7 +25,7 @@ func networkWithNodeAccountObjects(t *testing.T, n int) (*network.Network, []*ty
 	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
-		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Creator: strconv.Itoa(i), TssSignerAddress: "signer"})
+		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
@@ -49,7 +49,7 @@ func TestShowNodeAccount(t *testing.T) {
 	}{
 		{
 			desc: "found",
-			id:   objs[0].Creator,
+			id:   objs[0].Operator,
 			args: common,
 			obj:  objs[0],
 		},

@@ -35,26 +35,29 @@ func (chain Chain) IsEqual(c Chain) bool {
 func (chain Chain) IsZetaChain() bool {
 	return chain.IsEqual(ZetaChain())
 }
+func (chain Chain) IsExternalChain() bool {
+	return !chain.IsEqual(ZetaChain())
+}
 
-func (chain Chain) IsEVMChain() bool {
-	return chain.ChainId == 1 || // Ethereum
-		chain.ChainId == 56 || // BSC
-		chain.ChainId == 137 || // Polygon
-		chain.ChainId == 5 || // Goerli
-		chain.ChainId == 80001 || // Polygon mumbai
-		chain.ChainId == 97 || // BSC testnet
-		chain.ChainId == 1001 || // klaytn baobab
-		chain.ChainId == 1337 // eth privnet
+func IsEVMChain(chainID int64) bool {
+	return chainID == 1 || // Ethereum
+		chainID == 56 || // BSC
+		chainID == 137 || // Polygon
+		chainID == 5 || // Goerli
+		chainID == 80001 || // Polygon mumbai
+		chainID == 97 || // BSC testnet
+		chainID == 1001 || // klaytn baobab
+		chainID == 1337 // eth privnet
 }
 
 func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }
 
-func (chain Chain) IsBitcoinChain() bool {
-	return chain.ChainId == 18444 || // regtest
-		chain.ChainId == 18332 || //testnet
-		chain.ChainId == 8332 // mainnet
+func IsBitcoinChain(chainID int64) bool {
+	return chainID == 18444 || // regtest
+		chainID == 18332 || //testnet
+		chainID == 8332 // mainnet
 }
 
 // IsEmpty is to determinate whether the chain is empty

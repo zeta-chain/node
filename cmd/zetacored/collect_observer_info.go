@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	"os"
@@ -21,7 +20,6 @@ func CollectObserverInfoCmd() *cobra.Command {
 				args = append(args, defaultFile)
 			}
 			directory := args[0]
-
 			files, err := os.ReadDir(directory)
 			if err != nil {
 				return err
@@ -47,7 +45,6 @@ func CollectObserverInfoCmd() *cobra.Command {
 				}
 				observerInfoList = append(observerInfoList, observerInfo)
 			}
-			fmt.Println(observerInfoList)
 			file, _ := json.MarshalIndent(observerInfoList, "", " ")
 			_ = os.WriteFile("observer_info.json", file, 0600)
 			return nil

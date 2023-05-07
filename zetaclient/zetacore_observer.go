@@ -3,15 +3,12 @@ package zetaclient
 import (
 	"fmt"
 	"math"
-	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
-
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -20,8 +17,6 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 )
 
 const (
@@ -40,10 +35,12 @@ type CoreObserver struct {
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    ZetaCoreLog
+	cfg       *config.Config
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config) *CoreObserver {
 	co := CoreObserver{}
+	co.cfg = cfg
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()
@@ -79,74 +76,10 @@ func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.keys.GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
-	noKeygen := os.Getenv("DISABLE_TSS_KEYGEN")
-	if noKeygen == "" {
-		go co.keygenObserve()
-	}
-}
-
-func (co *CoreObserver) keygenObserve() {
-	logger := co.logger.ChainLogger.With().
-		Str("module", "KeygenObserve").Logger()
-	logger.Info().Msgf("keygen observe started")
-	observeTicker := time.NewTicker(2 * time.Second)
-	for range observeTicker.C {
-		kg, err := co.bridge.GetKeyGen()
-		if err != nil {
-			continue
-		}
-		bn, _ := co.bridge.GetZetaBlockHeight()
-		if bn != kg.BlockNumber {
-			continue
-		}
-
-		go func() {
-			for {
-				log.Info().Msgf("Detected KeyGen, initiate keygen at blocknumm %d, # signers %d", kg.BlockNumber, len(kg.Pubkeys))
-				var req keygen.Request
-				req = keygen.NewRequest(kg.Pubkeys, kg.BlockNumber, "0.14.0")
-				res, err := co.tss.Server.Keygen(req)
-				if err != nil || res.Status != tsscommon.Success {
-					logger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
-					continue
-				}
-				// Keygen succeed! Report TSS address
-				logger.Info().Msgf("Keygen success! keygen response: %v...", res)
-				err = co.tss.InsertPubKey(res.PubKey)
-				if err != nil {
-					logger.Error().Msgf("InsertPubKey fail")
-					continue
-				}
-				co.tss.CurrentPubkey = res.PubKey
-
-				for _, chain := range config.ChainsEnabled {
-					_, err = co.bridge.SetTSS(chain, co.tss.EVMAddress().Hex(), co.tss.CurrentPubkey)
-					if err != nil {
-						logger.Error().Err(err).Msgf("SetTSS fail %s", chain.String())
-					}
-				}
-
-				// Keysign test: sanity test
-				logger.Info().Msgf("test keysign...")
-				_ = TestKeysign(co.tss.CurrentPubkey, co.tss.Server)
-				logger.Info().Msg("test keysign finished. exit keygen loop. ")
-
-				for _, chain := range config.ChainsEnabled {
-					err = co.clientMap[chain].PostNonceIfNotRecorded(logger)
-					if err != nil {
-						co.logger.ChainLogger.Error().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
-					}
-				}
-
-				return
-			}
-		}()
-		return
-	}
 }
 
 // ZetaCore block is heart beat; each block we schedule some send according to
-// retry schedule.
+// retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
 	go outTxMan.StartMonitorHealth()

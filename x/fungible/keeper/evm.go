@@ -3,10 +3,11 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
 	"strconv"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"

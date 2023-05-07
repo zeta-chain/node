@@ -22,11 +22,11 @@ const ETHAddressLen = 42
 func NewAddress(address string, chain Chain) (Address, error) {
 
 	// Check is eth address
-	if chain.IsEVMChain() {
+	if IsEVMChain(chain.ChainId) {
 		if eth.IsHexAddress(address) {
 			return Address(address), nil
 		}
-	} else if chain.IsBitcoinChain() {
+	} else if IsBitcoinChain(chain.ChainId) {
 
 	}
 
