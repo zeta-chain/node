@@ -3,7 +3,7 @@ package zetachain.zetacore.crosschain;
 
 import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # proto/tx/import
-import "crosschain/tss_voter.proto";
+import "crosschain/keygen.proto";
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 
@@ -20,6 +20,7 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -50,12 +51,20 @@ message MsgUpdatePermissionFlags {
 }
 message MsgUpdatePermissionFlagsResponse {}
 
+message MsgUpdateKeygen {
+  string creator = 1;
+  int64 block = 2;
+}
+
+message MsgUpdateKeygenResponse {
+}
+
 // this line is used by starport scaffolding # proto/tx/message
 message MsgCreateTSSVoter {
   string creator = 1;
-  string chain = 3;
-  string address = 4;
-  string pubkey = 5;
+  string tss_pubkey = 2;
+  int64 keyGenZetaHeight = 3;
+  common.ReceiveStatus status = 4;
 }
 
 message MsgCreateTSSVoterResponse { }

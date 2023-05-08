@@ -1,0 +1,29 @@
+{
+  "title": "Observer Param Change",
+  "description": "Update policy address",
+  "changes": [
+    {
+      "subspace": "observer",
+      "key": "AdminParams",
+      "value": [
+        {
+          "policy_type": 0,
+          "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+        },
+        {
+          "policy_type": 1,
+          "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+        },
+        {
+          "policy_type": 2,
+          "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+        },
+        {
+          "policy_type": 3,
+          "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+        }
+      ]
+    }
+  ],
+  "deposit": "10000000azeta"
+}
