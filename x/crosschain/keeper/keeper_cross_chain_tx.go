@@ -57,7 +57,7 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 	return val, true
 }
 
-func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx, found bool) {
+func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
@@ -71,7 +71,7 @@ func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx, 
 		list = append(list, val)
 	}
 
-	return list, true
+	return list
 }
 
 // RemoveCrossChainTx removes a send from the store
