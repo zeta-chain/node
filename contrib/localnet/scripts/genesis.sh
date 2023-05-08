@@ -46,7 +46,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((5*NUMOFNODES))
+  sleep $((7*NUMOFNODES))
   echo "genesis.json created"
 fi
 

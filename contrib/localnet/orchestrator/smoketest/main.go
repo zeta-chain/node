@@ -196,6 +196,7 @@ func main() {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
+	time.Sleep(20 * time.Second)
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
