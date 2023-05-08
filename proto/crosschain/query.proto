@@ -16,6 +16,7 @@ import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/node_account.proto";
 import "crosschain/params.proto";
+import "crosschain/nonce_to_cctx.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
@@ -99,6 +100,11 @@ service Query {
 	// Queries a list of chainNonces items.
 	rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
+	}
+
+
+	rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
 	}
 
 
@@ -258,6 +264,16 @@ message QueryAllChainNoncesResponse {
 	repeated ChainNonces ChainNonces = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+message QueryAllPendingNoncesRequest {
+
+}
+
+message QueryAllPendingNoncesResponse {
+	repeated PendingNonces pending_nonces = 1;
+}
+
+
 message QueryGetLastBlockHeightRequest {
 	string index = 1;
 }
@@ -277,7 +293,6 @@ message QueryAllLastBlockHeightResponse {
 
 message QueryGetCctxRequest {
 	string index = 1;
-	int32 status = 2;
 }
 
 message QueryGetCctxResponse {
@@ -294,11 +309,13 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-
+	uint64 chainId = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryAllCctxPendingResponse {
 	repeated CrossChainTx CrossChainTx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetNodeAccountRequest {
