@@ -21,12 +21,38 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ethante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
+
+func NewLegacyCosmosAnteHandlerEip712(options ethante.HandlerOptions) sdk.AnteHandler {
+	return sdk.ChainAnteDecorators(
+		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
+		authante.NewSetUpContextDecorator(),
+		authante.NewValidateBasicDecorator(),
+		authante.NewTxTimeoutHeightDecorator(),
+		ethante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+		authante.NewValidateMemoDecorator(options.AccountKeeper),
+		authante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		// SetPubKeyDecorator must be called before all signature verification decorators
+		authante.NewSetPubKeyDecorator(options.AccountKeeper),
+		authante.NewValidateSigCountDecorator(options.AccountKeeper),
+		authante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+		// Note: signature verification uses EIP instead of the cosmos signature validator
+		ethante.NewLegacyEip712SigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		authante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
+		ethante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+	)
+}
 
 func newEthAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
