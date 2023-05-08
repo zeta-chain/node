@@ -139,9 +139,10 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 }
 
 func main() {
-	var enableGenesis bool
-	flag.BoolVar(&enableGenesis, "genesis", false, "Wait for genesis initialization.")
+	var stressTest bool
+	flag.BoolVar(&stressTest, "stress-test", false, "Perform indefinite stress test.")
 	flag.Parse()
+	fmt.Println("ENABLE Stress Test FLAG: ", stressTest)
 
 	testStartTime := time.Now()
 	defer func() {
@@ -199,17 +200,14 @@ func main() {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 10
-	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
-	if !enableGenesis {
-		time.Sleep(time.Second * 20)
-		for {
-			time.Sleep(5 * time.Second)
-			response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
-			if response.Height >= 30 {
-				break
-			}
-			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+	time.Sleep(time.Second * 20)
+	for {
+		time.Sleep(5 * time.Second)
+		response, _ := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		if response.Height >= 30 {
+			break
 		}
+		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 	}
 
 	// get the clients for tests
@@ -260,6 +258,12 @@ func main() {
 	fmt.Printf("##   Ether on Ethereum private net\n")
 	fmt.Printf("##   ZETA on ZetaChain EVM\n")
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
+
+	// If stress test flag is set, continuous swaps will be sent indefinitely at maximum throughput.
+	if stressTest {
+		smokeTest.StressTestCCTXSwap()
+	}
+
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.TestERC20Deposit()
