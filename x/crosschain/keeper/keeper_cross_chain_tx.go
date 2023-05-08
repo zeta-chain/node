@@ -14,15 +14,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//func (k Keeper) CctxChangePrefixStore(ctx sdk.Context, send types.CrossChainTx, oldStatus types.CctxStatus) {
-//	// Defensive Programming :Remove first set later
-//	_, found := k.GetCrossChainTx(ctx, send.Index, oldStatus)
-//	if found {
-//		k.RemoveCrossChainTx(ctx, send.Index, oldStatus)
-//	}
-//	k.SetCrossChainTx(ctx, send)
-//}
-
 // SetCrossChainTx set a specific send in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 

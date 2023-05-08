@@ -202,10 +202,9 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 				if string(buf[:nr]) != message {
 					startLogger.Error().Msgf("ping-pong failed with peer #(%d): %s; want %s got %s", peerCount, peer, message, string(buf[:nr]))
 					continue
-				} else {
-					startLogger.Info().Msgf("ping-pong success with peer #(%d): %s;", peerCount, peer)
-					okPingPongCount++
 				}
+				startLogger.Info().Msgf("ping-pong success with peer #(%d): %s;", peerCount, peer)
+				okPingPongCount++
 			}
 			startLogger.Info().Msgf("Expect %d peers in total; successful pings (%d/%d)", peerCount, okPingPongCount, peerCount-1)
 		}
