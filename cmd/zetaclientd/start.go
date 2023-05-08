@@ -172,15 +172,15 @@ func start(_ *cobra.Command, _ []string) error {
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 	mo1.MonitorCore()
 
-	// report TSS address nonce on all chains except zeta
-	for _, chain := range cfg.ChainsEnabled {
-		if chain.IsExternalChain() {
-			err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
-			if err != nil {
-				startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
-			}
-		}
-	}
+	//// report TSS address nonce on all chains except zeta
+	//for _, chain := range cfg.ChainsEnabled {
+	//	if chain.IsExternalChain() {
+	//		err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
+	//		if err != nil {
+	//			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
+	//		}
+	//	}
+	//}
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)

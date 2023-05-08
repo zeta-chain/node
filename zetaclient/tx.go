@@ -52,16 +52,16 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainId, nonce)
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, authzMsg, authzSigner)
-	if err != nil {
-		return "", err
-	}
-	return zetaTxHash, nil
-}
+//func (b *ZetaCoreBridge) PostNonce(chain common.Chain, nonce uint64) (string, error) {
+//	signerAddress := b.keys.GetOperatorAddress().String()
+//	msg := types.NewMsgNonceVoter(signerAddress, chain.ChainId, nonce)
+//	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
+//	zetaTxHash, err := b.Broadcast(PostNonceGasLimit, authzMsg, authzSigner)
+//	if err != nil {
+//		return "", err
+//	}
+//	return zetaTxHash, nil
+//}
 
 func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
