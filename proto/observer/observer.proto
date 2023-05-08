@@ -1,8 +1,8 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-import "gogoproto/gogo.proto";
 import "common/common.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -11,6 +11,7 @@ enum ObservationType {
   EmptyObserverType = 0;
   InBoundTx = 1;
   OutBoundTx = 2;
+  TSSKeyGen = 3;
 }
 
 message ObserverMapper {

@@ -19,8 +19,6 @@ func DefaultGenesis() *GenesisState {
 		PermissionFlags:    nil,
 		// this line is used by starport scaffolding # genesis/types/default
 		Keygen:          nil,
-		TSSVoterList:    []*TSSVoter{},
-		TSSList:         []*TSS{},
 		GasPriceList:    []*GasPrice{},
 		ChainNoncesList: []*ChainNonces{},
 		//CCTX:            []*Send{},
@@ -53,25 +51,7 @@ func (gs GenesisState) Validate() error {
 		}
 		inTxHashToCctxIndexMap[index] = struct{}{}
 	}
-	// this line is used by starport scaffolding # genesis/types/validate
-	// Check for duplicated index in tSSVoter
-	tSSVoterIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.TSSVoterList {
-		if _, ok := tSSVoterIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for tSSVoter")
-		}
-		tSSVoterIndexMap[elem.Index] = true
-	}
-	// Check for duplicated index in tSS
-	tSSIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.TSSList {
-		if _, ok := tSSIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for tSS")
-		}
-		tSSIndexMap[elem.Index] = true
-	}
+	// TODO add migrate for TSS
 
 	// Check for duplicated index in gasPrice
 	gasPriceIndexMap := make(map[string]bool)
@@ -106,10 +86,10 @@ func (gs GenesisState) Validate() error {
 	nodeAccountIndexMap := make(map[string]bool)
 
 	for _, elem := range gs.NodeAccountList {
-		if _, ok := nodeAccountIndexMap[elem.Creator]; ok {
+		if _, ok := nodeAccountIndexMap[elem.GetOperator()]; ok {
 			return fmt.Errorf("duplicated index for nodeAccount")
 		}
-		nodeAccountIndexMap[elem.Creator] = true
+		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
 	return nil

@@ -1,19 +1,20 @@
 package types
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgCreateTSSVoter{}
 
-func NewMsgCreateTSSVoter(creator string, chain string, address string, pubkey string) *MsgCreateTSSVoter {
+func NewMsgCreateTSSVoter(creator string, pubkey string, keygenZetaHeight int64, status common.ReceiveStatus) *MsgCreateTSSVoter {
 	return &MsgCreateTSSVoter{
-		Creator: creator,
-		Chain:   chain,
-		Address: address,
-		Pubkey:  pubkey,
+		Creator:          creator,
+		TssPubkey:        pubkey,
+		KeyGenZetaHeight: keygenZetaHeight,
+		Status:           status,
 	}
 }
 
@@ -47,8 +48,6 @@ func (msg *MsgCreateTSSVoter) ValidateBasic() error {
 }
 
 func (msg *MsgCreateTSSVoter) Digest() string {
-	m := *msg
-	m.Creator = ""
-	hash := crypto.Keccak256Hash([]byte(m.String()))
-	return hash.Hex()
+	// We support only 1 keygen at a particular height
+	return fmt.Sprintf("%d-%s", msg.KeyGenZetaHeight, msg.TssPubkey)
 }

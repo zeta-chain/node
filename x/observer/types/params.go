@@ -18,6 +18,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
 	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
+
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
 	observerParams := make([]*ObserverParams, len(chains))
@@ -90,6 +91,15 @@ func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	return ObserverParams{}
 }
 
+func (p Params) GetParamsForChainID(chainID int64) ObserverParams {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain.ChainId == chainID {
+			return *ObserverParam
+		}
+	}
+	return ObserverParams{}
+}
+
 func (p Params) GetSupportedChains() (chains []*common.Chain) {
 	for _, observerParam := range p.GetObserverParams() {
 		if observerParam.IsSupported {
@@ -121,6 +131,16 @@ func (p Params) IsChainSupported(checkChain common.Chain) bool {
 	chains := p.GetSupportedChains()
 	for _, chain := range chains {
 		if checkChain.IsEqual(*chain) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p Params) IsChainIDSupported(checkChainID int64) bool {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if chain.ChainId == checkChainID {
 			return true
 		}
 	}

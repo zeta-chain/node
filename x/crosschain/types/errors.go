@@ -20,4 +20,6 @@ var (
 	ErrUnableToParseContract   = sdkerrors.Register(ModuleName, 1115, "Cannot parse contract and data")
 	ErrCannotProcessWithdrawal = sdkerrors.Register(ModuleName, 1116, "Cannot process withdrawal event")
 	ErrForeignCoinNotFound     = sdkerrors.Register(ModuleName, 1118, "Err gas coin not found for SenderChain")
+	ErrKeygenNotFound          = sdkerrors.Register(ModuleName, 1120, "Err Keygen not found, Keygen block can only be updated,New keygen cannot be set")
+	ErrKeygenBlockTooLow       = sdkerrors.Register(ModuleName, 1121, "Please set a block number at-least 10 blocks higher than the current block number")
 )

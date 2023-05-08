@@ -1,0 +1,23 @@
+{
+  "group_policy_address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+  "messages": [
+    {
+      "@type": "/zetachain.zetacore.crosschain.MsgUpdatePermissionFlags",
+      "creator": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+      "isInboundEnabled": false
+    },
+    {
+      "@type": "/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
+      "creator": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+      "ERC20": "test",
+      "foreignChain": "test",
+      "decimals": 2,
+      "name": "test",
+      "symbol": "test",
+      "coinType": "Gas",
+      "gasLimit": "0"
+    }
+  ],
+  "metadata": "",
+  "proposers": ["zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk"]
+}

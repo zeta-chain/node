@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"time"
 
@@ -107,10 +108,9 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	return "", fmt.Errorf("post receive failed after %d retries", maxRetries)
 }
 
-func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string, error) {
-	tssSignerAddress := b.keys.GetAddress()
+func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgSetNodeKeys(signerAddress, tssSignerPubkeySet, tssSignerAddress.String())
+	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
 	if err != nil {
@@ -119,13 +119,21 @@ func (b *ZetaCoreBridge) SetNodeKey(tssSignerPubkeySet common.PubKeySet) (string
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(chain common.Chain, tssAddress string, tssPubkey string) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgCreateTSSVoter(signerAddress, chain.ChainName.String(), tssAddress, tssPubkey)
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
-	if err != nil {
-		return "", err
+func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
+	b.logger.Info().Msg("UpdateConfig started")
+	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			b.logger.Debug().Msg("Running Updater")
+			err := b.UpdateConfigFromCore(cfg)
+			if err != nil {
+				b.logger.Err(err).Msg("UpdateConfig error")
+				return
+			}
+		case <-b.stop:
+			b.logger.Info().Msg("UpdateConfig stopped")
+			return
+		}
 	}
-	return zetaTxHash, nil
 }
