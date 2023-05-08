@@ -145,6 +145,8 @@ jobs:
             go 
             gcc 
             g++
+            libusb-dev 
+            linux-headers
           shell-name: alpine.sh
 
       - name: setup-git-credentials
