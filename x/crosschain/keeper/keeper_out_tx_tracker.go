@@ -199,10 +199,8 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) && msg.Creator != types.AdminKey {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_remove_outtx_tracker) {
+		return &types.MsgRemoveFromOutTxTrackerResponse{}, zetaObserverTypes.ErrNotAuthorizedPolicy
 	}
 
 	k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
