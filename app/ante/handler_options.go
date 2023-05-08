@@ -47,7 +47,7 @@ func newEthAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
-		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
+		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
 			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
 		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
@@ -71,6 +71,8 @@ func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 func newCosmosAnteHandlerNoGasLimit(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
+		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
 		NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
