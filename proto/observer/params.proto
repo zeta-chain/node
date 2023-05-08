@@ -39,6 +39,7 @@ enum Policy_Type {
   stop_inbound_cctx = 0; // some observer sees inbound tx
   deploy_fungible_coin = 1;
   update_client_params = 2;
+  update_keygen_block = 3;
 }
 
 message Admin_Policy {

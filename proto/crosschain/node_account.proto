@@ -17,8 +17,8 @@ enum NodeStatus {
 }
 
 message NodeAccount {
-  string creator = 1;
-  string tssSignerAddress = 2;
-  common.PubKeySet pubkeySet = 3;
+  string operator = 1;
+  string granteeAddress = 2;
+  common.PubKeySet granteePubkey = 3;
   NodeStatus nodeStatus = 4;
 }

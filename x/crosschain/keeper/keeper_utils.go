@@ -45,6 +45,15 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chai
 	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
 }
 
+// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
+	_, found := k.GetNodeAccount(ctx, address)
+	if found {
+		return true
+	}
+	return false
+}
+
 func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifier string) (cctx types.CrossChainTx, err error) {
 	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
 		cctxIdentifier,

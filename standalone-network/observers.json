@@ -1,10 +1,12 @@
 [
   {
+    "IsObserver": "y",
     "ObserverAddress": "zeta1syavy2npfyt9tcncdtsdzf7kny9lh777heefxk",
     "ZetaClientGranteeAddress": "zeta19wzjdtah4kl2vh77jks68cyy5gpjyurqltys99",
     "ZetaClientGranteePubKey": "zetapub1addwnpepqggtjvkmj6apcqr6ynyc5edxf2mpf5fxp2d3kwupemxtfwvg6gm7qv79fw0"
   },
   {
+    "IsObserver": "n",
     "ObserverAddress": "zeta1l7hypmqk2yc334vc6vmdwzp5sdefygj2w5yj50",
     "ZetaClientGranteeAddress": "zeta1670kf63ny6pltexn5xkkwpk9vqqf6jkvq0ap77",
     "ZetaClientGranteePubKey": "zetapub1addwnpepq0a2hp5q6sxzf5ry2f39sfhvtrmcpd7z2nfq2z738d8ht6r0pt8hgrqn9tq"
