@@ -40,6 +40,7 @@ enum Policy_Type {
   deploy_fungible_coin = 1;
   update_client_params = 2;
   update_keygen_block = 3;
+  out_tx_tracker = 4;
 }
 
 message Admin_Policy {
