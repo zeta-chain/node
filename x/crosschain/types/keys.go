@@ -52,7 +52,10 @@ const (
 	TSSKey                = "TSS-value-"
 	TSSVoterKey           = "TSSVoter-value-"
 	KeygenKey             = "Keygen-value-"
-	OutTxTrackerKeyPrefix = "OutTxTracker/value/"
+	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
+
+	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
+	PendingNoncesKeyPrefix = "PendingNonces-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
@@ -78,11 +81,6 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 	return fmt.Sprintf("%s-%d-%d-%d", m.InboundTxParams.Sender, m.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
 
 }
-
-const (
-	// this admin can do some cleanup services like adding/removing outTxTracker entries
-	AdminKey = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
-)
 
 var (
 	ModuleAddress = authtypes.NewModuleAddress(ModuleName)

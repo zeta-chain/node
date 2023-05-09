@@ -48,7 +48,6 @@ func (k Keeper) ForeignCoins(c context.Context, req *types.QueryGetForeignCoinsR
 
 	val, found := k.GetForeignCoins(
 		ctx,
-		0,
 		req.Index,
 	)
 	if !found {

@@ -10,25 +10,23 @@ import (
 
 // SetForeignCoins set a specific foreignCoins in the store from its index
 func (k Keeper) SetForeignCoins(ctx sdk.Context, foreignCoins types.ForeignCoins) {
-	p := types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignCoins.ForeignChainId))
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&foreignCoins)
 	store.Set(types.ForeignCoinsKey(
-		foreignCoins.Index,
+		foreignCoins.Zrc20ContractAddress,
 	), b)
 }
 
 // GetForeignCoins returns a foreignCoins from its index
 func (k Keeper) GetForeignCoins(
 	ctx sdk.Context,
-	foreignChainID int64,
-	index string,
-
+	zrc20Addr string,
 ) (val types.ForeignCoins, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignChainID)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
 
 	b := store.Get(types.ForeignCoinsKey(
-		index,
+		zrc20Addr,
 	))
 	if b == nil {
 		return val, false
@@ -39,20 +37,36 @@ func (k Keeper) GetForeignCoins(
 }
 
 // RemoveForeignCoins removes a foreignCoins from the store
-//func (k Keeper) RemoveForeignCoins(
-//	ctx sdk.Context,
-//	index string,
-//
-//) {
-//	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
-//	store.Delete(types.ForeignCoinsKey(
-//		index,
-//	))
-//}
+func (k Keeper) RemoveForeignCoins(
+	ctx sdk.Context,
+	zrc20Addr string,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
+	store.Delete(types.ForeignCoinsKey(
+		zrc20Addr,
+	))
+}
+
+// GetAllForeignCoinsForChain returns all foreignCoins on a given chain
+func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.ForeignCoins
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		if val.ForeignChainId == foreignChainID {
+			list = append(list, val)
+		}
+	}
+	return
+}
 
 // GetAllForeignCoins returns all foreignCoins
-func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s-%d", types.ForeignCoinsKeyPrefix, foreignChainID)))
+func (k Keeper) GetAllForeignCoins(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -62,7 +76,6 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
-
 	return
 }
 
