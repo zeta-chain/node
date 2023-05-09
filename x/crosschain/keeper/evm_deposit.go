@@ -40,7 +40,8 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			if txOrigin == "" {
 				txOrigin = msg.Sender
 			}
-			err = k.ProcessWithdrawalLogs(ctx, logs, contract, txOrigin)
+
+			err = k.ProcessLogs(ctx, logs, contract, txOrigin)
 			if err != nil {
 				return err
 			}
