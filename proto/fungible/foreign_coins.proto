@@ -7,14 +7,14 @@ import "common/common.proto";
 
 
 message ForeignCoins {
-  string index = 1; 
-  string zrc20_contract_address = 2;
+//  string index = 1;
+  string zrc20_contract_address = 2; // index
   string asset = 3;
   int64 foreign_chain_id = 4;
   uint32 decimals = 5;
   string name = 6; 
   string symbol = 7;
   common.CoinType coin_type = 8;
-  
+  uint64 gas_limit = 9; 
 }
 

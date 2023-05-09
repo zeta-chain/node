@@ -21,4 +21,5 @@ var (
 	ErrSystemContractNotFound = sdkerrors.Register(ModuleName, 1110, "system contract not found")
 	ErrInvalidAddress         = sdkerrors.Register(ModuleName, 1111, "invalid address")
 	ErrStateVaraibleNotFound  = sdkerrors.Register(ModuleName, 1112, "state variable not found")
+	ErrDeployContract         = sdkerrors.Register(ModuleName, 1113, "deploy contract error")
 )
