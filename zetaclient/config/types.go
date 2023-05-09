@@ -26,6 +26,8 @@ type CoreParams struct {
 	ConnectorContractAddress    string
 	ZETATokenContractAddress    string
 	ERC20CustodyContractAddress string
+	OutboundTxScheduleInterval  int64
+	OutboundTxScheduleLookahead int64
 }
 
 func NewCoreParams() *CoreParams {
@@ -48,6 +50,8 @@ func (cp *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CorePar
 	cp.ConnectorContractAddress = newConfig.ConnectorContractAddress
 	cp.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
 	cp.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
+	cp.OutboundTxScheduleInterval = newConfig.OutboundTxScheduleInterval
+	cp.OutboundTxScheduleLookahead = newConfig.OutboundTxScheduleLookahead
 }
 
 type EVMConfig struct {
