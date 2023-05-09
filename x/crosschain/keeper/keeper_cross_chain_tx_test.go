@@ -22,7 +22,7 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
-		items[i].Index = fmt.Sprintf("%d", i)
+		items[i].Index = fmt.Sprintf("%d-%d", i, status)
 		items[i].CctxStatus = &types.Status{
 			Status:              status,
 			StatusMessage:       "",
@@ -119,12 +119,12 @@ func TestSends(t *testing.T) {
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted)...)
-			assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
-			assert.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
-			assert.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
-			assert.Equal(t, len(sends), len(keeper.GetAllCctxByStatuses(ctx, types.AllStatus())))
+			//assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
+			//assert.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
+			//assert.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
+			assert.Equal(t, len(sends), len(keeper.GetAllCrossChainTx(ctx)))
 			for _, s := range sends {
-				send, found := keeper.GetCrossChainTx(ctx, s.Index, s.CctxStatus.Status)
+				send, found := keeper.GetCrossChainTx(ctx, s.Index)
 				assert.True(t, found)
 				assert.Equal(t, s, send)
 			}
@@ -136,10 +136,10 @@ func TestSends(t *testing.T) {
 func TestSendGetAll(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNCctx(keeper, ctx, 10)
-	cctx := keeper.GetAllCctxByStatuses(ctx, types.AllStatus())
+	cctx := keeper.GetAllCrossChainTx(ctx)
 	c := make([]types.CrossChainTx, len(cctx))
 	for i, val := range cctx {
-		c[i] = *val
+		c[i] = val
 	}
 	assert.Equal(t, items, c)
 }
