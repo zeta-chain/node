@@ -193,6 +193,9 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
+	system, _ := k.GetSystemContract(ctx)
+	system.ConnectorZevm = contractAddr.Hex()
+	k.SetSystemContract(ctx, system)
 
 	return contractAddr, nil
 }

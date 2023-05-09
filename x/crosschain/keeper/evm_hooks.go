@@ -43,11 +43,21 @@ func (k Keeper) PostTxProcessing(
 	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
+	system, found := k.fungibleKeeper.GetSystemContract(ctx)
+	if !found {
+		return fmt.Errorf("cannot find system contract")
+	}
+	connectorZEVMAddr := ethcommon.HexToAddress(system.ConnectorZevm)
+	if connectorZEVMAddr == (ethcommon.Address{}) {
+		return fmt.Errorf("connectorZEVM address is empty")
+	}
+
 	target := receipt.ContractAddress
 	if msg.To() != nil {
 		target = *msg.To()
 	}
 	for _, log := range receipt.Logs {
+		//TODO: should authenticate emitting contract address in the Parse* functions
 		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
 		if err == nil {
 			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
@@ -56,6 +66,10 @@ func (k Keeper) PostTxProcessing(
 		}
 		eZeta, err := ParseZetaSentEvent(*log)
 		if err == nil {
+			if eZeta.Raw.Address != connectorZEVMAddr {
+				k.Logger(ctx).Error("Warning: ZetaSent event address is not connectorZEVMAddr", "event address", eZeta.Raw.Address.Hex(), "connectorZEVMAddr", connectorZEVMAddr.Hex())
+				continue
+			}
 			if err := k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
 				return err
 			}
@@ -82,8 +96,6 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
-	// TODO , change to using GetAllForeignCoins for Chain .
-	// TODO , Add receiver chain in the message
 	foreignCoinList, err := k.GetAllForeignCoins(ctx)
 	if err != nil {
 		return err
@@ -93,8 +105,8 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	asset := ""
 	var receiverChainID int64
 	for _, coin := range foreignCoinList {
-		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			//receiverChainName = common.ParseChainName(coin.ForeignChainId)
+		zrc20Addr := ethcommon.HexToAddress(coin.Zrc20ContractAddress)
+		if zrc20Addr == event.Raw.Address && event.Raw.Address != (ethcommon.Address{}) {
 			receiverChainID = coin.ForeignChainId
 			foundCoin = true
 			coinType = coin.CoinType
