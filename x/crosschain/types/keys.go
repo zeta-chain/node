@@ -82,11 +82,6 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 
 }
 
-const (
-	// this admin can do some cleanup services like adding/removing outTxTracker entries
-	AdminKey = "zeta1rx9r8hff0adaqhr5tuadkzj4e7ns2ntg446vtt"
-)
-
 var (
 	ModuleAddress = authtypes.NewModuleAddress(ModuleName)
 	//ModuleAddressEVM common.EVMAddress
