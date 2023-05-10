@@ -50,6 +50,7 @@ var BitcoinConfig = &BTCConfig{
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
+	CoreParams:  NewCoreParams(),
 }
 
 func New() Config {

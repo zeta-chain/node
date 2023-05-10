@@ -12,16 +12,12 @@ import (
 )
 
 func genNewTSSAtBlock(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS) error {
-	height := cfg.KeygenBlock
-	pubKeys := cfg.KeyGenPubKeys
-	log.Info().Msgf("Keygen at blocknum %d", height)
+
+	log.Info().Msgf("Keygen at blocknum %d", cfg.KeygenBlock)
 	bn, err := bridge.GetZetaBlockHeight()
 	if err != nil {
 		log.Error().Err(err).Msg("GetZetaBlockHeight error")
 		return err
-	}
-	if bn+3 > height {
-		return fmt.Errorf(fmt.Sprintf("Keygen at Blocknum %d, but current blocknum %d , Too late to take part in this keygen. Try again at a later block", height, bn))
 	}
 	ticker := time.NewTicker(time.Second * 1)
 	lastBlock := bn
@@ -33,19 +29,24 @@ func genNewTSSAtBlock(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS
 			log.Error().Err(err).Msg("GetZetaBlockHeight error")
 			return err
 		}
-		if currentBlock == height {
+		if currentBlock > cfg.KeygenBlock {
+			log.Debug().Msgf("Keygen block %d has passed , Wait for new Keygen to be set", cfg.KeygenBlock)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		if currentBlock == cfg.KeygenBlock {
 			log.Debug().Msgf("Trying to keygen at Block %d", currentBlock)
 			break
 		}
 		if currentBlock > lastBlock {
 			lastBlock = currentBlock
-			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", height, currentBlock)
+			log.Debug().Msgf("Waiting for KeygenBlock %d, Current blocknum %d", cfg.KeygenBlock, currentBlock)
 		}
 	}
-	log.Info().Msgf("Keygen with %d TSS signers", len(pubKeys))
-	log.Info().Msgf("%s", pubKeys)
+	log.Info().Msgf("Keygen with %d TSS signers", len(cfg.KeyGenPubKeys))
+	log.Info().Msgf("%s", cfg.KeyGenPubKeys)
 	var req keygen.Request
-	req = keygen.NewRequest(pubKeys, height, "0.14.0")
+	req = keygen.NewRequest(cfg.KeyGenPubKeys, cfg.KeygenBlock, "0.14.0")
 	res, err := tss.Server.Keygen(req)
 	if err != nil || res.Status != tsscommon.Success {
 		log.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
