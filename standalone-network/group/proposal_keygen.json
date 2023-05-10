@@ -4,7 +4,7 @@
     {
       "@type": "/zetachain.zetacore.crosschain.MsgUpdateKeygen",
       "creator": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
-      "block": 700
+      "block": 30
     }
   ],
   "metadata": "",
