@@ -117,20 +117,20 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	// If Keygen block is set it will try to generate new TSS at the block
-	// This is a blocking thread and will wait until the ceremony is complete , and report weather it's a success or failure
+	// This is a blocking thread and will wait until the ceremony is complete successfully
+	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
 	// Set TSS block to 0 using genesis file to disable this feature
 	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
 	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
-	if cfg.KeygenBlock > 0 {
-		err = genNewTSSAtBlock(cfg, zetaBridge, tss)
-		if err != nil {
-			hash, e := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
-			if e != nil {
-				panic("Failed to broadcast unsuccessful TSS keygen Vote")
+	ticker := time.NewTicker(time.Second * 1)
+	for range ticker.C {
+		if cfg.KeygenBlock > 0 {
+			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
+			if err == nil {
+				break
 			}
-			startLogger.Error().Err(err).Msgf("Broadcast Failed TSS vote : %s", hash)
-			return err
+			startLogger.Error().Err(err).Msg("Keygen Error")
 		}
 	}
 	tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
