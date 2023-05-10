@@ -152,7 +152,7 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
+func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	coreParams, err := b.GetCoreParams()
 	if err != nil {
 		return err
@@ -161,22 +161,35 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(config *config.Config) error {
 	for i, params := range coreParams {
 		chains[i] = *common.GetChainFromChainID(params.ChainId)
 		if common.IsBitcoinChain(params.ChainId) {
-			config.BitcoinConfig.CoreParams.UpdateCoreParams(params)
+			if cfg.BitcoinConfig == nil {
+				panic("BitcoinConfig is nil for this client")
+			}
+			if cfg.BitcoinConfig.CoreParams == nil {
+				cfg.BitcoinConfig.CoreParams = config.NewCoreParams()
+			}
+			cfg.BitcoinConfig.CoreParams.UpdateCoreParams(params)
 			continue
 		}
-		config.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
+		_, found := cfg.EVMChainConfigs[params.ChainId]
+		if !found {
+			panic(fmt.Sprintf("EvmConfig %s is nil for this client ", common.GetChainFromChainID(params.ChainId).String()))
+		}
+		if cfg.EVMChainConfigs[params.ChainId].CoreParams == nil {
+			cfg.EVMChainConfigs[params.ChainId].CoreParams = config.NewCoreParams()
+		}
+		cfg.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
 	}
-	config.ChainsEnabled = chains
+	cfg.ChainsEnabled = chains
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
 		return err
 	}
 	if keyGen.Status == stypes.KeygenStatus_PendingKeygen {
-		config.KeygenBlock = keyGen.BlockNumber
-		config.KeyGenPubKeys = keyGen.GranteePubkeys
+		cfg.KeygenBlock = keyGen.BlockNumber
+		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
 	} else {
-		config.KeygenBlock = 0
-		config.KeyGenPubKeys = nil
+		cfg.KeygenBlock = 0
+		cfg.KeyGenPubKeys = nil
 	}
 	return nil
 }
