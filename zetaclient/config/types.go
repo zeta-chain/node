@@ -44,16 +44,6 @@ func NewCoreParams() *CoreParams {
 	}
 }
 
-func (cp *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CoreParams) {
-	cp.GasPriceTicker = newConfig.GasPriceTicker
-	cp.ConfCount = newConfig.ConfirmationCount
-	cp.ConnectorContractAddress = newConfig.ConnectorContractAddress
-	cp.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
-	cp.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
-	cp.OutboundTxScheduleInterval = newConfig.OutboundTxScheduleInterval
-	cp.OutboundTxScheduleLookahead = newConfig.OutboundTxScheduleLookahead
-}
-
 type EVMConfig struct {
 	Client     *ethclient.Client
 	Chain      common.Chain
@@ -112,5 +102,6 @@ func (cp *CoreParams) UpdateCoreParams(params *zetaObserverTypes.CoreParams) {
 	cp.ConnectorContractAddress = params.ConnectorContractAddress
 	cp.ZETATokenContractAddress = params.ZetaTokenContractAddress
 	cp.ERC20CustodyContractAddress = params.Erc20CustodyContractAddress
-
+	cp.OutboundTxScheduleInterval = params.OutboundTxScheduleInterval
+	cp.OutboundTxScheduleLookahead = params.OutboundTxScheduleLookahead
 }
