@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
-	"math/rand"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -20,6 +19,10 @@ const (
 	StatInterval     = 5
 	DepositInterval  = 1
 	WithdrawInterval = 1
+)
+
+var (
+	zevmNonce = big.NewInt(1)
 )
 
 func (sm *SmokeTest) StressTestCCTXSwap() {
@@ -135,6 +138,14 @@ func (sm *SmokeTest) StressTestCCTXSwap() {
 	fmt.Printf("memobytes(%d) %x\n", len(memobytes), memobytes)
 	msg = append(msg, memobytes...)
 
+	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
+	blockNum, err := sm.zevmClient.BlockNumber(context.Background())
+	nonce, err := sm.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
+	if err != nil {
+		panic(err)
+	}
+	zevmNonce = big.NewInt(int64(nonce))
+
 	// -------------- TEST BEGINS ------------------
 
 	fmt.Println("**** STRESS TEST BEGINS ****")
@@ -157,7 +168,7 @@ func (sm *SmokeTest) SendCCtx(msg []byte) {
 	for {
 		select {
 		case <-ticker.C:
-			sm.DepositUSDTERC20(big.NewInt(8e7), msg)
+			sm.DepositUSDTERC20(big.NewInt(8e5), msg)
 		}
 	}
 }
@@ -205,16 +216,17 @@ func (sm *SmokeTest) DepositUSDTERC20(amount *big.Int, msg []byte) {
 }
 
 func (sm *SmokeTest) WithdrawUSDTZRC20() {
-	// Create random amount in range 100 - 200
-	min := 100
-	max := 200
-	amount := rand.Intn(max-min) + min
+	defer func() {
+		zevmNonce.Add(zevmNonce, big.NewInt(1))
+	}()
 
 	usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
-	_, err = usdtZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(int64(amount)))
+
+	sm.zevmAuth.Nonce = zevmNonce
+	_, err = usdtZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}
