@@ -22,6 +22,8 @@ func GetCoreParams() CoreParamsList {
 				OutTxTicker:                 2,
 				WatchUtxoTicker:             0,
 				GasPriceTicker:              5,
+				OutboundTxScheduleInterval:  2,
+				OutboundTxScheduleLookahead: 5,
 			},
 			{
 
@@ -42,6 +44,8 @@ func GetCoreParams() CoreParamsList {
 				WatchUtxoTicker:             1,
 				InTxTicker:                  1,
 				OutTxTicker:                 2,
+				OutboundTxScheduleInterval:  2,
+				OutboundTxScheduleLookahead: 5,
 			}},
 	}
 	chainList := common.DefaultChainsList()
