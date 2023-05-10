@@ -19,6 +19,8 @@ message CoreParams {
   string connector_contract_address = 9;
   string erc20_custody_contract_address = 10;
   int64 chain_id = 11;
+  int64 outbound_tx_schedule_interval = 12;
+  int64 outbound_tx_schedule_lookahead = 13;
 }
 
 message ObserverParams {
