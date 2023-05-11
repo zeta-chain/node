@@ -74,7 +74,7 @@ func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
 					anteHandler = newEthAnteHandler(options)
 				case "/ethermint.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
-					anteHandler = ethante.NewLegacyCosmosAnteHandlerEip712(options)
+					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
 				case "/ethermint.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
 					anteHandler = newCosmosAnteHandler(options)
