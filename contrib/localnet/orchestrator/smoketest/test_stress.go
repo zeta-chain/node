@@ -153,8 +153,8 @@ func (sm *SmokeTest) StressTestCCTXSwap() {
 	fmt.Println("	2. Periodically Withdraw USDT from ZEVM to EVM - goerli")
 	fmt.Println("	3. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
-	sm.wg.Add(3)
-	go sm.SendCCtx(msg)        // Add goroutine to periodically deposit USDT with a memo to swap for BTC
+	sm.wg.Add(2)
+	//go sm.SendCCtx(msg)        // Add goroutine to periodically deposit USDT with a memo to swap for BTC
 	go sm.WithdrawCCtx()       // Withdraw USDT from ZEVM to EVM - goerli
 	go sm.EchoNetworkMetrics() // Display Network metrics periodically to monitor performance
 
@@ -185,25 +185,60 @@ func (sm *SmokeTest) WithdrawCCtx() {
 }
 
 func (sm *SmokeTest) EchoNetworkMetrics() {
+	var minedTxs = map[string]bool{}
+	var queue = make([]int, 0)
+	var numTicks = 0
+	var totalMinedTxns = 0
 	ticker := time.NewTicker(time.Second * StatInterval)
+
 	for {
 		select {
 		case <-ticker.C:
+			numTicks++
 			// Get all pending outbound transactions
+			//==> Check for status == CctxStatus_OutboundMined using sm.cctxClient.CctxAll()
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{})
 			if err != nil {
 				continue
 			}
+			// Get all cross chain transactions
+			cctxAll, err := sm.cctxClient.CctxAll(context.Background(), &types2.QueryAllCctxRequest{})
+			if err != nil {
+				continue
+			}
+			//
 			// Get all trackers
 			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &types2.QueryAllOutTxTrackerRequest{})
 			if err != nil {
 				continue
 			}
 
+			newMinedTxCnt := 0
+			for _, tx := range cctxAll.CrossChainTx {
+				if tx.CctxStatus.Status == types2.CctxStatus_OutboundMined {
+					if _, found := minedTxs[tx.Index]; !found {
+						minedTxs[tx.Index] = true
+						newMinedTxCnt++
+					}
+				}
+			}
+			// Add new mined txn count to queue and remove the oldest entry
+			queue = append(queue, newMinedTxCnt)
+			if numTicks > 60/StatInterval {
+				totalMinedTxns -= queue[0]
+				queue = queue[1:]
+				numTicks = 60/StatInterval + 1 //prevent overflow
+			}
+
+			//Calculate rate -> tx/min
+			totalMinedTxns += queue[len(queue)-1]
+			rate := totalMinedTxns
+
 			numPending := len(cctxResp.CrossChainTx)
 			numTrackers := len(trackerResp.OutTxTracker)
 
-			fmt.Println("Network Stat => Num of Pending cctx: ", numPending, "Num active trackers: ", numTrackers)
+			fmt.Println("Network Stat => Num of Pending cctx: ", numPending, "Num active trackers: ", numTrackers, "Tx Rate: ", rate, " tx/min")
+			fmt.Println("new mined txn count: ", newMinedTxCnt)
 		}
 	}
 }
