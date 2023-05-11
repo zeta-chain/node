@@ -45,4 +45,5 @@ type ZetaObserverKeeper interface {
 	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
 	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
 	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
+	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *zetaObserverTypes.CoreParams, found bool)
 }

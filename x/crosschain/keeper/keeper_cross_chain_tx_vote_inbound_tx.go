@@ -55,6 +55,15 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 
+	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
+	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+	if !found {
+		return nil, types.ErrNotFoundCoreParams
+	}
+	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
+		return nil, types.ErrUnableToSendCoinType
+	}
+
 	// ******************************************************************************
 	// below only happens when ballot is finalized: exactly when threshold vote is in
 	// ******************************************************************************

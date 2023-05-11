@@ -26,4 +26,6 @@ var (
 	ErrCannotFindTSSKeys        = sdkerrors.Register(ModuleName, 1122, "Err Cannot find TSS keys")
 	ErrNonceMismatch            = sdkerrors.Register(ModuleName, 1123, "Err Nonce mismatch")
 	ErrKeygenBlockTooLow        = sdkerrors.Register(ModuleName, 1125, "Please set a block number at-least 10 blocks higher than the current block number")
+	ErrNotFoundCoreParams       = sdkerrors.Register(ModuleName, 1126, "Not found chain core params")
+	ErrUnableToSendCoinType     = sdkerrors.Register(ModuleName, 1127, "Unable to send this coin type to a receiver chain")
 )
