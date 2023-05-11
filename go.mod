@@ -40,7 +40,7 @@ require (
 	github.com/evmos/ethermint v0.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol-contracts v0.0.0-20230509152319-08ae6a328202
+	github.com/zeta-chain/protocol-contracts v0.0.0-20230511071635-36fd885d1f40
 	gopkg.in/yaml.v2 v2.4.0
 )
 
