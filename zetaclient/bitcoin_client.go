@@ -217,6 +217,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if !permssions.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
+
 	lastBN := ob.GetLastBlockHeight()
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -225,8 +226,15 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if cnt < 0 || cnt >= math2.MaxInt64 {
 		return fmt.Errorf("block count is out of range: %d", cnt)
 	}
+
+	// "confirmed" current block number
+	confirmedBlockNum := cnt - int64(ob.GetChainConfig().CoreParams.ConfCount)
+	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
+		return fmt.Errorf("Skipping observer , confirmedBlockNum is negative or too large ")
+	}
+
 	// query incoming gas asset
-	if cnt > lastBN {
+	if confirmedBlockNum > lastBN {
 		bn := lastBN + 1
 		ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
 		hash, err := ob.rpcClient.GetBlockHash(bn)
