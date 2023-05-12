@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common/cosmos"
@@ -49,12 +50,19 @@ func SetupConfigForTest() {
 
 }
 
-func InitLogger(level zerolog.Level) zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
-		Level(level).
-		With().
-		Timestamp().
-		Logger()
-	//Sample(&zerolog.BasicSampler{N: 5})
+func InitLogger(cfg *config.Config) zerolog.Logger {
+	var logger zerolog.Logger
+	switch cfg.LogFormat {
+	case "json":
+		logger = zerolog.New(os.Stdout).Level(cfg.LogLevel).With().Timestamp().Logger()
+	case "text":
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).Level(cfg.LogLevel).With().Timestamp().Logger()
+	default:
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
+	}
+
+	if cfg.LogSampler {
+		logger = logger.Sample(&zerolog.BasicSampler{N: 5})
+	}
 	return logger
 }
