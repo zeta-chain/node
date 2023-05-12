@@ -398,13 +398,13 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				continue
 			}
-			outTimeout := time.After(90 * time.Second)
+			outTimeout := time.After(10 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(3000 * time.Millisecond)
+					inTimeout := time.After(200 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)

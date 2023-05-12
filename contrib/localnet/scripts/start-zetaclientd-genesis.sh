@@ -22,7 +22,7 @@ then
     export TSSPATH=~/.tss
     zetaclientd init  \
       --pre-params ~/preParams.json  --zetacore-url zetacore0 \
-      --chain-id athens_101-1  --operator "$operatorAddress" --log-level 0 --hotkey=hotkey
+      --chain-id athens_101-1  --operator "$operatorAddress" --log-level 1 --hotkey=hotkey
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
@@ -33,6 +33,6 @@ else
   zetaclientd init  \
     --peer /ip4/172.20.0.21/tcp/6668/p2p/$SEED \
     --pre-params ~/preParams.json --zetacore-url $node \
-    --chain-id athens_101-1 --operator "$operatorAddress" --log-level 0 --hotkey=hotkey
+    --chain-id athens_101-1 --operator "$operatorAddress" --log-level 1 --hotkey=hotkey
   zetaclientd start
 fi
