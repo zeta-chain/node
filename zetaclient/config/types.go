@@ -62,7 +62,6 @@ type BTCConfig struct {
 }
 
 type Config struct {
-	ValidatorName string
 	Peer          string
 	PublicIP      string
 	LogFormat     string
