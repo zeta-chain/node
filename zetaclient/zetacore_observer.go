@@ -129,7 +129,8 @@ func (co *CoreObserver) startSendScheduler() {
 				}
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
-				for idx, send := range sendList {
+				cnt := 0
+				for _, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
@@ -163,12 +164,13 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					currentHeight := uint64(bn)
-					if nonce%10 == currentHeight%10 && !outTxMan.IsOutTxActive(outTxID) {
+					if nonce%10 == currentHeight%10 {
+						cnt++
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
-					if idx > 50 { // only look at 50 sends per chain
+					if cnt == 3 {
 						break
 					}
 				}

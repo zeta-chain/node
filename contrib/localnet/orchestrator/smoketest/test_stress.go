@@ -8,6 +8,7 @@ import (
 	"fmt"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
+	"sort"
 	"time"
 )
 
@@ -198,6 +199,13 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{})
 			if err != nil {
 				continue
+			}
+			sends := cctxResp.CrossChainTx
+			sort.Slice(sends, func(i, j int) bool {
+				return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
+			})
+			if len(sends) > 0 {
+				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutTxParam().OutboundTxTssNonce, sends[len(sends)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
 			}
 			// Get all cross chain transactions
 			cctxAll, err := sm.cctxClient.CctxAll(context.Background(), &types2.QueryAllCctxRequest{})
