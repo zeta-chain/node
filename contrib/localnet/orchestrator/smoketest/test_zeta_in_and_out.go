@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"time"
 
@@ -214,7 +215,7 @@ func (sm *SmokeTest) TestSendZetaOutBTCRevert() {
 	receipt = MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("approve tx receipt: status %d\n", receipt.Status)
 	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(18332),
+		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
