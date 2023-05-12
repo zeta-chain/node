@@ -7,23 +7,20 @@ import (
 	"strings"
 )
 
-const filename string = "zeta-client.json"
+const filename string = "zetaclient_config.json"
+const folder string = "config"
 
 func Save(config *Config, path string) error {
-	file := filepath.Join(path, filename)
+	folderPath := filepath.Join(path, folder)
+	err := os.MkdirAll(folderPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	file := filepath.Join(path, folder, filename)
 	file = filepath.Clean(file)
-	//fp, err := os.Create(file)
-	//if err != nil {
-	//	// failed to create/open the file
-	//	return err
-	//}
-	//if err := toml.NewEncoder(fp).Encode(config); err != nil {
-	//	// failed to encode
-	//	return err
-	//}
 
 	jsonFile, _ := json.MarshalIndent(config, "", "    ")
-	err := os.WriteFile(file, jsonFile, 0600)
+	err = os.WriteFile(file, jsonFile, 0600)
 	if err != nil {
 		return err
 	}
@@ -31,7 +28,7 @@ func Save(config *Config, path string) error {
 }
 
 func Load(path string) (*Config, error) {
-	file := filepath.Join(path, filename)
+	file := filepath.Join(path, folder, filename)
 	file, err := filepath.Abs(file)
 	if err != nil {
 		return nil, err
