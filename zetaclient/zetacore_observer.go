@@ -168,7 +168,7 @@ func (co *CoreObserver) startSendScheduler() {
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
-					if idx > 90 { // only look at 50 sends per chain
+					if idx > 50 { // only look at 50 sends per chain
 						break
 					}
 				}
