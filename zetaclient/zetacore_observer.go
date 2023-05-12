@@ -83,7 +83,7 @@ func (co *CoreObserver) MonitorCore() {
 func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
 	go outTxMan.StartMonitorHealth()
-	observeTicker := time.NewTicker(3 * time.Second)
+	observeTicker := time.NewTicker(1 * time.Second)
 	var lastBlockNum int64
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
@@ -164,13 +164,13 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					currentHeight := uint64(bn)
-					if nonce%10 == currentHeight%10 {
+					if nonce%20 == currentHeight%20 && !outTxMan.IsOutTxActive(outTxID) { // ZetaCore 5s
 						cnt++
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
-					if cnt == 3 {
+					if cnt == 4 { // 3/2s
 						break
 					}
 				}
