@@ -32,6 +32,10 @@ func DefaultParams() Params {
 	}
 	adminPolicy := []*Admin_Policy{
 		{
+			PolicyType: Policy_Type_out_tx_tracker,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
 			PolicyType: Policy_Type_stop_inbound_cctx,
 			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
 		},
@@ -45,10 +49,6 @@ func DefaultParams() Params {
 		},
 		{
 			PolicyType: Policy_Type_update_keygen_block,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
-		},
-		{
-			PolicyType: Policy_Type_out_tx_tracker,
 			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
 		},
 	}
