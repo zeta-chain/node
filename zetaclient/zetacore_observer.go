@@ -2,6 +2,8 @@ package zetaclient
 
 import (
 	"fmt"
+	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/libp2p/go-libp2p/core/protocol"
 	"math"
 	"sort"
 	"strings"
@@ -33,7 +35,7 @@ type CoreObserver struct {
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
-	tss       *TSS
+	Tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
 }
@@ -49,7 +51,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		ZetaChainWatcher: chainLogger.With().Str("module", "ZetaChainWatcher").Logger(),
 	}
 
-	co.tss = tss
+	co.Tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 
@@ -78,6 +80,38 @@ func (co *CoreObserver) MonitorCore() {
 	go co.startSendScheduler()
 }
 
+// returns map(protocolID -> count); map(connID -> count)
+func countActiveStreams(n network.Network) (map[string]int, map[string]int, int) {
+	count := 0
+	conns := n.Conns()
+	protocolCount := make(map[string]int)
+	connCount := make(map[string]int)
+	for _, conn := range conns {
+		count += len(conn.GetStreams())
+		for _, stream := range conn.GetStreams() {
+			protocolCount[string(stream.Protocol())]++
+		}
+		connCount[string(conn.ID())] += len(conn.GetStreams())
+	}
+	return protocolCount, connCount, count
+}
+
+var joinPartyProtocolWithLeader protocol.ID = "/p2p/join-party-leader"
+
+func releaseAllStreams(n network.Network) int {
+	conns := n.Conns()
+	cnt := 0
+	for _, conn := range conns {
+		for _, stream := range conn.GetStreams() {
+			if stream.Protocol() == joinPartyProtocolWithLeader {
+				stream.Reset()
+				cnt++
+			}
+		}
+	}
+	return cnt
+}
+
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
@@ -85,6 +119,7 @@ func (co *CoreObserver) startSendScheduler() {
 	go outTxMan.StartMonitorHealth()
 	observeTicker := time.NewTicker(1 * time.Second)
 	var lastBlockNum int64
+	zblockToProcessedNonce := make(map[int64]int64)
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -99,6 +134,7 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				co.logger.ZetaChainWatcher.Debug().Msgf("ZetaCore heart beat: %d", bn)
 			}
+
 			//tStart := time.Now()
 			sendList, err := co.bridge.GetAllPendingCctx()
 			if err != nil {
@@ -124,28 +160,44 @@ func (co *CoreObserver) startSendScheduler() {
 					co.logger.ZetaChainWatcher.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
 					continue
 				}
-				if bn%10 == 0 {
+				if len(sendList) > 0 {
 					co.logger.ZetaChainWatcher.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce, sendList[len(sendList)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
+				} else {
+					continue
 				}
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
 				cnt := 0
+				maxCnt := 4
+				safeMode := true // by default, be cautious and only send 1 tx per block
+				if len(sendList) > 0 {
+					lastProcessedNonce := int64(sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce) - 1
+					zblockToProcessedNonce[bn] = lastProcessedNonce
+					// if for 10 blocks there is no progress, then wind down the maxCnt (lookahead)
+					if nonce1, found := zblockToProcessedNonce[bn-10]; found {
+						if nonce1 < lastProcessedNonce && outTxMan.numActiveProcessor < 10 {
+							safeMode = false
+						}
+					}
+					co.logger.ZetaChainWatcher.Info().Msgf("20 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-20])/20.0)
+					co.logger.ZetaChainWatcher.Info().Msgf("100 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-100])/100.0)
+					co.logger.ZetaChainWatcher.Info().Msgf("since block 0 outbound tx processing rate: %.2f", float64(lastProcessedNonce)/(1.0*float64(bn)))
+				}
+				host := co.Tss.Server.P2pCommunication.GetHost()
+				pCount, cCount, numStreams := countActiveStreams(host.Network())
+				co.logger.ZetaChainWatcher.Info().Msgf("numStreams: %d; protocol: %+v; conn: %+v", numStreams, pCount, cCount)
+				if outTxMan.numActiveProcessor == 0 {
+					co.logger.ZetaChainWatcher.Warn().Msgf("no active outbound tx processor; safeMode: %v", safeMode)
+					numStreamsReleased := releaseAllStreams(host.Network())
+					co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
+				}
+
 				for _, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
 						continue
 					}
-					// update metrics
-					//if idx == 0 {
-					//	pTxs, err := ob.GetPromGauge(metrics.PendingTxs)
-					//	if err != nil {
-					//		co.logger.Warn().Msgf("cannot get prometheus counter [%s]", metrics.PendingTxs)
-					//	} else {
-					//		pTxs.Set(float64(len(sendList)))
-					//	}
-					//}
-					// Monitor Core Logger for OutboundTxTssNonce
 					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
@@ -164,13 +216,16 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					currentHeight := uint64(bn)
-					if nonce%20 == currentHeight%20 && !outTxMan.IsOutTxActive(outTxID) { // ZetaCore 5s
+					if nonce%10 == currentHeight%10 && !outTxMan.IsOutTxActive(outTxID) {
+						if safeMode && nonce != sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce {
+							break
+						}
 						cnt++
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
-					if cnt == 4 { // 3/2s
+					if cnt == maxCnt {
 						break
 					}
 				}

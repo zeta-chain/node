@@ -73,6 +73,7 @@ type TSS struct {
 	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
 	CurrentPubkey string
 	logger        zerolog.Logger
+	Signers       []string
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -88,7 +89,7 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.CurrentPubkey
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, nil, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, tss.Signers, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")

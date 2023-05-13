@@ -60,11 +60,13 @@ func genNewTSSAtBlock(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS
 	}
 	log.Info().Msgf("setting TSS pubkey: %s", res.PubKey)
 	err = tss.InsertPubKey(res.PubKey)
-	tss.CurrentPubkey = res.PubKey
+
 	if err != nil {
 		log.Error().Msgf("SetPubKey fail")
 		return err
 	}
+	tss.CurrentPubkey = res.PubKey // this is only needed for version 0.13.0 leaderless keysign
+	tss.Signers = pubKeys
 	log.Info().Msgf("TSS address in hex: %s", tss.EVMAddress().Hex())
 
 	return nil

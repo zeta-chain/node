@@ -15,7 +15,7 @@ import (
 const (
 	StatInterval     = 5
 	DepositInterval  = 1
-	WithdrawInterval = 1
+	WithdrawInterval = 500
 )
 
 var (
@@ -174,7 +174,7 @@ func (sm *SmokeTest) SendCCtx(msg []byte) {
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
 func (sm *SmokeTest) WithdrawCCtx() {
-	ticker := time.NewTicker(time.Second * WithdrawInterval)
+	ticker := time.NewTicker(time.Millisecond * WithdrawInterval)
 	for {
 		select {
 		case <-ticker.C:

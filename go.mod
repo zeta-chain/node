@@ -38,7 +38,6 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/evmos/ethermint v0.21.0
-	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/protocol-contracts v0.0.0-20230421024932-34119ba32459
@@ -61,6 +60,7 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 )
@@ -92,7 +92,7 @@ require (
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
+	github.com/coinbase/rosetta-sdk-go v0.7.9
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.3-0.20220203105225-a9a7ef127534 // indirect
@@ -180,10 +180,10 @@ require (
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.22.0 // indirect
+	github.com/libp2p/go-libp2p v0.22.0
 	github.com/libp2p/go-libp2p-asn-util v0.2.0 // indirect
 	github.com/libp2p/go-libp2p-core v0.20.0 // indirect
-	github.com/libp2p/go-libp2p-kad-dht v0.18.0 // indirect
+	github.com/libp2p/go-libp2p-kad-dht v0.18.0
 	github.com/libp2p/go-libp2p-kbucket v0.4.7 // indirect
 	github.com/libp2p/go-libp2p-record v0.2.0 // indirect
 	github.com/libp2p/go-msgio v0.2.0 // indirect
@@ -298,5 +298,5 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
-	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7
+	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230513044345-2316cd28fa3f
 )
