@@ -62,10 +62,11 @@ type BTCConfig struct {
 }
 
 type Config struct {
-	ValidatorName string
 	Peer          string
-	LogConsole    bool
+	PublicIP      string
+	LogFormat     string
 	LogLevel      zerolog.Level
+	LogSampler    bool
 	PreParamsPath string
 	KeygenBlock   int64
 	KeyGenPubKeys []string
