@@ -125,6 +125,12 @@ func start(_ *cobra.Command, _ []string) error {
 	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
+		// Break out of loop for the following conditions
+		// 1. KeygenBlock is set to 0 in genesis file. Which means TSS generation is disabled and TSS should already exist
+		// 2. KeygenBlock is set to a positive number in genesis file. Which means TSS generation is enabled and TSS should be generated at the block.Break if TSS is generated successfully
+		if cfg.KeygenBlock == 0 {
+			break
+		}
 		if cfg.KeygenBlock > 0 {
 			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
 			if err == nil {
