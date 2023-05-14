@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"math"
 	"sort"
 	"strings"
@@ -97,13 +98,22 @@ func countActiveStreams(n network.Network) (map[string]int, map[string]int, int)
 }
 
 var joinPartyProtocolWithLeader protocol.ID = "/p2p/join-party-leader"
+var TSSProtocolID protocol.ID = "/p2p/tss"
 
-func releaseAllStreams(n network.Network) int {
+func releaseAllStreams(n network.Network, streamMgr *p2p.StreamMgr) int {
+	streams := streamMgr.UnusedStreams
+	numKeys := len(streams)
+	lenMap := make(map[string]int)
+	for k, v := range streams {
+		lenMap[k] = len(v)
+	}
+	log.Warn().Msgf("analyzing StreamMgr: %d keys; ", numKeys)
+	log.Warn().Msgf("StreamMgr statistics by msgID: %v", lenMap)
 	conns := n.Conns()
 	cnt := 0
 	for _, conn := range conns {
 		for _, stream := range conn.GetStreams() {
-			if stream.Protocol() == joinPartyProtocolWithLeader {
+			if stream.Protocol() == joinPartyProtocolWithLeader || stream.Protocol() == TSSProtocolID {
 				stream.Reset()
 				cnt++
 			}
@@ -183,12 +193,14 @@ func (co *CoreObserver) startSendScheduler() {
 					co.logger.ZetaChainWatcher.Info().Msgf("100 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-100])/100.0)
 					co.logger.ZetaChainWatcher.Info().Msgf("since block 0 outbound tx processing rate: %.2f", float64(lastProcessedNonce)/(1.0*float64(bn)))
 				}
+				streamMgr := co.Tss.Server.P2pCommunication.StreamMgr
+
 				host := co.Tss.Server.P2pCommunication.GetHost()
 				pCount, cCount, numStreams := countActiveStreams(host.Network())
 				co.logger.ZetaChainWatcher.Info().Msgf("numStreams: %d; protocol: %+v; conn: %+v", numStreams, pCount, cCount)
 				if outTxMan.numActiveProcessor == 0 {
 					co.logger.ZetaChainWatcher.Warn().Msgf("no active outbound tx processor; safeMode: %v", safeMode)
-					numStreamsReleased := releaseAllStreams(host.Network())
+					numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
 					co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
 				}
 
