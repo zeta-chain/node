@@ -230,7 +230,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// "confirmed" current block number
 	confirmedBlockNum := cnt - int64(ob.GetChainConfig().CoreParams.ConfCount)
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
-		return fmt.Errorf("Skipping observer , confirmedBlockNum is negative or too large ")
+		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
 	}
 
 	// query incoming gas asset
