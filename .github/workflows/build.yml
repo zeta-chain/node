@@ -376,7 +376,7 @@ jobs:
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release')
     needs:
       - build-and-test
       - build-alpine-and-test

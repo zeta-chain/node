@@ -14,13 +14,10 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
-	"google.golang.org/grpc"
 	"io/ioutil"
-	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -45,19 +42,22 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	log.Logger = InitLogger(cfg.LogLevel)
+	log.Logger = InitLogger(cfg)
 	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
 		err := validatePeer(cfg.Peer)
 		if err != nil {
+			log.Error().Err(err).Msg("invalid peer")
 			return err
 		}
 	}
-	waitForZetaCore(cfg)
+
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
-	startLogger.Info().Msgf("ZetaCore is ready")
+	setMYIP(cfg, startLogger)
+	waitForZetaCore(cfg, startLogger)
+	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
+
 	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
 	zetaBridge, err := CreateZetaBridge(rootArgs.zetaCoreHome, cfg)
@@ -125,6 +125,12 @@ func start(_ *cobra.Command, _ []string) error {
 	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
+		// Break out of loop for the following conditions
+		// 1. KeygenBlock is set to 0 in genesis file. Which means TSS generation is disabled and TSS should already exist
+		// 2. KeygenBlock is set to a positive number in genesis file. Which means TSS generation is enabled and TSS should be generated at the block.Break if TSS is generated successfully
+		if cfg.KeygenBlock == 0 {
+			break
+		}
 		if cfg.KeygenBlock > 0 {
 			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
 			if err == nil {
@@ -197,24 +203,6 @@ func start(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func waitForZetaCore(configData *config.Config) {
-	// wait until zetacore is up
-	log.Debug().Msg("Waiting for ZetaCore to open 9090 port...")
-	for {
-		_, err := grpc.Dial(
-			fmt.Sprintf("%s:9090", configData.ZetaCoreURL),
-			grpc.WithInsecure(),
-		)
-		if err != nil {
-			log.Warn().Err(err).Msg("grpc dial fail")
-			time.Sleep(5 * time.Second)
-		} else {
-			break
-		}
-	}
-
-}
-
 func initPeers(peer string) (p2p.AddrList, error) {
 	var peers p2p.AddrList
 
@@ -249,28 +237,4 @@ func initPreParams(path string) {
 			}
 		}
 	}
-}
-
-func validatePeer(seedPeer string) error {
-	parsedPeer := strings.Split(seedPeer, "/")
-
-	if len(parsedPeer) < 7 {
-		log.Error().Msgf("seed peer is malformed: %s", seedPeer)
-		return errors.New("seed peer missing IP or ID")
-	}
-
-	seedIP := parsedPeer[2]
-	seedID := parsedPeer[6]
-
-	if net.ParseIP(seedIP) == nil {
-		log.Error().Msgf("invalid seed IP address: %s", seedIP)
-		return errors.New("invalid seed IP address")
-	}
-
-	if len(seedID) == 0 {
-		log.Error().Msgf("seed id is empty")
-		return errors.New("seed id is empty")
-	}
-
-	return nil
 }
