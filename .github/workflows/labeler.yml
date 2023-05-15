@@ -1,0 +1,18 @@
+name: "PR Labeler"
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/issue-labeler@v3.1
+        with:
+          configuration-path: .github/labeler.yml
+          include-title: 1
+          sync-labels: 1
+          enable-versioned-regex: 0
