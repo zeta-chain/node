@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/btcsuite/btcutil"
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
@@ -87,6 +87,21 @@ type SmokeTest struct {
 	SystemContractAddr ethcommon.Address
 }
 
+var RootCmd = &cobra.Command{
+	Use:   "smoketest",
+	Short: "Smoke Test CLI",
+}
+
+var LocalCmd = &cobra.Command{
+	Use:   "local",
+	Short: "Run Local Smoketest",
+	Run:   LocalSmokeTest,
+}
+
+func init() {
+	RootCmd.AddCommand(LocalCmd)
+}
+
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
@@ -134,12 +149,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 }
 
-func main() {
-	var stressTest bool
-	flag.BoolVar(&stressTest, "stress-test", false, "Perform indefinite stress test.")
-	flag.Parse()
-	fmt.Println("ENABLE Stress Test FLAG: ", stressTest)
-
+func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	testStartTime := time.Now()
 	defer func() {
 		fmt.Println("Smoke test took", time.Since(testStartTime))
@@ -259,11 +269,6 @@ func main() {
 	fmt.Printf("##   ZETA on ZetaChain EVM\n")
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 
-	// If stress test flag is set, continuous swaps will be sent indefinitely at maximum throughput.
-	if stressTest {
-		smokeTest.StressTestCCTXSwap()
-	}
-
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.TestERC20Deposit()
@@ -280,4 +285,11 @@ func main() {
 	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
+}
+
+func main() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }

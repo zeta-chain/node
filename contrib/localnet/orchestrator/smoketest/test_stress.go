@@ -6,140 +6,157 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	"google.golang.org/grpc"
 	"math/big"
+	"os"
 	"sort"
 	"time"
 )
 
 const (
-	StatInterval     = 5
-	DepositInterval  = 1
-	WithdrawInterval = 500
+	StatInterval      = 5
+	WithdrawInterval  = 500
+	StressTestTimeout = 100 * time.Minute
 )
 
 var (
 	zevmNonce = big.NewInt(1)
 )
 
-func (sm *SmokeTest) StressTestCCTXSwap() {
-	startTime := time.Now()
+var StressCmd = &cobra.Command{
+	Use:   "stress",
+	Short: "Run Local Stress Test",
+	Run:   StressTest,
+}
+
+type stressArguments struct {
+	ethURL             string
+	grpcURL            string
+	zevmURL            string
+	deployerAddress    string
+	deployerPrivateKey string
+	local              bool
+}
+
+var stressTestArgs = stressArguments{}
+
+func init() {
+	RootCmd.AddCommand(StressCmd)
+	StressCmd.Flags().StringVar(&stressTestArgs.ethURL, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
+	StressCmd.Flags().StringVar(&stressTestArgs.grpcURL, "grpcURL", "zetacore0:9090", "--grpcURL zetacore0:9090")
+	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", "http://zetacore0:8545", "--zevmURL http://zetacore0:8545")
+	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
+	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
+	StressCmd.Flags().BoolVar(&stressTestArgs.local, "local", true, "--local")
+
+	DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
+}
+
+func StressTest(_ *cobra.Command, _ []string) {
+	testStartTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		fmt.Println("Smoke test took", time.Since(testStartTime))
 	}()
-	LoudPrintf("Stress Testing crosschain swap and ZRC20 withdraw...\n")
-	// Firstly, deposit 1.15 BTC into Zeta for liquidity
-	// sm.DepositBTC()
-	// Secondly, deposit 1000.0 USDT into Zeta for liquidity
-	//LoudPrintf("Depositing 1000 USDT & 1.15 BTC for liquidity\n")
-	//
-	//txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
-	//WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
+	go func() {
+		time.Sleep(StressTestTimeout)
+		fmt.Println("Smoke test timed out after", StressTestTimeout)
+		os.Exit(1)
+	}()
 
-	// Create Uni-swap pair for USDT <-> BTC
-	//sm.zevmAuth.GasLimit = 10000000
-	//tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
-	//usdtBtcPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("USDT-BTC pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status, usdtBtcPair.Hex())
+	goerliClient, err := ethclient.Dial(stressTestArgs.ethURL)
+	if err != nil {
+		panic(err)
+	}
 
-	// Pre-approve 1 BTC and 1 USDT
-	//tx, err = sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
-	//fmt.Printf("USDT ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	//
-	//tx, err = sm.BTCZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
-	//fmt.Printf("BTC ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+	bal, err := goerliClient.BalanceAt(context.TODO(), DeployerAddress, nil)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Deployer address: %s, balance: %d Ether\n", DeployerAddress.Hex(), bal.Div(bal, big.NewInt(1e18)))
+
+	chainid, err := goerliClient.ChainID(context.Background())
+	deployerPrivkey, err := crypto.HexToECDSA(stressTestArgs.deployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	goerliAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
+	if err != nil {
+		panic(err)
+	}
+
+	grpcConn, err := grpc.Dial(stressTestArgs.grpcURL, grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	cctxClient := types.NewQueryClient(grpcConn)
+	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+
+	// Wait for Genesis and keygen to be completed. ~ height 30
+	time.Sleep(20 * time.Second)
+	for {
+		time.Sleep(5 * time.Second)
+		response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		if err != nil {
+			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
+			continue
+		}
+		if response.Height >= 30 {
+			break
+		}
+		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+	}
+
+	// get the clients for tests
+	var zevmClient *ethclient.Client
+	for {
+		time.Sleep(5 * time.Second)
+		fmt.Printf("dialing zevm client: %s\n", stressTestArgs.zevmURL)
+		zevmClient, err = ethclient.Dial(stressTestArgs.zevmURL)
+		if err != nil {
+			continue
+		}
+		break
+	}
+	chainid, err = zevmClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	zevmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
+	if err != nil {
+		panic(err)
+	}
+
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, nil)
+
+	// If stress test is running on local docker environment
+	if stressTestArgs.local {
+		smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
+		smokeTest.TestDepositEtherIntoZRC20()
+		smokeTest.TestSendZetaIn()
+	}
 
 	//Pre-approve USDT withdraw on ZEVM
-	zevmClient := sm.zevmClient
-	//usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//gasZRC20, _, err := usdtZRC20.WithdrawGasFee(&bind.CallOpts{})
-	//if err != nil {
-	//	panic(err)
-	//}
 	fmt.Printf("approving ETH ZRC20...\n")
-	ethZRC20 := sm.ETHZRC20
-	tx, err := ethZRC20.Approve(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e18))
-	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	ethZRC20 := smokeTest.ETHZRC20
+	tx, err := ethZRC20.Approve(smokeTest.zevmAuth, smokeTest.ETHZRC20Addr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(smokeTest.zevmClient, tx)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
-	//tx, err = ethZRC20.Approve(sm.zevmAuth, ethcommon.HexToAddress(USDTZRC20Addr), big.NewInt(1e18))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(zevmClient, tx)
-	//fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
-
-	// Add 100 USDT liq and 0.001 BTC
-	//bal, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("balance of deployer on BTC ZRC20: %d\n", bal)
-	//bal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	//tx, err = sm.UniswapV2Router.AddLiquidity(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr, big.NewInt(1e8), big.NewInt(1e8), big.NewInt(1e8), big.NewInt(1e5), DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
-	//if err != nil {
-	//	fmt.Printf("Error liq %s", err.Error())
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
-	//fmt.Printf("Add liquidity receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-
-	//fmt.Printf("Funding contracts ZEVMSwapApp with gas ZRC20s; 1e7 ETH, 1e6 BTC\n")
-	//// Fund ZEVMSwapApp with gas ZRC20s
-	//tx, err = sm.ETHZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e7))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
-	//fmt.Printf("  USDT ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	//bal1, _ := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
-	//fmt.Printf("  ZEVMSwapApp ETHZRC20 balance %d", bal1)
-	//tx, err = sm.BTCZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
-	//fmt.Printf("  BTC ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	//bal2, _ := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
-	//fmt.Printf("  ZEVMSwapApp BTCZRC20 balance %d", bal2)
-
-	// msg would be [ZEVMSwapAppAddr, memobytes]
-	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
-	//msg := []byte{}
-	//msg = append(msg, sm.ZEVMSwapAppAddr.Bytes()...)
-	//memobytes, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, sm.BTCZRC20Addr, []byte(BTCDeployerAddress.EncodeAddress()))
-	//
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("memobytes(%d) %x\n", len(memobytes), memobytes)
-	//msg = append(msg, memobytes...)
-
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
-	blockNum, err := sm.zevmClient.BlockNumber(context.Background())
-	nonce, err := sm.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
+	blockNum, err := smokeTest.zevmClient.BlockNumber(context.Background())
+	nonce, err := smokeTest.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
@@ -148,28 +165,14 @@ func (sm *SmokeTest) StressTestCCTXSwap() {
 	// -------------- TEST BEGINS ------------------
 
 	fmt.Println("**** STRESS TEST BEGINS ****")
-	fmt.Println("	1. Periodically deposit USDT with a memo to swap for BTC")
-	fmt.Println("	2. Periodically Withdraw USDT from ZEVM to EVM - goerli")
-	fmt.Println("	3. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
+	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM - goerli")
+	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
-	sm.wg.Add(2)
-	//go sm.SendCCtx(msg)        // Add goroutine to periodically deposit USDT with a memo to swap for BTC
-	go sm.WithdrawCCtx()       // Withdraw USDT from ZEVM to EVM - goerli
-	go sm.EchoNetworkMetrics() // Display Network metrics periodically to monitor performance
+	smokeTest.wg.Add(2)
+	go smokeTest.WithdrawCCtx()       // Withdraw USDT from ZEVM to EVM - goerli
+	go smokeTest.EchoNetworkMetrics() // Display Network metrics periodically to monitor performance
 
-	sm.wg.Wait()
-}
-
-// SendCCtx Send USDT deposit for a BTC swap once every block
-func (sm *SmokeTest) SendCCtx(msg []byte) {
-	// timeout_commit=2s - Wait 2 seconds before sending next deposit
-	ticker := time.NewTicker(time.Second * DepositInterval)
-	for {
-		select {
-		case <-ticker.C:
-			sm.DepositUSDTERC20(big.NewInt(8e5), msg)
-		}
-	}
+	smokeTest.wg.Wait()
 }
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
@@ -184,16 +187,12 @@ func (sm *SmokeTest) WithdrawCCtx() {
 }
 
 func (sm *SmokeTest) EchoNetworkMetrics() {
-	var minedTxs = map[string]bool{}
-	var queue = make([]int, 0)
-	var numTicks = 0
-	var totalMinedTxns = 0
+	echoStartTime := time.Now()
 	ticker := time.NewTicker(time.Second * StatInterval)
-
 	for {
 		select {
 		case <-ticker.C:
-			numTicks++
+
 			// Get all pending outbound transactions
 			//==> Check for status == CctxStatus_OutboundMined using sm.cctxClient.CctxAll()
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{})
@@ -207,11 +206,6 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			if len(sends) > 0 {
 				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutTxParam().OutboundTxTssNonce, sends[len(sends)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
 			}
-			// Get all cross chain transactions
-			cctxAll, err := sm.cctxClient.CctxAll(context.Background(), &types2.QueryAllCctxRequest{})
-			if err != nil {
-				continue
-			}
 			//
 			// Get all trackers
 			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &types2.QueryAllOutTxTrackerRequest{})
@@ -219,40 +213,14 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 				continue
 			}
 
-			newMinedTxCnt := 0
-			for _, tx := range cctxAll.CrossChainTx {
-				if tx.CctxStatus.Status == types2.CctxStatus_OutboundMined {
-					if _, found := minedTxs[tx.Index]; !found {
-						minedTxs[tx.Index] = true
-						newMinedTxCnt++
-					}
-				}
-			}
-			// Add new mined txn count to queue and remove the oldest entry
-			queue = append(queue, newMinedTxCnt)
-			if numTicks > 60/StatInterval {
-				totalMinedTxns -= queue[0]
-				queue = queue[1:]
-				numTicks = 60/StatInterval + 1 //prevent overflow
-			}
-
-			//Calculate rate -> tx/min
-			totalMinedTxns += queue[len(queue)-1]
-			rate := totalMinedTxns
+			elapsedTime := time.Since(echoStartTime).Minutes()
+			rate := float64(sends[0].GetCurrentOutTxParam().OutboundTxTssNonce) / elapsedTime
 
 			numPending := len(cctxResp.CrossChainTx)
 			numTrackers := len(trackerResp.OutTxTracker)
 
 			fmt.Println("Network Stat => Num of Pending cctx: ", numPending, "Num active trackers: ", numTrackers, "Tx Rate: ", rate, " tx/min")
-			fmt.Println("new mined txn count: ", newMinedTxCnt)
 		}
-	}
-}
-
-func (sm *SmokeTest) DepositUSDTERC20(amount *big.Int, msg []byte) {
-	_, err := sm.ERC20Custody.Deposit(sm.goerliAuth, DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
-	if err != nil {
-		panic(err)
 	}
 }
 

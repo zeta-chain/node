@@ -158,4 +158,4 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: ["/work/start.sh", "--stress-test"]
+    entrypoint: ["/work/start.sh", "stress"]
