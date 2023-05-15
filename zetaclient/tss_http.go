@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -40,6 +41,11 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
+	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	router.HandleFunc("/debug/pprof/", pprof.Index)
+	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+
 	//router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 	return router

@@ -8,6 +8,7 @@ import (
 	math2 "math"
 	"math/big"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -398,13 +399,16 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				continue
 			}
-			outTimeout := time.After(10 * time.Second)
+			sort.Slice(trackers, func(i, j int) bool {
+				return trackers[i].Nonce < trackers[j].Nonce
+			})
+			outTimeout := time.After(2 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(200 * time.Millisecond)
+					inTimeout := time.After(100 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)

@@ -6,6 +6,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"math"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -122,6 +123,14 @@ func releaseAllStreams(n network.Network, streamMgr *p2p.StreamMgr) int {
 	return cnt
 }
 
+func zetaclientRuntimeStats() (int, uint64) {
+	numGorotuine := runtime.NumGoroutine()
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+	heapAllocBytes := mem.HeapAlloc
+	return numGorotuine, heapAllocBytes
+}
+
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
@@ -178,20 +187,22 @@ func (co *CoreObserver) startSendScheduler() {
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
 				cnt := 0
-				maxCnt := 4
+				maxCnt := 5
 				safeMode := true // by default, be cautious and only send 1 tx per block
 				if len(sendList) > 0 {
 					lastProcessedNonce := int64(sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce) - 1
 					zblockToProcessedNonce[bn] = lastProcessedNonce
 					// if for 10 blocks there is no progress, then wind down the maxCnt (lookahead)
-					if nonce1, found := zblockToProcessedNonce[bn-10]; found {
-						if nonce1 < lastProcessedNonce && outTxMan.numActiveProcessor < 10 {
+					if nonce1, found := zblockToProcessedNonce[bn-20]; found {
+						if nonce1 < lastProcessedNonce && outTxMan.numActiveProcessor < 15 {
 							safeMode = false
 						}
 					}
 					co.logger.ZetaChainWatcher.Info().Msgf("20 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-20])/20.0)
 					co.logger.ZetaChainWatcher.Info().Msgf("100 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-100])/100.0)
 					co.logger.ZetaChainWatcher.Info().Msgf("since block 0 outbound tx processing rate: %.2f", float64(lastProcessedNonce)/(1.0*float64(bn)))
+					ngr, nbytes := zetaclientRuntimeStats()
+					co.logger.ZetaChainWatcher.Info().Msgf("stats: (numGoroutine,heapAllocBytes):  %d, %d", ngr, nbytes)
 				}
 				streamMgr := co.Tss.Server.P2pCommunication.StreamMgr
 
@@ -235,6 +246,7 @@ func (co *CoreObserver) startSendScheduler() {
 						cnt++
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
+						send.GetCurrentOutTxParam().OutboundTxGasLimit += uint64(bn % 1000) // this makes re-try sign slightly different tx, resulting in different msgID in go-tss
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
 					if cnt == maxCnt {
