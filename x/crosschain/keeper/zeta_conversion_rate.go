@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"math/big"
@@ -15,6 +16,9 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	ctx := sdk.UnwrapSDKContext(context)
 	chainName := common.ParseChainName(request.Chain)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+	if chain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")
