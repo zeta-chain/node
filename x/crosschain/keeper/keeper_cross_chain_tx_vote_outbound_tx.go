@@ -20,6 +20,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
 	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	if observationChain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
