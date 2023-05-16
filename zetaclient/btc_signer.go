@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"time"
@@ -203,7 +204,11 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	myid := zetaBridge.keys.GetAddress()
 	// Early return if the send is already processed
 	// FIXME: handle revert case
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), common.CoinType_Gas, logger)
+	outboundTxTssNonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
+	if outboundTxTssNonce >= math.MaxInt {
+		return
+	}
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(outboundTxTssNonce), common.CoinType_Gas, logger)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
