@@ -6,14 +6,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/btcsuite/btcutil"
-	flag "github.com/spf13/pflag"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/btcsuite/btcutil"
+	flag "github.com/spf13/pflag"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -265,6 +266,7 @@ func main() {
 	smokeTest.TestERC20Deposit()
 	smokeTest.TestERC20Withdraw()
 	smokeTest.TestSendZetaOut()
+	smokeTest.TestSendZetaOutBTCRevert()
 	smokeTest.TestMessagePassing()
 	smokeTest.TestZRC20Swap()
 	smokeTest.TestBitcoinWithdraw()
