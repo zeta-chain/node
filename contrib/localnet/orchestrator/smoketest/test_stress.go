@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -192,10 +193,10 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 	for {
 		select {
 		case <-ticker.C:
-
 			// Get all pending outbound transactions
-			//==> Check for status == CctxStatus_OutboundMined using sm.cctxClient.CctxAll()
-			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{})
+			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
+				ChainId: uint64(common.GoerliChain().ChainId),
+			})
 			if err != nil {
 				continue
 			}
