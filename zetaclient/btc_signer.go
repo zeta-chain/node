@@ -3,13 +3,14 @@ package zetaclient
 import (
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"math/rand"
+	"time"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gorm.io/gorm"
-	"math/big"
-	"math/rand"
-	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -180,6 +181,10 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		Str("OutTxID", outTxID).
 		Str("SendHash", send.Index).
 		Logger()
+	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Gas {
+		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
+		return
+	}
 	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
 	if err != nil {
 		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
@@ -196,7 +201,6 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	myid := zetaBridge.keys.GetAddress()
-
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), common.CoinType_Gas, logger)
