@@ -328,16 +328,16 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	return false, false, nil
 }
 
-// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
-// by the client to easily identify the cctx outbound command
-func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
-	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
-	if err != nil {
-		return errors.Wrap(err, "error posting nonce to zeta core")
-	}
-	logger.Info().Msgf("PostNonce zeta tx %s , signer %s , nonce %d", zetaHash, ob.zetaClient.keys.GetOperatorAddress(), 0)
-	return nil
-}
+//// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
+//// by the client to easily identify the cctx outbound command
+//func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
+//	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
+//	if err != nil {
+//		return errors.Wrap(err, "error posting nonce to zeta core")
+//	}
+//	logger.Info().Msgf("PostNonce zeta tx %s , signer %s , nonce %d", zetaHash, ob.zetaClient.keys.GetOperatorAddress(), 0)
+//	return nil
+//}
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
 

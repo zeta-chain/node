@@ -26,6 +26,8 @@ type CoreParams struct {
 	ConnectorContractAddress    string
 	ZETATokenContractAddress    string
 	ERC20CustodyContractAddress string
+	OutboundTxScheduleInterval  int64
+	OutboundTxScheduleLookahead int64
 }
 
 func NewCoreParams() *CoreParams {
@@ -40,14 +42,6 @@ func NewCoreParams() *CoreParams {
 		ZETATokenContractAddress:    "",
 		ERC20CustodyContractAddress: "",
 	}
-}
-
-func (cp *CoreParams) UpdateFromCoreResponse(newConfig zetaObserverTypes.CoreParams) {
-	cp.GasPriceTicker = newConfig.GasPriceTicker
-	cp.ConfCount = newConfig.ConfirmationCount
-	cp.ConnectorContractAddress = newConfig.ConnectorContractAddress
-	cp.ZETATokenContractAddress = newConfig.ZetaTokenContractAddress
-	cp.ERC20CustodyContractAddress = newConfig.Erc20CustodyContractAddress
 }
 
 type EVMConfig struct {
@@ -68,10 +62,11 @@ type BTCConfig struct {
 }
 
 type Config struct {
-	ValidatorName string
 	Peer          string
-	LogConsole    bool
+	PublicIP      string
+	LogFormat     string
 	LogLevel      zerolog.Level
+	LogSampler    bool
 	PreParamsPath string
 	KeygenBlock   int64
 	KeyGenPubKeys []string
@@ -108,5 +103,6 @@ func (cp *CoreParams) UpdateCoreParams(params *zetaObserverTypes.CoreParams) {
 	cp.ConnectorContractAddress = params.ConnectorContractAddress
 	cp.ZETATokenContractAddress = params.ZetaTokenContractAddress
 	cp.ERC20CustodyContractAddress = params.Erc20CustodyContractAddress
-
+	cp.OutboundTxScheduleInterval = params.OutboundTxScheduleInterval
+	cp.OutboundTxScheduleLookahead = params.OutboundTxScheduleLookahead
 }

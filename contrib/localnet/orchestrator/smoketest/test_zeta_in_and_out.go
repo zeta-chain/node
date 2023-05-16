@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"time"
 
@@ -89,7 +90,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	if err != nil {
 		panic(err)
 	}
-	//SystemContractAddr := ethcommon.HexToAddress("0x91d18e54DAf4F677cB28167158d6dd21F6aB3921")
+
 	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
 	wzeta, err := wzeta.NewWETH9(wzetaAddr, zevmClient)
 	if err != nil {
@@ -167,4 +168,67 @@ func (sm *SmokeTest) TestSendZetaOut() {
 		}
 	}()
 	sm.wg.Wait()
+}
+
+func (sm *SmokeTest) TestSendZetaOutBTCRevert() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	zevmClient := sm.zevmClient
+
+	LoudPrintf("Step 5: Should revert when sending ZETA from ZEVM to Bitcoin\n")
+	ConnectorZEVMAddr := ethcommon.HexToAddress("0x239e96c8f17C85c30100AC26F635Ea15f23E9c67")
+	ConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVM(ConnectorZEVMAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+
+	wzetaAddr := ethcommon.HexToAddress("0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf")
+	wzeta, err := wzeta.NewWETH9(wzetaAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	zchainid, err := zevmClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("zevm chainid: %d\n", zchainid)
+
+	zauth := sm.zevmAuth
+	zauth.Value = big.NewInt(1e18)
+	tx, err := wzeta.Deposit(zauth)
+	if err != nil {
+		panic(err)
+	}
+	zauth.Value = BigZero
+
+	fmt.Printf("Deposit tx hash: %s\n", tx.Hash().Hex())
+	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	fmt.Printf("Deposit tx receipt: status %d\n", receipt.Status)
+
+	tx, err = wzeta.Approve(zauth, ConnectorZEVMAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("wzeta.approve tx hash: %s\n", tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	fmt.Printf("approve tx receipt: status %d\n", receipt.Status)
+	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
+		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
+		DestinationAddress:  DeployerAddress.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             nil,
+		ZetaValueAndGas:     big.NewInt(1e17),
+		ZetaParams:          nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("send tx hash: %s\n", tx.Hash().Hex())
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	fmt.Printf("send tx receipt: status %d\n", receipt.Status)
+	if receipt.Status != 0 {
+		panic("Was able to send ZETA to BTC")
+	}
 }

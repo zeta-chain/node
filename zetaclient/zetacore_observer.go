@@ -153,39 +153,18 @@ func (co *CoreObserver) startSendScheduler() {
 			if bn%10 == 0 {
 				co.logger.ZetaChainWatcher.Debug().Msgf("ZetaCore heart beat: %d", bn)
 			}
-
-			//tStart := time.Now()
-			sendList, err := co.bridge.GetAllPendingCctx()
-			if err != nil {
-				co.logger.ZetaChainWatcher.Error().Err(err).Msg("error requesting sends from zetacore")
-				continue
-			}
 			//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
-			sendMap := SplitAndSortSendListByChain(sendList)
 
-			// schedule sends
-			for chain, sendList := range sendMap {
-				chainName := common.ParseChainName(chain)
-				c := common.GetChainFromChainName(chainName)
+			supportedChains := GetSupportedChains()
+			for _, c := range supportedChains {
 
-				found := false
-				for _, enabledChain := range GetSupportedChains() {
-					if enabledChain.ChainId == c.ChainId {
-						found = true
-						break
-					}
-				}
-				if !found {
-					co.logger.ZetaChainWatcher.Warn().Msgf("chain %s is not enabled; skip scheduling", c.String())
-					continue
-				}
-				if len(sendList) > 0 {
-					co.logger.ZetaChainWatcher.Info().Msgf("outstanding %d CCTX's on chain %s: range [%d,%d]", len(sendList), chain, sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce, sendList[len(sendList)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
-				} else {
-					continue
-				}
 				signer := co.signerMap[*c]
 				chainClient := co.clientMap[*c]
+				sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
+				if err != nil {
+					co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
+					continue
+				}
 				cnt := 0
 				maxCnt := 5
 				safeMode := true // by default, be cautious and only send 1 tx per block
@@ -218,12 +197,14 @@ func (co *CoreObserver) startSendScheduler() {
 				for _, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
-						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", chain)
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
 						continue
 					}
+
+					// Monitor Core Logger for OutboundTxTssNonce
 					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
 					if err != nil {
-						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", chain)
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", c.ChainName)
 						continue
 					}
 					if included {

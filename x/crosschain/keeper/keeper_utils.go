@@ -54,22 +54,6 @@ func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 	return false
 }
 
-func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifier string) (cctx types.CrossChainTx, err error) {
-	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
-		cctxIdentifier,
-		[]types.CctxStatus{
-			types.CctxStatus_PendingOutbound,
-			types.CctxStatus_PendingRevert,
-		})
-	if !isFound {
-		return cctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find cctx hash %s", cctxIdentifier))
-	}
-	if cctx.GetCurrentOutTxParam().OutboundTxBallotIndex == "" {
-		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIdentifier
-		k.SetCrossChainTx(ctx, cctx)
-	}
-	return
-}
 func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
@@ -142,7 +126,6 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	return nil
 }
 
-// TODO : USE CHAIN ID
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
 
@@ -153,8 +136,24 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return sdkerrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+	}
+
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, uint64(receiveChainID))
+	if !found {
+		return sdkerrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
+	}
+
+	if p.NonceHigh != int64(nonce.Nonce) {
+		return sdkerrors.Wrap(types.ErrNonceMismatch, fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce))
+	}
+
 	nonce.Nonce++
+	p.NonceHigh++
 	k.SetChainNonces(ctx, nonce)
+	k.SetPendingNonces(ctx, p)
 	return nil
 }
 func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {

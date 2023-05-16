@@ -19,6 +19,8 @@ message CoreParams {
   string connector_contract_address = 9;
   string erc20_custody_contract_address = 10;
   int64 chain_id = 11;
+  int64 outbound_tx_schedule_interval = 12;
+  int64 outbound_tx_schedule_lookahead = 13;
 }
 
 message ObserverParams {
@@ -40,6 +42,7 @@ enum Policy_Type {
   deploy_fungible_coin = 1;
   update_client_params = 2;
   update_keygen_block = 3;
+  out_tx_tracker = 4;
 }
 
 message Admin_Policy {

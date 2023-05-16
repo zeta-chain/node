@@ -92,10 +92,10 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return resp.Observers, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{}, maxSizeOption)
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
 	if err != nil {
 		return nil, err
 	}

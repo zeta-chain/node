@@ -76,6 +76,20 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		})
 		keygen.Status = types.KeygenStatus_KeyGenSuccess
+		// initialize the nonces and pending nonces of all enabled chain
+		supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+		for _, chain := range supportedChains {
+			chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}
+			k.SetChainNonces(ctx, chainNonce)
+
+			p := types.PendingNonces{
+				NonceLow:  0,
+				NonceHigh: 0,
+				ChainId:   chain.ChainId,
+				Tss:       msg.TssPubkey,
+			}
+			k.SetPendingNonces(ctx, p)
+		}
 	} else if ballot.BallotStatus == zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
 	}

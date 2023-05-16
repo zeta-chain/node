@@ -24,7 +24,7 @@ func (gs GenesisState) Validate() error {
 	foreignCoinsIndexMap := make(map[string]struct{})
 
 	for _, elem := range gs.ForeignCoinsList {
-		index := string(ForeignCoinsKey(elem.Index))
+		index := string(ForeignCoinsKey(elem.Zrc20ContractAddress))
 		if _, ok := foreignCoinsIndexMap[index]; ok {
 			return fmt.Errorf("duplicated index for foreignCoins")
 		}

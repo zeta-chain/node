@@ -40,7 +40,7 @@ require (
 	github.com/evmos/ethermint v0.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol-contracts v0.0.0-20230421024932-34119ba32459
+	github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -101,7 +101,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.19.4 // indirect
-	github.com/cosmos/ibc-go/v6 v6.1.0 // indirect
+	github.com/cosmos/ibc-go/v6 v6.1.0
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect

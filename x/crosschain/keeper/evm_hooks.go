@@ -43,35 +43,34 @@ func (k Keeper) PostTxProcessing(
 	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
-	target := receipt.ContractAddress
+	var emittingContract ethcommon.Address
 	if msg.To() != nil {
-		target = *msg.To()
+		emittingContract = *msg.To()
 	}
-	for _, log := range receipt.Logs {
-		eZRC20, err := ParseZRC20WithdrawalEvent(*log)
-		if err == nil {
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, target, ""); err != nil {
-				return err
-			}
-		}
-		eZeta, err := ParseZetaSentEvent(*log)
-		if err == nil {
-			if err := k.ProcessZetaSentEvent(ctx, eZeta, target, ""); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From().Hex())
 }
 
-func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
+
+	system, found := k.fungibleKeeper.GetSystemContract(ctx)
+	if !found {
+		return fmt.Errorf("cannot find system contract")
+	}
+	connectorZEVMAddr := ethcommon.HexToAddress(system.ConnectorZevm)
+	if connectorZEVMAddr == (ethcommon.Address{}) {
+		return fmt.Errorf("connectorZEVM address is empty")
+	}
+
 	for _, log := range logs {
-		var event *zrc20.ZRC20Withdrawal
-		event, err := ParseZRC20WithdrawalEvent(*log)
-		if err != nil {
-			fmt.Printf("######### skip log %s #########\n", log.Topics[0].String())
-		} else {
-			if err = k.ProcessZRC20WithdrawalEvent(ctx, event, contract, txOrigin); err != nil {
+		eZRC20, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
+		if err == nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, emittingContract, txOrigin); err != nil {
+				return err
+			}
+		}
+		eZeta, err := ParseZetaSentEvent(*log, connectorZEVMAddr)
+		if err == nil {
+			if err := k.ProcessZetaSentEvent(ctx, eZeta, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
@@ -79,45 +78,28 @@ func (k Keeper) ProcessWithdrawalLogs(ctx sdk.Context, logs []*ethtypes.Log, con
 	return nil
 }
 
-func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
-	// TODO , change to using GetAllForeignCoins for Chain .
-	// TODO , Add receiver chain in the message
-	foreignCoinList, err := k.GetAllForeignCoins(ctx)
-	if err != nil {
-		return err
-	}
-	foundCoin := false
-	coinType := common.CoinType_Zeta
-	asset := ""
-	var receiverChainID int64
-	for _, coin := range foreignCoinList {
-		if coin.Zrc20ContractAddress == event.Raw.Address.Hex() {
-			//receiverChainName = common.ParseChainName(coin.ForeignChainId)
-			receiverChainID = coin.ForeignChainId
-			foundCoin = true
-			coinType = coin.CoinType
-			asset = coin.Asset
-		}
-	}
-	if !foundCoin {
-		return fmt.Errorf("cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
+	if !found {
+		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID)
+	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
+	// TODO: this is a bit hacky; how do we tell whether it's Ethereum or Bitcoin address?
 	toAddr := "0x" + hex.EncodeToString(event.To)
-	// FIXME: use proper gas limit
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChainID, math.NewUintFromBigInt(event.Value),
-		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, coinType, asset)
+	gasLimit := foreignCoin.GasLimit
+	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
+		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
-func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, contract ethcommon.Address, txOrigin string) error {
+func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
 
 	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
@@ -129,11 +111,18 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
-	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
+	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
+	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+	if !found {
+		return zetacoretypes.ErrNotFoundCoreParams
+	}
+	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" {
+		return zetacoretypes.ErrUnableToSendCoinType
+	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
-	msg := zetacoretypes.NewMsgSendVoter("", contract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
+	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
@@ -164,7 +153,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
-func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
+func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
 	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
@@ -174,10 +163,14 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error)
 		return nil, err
 	}
 
+	_, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
+	if !found {
+		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+	}
 	return event, nil
 }
 
-func ParseZetaSentEvent(log ethtypes.Log) (*connectorzevm.ZetaConnectorZEVMZetaSent, error) {
+func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*connectorzevm.ZetaConnectorZEVMZetaSent, error) {
 	zetaConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
@@ -187,5 +180,8 @@ func ParseZetaSentEvent(log ethtypes.Log) (*connectorzevm.ZetaConnectorZEVMZetaS
 		return nil, err
 	}
 
+	if event.Raw.Address != connectorZEVM {
+		return nil, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
+	}
 	return event, nil
 }

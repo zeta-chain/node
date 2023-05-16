@@ -99,17 +99,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all send
-	sendList := k.GetAllCctxByStatuses(ctx, types.AllStatus())
+	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
-		elem := elem
-		genesis.CrossChainTxs = append(genesis.CrossChainTxs, elem)
+		e := elem
+		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
 	// Get all nodeAccount
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	for _, elem := range nodeAccountList {
-		elem := elem
-		genesis.NodeAccountList = append(genesis.NodeAccountList, &elem)
+		e := elem
+		genesis.NodeAccountList = append(genesis.NodeAccountList, &e)
 	}
 	return genesis
 }

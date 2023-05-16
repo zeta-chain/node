@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - cicd/fix-go-alpine-build
     tags:
       - "*"
   pull_request:
@@ -109,7 +110,6 @@ jobs:
 
   build-alpine-and-test:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -137,14 +137,17 @@ jobs:
 
       - uses: jirutka/setup-alpine@v1
         with:
+          branch: v3.17
           arch: x86_64
           packages: >
             build-base
             pkgconf
             lld
-            go 
+            go
             gcc 
             g++
+            libusb-dev 
+            linux-headers
           shell-name: alpine.sh
 
       - name: setup-git-credentials
@@ -373,7 +376,7 @@ jobs:
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
     timeout-minutes: 60
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release')
     needs:
       - build-and-test
       - build-alpine-and-test

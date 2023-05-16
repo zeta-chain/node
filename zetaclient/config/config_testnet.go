@@ -62,28 +62,18 @@ func New() Config {
 
 var evmChainsConfig = map[int64]*EVMConfig{
 	common.GoerliChain().ChainId: {
-		Chain:      common.GoerliChain(),
-		Endpoint:   "",
-		CoreParams: NewCoreParams(),
+		Chain:    common.GoerliChain(),
+		Endpoint: "",
 	},
 	common.BscTestnetChain().ChainId: {
-		Chain:      common.BscTestnetChain(),
-		Endpoint:   "",
-		CoreParams: NewCoreParams(),
+		Chain:    common.BscTestnetChain(),
+		Endpoint: "",
 	},
 	common.MumbaiChain().ChainId: {
-		Chain:      common.MumbaiChain(),
-		Endpoint:   "",
-		CoreParams: NewCoreParams(),
+		Chain:    common.MumbaiChain(),
+		Endpoint: "",
 	},
-	common.BaobabChain().ChainId: {
-		Chain:      common.BaobabChain(),
-		Endpoint:   "",
-		CoreParams: NewCoreParams(),
-	},
-
 	common.ZetaChain().ChainId: {
-		Chain:      common.ZetaChain(),
-		CoreParams: NewCoreParams(),
+		Chain: common.ZetaChain(),
 	},
 }

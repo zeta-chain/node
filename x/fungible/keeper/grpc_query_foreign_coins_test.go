@@ -31,14 +31,14 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 		{
 			desc: "First",
 			request: &types.QueryGetForeignCoinsRequest{
-				Index: msgs[0].Index,
+				Index: msgs[0].Zrc20ContractAddress,
 			},
 			response: &types.QueryGetForeignCoinsResponse{ForeignCoins: msgs[0]},
 		},
 		{
 			desc: "Second",
 			request: &types.QueryGetForeignCoinsRequest{
-				Index: msgs[1].Index,
+				Index: msgs[1].Zrc20ContractAddress,
 			},
 			response: &types.QueryGetForeignCoinsResponse{ForeignCoins: msgs[1]},
 		},

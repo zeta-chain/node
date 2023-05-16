@@ -43,7 +43,6 @@ var bitcoinConfig = &BTCConfig{
 	RPCPassword: "123",
 	RPCEndpoint: "bitcoin:18443",
 	RPCParams:   "regtest",
-	CoreParams:  NewCoreParams(),
 }
 
 func New() Config {
@@ -57,12 +56,10 @@ func New() Config {
 var evmChainConfigs = map[int64]*EVMConfig{
 
 	common.GoerliChain().ChainId: {
-		Chain:      common.GoerliChain(),
-		Endpoint:   "http://eth:8545",
-		CoreParams: NewCoreParams(),
+		Chain:    common.GoerliChain(),
+		Endpoint: "http://eth:8545",
 	},
 	common.ZetaChain().ChainId: {
-		Chain:      common.ZetaChain(),
-		CoreParams: NewCoreParams(),
+		Chain: common.ZetaChain(),
 	},
 }
