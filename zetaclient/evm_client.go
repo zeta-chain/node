@@ -673,8 +673,10 @@ func (ob *EVMChainClient) observeInTX() error {
 
 	// ============= query the incoming tx to TSS address ==============
 	tssAddress := ob.Tss.EVMAddress()
+
 	// query incoming gas asset
-	if !ob.chain.IsKlaytnChain() {
+	if tssAddress == (ethcommon.Address{}) { // when tss is not available; do not observe incoming tx
+	} else if !ob.chain.IsKlaytnChain() {
 		for bn := startBlock; bn <= toBlock; bn++ {
 			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
