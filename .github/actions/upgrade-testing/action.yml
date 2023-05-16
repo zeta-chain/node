@@ -53,7 +53,7 @@ runs:
         echo "***********Change Permission of Zetacored*********************"
         chmod a+x zetacored*
         chmod -R 777 zetacored*
-        mv zetacored-ubuntu zetacored
+        mv zetacored-ubuntu-22-amd64 zetacored
         export PATH=$(pwd):$PATH
         ls -lah | grep zetacored
         

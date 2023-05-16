@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -110,7 +111,14 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
-	//receiverChain := "BSCTESTNET" // TODO: parse with config.FindByChainID(eventZetaSent.ToChainID) after moving config to common
+	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
+	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+	if !found {
+		return zetacoretypes.ErrNotFoundCoreParams
+	}
+	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" {
+		return zetacoretypes.ErrUnableToSendCoinType
+	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
