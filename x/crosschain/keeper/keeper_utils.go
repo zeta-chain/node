@@ -79,6 +79,9 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 
 func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
+	if chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ", cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.LogIdentifierForCCTX()))
@@ -127,6 +130,9 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
+	if chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
 
 	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
