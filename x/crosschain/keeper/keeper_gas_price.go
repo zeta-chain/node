@@ -101,7 +101,6 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	fmt.Println(req.Index)
 	chainID, err := strconv.Atoi(req.Index)
 	if err != nil {
 		return nil, err
@@ -132,7 +131,6 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if !isFound {
 		gasPrice = types.GasPrice{
 			Creator:     msg.Creator,
-			Index:       strconv.FormatInt(chain.ChainId, 10), // TODO : Not needed index set at keeper
 			ChainId:     chain.ChainId,
 			Prices:      []uint64{msg.Price},
 			BlockNums:   []uint64{msg.BlockNumber},

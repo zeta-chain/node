@@ -39,7 +39,6 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			voterList = append(voterList, nodeAccount.Operator)
 		}
 		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        voterList,
 			Votes:            zetaObserverTypes.CreateVotes(len(msg.Creator)),

@@ -65,7 +65,6 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 			return
 		}
 		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        observerMapper.ObserverList,
 			Votes:            zetaObserverTypes.CreateVotes(len(observerMapper.ObserverList)),

@@ -83,7 +83,6 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			ballot := Ballot{
-				Index:            "index",
 				BallotIdentifier: "identifier",
 				VoterList:        test.voterList,
 				Votes:            CreateVotes(len(test.voterList)),
