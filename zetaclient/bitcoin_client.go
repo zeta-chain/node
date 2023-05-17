@@ -69,8 +69,8 @@ func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
 	return ob.cfg.BitcoinConfig
 }
 
-func (ob *BitcoinChainClient) EndPoint() string {
-	return ob.GetChainConfig().RPCEndpoint
+func (ob *BitcoinChainClient) GetRPCHost() string {
+	return ob.GetChainConfig().RPCHost
 }
 
 // Return configuration based on supplied target chain
@@ -105,9 +105,9 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	}
 
 	// initialize the Client
-	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.EndPoint())
+	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.GetRPCHost())
 	connCfg := &rpcclient.ConnConfig{
-		Host:         ob.EndPoint(),
+		Host:         ob.GetRPCHost(),
 		User:         ob.GetChainConfig().RPCUsername,
 		Pass:         ob.GetChainConfig().RPCPassword,
 		HTTPPostMode: true,
