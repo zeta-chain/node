@@ -62,7 +62,6 @@ type EVMLog struct {
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	ERC20Custody              *erc20custody.ERC20Custody
 	EvmClient                 *ethclient.Client
 	KlaytnClient              *KlaytnClient
 	zetaClient                *ZetaCoreBridge
@@ -132,18 +131,6 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		ob.KlaytnClient = kclient
 	}
 
-	if ob.ConnectorAddress() == ethcommon.HexToAddress("0x0") {
-		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", ob.ConnectorAddress(), ob.chain.String())
-	}
-
-	// initialize erc20 custody
-	erc20CustodyContract, err := erc20custody.NewERC20Custody(ob.ERC20CustodyAddress(), ob.EvmClient)
-	if err != nil {
-		ob.logger.ChainLogger.Err(err).Msg("ERC20Custody")
-		return nil, err
-	}
-	ob.ERC20Custody = erc20CustodyContract
-
 	// create metric counters
 	err = ob.RegisterPromCounter("rpc_getLogs_count", "Number of getLogs")
 	if err != nil {
@@ -194,6 +181,14 @@ func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNo
 
 func (ob *EVMChainClient) ERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ERC20CustodyContractAddress)
+}
+
+func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
+	addr := ob.ERC20CustodyAddress()
+	if addr == (ethcommon.Address{}) {
+		return nil, fmt.Errorf("ERC20Custody contract address not configured for chain %s", ob.chain.ChainName.String())
+	}
+	return erc20custody.NewERC20Custody(addr, ob.EvmClient)
 }
 
 func (ob *EVMChainClient) Start() {
@@ -636,7 +631,11 @@ func (ob *EVMChainClient) observeInTX() error {
 		ob.logger.ExternalChainWatcher.Error().Msgf("toBlock is out of range: %d", toBlock)
 	}
 	toB := uint64(toBlock)
-	depositedLogs, err := ob.ERC20Custody.FilterDeposited(&bind.FilterOpts{
+	erc20custody, err := ob.GetERC20CustodyContract()
+	if err != nil {
+		return fmt.Errorf("observeInTx: GetERC20CustodyContract error: %w", err)
+	}
+	depositedLogs, err := erc20custody.FilterDeposited(&bind.FilterOpts{
 		Start:   uint64(startBlock),
 		End:     &toB,
 		Context: context.TODO(),
