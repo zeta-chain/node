@@ -12,6 +12,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/zeta-chain/zetacore/docs/openapi"
@@ -23,8 +24,16 @@ func main() {
 
 	http.Handle("/", router)
 
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+
 	log.Println("Starting server on :8080")
-	err := http.ListenAndServe(":8080", nil)
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
