@@ -561,211 +561,217 @@ func (ob *EVMChainClient) observeInTX() error {
 	if uint64(toBlock) >= confirmedBlockNum {
 		toBlock = int64(confirmedBlockNum)
 	}
-	//ob.logger.Info().Msgf("%s current block %d, querying from %d to %d, %d blocks left to catch up, watching MPI address %s", ob.chain.String(), header.Number.Uint64(), ob.GetLastBlockHeight()+1, toBlock, int(toBlock)-int(confirmedBlockNum), ob.ConnectorAddress.Hex())
-
-	// Query evm chain for zeta sent logs
 	if startBlock < 0 || startBlock >= math2.MaxInt64 {
 		return fmt.Errorf("startBlock is negative or too large")
 	}
 	if toBlock < 0 || toBlock >= math2.MaxInt64 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
-	tb := uint64(toBlock)
-	connector, err := ob.GetConnectorContract()
-	if err != nil {
-		return fmt.Errorf("observeInTx: GetConnectorContract error: %w", err)
-	}
-	logs, err := connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   uint64(startBlock),
-		End:     &tb,
-		Context: context.TODO(),
-	}, []ethcommon.Address{}, []*big.Int{})
 
-	if err != nil {
-		return err
-	}
-	cnt, err := ob.GetPromCounter("rpc_getLogs_count")
-	if err != nil {
-		return err
-	}
-	cnt.Inc()
-
-	// Pull out arguments from logs
-	for logs.Next() {
-		event := logs.Event
-		ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-		destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
-		destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-
-		// TODO : refactor this to not use GLOBAL Config
-		if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainId].CoreParams.ZETATokenContractAddress) {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-		}
-		zetaHash, err := ob.zetaClient.PostSend(
-			event.ZetaTxSenderAddress.Hex(),
-			ob.chain.ChainId,
-			event.SourceTxOriginAddress.Hex(),
-			clienttypes.BytesToEthHex(event.DestinationAddress),
-			destChain.ChainId,
-			math.NewUintFromBigInt(event.ZetaValueAndGas),
-			base64.StdEncoding.EncodeToString(event.Message),
-			event.Raw.TxHash.Hex(),
-			event.Raw.BlockNumber,
-			event.DestinationGasLimit.Uint64(),
-			common.CoinType_Zeta,
-			PostSendNonEVMGasLimit,
-			"",
-		)
+	//task 1:  Query evm chain for zeta sent logs
+	func() {
+		tb := uint64(toBlock)
+		connector, err := ob.GetConnectorContract()
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-			continue
+			ob.logger.ChainLogger.Warn().Err(err).Msgf("observeInTx: GetConnectorContract error:")
+			return
 		}
-		ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
-	}
-
-	// Query evm chain for deposited logs
-	if startBlock < 0 || startBlock >= math2.MaxInt64 {
-		ob.logger.ExternalChainWatcher.Error().Msgf("startBlock is out of range: %d", startBlock)
-	}
-	if toBlock < 0 || toBlock >= math2.MaxInt64 {
-		ob.logger.ExternalChainWatcher.Error().Msgf("toBlock is out of range: %d", toBlock)
-	}
-	toB := uint64(toBlock)
-	erc20custody, err := ob.GetERC20CustodyContract()
-	if err != nil {
-		return fmt.Errorf("observeInTx: GetERC20CustodyContract error: %w", err)
-	}
-	depositedLogs, err := erc20custody.FilterDeposited(&bind.FilterOpts{
-		Start:   uint64(startBlock),
-		End:     &toB,
-		Context: context.TODO(),
-	}, []ethcommon.Address{})
-
-	if err != nil {
-		return err
-	}
-	cnt, err = ob.GetPromCounter("rpc_getLogs_count")
-	if err != nil {
-		return err
-	}
-	cnt.Inc()
-
-	// Pull out arguments from logs
-	for depositedLogs.Next() {
-		event := depositedLogs.Event
-		ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-		// TODO :add logger to POSTSEND
-		zetaHash, err := ob.zetaClient.PostSend(
-			"",
-			ob.chain.ChainId,
-			"",
-			clienttypes.BytesToEthHex(event.Recipient),
-			ob.cfg.EVMChainConfigs[common.ZetaChain().ChainId].Chain.ChainId,
-			math.NewUintFromBigInt(event.Amount),
-			hex.EncodeToString(event.Message),
-			event.Raw.TxHash.Hex(),
-			event.Raw.BlockNumber,
-			1_500_000,
-			common.CoinType_ERC20,
-			PostSendEVMGasLimit,
-			event.Asset.String(),
-		)
+		cnt, err := ob.GetPromCounter("rpc_getLogs_count")
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-			continue
+			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("GetPromCounter:")
+		} else {
+			cnt.Inc()
 		}
-		ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
-	}
+		logs, err := connector.FilterZetaSent(&bind.FilterOpts{
+			Start:   uint64(startBlock),
+			End:     &tb,
+			Context: context.TODO(),
+		}, []ethcommon.Address{}, []*big.Int{})
+		if err != nil {
+			ob.logger.ChainLogger.Warn().Err(err).Msgf("observeInTx: FilterZetaSent error:")
+			return
+		}
+		// Pull out arguments from logs
+		for logs.Next() {
+			event := logs.Event
+			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
+			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
+			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
-	// ============= query the incoming tx to TSS address ==============
-	tssAddress := ob.Tss.EVMAddress()
-
-	// query incoming gas asset
-	if tssAddress == (ethcommon.Address{}) { // when tss is not available; do not observe incoming tx
-	} else if !ob.chain.IsKlaytnChain() {
-		for bn := startBlock; bn <= toBlock; bn++ {
-			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-			block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
+			if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainId].CoreParams.ZETATokenContractAddress) {
+				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 				continue
 			}
-			//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
-			for _, tx := range block.Transactions() {
-				if tx.To() == nil {
+			zetaHash, err := ob.zetaClient.PostSend(
+				event.ZetaTxSenderAddress.Hex(),
+				ob.chain.ChainId,
+				event.SourceTxOriginAddress.Hex(),
+				clienttypes.BytesToEthHex(event.DestinationAddress),
+				destChain.ChainId,
+				math.NewUintFromBigInt(event.ZetaValueAndGas),
+				base64.StdEncoding.EncodeToString(event.Message),
+				event.Raw.TxHash.Hex(),
+				event.Raw.BlockNumber,
+				event.DestinationGasLimit.Uint64(),
+				common.CoinType_Zeta,
+				PostSendNonEVMGasLimit,
+				"",
+			)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
+				continue
+			}
+			ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+		}
+	}()
+
+	// task 2: Query evm chain for deposited logs
+	func() {
+		toB := uint64(toBlock)
+		erc20custody, err := ob.GetERC20CustodyContract()
+		if err != nil {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: GetERC20CustodyContract error: %w", err)
+			return
+		}
+		depositedLogs, err := erc20custody.FilterDeposited(&bind.FilterOpts{
+			Start:   uint64(startBlock),
+			End:     &toB,
+			Context: context.TODO(),
+		}, []ethcommon.Address{})
+
+		if err != nil {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: FilterDeposited error: %w", err)
+			return
+		}
+		cnt, err := ob.GetPromCounter("rpc_getLogs_count")
+		if err != nil {
+			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("GetPromCounter:")
+		} else {
+			cnt.Inc()
+		}
+
+		// Pull out arguments from logs
+		for depositedLogs.Next() {
+			event := depositedLogs.Event
+			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
+			// TODO :add logger to POSTSEND
+			zetaHash, err := ob.zetaClient.PostSend(
+				"",
+				ob.chain.ChainId,
+				"",
+				clienttypes.BytesToEthHex(event.Recipient),
+				ob.cfg.EVMChainConfigs[common.ZetaChain().ChainId].Chain.ChainId,
+				math.NewUintFromBigInt(event.Amount),
+				hex.EncodeToString(event.Message),
+				event.Raw.TxHash.Hex(),
+				event.Raw.BlockNumber,
+				1_500_000,
+				common.CoinType_ERC20,
+				PostSendEVMGasLimit,
+				event.Asset.String(),
+			)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
+				continue
+			}
+			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
+		}
+	}()
+
+	// task 3: query the incoming tx to TSS address ==============
+	func() {
+		tssAddress := ob.Tss.EVMAddress() // after keygen, ob.Tss.pubkey will be udpated
+		if tssAddress == (ethcommon.Address{}) {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: TSS address not set")
+			return
+		}
+
+		// query incoming gas asset
+		if !ob.chain.IsKlaytnChain() {
+			for bn := startBlock; bn <= toBlock; bn++ {
+				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+				block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				if *tx.To() == tssAddress {
-					receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
+				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+				for _, tx := range block.Transactions() {
+					if tx.To() == nil {
 						continue
 					}
-					if receipt.Status != 1 { // 1: successful, 0: failed
-						ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-						continue
-					}
-
-					from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-						chainConf, found := ob.cfg.EVMChainConfigs[ob.chain.ChainId]
-						if !found || chainConf == nil {
-							ob.logger.ExternalChainWatcher.Error().Msgf("chain %s not found in config", ob.chain.String())
-							continue
-						}
-						signer := ethtypes.NewLondonSigner(big.NewInt(chainConf.Chain.ChainId))
-						from, err = signer.Sender(tx)
+					if *tx.To() == tssAddress {
+						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
 						if err != nil {
-							ob.logger.ExternalChainWatcher.Err(err).Msg("local recovery of sender address failed")
+							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
 							continue
 						}
+						if receipt.Status != 1 { // 1: successful, 0: failed
+							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
+							continue
+						}
+
+						from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
+						if err != nil {
+							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
+							chainConf, found := ob.cfg.EVMChainConfigs[ob.chain.ChainId]
+							if !found || chainConf == nil {
+								ob.logger.ExternalChainWatcher.Error().Msgf("chain %s not found in config", ob.chain.String())
+								continue
+							}
+							signer := ethtypes.NewLondonSigner(big.NewInt(chainConf.Chain.ChainId))
+							from, err = signer.Sender(tx)
+							if err != nil {
+								ob.logger.ExternalChainWatcher.Err(err).Msg("local recovery of sender address failed")
+								continue
+							}
+						}
+						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+						if err != nil {
+							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
+							continue
+						}
+						ob.logger.ExternalChainWatcher.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
 					}
-					zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-						continue
-					}
-					ob.logger.ExternalChainWatcher.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
 				}
 			}
-		}
-	} else { // for Klaytn
-		for bn := startBlock; bn <= toBlock; bn++ {
-			//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-			block, err := ob.KlaytnClient.BlockByNumber(context.Background(), big.NewInt(bn))
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
-				continue
-			}
-			for _, tx := range block.Transactions {
-				if tx.To == nil {
+		} else { // for Klaytn
+			for bn := startBlock; bn <= toBlock; bn++ {
+				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+				block, err := ob.KlaytnClient.BlockByNumber(context.Background(), big.NewInt(bn))
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				if *tx.To == tssAddress {
-					receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash)
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
+				for _, tx := range block.Transactions {
+					if tx.To == nil {
 						continue
 					}
-					if receipt.Status != 1 { // 1: successful, 0: failed
-						ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash.Hex())
-						continue
-					}
+					if *tx.To == tssAddress {
+						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash)
+						if err != nil {
+							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
+							continue
+						}
+						if receipt.Status != 1 { // 1: successful, 0: failed
+							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash.Hex())
+							continue
+						}
 
-					from := *tx.From
-					value := tx.Value.ToInt()
+						from := *tx.From
+						value := tx.Value.ToInt()
 
-					zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-						continue
+						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
+						if err != nil {
+							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
+							continue
+						}
+						ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 					}
-					ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 				}
 			}
 		}
-	}
+	}()
 	// ============= end of query the incoming tx to TSS address ==============
 	ob.SetLastBlockHeight(toBlock)
 	if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
