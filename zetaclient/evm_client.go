@@ -62,7 +62,7 @@ type EVMLog struct {
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	Connector                 *zetaconnector.ZetaConnectorNonEth
+	connector                 *zetaconnector.ZetaConnectorNonEth
 	ERC20Custody              *erc20custody.ERC20Custody
 	EvmClient                 *ethclient.Client
 	KlaytnClient              *KlaytnClient
@@ -137,14 +137,6 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		return nil, fmt.Errorf("connector contract address %s not configured for chain %s", ob.ConnectorAddress(), ob.chain.String())
 	}
 
-	// initialize the connector
-	connector, err := zetaconnector.NewZetaConnectorNonEth(ob.ConnectorAddress(), ob.EvmClient)
-	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("Connector")
-		return nil, err
-	}
-	ob.Connector = connector
-
 	// initialize erc20 custody
 	erc20CustodyContract, err := erc20custody.NewERC20Custody(ob.ERC20CustodyAddress(), ob.EvmClient)
 	if err != nil {
@@ -191,6 +183,14 @@ func (ob *EVMChainClient) GetChainConfig() *config.EVMConfig {
 
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ConnectorContractAddress)
+}
+
+func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNonEth, error) {
+	addr := ob.ConnectorAddress()
+	if addr == (ethcommon.Address{}) {
+		return nil, fmt.Errorf("connector contract address not configured for chain %s", ob.chain.ChainName.String())
+	}
+	return zetaconnector.NewZetaConnectorNonEth(addr, ob.EvmClient)
 }
 
 func (ob *EVMChainClient) ERC20CustodyAddress() ethcommon.Address {
@@ -268,7 +268,11 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				// TODO rewrite this to return early if not confirmed
-				receivedLog, err := ob.Connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
+				connector, err := ob.GetConnectorContract()
+				if err != nil {
+					return false, false, fmt.Errorf("error getting connector contract: %w", err)
+				}
+				receivedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
@@ -300,7 +304,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
-				revertedLog, err := ob.Connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
+				revertedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
@@ -573,7 +577,11 @@ func (ob *EVMChainClient) observeInTX() error {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
 	tb := uint64(toBlock)
-	logs, err := ob.Connector.FilterZetaSent(&bind.FilterOpts{
+	connector, err := ob.GetConnectorContract()
+	if err != nil {
+		return fmt.Errorf("observeInTx: GetConnectorContract error: %w", err)
+	}
+	logs, err := connector.FilterZetaSent(&bind.FilterOpts{
 		Start:   uint64(startBlock),
 		End:     &tb,
 		Context: context.TODO(),
