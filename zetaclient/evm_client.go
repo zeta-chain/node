@@ -630,7 +630,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		toB := uint64(toBlock)
 		erc20custody, err := ob.GetERC20CustodyContract()
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: GetERC20CustodyContract error: %w", err)
+			ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeInTx: GetERC20CustodyContract error:")
 			return
 		}
 		depositedLogs, err := erc20custody.FilterDeposited(&bind.FilterOpts{
@@ -640,7 +640,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		}, []ethcommon.Address{})
 
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: FilterDeposited error: %w", err)
+			ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeInTx: FilterDeposited error:")
 			return
 		}
 		cnt, err := ob.GetPromCounter("rpc_getLogs_count")
@@ -680,7 +680,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 	// task 3: query the incoming tx to TSS address ==============
 	func() {
-		tssAddress := ob.Tss.EVMAddress() // after keygen, ob.Tss.pubkey will be udpated
+		tssAddress := ob.Tss.EVMAddress() // after keygen, ob.Tss.pubkey will be updated
 		if tssAddress == (ethcommon.Address{}) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("observeInTx: TSS address not set")
 			return
