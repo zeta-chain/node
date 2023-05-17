@@ -62,7 +62,6 @@ type EVMLog struct {
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	connector                 *zetaconnector.ZetaConnectorNonEth
 	ERC20Custody              *erc20custody.ERC20Custody
 	EvmClient                 *ethclient.Client
 	KlaytnClient              *KlaytnClient
