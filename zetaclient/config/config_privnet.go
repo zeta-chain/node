@@ -41,7 +41,7 @@ var (
 var bitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
-	RPCEndpoint: "bitcoin:18443",
+	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",
 }
 

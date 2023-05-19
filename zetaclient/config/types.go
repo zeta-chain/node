@@ -55,7 +55,7 @@ type BTCConfig struct {
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
 	RPCPassword string
-	RPCEndpoint string
+	RPCHost     string
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 
 	CoreParams *CoreParams
