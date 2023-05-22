@@ -97,10 +97,17 @@ jobs:
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
-          hostname
-          OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
-          cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
-          cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
+          hostname_check=$(hostname | grep 'zeta-chain-zeta-runners')
+          echo ${hostname_check}
+          if [ -z "${hostname_check}" ]; then
+            OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
+            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH-$(hostname)
+            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH-$(hostname)
+          else
+            OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
+            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
+          fi
 
       - name: Save Binaries as Artifacts
         uses: actions/upload-artifact@v3
