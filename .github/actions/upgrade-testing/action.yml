@@ -45,6 +45,8 @@ runs:
         CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
+        BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
+        UPGRADES_SLEEP_TIME: 140
       run: |
         
         current_directory=$(pwd)
