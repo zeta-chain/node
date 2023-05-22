@@ -127,6 +127,9 @@ jobs:
             exit 1
           fi
           mkdir -p /home/runner/work
+          mkdir -p /home/runner/actions-runner/
+          mkdir -p /home/runner/actions-runner/_work/
+          mkdir -p /home/runner/actions-runner/_work/_temp/
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
