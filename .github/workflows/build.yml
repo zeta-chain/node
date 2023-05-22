@@ -32,6 +32,7 @@ jobs:
             buildjet-4vcpu-ubuntu-2204-arm,
             buildjet-4vcpu-ubuntu-2204,
             buildjet-4vcpu-ubuntu-2004,
+            zeta-runners
           ]
 
     runs-on: ${{matrix.runs-on}}
