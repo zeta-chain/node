@@ -126,6 +126,7 @@ jobs:
             echo "Unsupported architecture" >&2
             exit 1
           fi
+          mkdir -p /home/runner/work
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
