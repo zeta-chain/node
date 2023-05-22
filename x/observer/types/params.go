@@ -18,6 +18,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
 	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
 }
+
 func DefaultParams() Params {
 	chains := common.DefaultChainsList()
 	observerParams := make([]*ObserverParams, len(chains))
@@ -29,7 +30,29 @@ func DefaultParams() Params {
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 	}
-	var adminPolicy []*Admin_Policy
+	adminPolicy := []*Admin_Policy{
+		{
+			PolicyType: Policy_Type_out_tx_tracker,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_stop_inbound_cctx,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_deploy_fungible_coin,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_update_client_params,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+		{
+			PolicyType: Policy_Type_update_keygen_block,
+			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+		},
+	}
+
 	return NewParams(observerParams, adminPolicy)
 }
 
@@ -90,6 +113,15 @@ func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	return ObserverParams{}
 }
 
+func (p Params) GetParamsForChainID(chainID int64) ObserverParams {
+	for _, ObserverParam := range p.GetObserverParams() {
+		if ObserverParam.Chain.ChainId == chainID {
+			return *ObserverParam
+		}
+	}
+	return ObserverParams{}
+}
+
 func (p Params) GetSupportedChains() (chains []*common.Chain) {
 	for _, observerParam := range p.GetObserverParams() {
 		if observerParam.IsSupported {
@@ -121,6 +153,16 @@ func (p Params) IsChainSupported(checkChain common.Chain) bool {
 	chains := p.GetSupportedChains()
 	for _, chain := range chains {
 		if checkChain.IsEqual(*chain) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p Params) IsChainIDSupported(checkChainID int64) bool {
+	chains := p.GetSupportedChains()
+	for _, chain := range chains {
+		if chain.ChainId == checkChainID {
 			return true
 		}
 	}

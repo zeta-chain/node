@@ -211,7 +211,7 @@ func (tss *TSS) Validate() error {
 }
 
 func (tss *TSS) EVMAddress() ethcommon.Address {
-	addr, err := getKeyAddr(tss.CurrentPubkey)
+	addr, err := GetTssAddrEVM(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ethcommon.Address{}
@@ -221,7 +221,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // generate a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
-	addr, err := getKeyAddrBTC(tss.CurrentPubkey)
+	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ""
@@ -257,7 +257,7 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
+func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
@@ -278,7 +278,7 @@ func getKeyAddr(tssPubkey string) (ethcommon.Address, error) {
 }
 
 // FIXME: mainnet/testnet
-func getKeyAddrBTC(tssPubkey string) (string, error) {
+func GetTssAddrBTC(tssPubkey string) (string, error) {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -300,8 +300,8 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	return addr, nil
 }
 
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*TSS, error) {
-	server, _, err := SetupTSSServer(peer, privkey, preParams)
+func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*TSS, error) {
+	server, _, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -310,22 +310,14 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 		Keys:   make(map[string]*TSSKey),
 		logger: log.With().Str("module", "tss_signer").Logger(),
 	}
-	// TODO : Move to config
-	tsspath := os.Getenv(("TSSPATH"))
-	if len(tsspath) == 0 {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatal().Err(err).Msg("UserHomeDir")
-			return nil, err
-		}
-		tsspath = filepath.Join(home, ".tss")
-	}
-	files, err := os.ReadDir(tsspath)
+
+	files, err := os.ReadDir(cfg.TssPath)
 	if err != nil {
+		fmt.Println("ReadDir error", err)
 		return nil, err
 	}
 	found := false
-	sharefiles := []os.DirEntry{}
+	var sharefiles []os.DirEntry
 	for _, file := range files {
 		if !file.IsDir() && strings.HasPrefix(filepath.Base(file.Name()), "localstate") {
 			sharefiles = append(sharefiles, file)
@@ -366,11 +358,11 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	return &tss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, *HTTPServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
-	tsspath := os.Getenv("TSSPATH")
+	tsspath := cfg.TssPath
 	if len(tsspath) == 0 {
 		log.Error().Msg("empty env TSSPATH")
 		homedir, err := os.UserHomeDir()

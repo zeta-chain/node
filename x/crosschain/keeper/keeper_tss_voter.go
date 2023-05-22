@@ -2,103 +2,15 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+  
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-// SetTSSVoter set a specific tSSVoter in the store from its index
-func (k Keeper) SetTSSVoter(ctx sdk.Context, tSSVoter types.TSSVoter) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSVoterKey))
-	b := k.cdc.MustMarshal(&tSSVoter)
-	store.Set(types.KeyPrefix(tSSVoter.Index), b)
-}
-
-// GetTSSVoter returns a tSSVoter from its index
-func (k Keeper) GetTSSVoter(ctx sdk.Context, index string) (val types.TSSVoter, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSVoterKey))
-
-	b := store.Get(types.KeyPrefix(index))
-	if b == nil {
-		return val, false
-	}
-
-	k.cdc.MustUnmarshal(b, &val)
-	return val, true
-}
-
-// RemoveTSSVoter removes a tSSVoter from the store
-func (k Keeper) RemoveTSSVoter(ctx sdk.Context, index string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSVoterKey))
-	store.Delete(types.KeyPrefix(index))
-}
-
-// GetAllTSSVoter returns all tSSVoter
-func (k Keeper) GetAllTSSVoter(ctx sdk.Context) (list []types.TSSVoter) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSVoterKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.TSSVoter
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
-	}
-
-	return
-}
-
-//Queries
-
-func (k Keeper) TSSVoterAll(c context.Context, req *types.QueryAllTSSVoterRequest) (*types.QueryAllTSSVoterResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	var tSSVoters []*types.TSSVoter
-	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	tSSVoterStore := prefix.NewStore(store, types.KeyPrefix(types.TSSVoterKey))
-
-	pageRes, err := query.Paginate(tSSVoterStore, req.Pagination, func(key []byte, value []byte) error {
-		var tSSVoter types.TSSVoter
-		if err := k.cdc.Unmarshal(value, &tSSVoter); err != nil {
-			return err
-		}
-
-		tSSVoters = append(tSSVoters, &tSSVoter)
-		return nil
-	})
-
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryAllTSSVoterResponse{TSSVoter: tSSVoters, Pagination: pageRes}, nil
-}
-
-func (k Keeper) TSSVoter(c context.Context, req *types.QueryGetTSSVoterRequest) (*types.QueryGetTSSVoterResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	val, found := k.GetTSSVoter(ctx, req.Index)
-	if !found {
-		return nil, status.Error(codes.InvalidArgument, "not found")
-	}
-
-	return &types.QueryGetTSSVoterResponse{TSSVoter: &val}, nil
-}
 
 // MESSAGES
 
@@ -118,50 +30,84 @@ func (k Keeper) TSSVoter(c context.Context, req *types.QueryGetTSSVoterRequest) 
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	validators := k.StakingKeeper.GetAllValidators(ctx)
-	if !IsBondedValidator(msg.Creator, validators) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s is not a bonded validator", msg.Creator))
+	if !k.IsAuthorizedNodeAccount(ctx, msg.Creator) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
 	}
-
-	msgDigest := msg.Digest()
-	sessionID := ctx.BlockHeight() / 1000 * 1000
-	index := crypto.Keccak256Hash([]byte(msgDigest), []byte(fmt.Sprintf("%d", sessionID)))
-	// Check if the value already exists
-	tssVoter, isFound := k.GetTSSVoter(ctx, index.Hex())
-
-	if isDuplicateSigner(msg.Creator, tssVoter.Signers) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s double signing!!", msg.Creator))
+	// No need to create a ballot if keygen does not exist
+	keygen, found := k.GetKeygen(ctx)
+	if !found {
+		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenNotFound
 	}
+	// USE a separate transaction to update KEYGEN status to pending when trying to change the TSS address
+	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
+		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenNotFound
+	}
+	index := msg.Digest()
+	// Add votes and Set Ballot
+	// GetBallot checks against the supported chains list before querying for Ballot
+	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
+	if !found {
+		var voterList []string
 
-	if isFound {
-		tssVoter.Signers = append(tssVoter.Signers, msg.Creator)
-	} else {
-		tssVoter = types.TSSVoter{
-			Creator:         msg.Creator,
-			Index:           index.Hex(),
-			Chain:           msg.Chain,
-			Address:         msg.Address,
-			Pubkey:          msg.Pubkey,
-			Signers:         []string{msg.Creator},
-			FinalizedHeight: 0,
+		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
+			voterList = append(voterList, nodeAccount.Operator)
+		}
+		ballot = zetaObserverTypes.Ballot{
+			Index:            "",
+			BallotIdentifier: index,
+			VoterList:        voterList,
+			Votes:            zetaObserverTypes.CreateVotes(len(msg.Creator)),
+			ObservationType:  zetaObserverTypes.ObservationType_TSSKeyGen,
+			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
+			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+		}
+	}
+	err := error(nil)
+	if msg.Status == common.ReceiveStatus_Success {
+		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+		if err != nil {
+			return &types.MsgCreateTSSVoterResponse{}, err
+		}
+	} else if msg.Status == common.ReceiveStatus_Failed {
+		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_FailureObservation)
+		if err != nil {
+			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	}
 
-	k.SetTSSVoter(ctx, tssVoter)
-
-	// this needs full consensus on all validators.
-	if len(tssVoter.Signers) == len(validators) {
-		tss := types.TSS{
-			Creator:             "",
-			Index:               tssVoter.Chain,
-			Chain:               tssVoter.Chain,
-			Address:             tssVoter.Address,
-			Pubkey:              tssVoter.Pubkey,
-			Signer:              tssVoter.Signers,
-			FinalizedZetaHeight: uint64(ctx.BlockHeader().Height),
-		}
-		k.SetTSS(ctx, tss)
+	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
+	if !isFinalized {
+		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
+	// Set TSS only on success , set Keygen either way.
+	// Keygen block cna be updated using a policy transaction if keygen fails
+	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
+		k.SetTSS(ctx, types.TSS{
+			TssPubkey:           msg.TssPubkey,
+			TssParticipantList:  keygen.GetGranteePubkeys(),
+			OperatorAddressList: ballot.VoterList,
+			FinalizedZetaHeight: ctx.BlockHeight(),
+			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
+		})
+		keygen.Status = types.KeygenStatus_KeyGenSuccess
+		// initialize the nonces and pending nonces of all enabled chain
+		supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+		for _, chain := range supportedChains {
+			chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}
+			k.SetChainNonces(ctx, chainNonce)
 
+			p := types.PendingNonces{
+				NonceLow:  0,
+				NonceHigh: 0,
+				ChainId:   chain.ChainId,
+				Tss:       msg.TssPubkey,
+			}
+			k.SetPendingNonces(ctx, p)
+		}
+	} else if ballot.BallotStatus == zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
+		keygen.Status = types.KeygenStatus_KeyGenFailed
+	}
+	k.SetKeygen(ctx, keygen)
+	// Remove ballot
 	return &types.MsgCreateTSSVoterResponse{}, nil
 }

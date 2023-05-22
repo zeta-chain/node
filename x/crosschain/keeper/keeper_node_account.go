@@ -14,7 +14,7 @@ import (
 func (k Keeper) SetNodeAccount(ctx sdk.Context, nodeAccount types.NodeAccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NodeAccountKey))
 	b := k.cdc.MustMarshal(&nodeAccount)
-	store.Set(types.KeyPrefix(nodeAccount.Creator), b)
+	store.Set(types.KeyPrefix(nodeAccount.Operator), b)
 }
 
 // GetNodeAccount returns a nodeAccount from its index

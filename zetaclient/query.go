@@ -21,6 +21,33 @@ func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) 
 
 }
 
+func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: externalChainID})
+	if err != nil {
+		return &zetaObserverTypes.CoreParams{}, err
+	}
+	return resp.CoreParams, nil
+}
+
+func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CoreParams.CoreParams, nil
+}
+
+func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Params(context.Background(), &zetaObserverTypes.QueryParamsRequest{})
+	if err != nil {
+		return zetaObserverTypes.Params{}, err
+	}
+	return resp.Params, nil
+}
+
 //func (b *ZetaCoreBridge) GetAccountDetails(address string) (string, error) {
 //	client := authtypes.NewQueryClient(b.grpcConn)
 //	resp, err := client.Account(context.Background(), &authtypes.QueryAccountRequest{
@@ -65,10 +92,10 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return resp.Observers, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx() ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{}, maxSizeOption)
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
 	if err != nil {
 		return nil, err
 	}
@@ -169,4 +196,13 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 		return nil, err
 	}
 	return resp.OutTxTracker, nil
+}
+
+func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetCoreParamsForChainResponse, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: chainID})
+	if err != nil {
+		return zetaObserverTypes.QueryGetCoreParamsForChainResponse{}, err
+	}
+	return *resp, nil
 }

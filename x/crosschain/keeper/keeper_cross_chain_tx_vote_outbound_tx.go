@@ -20,6 +20,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
 	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	if observationChain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
@@ -45,9 +48,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	// Check CCTX exists after confirmed vote
-	cctx, err := k.CheckCCTXExists(ctx, ballot.Index, msg.CctxHash)
-	if err != nil {
-		return nil, err
+	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
 	}
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
 	if !isFinalized {
@@ -63,22 +66,23 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
-	oldStatus := cctx.CctxStatus.Status
+	tss, _ := k.GetTSS(ctx)
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 	err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 	if err != nil {
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 		ctx.Logger().Error(err.Error())
-		k.SetCrossChainTx(ctx, cctx)
-		// Remove OutTX tracker and change CCTX prefix store
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-		k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
+		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+		k.SetCrossChainTx(ctx, cctx)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	// Remove OutTX tracker and change CCTX prefix store
+
+	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
-	k.CctxChangePrefixStore(ctx, cctx, oldStatus)
+	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 

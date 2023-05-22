@@ -3,10 +3,11 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
 	"strconv"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
@@ -72,48 +73,31 @@ func (k Keeper) DeployZRC20Contract(
 		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "failed to deploy ZRC20 contract: %s, %s", name, err.Error())
 	}
 
-	coinIndex := name
-	coin, _ := k.GetForeignCoins(ctx, chain.ChainId, coinIndex)
+	coin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
 	coin.CoinType = coinType
 	coin.Name = name
 	coin.Symbol = symbol
 	coin.Decimals = uint32(decimals)
 	coin.Asset = erc20Contract
-	coin.Zrc20ContractAddress = contractAddr.String()
-	coin.Index = coinIndex
+	coin.Zrc20ContractAddress = contractAddr.Hex()
 	coin.ForeignChainId = chain.ChainId
+	coin.GasLimit = gasLimit.Uint64()
 	k.SetForeignCoins(ctx, coin)
 
 	return contractAddr, nil
 }
 
 func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2factory common.Address, router02 common.Address) (common.Address, error) {
+	system, _ := k.GetSystemContract(ctx)
+
 	contractAddr, err := k.deployContract(ctx, systemcontract.SystemContractMetaData, wzeta, v2factory, router02)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContract")
 	}
 
-	system, _ := k.GetSystemContract(ctx)
 	//system := types.SystemContract{}
 	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
-
-	// go update all addr on ZRC-4 contracts
-
-	// TODO : Change to
-	// GET all supported chains
-	// Get all coins for al chains
-	//zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
-	//coins := k.GetAllForeignCoins(ctx)
-	//for _, coin := range coins {
-	//	if len(coin.Zrc20ContractAddress) != 0 {
-	//		zrc4Address := common.HexToAddress(coin.Zrc20ContractAddress)
-	//		_, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, zrc4Address, BigIntZero, nil, true, "updateSystemContractAddress", contractAddr)
-	//		if err != nil {
-	//			k.Logger(ctx).Error("failed to update updateSystemContractAddress contract address for %s: %s", coin.Name, contractAddr, err.Error())
-	//		}
-	//	}
-	//}
 
 	return contractAddr, nil
 }
@@ -192,6 +176,9 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
+	system, _ := k.GetSystemContract(ctx)
+	system.ConnectorZevm = contractAddr.Hex()
+	k.SetSystemContract(ctx, system)
 
 	return contractAddr, nil
 }

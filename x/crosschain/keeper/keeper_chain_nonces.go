@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -100,9 +102,13 @@ func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesReq
 
 // MESSAGES
 
+// Should be removed
 func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (*types.MsgNonceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 
 	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {
@@ -111,7 +117,15 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	chainNonce, isFound := k.GetChainNonces(ctx, chain.ChainName.String())
 
 	if isFound {
-		chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
+		isExisting := false
+		for _, signer := range chainNonce.Signers {
+			if signer == msg.Creator {
+				isExisting = true
+			}
+		}
+		if !isExisting {
+			chainNonce.Signers = append(chainNonce.Signers, msg.Creator)
+		}
 		chainNonce.Nonce = msg.Nonce
 	} else if !isFound {
 		chainNonce = types.ChainNonces{
@@ -131,13 +145,4 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 
 	k.SetChainNonces(ctx, chainNonce)
 	return &types.MsgNonceVoterResponse{}, nil
-}
-
-func isDuplicateSigner(creator string, signers []string) bool {
-	for _, v := range signers {
-		if creator == v {
-			return true
-		}
-	}
-	return false
 }

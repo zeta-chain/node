@@ -3,7 +3,6 @@ package zetachain.zetacore.observer;
 
 
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "observer/params.proto";
@@ -34,6 +33,16 @@ service Query {
 
 	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
 		option (google.api.http).get = "/zeta-chain/observer/supportedChains";
+	}
+
+// Queries a list of GetClientParamsForChain items.
+	rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
+	}
+
+// Queries a list of GetCoreParams items.
+	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -77,5 +86,20 @@ message QuerySupportedChainsResponse {
 	repeated common.Chain chains = 1;
 }
 
+
+message QueryGetCoreParamsForChainRequest {
+  int64 chainID = 1;
+}
+
+message QueryGetCoreParamsForChainResponse {
+	CoreParams core_params = 1;
+}
+
+message QueryGetCoreParamsRequest {
+}
+
+message QueryGetCoreParamsResponse {
+	CoreParamsList core_params = 1;
+}
 
 // this line is used by starport scaffolding # 3

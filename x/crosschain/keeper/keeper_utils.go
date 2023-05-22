@@ -45,22 +45,15 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chai
 	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
 }
 
-func (k Keeper) CheckCCTXExists(ctx sdk.Context, ballotIdentifier, cctxIdentifier string) (cctx types.CrossChainTx, err error) {
-	cctx, isFound := k.GetCctxByIndexAndStatuses(ctx,
-		cctxIdentifier,
-		[]types.CctxStatus{
-			types.CctxStatus_PendingOutbound,
-			types.CctxStatus_PendingRevert,
-		})
-	if !isFound {
-		return cctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("Cannot find cctx hash %s", cctxIdentifier))
+// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
+	_, found := k.GetNodeAccount(ctx, address)
+	if found {
+		return true
 	}
-	if cctx.GetCurrentOutTxParam().OutboundTxBallotIndex == "" {
-		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIdentifier
-		k.SetCrossChainTx(ctx, cctx)
-	}
-	return
+	return false
 }
+
 func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
@@ -87,10 +80,14 @@ func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, ob
 
 func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
+	if chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ", cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.LogIdentifierForCCTX()))
 	}
+	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
 	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
 	gasLimit := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
@@ -133,9 +130,11 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	return nil
 }
 
-// TODO : USE CHAIN ID
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
+	if chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
 
 	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
@@ -144,8 +143,24 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return sdkerrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+	}
+
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, uint64(receiveChainID))
+	if !found {
+		return sdkerrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
+	}
+
+	if p.NonceHigh != int64(nonce.Nonce) {
+		return sdkerrors.Wrap(types.ErrNonceMismatch, fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce))
+	}
+
 	nonce.Nonce++
+	p.NonceHigh++
 	k.SetChainNonces(ctx, nonce)
+	k.SetPendingNonces(ctx, p)
 	return nil
 }
 func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {

@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
+CHAINID="localnet_101-1"
+KEYRING="test"
+HOSTNAME=$(hostname)
+signer="zeta"
+
+
 killall zetacored
 zetacored start --trace \
 --minimum-gas-prices=0.0001azeta \
 --json-rpc.api eth,txpool,personal,net,debug,web3,miner \
---api.enable \
+--api.enable >> ~/.zetacored/zetacored.log 2>&1  & \
 #>> "$HOME"/.zetacored/zetanode.log 2>&1  & \
 
 #--home ~/.zetacored \
@@ -19,3 +25,12 @@ zetacored start --trace \
 #--min-retain-blocks 54000 \
 #--state-sync.snapshot-interval 14400 \
 #--state-sync.snapshot-keep-recent 3
+
+echo "--> Submitting proposal to update admin policies "
+sleep 7
+zetacored tx gov submit-legacy-proposal param-change standalone-network/proposal.json --from $signer --gas=auto --gas-adjustment=1.5 --gas-prices=0.001azeta --chain-id=$CHAINID --keyring-backend=$KEYRING -y --broadcast-mode=block
+echo "--> Submitting vote for proposal"
+sleep 7
+zetacored tx gov vote 1 yes --from $signer --keyring-backend $KEYRING --chain-id $CHAINID --yes --fees=40azeta --broadcast-mode=block
+tail -f ~/.zetacored/zetacored.log
+

@@ -10,8 +10,6 @@ import (
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,7 +43,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 
 	flags := flag.NewFlagSet("zetacore", 0)
 
-	ctx := b.GetContext(authzSigner.KeyType)
+	ctx := b.GetContext()
 	factory := clienttx.NewFactoryCLI(ctx, flags)
 	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
 	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
@@ -112,12 +110,12 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 }
 
 // GetContext return a valid context with all relevant values set
-func (b *ZetaCoreBridge) GetContext(keyType common.KeyType) client.Context {
+func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx := client.Context{}
 	addr, _ := b.keys.GetSignerInfo().GetAddress()
 	// TODO : Handle error
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	ctx = ctx.WithChainID(cmd.CHAINID)
+	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
 	ctx = ctx.WithFromAddress(addr)

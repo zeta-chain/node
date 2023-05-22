@@ -31,34 +31,37 @@ func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclien
 		return nil, err
 	}
 	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, config.AuthzHotkey, signerPass)
-	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, config.AuthzHotkey)
+	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, config.AuthzHotkey, config.ChainID)
 	if err != nil {
 		return nil, err
 	}
 	return bridge, nil
 }
 
-func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger) (map[common.Chain]zetaclient.ChainSigner, error) {
+func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *config.Config) (map[common.Chain]zetaclient.ChainSigner, error) {
 	signerMap := make(map[common.Chain]zetaclient.ChainSigner)
-	for _, chain := range config.ChainsEnabled {
-		if chain.IsEVMChain() {
-			mpiAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ConnectorContractAddress)
-			erc20CustodyAddress := ethcommon.HexToAddress(config.ChainConfigs[chain.ChainName.String()].ERC20CustodyContractAddress)
-			signer, err := zetaclient.NewEVMSigner(chain, config.ChainConfigs[chain.ChainName.String()].Endpoint, tss, config.ConnectorAbiString, config.ERC20CustodyAbiString, mpiAddress, erc20CustodyAddress, logger)
+	for _, chain := range cfg.ChainsEnabled {
+		if chain.IsZetaChain() {
+			continue
+		}
+		if common.IsEVMChain(chain.ChainId) {
+			mpiAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainId].CoreParams.ConnectorContractAddress)
+			erc20CustodyAddress := ethcommon.HexToAddress(cfg.EVMChainConfigs[chain.ChainId].CoreParams.ERC20CustodyContractAddress)
+			signer, err := zetaclient.NewEVMSigner(chain, cfg.EVMChainConfigs[chain.ChainId].Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger)
 			if err != nil {
 				logger.Fatal().Err(err).Msgf("%s: NewEVMSigner Ethereum error ", chain.String())
 				return nil, err
 			}
 			signerMap[chain] = signer
-		} else if chain.IsBitcoinChain() {
+		} else if common.IsBitcoinChain(chain.ChainId) {
 			// FIXME: move the construction of rpcclient to somewhere else
 			connCfg := &rpcclient.ConnConfig{
-				Host:         config.BitcoinConfig.RPCEndpoint,
-				User:         config.BitcoinConfig.RPCUsername,
-				Pass:         config.BitcoinConfig.RPCPassword,
+				Host:         cfg.BitcoinConfig.RPCHost,
+				User:         cfg.BitcoinConfig.RPCUsername,
+				Pass:         cfg.BitcoinConfig.RPCPassword,
 				HTTPPostMode: true,
 				DisableTLS:   true,
-				Params:       config.BitcoinConfig.RPCParams,
+				Params:       cfg.BitcoinConfig.RPCParams,
 			}
 			client, err := rpcclient.New(connCfg, nil)
 			if err != nil {
@@ -76,16 +79,19 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger) (map[commo
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics, logger zerolog.Logger) (map[common.Chain]zetaclient.ChainClient, error) {
+func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics, logger zerolog.Logger, cfg *config.Config) (map[common.Chain]zetaclient.ChainClient, error) {
 	clientMap := make(map[common.Chain]zetaclient.ChainClient)
-	for _, chain := range config.ChainsEnabled {
+	for _, chain := range cfg.ChainsEnabled {
+		if chain.IsZetaChain() {
+			continue
+		}
 		logger.Info().Msgf("starting observer for : %s ", chain.String())
 		var co zetaclient.ChainClient
 		var err error
-		if chain.IsEVMChain() {
-			co, err = zetaclient.NewEVMChainClient(chain, bridge, tss, dbpath, metrics, logger)
-		} else {
-			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger)
+		if common.IsEVMChain(chain.ChainId) {
+			co, err = zetaclient.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, chain)
+		} else if common.IsBitcoinChain(chain.ChainId) {
+			co, err = zetaclient.NewBitcoinClient(chain, bridge, tss, dbpath, metrics, logger, cfg)
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())

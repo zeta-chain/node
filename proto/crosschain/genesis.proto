@@ -7,7 +7,6 @@ import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
-import "crosschain/tss_voter.proto";
 import "crosschain/tss.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
@@ -22,14 +21,13 @@ message GenesisState {
 		Params params = 1 [(gogoproto.nullable) = false];
 		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
 		Keygen keygen = 3;
-		repeated TSSVoter tSSVoterList = 4;
-		repeated TSS tSSList = 5;
-		repeated GasPrice gasPriceList = 7;
-		repeated ChainNonces chainNoncesList = 8;
-		repeated CrossChainTx CrossChainTxs = 9;
-		repeated NodeAccount nodeAccountList = 11;
-		repeated LastBlockHeight lastBlockHeightList = 12;
-	repeated InTxHashToCctx inTxHashToCctxList = 13 [(gogoproto.nullable) = false];
-  PermissionFlags permissionFlags = 14;
+		TSS tss = 4;
+		repeated GasPrice gasPriceList = 5;
+		repeated ChainNonces chainNoncesList = 6;
+		repeated CrossChainTx CrossChainTxs = 7;
+		repeated NodeAccount nodeAccountList = 8;
+		repeated LastBlockHeight lastBlockHeightList = 9;
+	repeated InTxHashToCctx inTxHashToCctxList = 10 [(gogoproto.nullable) = false];
+  PermissionFlags permissionFlags = 11;
   // this line is used by starport scaffolding # genesis/proto/state
 }

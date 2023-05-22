@@ -23,13 +23,11 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type TSSVoter struct {
-	Creator         string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Index           string   `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	Chain           string   `protobuf:"bytes,3,opt,name=chain,proto3" json:"chain,omitempty"`
-	Address         string   `protobuf:"bytes,4,opt,name=address,proto3" json:"address,omitempty"`
-	Pubkey          string   `protobuf:"bytes,5,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
-	Signers         []string `protobuf:"bytes,6,rep,name=signers,proto3" json:"signers,omitempty"`
-	FinalizedHeight uint64   `protobuf:"varint,7,opt,name=finalizedHeight,proto3" json:"finalizedHeight,omitempty"`
+	Creator          string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Chain            string `protobuf:"bytes,2,opt,name=chain,proto3" json:"chain,omitempty"`
+	TssAddress       string `protobuf:"bytes,3,opt,name=tss_address,json=tssAddress,proto3" json:"tss_address,omitempty"`
+	TssPubkey        string `protobuf:"bytes,4,opt,name=tss_pubkey,json=tssPubkey,proto3" json:"tss_pubkey,omitempty"`
+	KeyGenZetaHeight uint64 `protobuf:"varint,5,opt,name=keyGenZetaHeight,proto3" json:"keyGenZetaHeight,omitempty"`
 }
 
 func (m *TSSVoter) Reset()         { *m = TSSVoter{} }
@@ -72,13 +70,6 @@ func (m *TSSVoter) GetCreator() string {
 	return ""
 }
 
-func (m *TSSVoter) GetIndex() string {
-	if m != nil {
-		return m.Index
-	}
-	return ""
-}
-
 func (m *TSSVoter) GetChain() string {
 	if m != nil {
 		return m.Chain
@@ -86,30 +77,23 @@ func (m *TSSVoter) GetChain() string {
 	return ""
 }
 
-func (m *TSSVoter) GetAddress() string {
+func (m *TSSVoter) GetTssAddress() string {
 	if m != nil {
-		return m.Address
+		return m.TssAddress
 	}
 	return ""
 }
 
-func (m *TSSVoter) GetPubkey() string {
+func (m *TSSVoter) GetTssPubkey() string {
 	if m != nil {
-		return m.Pubkey
+		return m.TssPubkey
 	}
 	return ""
 }
 
-func (m *TSSVoter) GetSigners() []string {
+func (m *TSSVoter) GetKeyGenZetaHeight() uint64 {
 	if m != nil {
-		return m.Signers
-	}
-	return nil
-}
-
-func (m *TSSVoter) GetFinalizedHeight() uint64 {
-	if m != nil {
-		return m.FinalizedHeight
+		return m.KeyGenZetaHeight
 	}
 	return 0
 }
@@ -121,24 +105,23 @@ func init() {
 func init() { proto.RegisterFile("crosschain/tss_voter.proto", fileDescriptor_e78ab18fa9692f61) }
 
 var fileDescriptor_e78ab18fa9692f61 = []byte{
-	// 261 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x31, 0x4b, 0xc4, 0x30,
-	0x18, 0x86, 0x1b, 0xef, 0xae, 0xa7, 0x59, 0x84, 0x20, 0x12, 0x04, 0x43, 0x71, 0xea, 0x62, 0x8b,
-	0xf8, 0x0f, 0x9c, 0x04, 0xb7, 0x3b, 0x71, 0x70, 0x91, 0xb4, 0xfd, 0x6c, 0x83, 0xda, 0x94, 0x7c,
-	0x39, 0xb9, 0xbb, 0x5f, 0xe1, 0xaf, 0x12, 0xc7, 0x1b, 0x1d, 0xa5, 0xfd, 0x23, 0x92, 0xb4, 0x45,
-	0xb9, 0x2d, 0xcf, 0xfb, 0xe5, 0x7d, 0x87, 0x87, 0x9e, 0xe5, 0x46, 0x23, 0xe6, 0x95, 0x54, 0x75,
-	0x6a, 0x11, 0x9f, 0xde, 0xb5, 0x05, 0x93, 0x34, 0x46, 0x5b, 0xcd, 0xce, 0xb7, 0x60, 0xa5, 0x3f,
-	0x25, 0xfe, 0xa5, 0x0d, 0x24, 0x7f, 0xdf, 0x2f, 0x3e, 0x09, 0x3d, 0xbc, 0x5f, 0x2e, 0x1f, 0x5c,
-	0x83, 0x71, 0x3a, 0xcf, 0x0d, 0x48, 0xab, 0x0d, 0x27, 0x11, 0x89, 0x8f, 0x16, 0x23, 0xb2, 0x13,
-	0x3a, 0x53, 0x75, 0x01, 0x6b, 0x7e, 0xe0, 0xf3, 0x1e, 0x5c, 0xea, 0x57, 0xf8, 0xa4, 0x4f, 0x3d,
-	0xb8, 0x15, 0x59, 0x14, 0x06, 0x10, 0xf9, 0xb4, 0x5f, 0x19, 0x90, 0x9d, 0xd2, 0xb0, 0x59, 0x65,
-	0x2f, 0xb0, 0xe1, 0x33, 0x7f, 0x18, 0xc8, 0x35, 0x50, 0x95, 0x35, 0x18, 0xe4, 0x61, 0x34, 0x71,
-	0x8d, 0x01, 0x59, 0x4c, 0x8f, 0x9f, 0x55, 0x2d, 0x5f, 0xd5, 0x16, 0x8a, 0x5b, 0x50, 0x65, 0x65,
-	0xf9, 0x3c, 0x22, 0xf1, 0x74, 0xb1, 0x1f, 0xdf, 0xdc, 0x7d, 0xb5, 0x82, 0xec, 0x5a, 0x41, 0x7e,
-	0x5a, 0x41, 0x3e, 0x3a, 0x11, 0xec, 0x3a, 0x11, 0x7c, 0x77, 0x22, 0x78, 0xbc, 0x2a, 0x95, 0xad,
-	0x56, 0x59, 0x92, 0xeb, 0xb7, 0xd4, 0x29, 0xb8, 0xec, 0x45, 0x8d, 0x36, 0xd2, 0x75, 0xfa, 0x5f,
-	0xdf, 0xa6, 0x01, 0xcc, 0x42, 0xef, 0xee, 0xfa, 0x37, 0x00, 0x00, 0xff, 0xff, 0x39, 0x09, 0x28,
-	0x9d, 0x59, 0x01, 0x00, 0x00,
+	// 250 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4a, 0x2e, 0xca, 0x2f,
+	0x2e, 0x4e, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x2f, 0x29, 0x2e, 0x8e, 0x2f, 0xcb, 0x2f, 0x49, 0x2d,
+	0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0xad, 0x4a, 0x2d, 0x49, 0x04, 0x4b, 0xe9, 0x81,
+	0x59, 0xf9, 0x45, 0xa9, 0x7a, 0x08, 0xe5, 0x4a, 0xcb, 0x18, 0xb9, 0x38, 0x42, 0x82, 0x83, 0xc3,
+	0x40, 0x3a, 0x84, 0x24, 0xb8, 0xd8, 0x93, 0x8b, 0x52, 0x13, 0x4b, 0xf2, 0x8b, 0x24, 0x18, 0x15,
+	0x18, 0x35, 0x38, 0x83, 0x60, 0x5c, 0x21, 0x11, 0x2e, 0x56, 0xb0, 0x7a, 0x09, 0x26, 0xb0, 0x38,
+	0x84, 0x23, 0x24, 0xcf, 0xc5, 0x0d, 0xb2, 0x2e, 0x31, 0x25, 0xa5, 0x28, 0xb5, 0xb8, 0x58, 0x82,
+	0x19, 0x2c, 0xc7, 0x55, 0x52, 0x5c, 0xec, 0x08, 0x11, 0x11, 0x92, 0xe5, 0x02, 0xf1, 0xe2, 0x0b,
+	0x4a, 0x93, 0xb2, 0x53, 0x2b, 0x25, 0x58, 0xc0, 0xf2, 0x9c, 0x25, 0xc5, 0xc5, 0x01, 0x60, 0x01,
+	0x21, 0x2d, 0x2e, 0x81, 0xec, 0xd4, 0x4a, 0xf7, 0xd4, 0xbc, 0xa8, 0xd4, 0x92, 0x44, 0x8f, 0xd4,
+	0xcc, 0xf4, 0x8c, 0x12, 0x09, 0x56, 0x05, 0x46, 0x0d, 0x96, 0x20, 0x0c, 0x71, 0x27, 0xef, 0x13,
+	0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86,
+	0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x32, 0x4c, 0xcf, 0x2c, 0xc9, 0x28, 0x4d,
+	0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x07, 0x79, 0x51, 0x17, 0x12, 0x10, 0x30, 0xdf, 0xea, 0x57, 0xe8,
+	0x23, 0x07, 0x4f, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0x38, 0x6c, 0x8c, 0x01, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0xef, 0xa0, 0x99, 0xd7, 0x39, 0x01, 0x00, 0x00,
 }
 
 func (m *TSSVoter) Marshal() (dAtA []byte, err error) {
@@ -161,45 +144,29 @@ func (m *TSSVoter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.FinalizedHeight != 0 {
-		i = encodeVarintTssVoter(dAtA, i, uint64(m.FinalizedHeight))
+	if m.KeyGenZetaHeight != 0 {
+		i = encodeVarintTssVoter(dAtA, i, uint64(m.KeyGenZetaHeight))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x28
 	}
-	if len(m.Signers) > 0 {
-		for iNdEx := len(m.Signers) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Signers[iNdEx])
-			copy(dAtA[i:], m.Signers[iNdEx])
-			i = encodeVarintTssVoter(dAtA, i, uint64(len(m.Signers[iNdEx])))
-			i--
-			dAtA[i] = 0x32
-		}
-	}
-	if len(m.Pubkey) > 0 {
-		i -= len(m.Pubkey)
-		copy(dAtA[i:], m.Pubkey)
-		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.Pubkey)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.Address)))
+	if len(m.TssPubkey) > 0 {
+		i -= len(m.TssPubkey)
+		copy(dAtA[i:], m.TssPubkey)
+		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.TssPubkey)))
 		i--
 		dAtA[i] = 0x22
+	}
+	if len(m.TssAddress) > 0 {
+		i -= len(m.TssAddress)
+		copy(dAtA[i:], m.TssAddress)
+		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.TssAddress)))
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.Chain) > 0 {
 		i -= len(m.Chain)
 		copy(dAtA[i:], m.Chain)
 		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.Chain)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Index) > 0 {
-		i -= len(m.Index)
-		copy(dAtA[i:], m.Index)
-		i = encodeVarintTssVoter(dAtA, i, uint64(len(m.Index)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -234,30 +201,20 @@ func (m *TSSVoter) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTssVoter(uint64(l))
 	}
-	l = len(m.Index)
-	if l > 0 {
-		n += 1 + l + sovTssVoter(uint64(l))
-	}
 	l = len(m.Chain)
 	if l > 0 {
 		n += 1 + l + sovTssVoter(uint64(l))
 	}
-	l = len(m.Address)
+	l = len(m.TssAddress)
 	if l > 0 {
 		n += 1 + l + sovTssVoter(uint64(l))
 	}
-	l = len(m.Pubkey)
+	l = len(m.TssPubkey)
 	if l > 0 {
 		n += 1 + l + sovTssVoter(uint64(l))
 	}
-	if len(m.Signers) > 0 {
-		for _, s := range m.Signers {
-			l = len(s)
-			n += 1 + l + sovTssVoter(uint64(l))
-		}
-	}
-	if m.FinalizedHeight != 0 {
-		n += 1 + sovTssVoter(uint64(m.FinalizedHeight))
+	if m.KeyGenZetaHeight != 0 {
+		n += 1 + sovTssVoter(uint64(m.KeyGenZetaHeight))
 	}
 	return n
 }
@@ -331,38 +288,6 @@ func (m *TSSVoter) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTssVoter
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Index = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
 			}
 			var stringLen uint64
@@ -393,9 +318,41 @@ func (m *TSSVoter) Unmarshal(dAtA []byte) error {
 			}
 			m.Chain = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TssAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTssVoter
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTssVoter
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTssVoter
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TssAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TssPubkey", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -423,77 +380,13 @@ func (m *TSSVoter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.TssPubkey = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pubkey", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTssVoter
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Pubkey = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTssVoter
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTssVoter
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Signers = append(m.Signers, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FinalizedHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyGenZetaHeight", wireType)
 			}
-			m.FinalizedHeight = 0
+			m.KeyGenZetaHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTssVoter
@@ -503,7 +396,7 @@ func (m *TSSVoter) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.FinalizedHeight |= uint64(b&0x7F) << shift
+				m.KeyGenZetaHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -1,9 +1,11 @@
 syntax = "proto3";
 package zetachain.zetacore.fungible;
 
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
-
 message SystemContract {
-  string systemContract = 1;
+  string system_contract = 1;
+  string connector_zevm = 2;
 }

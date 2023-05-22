@@ -3,7 +3,7 @@
 
 package common
 
-func GoerliLocalNetChain() Chain {
+func GoerliChain() Chain {
 	return Chain{
 		ChainName: ChainName_goerli_localnet,
 		ChainId:   1337,
@@ -27,7 +27,7 @@ func BtcRegtestChain() Chain {
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcRegtestChain(),
-		GoerliLocalNetChain(),
+		GoerliChain(),
 		ZetaChain(),
 	}
 	var c []*Chain

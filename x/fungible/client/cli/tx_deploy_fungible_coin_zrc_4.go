@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"strconv"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,7 +17,7 @@ var _ = strconv.Itoa(0)
 
 func CmdDeployFungibleCoinZRC4() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type]",
+		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit]",
 		Short: "Broadcast message DeployFungibleCoinZRC20",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -29,6 +30,10 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 			argName := args[3]
 			argSymbol := args[4]
 			argCoinType, err := strconv.ParseInt(args[5], 10, 32)
+			if err != nil {
+				return err
+			}
+			argGasLimit, err := strconv.ParseInt(args[6], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -46,6 +51,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				argName,
 				argSymbol,
 				common.CoinType(argCoinType),
+				argGasLimit,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

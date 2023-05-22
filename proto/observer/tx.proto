@@ -6,6 +6,7 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
+import "observer/params.proto";
 
 
 
@@ -15,6 +16,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Msg {
 //  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
    rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
+  rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 
 }
@@ -24,7 +26,15 @@ service Msg {
 //  int64 chain_id=2;
 //  common.ChainName ChainName=3;
 //}
-//// this line is used by starport scaffolding # proto/tx/message
+message MsgUpdateCoreParams {
+  string creator = 1;
+  CoreParams coreParams = 2;
+}
+
+message MsgUpdateCoreParamsResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message
 //
 //message MsgSetSupportedChainsResponse{
 //}

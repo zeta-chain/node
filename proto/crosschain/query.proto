@@ -9,7 +9,6 @@ import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
-import "crosschain/tss_voter.proto";
 import "crosschain/tss.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
@@ -17,6 +16,7 @@ import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/node_account.proto";
 import "crosschain/params.proto";
+import "crosschain/nonce_to_cctx.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
@@ -55,6 +55,11 @@ service Query {
 	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/crosschain/permission_flags";
 	}
+// Queries a list of GetTssAddress items.
+	rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/crosschain/get_tss_address";
+	}
+
 // this line is used by starport scaffolding # 2
 
 	// Queries a keygen by index.
@@ -63,26 +68,11 @@ service Query {
 	}
 
 
-	// Queries a tSSVoter by index.
-	rpc TSSVoter(QueryGetTSSVoterRequest) returns (QueryGetTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter/{index}";
-	}
-
-	// Queries a list of tSSVoter items.
-	rpc TSSVoterAll(QueryAllTSSVoterRequest) returns (QueryAllTSSVoterResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSSVoter";
-	}
-
-
 	// Queries a tSS by index.
 	rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/TSS/{index}";
-	}
-
-	// Queries a list of tSS items.
-	rpc TSSAll(QueryAllTSSRequest) returns (QueryAllTSSResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/TSS";
 	}
+
 
 	// Queries a gasPrice by index.
 	rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
@@ -110,6 +100,11 @@ service Query {
 	// Queries a list of chainNonces items.
 	rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
+	}
+
+
+	rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
 	}
 
 
@@ -215,43 +210,25 @@ message QueryGetPermissionFlagsRequest {}
 message QueryGetPermissionFlagsResponse {
 	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
 }
+message QueryGetTssAddressRequest {
+}
+
+message QueryGetTssAddressResponse {
+	string eth = 1;
+	string btc = 2;
+}
+
 // this line is used by starport scaffolding # 3
 message QueryGetKeygenRequest {}
 
 message QueryGetKeygenResponse {
 	Keygen Keygen = 1;
 }
-message QueryGetTSSVoterRequest {
-	string index = 1;
-}
 
-message QueryGetTSSVoterResponse {
-	TSSVoter TSSVoter = 1;
-}
-
-message QueryAllTSSVoterRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTSSVoterResponse {
-	repeated TSSVoter TSSVoter = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetTSSRequest {
-	string index = 1;
-}
+message QueryGetTSSRequest {}
 
 message QueryGetTSSResponse {
 	TSS TSS = 1;
-}
-
-message QueryAllTSSRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllTSSResponse {
-	repeated TSS TSS = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 
@@ -287,6 +264,16 @@ message QueryAllChainNoncesResponse {
 	repeated ChainNonces ChainNonces = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+message QueryAllPendingNoncesRequest {
+
+}
+
+message QueryAllPendingNoncesResponse {
+	repeated PendingNonces pending_nonces = 1;
+}
+
+
 message QueryGetLastBlockHeightRequest {
 	string index = 1;
 }
@@ -306,7 +293,6 @@ message QueryAllLastBlockHeightResponse {
 
 message QueryGetCctxRequest {
 	string index = 1;
-	int32 status = 2;
 }
 
 message QueryGetCctxResponse {
@@ -323,11 +309,13 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-
+	uint64 chainId = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryAllCctxPendingResponse {
 	repeated CrossChainTx CrossChainTx = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetNodeAccountRequest {

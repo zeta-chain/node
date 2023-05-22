@@ -14,6 +14,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, mapper := range genesisObservers {
 		k.SetObserverMapper(ctx, mapper)
 	}
+	k.SetCoreParams(ctx, types.GetCoreParams())
 	k.SetParams(ctx, types.DefaultParams())
 }
 

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,21 +33,11 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	)
 }
 
-// FIXME: fix the events
-func EmitEventCCTXCreated(ctx sdk.Context, cctx types.CrossChainTx) {
+func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.CctxCreated,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
-			//sdk.NewAttribute(types.SenderChain, cctx.InboundTxParams.SenderChain),
-			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
-			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
-			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
-			//sdk.NewAttribute(types.Receiver, cctx.OutboundTxParams.Receiver),
-			//sdk.NewAttribute(types.ReceiverChain, cctx.OutboundTxParams.ReceiverChain),
-			//sdk.NewAttribute(types.Amount, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
+		sdk.NewEvent(types.CctxNewKeygenBlock,
+			sdk.NewAttribute(types.KeyGenBlock, strconv.Itoa(int(keygen.BlockNumber))),
+			sdk.NewAttribute(types.KeyGenPubKeys, types2.PrettyPrintStruct(keygen.GranteePubkeys)),
 		),
 	)
 }

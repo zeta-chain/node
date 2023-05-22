@@ -24,10 +24,10 @@ func TestGenesisState_Validate(t *testing.T) {
 
 				ForeignCoinsList: []types.ForeignCoins{
 					{
-						Index: "0",
+						Zrc20ContractAddress: "0",
 					},
 					{
-						Index: "1",
+						Zrc20ContractAddress: "1",
 					},
 				},
 
@@ -40,10 +40,10 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				ForeignCoinsList: []types.ForeignCoins{
 					{
-						Index: "0",
+						Zrc20ContractAddress: "0",
 					},
 					{
-						Index: "0",
+						Zrc20ContractAddress: "0",
 					},
 				},
 			},

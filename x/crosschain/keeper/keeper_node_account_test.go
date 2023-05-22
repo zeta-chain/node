@@ -19,7 +19,7 @@ import (
 func createNNodeAccount(keeper *Keeper, ctx sdk.Context, n int) []types.NodeAccount {
 	items := make([]types.NodeAccount, n)
 	for i := range items {
-		items[i].Creator = fmt.Sprintf("%d", i)
+		items[i].Operator = fmt.Sprintf("%d", i)
 		keeper.SetNodeAccount(ctx, items[i])
 	}
 	return items
@@ -29,7 +29,7 @@ func TestNodeAccountGet(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetNodeAccount(ctx, item.Creator)
+		rst, found := keeper.GetNodeAccount(ctx, item.Operator)
 		assert.True(t, found)
 		assert.Equal(t, item, rst)
 	}
@@ -38,8 +38,8 @@ func TestNodeAccountRemove(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveNodeAccount(ctx, item.Creator)
-		_, found := keeper.GetNodeAccount(ctx, item.Creator)
+		keeper.RemoveNodeAccount(ctx, item.Operator)
+		_, found := keeper.GetNodeAccount(ctx, item.Operator)
 		assert.False(t, found)
 	}
 }
@@ -64,12 +64,12 @@ func TestNodeAccountQuerySingle(t *testing.T) {
 	}{
 		{
 			desc:     "First",
-			request:  &types.QueryGetNodeAccountRequest{Index: msgs[0].Creator},
+			request:  &types.QueryGetNodeAccountRequest{Index: msgs[0].Operator},
 			response: &types.QueryGetNodeAccountResponse{NodeAccount: &msgs[0]},
 		},
 		{
 			desc:     "Second",
-			request:  &types.QueryGetNodeAccountRequest{Index: msgs[1].Creator},
+			request:  &types.QueryGetNodeAccountRequest{Index: msgs[1].Operator},
 			response: &types.QueryGetNodeAccountResponse{NodeAccount: &msgs[1]},
 		},
 		{

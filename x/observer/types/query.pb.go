@@ -6,7 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -449,6 +448,174 @@ func (m *QuerySupportedChainsResponse) GetChains() []*common.Chain {
 	return nil
 }
 
+type QueryGetCoreParamsForChainRequest struct {
+	ChainID int64 `protobuf:"varint,1,opt,name=chainID,proto3" json:"chainID,omitempty"`
+}
+
+func (m *QueryGetCoreParamsForChainRequest) Reset()         { *m = QueryGetCoreParamsForChainRequest{} }
+func (m *QueryGetCoreParamsForChainRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCoreParamsForChainRequest) ProtoMessage()    {}
+func (*QueryGetCoreParamsForChainRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dcb801e455adaee4, []int{10}
+}
+func (m *QueryGetCoreParamsForChainRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCoreParamsForChainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCoreParamsForChainRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCoreParamsForChainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCoreParamsForChainRequest.Merge(m, src)
+}
+func (m *QueryGetCoreParamsForChainRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCoreParamsForChainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCoreParamsForChainRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCoreParamsForChainRequest proto.InternalMessageInfo
+
+func (m *QueryGetCoreParamsForChainRequest) GetChainID() int64 {
+	if m != nil {
+		return m.ChainID
+	}
+	return 0
+}
+
+type QueryGetCoreParamsForChainResponse struct {
+	CoreParams *CoreParams `protobuf:"bytes,1,opt,name=core_params,json=coreParams,proto3" json:"core_params,omitempty"`
+}
+
+func (m *QueryGetCoreParamsForChainResponse) Reset()         { *m = QueryGetCoreParamsForChainResponse{} }
+func (m *QueryGetCoreParamsForChainResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCoreParamsForChainResponse) ProtoMessage()    {}
+func (*QueryGetCoreParamsForChainResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dcb801e455adaee4, []int{11}
+}
+func (m *QueryGetCoreParamsForChainResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCoreParamsForChainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCoreParamsForChainResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCoreParamsForChainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCoreParamsForChainResponse.Merge(m, src)
+}
+func (m *QueryGetCoreParamsForChainResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCoreParamsForChainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCoreParamsForChainResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCoreParamsForChainResponse proto.InternalMessageInfo
+
+func (m *QueryGetCoreParamsForChainResponse) GetCoreParams() *CoreParams {
+	if m != nil {
+		return m.CoreParams
+	}
+	return nil
+}
+
+type QueryGetCoreParamsRequest struct {
+}
+
+func (m *QueryGetCoreParamsRequest) Reset()         { *m = QueryGetCoreParamsRequest{} }
+func (m *QueryGetCoreParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCoreParamsRequest) ProtoMessage()    {}
+func (*QueryGetCoreParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dcb801e455adaee4, []int{12}
+}
+func (m *QueryGetCoreParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCoreParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCoreParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCoreParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCoreParamsRequest.Merge(m, src)
+}
+func (m *QueryGetCoreParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCoreParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCoreParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCoreParamsRequest proto.InternalMessageInfo
+
+type QueryGetCoreParamsResponse struct {
+	CoreParams *CoreParamsList `protobuf:"bytes,1,opt,name=core_params,json=coreParams,proto3" json:"core_params,omitempty"`
+}
+
+func (m *QueryGetCoreParamsResponse) Reset()         { *m = QueryGetCoreParamsResponse{} }
+func (m *QueryGetCoreParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCoreParamsResponse) ProtoMessage()    {}
+func (*QueryGetCoreParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dcb801e455adaee4, []int{13}
+}
+func (m *QueryGetCoreParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCoreParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCoreParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCoreParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCoreParamsResponse.Merge(m, src)
+}
+func (m *QueryGetCoreParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCoreParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCoreParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCoreParamsResponse proto.InternalMessageInfo
+
+func (m *QueryGetCoreParamsResponse) GetCoreParams() *CoreParamsList {
+	if m != nil {
+		return m.CoreParams
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "zetachain.zetacore.observer.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.observer.QueryParamsResponse")
@@ -460,55 +627,67 @@ func init() {
 	proto.RegisterType((*QueryAllObserverMappersResponse)(nil), "zetachain.zetacore.observer.QueryAllObserverMappersResponse")
 	proto.RegisterType((*QuerySupportedChains)(nil), "zetachain.zetacore.observer.QuerySupportedChains")
 	proto.RegisterType((*QuerySupportedChainsResponse)(nil), "zetachain.zetacore.observer.QuerySupportedChainsResponse")
+	proto.RegisterType((*QueryGetCoreParamsForChainRequest)(nil), "zetachain.zetacore.observer.QueryGetCoreParamsForChainRequest")
+	proto.RegisterType((*QueryGetCoreParamsForChainResponse)(nil), "zetachain.zetacore.observer.QueryGetCoreParamsForChainResponse")
+	proto.RegisterType((*QueryGetCoreParamsRequest)(nil), "zetachain.zetacore.observer.QueryGetCoreParamsRequest")
+	proto.RegisterType((*QueryGetCoreParamsResponse)(nil), "zetachain.zetacore.observer.QueryGetCoreParamsResponse")
 }
 
 func init() { proto.RegisterFile("observer/query.proto", fileDescriptor_dcb801e455adaee4) }
 
 var fileDescriptor_dcb801e455adaee4 = []byte{
-	// 673 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xdf, 0x6a, 0xd4, 0x4e,
-	0x14, 0xde, 0xfc, 0x7e, 0xba, 0xd2, 0x29, 0xd2, 0x3a, 0x5d, 0xff, 0x90, 0xb6, 0x69, 0x49, 0x55,
-	0xaa, 0xd5, 0x8c, 0x5b, 0xaf, 0x6a, 0x2d, 0xd2, 0x2d, 0xbd, 0x28, 0x52, 0xd4, 0x08, 0x22, 0x5e,
-	0xb8, 0x4c, 0xb6, 0x63, 0x1a, 0xc8, 0x66, 0xd2, 0x4c, 0xb6, 0x18, 0x4b, 0x6f, 0x7c, 0x82, 0x82,
-	0xcf, 0xe1, 0x03, 0x78, 0xeb, 0x55, 0xaf, 0xa4, 0x20, 0x88, 0x57, 0x22, 0xbb, 0x3e, 0x88, 0x64,
-	0x66, 0x92, 0xdd, 0x4d, 0x36, 0xbb, 0x6b, 0xaf, 0x32, 0x9c, 0x73, 0xbe, 0xef, 0x7c, 0xe7, 0xcc,
-	0x7c, 0x04, 0x54, 0xa8, 0xc5, 0x48, 0x70, 0x48, 0x02, 0x74, 0xd0, 0x22, 0x41, 0x64, 0xf8, 0x01,
-	0x0d, 0x29, 0x9c, 0xfd, 0x40, 0x42, 0xdc, 0xd8, 0xc7, 0x8e, 0x67, 0xf0, 0x13, 0x0d, 0x88, 0x91,
-	0x14, 0xaa, 0x73, 0x36, 0xa5, 0xb6, 0x4b, 0x10, 0xf6, 0x1d, 0x84, 0x3d, 0x8f, 0x86, 0x38, 0x74,
-	0xa8, 0xc7, 0x04, 0x54, 0xbd, 0xdb, 0xa0, 0xac, 0x49, 0x19, 0xb2, 0x30, 0x23, 0x82, 0x13, 0x1d,
-	0x56, 0x2d, 0x12, 0xe2, 0x2a, 0xf2, 0xb1, 0xed, 0x78, 0xbc, 0x58, 0xd6, 0x56, 0x6c, 0x6a, 0x53,
-	0x7e, 0x44, 0xf1, 0x49, 0x46, 0xaf, 0xa6, 0x92, 0x7c, 0x1c, 0xe0, 0x66, 0x42, 0x7c, 0x3d, 0x0d,
-	0x27, 0x87, 0x5c, 0xbd, 0x85, 0x5d, 0x97, 0x86, 0x32, 0x3c, 0xd3, 0xa0, 0xcd, 0x26, 0xf5, 0x90,
-	0xf8, 0x88, 0xa0, 0x5e, 0x01, 0xf0, 0x45, 0xac, 0xe9, 0x39, 0x67, 0x36, 0xc9, 0x41, 0x8b, 0xb0,
-	0x50, 0x7f, 0x0d, 0x66, 0xfa, 0xa2, 0xcc, 0xa7, 0x1e, 0x23, 0x70, 0x13, 0x94, 0x85, 0x82, 0x1b,
-	0xca, 0xa2, 0xb2, 0x3c, 0xb9, 0xba, 0x64, 0x0c, 0x59, 0x8b, 0x21, 0xc0, 0xb5, 0x0b, 0xa7, 0xbf,
-	0x16, 0x4a, 0xa6, 0x04, 0xea, 0xbb, 0x40, 0xe3, 0xcc, 0x35, 0xae, 0xac, 0x16, 0xed, 0xec, 0x11,
-	0x2f, 0x74, 0xde, 0x39, 0x24, 0x90, 0xbd, 0xe1, 0x0a, 0xb8, 0x22, 0x64, 0xd7, 0x9d, 0x34, 0xc7,
-	0xfb, 0x4d, 0x98, 0xd3, 0x22, 0xd1, 0xc5, 0xe8, 0x6f, 0xc1, 0x42, 0x21, 0x9d, 0x14, 0xbd, 0x0e,
-	0xca, 0x02, 0x36, 0x96, 0x68, 0x41, 0x64, 0x4a, 0x88, 0xfe, 0x14, 0xcc, 0x71, 0xfe, 0x67, 0x32,
-	0xcf, 0x6a, 0xd1, 0x56, 0x8c, 0xec, 0x11, 0x2b, 0xa0, 0xfc, 0x16, 0xeb, 0x9c, 0x35, 0x11, 0xdb,
-	0x93, 0xe0, 0x18, 0x7d, 0x03, 0xcc, 0x17, 0x90, 0x49, 0xa9, 0x73, 0x60, 0x22, 0x11, 0x12, 0xaf,
-	0xf8, 0xff, 0xe5, 0x09, 0xb3, 0x1b, 0xd0, 0x17, 0xe5, 0xea, 0x36, 0x5d, 0x37, 0x61, 0xd8, 0xc5,
-	0xbe, 0x4f, 0x82, 0xf4, 0xda, 0x22, 0xb9, 0x8d, 0x41, 0x15, 0xb2, 0xc5, 0x2b, 0x30, 0x9d, 0x30,
-	0xd6, 0x9b, 0x22, 0xc7, 0x3b, 0x4d, 0xae, 0xae, 0x0c, 0xdd, 0x4b, 0x3f, 0x9f, 0x39, 0x45, 0xfb,
-	0xf9, 0xf5, 0x6b, 0xa0, 0xc2, 0x5b, 0xbf, 0x6c, 0xf9, 0x3e, 0x0d, 0x42, 0xb2, 0xc7, 0x27, 0x63,
-	0xfa, 0xb6, 0x5c, 0x60, 0x26, 0x9e, 0xea, 0xb9, 0x05, 0xca, 0xbc, 0x65, 0xa2, 0xe2, 0xb2, 0x21,
-	0x9f, 0xa7, 0xd8, 0x8c, 0x4c, 0xae, 0x7e, 0xb9, 0x04, 0x2e, 0x72, 0x1e, 0x78, 0xa2, 0x80, 0xb2,
-	0x78, 0x59, 0x10, 0x0d, 0x55, 0x9c, 0x7f, 0xd6, 0xea, 0x83, 0xf1, 0x01, 0x42, 0x9e, 0xbe, 0xf4,
-	0xf1, 0xfb, 0x9f, 0x4f, 0xff, 0xcd, 0xc3, 0x59, 0x14, 0xd7, 0xdf, 0xe7, 0x50, 0x94, 0xb1, 0x23,
-	0xfc, 0xa1, 0x00, 0x98, 0x7f, 0x80, 0x70, 0x7d, 0x74, 0xb7, 0x42, 0x17, 0xa8, 0x8f, 0xcf, 0x07,
-	0x96, 0xb2, 0xb7, 0xb9, 0xec, 0x27, 0x70, 0x63, 0xa0, 0x6c, 0x69, 0x2f, 0x2b, 0xea, 0x71, 0x18,
-	0x3a, 0xca, 0x99, 0xee, 0x18, 0x7e, 0x53, 0xc0, 0x74, 0xf6, 0xb1, 0xc2, 0xb5, 0xd1, 0xca, 0x0a,
-	0xdc, 0xa2, 0x3e, 0x3a, 0x0f, 0x54, 0x8e, 0xb4, 0xc5, 0x47, 0xda, 0x80, 0xeb, 0x03, 0x47, 0x4a,
-	0x5d, 0x12, 0x4f, 0x25, 0x72, 0x47, 0x39, 0x63, 0x1e, 0xc3, 0xaf, 0x0a, 0x80, 0x79, 0x73, 0x8c,
-	0x73, 0x53, 0x85, 0xa6, 0x1b, 0xe7, 0xa6, 0x8a, 0xfd, 0xa8, 0x57, 0xf9, 0x58, 0x2b, 0xf0, 0xce,
-	0xc0, 0xb1, 0xb0, 0xeb, 0xd6, 0xb3, 0x76, 0x85, 0x9f, 0x15, 0x30, 0x95, 0xb1, 0x13, 0xac, 0x8e,
-	0x16, 0x91, 0x81, 0xa8, 0x6b, 0xff, 0x0c, 0x49, 0x45, 0xdf, 0xe3, 0xa2, 0x6f, 0xc3, 0x9b, 0x03,
-	0x45, 0xb3, 0x7e, 0x54, 0x6d, 0xe7, 0xb4, 0xad, 0x29, 0x67, 0x6d, 0x4d, 0xf9, 0xdd, 0xd6, 0x94,
-	0x93, 0x8e, 0x56, 0x3a, 0xeb, 0x68, 0xa5, 0x9f, 0x1d, 0xad, 0xf4, 0x06, 0xd9, 0x4e, 0xb8, 0xdf,
-	0xb2, 0x62, 0xcb, 0xf7, 0x32, 0x25, 0x6a, 0xd0, 0xfb, 0x2e, 0x69, 0x18, 0xf9, 0x84, 0x59, 0x65,
-	0xfe, 0xd3, 0x7a, 0xf8, 0x37, 0x00, 0x00, 0xff, 0xff, 0xc8, 0x5b, 0x78, 0x5d, 0xa5, 0x07, 0x00,
-	0x00,
+	// 804 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x5d, 0x4f, 0x13, 0x41,
+	0x14, 0xed, 0x8a, 0xd6, 0x70, 0x09, 0x01, 0x87, 0xa2, 0xb8, 0x40, 0xc1, 0xc1, 0x0f, 0x4c, 0xa5,
+	0x2b, 0x18, 0x35, 0x88, 0x95, 0xd0, 0x8a, 0x4a, 0x80, 0xa8, 0x6b, 0x62, 0x8c, 0x0f, 0x36, 0xdb,
+	0x32, 0x94, 0x35, 0xdb, 0x9d, 0x65, 0x77, 0x6b, 0xac, 0x84, 0x17, 0x7f, 0x01, 0x89, 0xbf, 0xc3,
+	0x67, 0xdf, 0x7d, 0xe2, 0xc9, 0x90, 0x98, 0x18, 0x13, 0x13, 0x63, 0x40, 0xff, 0x87, 0xd9, 0x99,
+	0xd9, 0xed, 0xc7, 0x6e, 0x3f, 0xe0, 0x89, 0xe1, 0xde, 0x39, 0xe7, 0x9e, 0x33, 0x33, 0x7b, 0x00,
+	0x12, 0xb4, 0xe0, 0x10, 0xfb, 0x1d, 0xb1, 0x95, 0xed, 0x0a, 0xb1, 0xab, 0x69, 0xcb, 0xa6, 0x2e,
+	0x45, 0xa3, 0x1f, 0x88, 0xab, 0x15, 0xb7, 0x34, 0xdd, 0x4c, 0xb3, 0x15, 0xb5, 0x49, 0xda, 0xdf,
+	0x28, 0x8f, 0x95, 0x28, 0x2d, 0x19, 0x44, 0xd1, 0x2c, 0x5d, 0xd1, 0x4c, 0x93, 0xba, 0x9a, 0xab,
+	0x53, 0xd3, 0xe1, 0x50, 0x39, 0x51, 0xa2, 0x25, 0xca, 0x96, 0x8a, 0xb7, 0x12, 0xd5, 0xe1, 0x60,
+	0x8c, 0xa5, 0xd9, 0x5a, 0xd9, 0xdf, 0x7c, 0x21, 0x28, 0xfb, 0x8b, 0xd0, 0xfe, 0x82, 0x66, 0x18,
+	0xd4, 0x15, 0xe5, 0xa1, 0x22, 0x2d, 0x97, 0xa9, 0xa9, 0xf0, 0x1f, 0xbc, 0x88, 0x13, 0x80, 0x9e,
+	0x7b, 0xda, 0x9f, 0x31, 0x66, 0x95, 0x6c, 0x57, 0x88, 0xe3, 0xe2, 0x57, 0x30, 0xd4, 0x50, 0x75,
+	0x2c, 0x6a, 0x3a, 0x04, 0x2d, 0x41, 0x9c, 0x2b, 0x18, 0x91, 0x26, 0xa5, 0xe9, 0xbe, 0xb9, 0xa9,
+	0x74, 0x1b, 0xab, 0x69, 0x0e, 0xce, 0x9e, 0xde, 0xff, 0x3d, 0x11, 0x53, 0x05, 0x10, 0xaf, 0x43,
+	0x92, 0x31, 0x67, 0x99, 0xb2, 0x6c, 0x75, 0x65, 0x83, 0x98, 0xae, 0xbe, 0xa9, 0x13, 0x5b, 0xcc,
+	0x46, 0x29, 0x38, 0xc7, 0x65, 0xe7, 0xf5, 0xa0, 0xc7, 0xe6, 0xf5, 0xaa, 0x83, 0xbc, 0x51, 0xc3,
+	0xe0, 0x37, 0x30, 0xd1, 0x92, 0x4e, 0x88, 0x5e, 0x80, 0x38, 0x87, 0x75, 0x25, 0x9a, 0x13, 0xa9,
+	0x02, 0x82, 0x57, 0x61, 0x8c, 0xf1, 0x3f, 0x15, 0x7d, 0x27, 0x5b, 0xcd, 0x79, 0xc8, 0x3a, 0xb1,
+	0x1c, 0xca, 0xae, 0x31, 0xcf, 0x58, 0x7d, 0xb1, 0x75, 0x0d, 0x86, 0xc1, 0x19, 0x18, 0x6f, 0x41,
+	0x26, 0xa4, 0x8e, 0x41, 0xaf, 0x2f, 0xc4, 0x3b, 0xe2, 0x9e, 0xe9, 0x5e, 0xb5, 0x56, 0xc0, 0x93,
+	0xe2, 0xe8, 0x96, 0x0c, 0xc3, 0x67, 0x58, 0xd7, 0x2c, 0x8b, 0xd8, 0xc1, 0xb5, 0x55, 0xc5, 0x69,
+	0x44, 0xed, 0x10, 0x23, 0x5e, 0xc2, 0xa0, 0xcf, 0x98, 0x2f, 0xf3, 0x1e, 0x9b, 0xd4, 0x37, 0x97,
+	0x6a, 0x7b, 0x2e, 0x8d, 0x7c, 0xea, 0x00, 0x6d, 0xe4, 0xc7, 0xe7, 0x21, 0xc1, 0x46, 0xbf, 0xa8,
+	0x58, 0x16, 0xb5, 0x5d, 0xb2, 0xc1, 0x9c, 0x39, 0x78, 0x59, 0x1c, 0x60, 0x53, 0x3d, 0xd0, 0x73,
+	0x05, 0xe2, 0x6c, 0xa4, 0xaf, 0xa2, 0x3f, 0x2d, 0x9e, 0x27, 0x3f, 0x19, 0xd1, 0xc4, 0x19, 0xb8,
+	0xc4, 0x68, 0x1e, 0x13, 0x37, 0x47, 0x6d, 0xc2, 0x9f, 0xd6, 0x23, 0x6a, 0x37, 0x5c, 0xc6, 0x08,
+	0x9c, 0x65, 0xdb, 0x57, 0x1e, 0xb2, 0x2b, 0xe8, 0x51, 0xfd, 0x5f, 0xb1, 0x09, 0xb8, 0x1d, 0x5c,
+	0x68, 0x79, 0x02, 0x7d, 0x9e, 0xe9, 0x7c, 0xc3, 0x1b, 0xbf, 0xd6, 0xf6, 0x58, 0x6a, 0x6c, 0x2a,
+	0x14, 0x83, 0x35, 0x1e, 0x85, 0x8b, 0xe1, 0x79, 0xfe, 0x2d, 0xbd, 0x05, 0x39, 0xaa, 0x29, 0x44,
+	0xac, 0x45, 0x89, 0x48, 0x75, 0x29, 0x62, 0x4d, 0x77, 0xdc, 0x7a, 0x21, 0x73, 0xbf, 0x00, 0xce,
+	0xb0, 0x61, 0x68, 0x4f, 0x82, 0x38, 0x2f, 0x22, 0xa5, 0x2d, 0x5b, 0x38, 0x0e, 0xe4, 0x9b, 0xdd,
+	0x03, 0xb8, 0x0b, 0x3c, 0xf5, 0xf1, 0xfb, 0xdf, 0x4f, 0xa7, 0xc6, 0xd1, 0xa8, 0xe2, 0xed, 0x9f,
+	0x61, 0x50, 0xa5, 0x29, 0xc6, 0xd0, 0x0f, 0x09, 0x50, 0xf8, 0xc3, 0x45, 0x0b, 0x9d, 0xa7, 0xb5,
+	0x4c, 0x0f, 0xf9, 0xfe, 0xc9, 0xc0, 0x42, 0xf6, 0x32, 0x93, 0xbd, 0x88, 0x32, 0x91, 0xb2, 0x45,
+	0x2c, 0x15, 0xaa, 0x75, 0xc9, 0xa4, 0xec, 0x84, 0xc2, 0x6a, 0x17, 0x7d, 0x93, 0x60, 0xb0, 0xf9,
+	0x23, 0x47, 0xf3, 0x9d, 0x95, 0xb5, 0x48, 0x19, 0xf9, 0xde, 0x49, 0xa0, 0xc2, 0x52, 0x8e, 0x59,
+	0xca, 0xa0, 0x85, 0x48, 0x4b, 0x41, 0xba, 0x78, 0xae, 0x78, 0x6f, 0x27, 0x14, 0x68, 0xbb, 0xe8,
+	0xab, 0x04, 0x28, 0x1c, 0x2a, 0xdd, 0xdc, 0x54, 0xcb, 0xb0, 0xea, 0xe6, 0xa6, 0x5a, 0xe7, 0x18,
+	0x9e, 0x65, 0xb6, 0x52, 0xe8, 0x7a, 0xa4, 0x2d, 0xcd, 0x30, 0xf2, 0xcd, 0x31, 0x87, 0x3e, 0x4b,
+	0x30, 0xd0, 0x14, 0x43, 0x68, 0xb6, 0xb3, 0x88, 0x26, 0x88, 0x3c, 0x7f, 0x6c, 0x48, 0x20, 0xfa,
+	0x06, 0x13, 0x7d, 0x15, 0x5d, 0x8e, 0x14, 0xed, 0x34, 0x69, 0xfb, 0x27, 0xc1, 0x70, 0x64, 0x60,
+	0xa1, 0x07, 0x9d, 0x25, 0xb4, 0x0b, 0x4a, 0x79, 0xf1, 0xc4, 0x78, 0x61, 0x64, 0x95, 0x19, 0x59,
+	0x46, 0xb9, 0x7a, 0x23, 0x3e, 0x53, 0xcd, 0x51, 0x89, 0xb8, 0xf9, 0xa2, 0xa1, 0x13, 0xd3, 0x15,
+	0x71, 0x96, 0xdf, 0xa4, 0xb6, 0xff, 0xcc, 0x44, 0x36, 0xef, 0xa2, 0x2f, 0x12, 0xf4, 0x37, 0x8c,
+	0x43, 0x77, 0x8e, 0xa9, 0xcf, 0xf7, 0x75, 0xf7, 0xd8, 0x38, 0xe1, 0xe7, 0x36, 0xf3, 0xa3, 0xa0,
+	0x99, 0x2e, 0xfc, 0xd4, 0xc2, 0x39, 0xbb, 0xb2, 0x7f, 0x98, 0x94, 0x0e, 0x0e, 0x93, 0xd2, 0x9f,
+	0xc3, 0xa4, 0xb4, 0x77, 0x94, 0x8c, 0x1d, 0x1c, 0x25, 0x63, 0x3f, 0x8f, 0x92, 0xb1, 0xd7, 0x4a,
+	0x49, 0x77, 0xb7, 0x2a, 0x05, 0xef, 0x8f, 0x59, 0x24, 0xe5, 0xfb, 0x1a, 0xa9, 0x5b, 0xb5, 0x88,
+	0x53, 0x88, 0xb3, 0x7f, 0xc7, 0x6e, 0xfd, 0x0f, 0x00, 0x00, 0xff, 0xff, 0xe0, 0x9e, 0xa4, 0xdb,
+	0x53, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -531,6 +710,10 @@ type QueryClient interface {
 	ObserversByChain(ctx context.Context, in *QueryObserversByChainRequest, opts ...grpc.CallOption) (*QueryObserversByChainResponse, error)
 	AllObserverMappers(ctx context.Context, in *QueryAllObserverMappersRequest, opts ...grpc.CallOption) (*QueryAllObserverMappersResponse, error)
 	SupportedChains(ctx context.Context, in *QuerySupportedChains, opts ...grpc.CallOption) (*QuerySupportedChainsResponse, error)
+	// Queries a list of GetClientParamsForChain items.
+	GetCoreParamsForChain(ctx context.Context, in *QueryGetCoreParamsForChainRequest, opts ...grpc.CallOption) (*QueryGetCoreParamsForChainResponse, error)
+	// Queries a list of GetCoreParams items.
+	GetCoreParams(ctx context.Context, in *QueryGetCoreParamsRequest, opts ...grpc.CallOption) (*QueryGetCoreParamsResponse, error)
 }
 
 type queryClient struct {
@@ -586,6 +769,24 @@ func (c *queryClient) SupportedChains(ctx context.Context, in *QuerySupportedCha
 	return out, nil
 }
 
+func (c *queryClient) GetCoreParamsForChain(ctx context.Context, in *QueryGetCoreParamsForChainRequest, opts ...grpc.CallOption) (*QueryGetCoreParamsForChainResponse, error) {
+	out := new(QueryGetCoreParamsForChainResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Query/GetCoreParamsForChain", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetCoreParams(ctx context.Context, in *QueryGetCoreParamsRequest, opts ...grpc.CallOption) (*QueryGetCoreParamsResponse, error) {
+	out := new(QueryGetCoreParamsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Query/GetCoreParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -596,6 +797,10 @@ type QueryServer interface {
 	ObserversByChain(context.Context, *QueryObserversByChainRequest) (*QueryObserversByChainResponse, error)
 	AllObserverMappers(context.Context, *QueryAllObserverMappersRequest) (*QueryAllObserverMappersResponse, error)
 	SupportedChains(context.Context, *QuerySupportedChains) (*QuerySupportedChainsResponse, error)
+	// Queries a list of GetClientParamsForChain items.
+	GetCoreParamsForChain(context.Context, *QueryGetCoreParamsForChainRequest) (*QueryGetCoreParamsForChainResponse, error)
+	// Queries a list of GetCoreParams items.
+	GetCoreParams(context.Context, *QueryGetCoreParamsRequest) (*QueryGetCoreParamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -616,6 +821,12 @@ func (*UnimplementedQueryServer) AllObserverMappers(ctx context.Context, req *Qu
 }
 func (*UnimplementedQueryServer) SupportedChains(ctx context.Context, req *QuerySupportedChains) (*QuerySupportedChainsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SupportedChains not implemented")
+}
+func (*UnimplementedQueryServer) GetCoreParamsForChain(ctx context.Context, req *QueryGetCoreParamsForChainRequest) (*QueryGetCoreParamsForChainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCoreParamsForChain not implemented")
+}
+func (*UnimplementedQueryServer) GetCoreParams(ctx context.Context, req *QueryGetCoreParamsRequest) (*QueryGetCoreParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCoreParams not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -712,6 +923,42 @@ func _Query_SupportedChains_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCoreParamsForChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCoreParamsForChainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCoreParamsForChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Query/GetCoreParamsForChain",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCoreParamsForChain(ctx, req.(*QueryGetCoreParamsForChainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetCoreParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCoreParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCoreParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Query/GetCoreParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCoreParams(ctx, req.(*QueryGetCoreParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.observer.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -735,6 +982,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SupportedChains",
 			Handler:    _Query_SupportedChains_Handler,
+		},
+		{
+			MethodName: "GetCoreParamsForChain",
+			Handler:    _Query_GetCoreParamsForChain_Handler,
+		},
+		{
+			MethodName: "GetCoreParams",
+			Handler:    _Query_GetCoreParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1044,6 +1299,127 @@ func (m *QuerySupportedChainsResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetCoreParamsForChainRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCoreParamsForChainRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCoreParamsForChainRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ChainID != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetCoreParamsForChainResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCoreParamsForChainResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCoreParamsForChainResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CoreParams != nil {
+		{
+			size, err := m.CoreParams.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetCoreParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCoreParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCoreParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetCoreParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCoreParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCoreParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CoreParams != nil {
+		{
+			size, err := m.CoreParams.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1173,6 +1549,53 @@ func (m *QuerySupportedChainsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryGetCoreParamsForChainRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ChainID != 0 {
+		n += 1 + sovQuery(uint64(m.ChainID))
+	}
+	return n
+}
+
+func (m *QueryGetCoreParamsForChainResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CoreParams != nil {
+		l = m.CoreParams.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetCoreParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetCoreParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CoreParams != nil {
+		l = m.CoreParams.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1892,6 +2315,297 @@ func (m *QuerySupportedChainsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Chains = append(m.Chains, &common.Chain{})
 			if err := m.Chains[len(m.Chains)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCoreParamsForChainRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCoreParamsForChainRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCoreParamsForChainRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainID", wireType)
+			}
+			m.ChainID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChainID |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCoreParamsForChainResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCoreParamsForChainResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCoreParamsForChainResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoreParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CoreParams == nil {
+				m.CoreParams = &CoreParams{}
+			}
+			if err := m.CoreParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCoreParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCoreParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCoreParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCoreParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCoreParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCoreParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CoreParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CoreParams == nil {
+				m.CoreParams = &CoreParamsList{}
+			}
+			if err := m.CoreParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

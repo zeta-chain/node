@@ -7,15 +7,16 @@ import (
 )
 
 type ObserverInfoReader struct {
+	IsObserver                string   `json:"IsObserver"`
 	ObserverAddress           string   `json:"ObserverAddress"`
-	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress"`
+	ZetaClientGranteeAddress  string   `json:"ZetaClientGranteeAddress,omitempty"`
 	StakingGranteeAddress     string   `json:"StakingGranteeAddress,omitempty"`
 	StakingMaxTokens          string   `json:"StakingMaxTokens,omitempty"`
 	StakingValidatorAllowList []string `json:"StakingValidatorAllowList,omitempty"`
 	SpendGranteeAddress       string   `json:"SpendGranteeAddress,omitempty"`
 	SpendMaxTokens            string   `json:"SpendMaxTokens,omitempty"`
 	GovGranteeAddress         string   `json:"GovGranteeAddress,omitempty"`
-	ZetaClientGranteePubKey   string   `json:"ZetaClientGranteePubKey"`
+	ZetaClientGranteePubKey   string   `json:"ZetaClientGranteePubKey,omitempty"`
 }
 
 func (o ObserverInfoReader) String() string {

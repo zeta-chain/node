@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	"os"
@@ -12,7 +11,7 @@ import (
 func CollectObserverInfoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-observer-info [folder]",
-		Short: "collect observer info from a folder , default path is ~/.zetacored/os_info/",
+		Short: "collect observer info from a folder , default path is ~/.zetacored/os_info/ \n",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			defaultHome := app.DefaultNodeHome
@@ -21,7 +20,6 @@ func CollectObserverInfoCmd() *cobra.Command {
 				args = append(args, defaultFile)
 			}
 			directory := args[0]
-
 			files, err := os.ReadDir(directory)
 			if err != nil {
 				return err
@@ -47,7 +45,6 @@ func CollectObserverInfoCmd() *cobra.Command {
 				}
 				observerInfoList = append(observerInfoList, observerInfo)
 			}
-			fmt.Println(observerInfoList)
 			file, _ := json.MarshalIndent(observerInfoList, "", " ")
 			_ = os.WriteFile("observer_info.json", file, 0600)
 			return nil

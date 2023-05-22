@@ -10,7 +10,7 @@ const TypeMsgDeployFungibleCoinZRC20 = "deploy_fungible_coin_zrc_20"
 
 var _ sdk.Msg = &MsgDeployFungibleCoinZRC20{}
 
-func NewMsgDeployFungibleCoinZRC20(creator string, ERC20 string, foreignChain string, decimals uint32, name string, symbol string, coinType common.CoinType) *MsgDeployFungibleCoinZRC20 {
+func NewMsgDeployFungibleCoinZRC20(creator string, ERC20 string, foreignChain string, decimals uint32, name string, symbol string, coinType common.CoinType, gasLimit int64) *MsgDeployFungibleCoinZRC20 {
 	return &MsgDeployFungibleCoinZRC20{
 		Creator:      creator,
 		ERC20:        ERC20,
@@ -19,6 +19,7 @@ func NewMsgDeployFungibleCoinZRC20(creator string, ERC20 string, foreignChain st
 		Name:         name,
 		Symbol:       symbol,
 		CoinType:     coinType,
+		GasLimit:     gasLimit,
 	}
 }
 
@@ -47,6 +48,9 @@ func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.GasLimit < 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit (%s)", err)
 	}
 	return nil
 }

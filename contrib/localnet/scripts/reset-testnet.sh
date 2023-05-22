@@ -1,7 +1,27 @@
 #!/bin/bash
 set -x
-ZETACORED=/usr/local/bin/zetacored
-NODES="zetacore1"
+
+CHAINID="athens_101-1"
+KEYRING="test"
+HOSTNAME=$(hostname)
+
+if [ $# -ne 1 ]
+then
+  echo "Usage: reset-testnet.sh <num of nodes>"
+  exit 1
+fi
+NUMOFNODES=$1
+
+# generate node list
+START=1
+# shellcheck disable=SC2100
+END=$((NUMOFNODES - 1))
+NODELIST=()
+for i in $(eval echo "{$START..$END}")
+do
+  NODELIST+=("zetacore$i")
+done
+
 HOSTNAME=$(hostname)
 if [ $HOSTNAME != "zetacore0" ]
 then
@@ -9,97 +29,80 @@ then
   exit 1
 fi
 
-rm -rf ~/.zetacored/data
-rm -rf ~/.zetacored/config
-for NODE in $NODES; do
-	ssh $NODE rm -rf ~/.zetacored/data
-	ssh $NODE rm -rf ~/.zetacored/config
+
+
+# Init a new node to generate genesis file.
+# Copy config files from existing folders which get copied via Docker Copy when building images
+mkdir -p ~/.backup/config
+zetacored init Zetanode-Localnet --chain-id="$CHAINID"
+for NODE in "${NODELIST[@]}"
+do
+  ssh "$NODE" mkdir -p ~/.backup/config
+  ssh "$NODE" zetacored init Zetanode-Localnet --chain-id="$CHAINID"
 done
 
-$ZETACORED init --chain-id athens_101-1 zetachain
-ADDR=$($ZETACORED keys show val -a --keyring-backend=test)
-if [ -z "$ADDR" ]; then
-    echo "No val key found; generate new val key"
-	  $ZETACORED keys add val --keyring-backend=test --algo=secp256k1
-fi
-ADDR=$($ZETACORED keys show val -a --keyring-backend=test)
-
-observer+=$ADDR
-observer+=","
-
-
-$ZETACORED add-genesis-account $($ZETACORED keys show val -a --keyring-backend=test) 100000000000000000000000000azeta
-# give test address bob 10000 ZETA
-# cosmos:zeta1h4m2lf04kpzn4c6fj7tfcnr29fmgk2vfpkjma6
-# hex: 0xBD76aFa5f5b0453aE34997969C4c6a2A768b2989
-$ZETACORED add-genesis-account zeta1h4m2lf04kpzn4c6fj7tfcnr29fmgk2vfpkjma6 10000000000000000000000azeta
-
-for NODE in $NODES; do
-  ADDR=$(ssh  $NODE $ZETACORED keys show val -a --keyring-backend=test)
-  if [ -z "$ADDR" ]; then
-    echo "No val key found; generate new val key"
-	  ssh $NODE $ZETACORED keys add val --keyring-backend=test --algo=secp256k1
-  fi
-	ADDR=$(ssh  $NODE $ZETACORED keys show val -a --keyring-backend=test)
-	observer+=$ADDR
-	observer+=","
-	$ZETACORED add-genesis-account $ADDR 100000000000000000000000000azeta --keyring-backend=test
+# Add two new keys for operator and hotkey and create the required json structure for os_info
+source /root/os-info.sh
+for NODE in "${NODELIST[@]}"; do
+    ssh $NODE source /root/os-info.sh
 done
 
-observer_list=$(echo $observer | rev | cut -c2- | rev)
-zetacored add-observer Goerli 1337 InBoundTx "$observer_list" #goerli
-zetacored add-observer Goerli 1337 OutBoundTx "$observer_list"
-zetacored add-observer BscTestnet 97 InBoundTx "$observer_list" #bsctestnet
-zetacored add-observer BscTestnet 97 OutBoundTx "$observer_list"
-zetacored add-observer Mumbai 80001 InBoundTx "$observer_list" #mumbai
-zetacored add-observer Mumbai 80001 OutBoundTx "$observer_list"
-zetacored add-observer BtcTestNet 8001 InBoundTx "$observer_list" #btctestnet
-zetacored add-observer BtcTestNet 8001 OutBoundTx "$observer_list"
-zetacored add-observer Baobab 1001 InBoundTx "$observer_list" #baobab klaytn
-zetacored add-observer Baobab 1001 OutBoundTx "$observer_list"
 
-for NODE in $NODES; do
-	scp  ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/
+# Start of genesis creation.
+
+# 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
+ssh zetaclient0 mkdir -p ~/.zetacored/
+scp ~/.zetacored/os_info/os.json zetaclient0:~/.zetacored/os.json
+for NODE in "${NODELIST[@]}"; do
+  INDEX=${NODE:0-1}
+  ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
+  scp "$NODE":~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_z"$INDEX".json
+  scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
 done
 
-$ZETACORED gentx val 10000000000000000000000000azeta --keyring-backend=test --chain-id=athens_101-1
-
-for NODE in $NODES; do
-    ssh $NODE $ZETACORED gentx val 10000000000000000000000000azeta --keyring-backend=test --chain-id=athens_101-1 --ip $NODE
-    scp $NODE:~/.zetacored/config/gentx/*.json ~/.zetacored/config/gentx/
-done
-
-$ZETACORED collect-gentxs
-
-# Change parameter token denominations to aphoton
+# 2. Add the observers , authorizations and required params to the genesis.json
+zetacored collect-observer-info
+zetacored add-observer-list
 cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 cat $HOME/.zetacored/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 cat $HOME/.zetacored/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
-# set block gas limit to 100 million
-cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="100000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-
-zetacored validate-genesis --home ~/.zetacored
-
-
-for NODE in $NODES; do
-	scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/
+# 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
+zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+mkdir ~/.zetacored/config/gentx/z2gentx
+for NODE in "${NODELIST[@]}"; do
+    ssh $NODE rm -rf ~/.zetacored/genesis.json
+    scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
+    ssh $NODE zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+    scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
+    scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
 done
 
-#
-
-jq '.chain_id = "athens_101-1"' ~/.zetacored/config/genesis.json > temp.json && mv temp.json ~/.zetacored/config/genesis.json
-sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacored/config/app.toml
-sed -i '/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/' ~/.zetacored/config/app.toml
-
-for NODE in $NODES; do
-    ssh $NODE jq \'.chain_id = \"athens_101-1\"\' ~/.zetacored/config/genesis.json > temp.json && mv temp.json ~/.zetacored/config/genesis.json
-    ssh $NODE sed -i \'/\[api\]/,+3 s/enable = false/enable = true/\' ~/.zetacored/config/app.toml
-    ssh $NODE sed -i \'/\[api\]/,+24 s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/\' ~/.zetacored/config/app.toml
-done
-
-
-
+# 4. Collect all the gentx files in zetacore0 and create the final genesis.json
+zetacored collect-gentxs
 zetacored validate-genesis
+
+# 5. Copy the final genesis.json to all the nodes
+for NODE in "${NODELIST[@]}"; do
+    ssh $NODE rm -rf ~/.zetacored/genesis.json
+    scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
+done
+
+# 6. Update Config in zetacore0 so that it has the correct persistent peer list
+sleep 2
+pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
+pps=${pp:1:58}
+sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+# End of genesis creation steps . The steps below are common to all the nodes
+
+# Misc : Copying the keyring to the client nodes so that they can sign the transactions
+# We do not need to use keyring/* , as the client only needs the hotkey to sign the transactions but differentiating between the two keys would add additional logic to the script
+scp ~/.zetacored/keyring-test/* "zetaclient0":~/.zetacored/keyring-test/
+for NODE in "${NODELIST[@]}"; do
+  INDEX=${NODE:0-1}
+  ssh "zetaclient$INDEX" mkdir -p ~/.zetacored/keyring-test/
+  scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
+done

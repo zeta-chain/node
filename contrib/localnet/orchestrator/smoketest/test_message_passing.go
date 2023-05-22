@@ -63,6 +63,7 @@ func (sm *SmokeTest) TestMessagePassing() {
 	go func() {
 		defer sm.wg.Done()
 		fmt.Printf("Waiting for ConnectorEth.Send CCTX to be mined...\n")
+		fmt.Printf("  INTX hash: %s\n", receipt.TxHash.String())
 		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.cctxClient)
 		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 		if err != nil {

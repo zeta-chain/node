@@ -46,15 +46,16 @@ type ZetaCoreBridge struct {
 	cfg           config.ClientConfiguration
 	keys          *Keys
 	broadcastLock *sync.RWMutex
+	zetaChainID   string
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
+	stop                chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
-
 	cfg := config.ClientConfiguration{
 		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
 		SignerName:   signerName,
@@ -90,6 +91,8 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string) (*ZetaCoreBri
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
+		stop:                make(chan struct{}),
+		zetaChainID:         chainID,
 	}, nil
 }
 
@@ -103,18 +106,41 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
+func (b *ZetaCoreBridge) Stop() {
+	b.logger.Info().Msgf("ZetaBridge is stopping")
+	close(b.stop) // this notifies all configupdater to stop
+}
+
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
-	ctx := b.GetContext(keyType)
+	ctx := b.GetContext()
 	address := b.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
-	ctx := b.GetContext(keyType)
+	ctx := b.GetContext()
 	address := b.keys.GetAddress()
 	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	b.accountNumber[keyType] = accN
 	b.seqNumber[keyType] = seq
+}
+
+func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
+	retryCount := 0
+	maxRetryCount := 10
+	for {
+		block, err := b.GetLatestZetaBlock()
+		if err == nil && block.Header.Height > 1 {
+			b.logger.Info().Msgf("Zeta-core height: %d", block.Header.Height)
+			break
+		}
+		retryCount++
+		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
+		if retryCount > maxRetryCount {
+			panic("ZetaCore is not ready , Waited for 60s")
+		}
+		time.Sleep(6 * time.Second)
+	}
 }
 
 //func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {
@@ -124,4 +150,46 @@ func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
+}
+
+func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
+	coreParams, err := b.GetCoreParams()
+	if err != nil {
+		return err
+	}
+	chains := make([]common.Chain, len(coreParams))
+	for i, params := range coreParams {
+		chains[i] = *common.GetChainFromChainID(params.ChainId)
+		if common.IsBitcoinChain(params.ChainId) {
+			if cfg.BitcoinConfig == nil {
+				panic("BitcoinConfig is nil for this client")
+			}
+			if cfg.BitcoinConfig.CoreParams == nil {
+				cfg.BitcoinConfig.CoreParams = config.NewCoreParams()
+			}
+			cfg.BitcoinConfig.CoreParams.UpdateCoreParams(params)
+			continue
+		}
+		_, found := cfg.EVMChainConfigs[params.ChainId]
+		if !found {
+			panic(fmt.Sprintf("EvmConfig %s is nil for this client ", common.GetChainFromChainID(params.ChainId).String()))
+		}
+		if cfg.EVMChainConfigs[params.ChainId].CoreParams == nil {
+			cfg.EVMChainConfigs[params.ChainId].CoreParams = config.NewCoreParams()
+		}
+		cfg.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
+	}
+	cfg.ChainsEnabled = chains
+	keyGen, err := b.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	if keyGen.Status == stypes.KeygenStatus_PendingKeygen {
+		cfg.KeygenBlock = keyGen.BlockNumber
+		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
+	} else {
+		cfg.KeygenBlock = 0
+		cfg.KeyGenPubKeys = nil
+	}
+	return nil
 }

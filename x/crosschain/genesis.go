@@ -29,16 +29,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
 
-	// Set all the tSSVoter
-	for _, elem := range genState.TSSVoterList {
-		k.SetTSSVoter(ctx, *elem)
-	}
-
-	// Set all the tSS
-	for _, elem := range genState.TSSList {
-		k.SetTSS(ctx, *elem)
-	}
-
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
 		k.SetGasPrice(ctx, *elem)
@@ -85,18 +75,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all tSSVoter
-	tSSVoterList := k.GetAllTSSVoter(ctx)
-	for _, elem := range tSSVoterList {
-		elem := elem
-		genesis.TSSVoterList = append(genesis.TSSVoterList, &elem)
-	}
-
-	// Get all tSS
-	tSSList := k.GetAllTSS(ctx)
-	for _, elem := range tSSList {
-		elem := elem
-		genesis.TSSList = append(genesis.TSSList, &elem)
-	}
+	// TODO : ADD for single TSS
 
 	// Get all gasPrice
 	gasPriceList := k.GetAllGasPrice(ctx)
@@ -120,17 +99,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all send
-	sendList := k.GetAllCctxByStatuses(ctx, types.AllStatus())
+	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
-		elem := elem
-		genesis.CrossChainTxs = append(genesis.CrossChainTxs, elem)
+		e := elem
+		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
 	// Get all nodeAccount
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	for _, elem := range nodeAccountList {
-		elem := elem
-		genesis.NodeAccountList = append(genesis.NodeAccountList, &elem)
+		e := elem
+		genesis.NodeAccountList = append(genesis.NodeAccountList, &e)
 	}
 	return genesis
 }

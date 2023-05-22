@@ -26,9 +26,10 @@ cat $HOME/.zetacored/config/genesis.json | jq '.app_state["evm"]["params"]["evm_
 cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json
+sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacored/config/app.toml
 
 
-zetacored add-observer-list standalone-network/observers.json
+zetacored add-observer-list standalone-network/observers.json --keygen-block=5
 zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
 
 

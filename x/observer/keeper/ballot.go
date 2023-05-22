@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -45,6 +46,9 @@ func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallot
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	voter, _ := k.GetBallot(ctx, req.BallotIdentifier)
+	voter, found := k.GetBallot(ctx, req.BallotIdentifier)
+	if !found {
+		return nil, status.Error(codes.NotFound, "not found ballot")
+	}
 	return &types.QueryBallotByIdentifierResponse{Ballot: &voter}, nil
 }

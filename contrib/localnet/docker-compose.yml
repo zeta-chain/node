@@ -33,7 +33,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: /root/start-zetacored.sh
+    entrypoint: ["/root/genesis.sh", "2"]
 
 
   zetacore1:
@@ -46,7 +46,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: /root/start-zetacored.sh
+    entrypoint: ["/root/genesis.sh", "2"]
 
 
   zetaclient0:
@@ -59,7 +59,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
@@ -73,7 +73,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd.sh
+    entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 

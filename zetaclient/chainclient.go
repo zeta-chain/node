@@ -15,7 +15,7 @@ type ChainClient interface {
 	Stop()
 	//GetBaseGasPrice() *big.Int
 	IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
-	PostNonceIfNotRecorded(logger zerolog.Logger) error
+	//PostNonceIfNotRecorded(logger zerolog.Logger) error
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
 }
