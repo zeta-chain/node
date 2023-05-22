@@ -48,7 +48,7 @@ func GetERC20CustodyABI() string {
 var BitcoinConfig = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
-	RPCEndpoint: "bitcoin:18443",
+	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",
 }
 
