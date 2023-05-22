@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -69,25 +70,6 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	_ = sdk.UnwrapSDKContext(goCtx)
 	return &types.MsgAddObserverResponse{}, nil
-
-	//err := k.IsValidator(ctx, msg.Creator)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//chain := k.GetParams(ctx).GetChainFromChainID(msg.ChainId)
-	//if chain == nil {
-	//	return nil, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf("ChainID %d", msg.ChainId))
-	//}
-	//err = k.CheckObserverDelegation(ctx, msg.Creator, chain, msg.ObservationType)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//k.AddObserverToMapper(ctx,
-	//	chain,
-	//	msg.ObservationType,
-	//	msg.Creator)
-
-	//return &types.MsgAddObserverResponse{}, nil
 }
 
 //Queries
