@@ -97,6 +97,7 @@ jobs:
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
+          hostname
           OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
           cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
           cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
