@@ -110,7 +110,7 @@ jobs:
             zetaclientd-ubuntu-*
 
   build-alpine-and-test:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ["zeta-runners"]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -126,11 +126,7 @@ jobs:
             echo "Unsupported architecture" >&2
             exit 1
           fi
-          mkdir -p /home/runner/work
-          mkdir -p /home/runner/actions-runner/
-          mkdir -p /home/runner/actions-runner/_work/
-          mkdir -p /home/runner/actions-runner/_work/_temp/
-
+          
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
         timeout-minutes: 8
