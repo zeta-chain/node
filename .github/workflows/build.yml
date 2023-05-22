@@ -110,7 +110,7 @@ jobs:
             zetaclientd-ubuntu-*
 
   build-alpine-and-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest-4-cores
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
@@ -155,16 +155,6 @@ jobs:
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-      # - uses: actions/cache@v3
-      #   timeout-minutes: 5
-      #   with:
-      #     path: |
-      #       ~/.cache/go-build
-      #       ~/go/pkg/mod
-      #     key: ${{ runner.os }}-go-alpine-build-${{ hashFiles('**/go.sum') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-go-alpine-build
 
       - name: Build zetacored and zetaclientd
         env:
