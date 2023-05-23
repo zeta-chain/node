@@ -396,6 +396,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "false"
+          skip_docker_compose: "true"
+
       - name: upgrade-path-testing
         uses: ./.github/actions/upgrade-testing
         with:
