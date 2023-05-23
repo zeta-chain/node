@@ -334,6 +334,8 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
+            zetacored-ubuntu-20-amd64-zeta-chain-zeta-runners
+            zetaclientd-ubuntu-20-amd64-zeta-chain-zeta-runners
 
       # # Approval will be required closer to mainnet
       # - name: Require Approval To Create a Release
@@ -382,6 +384,7 @@ jobs:
     needs:
       - build-and-test
       - build-alpine-and-test
+      - upload
     steps:
       - uses: actions/checkout@v3
         with:
