@@ -31,8 +31,7 @@ jobs:
           [
             buildjet-4vcpu-ubuntu-2204-arm,
             buildjet-4vcpu-ubuntu-2204,
-            buildjet-4vcpu-ubuntu-2004,
-            zeta-runners
+            buildjet-4vcpu-ubuntu-2004
           ]
 
     runs-on: ${{matrix.runs-on}}
@@ -97,19 +96,9 @@ jobs:
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
-          hostname_check=$(hostname | cut -d '-' -f 1)-$(hostname | cut -d '-' -f 2)-$(hostname | cut -d '-' -f 3)-$(hostname | cut -d '-' -f 4)
-          echo "Hostname check: ${hostname_check}"
-          if [[ "${hostname_check}" == "zeta-chain-zeta-runners" ]]; then
-            echo "Zeta Runner: ${hostname_check}"
-            OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
-            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH-$hostname_check
-            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH-$hostname_check
-          else
-            echo "Non Zeta Runner: ${hostname_check}"
             OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
             cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
             cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
-          fi
 
       - name: Save Binaries as Artifacts
         uses: actions/upload-artifact@v3
@@ -338,8 +327,6 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
-            zetacored-ubuntu-20-amd64-zeta-chain-zeta-runners
-            zetaclientd-ubuntu-20-amd64-zeta-chain-zeta-runners
 
       # # Approval will be required closer to mainnet
       # - name: Require Approval To Create a Release
@@ -380,8 +367,6 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
-            zetacored-ubuntu-20-amd64-zeta-chain-zeta-runners
-            zetaclientd-ubuntu-20-amd64-zeta-chain-zeta-runners
 
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
