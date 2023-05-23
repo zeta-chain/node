@@ -49,7 +49,10 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install wget jq -y
+        sudo apt-get install wget \
+          libusb-dev \
+          linux-headers \ 
+          jq -y
 
     - name: Install Docker Compose
       if: ${{ inputs.skip_docker_compose == 'false' }}
@@ -59,8 +62,7 @@ runs:
         sudo apt-get install \
           ca-certificates \
           curl \
-          gnupg libusb-dev \
-          linux-headers \
+          gnupg \
           lsb-release -y || echo "issue installing dependencies"
         sudo mkdir -p /etc/apt/keyrings
         sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --no-tty --batch --dearmor --yes -o /etc/apt/keyrings/docker.gpg
