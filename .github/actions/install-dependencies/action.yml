@@ -50,10 +50,6 @@ runs:
       run: |
         sudo apt-get update
         sudo apt-get install wget jq -y
-        sudo apt-get dist-upgrade -y
-        sudo apt-get install libusb-dev linux-generic -y
-        sudo apt upgrade libc6 -y
-        sudo apt install curl wget vim jq bash glibc-source -y
 
     - name: Install Docker Compose
       if: ${{ inputs.skip_docker_compose == 'false' }}
