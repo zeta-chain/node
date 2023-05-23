@@ -319,6 +319,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Check Binaries
+        run: |
+          ls -lah
+
       - name: upload-files-to-s3
         uses: ./.github/actions/upload-to-s3
         with:
@@ -376,6 +380,8 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
+            zetacored-ubuntu-20-amd64-zeta-chain-zeta-runners
+            zetaclientd-ubuntu-20-amd64-zeta-chain-zeta-runners
 
   upgrade_path_testing:
     runs-on: ["zeta-runners"]
