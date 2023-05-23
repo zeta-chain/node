@@ -87,6 +87,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ", cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.LogIdentifierForCCTX()))
 	}
+	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
 	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
 	gasLimit := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
