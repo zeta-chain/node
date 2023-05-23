@@ -1,6 +1,5 @@
 localnet
 package.json
 yarn.lock
-.git/
 .github/
 .gitignore
