@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-  
+
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -14,19 +15,6 @@ import (
 
 // MESSAGES
 
-// The CreateTSSVoter function creates a threshold signature scheme (TSS) voter
-// and adds it to the TSS voter store. It first checks if the message creator is
-// a bonded validator. It then calculates the sessionID based on the current
-// block height and creates an index using the message digest and the sessionID.
-// It retrieves a TSS voter based on the index and checks if the creator has
-// already signed. If the creator has not signed, the method adds the creator to
-// the Signers list in the TSS voter. If the TSS voter is not found, the method
-// creates a new TSS voter with the provided information and initializes the
-// Signers list with the creator. The method then sets the TSS voter in the
-// store using the SetTSSVoter function. If the Signers list in the TSS voter is
-// equal to the number of validators, the method creates a new TSS using the TSS
-// voter information and sets it in the TSS store using the SetTSS function. The
-// function returns an empty MsgCreateTSSVoterResponse and no error.
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

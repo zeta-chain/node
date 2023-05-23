@@ -10,3 +10,12 @@ message MsgAddObserver {
 }
 ```
 
+## MsgUpdateCoreParams
+
+```proto
+message MsgUpdateCoreParams {
+	string creator = 1;
+	CoreParams coreParams = 2;
+}
+```
+

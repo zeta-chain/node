@@ -2,16 +2,6 @@
 
 ## MsgAddToOutTxTracker
 
-The AddToOutTxTracker function adds a transaction hash and signer to the
-outgoing transaction tracker for a given chain and nonce. It first checks if
-the message creator is a bonded validator or an admin key. It then retrieves
-a chain based on the chain ID and checks if it is supported. After that, it
-retrieves a tracker based on the chain ID and the nonce. If the tracker does
-not exist, it creates a new tracker with the provided hash and signer. If the
-tracker exists, it checks if the hash already exists in the tracker. If not,
-it adds the hash and signer to the tracker. The function returns an empty
-MsgAddToOutTxTrackerResponse and no error.
-
 ```proto
 message MsgAddToOutTxTracker {
 	string creator = 1;
@@ -23,12 +13,6 @@ message MsgAddToOutTxTracker {
 
 ## MsgRemoveFromOutTxTracker
 
-The RemoveFromOutTxTracker function removes an outgoing transaction tracker
-for a given chain and nonce. It first checks if the message creator is a
-bonded validator or an admin key. It then removes the tracker with the
-provided chain ID and nonce using the RemoveOutTxTracker function. The
-function returns an empty MsgRemoveFromOutTxTrackerResponse and no error.
-
 ```proto
 message MsgRemoveFromOutTxTracker {
 	string creator = 1;
@@ -39,26 +23,12 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgCreateTSSVoter
 
-The CreateTSSVoter function creates a threshold signature scheme (TSS) voter
-and adds it to the TSS voter store. It first checks if the message creator is
-a bonded validator. It then calculates the sessionID based on the current
-block height and creates an index using the message digest and the sessionID.
-It retrieves a TSS voter based on the index and checks if the creator has
-already signed. If the creator has not signed, the method adds the creator to
-the Signers list in the TSS voter. If the TSS voter is not found, the method
-creates a new TSS voter with the provided information and initializes the
-Signers list with the creator. The method then sets the TSS voter in the
-store using the SetTSSVoter function. If the Signers list in the TSS voter is
-equal to the number of validators, the method creates a new TSS using the TSS
-voter information and sets it in the TSS store using the SetTSS function. The
-function returns an empty MsgCreateTSSVoterResponse and no error.
-
 ```proto
 message MsgCreateTSSVoter {
 	string creator = 1;
-	string chain = 3;
-	string address = 4;
-	string pubkey = 5;
+	string tss_pubkey = 2;
+	int64 keyGenZetaHeight = 3;
+	common.ReceiveStatus status = 4;
 }
 ```
 
@@ -75,6 +45,8 @@ message MsgGasPriceVoter {
 ```
 
 ## MsgNonceVoter
+
+Should be removed
 
 ```proto
 message MsgNonceVoter {
@@ -141,3 +113,11 @@ message MsgUpdatePermissionFlags {
 }
 ```
 
+## MsgUpdateKeygen
+
+```proto
+message MsgUpdateKeygen {
+	string creator = 1;
+	int64 block = 2;
+}
+```

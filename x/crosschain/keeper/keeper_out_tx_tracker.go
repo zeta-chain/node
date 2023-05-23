@@ -156,15 +156,6 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 
 // Messages
 
-// The AddToOutTxTracker function adds a transaction hash and signer to the
-// outgoing transaction tracker for a given chain and nonce. It first checks if
-// the message creator is a bonded validator or an admin key. It then retrieves
-// a chain based on the chain ID and checks if it is supported. After that, it
-// retrieves a tracker based on the chain ID and the nonce. If the tracker does
-// not exist, it creates a new tracker with the provided hash and signer. If the
-// tracker exists, it checks if the hash already exists in the tracker. If not,
-// it adds the hash and signer to the tracker. The function returns an empty
-// MsgAddToOutTxTrackerResponse and no error.
 func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
@@ -215,11 +206,6 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
 }
 
-// The RemoveFromOutTxTracker function removes an outgoing transaction tracker
-// for a given chain and nonce. It first checks if the message creator is a
-// bonded validator or an admin key. It then removes the tracker with the
-// provided chain ID and nonce using the RemoveOutTxTracker function. The
-// function returns an empty MsgRemoveFromOutTxTrackerResponse and no error.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker) {
