@@ -97,8 +97,9 @@ jobs:
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
-          hostname_check=$(hostname | grep "zeta-chain-zeta-runners" || echo "")
-          if [ ! -z "${hostname_check}" ]; then
+          hostname_check=$(hostname | cut -d '-' -f 1)-$(hostname | cut -d '-' -f 2)-$(hostname | cut -d '-' -f 3)-$(hostname | cut -d '-' -f 4)
+          echo "Hostname check: ${hostname_check}"
+          if [[ "${hostname_check}" == "zeta-chain-zeta-runners" ]]; then
             echo "Zeta Runner: ${hostname_check}"
             OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
             cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH-$(hostname)
