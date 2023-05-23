@@ -56,7 +56,7 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 		} else if common.IsBitcoinChain(chain.ChainId) {
 			// FIXME: move the construction of rpcclient to somewhere else
 			connCfg := &rpcclient.ConnConfig{
-				Host:         cfg.BitcoinConfig.RPCEndpoint,
+				Host:         cfg.BitcoinConfig.RPCHost,
 				User:         cfg.BitcoinConfig.RPCUsername,
 				Pass:         cfg.BitcoinConfig.RPCPassword,
 				HTTPPostMode: true,

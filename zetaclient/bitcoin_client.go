@@ -69,8 +69,8 @@ func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
 	return ob.cfg.BitcoinConfig
 }
 
-func (ob *BitcoinChainClient) EndPoint() string {
-	return ob.GetChainConfig().RPCEndpoint
+func (ob *BitcoinChainClient) GetRPCHost() string {
+	return ob.GetChainConfig().RPCHost
 }
 
 // Return configuration based on supplied target chain
@@ -105,9 +105,9 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	}
 
 	// initialize the Client
-	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.EndPoint())
+	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.GetRPCHost())
 	connCfg := &rpcclient.ConnConfig{
-		Host:         ob.EndPoint(),
+		Host:         ob.GetRPCHost(),
 		User:         ob.GetChainConfig().RPCUsername,
 		Pass:         ob.GetChainConfig().RPCPassword,
 		HTTPPostMode: true,
@@ -217,6 +217,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if !permssions.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
+
 	lastBN := ob.GetLastBlockHeight()
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -225,8 +226,15 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if cnt < 0 || cnt >= math2.MaxInt64 {
 		return fmt.Errorf("block count is out of range: %d", cnt)
 	}
+
+	// "confirmed" current block number
+	confirmedBlockNum := cnt - int64(ob.GetChainConfig().CoreParams.ConfCount)
+	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
+		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
+	}
+
 	// query incoming gas asset
-	if cnt > lastBN {
+	if confirmedBlockNum > lastBN {
 		bn := lastBN + 1
 		ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
 		hash, err := ob.rpcClient.GetBlockHash(bn)

@@ -100,7 +100,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
-
 	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
 		fmt.Printf("burn coins failed: %s\n", err.Error())
@@ -122,7 +121,8 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
-	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000, common.CoinType_Zeta, "")
+	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
+	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000+uint64(event.Raw.Index), common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)

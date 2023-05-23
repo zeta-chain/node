@@ -81,7 +81,7 @@ import (
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
-	"github.com/zeta-chain/zetacore/docs"
+	"github.com/zeta-chain/zetacore/docs/openapi"
 
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -705,7 +705,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	if apiConfig.Swagger {
-		docs.RegisterOpenAPIService(apiSvr.Router)
+		openapi.RegisterOpenAPIService(apiSvr.Router)
 	}
 }
 
