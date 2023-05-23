@@ -34,8 +34,9 @@ COPY ./upgrades/ /app_version/
 RUN apt update && \
     apt-get update && \
     apt-get dist-upgrade -y && \
+    apt-get install libusb-dev linux-headers -y && \
     apt upgrade libc6 -y && \
-    apt install curl wget vim jq bash glibc-source -y && \
+    apt install curl wget vim jq bash glibc-source  -y && \
     chmod -R a+x /scripts && \
     chmod -R a+x /app_version/ && \
     chmod -R 766 /app_version
