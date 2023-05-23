@@ -102,8 +102,8 @@ jobs:
           if [[ "${hostname_check}" == "zeta-chain-zeta-runners" ]]; then
             echo "Zeta Runner: ${hostname_check}"
             OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
-            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH-$(hostname)
-            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH-$(hostname)
+            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH-$hostname_check
+            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH-$hostname_check
           else
             echo "Non Zeta Runner: ${hostname_check}"
             OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
