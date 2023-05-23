@@ -23,10 +23,10 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
 	store.Set(types.KeyPrefix(send.Index), b)
 
 	// set mapping inTxHash -> cctxIndex
-	k.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
-		InTxHash:  send.InboundTxParams.InboundTxObservedHash,
-		CctxIndex: send.Index,
-	})
+	in, found := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
+	in.InTxHash = send.InboundTxParams.InboundTxObservedHash
+	in.CctxIndex = append(in.CctxIndex, send.Index)
+	k.SetInTxHashToCctx(ctx, in)
 
 	tss, found := k.GetTSS(ctx)
 	if !found {

@@ -5,7 +5,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 message InTxHashToCctx {
   string in_tx_hash = 1;
-  string cctx_index = 2;
-  
+  repeated string cctx_index = 2;
 }
 
