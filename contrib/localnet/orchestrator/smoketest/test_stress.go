@@ -24,8 +24,8 @@ import (
 
 const (
 	StatInterval      = 5
-	WithdrawInterval  = 500
-	StressTestTimeout = 100 * time.Minute
+	WithdrawInterval  = 1000
+	StressTestTimeout = 1000 * time.Minute
 )
 
 var (

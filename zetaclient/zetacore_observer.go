@@ -166,7 +166,7 @@ func (co *CoreObserver) startSendScheduler() {
 					continue
 				}
 				cnt := 0
-				maxCnt := 5
+				maxCnt := 3
 				safeMode := true // by default, be cautious and only send 1 tx per block
 				if len(sendList) > 0 {
 					lastProcessedNonce := int64(sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce) - 1
@@ -188,10 +188,11 @@ func (co *CoreObserver) startSendScheduler() {
 				host := co.Tss.Server.P2pCommunication.GetHost()
 				pCount, cCount, numStreams := countActiveStreams(host.Network())
 				co.logger.ZetaChainWatcher.Info().Msgf("numStreams: %d; protocol: %+v; conn: %+v", numStreams, pCount, cCount)
+				co.logger.ZetaChainWatcher.Info().Msgf("streamMgr: %d", len(streamMgr.UnusedStreams))
 				if outTxMan.numActiveProcessor == 0 {
 					co.logger.ZetaChainWatcher.Warn().Msgf("no active outbound tx processor; safeMode: %v", safeMode)
-					numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
-					co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
+					//numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
+					//co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
 				}
 
 				for _, send := range sendList {
@@ -220,7 +221,7 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					currentHeight := uint64(bn)
-					if nonce%10 == currentHeight%10 && !outTxMan.IsOutTxActive(outTxID) {
+					if nonce%15 == currentHeight%15 && !outTxMan.IsOutTxActive(outTxID) {
 						if safeMode && nonce != sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce {
 							break
 						}
