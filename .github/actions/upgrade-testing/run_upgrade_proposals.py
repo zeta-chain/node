@@ -36,20 +36,22 @@ upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 first = True
 non_concensus_upgrades = []
-for tag in tag_list:
-    if first:
-        first_major_version = tag.split(".")[0]
-        first_minor_version = tag.split(".")[1]
-        first = False
-    else:
-        major_version = tag.split(".")[0]
-        minor_version = tag.split(".")[1]
-        #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
-        if major_version == first_major_version and minor_version != first_minor_version:
-            non_concensus_upgrades.append(tag)
-        first_major_version = tag.split(".")[0]
-        first_minor_version = tag.split(".")[1]
-    binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
+# for tag in tag_list:
+#     if first:
+#         first_major_version = tag.split(".")[0]
+#         first_minor_version = tag.split(".")[1]
+#         first = False
+#     else:
+#         major_version = tag.split(".")[0]
+#         minor_version = tag.split(".")[1]
+#         #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
+#         if major_version == first_major_version and minor_version != first_minor_version:
+#             non_concensus_upgrades.append(tag)
+#         first_major_version = tag.split(".")[0]
+#         first_minor_version = tag.split(".")[1]
+#     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
+
+binary_download_list.append(["v1.1.6", "zetacored-ubuntu-22-amd64"],["v1.1.7", "zetacored-ubuntu-22-amd64"])
 
 logger.log.info(binary_download_list)
 os.environ["STARTING_VERSION"] = tag_list[0]
