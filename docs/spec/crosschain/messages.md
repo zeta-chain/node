@@ -69,7 +69,7 @@ updated" timestamp are updated.
 The transaction is proceeded to be finalized:
 
 If the observation was successful, the status is changed from "pending
-reverted/mined" to "reverted/minted". The difference between zeta burned
+revert/outbound" to "reverted/mined". The difference between zeta burned
 and minted is minted by the bank module and deposited into the module
 account.
 

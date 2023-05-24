@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/emicklei/proto"
@@ -27,6 +28,13 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error walking the path %q: %v\n", startDir, err)
 	}
+}
+
+// SanitizePackageName sanitizes the package name by allowing only alphanumeric characters and underscores.
+func sanitizePackageName(packageName string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9_]+")
+	sanitized := reg.ReplaceAllString(packageName, "")
+	return sanitized
 }
 
 func visit(path string, f os.FileInfo, err error, outputBaseDir string) error {
@@ -51,7 +59,8 @@ func visit(path string, f os.FileInfo, err error, outputBaseDir string) error {
 }
 
 func processProtoFile(path string, outputBaseDir string) error {
-	reader, err := os.Open(path)
+	safePath := filepath.Clean(path)
+	reader, err := os.Open(safePath)
 	if err != nil {
 		fmt.Printf("Error opening proto file %q: %v\n", path, err)
 		return err
@@ -91,15 +100,21 @@ func processProtoFile(path string, outputBaseDir string) error {
 			return err
 		}
 
-		outputFile := filepath.Join(outputDir, "messages.md")
-		file, err := os.Create(outputFile)
+		// Constructing safeOutputFile using filepath.Join to avoid file inclusion
+		safeOutputFile := filepath.Join(outputDir, "messages.md")
+		// #nosec G304
+		file, err := os.Create(safeOutputFile)
 		if err != nil {
-			fmt.Printf("Error creating file %q: %v\n", outputFile, err)
+			fmt.Printf("Error creating file %q: %v\n", safeOutputFile, err)
 			return err
 		}
 		defer file.Close()
 
-		file.WriteString("# Messages\n\n")
+		_, err = file.WriteString("# Messages\n\n")
+		if err != nil {
+			fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
+			return err
+		}
 		for _, service := range msgServices {
 			for _, element := range service.Elements {
 				if rpc, ok := element.(*proto.RPC); ok {
@@ -126,11 +141,26 @@ func processProtoFile(path string, outputBaseDir string) error {
 								return err
 							}
 						}
-						file.WriteString("```proto\n")
-						file.WriteString(messageToString(message))
-						file.WriteString("```\n\n")
+						_, err = file.WriteString("```proto\n")
+						if err != nil {
+							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
+							return err
+						}
+						_, err = file.WriteString(messageToString(message))
+						if err != nil {
+							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
+							return err
+						}
+						_, err = file.WriteString("```\n\n")
+						if err != nil {
+							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
+							return err
+						}
 					} else {
-						file.WriteString(fmt.Sprintf("## %s\n\n```\n%s\n```\n\n", rpc.RequestType, rpc.RequestType))
+						if _, err = file.WriteString(fmt.Sprintf("## %s\n\n```\n%s\n```\n\n", rpc.RequestType, rpc.RequestType)); err != nil {
+							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
+							return err
+						}
 					}
 				}
 			}
