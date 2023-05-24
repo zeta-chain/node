@@ -58,6 +58,31 @@ message MsgNonceVoter {
 
 ## MsgVoteOnObservedOutboundTx
 
+Casts a vote on an outbound transaction observed on a connected chain (after
+it has been broadcasted to and finalized on a connected chain). If this is
+the first vote, a new ballot is created. When a threshold of votes is
+reached, the ballot is finalized. When a ballot is finalized, if the amount
+of zeta minted does not match the outbound transaction amount an error is
+thrown. If the amounts match, the outbound transaction hash and the "last
+updated" timestamp are updated.
+
+The transaction is proceeded to be finalized:
+
+If the observation was successful, the status is changed from "pending
+reverted/mined" to "reverted/minted". The difference between zeta burned
+and minted is minted by the bank module and deposited into the module
+account.
+
+If the observation was unsuccessful, and if the status is "pending outbound",
+prices and nonce are updated and the status is changed to "pending revert".
+If the status was "pending revert", the status is changed to "aborted".
+
+If there's an error in the finalization process, the CCTX status is set to
+'Aborted'.
+
+After finalization yhe outbound transaction tracker and pending nonces are
+removed, and the CCTX is updated in the store.
+
 ```proto
 message MsgVoteOnObservedOutboundTx {
 	string creator = 1;
@@ -74,7 +99,12 @@ message MsgVoteOnObservedOutboundTx {
 
 ## MsgVoteOnObservedInboundTx
 
-FIXME: use more specific error types & codes
+Casts a vote on an inbound transaction observed on a connected chain. If this
+is the first vote, a new ballot is created. When a threshold of votes is
+reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
+created. If the receiver chain is a ZetaChain, the EVM deposit is handled.
+If the receiver chain is a connected chain, a swap is performed and the
+CCTX is finalized.
 
 ```proto
 message MsgVoteOnObservedInboundTx {
@@ -121,3 +151,4 @@ message MsgUpdateKeygen {
 	int64 block = 2;
 }
 ```
+
