@@ -31,7 +31,7 @@ import (
 
 const (
 	ObserverBalance = "100000000000000000000000"
-	HotkeyBalance   = "100000000000000000000"
+	HotkeyBalance   = "4100000000000000000000000"
 	keygenBlock     = "keygen-block"
 )
 
@@ -472,7 +472,6 @@ func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, a
 
 	return appState, nil
 }
-
 
 func isValidatorOnly(isObserver string) bool {
 	if isObserver == "y" {
