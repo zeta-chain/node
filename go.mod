@@ -21,7 +21,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
-	gitlab.com/thorchain/tss/go-tss v1.5.7
 	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37
 	google.golang.org/grpc v1.52.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -60,9 +59,11 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
+	github.com/otiai10/copy v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
+	github.com/zeta-chain/cosmos-sdk/cosmovisor v0.1.1-0.20221229222507-53cb3de5285c // indirect
 )
 
 require (

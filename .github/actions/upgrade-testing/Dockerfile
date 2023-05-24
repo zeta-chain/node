@@ -13,9 +13,8 @@ RUN apt update && \
     wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
     unzip main.zip && \
     cd cosmos-sdk-main/tools/cosmovisor && \
-    make cosmovisor && \
-    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3 && \
-    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.3
+    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.4 && \
+    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.4
 
 ################
 # BUILD MAIN IMAGE
@@ -34,7 +33,7 @@ COPY ./upgrades/ /app_version/
 RUN apt update && \
     apt-get update && \
     apt-get dist-upgrade -y && \
-    apt-get install libusb-dev linux-headers -y && \
+    apt-get install libusb-dev -y && \
     apt upgrade libc6 -y && \
     apt install curl wget vim jq bash glibc-source  -y && \
     chmod -R a+x /scripts && \

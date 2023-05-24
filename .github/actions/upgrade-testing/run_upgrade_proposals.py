@@ -51,6 +51,7 @@ for tag in tag_list:
         first_minor_version = tag.split(".")[1]
     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
 
+logger.log.info(binary_download_list)
 os.environ["STARTING_VERSION"] = tag_list[0]
 os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
@@ -69,12 +70,15 @@ upgrades_json_write.close()
 logger.log.info("**************************Generate Wallet For Test**************************")
 command_runner.generate_wallet()
 command_runner.load_key()
+logger.log.info("")
 
 logger.log.info("**************************Download Github Binaries from upgrades.json**************************")
 binary_downloader.download_testing_binaries()
+logger.log.info("")
 
 logger.log.info("**************************Build Docker Image**************************")
 command_runner.build_docker_image(os.environ["DOCKER_FILE_LOCATION"])
+logger.log.info("")
 
 logger.log.info("**************************Start Docker Container and Sleep for 60 Seconds**************************")
 command_runner.start_docker_container(os.environ["GAS_PRICES"],
@@ -94,13 +98,25 @@ command_runner.start_docker_container(os.environ["GAS_PRICES"],
                                os.environ["CLIENT_START_PROCESS"])
 
 time.sleep(10)
-logger.log.info("**************************check docker containers**************************")
+logger.log.info("**************************DOCKER PS**************************")
 command_runner.docker_ps()
-#Uncomment to debug.
-#command_runner.get_docker_container_logs()
+logger.log.info("")
+
+logger.log.info("**************************CHECK CONTAINER ID**************************")
+if not command_runner.CONTAINER_ID:
+    logger.log.error(f"Container didn't start. No Container ID: {command_runner.CONTAINER_ID}")
+    sys.exit(1)
+logger.log.info("")
+
+logger.log.info("**************************CHECK DEBUG IF SET SHOW LOGS**************************")
+if "DEBUG_UPGRADES" in os.environ:
+    if os.environ["DEBUG_UPGRADES"] != "false":
+        command_runner.get_docker_container_logs()
+logger.log.info("")
 
 logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
+logger.log.info("")
 
 for version in UPGRADE_DATA["upgrade_versions"]:
     logger.log.info(f"**************************starting upgrade for version: {version}**************************")

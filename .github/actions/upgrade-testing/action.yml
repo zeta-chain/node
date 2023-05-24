@@ -47,6 +47,7 @@ runs:
         CLIENT_START_PROCESS: "false"
         BINARY_NAME_SUFFIX: "ubuntu-20-amd64"
         UPGRADES_SLEEP_TIME: 140
+        DEBUG_UPGRADES: "false"
       run: |
         
         current_directory=$(pwd)
