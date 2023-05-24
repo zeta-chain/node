@@ -8,7 +8,6 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/emicklei/proto"
@@ -28,13 +27,6 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error walking the path %q: %v\n", startDir, err)
 	}
-}
-
-// SanitizePackageName sanitizes the package name by allowing only alphanumeric characters and underscores.
-func sanitizePackageName(packageName string) string {
-	reg, _ := regexp.Compile("[^a-zA-Z0-9_]+")
-	sanitized := reg.ReplaceAllString(packageName, "")
-	return sanitized
 }
 
 func visit(path string, f os.FileInfo, err error, outputBaseDir string) error {
