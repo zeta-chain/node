@@ -40,17 +40,21 @@ func visit(path string, f os.FileInfo, err error, outputBaseDir string) error {
 	}
 
 	if filepath.Ext(path) == ".proto" {
-		processProtoFile(path, outputBaseDir)
+		err := processProtoFile(path, outputBaseDir)
+		if err != nil {
+			fmt.Printf("Error processing proto file %q: %v\n", path, err)
+			return err
+		}
 	}
 
 	return nil
 }
 
-func processProtoFile(path string, outputBaseDir string) {
+func processProtoFile(path string, outputBaseDir string) error {
 	reader, err := os.Open(path)
 	if err != nil {
 		fmt.Printf("Error opening proto file %q: %v\n", path, err)
-		return
+		return err
 	}
 	defer reader.Close()
 
@@ -58,7 +62,7 @@ func processProtoFile(path string, outputBaseDir string) {
 	definition, err := parser.Parse()
 	if err != nil {
 		fmt.Printf("Error parsing proto file %q: %v\n", path, err)
-		return
+		return err
 	}
 
 	var packageName string
@@ -81,17 +85,17 @@ func processProtoFile(path string, outputBaseDir string) {
 
 	if packageName != "" && len(msgServices) > 0 {
 		outputDir := filepath.Join(outputBaseDir, getLastSegmentOfPackageName(packageName))
-		err = os.MkdirAll(outputDir, 0755)
+		err = os.MkdirAll(outputDir, 0750)
 		if err != nil {
 			fmt.Printf("Error creating directory %q: %v\n", outputDir, err)
-			return
+			return err
 		}
 
 		outputFile := filepath.Join(outputDir, "messages.md")
 		file, err := os.Create(outputFile)
 		if err != nil {
 			fmt.Printf("Error creating file %q: %v\n", outputFile, err)
-			return
+			return err
 		}
 		defer file.Close()
 
@@ -105,16 +109,22 @@ func processProtoFile(path string, outputBaseDir string) {
 						currentDir, err := os.Getwd()
 						if err != nil {
 							fmt.Printf("Error getting current working directory: %v\n", err)
-							return
+							return err
 						}
 
 						// Search for the corresponding Go function
 						goFunctionPath := filepath.Join(currentDir, "x")
 						functionComment, functionFound := findFunctionInGoFiles(functionName, goFunctionPath)
 
-						file.WriteString(fmt.Sprintf("## %s\n\n", rpc.RequestType))
+						_, err = file.WriteString(fmt.Sprintf("## %s\n\n", rpc.RequestType))
+						if err != nil {
+							return err
+						}
 						if functionFound && functionComment != "" {
-							file.WriteString(fmt.Sprintf("%s\n", functionComment))
+							_, err = file.WriteString(fmt.Sprintf("%s\n", functionComment))
+							if err != nil {
+								return err
+							}
 						}
 						file.WriteString("```proto\n")
 						file.WriteString(messageToString(message))
@@ -126,6 +136,7 @@ func processProtoFile(path string, outputBaseDir string) {
 			}
 		}
 	}
+	return nil
 }
 
 func messageToString(message *proto.Message) string {
