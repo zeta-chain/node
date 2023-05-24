@@ -80,7 +80,7 @@ If the status was "pending revert", the status is changed to "aborted".
 If there's an error in the finalization process, the CCTX status is set to
 'Aborted'.
 
-After finalization yhe outbound transaction tracker and pending nonces are
+After finalization the outbound transaction tracker and pending nonces are
 removed, and the CCTX is updated in the store.
 
 ```proto
