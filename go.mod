@@ -40,6 +40,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05
+	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -59,11 +60,9 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
-	github.com/otiai10/copy v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
-	github.com/zeta-chain/cosmos-sdk/cosmovisor v0.1.1-0.20221229222507-53cb3de5285c // indirect
 )
 
 require (
