@@ -25,6 +25,8 @@ import (
 // If the receiver chain is a connected chain, the inbound CCTX is finalized
 // (prices and nonce are updated) and status changes to "pending outbound". If
 // the finalization fails, the status of CCTX is changed to 'aborted'.
+//
+// Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_InBoundTx

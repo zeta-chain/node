@@ -2,6 +2,11 @@
 
 ## MsgAddToOutTxTracker
 
+Adds a new record to the outbound transaction tracker.
+
+Only the admin policy account and the observer validators are authorized to
+broadcast this message.
+
 ```proto
 message MsgAddToOutTxTracker {
 	string creator = 1;
@@ -13,6 +18,10 @@ message MsgAddToOutTxTracker {
 
 ## MsgRemoveFromOutTxTracker
 
+Removes a record from the outbound transaction tracker by chain ID and nonce.
+
+Only the admin policy account is authorized to broadcast this message.
+
 ```proto
 message MsgRemoveFromOutTxTracker {
 	string creator = 1;
@@ -22,6 +31,17 @@ message MsgRemoveFromOutTxTracker {
 ```
 
 ## MsgCreateTSSVoter
+
+Vote on creating a TSS key and recording the information about it (public
+key, participant and operator addresses, finalized and keygen heights).
+
+If the vote passes, the information about the TSS key is recorded on chain
+and the status of the keygen is set to "success".
+
+Fails if the keygen does not exist or if the keygen has been already
+completed.
+
+Only node accounts are authorized to broadcast this message.
 
 ```proto
 message MsgCreateTSSVoter {
@@ -33,6 +53,12 @@ message MsgCreateTSSVoter {
 ```
 
 ## MsgGasPriceVoter
+
+Submit information about the connected chain's gas price at a specific block
+height. Gas price submitted by each validator is recorded separately and a
+median index is updated.
+
+Only observer validators are authorized to broadcast this message.
 
 ```proto
 message MsgGasPriceVoter {
@@ -46,7 +72,7 @@ message MsgGasPriceVoter {
 
 ## MsgNonceVoter
 
-Should be removed
+Deprecated.
 
 ```proto
 message MsgNonceVoter {
@@ -80,8 +106,10 @@ If the status was "pending revert", the status is changed to "aborted".
 If there's an error in the finalization process, the CCTX status is set to
 'aborted'.
 
-After finalization yhe outbound transaction tracker and pending nonces are
+After finalization the outbound transaction tracker and pending nonces are
 removed, and the CCTX is updated in the store.
+
+Only observer validators are authorized to broadcast this message.
 
 ```proto
 message MsgVoteOnObservedOutboundTx {
@@ -112,6 +140,8 @@ If the receiver chain is a connected chain, the inbound CCTX is finalized
 (prices and nonce are updated) and status changes to "pending outbound". If
 the finalization fails, the status of CCTX is changed to 'aborted'.
 
+Only observer validators are authorized to broadcast this message.
+
 ```proto
 message MsgVoteOnObservedInboundTx {
 	string creator = 1;
@@ -132,6 +162,8 @@ message MsgVoteOnObservedInboundTx {
 
 ## MsgSetNodeKeys
 
+Not implemented yet.
+
 ```proto
 message MsgSetNodeKeys {
 	string creator = 1;
@@ -142,6 +174,11 @@ message MsgSetNodeKeys {
 
 ## MsgUpdatePermissionFlags
 
+Updates permissions. Currently, this is only used to enable/disable the
+inbound transactions.
+
+Only the admin policy account is authorized to broadcast this message.
+
 ```proto
 message MsgUpdatePermissionFlags {
 	string creator = 1;
@@ -150,6 +187,11 @@ message MsgUpdatePermissionFlags {
 ```
 
 ## MsgUpdateKeygen
+
+Updates the block height of the keygen and sets the status to "pending
+keygen".
+
+Only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgUpdateKeygen {

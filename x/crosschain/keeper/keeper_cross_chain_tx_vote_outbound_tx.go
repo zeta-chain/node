@@ -37,6 +37,8 @@ import (
 //
 // After finalization the outbound transaction tracker and pending nonces are
 // removed, and the CCTX is updated in the store.
+//
+// Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
