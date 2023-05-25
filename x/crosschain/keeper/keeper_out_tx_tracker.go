@@ -161,18 +161,16 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if chain == nil {
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
-	authorized := false
-	if msg.Creator == k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker) {
-		authorized = true
-	}
-	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
+
+	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
+	isAdmin := msg.Creator == adminPolicyAccount
+
+	isObserver, err := k.IsAuthorized(ctx, msg.Creator, chain)
 	if err != nil {
 		return nil, err
 	}
-	if ok {
-		authorized = true
-	}
-	if !authorized {
+
+	if !(isAdmin || isObserver) {
 		return nil, sdkerrors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 
