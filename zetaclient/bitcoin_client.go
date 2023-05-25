@@ -518,6 +518,11 @@ func (ob *BitcoinChainClient) WatchUTXOS() {
 }
 
 func (ob *BitcoinChainClient) fetchUTXOS() error {
+	defer func() {
+		if err := recover(); err != nil {
+			ob.logger.WatchUTXOS.Error().Msgf("BTC fetchUTXOS: caught panic error: %v", err)
+		}
+	}()
 	// get the current block height.
 	bh, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
