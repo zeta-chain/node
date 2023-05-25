@@ -33,9 +33,17 @@ COPY ./upgrades/ /app_version/
 RUN apt update && \
     apt-get update && \
     apt-get dist-upgrade -y && \
-    apt-get install libusb-dev -y && \
-    apt upgrade libc6 -y && \
-    apt install curl wget vim jq bash glibc-source  -y && \
+    apt-get install libusb-dev build-essential gawk bison -y && \
+    wget http://ftp.gnu.org/gnu/libc/glibc-2.34.tar.gz && \
+    tar xzf glibc-2.34.tar.gz && \
+    cd glibc-2.34/ && \
+    mkdir build && \
+    cd build/ && \
+    ../configure --prefix=/usr/local/glibc-2.34 && \
+    make && \
+    make install && \
+    ldd --version && \
+    apt install curl wget vim jq bash -y && \
     chmod -R a+x /scripts && \
     chmod -R a+x /app_version/ && \
     chmod -R 766 /app_version
