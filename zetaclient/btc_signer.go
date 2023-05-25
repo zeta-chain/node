@@ -177,6 +177,12 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge) {
+	defer func() {
+		if err := recover(); err != nil {
+			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", send.Index, err)
+		}
+	}()
+
 	logger := signer.logger.With().
 		Str("OutTxID", outTxID).
 		Str("SendHash", send.Index).
@@ -214,6 +220,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
 		return
 	}
+
 	// FIXME: config chain params
 	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
 	if err != nil {
