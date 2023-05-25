@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
