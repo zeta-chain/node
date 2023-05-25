@@ -49,5 +49,5 @@ func (msg *MsgCreateTSSVoter) ValidateBasic() error {
 
 func (msg *MsgCreateTSSVoter) Digest() string {
 	// We support only 1 keygen at a particular height
-	return fmt.Sprintf("%d-%s", msg.KeyGenZetaHeight, msg.TssPubkey)
+	return fmt.Sprintf("%d-%s", msg.KeyGenZetaHeight, "TSS-Keygen")
 }

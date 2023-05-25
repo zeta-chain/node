@@ -42,7 +42,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        voterList,
-			Votes:            zetaObserverTypes.CreateVotes(len(msg.Creator)),
+			Votes:            zetaObserverTypes.CreateVotes(len(voterList)),
 			ObservationType:  zetaObserverTypes.ObservationType_TSSKeyGen,
 			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
