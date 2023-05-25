@@ -57,6 +57,19 @@ observers vote on ZetaChain by sending a `VoteOnObservedOutboundTx` message.
 After the vote passes the threshold, the voting is finalized and a transaction's
 status is changed to final.
 
+## Permissions
+
+| Message                     | Admin policy account | Observer validator |
+| --------------------------- | -------------------- | ------------------ |
+| MsgCreateTSSVoter           |                      | ✅                 |
+| MsgGasPriceVoter            |                      | ✅                 |
+| MsgVoteOnObservedOutboundTx |                      | ✅                 |
+| MsgVoteOnObservedInboundTx  |                      | ✅                 |
+| MsgAddToOutTxTracker        | ✅                   | ✅                 |
+| MsgRemoveFromOutTxTracker   | ✅                   |                    |
+| MsgUpdatePermissionFlags    | ✅                   |                    |
+| MsgUpdateKeygenPermission   | ✅                   |                    |
+
 ## State
 
 The module stores the following information in the state:
