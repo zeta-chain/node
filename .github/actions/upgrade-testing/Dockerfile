@@ -1,7 +1,7 @@
 ################
 # BUILD ZETAVISOR
 ################
-FROM golang:1.20 AS cosmovisor
+FROM golang:1.19 AS cosmovisor
 
 ENV GOBIN=/go/bin
 ENV GOPATH=/go
@@ -19,7 +19,7 @@ RUN apt update && \
 ################
 # BUILD MAIN IMAGE
 ################
-FROM golang:1.20
+FROM golang:1.19
 
 EXPOSE 1317
 EXPOSE 26656
@@ -39,7 +39,7 @@ RUN apt update && \
     cd glibc-2.34/ && \
     mkdir build && \
     cd build/ && \
-    ../configure --prefix=/usr/local/glibc-2.34 && \
+    ../configure --disable-sanity-checks && \
     make && \
     make install && \
     ldd --version && \

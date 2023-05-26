@@ -2,7 +2,7 @@ ls -lah /app_version/
 
 #docker buildx build --platform linux/amd64 -t local/docker-test:latest .
 #docker run -d -p 26657:26657 --platform linux/amd64 local/docker-test:latest
-export LD_LIBRARY_PATH="/usr/local/glibc-2.34/lib"
+#export LD_LIBRARY_PATH="/usr/local/glibc-2.34/lib"
 ldd --version
 
 log_it () {
