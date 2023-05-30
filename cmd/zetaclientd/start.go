@@ -145,7 +145,7 @@ func start(_ *cobra.Command, _ []string) error {
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {
 				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
-				return err
+				continue
 			}
 			// If not at keygen block do not try to generate TSS
 			if currentBlock != cfg.KeygenBlock {
