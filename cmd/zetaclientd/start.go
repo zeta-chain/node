@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -124,17 +125,24 @@ func start(_ *cobra.Command, _ []string) error {
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
 	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
+	triedKeygenAtBlock := false
 	for range ticker.C {
-		// Break out of loop for the following conditions
-		// 1. KeygenBlock is set to 0 in genesis file. Which means TSS generation is disabled and TSS should already exist
-		// 2. KeygenBlock is set to a positive number in genesis file. Which means TSS generation is enabled and TSS should be generated at the block.Break if TSS is generated successfully
-		if cfg.KeygenBlock == 0 {
+		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
+		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
+		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenSuccess {
 			break
 		}
-		if cfg.KeygenBlock > 0 {
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenFailed {
+			triedKeygenAtBlock = false
+			continue
+		}
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen && !triedKeygenAtBlock {
+			// keygenTss will try to generate a new TSS at the keygen block.This is a blocking thread .
 			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
 			if err == nil {
-				break
+				triedKeygenAtBlock = true
+				continue
 			}
 			startLogger.Error().Err(err).Msg("Keygen Error")
 		}

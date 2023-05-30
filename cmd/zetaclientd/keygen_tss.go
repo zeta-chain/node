@@ -24,7 +24,7 @@ func keygenTss(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS, logge
 	ticker := time.NewTicker(time.Second * 1)
 	lastBlock := bn
 	// This is a blocking thread , it will wait for the keygen block to arrive.
-	// At keygen block , it can either be success or a failure.The zetacore is update accordingly
+	// At keygen block , it can either be success or a failure.The zeta-core is update accordingly
 	// This ticker waits for the keygen block to arrive
 	for range ticker.C {
 		currentBlock, err := bridge.GetZetaBlockHeight()
@@ -51,10 +51,11 @@ func keygenTss(cfg *config.Config, bridge *mc.ZetaCoreBridge, tss *mc.TSS, logge
 	res, err := tss.Server.Keygen(req)
 	if err != nil || res.Status != tsscommon.Success {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
-		_, err = bridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+		tssFailedVoteHash, err := bridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 		}
+		keygenLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
 		return errors.Wrap(err, fmt.Sprintf("Keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes))
 	}
 	// Keygen succeed! Report TSS address

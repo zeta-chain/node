@@ -185,6 +185,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
+	cfg.KeyGenStatus = keyGen.Status
 	switch keyGen.Status {
 	case stypes.KeygenStatus_PendingKeygen:
 		cfg.KeygenBlock = keyGen.BlockNumber
@@ -192,10 +193,11 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	case stypes.KeygenStatus_KeyGenFailed:
 		cfg.KeygenBlock = math.MaxInt64
 		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
-	default:
+	case stypes.KeygenStatus_KeyGenSuccess:
 		cfg.KeygenBlock = 0
 		cfg.KeyGenPubKeys = nil
-
+	default:
+		panic("unknown keygen status")
 	}
 	return nil
 }
