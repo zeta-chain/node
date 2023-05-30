@@ -19,6 +19,11 @@ wasn't created before). Observers are allowed to cast votes that will be
 associated with this ballot. Based on `BallotThreshold`, when enough votes are
 cast ballot is considered to be "finalized".
 
+The last vote that moves the ballot to the "finalized" state triggers execution
+and pays the gas costs of the cross-chain transaction.
+
+Any votes cast after the ballot has been finalized are discarded.
+
 ## Inbound Transaction
 
 Inbound transactions are cross-chain transactions observed on connected chains.
