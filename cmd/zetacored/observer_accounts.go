@@ -141,13 +141,9 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = nodeAccounts
-			keygenStatus := crosschaintypes.KeygenStatus_PendingKeygen
-			// Set keygen to success if TSS already exists before genesis
-			if keyGenBlock == 0 {
-				keygenStatus = crosschaintypes.KeygenStatus_KeyGenSuccess
-			}
+
 			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
-				Status:         keygenStatus,
+				Status:         crosschaintypes.KeygenStatus_PendingKeygen,
 				GranteePubkeys: keygenPubKeys,
 				BlockNumber:    keyGenBlock,
 			}
