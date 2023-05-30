@@ -134,12 +134,14 @@ func start(_ *cobra.Command, _ []string) error {
 		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenSuccess {
 			break
 		}
-		// Arrive at this stage only if keygen is unsuccessful and reported by every node
+		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
 		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenFailed {
 			triedKeygenAtBlock = false
 			continue
 		}
+		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
 		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen && !triedKeygenAtBlock {
+			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {
 				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
@@ -153,27 +155,36 @@ func start(_ *cobra.Command, _ []string) error {
 				}
 				continue
 			}
-			err, reportError := keygenTss(cfg, tss, masterLogger)
+			// Try keygen only once at a particular block, irrespective of whether it is successful or failure
+			triedKeygenAtBlock = true
+			err = keygenTss(cfg, tss, masterLogger)
 			if err != nil {
 				startLogger.Error().Err(err).Msg("keygenTss error")
-				if reportError {
-					tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
-					if err != nil {
-						startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
-					}
-					startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
+				tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 				}
+				startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
 				continue
 			}
+
+			// If TSS is successful , broadcast the vote to zetacore and set Pubkey
 			tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
 			if err != nil {
 				startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 				return err
 			}
 			startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
-			triedKeygenAtBlock = true
+			err = SetTSSPubKey(tss, masterLogger)
+			if err != nil {
+				startLogger.Error().Err(err).Msg("SetTSSPubKey error")
+			}
 			continue
 		}
+	}
+	err = TestTSS(tss, masterLogger)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("TestTSS error")
 	}
 
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
