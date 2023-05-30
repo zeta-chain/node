@@ -21,8 +21,8 @@ import (
 // If the vote passes, the information about the TSS key is recorded on chain
 // and the status of the keygen is set to "success".
 //
-// Fails if the keygen does not exist or if the keygen has been already
-// completed.
+// Fails if the keygen does not exist, the keygen has been already
+// completed, or the keygen has failed.
 //
 // Only node accounts are authorized to broadcast this message.
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
