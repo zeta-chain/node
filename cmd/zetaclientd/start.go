@@ -163,6 +163,7 @@ func start(_ *cobra.Command, _ []string) error {
 				tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
 				if err != nil {
 					startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
+					return err
 				}
 				startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
 				continue
@@ -219,16 +220,6 @@ func start(_ *cobra.Command, _ []string) error {
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 	mo1.MonitorCore()
-
-	//// report TSS address nonce on all chains except zeta
-	//for _, chain := range cfg.ChainsEnabled {
-	//	if chain.IsExternalChain() {
-	//		err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
-	//		if err != nil {
-	//			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
-	//		}
-	//	}
-	//}
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
