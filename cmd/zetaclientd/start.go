@@ -151,7 +151,7 @@ func start(_ *cobra.Command, _ []string) error {
 			if currentBlock != cfg.KeygenBlock {
 				if currentBlock > lastBlock {
 					lastBlock = currentBlock
-					startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set .Keygen at : %s", cfg.KeygenBlock)
+					startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d", cfg.KeygenBlock)
 				}
 				continue
 			}

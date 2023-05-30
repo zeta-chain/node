@@ -20,6 +20,8 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, logger zerolog.Logger) error {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 		return errors.Wrap(err, fmt.Sprintf("Keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes))
 	}
+	tss.CurrentPubkey = res.PubKey
+
 	// Keygen succeed! Report TSS address
 	keygenLogger.Debug().Msgf("Keygen success! keygen response: %v", res)
 	return nil
