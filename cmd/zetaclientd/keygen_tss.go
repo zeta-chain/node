@@ -17,7 +17,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, logger zerolog.Logger) (error, b
 	var req keygen.Request
 	req = keygen.NewRequest(cfg.KeyGenPubKeys, cfg.KeygenBlock, "0.14.0")
 	res, err := tss.Server.Keygen(req)
-	if err != nil || res.Status != tsscommon.Success {
+	if err != nil || res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 		return errors.Wrap(err, fmt.Sprintf("Keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)), true
 	}
