@@ -79,6 +79,12 @@ status is changed to final.
 
 The module stores the following information in the state:
 
-- Tracker of outbound transactions
+- List of outbound transactions
+- List of chain nonces
+- List of last chain heights
+- List of cross-chain transactions
+- List of
+- Mapping between inbound transactions and cross-chain transactions
+- Keygen
 - TSS key
 - Gas prices on connected chains submitted by observers
