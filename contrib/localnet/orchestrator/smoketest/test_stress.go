@@ -188,11 +188,15 @@ func (sm *SmokeTest) WithdrawCCtx() {
 }
 
 func (sm *SmokeTest) EchoNetworkMetrics() {
-	echoStartTime := time.Now()
 	ticker := time.NewTicker(time.Second * StatInterval)
+	var queue = make([]uint64, 0)
+	var numTicks = 0
+	var totalMinedTxns = uint64(0)
+	var previousMinedTxns = uint64(0)
 	for {
 		select {
 		case <-ticker.C:
+			numTicks++
 			// Get all pending outbound transactions
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
 				ChainId: uint64(common.GoerliChain().ChainId),
@@ -214,8 +218,21 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 				continue
 			}
 
-			elapsedTime := time.Since(echoStartTime).Minutes()
-			rate := float64(sends[0].GetCurrentOutTxParam().OutboundTxTssNonce) / elapsedTime
+			currentMinedTxns := sends[0].GetCurrentOutTxParam().OutboundTxTssNonce
+			newMinedTxCnt := currentMinedTxns - previousMinedTxns
+			previousMinedTxns = currentMinedTxns
+
+			// Add new mined txn count to queue and remove the oldest entry
+			queue = append(queue, newMinedTxCnt)
+			if numTicks > 60/StatInterval {
+				totalMinedTxns -= queue[0]
+				queue = queue[1:]
+				numTicks = 60/StatInterval + 1 //prevent overflow
+			}
+
+			//Calculate rate -> tx/min
+			totalMinedTxns += queue[len(queue)-1]
+			rate := totalMinedTxns
 
 			numPending := len(cctxResp.CrossChainTx)
 			numTrackers := len(trackerResp.OutTxTracker)

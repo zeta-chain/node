@@ -183,15 +183,15 @@ func (co *CoreObserver) startSendScheduler() {
 					ngr, nbytes := zetaclientRuntimeStats()
 					co.logger.ZetaChainWatcher.Info().Msgf("stats: (numGoroutine,heapAllocBytes):  %d, %d", ngr, nbytes)
 				}
-				streamMgr := co.Tss.Server.P2pCommunication.StreamMgr
+				//streamMgr := co.Tss.Server.P2pCommunication.StreamMgr
 
 				host := co.Tss.Server.P2pCommunication.GetHost()
 				pCount, cCount, numStreams := countActiveStreams(host.Network())
 				co.logger.ZetaChainWatcher.Info().Msgf("numStreams: %d; protocol: %+v; conn: %+v", numStreams, pCount, cCount)
 				if outTxMan.numActiveProcessor == 0 {
 					co.logger.ZetaChainWatcher.Warn().Msgf("no active outbound tx processor; safeMode: %v", safeMode)
-					numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
-					co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
+					//numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
+					//co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
 				}
 
 				for _, send := range sendList {

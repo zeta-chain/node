@@ -298,5 +298,5 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
-	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230515041550-13f304640fbc
+	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230523182706-c6b8b34b0545
 )
