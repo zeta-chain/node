@@ -146,6 +146,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 				GranteePubkeys: keygenPubKeys,
 				BlockNumber:    keyGenBlock,
 			}
+
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaObserverGenState.Observers = observerMapper
