@@ -20,7 +20,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --public-ip "$MYIP" --log-format=text
+    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress"  --log-format=text --public-ip "$MYIP"
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
@@ -28,6 +28,6 @@ else
   MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
   SEED=$(curl --retry 10 --retry-delay 5 --retry-connrefused  -s zetaclient0:8123/p2p)
   rm ~/.tss/*
-  zetaclientd init --peer /ip4/172.20.0.21/tcp/6668/p2p/"$SEED" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --public-ip "$MYIP" --log-format=text
+  zetaclientd init --peer /ip4/172.20.0.21/tcp/6668/p2p/"$SEED" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP"
   zetaclientd start
 fi

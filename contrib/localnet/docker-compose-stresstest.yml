@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile
     hostname: zetacore0
     ports:
-#      - "1317:1317"
+      - "1317:1317"
       - "9545:8545"
       - "9546:8546"
     networks:
