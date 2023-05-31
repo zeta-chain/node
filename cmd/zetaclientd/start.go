@@ -79,7 +79,7 @@ func start(_ *cobra.Command, _ []string) error {
 	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
 	if len(cfg.ChainsEnabled) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config ", cfg.String())
+		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
