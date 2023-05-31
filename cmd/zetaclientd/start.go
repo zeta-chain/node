@@ -79,8 +79,7 @@ func start(_ *cobra.Command, _ []string) error {
 	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
 	if len(cfg.ChainsEnabled) == 0 {
-		startLogger.Info().Msgf("No chains enabled, exiting")
-		return nil
+		startLogger.Error().Msgf("No chains enabled in updated config ", cfg.String())
 	}
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
@@ -88,7 +87,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+		startLogger.Error().Err(err).Msg("zetabridge getPrivateKey error")
 	}
 	startLogger.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
