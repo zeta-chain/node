@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"fmt"
 	"github.com/zeta-chain/zetacore/common"
+	"math"
 	"time"
 
 	"sync"
@@ -184,12 +185,19 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	if keyGen.Status == stypes.KeygenStatus_PendingKeygen {
+	cfg.KeyGenStatus = keyGen.Status
+	switch keyGen.Status {
+	case stypes.KeygenStatus_PendingKeygen:
 		cfg.KeygenBlock = keyGen.BlockNumber
 		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
-	} else {
+	case stypes.KeygenStatus_KeyGenFailed:
+		cfg.KeygenBlock = math.MaxInt64
+		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
+	case stypes.KeygenStatus_KeyGenSuccess:
 		cfg.KeygenBlock = 0
 		cfg.KeyGenPubKeys = nil
+	default:
+		panic("unknown keygen status")
 	}
 	return nil
 }

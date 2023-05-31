@@ -385,8 +385,8 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath,
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
-			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
+			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
+			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
 			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
