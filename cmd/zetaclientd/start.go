@@ -148,6 +148,7 @@ func start(_ *cobra.Command, _ []string) error {
 				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
 				continue
 			}
+			// Reset the flag if the keygen block has passed and a new keygen block has been set . This condition is only reached if the older keygen is stuck at PendingKeygen for some reason
 			if cfg.KeygenBlock > currentBlock {
 				triedKeygenAtBlock = false
 			}
@@ -188,6 +189,7 @@ func start(_ *cobra.Command, _ []string) error {
 				continue
 			}
 		}
+		startLogger.Info().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.KeygenBlock)
 	}
 	err = TestTSS(tss, masterLogger)
 	if err != nil {
