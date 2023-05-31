@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/pkg/errors"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -44,7 +43,7 @@ func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return nil, errors.New(fmt.Sprintf("failed to get core params | err %s", err.Error()))
+	return nil, fmt.Errorf("failed to get core params | err %s", err.Error())
 }
 
 func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
