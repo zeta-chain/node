@@ -117,6 +117,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
+
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
@@ -189,7 +190,7 @@ func start(_ *cobra.Command, _ []string) error {
 				continue
 			}
 		}
-		startLogger.Info().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.KeygenBlock)
+		startLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.KeygenBlock)
 	}
 	err = TestTSS(tss, masterLogger)
 	if err != nil {
