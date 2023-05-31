@@ -175,8 +175,8 @@ github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnweb
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
-github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7 h1:oP3b/kCGmDEvM5mhj5Dm16joK9wx922k62B/79nrG5Q=
-github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7/go.mod h1:RYOe4ihG8KkoQQhW6ljiyxyW6F3CoZA3ozyyEb5HVmI=
+github.com/brewmaster012/go-tss v0.0.0-20230530183945-4ce35ef0f84f h1:/+bYJK9GALvVF3yNxewZ2ohs9H+wvI6pkqqtPtiqXAY=
+github.com/brewmaster012/go-tss v0.0.0-20230530183945-4ce35ef0f84f/go.mod h1:RYOe4ihG8KkoQQhW6ljiyxyW6F3CoZA3ozyyEb5HVmI=
 github.com/btcsuite/btcd v0.22.1 h1:CnwP9LM/M9xuRrGSCGeMVs9iv09uMqwsVX7EeIpgV2c=
 github.com/btcsuite/btcd v0.22.1/go.mod h1:wqgTSL29+50LRkmOVknEdmt8ZojIzhuWvgu/iptuN7Y=
 github.com/btcsuite/btcd/btcec/v2 v2.1.2/go.mod h1:ctjw4H1kknNJmRN4iP1R7bTQ+v3GJkZBd6mui8ZsAZE=
