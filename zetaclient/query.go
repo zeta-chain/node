@@ -2,13 +2,16 @@ package zetaclient
 
 import (
 	"context"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/pkg/errors"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
+	"time"
 )
 
 func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) {
@@ -32,11 +35,16 @@ func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaOb
 
 func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})
-	if err != nil {
-		return nil, err
+	err := error(nil)
+	resp := &zetaObserverTypes.QueryGetCoreParamsResponse{}
+	for i := 0; i <= DefaultRetryCount; i++ {
+		resp, err = client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})
+		if err == nil {
+			return resp.CoreParams.CoreParams, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return resp.CoreParams.CoreParams, nil
+	return nil, errors.New(fmt.Sprintf("failed to get core params | err %s", err.Error()))
 }
 
 func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {

@@ -131,6 +131,7 @@ func start(_ *cobra.Command, _ []string) error {
 		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
+
 		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenSuccess {
 			break
 		}
@@ -140,47 +141,52 @@ func start(_ *cobra.Command, _ []string) error {
 			continue
 		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen && !triedKeygenAtBlock {
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {
 				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
 				continue
 			}
-			// If not at keygen block do not try to generate TSS
-			if currentBlock != cfg.KeygenBlock {
-				if currentBlock > lastBlock {
-					lastBlock = currentBlock
-					startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d", cfg.KeygenBlock)
-				}
-				continue
+			if cfg.KeygenBlock > currentBlock {
+				triedKeygenAtBlock = false
 			}
-			// Try keygen only once at a particular block, irrespective of whether it is successful or failure
-			triedKeygenAtBlock = true
-			err = keygenTss(cfg, tss, masterLogger)
-			if err != nil {
-				startLogger.Error().Err(err).Msg("keygenTss error")
-				tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+			if !triedKeygenAtBlock {
+				// If not at keygen block do not try to generate TSS
+				if currentBlock != cfg.KeygenBlock {
+					if currentBlock > lastBlock {
+						lastBlock = currentBlock
+						startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", cfg.KeygenBlock, currentBlock)
+					}
+					continue
+				}
+				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
+				triedKeygenAtBlock = true
+				err = keygenTss(cfg, tss, masterLogger)
 				if err != nil {
-					startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
+					startLogger.Error().Err(err).Msg("keygenTss error")
+					tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+					if err != nil {
+						startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
+						return err
+					}
+					startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
+					continue
+				}
+
+				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return err
 				}
-				startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
+				startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+				err = SetTSSPubKey(tss, masterLogger)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("SetTSSPubKey error")
+				}
 				continue
 			}
-
-			// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-			tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
-			if err != nil {
-				startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
-				return err
-			}
-			startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
-			err = SetTSSPubKey(tss, masterLogger)
-			if err != nil {
-				startLogger.Error().Err(err).Msg("SetTSSPubKey error")
-			}
-			continue
 		}
 	}
 	err = TestTSS(tss, masterLogger)
