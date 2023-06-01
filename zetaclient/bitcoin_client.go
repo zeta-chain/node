@@ -45,19 +45,20 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain       common.Chain
-	rpcClient   *rpcclient.Client
-	zetaClient  *ZetaCoreBridge
-	Tss         TSSSigner
-	lastBlock   int64
-	BlockTime   uint64                                  // block time in seconds
-	submittedTx map[string]btcjson.GetTransactionResult // key: chain-nonce
-	mu          *sync.Mutex
-	utxos       []btcjson.ListUnspentResult
-	db          *gorm.DB
-	stop        chan struct{}
-	logger      BTCLog
-	cfg         *config.Config
+	chain         common.Chain
+	rpcClient     *rpcclient.Client
+	zetaClient    *ZetaCoreBridge
+	Tss           TSSSigner
+	lastBlock     int64
+	BlockTime     uint64                                  // block time in seconds
+	submittedTx   map[string]btcjson.GetTransactionResult // key: chain-nonce
+	broadcastedTx map[string]chainhash.Hash
+	mu            *sync.Mutex
+	utxos         []btcjson.ListUnspentResult
+	db            *gorm.DB
+	stop          chan struct{}
+	logger        BTCLog
+	cfg           *config.Config
 }
 
 const (
@@ -97,6 +98,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
+	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
 	//Load btc chain client DB
 	err := ob.loadDB(dbpath)
@@ -308,9 +310,28 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
-	res, found := ob.submittedTx[outTxID]
-	if !found {
-		return false, false, nil
+	ob.mu.Lock()
+	txnHash, broadcasted := ob.broadcastedTx[outTxID]
+	res, submitted := ob.submittedTx[outTxID]
+	ob.mu.Unlock()
+
+	if !submitted {
+		if !broadcasted {
+			return false, false, nil
+		}
+		//Query txn hash on bitcoin chain
+		hash, err := chainhash.NewHashFromStr(txnHash.String())
+		getTxResult, err := ob.rpcClient.GetTransaction(hash)
+		if err != nil {
+			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
+			return false, false, nil
+		}
+		res = *getTxResult
+
+		// Save result to avoid unnecessary query
+		ob.mu.Lock()
+		ob.submittedTx[outTxID] = res
+		ob.mu.Unlock()
 	}
 	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
 	if res.Confirmations == 0 {
@@ -641,7 +662,9 @@ func (ob *BitcoinChainClient) observeOutTx() {
 						continue
 					}
 					if getTxResult.Confirmations >= 0 {
+						ob.mu.Lock()
 						ob.submittedTx[outTxID] = *getTxResult
+						ob.mu.Unlock()
 
 						//Save to db
 						tx, err := clienttypes.ToTransactionResultSQLType(*getTxResult, outTxID)
@@ -697,6 +720,18 @@ func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
 	return nil
 }
 
+func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
+	var broadcastedTransactions []clienttypes.TransactionHashSQLType
+	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
+		return err
+	}
+	for _, entry := range broadcastedTransactions {
+		ob.broadcastedTx[entry.Key] = entry.Hash
+	}
+	return nil
+}
+
 func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbpath, os.ModePerm)
@@ -711,7 +746,9 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	}
 	ob.db = db
 
-	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{}, &clienttypes.TransactionResultSQLType{})
+	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{},
+		&clienttypes.TransactionResultSQLType{},
+		&clienttypes.TransactionHashSQLType{})
 	if err != nil {
 		return err
 	}
@@ -724,6 +761,12 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 
 	//Load submitted transactions
 	err = ob.BuildSubmittedTxMap()
+	if err != nil {
+		return err
+	}
+
+	//Load broadcasted transactions
+	err = ob.BuildBroadcastedTxMap()
 
 	return err
 }
