@@ -37,7 +37,7 @@ type TransactionResultSQLType struct {
 type TransactionHashSQLType struct {
 	gorm.Model
 	Key  string
-	Hash chainhash.Hash `gorm:"embedded"`
+	Hash chainhash.Hash
 }
 
 func ToTransactionResultDB(txResult btcjson.GetTransactionResult) (TransactionResultDB, error) {
