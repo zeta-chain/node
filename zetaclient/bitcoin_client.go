@@ -334,9 +334,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		ob.mu.Unlock()
 	}
 	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
-	if res.Confirmations == 0 {
+	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
-	} else if res.Confirmations >= ob.ConfirmationsThreshold(amountInSat) {
+	} else {
 		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
 			res.TxID,
@@ -354,7 +354,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		}
 		return true, true, nil
 	}
-	return false, false, nil
 }
 
 //// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
