@@ -19,7 +19,24 @@ RUN apt update && \
 ################
 # BUILD MAIN IMAGE
 ################
-FROM golang:1.19
+FROM ubuntu:latest
+
+# Start from the latest Ubuntu image
+FROM ubuntu:latest
+
+# Install curl and ca-certificates
+RUN apt-get update && apt-get install -y curl ca-certificates
+
+# Set the Go version as an environment variable
+ENV GO_VERSION 1.19
+
+# Download and install Go
+RUN curl -L https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -o go.tar.gz && \
+    tar -C /usr/local -xzf go.tar.gz && \
+    rm go.tar.gz
+
+# Add the Go binaries to the PATH
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 EXPOSE 1317
 EXPOSE 26656
@@ -48,4 +65,4 @@ RUN apt update && \
     chmod -R a+x /app_version/ && \
     chmod -R 766 /app_version
 
-CMD bash /scripts/network-genesis.sh
+CMD export PATH="/usr/local/go/bin:${PATH}" && bash /scripts/network-genesis.sh
