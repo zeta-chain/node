@@ -321,6 +321,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		}
 		//Query txn hash on bitcoin chain
 		hash, err := chainhash.NewHashFromStr(txnHash.String())
+		if err != nil {
+			return false, false, nil
+		}
 		getTxResult, err := ob.rpcClient.GetTransaction(hash)
 		if err != nil {
 			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
@@ -336,24 +339,24 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
-	} else {
-		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
-			sendHash,
-			res.TxID,
-			uint64(res.BlockIndex),
-			amountInSat,
-			common.ReceiveStatus_Success,
-			ob.chain,
-			nonce,
-			common.CoinType_Gas,
-		)
-		if err != nil {
-			logger.Error().Err(err).Msgf("error posting to zeta core")
-		} else {
-			logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
-		}
-		return true, true, nil
 	}
+
+	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+		sendHash,
+		res.TxID,
+		uint64(res.BlockIndex),
+		amountInSat,
+		common.ReceiveStatus_Success,
+		ob.chain,
+		nonce,
+		common.CoinType_Gas,
+	)
+	if err != nil {
+		logger.Error().Err(err).Msgf("error posting to zeta core")
+	} else {
+		logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+	}
+	return true, true, nil
 }
 
 //// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
