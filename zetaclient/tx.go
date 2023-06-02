@@ -21,6 +21,8 @@ const (
 	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
 	DefaultGasLimit                 = 200_000
+	DefaultRetryCount               = 5
+	DefaultRetryInterval            = 5
 )
 
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner) {
@@ -95,8 +97,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 	if status == common.ReceiveStatus_Failed {
 		gasLimit = PostSendEVMGasLimit
 	}
-	maxRetries := 2
-	for i := 0; i < maxRetries; i++ {
+	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
 		if err == nil {
 			b.lastOutTxReportTime[outTxHash] = time.Now() // update last report time when bcast succeeds
@@ -105,18 +106,23 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash stri
 		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
 		time.Sleep(1 * time.Second)
 	}
-	return "", fmt.Errorf("post receive failed after %d retries", maxRetries)
+	return "", fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
 }
 
 func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	zetaTxHash, err := b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
-	if err != nil {
-		return "", err
+	err := error(nil)
+	zetaTxHash := ""
+	for i := 0; i <= DefaultRetryCount; i++ {
+		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
+		if err == nil {
+			return zetaTxHash, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return zetaTxHash, nil
+	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
 func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {

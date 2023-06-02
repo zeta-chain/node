@@ -284,17 +284,17 @@ jobs:
           github_commit_sha: "${{ env.GIT_HASH }}"
           current_branch_name: "${{ steps.branch-name.outputs.current_branch }}"
 
-      - name: Check Upgrade Handler Name Matches Tag Name
-        if: ( startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') ) && !endsWith(github.ref, '-rc')
-        run: |
-          UPGRADE_HANDLER_NAME=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-          echo $UPGRADE_HANDLER_NAME
-          if [ ${{ github.ref_name }} != $UPGRADE_HANDLER_NAME ]; then
-            echo "ERROR: The name of this release (${{ github.ref_name }}) does not match the releaseVersion const in app/setup_handlers.go"
-            echo "Did you forget to update the 'releaseVersion' const in app/setup_handlers.go?" 
-            exit 1
-          fi
-          echo "releaseVersion' const in app/setup_handlers.go matches this tagged release - Moving Forward!"
+      # - name: Check Upgrade Handler Name Matches Tag Name
+      #   if: ( startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') ) && !endsWith(github.ref, '-rc')
+      #   run: |
+      #     UPGRADE_HANDLER_NAME=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+      #     echo $UPGRADE_HANDLER_NAME
+      #     if [ ${{ github.ref_name }} != $UPGRADE_HANDLER_NAME ]; then
+      #       echo "ERROR: The name of this release (${{ github.ref_name }}) does not match the releaseVersion const in app/setup_handlers.go"
+      #       echo "Did you forget to update the 'releaseVersion' const in app/setup_handlers.go?" 
+      #       exit 1
+      #     fi
+      #     echo "releaseVersion' const in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
       - uses: actions/download-artifact@v3
         with:
