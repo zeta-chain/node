@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -16,9 +15,13 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, logger zerolog.Logger) error {
 	var req keygen.Request
 	req = keygen.NewRequest(cfg.KeyGenPubKeys, cfg.KeygenBlock, "0.14.0")
 	res, err := tss.Server.Keygen(req)
-	if err != nil || res.Status != tsscommon.Success || res.PubKey == "" {
+	if res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
-		return errors.Wrap(err, fmt.Sprintf("Keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes))
+		return fmt.Errorf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+	}
+	if err != nil {
+		keygenLogger.Error().Msgf("keygen fail: reason %s ", err.Error())
+		return err
 	}
 	tss.CurrentPubkey = res.PubKey
 

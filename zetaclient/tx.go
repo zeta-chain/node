@@ -5,7 +5,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"time"
@@ -23,6 +22,7 @@ const (
 	PostReceiveConfirmationGasLimit = 200_000
 	DefaultGasLimit                 = 200_000
 	DefaultRetryCount               = 5
+	DefaultRetryInterval            = 5
 )
 
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner) {
@@ -120,8 +120,9 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 		if err == nil {
 			return zetaTxHash, nil
 		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return "", errors.Wrap(err, "set tss failed")
+	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
 func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
