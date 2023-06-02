@@ -50,7 +50,7 @@ COPY ./upgrades/ /app_version/
 RUN apt update && \
     apt-get update && \
     apt-get dist-upgrade -y && \
-    apt-get install libusb-dev build-essential gawk bison -y && \
+    apt-get install libusb-dev build-essential gawk wget bash curl bison -y && \
     wget http://ftp.gnu.org/gnu/libc/glibc-2.34.tar.gz && \
     tar xzf glibc-2.34.tar.gz && \
     cd glibc-2.34/ && \
