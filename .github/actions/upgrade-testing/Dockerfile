@@ -20,6 +20,7 @@ ENV GO_VERSION 1.19
 RUN curl -L https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -o go.tar.gz && \
     tar -C /usr/local -xzf go.tar.gz && \
     rm go.tar.gz
+
 ENV PATH="/usr/local/go/bin:${PATH}"
 EXPOSE 1317
 EXPOSE 26656
@@ -33,4 +34,5 @@ RUN apt-get update && \
     chmod -R a+x /scripts && \
     chmod -R a+x /app_version/ && \
     chmod -R 766 /app_version
-CMD export PATH="/usr/local/go/bin:${PATH}" && bash /scripts/network-genesis.sh
+
+CMD bash /scripts/network-genesis.sh

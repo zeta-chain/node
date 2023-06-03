@@ -1,3 +1,5 @@
+
+export PATH="/usr/local/go/bin:${PATH}"
 ls -lah /app_version/
 
 #docker buildx build --platform linux/amd64 -t local/docker-test:latest .
@@ -15,6 +17,10 @@ log_it () {
 
 chmod -R 777 /app_version
 cp /app_version/${STARTING_VERSION}/bin/${DAEMON_NAME} /usr/bin/${DAEMON_NAME}
+
+echo "Check /usr/bin/ for Daemon"
+ls -lah | grep ${DAEMON_NAME}
+
 echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend test --recover
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
 cp /app_version/app.toml ${DAEMON_HOME}config/app.toml
