@@ -1,11 +1,4 @@
-
 export PATH="/usr/local/go/bin:${PATH}"
-ls -lah /app_version/
-
-#docker buildx build --platform linux/amd64 -t local/docker-test:latest .
-#docker run -d -p 26657:26657 --platform linux/amd64 local/docker-test:latest
-#export LD_LIBRARY_PATH="/usr/local/glibc-2.34/lib"
-ldd --version
 
 log_it () {
   echo "********************************"
@@ -17,10 +10,6 @@ log_it () {
 
 chmod -R 777 /app_version
 cp /app_version/${STARTING_VERSION}/bin/${DAEMON_NAME} /usr/bin/${DAEMON_NAME}
-
-echo "Check /usr/bin/ for Daemon"
-ls -lah | grep ${DAEMON_NAME}
-
 echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend test --recover
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
 cp /app_version/app.toml ${DAEMON_HOME}config/app.toml
@@ -50,9 +39,6 @@ echo $(jq --arg a "${DENOM}" '.app_state.mint.params.mint_denom = ($a)' ${DAEMON
 echo $(jq --arg a "${DENOM}" '.app_state.gov.deposit_params.min_deposit[0].denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 echo $(jq --arg a "${DENOM}" '.app_state.staking.params.bond_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 echo $(jq --arg a "${DENOM}" '.app_state.evm.params.evm_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
-
-log_it "Genesis File"
-cat ${DAEMON_HOME}/config/genesis.json
 
 log_it "Copy Binaries to Cosmovisor Upgrades Folder"
 cp -r /app_version/* ${DAEMON_HOME}/cosmovisor/upgrades/

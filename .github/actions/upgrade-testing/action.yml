@@ -58,7 +58,6 @@ runs:
         chmod -R 777 zetacored*
         mv zetacored-ubuntu-22-amd64 zetacored
         export PATH=$(pwd):$PATH
-        ls -lah | grep zetacored
         
         echo "***********Change Directories into the Upgrade Testing Directory.*********************"
         cd .github/actions/upgrade-testing/

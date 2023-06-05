@@ -201,7 +201,7 @@ class Utilities:
     def build_docker_image(self, docker_file_location):
         self.logger.info("Build Docker Image")
         #docker_build_output = self.run_command(f'docker buildx build --platform linux/amd64 -t local/upgrade-test:latest {docker_file_location}')
-        docker_build_output = self.run_command(f'docker build -t local/upgrade-test:latest {docker_file_location}')
+        docker_build_output = self.run_command(f'docker build --quiet -t local/upgrade-test:latest {docker_file_location}')
         self.logger.info(docker_build_output)
         docker_image_list = self.run_command("docker image list")
         self.logger.info(docker_image_list)
