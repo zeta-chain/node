@@ -129,6 +129,12 @@ class Utilities:
         self.logger.info(TX_HASH)
         return TX_HASH, self
 
+    def query_tx(self, TX_HASH):
+        GOV_PROPOSAL_TX = f"""zetacored query tx {TX_HASH} --node {self.NODE}"""
+        self.logger.info(GOV_PROPOSAL_TX)
+        results_output = self.run_command(GOV_PROPOSAL_TX)
+        return results_output
+
     def raise_governance_vote(self, PROPOSAL_ID):
         VOTE_PROPOSAL=f"""zetacored tx gov vote "{PROPOSAL_ID}" yes \
             --from {self.MONIKER} \
@@ -172,6 +178,12 @@ class Utilities:
         block_height_request = requests.get(self.NODE+"/status").json()
         LATEST_BLOCK = block_height_request["result"]["sync_info"]["latest_block_height"]
         return int(LATEST_BLOCK)
+
+    def current_version(self):
+        version_check_request = requests.get(self.NODE+"/abci_info").json()
+        VERSION_CHECK = version_check_request["result"]["response"]["version"]
+        self.logger.info(f"CURRENT_VERSION: {VERSION_CHECK}")
+        return VERSION_CHECK
 
     def docker_ps(self):
         self.run_command(f'docker ps')

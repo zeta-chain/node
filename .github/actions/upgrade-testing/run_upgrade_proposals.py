@@ -144,11 +144,15 @@ for version in UPGRADE_DATA["upgrade_versions"]:
         GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
         logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
         time.sleep(10)
+        TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
+        logger.log.info(TX_OUTPUT)
         logger.log.info("**************************get proposal id**************************")
         PROPOSAL_ID = command_runner.get_proposal_id()
         logger.log.info(f"PROPOSAL_ID: {PROPOSAL_ID}")
         logger.log.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
         vote_output = command_runner.raise_governance_vote(PROPOSAL_ID)
+        current_version = command_runner.current_version()
+        logger.log.info(f"current version: {current_version}")
         logger.log.info(f"""**************************UPGRADE INFO**************************
             MONIKER: {command_runner.MONIKER}
             NODE: {command_runner.NODE}

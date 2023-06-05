@@ -40,6 +40,16 @@ echo $(jq --arg a "${DENOM}" '.app_state.gov.deposit_params.min_deposit[0].denom
 echo $(jq --arg a "${DENOM}" '.app_state.staking.params.bond_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 echo $(jq --arg a "${DENOM}" '.app_state.evm.params.evm_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 
+log_it "*********DEBUG GENSIS FILE***********"
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.gov.voting_params.voting_period
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.crisis.constant_fee.denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.mint.params.mint_denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.gov.deposit_params.min_deposit[0].denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.staking.params.bond_denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.evm.params.evm_denom
+log_it "**************************************"
+
+
 log_it "Copy Binaries to Cosmovisor Upgrades Folder"
 cp -r /app_version/* ${DAEMON_HOME}/cosmovisor/upgrades/
 
