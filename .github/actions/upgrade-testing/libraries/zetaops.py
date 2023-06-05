@@ -94,20 +94,19 @@ class Utilities:
             self.logger.info(GOV_PROPOSALS["proposals"])
             for proposal in GOV_PROPOSALS["proposals"]:
                 try:
-                    PROPOSAL_ID = proposal["proposal_id"]
+                    self.logger.info(proposal)
+                    PROPOSAL_ID = proposal["id"]
                 except Exception as e:
                     self.logger.error(str(e))
-                    self.logger.info("proposal_id key wasn't found trying id key.")
-                    PROPOSAL_ID = proposal["id"]
+                    self.logger.info("id key wasn't found trying id key.")
+            self.logger.info(f"PROPOSAL ID: {PROPOSAL_ID}")
             return PROPOSAL_ID
         except Exception as e:
             self.logger.error(e)
             return 1
 
     def raise_governance_proposal(self,VERSION,BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO):
-        self.logger.error("There was issue rasing proposal the old way swtich to new way and see if that helps.")
-        self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"][
-            "latest_block_height"]
+        self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
         self.UPGRADE_HEIGHT = \
         str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
         GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{VERSION}" \
