@@ -372,8 +372,8 @@ jobs:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
     #if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release')
-    #needs:
-      #- build-and-test
+    needs:
+      - build-and-test
       #- build-alpine-and-test
       #- upload
     steps:
