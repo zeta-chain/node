@@ -31,12 +31,6 @@ if len(tag_list) == 0 or len(tag_list) == 1:
 
 tag_list.sort()
 
-try:
-    logger.log.info("remove existing upgrades file if exsits")
-    os.remove("upgrades.json")
-except:
-    logger.log.info("upgrades file not present contine.")
-
 upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
@@ -58,8 +52,10 @@ non_concensus_upgrades = []
 #     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
 
 binary_download_list = [["v1.2.4", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.5", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6"]
+                        ["v1.2.5", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.7", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
 
 
 #os.environ["STARTING_VERSION"] = tag_list[0]
@@ -67,7 +63,7 @@ tag_list = ["v1.2.4","v1.2.5","v1.2.6"]
 
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.4"
-os.environ["END_VERSION"] = "v1.2.5"
+os.environ["END_VERSION"] = "v1.2.7"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
