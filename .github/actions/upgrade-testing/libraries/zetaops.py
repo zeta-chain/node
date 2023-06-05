@@ -105,50 +105,29 @@ class Utilities:
             return 1
 
     def raise_governance_proposal(self,VERSION,BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO):
-        try:
-            self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
-            self.UPGRADE_HEIGHT = str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
-            GOV_PROPOSAL = f"""zetacored tx gov submit-proposal software-upgrade "{VERSION}" \
-                --from "{self.MONIKER}" \
-                --deposit 10000000000000000000azeta \
-                --upgrade-height "{self.UPGRADE_HEIGHT}" \
-                --upgrade-info "{UPGRADE_INFO}" \
-                --title "{VERSION}" \
-                --description "Zeta Release {VERSION}" \
-                --chain-id "{self.CHAIN_ID}" \
-                --node "{self.NODE}" \
-                --keyring-backend test \
-                --fees 20000azeta \
-                -y"""
-            self.logger.info(GOV_PROPOSAL)
-            results_output = self.run_command(GOV_PROPOSAL)
-            self.logger.info(results_output)
-            TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
-            self.logger.info(TX_HASH)
-        except Exception as e:
-            self.logger.error("There was issue rasing proposal the old way swtich to new way and see if that helps.")
-            self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"][
-                "latest_block_height"]
-            self.UPGRADE_HEIGHT = \
-            str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
-            GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{VERSION}" \
-                --from "{self.MONIKER}" \
-                --deposit 10000000000000000000azeta \
-                --upgrade-height "{self.UPGRADE_HEIGHT}" \
-                --upgrade-info "{UPGRADE_INFO}" \
-                --title "{VERSION}" \
-                --description "Zeta Release {VERSION}" \
-                --chain-id "{self.CHAIN_ID}" \
-                --node "{self.NODE}" \
-                --keyring-backend test \
-                --fees 20000azeta \
-                -y \
-                --no-validate"""
-            self.logger.info(GOV_PROPOSAL)
-            results_output = self.run_command(GOV_PROPOSAL)
-            self.logger.info(results_output)
-            TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
-            self.logger.info(TX_HASH)
+        self.logger.error("There was issue rasing proposal the old way swtich to new way and see if that helps.")
+        self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"][
+            "latest_block_height"]
+        self.UPGRADE_HEIGHT = \
+        str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
+        GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{VERSION}" \
+            --from "{self.MONIKER}" \
+            --deposit 10000000000000000000azeta \
+            --upgrade-height "{self.UPGRADE_HEIGHT}" \
+            --upgrade-info "{UPGRADE_INFO}" \
+            --title "{VERSION}" \
+            --description "Zeta Release {VERSION}" \
+            --chain-id "{self.CHAIN_ID}" \
+            --node "{self.NODE}" \
+            --keyring-backend test \
+            --fees 20000azeta \
+            -y \
+            --no-validate"""
+        self.logger.info(GOV_PROPOSAL)
+        results_output = self.run_command(GOV_PROPOSAL)
+        self.logger.info(results_output)
+        TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
+        self.logger.info(TX_HASH)
         return TX_HASH, self
 
     def raise_governance_vote(self, PROPOSAL_ID):
