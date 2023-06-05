@@ -31,7 +31,7 @@ runs:
         NODE: "http://127.0.0.1:26657"
         GO_PATH: "/home/runner/work/zeta-node/zeta-node/"
         BLOCK_TIME_SECONDS: "4"
-        PROPOSAL_TIME_SECONDS: "60s"
+        PROPOSAL_TIME_SECONDS: "60"
         GAS_PRICES: "0.1azeta"
         DAEMON_HOME: "/root/.zetacored/"
         DAEMON_NAME: "zetacored"
