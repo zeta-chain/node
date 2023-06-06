@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"path"
@@ -385,8 +386,8 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath,
 		thorcommon.TssConfig{
 			EnableMonitor:   true,
-			KeyGenTimeout:   60 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  30 * time.Second, // must be shorter than constants.JailTimeKeysign
+			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
+			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
 			PartyTimeout:    30 * time.Second,
 			PreParamTimeout: 5 * time.Minute,
 		},
@@ -404,6 +405,13 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 	}
 
 	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
+	if tssServer.GetLocalPeerID() == "" ||
+		tssServer.GetLocalPeerID() == "0" ||
+		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
+		tssServer.GetLocalPeerID() == peer2.ID("").String() {
+		log.Error().Msg("tss server start error")
+		return nil, nil, fmt.Errorf("tss server start error")
+	}
 
 	s := NewHTTPServer(tssServer.GetLocalPeerID())
 	go func() {

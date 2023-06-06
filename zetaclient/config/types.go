@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -70,6 +71,7 @@ type Config struct {
 	PreParamsPath string
 	KeygenBlock   int64
 	KeyGenPubKeys []string
+	KeyGenStatus  crosschaintypes.KeygenStatus
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string

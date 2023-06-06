@@ -12,6 +12,21 @@ import (
 )
 
 // FIXME: use more specific error types & codes
+
+// Casts a vote on an inbound transaction observed on a connected chain. If this
+// is the first vote, a new ballot is created. When a threshold of votes is
+// reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
+// created.
+//
+// If the receiver chain is a ZetaChain, the EVM deposit is handled and the
+// status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
+// the status of CCTX is chagned to 'aborted'.
+//
+// If the receiver chain is a connected chain, the inbound CCTX is finalized
+// (prices and nonce are updated) and status changes to "pending outbound". If
+// the finalization fails, the status of CCTX is changed to 'aborted'.
+//
+// Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_InBoundTx

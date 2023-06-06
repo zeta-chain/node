@@ -2,8 +2,12 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+	"math/big"
+	"sort"
+	"strconv"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,9 +16,6 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/big"
-	"sort"
-	"strconv"
 )
 
 // SetGasPrice set a specific gasPrice in the store from its index
@@ -117,6 +118,11 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 
 // MESSAGES
 
+// Submit information about the connected chain's gas price at a specific block
+// height. Gas price submitted by each validator is recorded separately and a
+// median index is updated.
+//
+// Only observer validators are authorized to broadcast this message.
 func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVoter) (*types.MsgGasPriceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
