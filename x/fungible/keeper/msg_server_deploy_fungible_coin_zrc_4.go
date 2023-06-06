@@ -12,6 +12,24 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
+//
+// If this is a gas coin, the following happens:
+//
+// * ZRC20 contract for the coin is deployed
+// * contract address of ZRC20 is set as a token address in the system
+// contract
+// * ZETA tokens are minted and deposited into the module account
+// * setGasZetaPool is called on the system contract to add the information
+// about the pool to the system contract
+// * addLiquidityETH is called to add liquidity to the pool
+//
+// If this is a non-gas coin, the following happens:
+//
+// * ZRC20 contract for the coin is deployed
+// * The coin is added to the list of foreign coins in the module's state
+//
+// Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
