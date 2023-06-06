@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -98,6 +99,7 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 
 // MESSAGES
 
+// Not implemented yet.
 func (k msgServer) SetNodeKeys(_ context.Context, _ *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
 	return &types.MsgSetNodeKeysResponse{}, nil
 }

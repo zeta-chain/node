@@ -2,12 +2,17 @@ package keeper
 
 import (
 	"context"
+
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+// Updates the block height of the keygen and sets the status to "pending
+// keygen".
+//
+// Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
