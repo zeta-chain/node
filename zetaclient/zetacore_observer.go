@@ -2,11 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
-	"github.com/libp2p/go-libp2p-core/network"
-	"github.com/libp2p/go-libp2p/core/protocol"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
 	"math"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -37,7 +33,7 @@ type CoreObserver struct {
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
-	Tss       *TSS
+	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
 }
@@ -53,7 +49,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		ZetaChainWatcher: chainLogger.With().Str("module", "ZetaChainWatcher").Logger(),
 	}
 
-	co.Tss = tss
+	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 
@@ -82,63 +78,13 @@ func (co *CoreObserver) MonitorCore() {
 	go co.startSendScheduler()
 }
 
-// returns map(protocolID -> count); map(connID -> count)
-func countActiveStreams(n network.Network) (map[string]int, map[string]int, int) {
-	count := 0
-	conns := n.Conns()
-	protocolCount := make(map[string]int)
-	connCount := make(map[string]int)
-	for _, conn := range conns {
-		count += len(conn.GetStreams())
-		for _, stream := range conn.GetStreams() {
-			protocolCount[string(stream.Protocol())]++
-		}
-		connCount[string(conn.ID())] += len(conn.GetStreams())
-	}
-	return protocolCount, connCount, count
-}
-
-var joinPartyProtocolWithLeader protocol.ID = "/p2p/join-party-leader"
-var TSSProtocolID protocol.ID = "/p2p/tss"
-
-func releaseAllStreams(n network.Network, streamMgr *p2p.StreamMgr) int {
-	streams := streamMgr.UnusedStreams
-	numKeys := len(streams)
-	lenMap := make(map[string]int)
-	for k, v := range streams {
-		lenMap[k] = len(v)
-	}
-	log.Warn().Msgf("analyzing StreamMgr: %d keys; ", numKeys)
-	log.Warn().Msgf("StreamMgr statistics by msgID: %v", lenMap)
-	conns := n.Conns()
-	cnt := 0
-	for _, conn := range conns {
-		for _, stream := range conn.GetStreams() {
-			if stream.Protocol() == joinPartyProtocolWithLeader || stream.Protocol() == TSSProtocolID {
-				stream.Reset()
-				cnt++
-			}
-		}
-	}
-	return cnt
-}
-
-func zetaclientRuntimeStats() (int, uint64) {
-	numGorotuine := runtime.NumGoroutine()
-	var mem runtime.MemStats
-	runtime.ReadMemStats(&mem)
-	heapAllocBytes := mem.HeapAlloc
-	return numGorotuine, heapAllocBytes
-}
-
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
 	go outTxMan.StartMonitorHealth()
-	observeTicker := time.NewTicker(1 * time.Second)
+	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
-	zblockToProcessedNonce := make(map[int64]int64)
 	for range observeTicker.C {
 		bn, err := co.bridge.GetZetaBlockHeight()
 		if err != nil {
@@ -165,36 +111,8 @@ func (co *CoreObserver) startSendScheduler() {
 					co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 					continue
 				}
-				cnt := 0
-				maxCnt := 5
-				safeMode := true // by default, be cautious and only send 1 tx per block
-				if len(sendList) > 0 {
-					lastProcessedNonce := int64(sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce) - 1
-					zblockToProcessedNonce[bn] = lastProcessedNonce
-					// if for 10 blocks there is no progress, then wind down the maxCnt (lookahead)
-					if nonce1, found := zblockToProcessedNonce[bn-20]; found {
-						if nonce1 < lastProcessedNonce && outTxMan.numActiveProcessor < 15 {
-							safeMode = false
-						}
-					}
-					co.logger.ZetaChainWatcher.Info().Msgf("20 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-20])/20.0)
-					co.logger.ZetaChainWatcher.Info().Msgf("100 blocks outbound tx processing rate: %.2f", float64(lastProcessedNonce-zblockToProcessedNonce[bn-100])/100.0)
-					co.logger.ZetaChainWatcher.Info().Msgf("since block 0 outbound tx processing rate: %.2f", float64(lastProcessedNonce)/(1.0*float64(bn)))
-					ngr, nbytes := zetaclientRuntimeStats()
-					co.logger.ZetaChainWatcher.Info().Msgf("stats: (numGoroutine,heapAllocBytes):  %d, %d", ngr, nbytes)
-				}
-				//streamMgr := co.Tss.Server.P2pCommunication.StreamMgr
 
-				host := co.Tss.Server.P2pCommunication.GetHost()
-				pCount, cCount, numStreams := countActiveStreams(host.Network())
-				co.logger.ZetaChainWatcher.Info().Msgf("numStreams: %d; protocol: %+v; conn: %+v", numStreams, pCount, cCount)
-				if outTxMan.numActiveProcessor == 0 {
-					co.logger.ZetaChainWatcher.Warn().Msgf("no active outbound tx processor; safeMode: %v", safeMode)
-					//numStreamsReleased := releaseAllStreams(host.Network(), streamMgr)
-					//co.logger.ZetaChainWatcher.Warn().Msgf("released %d streams", numStreamsReleased)
-				}
-
-				for _, send := range sendList {
+				for idx, send := range sendList {
 					ob, err := co.getTargetChainOb(send)
 					if err != nil {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
@@ -220,17 +138,26 @@ func (co *CoreObserver) startSendScheduler() {
 						continue
 					}
 					currentHeight := uint64(bn)
-					if nonce%10 == currentHeight%10 && !outTxMan.IsOutTxActive(outTxID) {
-						if safeMode && nonce != sendList[0].GetCurrentOutTxParam().OutboundTxTssNonce {
-							break
-						}
-						cnt++
+					var interval uint64
+					var lookahead int64
+					// FIXME: fix these ugly type switches and conversions
+					switch v := ob.(type) {
+					case *EVMChainClient:
+						interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
+						lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
+					case *BitcoinChainClient:
+						interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
+						lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
+					default:
+						co.logger.ZetaChainWatcher.Error().Msgf("unknown ob type on chain %s: type %T", chain, ob)
+						continue
+					}
+					if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
-						send.GetCurrentOutTxParam().OutboundTxGasLimit += uint64(bn % 1000) // this makes re-try sign slightly different tx, resulting in different msgID in go-tss
 						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
 					}
-					if cnt == maxCnt {
+					if idx > int(lookahead) { // only look at 50 sends per chain
 						break
 					}
 				}
