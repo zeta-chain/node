@@ -53,9 +53,13 @@ non_concensus_upgrades = []
 
 binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.4", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.5", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5"]
-
+                        ["v1.2.5", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.7", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.8", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.9", "zetacored-ubuntu-22-amd64"],
+                        ["v1.3.0", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7","v1.2.8","v1.2.9","v1.3.0"]
 
 #os.environ["STARTING_VERSION"] = tag_list[0]
 #os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
