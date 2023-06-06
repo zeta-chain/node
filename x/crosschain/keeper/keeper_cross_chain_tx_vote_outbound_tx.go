@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
@@ -12,6 +13,32 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Casts a vote on an outbound transaction observed on a connected chain (after
+// it has been broadcasted to and finalized on a connected chain). If this is
+// the first vote, a new ballot is created. When a threshold of votes is
+// reached, the ballot is finalized. When a ballot is finalized, if the amount
+// of zeta minted does not match the outbound transaction amount an error is
+// thrown. If the amounts match, the outbound transaction hash and the "last
+// updated" timestamp are updated.
+//
+// The transaction is proceeded to be finalized:
+//
+// If the observation was successful, the status is changed from "pending
+// revert/outbound" to "reverted/mined". The difference between zeta burned
+// and minted is minted by the bank module and deposited into the module
+// account.
+//
+// If the observation was unsuccessful, and if the status is "pending outbound",
+// prices and nonce are updated and the status is changed to "pending revert".
+// If the status was "pending revert", the status is changed to "aborted".
+//
+// If there's an error in the finalization process, the CCTX status is set to
+// 'aborted'.
+//
+// After finalization the outbound transaction tracker and pending nonces are
+// removed, and the CCTX is updated in the store.
+//
+// Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := zetaObserverTypes.ObservationType_OutBoundTx
@@ -20,6 +47,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
 	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	if observationChain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err

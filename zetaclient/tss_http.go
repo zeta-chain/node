@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"net/http"
 	"net/http/pprof"
 	"time"
@@ -41,6 +42,7 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
+	router.Handle("/version", http.HandlerFunc(t.versionHandler)).Methods(http.MethodGet)
 	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -95,4 +97,9 @@ func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", t.p2pid)
+}
+
+func (t *HTTPServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", common.Version)
 }

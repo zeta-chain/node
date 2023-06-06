@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -101,10 +103,13 @@ func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesReq
 
 // MESSAGES
 
-// Should be removed
+// Deprecated.
 func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (*types.MsgNonceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
+		return nil, zetaObserverTypes.ErrSupportedChains
+	}
 
 	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {

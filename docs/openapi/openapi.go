@@ -1,4 +1,4 @@
-package docs
+package openapi
 
 import (
 	"embed"
@@ -9,23 +9,23 @@ import (
 )
 
 const (
-	apiFile   = "/static/openapi.swagger.yaml"
-	indexFile = "template/index.tpl"
+	apiFile      = "openapi.swagger.yaml"
+	templateFile = "template.tpl"
 )
 
-//go:embed static
+//go:embed openapi.swagger.yaml
 var staticFS embed.FS
 
-//go:embed template
+//go:embed template.tpl
 var templateFS embed.FS
 
 func RegisterOpenAPIService(router *mux.Router) {
-	router.Handle(apiFile, http.FileServer(http.FS(staticFS)))
+	router.Handle("/"+apiFile, http.FileServer(http.FS(staticFS)))
 	router.HandleFunc("/", openAPIHandler())
 }
 
 func openAPIHandler() http.HandlerFunc {
-	tmpl, err := template.ParseFS(templateFS, indexFile)
+	tmpl, err := template.ParseFS(templateFS, templateFile)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +34,7 @@ func openAPIHandler() http.HandlerFunc {
 		err := tmpl.Execute(w, struct {
 			URL string
 		}{
-			apiFile,
+			"/" + apiFile,
 		})
 		if err != nil {
 			http.Error(w, "Failed to render template", http.StatusInternalServerError)

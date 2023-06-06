@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -78,8 +79,7 @@ func start(_ *cobra.Command, _ []string) error {
 	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
 	if len(cfg.ChainsEnabled) == 0 {
-		startLogger.Info().Msgf("No chains enabled, exiting")
-		return nil
+		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
@@ -87,7 +87,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+		startLogger.Error().Err(err).Msg("zetabridge getPrivateKey error")
 	}
 	startLogger.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
@@ -116,6 +116,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
+
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
@@ -124,27 +125,77 @@ func start(_ *cobra.Command, _ []string) error {
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
 	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
+	triedKeygenAtBlock := false
+	lastBlock := int64(0)
 	for range ticker.C {
-		// Break out of loop for the following conditions
-		// 1. KeygenBlock is set to 0 in genesis file. Which means TSS generation is disabled and TSS should already exist
-		// 2. KeygenBlock is set to a positive number in genesis file. Which means TSS generation is enabled and TSS should be generated at the block.Break if TSS is generated successfully
-		if cfg.KeygenBlock == 0 {
+		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
+		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
+		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
+
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenSuccess {
 			break
 		}
-		if cfg.KeygenBlock > 0 {
-			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
-			if err == nil {
-				break
-			}
-			startLogger.Error().Err(err).Msg("Keygen Error")
+		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenFailed {
+			triedKeygenAtBlock = false
+			continue
 		}
+		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
+		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen {
+			// Return error if RPC is not working
+			currentBlock, err := zetaBridge.GetZetaBlockHeight()
+			if err != nil {
+				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
+				continue
+			}
+			// Reset the flag if the keygen block has passed and a new keygen block has been set . This condition is only reached if the older keygen is stuck at PendingKeygen for some reason
+			if cfg.KeygenBlock > currentBlock {
+				triedKeygenAtBlock = false
+			}
+			if !triedKeygenAtBlock {
+				// If not at keygen block do not try to generate TSS
+				if currentBlock != cfg.KeygenBlock {
+					if currentBlock > lastBlock {
+						lastBlock = currentBlock
+						startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", cfg.KeygenBlock, currentBlock)
+					}
+					continue
+				}
+				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
+				triedKeygenAtBlock = true
+				err = keygenTss(cfg, tss, masterLogger)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("keygenTss error")
+					tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
+					if err != nil {
+						startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
+						return err
+					}
+					startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
+					continue
+				}
+
+				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
+					return err
+				}
+				startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+				err = SetTSSPubKey(tss, masterLogger)
+				if err != nil {
+					startLogger.Error().Err(err).Msg("SetTSSPubKey error")
+				}
+				continue
+			}
+		}
+		startLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.KeygenBlock)
 	}
-	tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+	err = TestTSS(tss, masterLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
-		return err
+		startLogger.Error().Err(err).Msg("TestTSS error")
 	}
-	startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
@@ -177,16 +228,6 @@ func start(_ *cobra.Command, _ []string) error {
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 	mo1.MonitorCore()
-
-	//// report TSS address nonce on all chains except zeta
-	//for _, chain := range cfg.ChainsEnabled {
-	//	if chain.IsExternalChain() {
-	//		err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
-	//		if err != nil {
-	//			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
-	//		}
-	//	}
-	//}
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
