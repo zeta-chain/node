@@ -139,6 +139,7 @@ for version in UPGRADE_DATA["upgrade_versions"]:
 
     if version not in non_concensus_upgrades:
         logger.log.info("**************************raise governance proposal**************************")
+        command_runner.get_docker_container_logs()
         GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
         logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
         time.sleep(10)
@@ -167,6 +168,8 @@ for version in UPGRADE_DATA["upgrade_versions"]:
         logger.log.info(vote_output)
         logger.log.info(f"sleep for : {UPGRADE_DATA['upgrade_sleep_time']}")
         time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
+        TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
+        logger.log.info(TX_OUTPUT)
         logger.log.info("wake up from sleep")
     else:
         print(version, "this version will be done as non-consensus breaking upgrade")
