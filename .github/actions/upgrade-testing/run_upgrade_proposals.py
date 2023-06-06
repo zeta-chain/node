@@ -58,15 +58,16 @@ binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.7", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.8", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.9", "zetacored-ubuntu-22-amd64"],
-                        ["v1.3.0", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7","v1.2.8","v1.2.9","v1.3.0"]
+                        ["v1.3.0", "zetacored-ubuntu-22-amd64"],
+                        ["v1.3.1", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7","v1.2.8","v1.2.9","v1.3.0","v1.3.1"]
 
 #os.environ["STARTING_VERSION"] = tag_list[0]
 #os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.0"
-os.environ["END_VERSION"] = "v1.2.5"
+os.environ["END_VERSION"] = "v1.3.1"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
