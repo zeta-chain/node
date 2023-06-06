@@ -52,22 +52,17 @@ non_concensus_upgrades = []
 #     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
 
 binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.1", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.4", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.5", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.7", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.8", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.9", "zetacored-ubuntu-22-amd64"],
-                        ["v1.3.0", "zetacored-ubuntu-22-amd64"],
-                        ["v1.3.2", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7","v1.2.8","v1.2.9","v1.3.0","v1.3.2"]
+                        ["v1.2.5", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.1","v1.2.4","v1.2.5"]
 
 #os.environ["STARTING_VERSION"] = tag_list[0]
 #os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.0"
-os.environ["END_VERSION"] = "v1.3.1"
+os.environ["END_VERSION"] = "v1.2.5"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
@@ -134,54 +129,54 @@ logger.log.info("")
 
 logger.log.info("**************************start upgrade process, open upgrades.json and read what upgrades to start.**************************")
 UPGRADE_DATA = json.loads(open("upgrades.json", "r").read())
-logger.log.info("")
+try:
+    for version in UPGRADE_DATA["upgrade_versions"]:
+        logger.log.info(f"**************************starting upgrade for version: {version}**************************")
+        VERSION=version
+        BLOCK_TIME_SECONDS = int(os.environ["BLOCK_TIME_SECONDS"])
+        PROPOSAL_TIME_SECONDS = int(os.environ["PROPOSAL_TIME_SECONDS"])
+        UPGRADE_INFO = '{}'
 
-for version in UPGRADE_DATA["upgrade_versions"]:
-    logger.log.info(f"**************************starting upgrade for version: {version}**************************")
-    VERSION=version
-    BLOCK_TIME_SECONDS = int(os.environ["BLOCK_TIME_SECONDS"])
-    PROPOSAL_TIME_SECONDS = int(os.environ["PROPOSAL_TIME_SECONDS"])
-    UPGRADE_INFO = '{}'
-
-    if version not in non_concensus_upgrades:
-        logger.log.info("**************************raise governance proposal**************************")
-        command_runner.get_docker_container_logs()
-        GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
-        logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
-        time.sleep(10)
-        TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
-        logger.log.info(TX_OUTPUT)
-        logger.log.info("**************************get proposal id**************************")
-        PROPOSAL_ID = command_runner.get_proposal_id()
-        logger.log.info(f"PROPOSAL_ID: {PROPOSAL_ID}")
-        logger.log.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
-        vote_output, tx_hash = command_runner.raise_governance_vote(PROPOSAL_ID)
-        time.sleep(10)
-        TX_OUTPUT = command_runner.query_tx(tx_hash)
-        logger.log.info(TX_OUTPUT)
-        current_version = command_runner.current_version()
-        logger.log.info(f"current version: {current_version}")
-        logger.log.info(f"""**************************UPGRADE INFO**************************
-            MONIKER: {command_runner.MONIKER}
-            NODE: {command_runner.NODE}
-            PROPOSAL_ID: {PROPOSAL_ID}
-            VERSION: {VERSION}
-            UPGRADE_HEIGHT: {command_runner.UPGRADE_HEIGHT}
-            UPGRADE_INFO: {UPGRADE_INFO}
-            CHAIN_ID: {command_runner.CHAIN_ID}
-            LATEST_BLOCK: {command_runner.CURRENT_HEIGHT}
-        **************************UPGRADE INFO**************************""")
-        logger.log.info(vote_output)
-        logger.log.info(f"sleep for : {UPGRADE_DATA['upgrade_sleep_time']}")
-        time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
-        TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
-        logger.log.info(TX_OUTPUT)
-        logger.log.info("wake up from sleep")
-    else:
-        print(version, "this version will be done as non-consensus breaking upgrade")
+        if version not in non_concensus_upgrades:
+            logger.log.info("**************************raise governance proposal**************************")
+            GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
+            logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")
+            time.sleep(10)
+            TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
+            logger.log.info(TX_OUTPUT)
+            logger.log.info("**************************get proposal id**************************")
+            PROPOSAL_ID = command_runner.get_proposal_id()
+            logger.log.info(f"PROPOSAL_ID: {PROPOSAL_ID}")
+            logger.log.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
+            vote_output, tx_hash = command_runner.raise_governance_vote(PROPOSAL_ID)
+            time.sleep(10)
+            TX_OUTPUT = command_runner.query_tx(tx_hash)
+            logger.log.info(TX_OUTPUT)
+            current_version = command_runner.current_version()
+            logger.log.info(f"current version: {current_version}")
+            logger.log.info(f"""**************************UPGRADE INFO**************************
+                MONIKER: {command_runner.MONIKER}
+                NODE: {command_runner.NODE}
+                PROPOSAL_ID: {PROPOSAL_ID}
+                VERSION: {VERSION}
+                UPGRADE_HEIGHT: {command_runner.UPGRADE_HEIGHT}
+                UPGRADE_INFO: {UPGRADE_INFO}
+                CHAIN_ID: {command_runner.CHAIN_ID}
+                LATEST_BLOCK: {command_runner.CURRENT_HEIGHT}
+            **************************UPGRADE INFO**************************""")
+            logger.log.info(vote_output)
+            logger.log.info(f"sleep for : {UPGRADE_DATA['upgrade_sleep_time']}")
+            time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
+            TX_OUTPUT = command_runner.query_tx(GOVERNANCE_TX_HASH)
+            logger.log.info(TX_OUTPUT)
+            logger.log.info("wake up from sleep")
+        else:
+            print(version, "this version will be done as non-consensus breaking upgrade")
+except Exception as e:
+    logger.log.error(str(e))
+    command_runner.get_docker_container_logs()
 
 logger.log.info("Check docker process is still running for debug purposes.")
-command_runner.docker_ps()
 time.sleep(30)
 if command_runner.version_check(os.environ["END_VERSION"]):
     logger.log.info("**************************Version is what was expected.**************************")
