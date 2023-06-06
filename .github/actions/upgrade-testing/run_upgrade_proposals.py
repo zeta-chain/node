@@ -62,7 +62,7 @@ tag_list = ["v1.2.4","v1.2.5","v1.2.6"]
 
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.0"
-os.environ["END_VERSION"] = "v1.2.5"
+os.environ["END_VERSION"] = "v1.2.6"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
