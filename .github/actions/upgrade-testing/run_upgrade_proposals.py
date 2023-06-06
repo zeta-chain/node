@@ -148,7 +148,9 @@ for version in UPGRADE_DATA["upgrade_versions"]:
         PROPOSAL_ID = command_runner.get_proposal_id()
         logger.log.info(f"PROPOSAL_ID: {PROPOSAL_ID}")
         logger.log.info(f"raise governance vote on proposal id: {PROPOSAL_ID}")
-        vote_output = command_runner.raise_governance_vote(PROPOSAL_ID)
+        vote_output, tx_hash = command_runner.raise_governance_vote(PROPOSAL_ID)
+        TX_OUTPUT = command_runner.query_tx(tx_hash)
+        logger.log.info(TX_OUTPUT)
         current_version = command_runner.current_version()
         logger.log.info(f"current version: {current_version}")
         logger.log.info(f"""**************************UPGRADE INFO**************************

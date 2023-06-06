@@ -145,7 +145,8 @@ class Utilities:
             -y"""
         self.logger.info(VOTE_PROPOSAL)
         results_output = self.run_command(VOTE_PROPOSAL)
-        return results_output
+        TX_HASH = results_output.split("txhash:")[1].strip()
+        return results_output, TX_HASH
 
     def load_key(self):
         LOAD_KEY = f"echo {self.mnemonic} | zetacored keys add {self.MONIKER} --keyring-backend test --recover"
