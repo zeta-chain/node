@@ -53,6 +53,10 @@ log_it "**************************************"
 log_it "Copy Binaries to Cosmovisor Upgrades Folder"
 cp -r /app_version/* ${DAEMON_HOME}/cosmovisor/upgrades/
 
+log_it "***************"
+log_it "Cosmos Upgrades"
+ls -lah ${DAEMON_HOME}/cosmovisor/upgrades/
+
 log_it "Copy Starting Binary to Cosmovisor Genesis Bin Folder"
 cp /usr/bin/${DAEMON_NAME} ${DAEMON_HOME}/cosmovisor/genesis/bin
 

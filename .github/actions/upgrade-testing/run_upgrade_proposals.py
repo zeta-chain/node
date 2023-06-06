@@ -51,11 +51,9 @@ non_concensus_upgrades = []
 #         first_minor_version = tag.split(".")[1]
 #     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
 
-binary_download_list = [["v1.2.4", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.5", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.7", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
+binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.4", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.0","v1.2.4"]
 
 
 #os.environ["STARTING_VERSION"] = tag_list[0]
