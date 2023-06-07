@@ -254,25 +254,10 @@ class Utilities:
         self.logger.info(docker_logs)
         self.logger.error(error_output)
 
-    def non_governance_upgrade(self, DAEMON_HOME, VERSION, GAS_PRICES):
-        docker_exec, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} cp {DAEMON_HOME}/cosmovisor/upgrades/{VERSION}/bin/zetacored {DAEMON_HOME}/cosmovisor/genesis/bin/zetacored')
+    def non_governance_upgrade(self, VERSION):
+        command = f'docker exec -it {self.CONTAINER_ID} bash /scripts/move-binary-restart.sh {VERSION}'
+        self.logger.info(command)
+        docker_exec, error_output = self.run_command_all_output(command)
         self.logger.info(docker_exec)
         self.logger.error(error_output)
-
-        docker_check, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} ls {DAEMON_HOME}/cosmovisor/genesis/bin/zetacored')
-        self.logger.info(docker_check)
-        self.logger.error(error_output)
-
-        kill_cosmovisor, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} killall cosmovisor')
-        self.logger.info(kill_cosmovisor)
-        self.logger.error(error_output)
-
-        start_cosmovisor, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} cd {DAEMON_HOME} && source /root/.bashrc && nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices {GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &')
-        self.logger.info(start_cosmovisor)
-        self.logger.error(error_output)
-
-        version_check, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} source /root/.bashrc && cosmovisor version')
-        self.logger.info(version_check)
-        self.logger.error(error_output)
-
-        return docker_exec, docker_check, kill_cosmovisor, start_cosmovisor, version_check
+        return docker_exec, error_output

@@ -172,8 +172,8 @@ try:
             logger.log.info(TX_OUTPUT)
             logger.log.info("wake up from sleep")
         else:
-            print(version, "this version will be done as non-consensus breaking upgrade")
-            command_runner.non_governance_upgrade(os.environ["DAEMON_HOME"], VERSION, os.environ["GAS_PRICES"])
+            logger.log.info(VERSION, "this version will be done as non-consensus breaking upgrade")
+            command_runner.non_governance_upgrade(VERSION)
             time.sleep(30)
 
 except Exception as e:
