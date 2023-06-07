@@ -5,8 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd/fix-go-alpine-build
-      - ci-upgrade-handler-major-version-only
     tags:
       - "*"
   pull_request:
