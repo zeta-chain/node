@@ -54,15 +54,16 @@ non_concensus_upgrades = []
 binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.4", "zetacored-ubuntu-22-amd64"],
                         ["v1.2.5", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.6", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6"]
-
+                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
+                        ["v1.2.7", "zetacored-ubuntu-22-amd64"]]
+tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
+non_concensus_upgrades = ["v1.2.5","v1.2.7"]
 #os.environ["STARTING_VERSION"] = tag_list[0]
 #os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.0"
-os.environ["END_VERSION"] = "v1.2.6"
+os.environ["END_VERSION"] = "v1.2.7"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
@@ -172,6 +173,9 @@ try:
             logger.log.info("wake up from sleep")
         else:
             print(version, "this version will be done as non-consensus breaking upgrade")
+            command_runner.non_governance_upgrade(os.environ["DAEMON_HOME"], VERSION, os.environ["GAS_PRICES"])
+            time.sleep(30)
+
 except Exception as e:
     logger.log.error(str(e))
     command_runner.get_docker_container_logs()
