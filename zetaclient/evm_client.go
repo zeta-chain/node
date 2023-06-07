@@ -552,7 +552,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		return nil
 	}
 	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
-		sampledLogger.Info().Msg("Skipping observer , No new block is produced ")
+		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
 	lastBlock := ob.GetLastBlockHeight()
@@ -690,6 +690,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
 				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+				ob.logger.ExternalChainWatcher.Info().Msgf("Scanning block %d", bn)
 				block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
