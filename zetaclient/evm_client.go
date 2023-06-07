@@ -695,7 +695,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+				ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
@@ -910,7 +910,7 @@ func (ob *EVMChainClient) getLastHeight() (int64, error) {
 
 func (ob *EVMChainClient) BuildBlockIndex() error {
 	logger := ob.logger.ChainLogger.With().Str("module", "BuildBlockIndex").Logger()
-	envvar := ob.chain.String() + "_SCAN_FROM"
+	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
 		logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
