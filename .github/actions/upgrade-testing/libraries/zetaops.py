@@ -267,7 +267,7 @@ class Utilities:
         self.logger.info(kill_cosmovisor)
         self.logger.error(error_output)
 
-        start_cosmovisor, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} cd {DAEMON_HOME} && nophup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices {GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &')
+        start_cosmovisor, error_output = self.run_command_all_output(f'docker exec -it {self.CONTAINER_ID} cd {DAEMON_HOME} && nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices {GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &')
         self.logger.info(start_cosmovisor)
         self.logger.error(error_output)
 

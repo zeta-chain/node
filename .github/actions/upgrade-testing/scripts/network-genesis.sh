@@ -66,5 +66,5 @@ chmod -R a+x ${DAEMON_HOME}/cosmovisor/
 log_it "Validate Genesis File"
 ${DAEMON_NAME} validate-genesis --home ${DAEMON_HOME}/
 
-nophup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
 tail -n 1000 -f cosmovisor.log
