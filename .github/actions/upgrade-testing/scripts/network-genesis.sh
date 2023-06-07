@@ -1,5 +1,8 @@
 export PATH="/usr/local/go/bin:${PATH}"
 
+echo 'export PATH=/usr/local/go/bin:'${PATH} >> /root/.bashrc
+cat /root/.bashrc
+
 log_it () {
   echo "********************************"
   echo "$1"
