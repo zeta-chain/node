@@ -255,7 +255,7 @@ class Utilities:
         self.logger.error(error_output)
 
     def non_governance_upgrade(self, VERSION):
-        command = f'docker exec -it {self.CONTAINER_ID} bash /scripts/move-binary-restart.sh {VERSION}'
+        command = f'docker exec -it {self.CONTAINER_ID.strip()} bash /scripts/restart.sh {VERSION}'
         self.logger.info(command)
         docker_exec, error_output = self.run_command_all_output(command)
         self.logger.info(docker_exec)

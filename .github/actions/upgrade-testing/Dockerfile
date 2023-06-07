@@ -28,12 +28,13 @@ EXPOSE 26657
 COPY --from=cosmovisor /go/bin/cosmovisor /usr/bin/cosmovisor
 COPY ./configs/* /app_version/
 COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
-COPY ./scripts/move-binary-restart.sh /scripts/move-binary-restart.sh
+COPY ./scripts/restart.sh /scripts/restart.sh
 COPY ./upgrades/ /app_version/
 
 RUN apt-get update && \
     apt-get install libusb-dev build-essential gawk wget jq vim bash curl bison python3 python3-pip -y && \
     chmod -R a+x /scripts && \
+    chmod -R 766 /scripts && \
     chmod -R a+x /app_version/ && \
     chmod -R 766 /app_version
 
