@@ -4,7 +4,7 @@ developers to explore the OpenAPI specification without the need to build and
 start the chain.
 
 To start the server, run `go run docs/main.go` and navigate to
-http://localhost:8080 in your browser. 
+http://localhost:8080 in your browser.
 */
 
 package main
