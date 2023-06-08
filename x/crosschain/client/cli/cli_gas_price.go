@@ -2,12 +2,13 @@ package cli
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"strconv"
 )
 
 func CmdListGasPrice() *cobra.Command {
@@ -83,13 +84,13 @@ func CmdGasPriceVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsPrice, err := strconv.ParseInt(args[1], 10, 64)
+			argsPrice, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 			argsSupply := args[2]
 
-			argsBlockNumber, err := strconv.ParseInt(args[3], 10, 64)
+			argsBlockNumber, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -98,7 +99,7 @@ func CmdGasPriceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), argsChain, uint64(argsPrice), argsSupply, uint64(argsBlockNumber))
+			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), argsChain, argsPrice, argsSupply, argsBlockNumber)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
