@@ -114,6 +114,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		return err
 	}
 	tss.CurrentPubkey = res.PubKey
+	tss.Signers = cfg.KeyGenPubKeys
 
 	// Keygen succeed! Report TSS address
 	keygenLogger.Debug().Msgf("Keygen success! keygen response: %v", res)
