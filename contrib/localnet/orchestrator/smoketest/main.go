@@ -6,15 +6,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcutil"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/btcsuite/btcutil"
-	flag "github.com/spf13/pflag"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -39,9 +38,9 @@ var (
 	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress           = ethcommon.HexToAddress("0x0Da38EA1B43758F55eB97590D41e244913A00b26")
 	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", config.BitconNetParams)
-	BLOCK                = 5 * time.Second // should be 2x block time
+	BLOCK                = 2 * time.Second // should be 2x block time
 	BigZero              = big.NewInt(0)
-	SmokeTestTimeout     = 35 * time.Minute // smoke test fails if timeout is reached
+	SmokeTestTimeout     = 24 * time.Hour // smoke test fails if timeout is reached
 	USDTZRC20Addr        = "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
 	USDTERC20Addr        = "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
@@ -86,6 +85,21 @@ type SmokeTest struct {
 
 	SystemContract     *systemcontract.SystemContract
 	SystemContractAddr ethcommon.Address
+}
+
+var RootCmd = &cobra.Command{
+	Use:   "smoketest",
+	Short: "Smoke Test CLI",
+}
+
+var LocalCmd = &cobra.Command{
+	Use:   "local",
+	Short: "Run Local Smoketest",
+	Run:   LocalSmokeTest,
+}
+
+func init() {
+	RootCmd.AddCommand(LocalCmd)
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
@@ -135,11 +149,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	}
 }
 
-func main() {
-	var enableGenesis bool
-	flag.BoolVar(&enableGenesis, "genesis", false, "Wait for genesis initialization.")
-	flag.Parse()
-
+func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	testStartTime := time.Now()
 	defer func() {
 		fmt.Println("Smoke test took", time.Since(testStartTime))
@@ -195,22 +205,19 @@ func main() {
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 
-	// Wait for Genesis and keygen to be completed. ~ height 10
-	fmt.Println("ENABLE GENESIS VALUE: ", enableGenesis)
-	if !enableGenesis {
-		// time.Sleep(time.Second * 20)
-		for {
-			time.Sleep(5 * time.Second)
-			response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
-			if err != nil {
-				fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
-				continue
-			}
-			if response.Height >= 30 {
-				break
-			}
-			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+	// Wait for Genesis and keygen to be completed. ~ height 30
+	time.Sleep(20 * time.Second)
+	for {
+		time.Sleep(5 * time.Second)
+		response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		if err != nil {
+			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
+			continue
 		}
+		if response.Height >= 30 {
+			break
+		}
+		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 	}
 
 	// get the clients for tests
@@ -278,4 +285,11 @@ func main() {
 	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
+}
+
+func main() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }
