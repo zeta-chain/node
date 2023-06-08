@@ -256,7 +256,7 @@ class Utilities:
 
     def non_governance_upgrade(self, VERSION):
         command = f'docker exec -it {self.CONTAINER_ID.strip()} bash /scripts/restart.sh {VERSION}'
-        copy_file_command = "docker cp {self.CONTAINER_ID.strip()}:/root/.zetacored/restart.log restart.log"
+        copy_file_command = f"docker cp {self.CONTAINER_ID.strip()}:/root/.zetacored/restart.log restart.log"
         self.logger.info(command)
         self.logger.info(copy_file_command)
 
