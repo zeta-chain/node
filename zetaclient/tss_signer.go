@@ -74,6 +74,7 @@ type TSS struct {
 	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
 	CurrentPubkey string
 	logger        zerolog.Logger
+	Signers       []string
 }
 
 var _ TSSSigner = (*TSS)(nil)
