@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -78,9 +77,6 @@ func start(_ *cobra.Command, _ []string) error {
 	go zetaBridge.ConfigUpdater(cfg)
 	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
-	if len(cfg.ChainsEnabled) == 0 {
-		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
-	}
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
@@ -111,85 +107,9 @@ func start(_ *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	tss, err := mc.NewTSS(peers, priKey, preParams, cfg)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
-	}
-
-	// If Keygen block is set it will try to generate new TSS at the block
-	// This is a blocking thread and will wait until the ceremony is complete successfully
-	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
-	// Set TSS block to 0 using genesis file to disable this feature
-	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
-	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
-	ticker := time.NewTicker(time.Second * 1)
-	triedKeygenAtBlock := false
-	lastBlock := int64(0)
-	for range ticker.C {
-		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
-		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
-		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
-
-		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenSuccess {
-			break
-		}
-		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
-		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_KeyGenFailed {
-			triedKeygenAtBlock = false
-			continue
-		}
-		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if cfg.KeyGenStatus == crosschaintypes.KeygenStatus_PendingKeygen {
-			// Return error if RPC is not working
-			currentBlock, err := zetaBridge.GetZetaBlockHeight()
-			if err != nil {
-				startLogger.Error().Err(err).Msg("GetZetaBlockHeight RPC  error")
-				continue
-			}
-			// Reset the flag if the keygen block has passed and a new keygen block has been set . This condition is only reached if the older keygen is stuck at PendingKeygen for some reason
-			if cfg.KeygenBlock > currentBlock {
-				triedKeygenAtBlock = false
-			}
-			if !triedKeygenAtBlock {
-				// If not at keygen block do not try to generate TSS
-				if currentBlock != cfg.KeygenBlock {
-					if currentBlock > lastBlock {
-						lastBlock = currentBlock
-						startLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", cfg.KeygenBlock, currentBlock)
-					}
-					continue
-				}
-				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
-				triedKeygenAtBlock = true
-				err = keygenTss(cfg, tss, masterLogger)
-				if err != nil {
-					startLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.KeygenBlock, common.ReceiveStatus_Failed)
-					if err != nil {
-						startLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
-						return err
-					}
-					startLogger.Info().Msgf("TSS Failed Vote: %s", tssFailedVoteHash)
-					continue
-				}
-
-				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
-				if err != nil {
-					startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
-					return err
-				}
-				startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
-				err = SetTSSPubKey(tss, masterLogger)
-				if err != nil {
-					startLogger.Error().Err(err).Msg("SetTSSPubKey error")
-				}
-				continue
-			}
-		}
-		startLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.KeygenBlock)
 	}
 	err = TestTSS(tss, masterLogger)
 	if err != nil {
@@ -198,6 +118,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
+	if len(cfg.ChainsEnabled) == 0 {
+		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+	}
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)
 	if err != nil {
