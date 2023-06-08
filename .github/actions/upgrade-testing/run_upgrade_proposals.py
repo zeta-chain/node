@@ -176,6 +176,10 @@ try:
             command_runner.non_governance_upgrade(VERSION)
             time.sleep(30)
 
+            restart_log = open("restart.log", "r").read()
+            logger.log.info("restart log contents")
+            logger.log.info(restart_log)
+
 except Exception as e:
     logger.log.error(str(e))
     command_runner.get_docker_container_logs()

@@ -256,8 +256,17 @@ class Utilities:
 
     def non_governance_upgrade(self, VERSION):
         command = f'docker exec -it {self.CONTAINER_ID.strip()} bash /scripts/restart.sh {VERSION}'
+        copy_file_command = "docker cp {self.CONTAINER_ID.strip()}:/root/.zetacored/restart.log restart.log"
         self.logger.info(command)
+        self.logger.info(copy_file_command)
+
         docker_exec, error_output = self.run_command_all_output(command)
         self.logger.info(docker_exec)
         self.logger.error(error_output)
+
+        self.logger.info("Copy restart and move local and view to ensure the non concensus upgrade is working properly.")
+        docker_exec, error_output = self.run_command_all_output(copy_file_command)
+        self.logger.info(docker_exec)
+        self.logger.error(error_output)
+
         return docker_exec, error_output
