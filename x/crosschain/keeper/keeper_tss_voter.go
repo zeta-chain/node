@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -13,6 +16,16 @@ import (
 
 // MESSAGES
 
+// Vote on creating a TSS key and recording the information about it (public
+// key, participant and operator addresses, finalized and keygen heights).
+//
+// If the vote passes, the information about the TSS key is recorded on chain
+// and the status of the keygen is set to "success".
+//
+// Fails if the keygen does not exist, the keygen has been already
+// completed, or the keygen has failed.
+//
+// Only node accounts are authorized to broadcast this message.
 func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSSVoter) (*types.MsgCreateTSSVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -42,7 +55,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        voterList,
-			Votes:            zetaObserverTypes.CreateVotes(len(msg.Creator)),
+			Votes:            zetaObserverTypes.CreateVotes(len(voterList)),
 			ObservationType:  zetaObserverTypes.ObservationType_TSSKeyGen,
 			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
 			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
@@ -66,7 +79,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
 	// Set TSS only on success , set Keygen either way.
-	// Keygen block cna be updated using a policy transaction if keygen fails
+	// Keygen block can be updated using a policy transaction if keygen fails
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
@@ -76,6 +89,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		})
 		keygen.Status = types.KeygenStatus_KeyGenSuccess
+		keygen.BlockNumber = ctx.BlockHeight()
 		// initialize the nonces and pending nonces of all enabled chain
 		supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
 		for _, chain := range supportedChains {
@@ -92,6 +106,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		}
 	} else if ballot.BallotStatus == zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
+		keygen.BlockNumber = math2.MaxInt64
 	}
 	k.SetKeygen(ctx, keygen)
 	// Remove ballot

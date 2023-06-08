@@ -77,17 +77,13 @@ func start(_ *cobra.Command, _ []string) error {
 	go zetaBridge.ConfigUpdater(cfg)
 	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
-	if len(cfg.ChainsEnabled) == 0 {
-		startLogger.Info().Msgf("No chains enabled, exiting")
-		return nil
-	}
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
 	if err != nil {
-		startLogger.Error().Err(err).Msg("GetKeys GetPrivateKey error:")
+		startLogger.Error().Err(err).Msg("zetabridge getPrivateKey error")
 	}
 	startLogger.Debug().Msgf("bridgePk %s", bridgePk.String())
 	if len(bridgePk.Bytes()) != 32 {
@@ -111,42 +107,20 @@ func start(_ *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	tss, err := mc.NewTSS(peers, priKey, preParams, cfg)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("NewTSS error")
 		return err
 	}
-	// If Keygen block is set it will try to generate new TSS at the block
-	// This is a blocking thread and will wait until the ceremony is complete successfully
-	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
-	// Set TSS block to 0 using genesis file to disable this feature
-	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
-	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
-	ticker := time.NewTicker(time.Second * 1)
-	for range ticker.C {
-		// Break out of loop for the following conditions
-		// 1. KeygenBlock is set to 0 in genesis file. Which means TSS generation is disabled and TSS should already exist
-		// 2. KeygenBlock is set to a positive number in genesis file. Which means TSS generation is enabled and TSS should be generated at the block.Break if TSS is generated successfully
-		if cfg.KeygenBlock == 0 {
-			break
-		}
-		if cfg.KeygenBlock > 0 {
-			err = keygenTss(cfg, zetaBridge, tss, masterLogger)
-			if err == nil {
-				break
-			}
-			startLogger.Error().Err(err).Msg("Keygen Error")
-		}
-	}
-	tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.KeygenBlock, common.ReceiveStatus_Success)
+	err = TestTSS(tss, masterLogger)
 	if err != nil {
-		startLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
-		return err
+		startLogger.Error().Err(err).Msg("TestTSS error")
 	}
-	startLogger.Info().Msgf("TSS successful Vote: %s", tssSuccessVoteHash)
+
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
+	if len(cfg.ChainsEnabled) == 0 {
+		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
+	}
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)
 	if err != nil {
@@ -177,16 +151,6 @@ func start(_ *cobra.Command, _ []string) error {
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg)
 	mo1.MonitorCore()
-
-	//// report TSS address nonce on all chains except zeta
-	//for _, chain := range cfg.ChainsEnabled {
-	//	if chain.IsExternalChain() {
-	//		err = (chainClientMap)[chain].PostNonceIfNotRecorded(startLogger)
-	//		if err != nil {
-	//			startLogger.Fatal().Err(err).Msgf("PostNonceIfNotRecorded fail %s", chain.String())
-	//		}
-	//	}
-	//}
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)

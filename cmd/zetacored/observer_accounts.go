@@ -32,13 +32,14 @@ const (
 	ObserverTokens  = "4100000000000000000000000"
 	HotkeyTokens    = "1000000000000000000000"
 	keygenBlock     = "keygen-block"
+	tssPubKey       = "tss-pubkey"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
 		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
@@ -50,9 +51,17 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if len(args) == 0 {
 				args = append(args, defaultFile)
 			}
-			keyGenBlock, err := cmd.Flags().GetInt64("keygen-block")
+			keyGenBlock, err := cmd.Flags().GetInt64(keygenBlock)
 			if err != nil {
 				return err
+			}
+			tssPubkey, err := cmd.Flags().GetString(tssPubKey)
+			if err != nil {
+				return err
+			}
+			fmt.Println("TSS Pubkey: ", tssPubkey)
+			if keyGenBlock == 0 && tssPubkey == "" {
+				panic("TSS pubkey is required if keygen block is set to 0")
 			}
 			file := args[0]
 			observerInfo, err := ParsefileToObserverDetails(file)
@@ -149,10 +158,29 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+			keyGenStatus := crosschaintypes.KeygenStatus_PendingKeygen
+			if keyGenBlock == 0 {
+				keyGenStatus = crosschaintypes.KeygenStatus_KeyGenSuccess
+			}
 			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
-				Status:         crosschaintypes.KeygenStatus_PendingKeygen,
+				Status:         keyGenStatus,
 				GranteePubkeys: keygenPubKeys,
 				BlockNumber:    keyGenBlock,
+			}
+
+			if keyGenBlock == 0 {
+				operatorList := make([]string, len(nodeAccounts))
+				for i, nodeAccount := range nodeAccounts {
+					operatorList[i] = nodeAccount.Operator
+				}
+				tss := crosschaintypes.TSS{
+					TssPubkey:           tssPubkey,
+					TssParticipantList:  keygenPubKeys,
+					OperatorAddressList: operatorList,
+					FinalizedZetaHeight: 0,
+					KeyGenZetaHeight:    0,
+				}
+				zetaCrossChainGenState.Tss = &tss
 			}
 
 			// Add observers to observer genesis state
@@ -206,6 +234,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().Int64(keygenBlock, 20, "set keygen block , default is 20")
+	cmd.Flags().String(tssPubKey, "", "set TSS pubkey if using older keygen")
 	return cmd
 }
 

@@ -71,6 +71,9 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
+    ports:
+      - "8123:8123"
+
     entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
@@ -158,4 +161,4 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: /work/start.sh
+    entrypoint: ["/work/start.sh", "stress"]

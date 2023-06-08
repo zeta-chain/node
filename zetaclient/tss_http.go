@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -42,6 +43,11 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
 	router.Handle("/version", http.HandlerFunc(t.versionHandler)).Methods(http.MethodGet)
+	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	router.HandleFunc("/debug/pprof/", pprof.Index)
+	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+
 	//router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
 	return router

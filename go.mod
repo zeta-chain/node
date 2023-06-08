@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.8
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/gogo/protobuf v1.3.3
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -58,6 +58,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
+	github.com/emicklei/proto v1.11.1 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -182,7 +183,7 @@ require (
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.22.0
 	github.com/libp2p/go-libp2p-asn-util v0.2.0 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.0 // indirect
+	github.com/libp2p/go-libp2p-core v0.20.0
 	github.com/libp2p/go-libp2p-kad-dht v0.18.0
 	github.com/libp2p/go-libp2p-kbucket v0.4.7 // indirect
 	github.com/libp2p/go-libp2p-record v0.2.0 // indirect
@@ -298,5 +299,5 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
-	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230328191220-06e3b12d56a7
+	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230530183945-4ce35ef0f84f
 )

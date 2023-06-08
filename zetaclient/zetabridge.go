@@ -184,12 +184,6 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	if keyGen.Status == stypes.KeygenStatus_PendingKeygen {
-		cfg.KeygenBlock = keyGen.BlockNumber
-		cfg.KeyGenPubKeys = keyGen.GranteePubkeys
-	} else {
-		cfg.KeygenBlock = 0
-		cfg.KeyGenPubKeys = nil
-	}
+	cfg.Keygen = *keyGen
 	return nil
 }
