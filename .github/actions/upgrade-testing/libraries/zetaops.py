@@ -255,17 +255,42 @@ class Utilities:
         self.logger.error(error_output)
 
     def non_governance_upgrade(self, VERSION):
-        command = f'docker exec -it {self.CONTAINER_ID.strip()} bash /scripts/restart.sh {VERSION}'
-        copy_file_command = f"docker cp {self.CONTAINER_ID.strip()}:/root/.zetacored/restart.log restart.log"
-        self.logger.info(command)
-        self.logger.info(copy_file_command)
+        command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
+export VERSION=""" + VERSION + """
+
+echo "********************RESTART VARS********************" > /root/.zetacored/restart.log
+echo "VERSION: ${VERSION}"
+echo "GAS_PRICES: ${GAS_PRICES}"
+echo "DAEMON_HOME: ${DAEMON_HOME}"
+echo "********************RESTART VARS********************"
+
+source /root/.bashrc
+
+cd ${DAEMON_HOME}
+
+echo "CHECK CURRENT BINARY"
+ls -lah cosmovisor/genesis/bin/zetacored
+
+echo "COPY BINARY TO CURRENT ONE"
+cp cosmovisor/upgrades/${VERSION}/bin/zetacored cosmovisor/genesis/bin/zetacored
+
+echo "CHECK CURRENT BINARY"
+ls -lah cosmovisor/genesis/bin/zetacored
+
+echo "KILL ALL COSMOVISOR"
+killall cosmovisor
+
+echo "RESTART COSMOVISOR"
+nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+
+echo "SLEEP FOR 15 SECONDS"
+sleep 15
+
+echo "CHECK VERSION"
+cosmovisor version
+EOF"""
 
         docker_exec, error_output = self.run_command_all_output(command)
-        self.logger.info(docker_exec)
-        self.logger.error(error_output)
-
-        self.logger.info("Copy restart and move local and view to ensure the non concensus upgrade is working properly.")
-        docker_exec, error_output = self.run_command_all_output(copy_file_command)
         self.logger.info(docker_exec)
         self.logger.error(error_output)
 
