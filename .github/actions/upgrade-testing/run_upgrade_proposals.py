@@ -172,7 +172,7 @@ try:
             logger.log.info(TX_OUTPUT)
             logger.log.info("wake up from sleep")
         else:
-            logger.log.info(VERSION, "this version will be done as non-consensus breaking upgrade")
+            logger.log.info(f"{VERSION}: this version will be done as non-consensus breaking upgrade")
             command_runner.non_governance_upgrade(VERSION)
             time.sleep(30)
 
