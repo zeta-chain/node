@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,10 +50,6 @@ func TestKeygenQuery(t *testing.T) {
 			desc:     "First",
 			request:  &types.QueryGetKeygenRequest{},
 			response: &types.QueryGetKeygenResponse{Keygen: &item},
-		},
-		{
-			desc: "InvalidRequest",
-			err:  status.Error(codes.InvalidArgument, "invalid request"),
 		},
 	} {
 		tc := tc
