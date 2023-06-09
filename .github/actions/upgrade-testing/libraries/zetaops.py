@@ -260,6 +260,16 @@ class Utilities:
         self.logger.info(docker_exec)
         self.logger.info(error_output)
 
+        command = f"chmod 777 /root/.zetacored/current_version"
+        docker_exec, error_output = self.run_command_all_output(command)
+        self.logger.info(docker_exec)
+        self.logger.info(error_output)
+
+        command = f"cat /root/.zetacored/current_version"
+        docker_exec, error_output = self.run_command_all_output(command)
+        self.logger.info(docker_exec)
+        self.logger.info(error_output)
+
         self.logger.info(command_echo)
         command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
 cat /root/.zetacored/current_version     
