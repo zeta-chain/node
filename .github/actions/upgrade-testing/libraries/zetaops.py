@@ -268,9 +268,12 @@ cd ${DAEMON_HOME}
 
 echo "CHECK CURRENT BINARY"
 ls -lah cosmovisor/genesis/bin/zetacored
+ls -lah cosmovisor/current/bin/zetacored
 
 echo "COPY BINARY TO CURRENT ONE"
 cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
 
 echo "CHECK CURRENT BINARY"
 ls -lah cosmovisor/genesis/bin/zetacored
