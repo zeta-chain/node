@@ -255,28 +255,9 @@ class Utilities:
         self.logger.error(error_output)
 
     def non_governance_upgrade(self, VERSION):
-        command_echo = f"echo '{VERSION}' > /root/.zetacored/current_version"
-        docker_exec, error_output = self.run_command_all_output(command_echo)
-        self.logger.info(docker_exec)
-        self.logger.info(error_output)
-
-        command = f"chmod 777 /root/.zetacored/current_version"
-        docker_exec, error_output = self.run_command_all_output(command)
-        self.logger.info(docker_exec)
-        self.logger.info(error_output)
-
-        command = f"cat /root/.zetacored/current_version"
-        docker_exec, error_output = self.run_command_all_output(command)
-        self.logger.info(docker_exec)
-        self.logger.info(error_output)
-
-        self.logger.info(command_echo)
         command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
-cat /root/.zetacored/current_version     
-export VERSION=$(cat /root/.zetacored/current_version)
-
 echo "********************RESTART VARS********************"
-echo "VERSION: ${VERSION}"
+echo "VERSION: """ + VERSION + """
 echo "GAS_PRICES: ${GAS_PRICES}"
 echo "DAEMON_HOME: ${DAEMON_HOME}"
 echo "********************RESTART VARS********************"
@@ -289,7 +270,7 @@ echo "CHECK CURRENT BINARY"
 ls -lah cosmovisor/genesis/bin/zetacored
 
 echo "COPY BINARY TO CURRENT ONE"
-cp cosmovisor/upgrades/${VERSION}/bin/zetacored cosmovisor/genesis/bin/zetacored
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
 
 echo "CHECK CURRENT BINARY"
 ls -lah cosmovisor/genesis/bin/zetacored
