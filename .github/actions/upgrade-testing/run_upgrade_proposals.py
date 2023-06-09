@@ -176,13 +176,9 @@ try:
             command_runner.non_governance_upgrade(VERSION)
             time.sleep(30)
 
-            restart_log = open("restart.log", "r").read()
-            logger.log.info("restart log contents")
-            logger.log.info(restart_log)
-
 except Exception as e:
     logger.log.error(str(e))
-    command_runner.get_docker_container_logs()
+    #command_runner.get_docker_container_logs()
 
 logger.log.info("Check docker process is still running for debug purposes.")
 time.sleep(30)
