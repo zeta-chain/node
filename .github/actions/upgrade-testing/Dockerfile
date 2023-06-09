@@ -31,7 +31,7 @@ COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
 COPY ./upgrades/ /app_version/
 
 RUN apt-get update && \
-    apt-get install libusb-dev build-essential gawk wget jq vim bash curl bison python3 python3-pip -y && \
+    apt-get install libusb-dev build-essential gawk psmisc wget jq vim bash curl bison python3 python3-pip -y && \
     chmod -R a+x /scripts && \
     chmod -R 766 /scripts && \
     chmod -R a+x /app_version/ && \
