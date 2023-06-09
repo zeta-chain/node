@@ -51,7 +51,7 @@ type BitcoinChainClient struct {
 	Tss           TSSSigner
 	lastBlock     int64
 	BlockTime     uint64                                  // block time in seconds
-	submittedTx   map[string]btcjson.GetTransactionResult // key: chain-nonce
+	minedTx   map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
 	mu            *sync.Mutex
 	utxos         []btcjson.ListUnspentResult
