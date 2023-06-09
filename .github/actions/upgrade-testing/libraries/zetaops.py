@@ -257,7 +257,7 @@ class Utilities:
     def non_governance_upgrade(self, VERSION):
         command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
 echo "********************RESTART VARS********************"
-echo "VERSION: """ + VERSION + """
+echo "VERSION: """ + VERSION + """ "
 echo "GAS_PRICES: ${GAS_PRICES}"
 echo "DAEMON_HOME: ${DAEMON_HOME}"
 echo "********************RESTART VARS********************"
