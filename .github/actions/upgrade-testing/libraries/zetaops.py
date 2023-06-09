@@ -255,10 +255,11 @@ class Utilities:
         self.logger.error(error_output)
 
     def non_governance_upgrade(self, VERSION):
-        command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
-export VERSION=""" + VERSION + """
 
-echo "********************RESTART VARS********************" > /root/.zetacored/restart.log
+        command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
+export VERSION=%s
+
+echo "********************RESTART VARS********************"
 echo "VERSION: ${VERSION}"
 echo "GAS_PRICES: ${GAS_PRICES}"
 echo "DAEMON_HOME: ${DAEMON_HOME}"
@@ -288,7 +289,8 @@ sleep 15
 
 echo "CHECK VERSION"
 cosmovisor version
-EOF"""
+EOF""" % (VERSION)
+        self.logger.info(command)
 
         docker_exec, error_output = self.run_command_all_output(command)
         self.logger.info(docker_exec)

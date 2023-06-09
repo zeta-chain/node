@@ -28,7 +28,6 @@ EXPOSE 26657
 COPY --from=cosmovisor /go/bin/cosmovisor /usr/bin/cosmovisor
 COPY ./configs/* /app_version/
 COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
-COPY ./scripts/restart.sh /scripts/restart.sh
 COPY ./upgrades/ /app_version/
 
 RUN apt-get update && \
