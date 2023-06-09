@@ -51,7 +51,7 @@ type BitcoinChainClient struct {
 	Tss           TSSSigner
 	lastBlock     int64
 	BlockTime     uint64                                  // block time in seconds
-	minedTx   map[string]btcjson.GetTransactionResult // key: chain-nonce
+	minedTx       map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
 	mu            *sync.Mutex
 	utxos         []btcjson.ListUnspentResult
@@ -97,7 +97,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
-	ob.submittedTx = make(map[string]btcjson.GetTransactionResult)
+	ob.minedTx = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
 	//Load btc chain client DB
@@ -312,10 +312,10 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 	ob.mu.Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
-	res, submitted := ob.submittedTx[outTxID]
+	res, mined := ob.minedTx[outTxID]
 	ob.mu.Unlock()
 
-	if !submitted {
+	if !mined {
 		if !broadcasted {
 			return false, false, nil
 		}
@@ -333,7 +333,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 		// Save result to avoid unnecessary query
 		ob.mu.Lock()
-		ob.submittedTx[outTxID] = res
+		ob.minedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
 	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
@@ -665,7 +665,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					}
 					if getTxResult.Confirmations >= 0 {
 						ob.mu.Lock()
-						ob.submittedTx[outTxID] = *getTxResult
+						ob.minedTx[outTxID] = *getTxResult
 						ob.mu.Unlock()
 
 						//Save to db
@@ -717,7 +717,7 @@ func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
 		if err != nil {
 			return err
 		}
-		ob.submittedTx[txResult.Key] = r
+		ob.minedTx[txResult.Key] = r
 	}
 	return nil
 }
