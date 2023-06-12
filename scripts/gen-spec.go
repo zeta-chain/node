@@ -84,6 +84,10 @@ func processProtoFile(path string, outputBaseDir string) error {
 		}),
 	)
 
+	if len(messageMap) == 0 {
+		return nil
+	}
+
 	if packageName != "" && len(msgServices) > 0 {
 		outputDir := filepath.Join(outputBaseDir, getLastSegmentOfPackageName(packageName))
 		err = os.MkdirAll(outputDir, 0750)
