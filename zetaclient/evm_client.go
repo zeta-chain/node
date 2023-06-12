@@ -8,6 +8,7 @@ import (
 	math2 "math"
 	"math/big"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -396,6 +397,9 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				continue
 			}
+			sort.Slice(trackers, func(i, j int) bool {
+				return trackers[i].Nonce < trackers[j].Nonce
+			})
 			outTimeout := time.After(90 * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {

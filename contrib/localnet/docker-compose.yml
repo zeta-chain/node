@@ -118,5 +118,5 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: /work/start.sh
+    entrypoint: ["/work/start.sh", "local"]
 

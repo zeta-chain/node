@@ -69,9 +69,7 @@ type Config struct {
 	LogLevel      zerolog.Level
 	LogSampler    bool
 	PreParamsPath string
-	KeygenBlock   int64
-	KeyGenPubKeys []string
-	KeyGenStatus  crosschaintypes.KeygenStatus
+	Keygen        crosschaintypes.Keygen
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
