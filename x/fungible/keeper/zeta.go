@@ -10,7 +10,6 @@ import (
 )
 
 // Mint ZETA (gas token) to the given address
-// TODO balanceCoinAfter != expCoin , be replicated in an unit test
 func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount *big.Int) error {
 	balanceCoin := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
 	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))
@@ -20,20 +19,28 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 	}
 
 	// Send minted coins to the receiver
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins); err != nil {
-		return err
+	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins)
+
+	if err == nil {
+		// Check expected receiver balance after transfer
+		balanceCoinAfter := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
+		expCoin := balanceCoin.Add(coins[0])
+
+		if ok := balanceCoinAfter.IsEqual(expCoin); !ok {
+			err = sdkerrors.Wrapf(
+				types.ErrBalanceInvariance,
+				"invalid coin balance - expected: %v, actual: %v",
+				expCoin, balanceCoinAfter,
+			)
+		}
 	}
 
-	// Check expected receiver balance after transfer
-	balanceCoinAfter := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
-	expCoin := balanceCoin.Add(coins[0])
-
-	if ok := balanceCoinAfter.IsEqual(expCoin); !ok {
-		return sdkerrors.Wrapf(
-			types.ErrBalanceInvariance,
-			"invalid coin balance - expected: %v, actual: %v",
-			expCoin, balanceCoinAfter,
-		)
+	if err != nil {
+		// Revert minting if an error is found.
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins); err != nil {
+			return err
+		}
+		return err
 	}
 
 	return nil
