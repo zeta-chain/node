@@ -24,7 +24,10 @@ tag_list = []
 for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
-        tag_list.append(tag)
+        if "-rc" in str(tag):
+            continue
+        else:
+            tag_list.append(tag)
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
@@ -52,12 +55,12 @@ for tag in tag_list:
 #binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],["v1.2.4", "zetacored-ubuntu-22-amd64"],["v1.2.5", "zetacored-ubuntu-22-amd64"],["v1.2.6", "zetacored-ubuntu-22-amd64"],["v1.2.7", "zetacored-ubuntu-22-amd64"]]
 #tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
 #non_concensus_upgrades = ["v1.2.5","v1.2.7"]
+#os.environ["STARTING_VERSION"] = "v1.2.0"
+#os.environ["END_VERSION"] = "v1.2.7"
 
+logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = tag_list[0]
 os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
-logger.log.info("***************************")
-os.environ["STARTING_VERSION"] = "v1.2.0"
-os.environ["END_VERSION"] = "v1.2.7"
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
