@@ -236,9 +236,7 @@ class Utilities:
         self.logger.info("kill running containers.")
         self.kill_docker_containers()
         self.logger.info("Start local network contianer.")
-        #docker_command = f'docker run {DOCKER_ENVS} --platform=linux/amd64 -d -p 26657:26657 local/upgrade-test:latest'
         docker_command = f'docker run {DOCKER_ENVS} -d -p 26657:26657 local/upgrade-test:latest'
-
         self.logger.info(docker_command)
         self.run_command(docker_command)
         container_id = self.run_command("docker ps | grep -v COMMAND | cut -d ' ' -f 1 | tr -d ' '")
