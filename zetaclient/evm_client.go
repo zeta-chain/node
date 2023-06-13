@@ -227,6 +227,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	}
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
+	logger.Info().Msgf("Found TX and Receipt %s", transaction.Hash().Hex(), receipt.Status)
 	if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
@@ -253,7 +254,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
 		}
-	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
+	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived logger.Info().Msgf("Checking outbound transaction receipt ", receipt.
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
@@ -340,6 +341,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
 		}
+		logger.Info().Msgf("Unable to PostReceiveConfirmation  %s | %s | %s | %d ", sendHash, ob.chain.String(), receipt.TxHash, receipt.Status)
 	} else if cointype == common.CoinType_ERC20 {
 		if receipt.Status == 1 {
 			logs := receipt.Logs
