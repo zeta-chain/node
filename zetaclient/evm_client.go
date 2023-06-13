@@ -409,6 +409,9 @@ func (ob *EVMChainClient) observeOutTx() {
 						break TRACKERLOOP
 					default:
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
+						if err != nil {
+							ob.logger.ObserveOutTx.Error().Err(err).Msgf("error querying tx by hash")
+						}
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[int(nonceInt)] = receipt
@@ -462,13 +465,15 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
+		logger.Warn().Err(err).Msg("TransactionReceipt error")
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msg("TransactionReceipt/TransactionByHash error")
+			logger.Warn().Err(err).Msg("TransactionReceipt error not NotFound")
 		}
 		return nil, nil, err
 	}
 	transaction, _, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
+		logger.Error().Err(err).Msg("TransactionByHash error")
 		return nil, nil, err
 	}
 	if transaction.Nonce() != uint64(nonce) {
