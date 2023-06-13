@@ -28,39 +28,33 @@ for tag in git_tags:
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
-
 tag_list.sort()
-
 upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 first = True
 non_concensus_upgrades = []
-# for tag in tag_list:
-#     if first:
-#         first_major_version = tag.split(".")[0]
-#         first_minor_version = tag.split(".")[1]
-#         first = False
-#     else:
-#         major_version = tag.split(".")[0]
-#         minor_version = tag.split(".")[1]
-#         #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
-#         if major_version == first_major_version and minor_version != first_minor_version:
-#             non_concensus_upgrades.append(tag)
-#         first_major_version = tag.split(".")[0]
-#         first_minor_version = tag.split(".")[1]
-#     binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
+for tag in tag_list:
+    if first:
+        first_major_version = tag.split(".")[0]
+        first_minor_version = tag.split(".")[1]
+        first = False
+    else:
+        major_version = tag.split(".")[0]
+        minor_version = tag.split(".")[1]
+        #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
+        if major_version == first_major_version and minor_version != first_minor_version:
+            non_concensus_upgrades.append(tag)
+        first_major_version = tag.split(".")[0]
+        first_minor_version = tag.split(".")[1]
+    binary_download_list.append([f"{tag}", f"zetacored-{os.environ['BINARY_NAME_SUFFIX']}"])
 
-binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.4", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.5", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.6", "zetacored-ubuntu-22-amd64"],
-                        ["v1.2.7", "zetacored-ubuntu-22-amd64"]]
-tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
-non_concensus_upgrades = ["v1.2.5","v1.2.7"]
-#os.environ["STARTING_VERSION"] = tag_list[0]
-#os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
+#binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],["v1.2.4", "zetacored-ubuntu-22-amd64"],["v1.2.5", "zetacored-ubuntu-22-amd64"],["v1.2.6", "zetacored-ubuntu-22-amd64"],["v1.2.7", "zetacored-ubuntu-22-amd64"]]
+#tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
+#non_concensus_upgrades = ["v1.2.5","v1.2.7"]
 
+os.environ["STARTING_VERSION"] = tag_list[0]
+os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info("***************************")
 os.environ["STARTING_VERSION"] = "v1.2.0"
 os.environ["END_VERSION"] = "v1.2.7"
@@ -70,8 +64,8 @@ logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
 logger.log.info(f"End Version Version: {os.environ['END_VERSION']}")
 logger.log.info("***************************")
 
-#commented for specific version testing
-#tag_list.pop(0)
+#pop the starting version tag so it doesn't try to upgrade to itsself.
+tag_list.pop(0)
 
 upgrades_json["upgrade_sleep_time"] = os.environ["UPGRADES_SLEEP_TIME"]
 upgrades_json["binary_versions"] = binary_download_list
