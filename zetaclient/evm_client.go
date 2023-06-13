@@ -227,7 +227,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	}
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
-	logger.Info().Msgf("Found TX and Receipt %s", transaction.Hash().Hex(), receipt.Status)
+	logger.Info().Msgf("Found TX and Receipt %s | %d ", transaction.Hash().Hex(), receipt.Status)
 	if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
