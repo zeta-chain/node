@@ -343,7 +343,6 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
 			return true, true, nil
 		}
-		logger.Info().Msgf("Unable to PostReceiveConfirmation  %s | %s | %s | %d ", sendHash, ob.chain.String(), receipt.TxHash, receipt.Status)
 	} else if cointype == common.CoinType_ERC20 {
 		if receipt.Status == 1 {
 			logs := receipt.Logs
