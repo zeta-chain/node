@@ -22,6 +22,7 @@ var (
 	ErrForeignCoinNotFound      = sdkerrors.Register(ModuleName, 1118, "Err gas coin not found for SenderChain")
 	ErrNotEnoughPermissions     = sdkerrors.Register(ModuleName, 1119, "Not enough permissions for current actions")
 	ErrKeygenNotFound           = sdkerrors.Register(ModuleName, 1120, "Err Keygen not found, Keygen block can only be updated,New keygen cannot be set")
+	ErrSuccessfullCompleted     = sdkerrors.Register(ModuleName, 1120, "Err Keygen not found, Keygen block can only be updated,New keygen cannot be set")
 	ErrCannotFindPendingNonces  = sdkerrors.Register(ModuleName, 1121, "Err Cannot find pending nonces")
 	ErrCannotFindTSSKeys        = sdkerrors.Register(ModuleName, 1122, "Err Cannot find TSS keys")
 	ErrNonceMismatch            = sdkerrors.Register(ModuleName, 1123, "Err Nonce mismatch")

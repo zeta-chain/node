@@ -75,7 +75,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 		// Only set this the first time when the ballot is created
-		cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
+		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 		k.SetCrossChainTx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot

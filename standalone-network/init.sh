@@ -29,7 +29,7 @@ echo "${contents}" > $DAEMON_HOME/config/genesis.json
 sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacored/config/app.toml
 
 
-zetacored add-observer-list standalone-network/observers.json --keygen-block=0 --tss-pubkey=tsspubkey
+zetacored add-observer-list standalone-network/observers.json --keygen-block=5 --tss-pubkey=tsspubkey
 zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
 
 

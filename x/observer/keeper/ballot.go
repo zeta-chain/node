@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	types2 "github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,9 +47,23 @@ func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallot
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	voter, found := k.GetBallot(ctx, req.BallotIdentifier)
+	ballot, found := k.GetBallot(ctx, req.BallotIdentifier)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found ballot")
 	}
-	return &types.QueryBallotByIdentifierResponse{Ballot: &voter}, nil
+	type voters struct {
+		VoterAddress string `json:"voter_address"`
+		VoteType     string `json:"vote_type"`
+	}
+	votersList := make([]voters, len(ballot.VoterList))
+	for i, voterAddress := range ballot.VoterList {
+		votersList[i].VoterAddress = voterAddress
+		ballot.GetIndex()
+		votersList[i].VoteType = ballot.Votes[ballot.GetVoterIndex(voterAddress)].String()
+	}
+
+	outputString := types2.PrettyPrintStruct(votersList)
+	ballot.VoterList = []string{outputString}
+	ballot.Votes = nil
+	return &types.QueryBallotByIdentifierResponse{Ballot: &ballot}, nil
 }
