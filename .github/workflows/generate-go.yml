@@ -25,6 +25,6 @@ jobs:
           if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- x; then
             echo "Generated Go files are up-to-date."
           else
-            echo "::error::Generated Go files are not up-to-date, please run 'make proto' locally and commit changes."
+            echo "::error::Generated Go files are not up-to-date. Please run 'make proto' locally and commit any changes."
             exit 1
           fi
