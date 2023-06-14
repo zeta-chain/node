@@ -18,11 +18,11 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: Generate Go
-        run: ./scripts/protoc-gen-go.sh
+        run: make proto
 
       - name: Check for changes
         run: |
-          if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- x; then
+          if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol; then
             echo "Generated Go files are up-to-date."
           else
             echo "::error::Generated Go files are not up-to-date. Please run 'make proto' locally and commit any changes."

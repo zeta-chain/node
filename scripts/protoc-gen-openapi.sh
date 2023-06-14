@@ -2,6 +2,8 @@
 
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 
+go mod download
+
 COSMOS_SDK="github.com/cosmos/cosmos-sdk"
 PROTO_TEMPLATE="proto/buf.openapi.yaml"
 OUTPUT_DIR="./docs/openapi"
