@@ -9,6 +9,7 @@ import (
 
 const releaseVersion = "v1.0.0"
 
+// TODO : Add migrations if necessary for Ballot index  v2.0.0
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
