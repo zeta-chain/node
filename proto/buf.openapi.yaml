@@ -6,4 +6,4 @@ plugins:
   - name: openapiv2
     out: .
     strategy: all
-    opt: allow_merge=true,merge_file_name=zetachain,output_format=yaml
+    opt: allow_merge=true,merge_file_name=zetachain,output_format=yaml,json_names_for_fields=false
