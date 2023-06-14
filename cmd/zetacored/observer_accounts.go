@@ -25,21 +25,21 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 const (
-	ObserverBalance = "100000000000000000000000"
-	HotkeyBalance   = "100000000000000000000"
+	ValidatorTokens = "100000000000000000000000"
+	ObserverTokens  = "4100000000000000000000000"
+	HotkeyTokens    = "1000000000000000000000"
 	keygenBlock     = "keygen-block"
+	tssPubKey       = "tss-pubkey"
 )
 
 func AddObserverAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer-list [observer-list.json] ",
 		Short: "Add a list of observers to the observer mapper ,default path is ~/.zetacored/os_info/observer_info.json",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.Codec
@@ -51,9 +51,17 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if len(args) == 0 {
 				args = append(args, defaultFile)
 			}
-			keyGenBlock, err := cmd.Flags().GetInt64("keygen-block")
+			keyGenBlock, err := cmd.Flags().GetInt64(keygenBlock)
 			if err != nil {
 				return err
+			}
+			tssPubkey, err := cmd.Flags().GetString(tssPubKey)
+			if err != nil {
+				return err
+			}
+			fmt.Println("TSS Pubkey: ", tssPubkey)
+			if keyGenBlock == 0 && tssPubkey == "" {
+				panic("TSS pubkey is required if keygen block is set to 0")
 			}
 			file := args[0]
 			observerInfo, err := ParsefileToObserverDetails(file)
@@ -68,26 +76,35 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// DefaultChainsList is based on Build Flags
 			supportedChains := common.DefaultChainsList()
 			var balances []banktypes.Balance
-			commonCoins, ok := sdk.NewIntFromString(ObserverBalance)
+			validatorTokens, ok := sdk.NewIntFromString(ValidatorTokens)
 			if !ok {
 				panic("Failed to parse string to int for observer")
 			}
-			commonHotkeyCoins, ok := sdk.NewIntFromString(HotkeyBalance)
+			hotkeyTokens, ok := sdk.NewIntFromString(HotkeyTokens)
 			if !ok {
 				panic("Failed to parse string to int for hotkey")
 			}
-			commonObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonCoins))
-			commonHotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, commonHotkeyCoins))
+			observerTokens, ok := sdk.NewIntFromString(ObserverTokens)
+			if !ok {
+				panic("Failed to parse string to int for hotkey")
+			}
+			ValidatorBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, validatorTokens))
+			HotkeyBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, hotkeyTokens))
+			ObserverBalance := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, observerTokens))
 			// Generate the grant authorizations and created observer list for chain
 			for _, info := range observerInfo {
 
-				balances = append(balances, banktypes.Balance{
-					Address: info.ObserverAddress,
-					Coins:   commonObserverBalance,
-				})
 				if isValidatorOnly(info.IsObserver) {
+					balances = append(balances, banktypes.Balance{
+						Address: info.ObserverAddress,
+						Coins:   ValidatorBalance,
+					})
 					continue
 				}
+				balances = append(balances, banktypes.Balance{
+					Address: info.ObserverAddress,
+					Coins:   ValidatorBalance.Add(ObserverBalance...),
+				})
 
 				if info.ZetaClientGranteeAddress == "" || info.ObserverAddress == "" {
 					panic("ZetaClientGranteeAddress or ObserverAddress is empty")
@@ -116,7 +133,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 				balances = append(balances, banktypes.Balance{
 					Address: info.ZetaClientGranteeAddress,
-					Coins:   commonHotkeyBalance,
+					Coins:   HotkeyBalance,
 				})
 				keygenPubKeys = append(keygenPubKeys, info.ZetaClientGranteePubKey)
 			}
@@ -141,10 +158,29 @@ func AddObserverAccountsCmd() *cobra.Command {
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
 			zetaCrossChainGenState.NodeAccountList = nodeAccounts
+			keyGenStatus := crosschaintypes.KeygenStatus_PendingKeygen
+			if keyGenBlock == 0 {
+				keyGenStatus = crosschaintypes.KeygenStatus_KeyGenSuccess
+			}
 			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
-				Status:         crosschaintypes.KeygenStatus_PendingKeygen,
+				Status:         keyGenStatus,
 				GranteePubkeys: keygenPubKeys,
 				BlockNumber:    keyGenBlock,
+			}
+
+			if keyGenBlock == 0 {
+				operatorList := make([]string, len(nodeAccounts))
+				for i, nodeAccount := range nodeAccounts {
+					operatorList[i] = nodeAccount.Operator
+				}
+				tss := crosschaintypes.TSS{
+					TssPubkey:           tssPubkey,
+					TssParticipantList:  keygenPubKeys,
+					OperatorAddressList: operatorList,
+					FinalizedZetaHeight: 0,
+					KeyGenZetaHeight:    0,
+				}
+				zetaCrossChainGenState.Tss = &tss
 			}
 
 			// Add observers to observer genesis state
@@ -198,6 +234,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().Int64(keygenBlock, 20, "set keygen block , default is 20")
+	cmd.Flags().String(tssPubKey, "", "set TSS pubkey if using older keygen")
 	return cmd
 }
 
@@ -351,67 +388,6 @@ func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader
 	})
 	return grants
 
-}
-
-// AddObserverAccountCmd Deprecated : Use AddObserverAccountsCmd instead
-func AddObserverAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "add-observer [chainID] [comma separate list of address] ",
-		Short: "Add a list of observers to the observer mapper",
-		Long: `
-           Chain Types :
-					"Empty"     
-					"Eth"       
-					"ZetaChain" 
-					"Btc"       
-					"Polygon"   
-					"BscMainnet"
-					"Goerli"    
-					"Mumbai"    
-					"Ropsten"   
-					"Ganache"   
-					"Baobap"    
-					"BscTestnet"
-					"BTCTestnet"
-			`,
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
-			serverCtx := server.GetServerContextFromCmd(cmd)
-			config := serverCtx.Config
-			chainID, err := strconv.ParseInt(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-			chain := common.GetChainFromChainID(chainID)
-			observer := &types.ObserverMapper{
-				Index:         "",
-				ObserverChain: chain,
-				ObserverList:  strings.Split(args[1], ","),
-			}
-			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
-			}
-			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
-			zetaObserverGenState.Observers = append(zetaObserverGenState.Observers, observer)
-
-			zetaObserverStateBz, err := json.Marshal(zetaObserverGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal Observer List into Genesis File: %w", err)
-			}
-			appState[types.ModuleName] = zetaObserverStateBz
-			appStateJSON, err := json.Marshal(appState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal application genesis state: %w", err)
-			}
-			genDoc.AppState = appStateJSON
-			return genutil.ExportGenesisFile(genDoc, genFile)
-		},
-	}
-	return cmd
 }
 
 func AddGenesisAccount(clientCtx client.Context, balances []banktypes.Balance, appState map[string]json.RawMessage) (map[string]json.RawMessage, error) {

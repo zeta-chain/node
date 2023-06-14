@@ -26,11 +26,11 @@ zetacored start --trace \
 #--state-sync.snapshot-interval 14400 \
 #--state-sync.snapshot-keep-recent 3
 
-echo "--> Submitting proposal to update admin policies "
-sleep 7
-zetacored tx gov submit-legacy-proposal param-change standalone-network/proposal.json --from $signer --gas=auto --gas-adjustment=1.5 --gas-prices=0.001azeta --chain-id=$CHAINID --keyring-backend=$KEYRING -y --broadcast-mode=block
-echo "--> Submitting vote for proposal"
-sleep 7
-zetacored tx gov vote 1 yes --from $signer --keyring-backend $KEYRING --chain-id $CHAINID --yes --fees=40azeta --broadcast-mode=block
+#echo "--> Submitting proposal to update admin policies "
+#sleep 7
+#zetacored tx gov submit-legacy-proposal param-change standalone-network/proposal.json --from $signer --gas=auto --gas-adjustment=1.5 --gas-prices=0.001azeta --chain-id=$CHAINID --keyring-backend=$KEYRING -y --broadcast-mode=block
+#echo "--> Submitting vote for proposal"
+#sleep 7
+#zetacored tx gov vote 1 yes --from $signer --keyring-backend $KEYRING --chain-id $CHAINID --yes --fees=40azeta --broadcast-mode=block
 tail -f ~/.zetacored/zetacored.log
 
