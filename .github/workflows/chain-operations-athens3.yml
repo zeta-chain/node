@@ -29,7 +29,7 @@ env:
   AWS_REGION: "us-east-1"
 
 jobs:
-  start-stop-processes-athens3:
+  start-stop-processes:
     runs-on: ubuntu-latest
     # environment: ${{ github.event.inputs.ENVIRONMENT }}
     environment: athens3-validators
