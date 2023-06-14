@@ -18,7 +18,7 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: Generate Go and OpenAPI
-        run: ./scripts/prococ-gen-go.sh
+        run: ./scripts/protoc-gen-go.sh
 
       - name: Check for changes
         run: |
