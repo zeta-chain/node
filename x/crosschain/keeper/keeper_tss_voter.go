@@ -73,6 +73,9 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	}
+	if !found {
+		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
+	}
 
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
 	if !isFinalized {

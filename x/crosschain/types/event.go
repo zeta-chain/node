@@ -32,6 +32,7 @@ const (
 	CCTXIndex              = "CCTXIndex"
 	BallotObservationHash  = "BallotObservationHash"
 	BallotObservationChain = "BallotObservationChain"
+	BallotType             = "BallotType"
 )
 
 const (
