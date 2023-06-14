@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - athens2-develop
-      - cicd/fix-go-alpine-build
     tags:
       - "*"
   pull_request:
@@ -234,12 +233,12 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
-    
+
       - name: Stop Private Network
         if: always()
         run: |
-            cd contrib/localnet/
-            docker compose down
+          cd contrib/localnet/
+          docker compose down
 
   upload:
     runs-on: ["zeta-runners"]
@@ -283,18 +282,6 @@ jobs:
           github_head_ref: "${{ github.event.pull_request.head.ref }}"
           github_commit_sha: "${{ env.GIT_HASH }}"
           current_branch_name: "${{ steps.branch-name.outputs.current_branch }}"
-
-      # - name: Check Upgrade Handler Name Matches Tag Name
-      #   if: ( startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') ) && !endsWith(github.ref, '-rc')
-      #   run: |
-      #     UPGRADE_HANDLER_NAME=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-      #     echo $UPGRADE_HANDLER_NAME
-      #     if [ ${{ github.ref_name }} != $UPGRADE_HANDLER_NAME ]; then
-      #       echo "ERROR: The name of this release (${{ github.ref_name }}) does not match the releaseVersion const in app/setup_handlers.go"
-      #       echo "Did you forget to update the 'releaseVersion' const in app/setup_handlers.go?" 
-      #       exit 1
-      #     fi
-      #     echo "releaseVersion' const in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
       - uses: actions/download-artifact@v3
         with:
@@ -352,7 +339,7 @@ jobs:
           IMAGE_TAG: ${{ env.TAG_NAME }}
           GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
           GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          
+
       - name: Create GitHub Release for ZetaCore/ZetaClient
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
@@ -381,9 +368,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Major Version in Upgrade Handler Must Match Tag
+        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') 
+        run: |
+          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
+          echo $UPGRADE_HANDLER_MAJOR_VERSION
+          GITHUB_TAG_MAJOR_VERSION=$(echo ${{ github.ref_name }} | cut -d '.' -f1)
+          if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
+            echo "ERROR: The major version of this release (${{ github.ref_name }}) does not match the major version in the releaseVersion constant ($UPGRADE_HANDLER_MAJOR_VERSION) found in app/setup_handlers.go"
+            echo "Did you forget to update the 'releaseVersion' in app/setup_handlers.go?" 
+            exit 1
+          fi
+          echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
+
       - name: upgrade-path-testing
         uses: ./.github/actions/upgrade-testing
         with:
           github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-          
