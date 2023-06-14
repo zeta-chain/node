@@ -17,4 +17,4 @@ jobs:
 
       - name: Check for changes
         run: |
-          git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- pkg
+          git diff --exit-code
