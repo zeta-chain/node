@@ -1,0 +1,19 @@
+name: Generate Go and OpenAPI from Protobuf
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Generate Go and OpenAPI
+        run: make proto
+
+      - name: Check for changes
+        run: |
+          git diff --exit-code || echo "::error::Files generated from Protobuf are not up-to-date, please, run 'make proto' locally and commit the changes."
