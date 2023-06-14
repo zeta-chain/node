@@ -149,7 +149,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	}
 
 	k.SetCrossChainTx(ctx, cctx)
-	fmt.Printf("####setting send... ###########\n")
+	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }
 

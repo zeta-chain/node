@@ -60,6 +60,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
+	// Check if CCTX exists
+	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
+	}
+
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
 	ballot, isNew, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
@@ -68,17 +74,16 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
+		// Only set this the first time when the ballot is created
+		cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
+		k.SetCrossChainTx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
-	// Check CCTX exists after confirmed vote
-	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
-	}
+
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
