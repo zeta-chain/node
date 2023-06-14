@@ -11,8 +11,8 @@ RUN apt update && \
     wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
     unzip main.zip && \
     cd cosmos-sdk-main/tools/cosmovisor && \
-    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.4 && \
-    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.4
+    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.5 && \
+    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.5
 
 FROM ubuntu:latest
 RUN apt-get update && apt-get install -y curl ca-certificates
@@ -25,7 +25,7 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 EXPOSE 1317
 EXPOSE 26656
 EXPOSE 26657
-COPY --from=cosmovisor /go/bin/cosmovisor /usr/bin/cosmovisor
+COPY --from=cosmovisor /go/bin/zetavisor /usr/bin/zetavisor
 COPY ./configs/* /app_version/
 COPY ./scripts/network-genesis.sh /scripts/network-genesis.sh
 COPY ./upgrades/ /app_version/

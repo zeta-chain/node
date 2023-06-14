@@ -36,7 +36,7 @@ upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 first = True
-non_concensus_upgrades = []
+non_consensus_upgrades = []
 for tag in tag_list:
     if first:
         first_major_version = tag.split(".")[0]
@@ -50,10 +50,10 @@ for tag in tag_list:
         #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
         if major_version == first_major_version and minor_version != first_minor_version:
             logger.log.info("NON-CONCENSUS: Major Version Matches, Minor Version Don't Match.")
-            non_concensus_upgrades.append(tag)
+            non_consensus_upgrades.append(tag)
         elif major_version == first_major_version and minor_version == first_minor_version and sub_version != first_sub_version:
             logger.log.info("NON-CONCENSUS: Major Version Matches, Minor Match, Sub Version Doesn't match.")
-            non_concensus_upgrades.append(tag)
+            non_consensus_upgrades.append(tag)
         first_major_version = tag.split(".")[0]
         first_minor_version = tag.split(".")[1]
         first_sub_version = tag.split(".")[2]
@@ -61,7 +61,7 @@ for tag in tag_list:
 
 #binary_download_list = [["v1.2.0", "zetacored-ubuntu-22-amd64"],["v1.2.4", "zetacored-ubuntu-22-amd64"],["v1.2.5", "zetacored-ubuntu-22-amd64"],["v1.2.6", "zetacored-ubuntu-22-amd64"],["v1.2.7", "zetacored-ubuntu-22-amd64"]]
 #tag_list = ["v1.2.4","v1.2.5","v1.2.6","v1.2.7"]
-#non_concensus_upgrades = ["v1.2.5","v1.2.7"]
+#non_consensus_upgrades = ["v1.2.5","v1.2.7"]
 #os.environ["STARTING_VERSION"] = "v1.2.0"
 #os.environ["END_VERSION"] = "v1.2.7"
 
@@ -142,7 +142,7 @@ try:
         PROPOSAL_TIME_SECONDS = int(os.environ["PROPOSAL_TIME_SECONDS"])
         UPGRADE_INFO = '{}'
 
-        if version not in non_concensus_upgrades:
+        if version not in non_consensus_upgrades:
             logger.log.info("**************************raise governance proposal**************************")
             GOVERNANCE_TX_HASH = command_runner.raise_governance_proposal(VERSION, BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO)[0]
             logger.log.info("**************************sleep for 10 seconds to allow the proposal to show up on the network**************************")

@@ -16,8 +16,8 @@ echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend t
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
 cp /app_version/app.toml ${DAEMON_HOME}config/app.toml
 cp /app_version/config.toml ${DAEMON_HOME}config/config.toml
-mkdir -p ${DAEMON_HOME}/cosmovisor/genesis/bin
-mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades
+mkdir -p ${DAEMON_HOME}/zetavisor/genesis/bin
+mkdir -p ${DAEMON_HOME}/zetavisor/upgrades
 
 genesis_account=$(${DAEMON_NAME} keys show ${MONIKER} -a --keyring-backend test)
 log_it "${genesis_account}"
@@ -52,21 +52,21 @@ cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.evm.params.evm_denom
 log_it "**************************************"
 
 
-log_it "Copy Binaries to Cosmovisor Upgrades Folder"
-cp -r /app_version/* ${DAEMON_HOME}/cosmovisor/upgrades/
+log_it "Copy Binaries to zetavisor Upgrades Folder"
+cp -r /app_version/* ${DAEMON_HOME}/zetavisor/upgrades/
 
 log_it "***************"
 log_it "Cosmos Upgrades"
-ls -lah ${DAEMON_HOME}/cosmovisor/upgrades/
+ls -lah ${DAEMON_HOME}/zetavisor/upgrades/
 
-log_it "Copy Starting Binary to Cosmovisor Genesis Bin Folder"
-cp /usr/bin/${DAEMON_NAME} ${DAEMON_HOME}/cosmovisor/genesis/bin
+log_it "Copy Starting Binary to zetavisor Genesis Bin Folder"
+cp /usr/bin/${DAEMON_NAME} ${DAEMON_HOME}/zetavisor/genesis/bin
 
-chmod -R 777 ${DAEMON_HOME}/cosmovisor
-chmod -R a+x ${DAEMON_HOME}/cosmovisor/
+chmod -R 777 ${DAEMON_HOME}/zetavisor
+chmod -R a+x ${DAEMON_HOME}/zetavisor/
 
 log_it "Validate Genesis File"
 ${DAEMON_NAME} validate-genesis --home ${DAEMON_HOME}/
 
-nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
-tail -n 1000 -f cosmovisor.log
+nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > zetavisor.log 2>&1 &
+tail -n 1000 -f zetavisor.log
