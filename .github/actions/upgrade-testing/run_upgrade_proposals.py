@@ -200,13 +200,17 @@ if command_runner.version_check(os.environ["END_VERSION"]):
     else:
         logger.log.info("**************************Chain doesn't seem to be processign blocks upgrade path was a failure.**************************")
         logger.log.info("**************************kill running docker containers and cleanup.**************************")
-        #command_runner.get_docker_container_logs()
+        if "DEBUG_UPGRADES" in os.environ:
+            if os.environ["DEBUG_UPGRADES"] != "false":
+                command_runner.get_docker_container_logs()
         command_runner.kill_docker_containers()
         sys.exit(1)
 else:
     logger.log.info("**************************Version didn't match what was expected.**************************")
     logger.log.info("**************************kill running docker containers and cleanup.**************************")
-    #command_runner.get_docker_container_logs()
+    if "DEBUG_UPGRADES" in os.environ:
+        if os.environ["DEBUG_UPGRADES"] != "false":
+            command_runner.get_docker_container_logs()
     command_runner.kill_docker_containers()
     sys.exit(1)
 
