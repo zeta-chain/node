@@ -11,10 +11,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Generate Go packages
-        run: |
-          make proto
+      - name: Generate Go and OpenAPI
+        run: make proto
 
       - name: Check for changes
         run: |
-          git diff --exit-code
+          git diff --exit-code || echo "::error::Files generated from Protobuf are not up-to-date, please, run 'make proto' locally and commit the changes."
