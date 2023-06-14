@@ -31035,7 +31035,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31119,7 +31119,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31178,7 +31178,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31280,7 +31280,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31359,7 +31359,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31453,7 +31453,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31547,7 +31547,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31626,7 +31626,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31715,7 +31715,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -31791,7 +31791,7 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/ballot_by_identifier/{ballotIdentifier}:
+  /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
       operationId: Query_BallotByIdentifier
@@ -31805,13 +31805,13 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: ballotIdentifier
+        - name: ballot_identifier
           in: path
           required: true
           type: string
       tags:
         - Query
-  /zeta-chain/observer/observers_by_chain/{observationChain}:
+  /zeta-chain/observer/observers_by_chain/{observation_chain}:
     get:
       summary: Queries a list of ObserversByChainAndType items.
       operationId: Query_ObserversByChain
@@ -31825,7 +31825,7 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: observationChain
+        - name: observation_chain
           in: path
           required: true
           type: string
@@ -31960,7 +31960,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.countTotal
+        - name: pagination.count_total
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -55128,9 +55128,9 @@ definitions:
   commonChain:
     type: object
     properties:
-      chainName:
+      chain_name:
         $ref: '#/definitions/commonChainName'
-      chainId:
+      chain_id:
         type: string
         format: int64
   commonChainName:
@@ -55208,7 +55208,7 @@ definitions:
         type: string
       index:
         type: string
-      chainId:
+      chain_id:
         type: string
         format: int64
       nonce:
@@ -55228,16 +55228,16 @@ definitions:
         type: string
       index:
         type: string
-      zetaFees:
+      zeta_fees:
         type: string
-      relayedMessage:
+      relayed_message:
         type: string
         title: Not used by protocol , just relayed across
-      cctxStatus:
+      cctx_status:
         $ref: '#/definitions/zetacorecrosschainStatus'
-      inboundTxParams:
+      inbound_tx_params:
         $ref: '#/definitions/crosschainInboundTxParams'
-      outboundTxParams:
+      outbound_tx_params:
         type: array
         items:
           type: object
@@ -55249,14 +55249,14 @@ definitions:
         type: string
       index:
         type: string
-      chainId:
+      chain_id:
         type: string
         format: int64
       signers:
         type: array
         items:
           type: string
-      blockNums:
+      block_nums:
         type: array
         items:
           type: string
@@ -55266,15 +55266,15 @@ definitions:
         items:
           type: string
           format: uint64
-      medianIndex:
+      median_index:
         type: string
         format: uint64
   crosschainInTxHashToCctx:
     type: object
     properties:
-      inTxHash:
+      in_tx_hash:
         type: string
-      cctxIndex:
+      cctx_index:
         type: string
   crosschainInboundTxParams:
     type: object
@@ -55282,27 +55282,27 @@ definitions:
       sender:
         type: string
         title: this address is the immediate contract/EOA that calls the Connector.send()
-      senderChainId:
+      sender_chain_id:
         type: string
         format: int64
-      txOrigin:
+      tx_origin:
         type: string
         title: this address is the EOA that signs the inbound tx
-      coinType:
+      coin_type:
         $ref: '#/definitions/commonCoinType'
       asset:
         type: string
         title: for ERC20 coin type, the asset is an address of the ERC20 contract
       amount:
         type: string
-      inboundTxObservedHash:
+      inbound_tx_observed_hash:
         type: string
-      inboundTxObservedExternalHeight:
+      inbound_tx_observed_external_height:
         type: string
         format: uint64
-      inboundTxBallotIndex:
+      inbound_tx_ballot_index:
         type: string
-      inboundTxFinalizedZetaHeight:
+      inbound_tx_finalized_zeta_height:
         type: string
         format: uint64
   crosschainKeygen:
@@ -55388,13 +55388,13 @@ definitions:
       index:
         type: string
         title: 'format: "chain-nonce"'
-      chainId:
+      chain_id:
         type: string
         format: int64
       nonce:
         type: string
         format: uint64
-      hashList:
+      hash_list:
         type: array
         items:
           type: object
@@ -55404,41 +55404,41 @@ definitions:
     properties:
       receiver:
         type: string
-      receiverChainId:
+      receiver_chainId:
         type: string
         format: int64
-      coinType:
+      coin_type:
         $ref: '#/definitions/commonCoinType'
       amount:
         type: string
-      outboundTxTssNonce:
+      outbound_tx_tss_nonce:
         type: string
         format: uint64
-      outboundTxGasLimit:
+      outbound_tx_gas_limit:
         type: string
         format: uint64
-      outboundTxGasPrice:
+      outbound_tx_gas_price:
         type: string
-      outboundTxHash:
+      outbound_tx_hash:
         type: string
         title: |-
           the above are commands for zetaclients
           the following fields are used for the outbound tx are mined
-      outboundTxBallotIndex:
+      outbound_tx_ballot_index:
         type: string
-      outboundTxObservedExternalHeight:
+      outbound_tx_observed_external_height:
         type: string
         format: uint64
   crosschainPendingNonces:
     type: object
     properties:
-      nonceLow:
+      nonce_low:
         type: string
         format: int64
-      nonceHigh:
+      nonce_high:
         type: string
         format: int64
-      chainId:
+      chain_id:
         type: string
         format: int64
       tss:
@@ -55542,7 +55542,7 @@ definitions:
   crosschainQueryAllPendingNoncesResponse:
     type: object
     properties:
-      pendingNonces:
+      pending_nonces:
         type: array
         items:
           type: object
@@ -55628,13 +55628,13 @@ definitions:
   crosschainTSS:
     type: object
     properties:
-      tssPubkey:
+      tss_pubkey:
         type: string
-      tssParticipantList:
+      tss_participant_list:
         type: array
         items:
           type: string
-      operatorAddressList:
+      operator_address_list:
         type: array
         items:
           type: string
@@ -55647,29 +55647,29 @@ definitions:
   crosschainTxHashList:
     type: object
     properties:
-      txHash:
+      tx_hash:
         type: string
-      txSigner:
+      tx_signer:
         type: string
   emissionsQueryListPoolAddressesResponse:
     type: object
     properties:
-      undistributedObserverBalancesAddress:
+      undistributed_observer_balances_address:
         type: string
-      undistributedTssBalancesAddress:
+      undistributed_tss_balances_address:
         type: string
-      emissionModuleAddress:
+      emission_module_address:
         type: string
   fungibleForeignCoins:
     type: object
     properties:
-      zrc20ContractAddress:
+      zrc20_contract_address:
         type: string
         description: index
         title: string index = 1;
       asset:
         type: string
-      foreignChainId:
+      foreign_chain_id:
         type: string
         format: int64
       decimals:
@@ -55679,9 +55679,9 @@ definitions:
         type: string
       symbol:
         type: string
-      coinType:
+      coin_type:
         $ref: '#/definitions/commonCoinType'
-      gasLimit:
+      gas_limit:
         type: string
         format: uint64
   fungibleMsgDeployFungibleCoinZRC20Response:
@@ -55711,9 +55711,9 @@ definitions:
   fungibleSystemContract:
     type: object
     properties:
-      systemContract:
+      system_contract:
         type: string
-      connectorZevm:
+      connector_zevm:
         type: string
   googlerpcStatus:
     type: object
@@ -55731,7 +55731,7 @@ definitions:
   observerAdmin_Policy:
     type: object
     properties:
-      policyType:
+      policy_type:
         $ref: '#/definitions/observerPolicy_Type'
       address:
         type: string
@@ -55740,9 +55740,9 @@ definitions:
     properties:
       index:
         type: string
-      ballotIdentifier:
+      ballot_identifier:
         type: string
-      voterList:
+      voter_list:
         type: array
         items:
           type: string
@@ -55750,11 +55750,11 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/observerVoteType'
-      observationType:
+      observation_type:
         $ref: '#/definitions/observerObservationType'
       BallotThreshold:
         type: string
-      ballotStatus:
+      ballot_status:
         $ref: '#/definitions/observerBallotStatus'
   observerBallotStatus:
     type: string
@@ -55766,40 +55766,40 @@ definitions:
   observerCoreParams:
     type: object
     properties:
-      confirmationCount:
+      confirmation_count:
         type: string
         format: uint64
-      gasPriceTicker:
+      gas_price_ticker:
         type: string
         format: uint64
-      inTxTicker:
+      in_tx_ticker:
         type: string
         format: uint64
-      outTxTicker:
+      out_tx_ticker:
         type: string
         format: uint64
-      watchUtxoTicker:
+      watch_utxo_ticker:
         type: string
         format: uint64
-      zetaTokenContractAddress:
+      zeta_token_contract_address:
         type: string
-      connectorContractAddress:
+      connector_contract_address:
         type: string
-      erc20CustodyContractAddress:
+      erc20_custody_contract_address:
         type: string
-      chainId:
+      chain_id:
         type: string
         format: int64
-      outboundTxScheduleInterval:
+      outbound_tx_schedule_interval:
         type: string
         format: int64
-      outboundTxScheduleLookahead:
+      outbound_tx_schedule_lookahead:
         type: string
         format: int64
   observerCoreParamsList:
     type: object
     properties:
-      coreParams:
+      core_params:
         type: array
         items:
           type: object
@@ -55821,9 +55821,9 @@ definitions:
     properties:
       index:
         type: string
-      observerChain:
+      observer_chain:
         $ref: '#/definitions/commonChain'
-      observerList:
+      observer_list:
         type: array
         items:
           type: string
@@ -55832,11 +55832,11 @@ definitions:
     properties:
       chain:
         $ref: '#/definitions/commonChain'
-      ballotThreshold:
+      ballot_threshold:
         type: string
-      minObserverDelegation:
+      min_observer_delegation:
         type: string
-      isSupported:
+      is_supported:
         type: boolean
   observerPolicy_Type:
     type: string
@@ -55851,7 +55851,7 @@ definitions:
   observerQueryAllObserverMappersResponse:
     type: object
     properties:
-      observerMappers:
+      observer_mappers:
         type: array
         items:
           type: object
@@ -55864,12 +55864,12 @@ definitions:
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
-      coreParams:
+      core_params:
         $ref: '#/definitions/observerCoreParams'
   observerQueryGetCoreParamsResponse:
     type: object
     properties:
-      coreParams:
+      core_params:
         $ref: '#/definitions/observerCoreParamsList'
   observerQueryObserversByChainResponse:
     type: object
@@ -55923,7 +55923,7 @@ definitions:
         description: |-
           limit is the total number of results to be returned in the result page.
           If left empty it will default to a value to be set by each app.
-      countTotal:
+      count_total:
         type: boolean
         description: |-
           count_total is set to true  to indicate that the result set should include
@@ -55947,7 +55947,7 @@ definitions:
   v1beta1PageResponse:
     type: object
     properties:
-      nextKey:
+      next_key:
         type: string
         format: byte
         description: |-
@@ -55986,29 +55986,29 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/crosschainCctxStatus'
-      statusMessage:
+      status_message:
         type: string
-      lastUpdateTimestamp:
+      lastUpdate_timestamp:
         type: string
         format: int64
   zetacoreemissionsParams:
     type: object
     properties:
-      maxBondFactor:
+      max_bond_factor:
         type: string
-      minBondFactor:
+      min_bond_factor:
         type: string
-      avgBlockTime:
+      avg_block_time:
         type: string
-      targetBondRatio:
+      target_bond_ratio:
         type: string
-      validatorEmissionPercentage:
+      validator_emission_percentage:
         type: string
-      observerEmissionPercentage:
+      observer_emission_percentage:
         type: string
-      tssSignerEmissionPercentage:
+      tss_signer_emission_percentage:
         type: string
-      durationFactorConstant:
+      duration_factor_constant:
         type: string
     description: Params defines the parameters for the module.
   zetacoreemissionsQueryParamsResponse:
@@ -56031,12 +56031,12 @@ definitions:
   zetacoreobserverParams:
     type: object
     properties:
-      observerParams:
+      observer_params:
         type: array
         items:
           type: object
           $ref: '#/definitions/observerObserverParams'
-      adminPolicy:
+      admin_policy:
         type: array
         items:
           type: object
