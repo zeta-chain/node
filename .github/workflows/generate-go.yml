@@ -11,10 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install buf
-        run: |
-          curl -sSL https://install.buf.build/install.sh | sh
-          echo "/root/.local/bin" >> $GITHUB_PATH
+      - uses: bufbuild/buf-setup-action@v1
 
       - name: Generate Go and OpenAPI
         run: make proto
