@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 # Install the required protoc execution tools.
 go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
