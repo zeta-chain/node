@@ -1,0 +1,25 @@
+name: Generate Go
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Add protoc plugins to PATH
+        run: |
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Generate Go and OpenAPI
+        run: ./scripts/prococ-gen-go.sh
+
+      - name: Check for changes
+        run: |
+          git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol -- x
