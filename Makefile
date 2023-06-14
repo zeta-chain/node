@@ -127,6 +127,10 @@ proto:
 	@sh ./scripts/protoc-gen-openapi.sh
 .PHONY: proto
 
+specs:
+	@go run ./scripts/gen-spec.go
+.PHONY: specs
+
 ###############################################################################
 ###                                Docker Images                             ###
 ###############################################################################

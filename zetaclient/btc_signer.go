@@ -267,6 +267,17 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, btcClient.chain.ChainName, outTxHash)
 			}
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+			outTxID := fmt.Sprintf("%d-%d", btcClient.chain.ChainId, send.GetCurrentOutTxParam().OutboundTxTssNonce)
+
+			// Save successfully broadcasted transaction to btc chain client
+			btcClient.mu.Lock()
+			btcClient.broadcastedTx[outTxID] = tx.TxHash()
+			btcClient.mu.Unlock()
+			broadcastEntry := clienttypes.ToTransactionHashSQLType(tx.TxHash(), outTxID)
+			if err := btcClient.db.Create(&broadcastEntry).Error; err != nil {
+				btcClient.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
+			}
+
 			break // successful broadcast; no need to retry
 		}
 
