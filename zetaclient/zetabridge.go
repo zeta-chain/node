@@ -111,6 +111,7 @@ func (b *ZetaCoreBridge) Stop() {
 	close(b.stop) // this notifies all configupdater to stop
 }
 
+// GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
 	ctx := b.GetContext()
 	address := b.keys.GetAddress()
@@ -127,7 +128,6 @@ func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 
 func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
 	retryCount := 0
-	maxRetryCount := 10
 	for {
 		block, err := b.GetLatestZetaBlock()
 		if err == nil && block.Header.Height > 1 {
@@ -135,18 +135,13 @@ func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
 			break
 		}
 		retryCount++
-		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, maxRetryCount)
-		if retryCount > maxRetryCount {
-			panic("ZetaCore is not ready , Waited for 60s")
+		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
+		if retryCount > DefaultRetryCount {
+			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
-		time.Sleep(6 * time.Second)
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 }
-
-//func (b *ZetaCoreBridge) GetOperatorAccountNumberAndSequenceNumber() (uint64, uint64, error) {
-//	ctx := b.GetContext()
-//	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, b.keys.GetOperatorAddress())
-//}
 
 func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
