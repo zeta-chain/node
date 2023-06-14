@@ -28,4 +28,4 @@ jobs:
 
       - name: Check for changes
         run: |
-          git diff --exit-code || echo "::error::Files generated from Protobuf are not up-to-date, please, run 'make proto' locally and commit the changes."
+          git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol
