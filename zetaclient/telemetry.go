@@ -95,7 +95,7 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
 	router.Handle("/version", http.HandlerFunc(t.versionHandler)).Methods(http.MethodGet)
 	router.Handle("/lastscannedblock", http.HandlerFunc(t.lastScannedBlockHandler)).Methods(http.MethodGet)
-	router.Handle("/laststarttamstamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
+	router.Handle("/laststarttimestamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
