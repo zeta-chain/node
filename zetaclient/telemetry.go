@@ -22,6 +22,7 @@ type HTTPServer struct {
 	s                      *http.Server
 	p2pid                  string
 	lastScannedBlockNumber map[int64]int64 // chainid => block number
+	lastCoreBlockNumber    int64
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
 }
@@ -75,6 +76,18 @@ func (t *HTTPServer) GetLastScannedBlockNumber(chainId int64) int64 {
 	return t.lastScannedBlockNumber[chainId]
 }
 
+func (t *HTTPServer) SetCoreBlockNumber(blockNumber int64) {
+	t.mu.Lock()
+	t.lastCoreBlockNumber = blockNumber
+	t.mu.Unlock()
+}
+
+func (t *HTTPServer) GetCoreBlockNumber() int64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.lastCoreBlockNumber
+}
+
 // NewHandler registers the API routes and returns a new HTTP handler
 func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
@@ -83,6 +96,7 @@ func (t *HTTPServer) Handlers() http.Handler {
 	router.Handle("/version", http.HandlerFunc(t.versionHandler)).Methods(http.MethodGet)
 	router.Handle("/lastscannedblock", http.HandlerFunc(t.lastScannedBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/laststarttamstamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
+	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -154,6 +168,13 @@ func (t *HTTPServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Requ
 		return
 	}
 	w.Write(jsonBytes)
+}
+
+func (t *HTTPServer) lastCoreBlockHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	fmt.Fprintf(w, "%d", t.lastCoreBlockNumber)
 }
 
 func (t *HTTPServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
