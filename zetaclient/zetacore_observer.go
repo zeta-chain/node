@@ -36,10 +36,10 @@ type CoreObserver struct {
 	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
-	ts        *HTTPServer
+	ts        *TelemetryServer
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *HTTPServer) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
 	co := CoreObserver{
 		ts: ts,
 	}

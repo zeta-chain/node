@@ -81,13 +81,13 @@ type EVMChainClient struct {
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    EVMLog
 	cfg                       *config.Config
-	ts                        *HTTPServer
+	ts                        *TelemetryServer
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain, ts *HTTPServer) (*EVMChainClient, error) {
+func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain, ts *TelemetryServer) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
