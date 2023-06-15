@@ -8,11 +8,11 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 RUN apt update && \
     apt install unzip wget -y && \
-    wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/main.zip && \
-    unzip main.zip && \
-    cd cosmos-sdk-main/tools/cosmovisor && \
-    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.5 && \
-    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/cosmovisor@zetavisor-v0.1.5
+    wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/zetavisor-v0.1.5.zip && \
+    unzip zetavisor-v0.1.5.zip && \
+    cd cosmos-sdk-zetavisor-v0.1.5/cosmovisor && \
+    go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor && \
+    go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
 
 FROM ubuntu:latest
 RUN apt-get update && apt-get install -y curl ca-certificates
