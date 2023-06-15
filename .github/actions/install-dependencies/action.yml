@@ -74,4 +74,3 @@ runs:
           $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
         sudo apt-get update || echo "Issue running apt-get update."
         sudo apt-get install docker-compose-plugin -y || echo "Issue installing docker compose"
-

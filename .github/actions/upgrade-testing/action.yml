@@ -45,6 +45,9 @@ runs:
         CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
+        BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
+        UPGRADES_SLEEP_TIME: 220
+        DEBUG_UPGRADES: "false"
       run: |
         
         current_directory=$(pwd)
@@ -55,7 +58,6 @@ runs:
         chmod -R 777 zetacored*
         mv zetacored-ubuntu-22-amd64 zetacored
         export PATH=$(pwd):$PATH
-        ls -lah | grep zetacored
         
         echo "***********Change Directories into the Upgrade Testing Directory.*********************"
         cd .github/actions/upgrade-testing/
