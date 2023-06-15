@@ -47,13 +47,13 @@ func (msg *MsgUpdateCoreParams) ValidateBasic() error {
 	if msg.CoreParams.ConfirmationCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
 	}
-	if msg.CoreParams.GasPriceTicker <= 0 || msg.CoreParams.GasPriceTicker > 30 {
+	if msg.CoreParams.GasPriceTicker <= 0 || msg.CoreParams.GasPriceTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker out of range")
 	}
-	if msg.CoreParams.InTxTicker <= 0 || msg.CoreParams.InTxTicker > 10 {
+	if msg.CoreParams.InTxTicker <= 0 || msg.CoreParams.InTxTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InTxTicker out of range")
 	}
-	if msg.CoreParams.OutTxTicker <= 0 || msg.CoreParams.OutTxTicker > 10 {
+	if msg.CoreParams.OutTxTicker <= 0 || msg.CoreParams.OutTxTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutTxTicker out of range")
 	}
 	if common.GetChainFromChainID(msg.CoreParams.ChainId) == nil {
