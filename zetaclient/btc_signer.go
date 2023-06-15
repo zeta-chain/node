@@ -28,12 +28,12 @@ type BTCSigner struct {
 	tssSigner TSSSigner
 	rpcClient *rpcclient.Client
 	logger    zerolog.Logger
-	ts        *HTTPServer
+	ts        *TelemetryServer
 }
 
 var _ ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerolog.Logger, ts *HTTPServer) (*BTCSigner, error) {
+func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerolog.Logger, ts *TelemetryServer) (*BTCSigner, error) {
 	return &BTCSigner{
 		tssSigner: tssSigner,
 		rpcClient: rpcClient,

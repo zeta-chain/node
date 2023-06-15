@@ -16,8 +16,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// HTTPServer provide http endpoint for Tss server
-type HTTPServer struct {
+// TelemetryServer provide http endpoint for Tss server
+type TelemetryServer struct {
 	logger                 zerolog.Logger
 	s                      *http.Server
 	p2pid                  string
@@ -27,9 +27,9 @@ type HTTPServer struct {
 	lastStartTimestamp     time.Time
 }
 
-// NewHTTPServer should only listen to the loopback
-func NewHTTPServer() *HTTPServer {
-	hs := &HTTPServer{
+// NewTelemetryServer should only listen to the loopback
+func NewTelemetryServer() *TelemetryServer {
+	hs := &TelemetryServer{
 		logger:                 log.With().Str("module", "http").Logger(),
 		lastScannedBlockNumber: make(map[int64]int64),
 		lastStartTimestamp:     time.Now(),
@@ -44,52 +44,52 @@ func NewHTTPServer() *HTTPServer {
 	return hs
 }
 
-func (t *HTTPServer) GetLastStartTimestamp() time.Time {
+func (t *TelemetryServer) GetLastStartTimestamp() time.Time {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.lastStartTimestamp
 }
 
 // setter/getter for p2pid
-func (t *HTTPServer) SetP2PID(p2pid string) {
+func (t *TelemetryServer) SetP2PID(p2pid string) {
 	t.mu.Lock()
 	t.p2pid = p2pid
 	t.mu.Unlock()
 }
 
-func (t *HTTPServer) GetP2PID() string {
+func (t *TelemetryServer) GetP2PID() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.p2pid
 }
 
 // setter for lastScanned block number
-func (t *HTTPServer) SetLastScannedBlockNumber(chainID int64, blockNumber int64) {
+func (t *TelemetryServer) SetLastScannedBlockNumber(chainID int64, blockNumber int64) {
 	t.mu.Lock()
 	t.lastScannedBlockNumber[chainID] = blockNumber
 	t.mu.Unlock()
 }
 
-func (t *HTTPServer) GetLastScannedBlockNumber(chainID int64) int64 {
+func (t *TelemetryServer) GetLastScannedBlockNumber(chainID int64) int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.lastScannedBlockNumber[chainID]
 }
 
-func (t *HTTPServer) SetCoreBlockNumber(blockNumber int64) {
+func (t *TelemetryServer) SetCoreBlockNumber(blockNumber int64) {
 	t.mu.Lock()
 	t.lastCoreBlockNumber = blockNumber
 	t.mu.Unlock()
 }
 
-func (t *HTTPServer) GetCoreBlockNumber() int64 {
+func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.lastCoreBlockNumber
 }
 
 // NewHandler registers the API routes and returns a new HTTP handler
-func (t *HTTPServer) Handlers() http.Handler {
+func (t *TelemetryServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
@@ -107,7 +107,7 @@ func (t *HTTPServer) Handlers() http.Handler {
 	return router
 }
 
-func (t *HTTPServer) Start() error {
+func (t *TelemetryServer) Start() error {
 	if t.s == nil {
 		return errors.New("invalid http server instance")
 	}
@@ -134,7 +134,7 @@ func logMiddleware() mux.MiddlewareFunc {
 	}
 }
 
-func (t *HTTPServer) Stop() error {
+func (t *TelemetryServer) Stop() error {
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	err := t.s.Shutdown(c)
@@ -144,18 +144,18 @@ func (t *HTTPServer) Stop() error {
 	return err
 }
 
-func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%s", t.p2pid)
 }
 
-func (t *HTTPServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
 	//w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -173,19 +173,19 @@ func (t *HTTPServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Requ
 	}
 }
 
-func (t *HTTPServer) lastCoreBlockHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) lastCoreBlockHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%d", t.lastCoreBlockNumber)
 }
 
-func (t *HTTPServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", common.Version)
 }
 
-func (t *HTTPServer) lastStartTimestampHandler(w http.ResponseWriter, _ *http.Request) {
+func (t *TelemetryServer) lastStartTimestampHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
 	defer t.mu.Unlock()

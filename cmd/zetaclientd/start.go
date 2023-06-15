@@ -108,7 +108,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	telemetryServer := mc.NewHTTPServer()
+	telemetryServer := mc.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {

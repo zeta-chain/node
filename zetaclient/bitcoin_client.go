@@ -59,7 +59,7 @@ type BitcoinChainClient struct {
 	stop          chan struct{}
 	logger        BTCLog
 	cfg           *config.Config
-	ts            *HTTPServer
+	ts            *TelemetryServer
 }
 
 const (
@@ -76,7 +76,7 @@ func (ob *BitcoinChainClient) GetRPCHost() string {
 }
 
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *HTTPServer) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
 		ts:           ts,
