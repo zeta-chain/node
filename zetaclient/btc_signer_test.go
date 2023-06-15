@@ -36,7 +36,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(&tss, nil, zerolog.Logger{})
+	s.btcSigner, err = NewBTCSigner(&tss, nil, zerolog.Logger{}, &HTTPServer{})
 	c.Assert(err, IsNil)
 }
 
