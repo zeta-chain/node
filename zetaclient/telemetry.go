@@ -2,11 +2,13 @@ package zetaclient
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"net/http"
 	"net/http/pprof"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,16 +18,20 @@ import (
 
 // HTTPServer provide http endpoint for Tss server
 type HTTPServer struct {
-	logger zerolog.Logger
-	s      *http.Server
-	p2pid  string
+	logger                 zerolog.Logger
+	s                      *http.Server
+	p2pid                  string
+	lastScannedBlockNumber map[int64]int64 // chainid => block number
+	mu                     sync.Mutex
+	lastStartTimestamp     time.Time
 }
 
 // NewHTTPServer should only listen to the loopback
-func NewHTTPServer(p2pid string) *HTTPServer {
+func NewHTTPServer() *HTTPServer {
 	hs := &HTTPServer{
-		logger: log.With().Str("module", "http").Logger(),
-		p2pid:  p2pid,
+		logger:                 log.With().Str("module", "http").Logger(),
+		lastScannedBlockNumber: make(map[int64]int64),
+		lastStartTimestamp:     time.Now(),
 	}
 	s := &http.Server{
 		Addr:              ":8123",
@@ -37,12 +43,46 @@ func NewHTTPServer(p2pid string) *HTTPServer {
 	return hs
 }
 
+func (t *HTTPServer) GetLastStartTimestamp() time.Time {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.lastStartTimestamp
+}
+
+// setter/getter for p2pid
+func (t *HTTPServer) SetP2PID(p2pid string) {
+	t.mu.Lock()
+	t.p2pid = p2pid
+	t.mu.Unlock()
+}
+
+func (t *HTTPServer) GetP2PID() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.p2pid
+}
+
+// setter for lastScanned block number
+func (t *HTTPServer) SetLastScannedBlockNumber(chainId int64, blockNumber int64) {
+	t.mu.Lock()
+	t.lastScannedBlockNumber[chainId] = blockNumber
+	t.mu.Unlock()
+}
+
+func (t *HTTPServer) GetLastScannedBlockNumber(chainId int64) int64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.lastScannedBlockNumber[chainId]
+}
+
 // NewHandler registers the API routes and returns a new HTTP handler
 func (t *HTTPServer) Handlers() http.Handler {
 	router := mux.NewRouter()
 	router.Handle("/ping", http.HandlerFunc(t.pingHandler)).Methods(http.MethodGet)
 	router.Handle("/p2p", http.HandlerFunc(t.p2pHandler)).Methods(http.MethodGet)
 	router.Handle("/version", http.HandlerFunc(t.versionHandler)).Methods(http.MethodGet)
+	router.Handle("/lastscannedblock", http.HandlerFunc(t.lastScannedBlockHandler)).Methods(http.MethodGet)
+	router.Handle("/laststarttamstamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
 	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -96,10 +136,34 @@ func (t *HTTPServer) pingHandler(w http.ResponseWriter, _ *http.Request) {
 
 func (t *HTTPServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%s", t.p2pid)
+}
+
+func (t *HTTPServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {
+	//w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	// Convert map to JSON
+	jsonBytes, err := json.Marshal(t.lastScannedBlockNumber)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonBytes)
 }
 
 func (t *HTTPServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", common.Version)
+}
+
+func (t *HTTPServer) lastStartTimestampHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	fmt.Fprintf(w, "%s", t.lastStartTimestamp.Format(time.RFC3339))
 }
