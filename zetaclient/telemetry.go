@@ -64,16 +64,16 @@ func (t *HTTPServer) GetP2PID() string {
 }
 
 // setter for lastScanned block number
-func (t *HTTPServer) SetLastScannedBlockNumber(chainId int64, blockNumber int64) {
+func (t *HTTPServer) SetLastScannedBlockNumber(chainID int64, blockNumber int64) {
 	t.mu.Lock()
-	t.lastScannedBlockNumber[chainId] = blockNumber
+	t.lastScannedBlockNumber[chainID] = blockNumber
 	t.mu.Unlock()
 }
 
-func (t *HTTPServer) GetLastScannedBlockNumber(chainId int64) int64 {
+func (t *HTTPServer) GetLastScannedBlockNumber(chainID int64) int64 {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.lastScannedBlockNumber[chainId]
+	return t.lastScannedBlockNumber[chainID]
 }
 
 func (t *HTTPServer) SetCoreBlockNumber(blockNumber int64) {
@@ -167,7 +167,10 @@ func (t *HTTPServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Requ
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write(jsonBytes)
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		t.logger.Error().Err(err).Msg("Failed to write response")
+	}
 }
 
 func (t *HTTPServer) lastCoreBlockHandler(w http.ResponseWriter, _ *http.Request) {
