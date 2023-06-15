@@ -21,7 +21,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
-	gitlab.com/thorchain/tss/go-tss v1.5.7
 	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37
 	google.golang.org/grpc v1.52.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -41,6 +40,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05
+	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v2 v2.4.0
 )
 

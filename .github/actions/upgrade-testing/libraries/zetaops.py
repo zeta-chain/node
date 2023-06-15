@@ -94,62 +94,46 @@ class Utilities:
             self.logger.info(GOV_PROPOSALS["proposals"])
             for proposal in GOV_PROPOSALS["proposals"]:
                 try:
-                    PROPOSAL_ID = proposal["proposal_id"]
+                    self.logger.info(proposal)
+                    PROPOSAL_ID = proposal["id"]
                 except Exception as e:
                     self.logger.error(str(e))
-                    self.logger.info("proposal_id key wasn't found trying id key.")
-                    PROPOSAL_ID = proposal["id"]
+                    self.logger.info("id key wasn't found trying id key.")
+            self.logger.info(f"PROPOSAL ID: {PROPOSAL_ID}")
             return PROPOSAL_ID
         except Exception as e:
             self.logger.error(e)
             return 1
 
     def raise_governance_proposal(self,VERSION,BLOCK_TIME_SECONDS, PROPOSAL_TIME_SECONDS, UPGRADE_INFO):
-        try:
-            self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
-            self.UPGRADE_HEIGHT = str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
-            GOV_PROPOSAL = f"""zetacored tx gov submit-proposal software-upgrade "{VERSION}" \
-                --from "{self.MONIKER}" \
-                --deposit 10000000000000000000azeta \
-                --upgrade-height "{self.UPGRADE_HEIGHT}" \
-                --upgrade-info "{UPGRADE_INFO}" \
-                --title "{VERSION}" \
-                --description "Zeta Release {VERSION}" \
-                --chain-id "{self.CHAIN_ID}" \
-                --node "{self.NODE}" \
-                --keyring-backend test \
-                --fees 20000azeta \
-                -y"""
-            self.logger.info(GOV_PROPOSAL)
-            results_output = self.run_command(GOV_PROPOSAL)
-            self.logger.info(results_output)
-            TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
-            self.logger.info(TX_HASH)
-        except Exception as e:
-            self.logger.error("There was issue rasing proposal the old way swtich to new way and see if that helps.")
-            self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"][
-                "latest_block_height"]
-            self.UPGRADE_HEIGHT = \
-            str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
-            GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{VERSION}" \
-                --from "{self.MONIKER}" \
-                --deposit 10000000000000000000azeta \
-                --upgrade-height "{self.UPGRADE_HEIGHT}" \
-                --upgrade-info "{UPGRADE_INFO}" \
-                --title "{VERSION}" \
-                --description "Zeta Release {VERSION}" \
-                --chain-id "{self.CHAIN_ID}" \
-                --node "{self.NODE}" \
-                --keyring-backend test \
-                --fees 20000azeta \
-                -y \
-                --no-validate"""
-            self.logger.info(GOV_PROPOSAL)
-            results_output = self.run_command(GOV_PROPOSAL)
-            self.logger.info(results_output)
-            TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
-            self.logger.info(TX_HASH)
+        self.CURRENT_HEIGHT = requests.get(f"{self.NODE}/status").json()["result"]["sync_info"]["latest_block_height"]
+        self.UPGRADE_HEIGHT = \
+        str(int(self.CURRENT_HEIGHT) + (PROPOSAL_TIME_SECONDS / BLOCK_TIME_SECONDS)).split(".")[0]
+        GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{VERSION}" \
+            --from "{self.MONIKER}" \
+            --deposit 10000000000000000000azeta \
+            --upgrade-height "{self.UPGRADE_HEIGHT}" \
+            --upgrade-info "{UPGRADE_INFO}" \
+            --title "{VERSION}" \
+            --description "Zeta Release {VERSION}" \
+            --chain-id "{self.CHAIN_ID}" \
+            --node "{self.NODE}" \
+            --keyring-backend test \
+            --fees 20000azeta \
+            -y \
+            --no-validate"""
+        self.logger.info(GOV_PROPOSAL)
+        results_output = self.run_command(GOV_PROPOSAL)
+        self.logger.info(results_output)
+        TX_HASH = results_output.split("\n")[12].split(":")[1].strip()
+        self.logger.info(TX_HASH)
         return TX_HASH, self
+
+    def query_tx(self, TX_HASH):
+        GOV_PROPOSAL_TX = f"""zetacored query tx {TX_HASH} --node {self.NODE}"""
+        self.logger.info(GOV_PROPOSAL_TX)
+        results_output = self.run_command(GOV_PROPOSAL_TX)
+        return results_output
 
     def raise_governance_vote(self, PROPOSAL_ID):
         VOTE_PROPOSAL=f"""zetacored tx gov vote "{PROPOSAL_ID}" yes \
@@ -161,7 +145,8 @@ class Utilities:
             -y"""
         self.logger.info(VOTE_PROPOSAL)
         results_output = self.run_command(VOTE_PROPOSAL)
-        return results_output
+        TX_HASH = results_output.split("txhash:")[1].strip()
+        return results_output, TX_HASH
 
     def load_key(self):
         LOAD_KEY = f"echo {self.mnemonic} | zetacored keys add {self.MONIKER} --keyring-backend test --recover"
@@ -195,13 +180,19 @@ class Utilities:
         LATEST_BLOCK = block_height_request["result"]["sync_info"]["latest_block_height"]
         return int(LATEST_BLOCK)
 
+    def current_version(self):
+        version_check_request = requests.get(self.NODE+"/abci_info").json()
+        VERSION_CHECK = version_check_request["result"]["response"]["version"]
+        self.logger.info(f"CURRENT_VERSION: {VERSION_CHECK}")
+        return VERSION_CHECK
+
     def docker_ps(self):
         self.run_command(f'docker ps')
 
     def build_docker_image(self, docker_file_location):
         self.logger.info("Build Docker Image")
         #docker_build_output = self.run_command(f'docker buildx build --platform linux/amd64 -t local/upgrade-test:latest {docker_file_location}')
-        docker_build_output = self.run_command(f'docker build -t local/upgrade-test:latest {docker_file_location}')
+        docker_build_output = self.run_command(f'docker build --quiet -t local/upgrade-test:latest {docker_file_location}')
         self.logger.info(docker_build_output)
         docker_image_list = self.run_command("docker image list")
         self.logger.info(docker_image_list)
@@ -245,9 +236,7 @@ class Utilities:
         self.logger.info("kill running containers.")
         self.kill_docker_containers()
         self.logger.info("Start local network contianer.")
-        #docker_command = f'docker run {DOCKER_ENVS} --platform=linux/amd64 -d -p 26657:26657 local/upgrade-test:latest'
         docker_command = f'docker run {DOCKER_ENVS} -d -p 26657:26657 local/upgrade-test:latest'
-
         self.logger.info(docker_command)
         self.run_command(docker_command)
         container_id = self.run_command("docker ps | grep -v COMMAND | cut -d ' ' -f 1 | tr -d ' '")
@@ -262,3 +251,50 @@ class Utilities:
         docker_logs, error_output = self.run_command_all_output(f'docker logs {self.CONTAINER_ID}')
         self.logger.info(docker_logs)
         self.logger.error(error_output)
+
+    def non_governance_upgrade(self, VERSION):
+        command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
+echo "********************RESTART VARS********************"
+echo "VERSION: """ + VERSION + """ "
+echo "GAS_PRICES: ${GAS_PRICES}"
+echo "DAEMON_HOME: ${DAEMON_HOME}"
+echo "********************RESTART VARS********************"
+
+source /root/.bashrc
+
+cd ${DAEMON_HOME}
+
+echo "CHECK CURRENT BINARY"
+ls -lah cosmovisor/genesis/bin/zetacored
+ls -lah cosmovisor/current/bin/zetacored
+
+echo "KILL ALL COSMOVISOR"
+killall cosmovisor
+
+rm -rf cosmovisor/current/bin/zetacored
+
+echo "COPY BINARY TO CURRENT ONE"
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
+cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
+
+echo "CHECK CURRENT BINARY"
+ls -lah cosmovisor/genesis/bin/zetacored
+ls -lah cosmovisor/current/bin/zetacored
+
+echo "RESTART COSMOVISOR"
+nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+
+echo "SLEEP FOR 15 SECONDS"
+sleep 15
+
+echo "CHECK VERSION"
+cosmovisor version
+EOF"""
+        self.logger.info(command)
+
+        docker_exec, error_output = self.run_command_all_output(command)
+        self.logger.info(docker_exec)
+        self.logger.error(error_output)
+
+        return docker_exec, error_output
