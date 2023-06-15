@@ -54,6 +54,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetNodeAccount(ctx, *elem)
 	}
 
+	if genState.Tss != nil {
+		k.SetTSS(ctx, *genState.Tss)
+	}
+
 }
 
 // ExportGenesis returns the capability module's exported genesis.
