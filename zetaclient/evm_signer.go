@@ -33,12 +33,12 @@ type EVMSigner struct {
 	metaContractAddress         ethcommon.Address
 	erc20CustodyContractAddress ethcommon.Address
 	logger                      zerolog.Logger
-	ts                          *HTTPServer
+	ts                          *TelemetryServer
 }
 
 var _ ChainSigner = &EVMSigner{}
 
-func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, erc20CustodyABIString string, metaContract ethcommon.Address, erc20CustodyContract ethcommon.Address, logger zerolog.Logger, ts *HTTPServer) (*EVMSigner, error) {
+func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, erc20CustodyABIString string, metaContract ethcommon.Address, erc20CustodyContract ethcommon.Address, logger zerolog.Logger, ts *TelemetryServer) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err

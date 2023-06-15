@@ -37,7 +37,7 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 	}
 	startLogger.Warn().Msgf("my pubkey %s", pubkeyBech32)
 
-	var s *mc.HTTPServer
+	var s *mc.TelemetryServer
 	if len(peers) == 0 {
 		startLogger.Warn().Msg("No seed peer specified; assuming I'm the host")
 
@@ -82,7 +82,7 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 	}
 	startLogger.Info().Msgf("host created: ID %s", host.ID().String())
 	if len(peers) == 0 {
-		s = mc.NewHTTPServer()
+		s = mc.NewTelemetryServer()
 		s.SetP2PID(host.ID().String())
 		go func() {
 			startLogger.Info().Msg("Starting TSS HTTP Server...")

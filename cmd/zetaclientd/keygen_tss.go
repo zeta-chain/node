@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.HTTPServer) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 	tss, err := mc.NewTSS(peers, priKey, preParams, cfg)
 	if err != nil {
