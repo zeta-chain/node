@@ -556,7 +556,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		return nil
 	}
 	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
-		sampledLogger.Info().Msg("Skipping observer , No new block is produced ")
+		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
 	lastBlock := ob.GetLastBlockHeight()
@@ -571,7 +571,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	if toBlock < 0 || toBlock >= math2.MaxInt64 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
-
+	ob.logger.ExternalChainWatcher.Info().Msgf("Checking for all inTX : startBlock %d, toBlock %d", startBlock, toBlock)
 	//task 1:  Query evm chain for zeta sent logs
 	func() {
 		tb := uint64(toBlock)
@@ -856,7 +856,8 @@ func (ob *EVMChainClient) WatchGasPrice() {
 
 	err := ob.PostGasPrice()
 	if err != nil {
-		ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+		height, _ := ob.zetaClient.GetBlockHeight()
+		ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 	}
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.GasPriceTicker) * time.Second)
 	for {
@@ -864,7 +865,8 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		case <-ticker.C:
 			err := ob.PostGasPrice()
 			if err != nil {
-				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+				height, _ := ob.zetaClient.GetBlockHeight()
+				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 				continue
 			}
 		case <-ob.stop:
@@ -878,12 +880,12 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	// GAS PRICE
 	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
+		ob.logger.WatchGasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
 	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
+		ob.logger.WatchGasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
 	}
 
@@ -893,7 +895,7 @@ func (ob *EVMChainClient) PostGasPrice() error {
 
 	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), supply, blockNum)
 	if err != nil {
-		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
+		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice to zetacore failed")
 		return err
 	}
 	_ = zetaHash
@@ -914,7 +916,7 @@ func (ob *EVMChainClient) getLastHeight() (int64, error) {
 
 func (ob *EVMChainClient) BuildBlockIndex() error {
 	logger := ob.logger.ChainLogger.With().Str("module", "BuildBlockIndex").Logger()
-	envvar := ob.chain.String() + "_SCAN_FROM"
+	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
 	if scanFromBlock != "" {
 		logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)

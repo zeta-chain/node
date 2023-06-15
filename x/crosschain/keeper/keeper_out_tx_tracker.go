@@ -172,9 +172,9 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 	isObserver, err := k.IsAuthorized(ctx, msg.Creator, chain)
 	if err != nil {
-		return nil, err
+		ctx.Logger().Error("Error while checking if the account is an observer", err)
 	}
-
+	// Sender needs to be either the admin policy account or an observer
 	if !(isAdmin || isObserver) {
 		return nil, sdkerrors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
