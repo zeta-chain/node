@@ -72,8 +72,8 @@ type EVMChainClient struct {
 	txWatchList               map[ethcommon.Hash]string
 	mu                        *sync.Mutex
 	db                        *gorm.DB
-	outTXConfirmedReceipts    map[int]*ethtypes.Receipt
-	outTXConfirmedTransaction map[int]*ethtypes.Transaction
+	outTXConfirmedReceipts    map[string]*ethtypes.Receipt
+	outTXConfirmedTransaction map[string]*ethtypes.Transaction
 	MinNonce                  int64
 	MaxNonce                  int64
 	OutTxChan                 chan OutTx // send to this channel if you want something back!
@@ -104,8 +104,8 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
-	ob.outTXConfirmedReceipts = make(map[int]*ethtypes.Receipt)
-	ob.outTXConfirmedTransaction = make(map[int]*ethtypes.Transaction)
+	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
+	ob.outTXConfirmedTransaction = make(map[string]*ethtypes.Transaction)
 	ob.OutTxChan = make(chan OutTx, 100)
 
 	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -209,7 +209,7 @@ func (ob *EVMChainClient) Stop() {
 	}
 	err = dbInst.Close()
 	if err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("error closing pendingUtxos")
+		ob.logger.ChainLogger.Error().Err(err).Msg("error closing database")
 	}
 
 	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
@@ -219,8 +219,8 @@ func (ob *EVMChainClient) Stop() {
 // If isConfirmed, it also post to ZetaCore
 func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	ob.mu.Lock()
-	receipt, found1 := ob.outTXConfirmedReceipts[nonce]
-	transaction, found2 := ob.outTXConfirmedTransaction[nonce]
+	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetIndex(nonce)]
+	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetIndex(nonce)]
 	ob.mu.Unlock()
 	found := found1 && found2
 	if !found {
@@ -415,17 +415,17 @@ func (ob *EVMChainClient) observeOutTx() {
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							ob.outTXConfirmedReceipts[int(nonceInt)] = receipt
-							ob.outTXConfirmedTransaction[int(nonceInt)] = transaction
+							ob.outTXConfirmedReceipts[ob.GetIndex(int(nonceInt))] = receipt
+							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
 							ob.mu.Unlock()
 
 							// Convert to DB types
-							rec, err := clienttypes.ToReceiptSQLType(receipt, int(nonceInt))
+							rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
 							if err != nil {
 								ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
 								continue
 							}
-							trans, err := clienttypes.ToTransactionSQLType(transaction, int(nonceInt))
+							trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
 							if err != nil {
 								ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
 								continue
@@ -458,7 +458,7 @@ func (ob *EVMChainClient) observeOutTx() {
 // receipt non-nil, err nil: txHash confirmed
 func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
 	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
-	if ob.outTXConfirmedReceipts[int(nonce)] != nil && ob.outTXConfirmedTransaction[int(nonce)] != nil {
+	if ob.outTXConfirmedReceipts[ob.GetIndex(int(nonce))] != nil && ob.outTXConfirmedTransaction[ob.GetIndex(int(nonce))] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -970,7 +970,7 @@ func (ob *EVMChainClient) BuildReceiptsMap() error {
 		if err != nil {
 			return err
 		}
-		ob.outTXConfirmedReceipts[receipt.Nonce] = r
+		ob.outTXConfirmedReceipts[receipt.Identifier] = r
 	}
 
 	return nil
@@ -988,7 +988,7 @@ func (ob *EVMChainClient) BuildTransactionsMap() error {
 		if err != nil {
 			return err
 		}
-		ob.outTXConfirmedTransaction[transaction.Nonce] = trans
+		ob.outTXConfirmedTransaction[transaction.Identifier] = trans
 	}
 	return nil
 }
@@ -1057,4 +1057,9 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) e
 		atomic.StoreInt64(&ob.MaxNonce, maxNonce)
 	}
 	return nil
+}
+
+func (ob *EVMChainClient) GetIndex(nonce int) string {
+	tssAddr := ob.Tss.EVMAddress().String()
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }

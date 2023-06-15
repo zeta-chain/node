@@ -306,8 +306,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 
 // returns isIncluded, isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
-	chain := ob.chain.ChainId
-	outTxID := fmt.Sprintf("%d-%d", chain, nonce)
+	outTxID := ob.GetTxID(uint64(nonce))
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
 	ob.mu.Lock()
@@ -650,7 +649,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				continue
 			}
 			for _, tracker := range trackers {
-				outTxID := fmt.Sprintf("%d-%d", tracker.ChainId, tracker.Nonce)
+				outTxID := ob.GetTxID(tracker.Nonce)
 				ob.logger.ObserveOutTx.Info().Msgf("tracker outTxID: %s", outTxID)
 				for _, txHash := range tracker.HashList {
 					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
@@ -771,4 +770,9 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	err = ob.BuildBroadcastedTxMap()
 
 	return err
+}
+
+func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
+	tssAddr := ob.Tss.BTCAddress()
+	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
