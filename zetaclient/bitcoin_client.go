@@ -59,6 +59,7 @@ type BitcoinChainClient struct {
 	stop          chan struct{}
 	logger        BTCLog
 	cfg           *config.Config
+	ts            *HTTPServer
 }
 
 const (
@@ -75,9 +76,10 @@ func (ob *BitcoinChainClient) GetRPCHost() string {
 }
 
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *HTTPServer) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+		ts:           ts,
 	}
 	ob.cfg = cfg
 	ob.stop = make(chan struct{})
@@ -175,6 +177,7 @@ func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
+	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), (block))
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {

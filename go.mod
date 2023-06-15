@@ -37,6 +37,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/emicklei/proto v1.11.1
 	github.com/evmos/ethermint v0.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -58,7 +59,6 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/emicklei/proto v1.11.1 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.22.0
 	github.com/libp2p/go-libp2p-asn-util v0.2.0 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.0
+	github.com/libp2p/go-libp2p-core v0.20.0 // indirect
 	github.com/libp2p/go-libp2p-kad-dht v0.18.0
 	github.com/libp2p/go-libp2p-kbucket v0.4.7 // indirect
 	github.com/libp2p/go-libp2p-record v0.2.0 // indirect

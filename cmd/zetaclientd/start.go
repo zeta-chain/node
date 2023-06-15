@@ -107,7 +107,16 @@ func start(_ *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey)
+
+	telemetryServer := mc.NewHTTPServer()
+	go func() {
+		err := telemetryServer.Start()
+		if err != nil {
+			startLogger.Error().Err(err).Msg("telemetryServer error")
+		}
+	}()
+
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
 	if err != nil {
 		return err
 	}
@@ -122,7 +131,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg)
+	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -139,7 +148,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg)
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err

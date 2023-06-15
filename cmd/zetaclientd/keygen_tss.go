@@ -15,13 +15,14 @@ import (
 	"time"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.HTTPServer) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 	tss, err := mc.NewTSS(peers, priKey, preParams, cfg)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")
 		return nil, err
 	}
+	ts.SetP2PID(tss.Server.GetLocalPeerID())
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
