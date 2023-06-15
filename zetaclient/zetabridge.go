@@ -50,6 +50,8 @@ type ZetaCoreBridge struct {
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
+
+	pause bool
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -148,6 +150,18 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 }
 
 func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
+	bn, err := b.GetZetaBlockHeight()
+	if err != nil {
+		return err
+	}
+	plan, err := b.GetUpgradePlan()
+	if err != nil {
+		return err
+	}
+	if bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
+
+	}
+
 	coreParams, err := b.GetCoreParams()
 	if err != nil {
 		return err
