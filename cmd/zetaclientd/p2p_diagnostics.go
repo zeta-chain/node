@@ -82,7 +82,8 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 	}
 	startLogger.Info().Msgf("host created: ID %s", host.ID().String())
 	if len(peers) == 0 {
-		s = mc.NewHTTPServer(host.ID().String())
+		s = mc.NewHTTPServer()
+		s.SetP2PID(host.ID().String())
 		go func() {
 			startLogger.Info().Msg("Starting TSS HTTP Server...")
 			if err := s.Start(); err != nil {
