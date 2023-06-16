@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -53,6 +54,16 @@ func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
 		return zetaObserverTypes.Params{}, err
 	}
 	return resp.Params, nil
+}
+
+func (b *ZetaCoreBridge) GetUpgradePlan() (*upgradetypes.Plan, error) {
+	client := upgradetypes.NewQueryClient(b.grpcConn)
+
+	resp, err := client.CurrentPlan(context.Background(), &upgradetypes.QueryCurrentPlanRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.Plan, nil
 }
 
 //func (b *ZetaCoreBridge) GetAccountDetails(address string) (string, error) {
