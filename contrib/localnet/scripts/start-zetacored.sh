@@ -11,4 +11,6 @@ else
   cp -r "/root/zetacored/zetacored_$HOSTNAME/priv_validator_state.json" /root/.zetacored/data
 fi
 
-exec zetacored start --pruning=nothing   --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+/root/zetacored-proposal.sh &
+
+zetacored start --pruning=nothing   --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
