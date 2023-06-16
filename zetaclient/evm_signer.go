@@ -212,15 +212,13 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge) {
+func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
 	logger := signer.logger.With().
 		Str("outTxID", outTxID).
 		Str("SendHash", send.Index).
 		Logger()
 	logger.Info().Msgf("start processing outTxID %s", outTxID)
 	logger.Info().Msgf("EVM Chain TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), send.GetCurrentOutTxParam().Receiver)
-
-	height := uint64(zetaBridge.blockHeight)
 
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
