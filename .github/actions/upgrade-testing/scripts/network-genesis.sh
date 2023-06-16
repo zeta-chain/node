@@ -1,7 +1,6 @@
-ls -lah /app_version/
+export PATH="/usr/local/go/bin:${PATH}"
 
-#docker buildx build --platform linux/amd64 -t local/docker-test:latest .
-#docker run -d -p 26657:26657 --platform linux/amd64 local/docker-test:latest
+echo 'export PATH=/usr/local/go/bin:'${PATH} >> /root/.bashrc
 
 log_it () {
   echo "********************************"
@@ -17,8 +16,8 @@ echo "${ZETA_MNEMONIC}" | ${DAEMON_NAME} keys add ${MONIKER} --keyring-backend t
 ${DAEMON_NAME} init "${MONIKER}" --chain-id "${CHAIN_ID}"
 cp /app_version/app.toml ${DAEMON_HOME}config/app.toml
 cp /app_version/config.toml ${DAEMON_HOME}config/config.toml
-mkdir -p ${DAEMON_HOME}/cosmovisor/genesis/bin
-mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades
+mkdir -p ${DAEMON_HOME}/zetavisor/genesis/bin
+mkdir -p ${DAEMON_HOME}/zetavisor/upgrades
 
 genesis_account=$(${DAEMON_NAME} keys show ${MONIKER} -a --keyring-backend test)
 log_it "${genesis_account}"
@@ -43,19 +42,31 @@ echo $(jq --arg a "${DENOM}" '.app_state.gov.deposit_params.min_deposit[0].denom
 echo $(jq --arg a "${DENOM}" '.app_state.staking.params.bond_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 echo $(jq --arg a "${DENOM}" '.app_state.evm.params.evm_denom = ($a)' ${DAEMON_HOME}/config/genesis.json) > ${DAEMON_HOME}/config/genesis.json
 
-log_it "Genesis File"
-cat ${DAEMON_HOME}/config/genesis.json
+log_it "*********DEBUG GENSIS FILE***********"
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.gov.voting_params.voting_period
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.crisis.constant_fee.denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.mint.params.mint_denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.gov.deposit_params.min_deposit[0].denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.staking.params.bond_denom
+cat ${DAEMON_HOME}/config/genesis.json | jq .app_state.evm.params.evm_denom
+log_it "**************************************"
 
-log_it "Copy Binaries to Cosmovisor Upgrades Folder"
-cp -r /app_version/* ${DAEMON_HOME}/cosmovisor/upgrades/
 
-log_it "Copy Starting Binary to Cosmovisor Genesis Bin Folder"
-cp /usr/bin/${DAEMON_NAME} ${DAEMON_HOME}/cosmovisor/genesis/bin
+log_it "Copy Binaries to zetavisor Upgrades Folder"
+cp -r /app_version/* ${DAEMON_HOME}/zetavisor/upgrades/
 
-chmod -R 777 ${DAEMON_HOME}/cosmovisor
-chmod -R a+x ${DAEMON_HOME}/cosmovisor/
+log_it "***************"
+log_it "Cosmos Upgrades"
+ls -lah ${DAEMON_HOME}/zetavisor/upgrades/
+
+log_it "Copy Starting Binary to zetavisor Genesis Bin Folder"
+cp /usr/bin/${DAEMON_NAME} ${DAEMON_HOME}/zetavisor/genesis/bin
+
+chmod -R 777 ${DAEMON_HOME}/zetavisor
+chmod -R a+x ${DAEMON_HOME}/zetavisor/
 
 log_it "Validate Genesis File"
 ${DAEMON_NAME} validate-genesis --home ${DAEMON_HOME}/
 
-cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true"
+nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > zetavisor.log 2>&1 &
+tail -n 1000 -f zetavisor.log
