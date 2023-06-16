@@ -85,12 +85,12 @@ func (tss *TSS) Pubkey() []byte {
 }
 
 // digest should be Hashes of some data
-func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.CurrentPubkey
-	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, 10, nil, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
@@ -129,13 +129,13 @@ func (tss *TSS) Sign(digest []byte) ([65]byte, error) {
 }
 
 // digest should be batch of Hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
-	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, 10, nil, "0.14.0")
+	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")

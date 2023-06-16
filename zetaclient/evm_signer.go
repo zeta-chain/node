@@ -77,11 +77,11 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 
 // given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
-func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64) (*ethtypes.Transaction, []byte, []byte, error) {
+func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64, height uint64) (*ethtypes.Transaction, []byte, []byte, error) {
 	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes)
+	sig, err := signer.tssSigner.Sign(hashBytes, height)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -116,7 +116,17 @@ func (signer *EVMSigner) Broadcast(tx *ethtypes.Transaction) error {
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address, srcChainID *big.Int, to ethcommon.Address, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
+	srcChainID *big.Int,
+	to ethcommon.Address,
+	amount *big.Int,
+	gasLimit uint64,
+	message []byte,
+	sendHash [32]byte,
+	nonce uint64,
+	gasPrice *big.Int,
+	height uint64) (*ethtypes.Transaction, error) {
+
 	if len(sendHash) < 32 {
 		return nil, fmt.Errorf("sendHash len %d must be 32", len(sendHash))
 	}
@@ -128,7 +138,7 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address, srcChainID *bi
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce, height)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}
@@ -145,7 +155,7 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address, srcChainID *bi
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -154,7 +164,7 @@ func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce)
+	tx, _, _, err := signer.Sign(data, signer.metaContractAddress, gasLimit, gasPrice, nonce, height)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}
@@ -162,10 +172,10 @@ func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.
 	return tx, nil
 }
 
-func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes)
+	sig, err := signer.tssSigner.Sign(hashBytes, height)
 	if err != nil {
 		return nil, err
 	}
@@ -183,10 +193,10 @@ func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int) (*ethtype
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, to, amount, 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes)
+	sig, err := signer.tssSigner.Sign(hashBytes, height)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +214,7 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge) {
+func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
 	logger := signer.logger.With().
 		Str("outTxID", outTxID).
 		Str("SendHash", send.Index).
@@ -276,26 +286,26 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignWithdrawTx(to, send.InboundTxParams.Amount.BigInt(), send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignWithdrawTx(to, send.InboundTxParams.Amount.BigInt(), send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
 			//srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChainId].Chain.ChainId
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.InboundTxParams.Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.InboundTxParams.Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
 		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		//srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChain].Chain.ChainId
 		logger.Info().Msgf("SignRevertTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 		//toChainID := config.ChainConfigs[send.OutboundTxParams.ReceiverChain].Chain.ChainId
-		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.OutboundTxParams[0].ReceiverChainId), to.Bytes(), big.NewInt(send.GetCurrentOutTxParam().ReceiverChainId), send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.OutboundTxParams[0].ReceiverChainId), to.Bytes(), big.NewInt(send.GetCurrentOutTxParam().ReceiverChainId), send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
 	}
 
 	if err != nil {
@@ -355,7 +365,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset ethcommon.Address, amount *big.Int, gasLimit uint64, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset ethcommon.Address, amount *big.Int, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", recipient, asset, amount)
@@ -363,7 +373,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce)
+	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce, height)
 	if err != nil {
 		return nil, fmt.Errorf("sign error: %w", err)
 	}
@@ -377,7 +387,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 // function unwhitelist(
 // address asset,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	var data []byte
 
 	var err error
@@ -387,7 +397,7 @@ func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Addr
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce)
+	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce, height)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}
