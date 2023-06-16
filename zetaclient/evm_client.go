@@ -810,48 +810,6 @@ func (ob *EVMChainClient) ReportTokenSentToTSS(txhash ethcommon.Hash, value *big
 	return zetaHash, err
 }
 
-// query the base gas price for the block number bn.
-//func (ob *EVMChainClient) GetBaseGasPrice() *big.Int {
-//	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
-//	if err != nil {
-//		ob.logger.Err(err).Msg("GetBaseGasPrice")
-//		return nil
-//	}
-//	return gasPrice
-//}
-
-//func (ob *EVMChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
-//	zetaClient := ob.zetaClient
-//	evmClient := ob.EvmClient
-//	tss := ob.Tss
-//	chain := ob.chain
-//
-//	_, err := zetaClient.GetNonceByChain(chain)
-//	if err != nil { // if Nonce of Chain is not found in ZetaCore; report it
-//		nonce, err := evmClient.NonceAt(context.TODO(), tss.EVMAddress(), nil)
-//		if err != nil {
-//			return errors.Wrap(err, "NonceAt")
-//		}
-//		pendingNonce, err := evmClient.PendingNonceAt(context.TODO(), tss.EVMAddress())
-//		if err != nil {
-//			return errors.Wrap(err, "PendingNonceAt")
-//		}
-//		if pendingNonce != nonce {
-//			return errors.Errorf(fmt.Sprintf("fatal: pending nonce %d != nonce %d", pendingNonce, nonce))
-//		}
-//		if err != nil {
-//			return errors.Wrap(err, "NonceAt")
-//		}
-//		zetahash, err := zetaClient.PostNonce(chain, nonce)
-//		if err != nil {
-//			return errors.Wrap(err, "PostNonce")
-//		}
-//		zetaClient.GetKeys()
-//		logger.Debug().Msgf("PostNonce zeta tx %s , Signer %s , nonce %d", zetahash, zetaClient.keys.GetOperatorAddress(), nonce)
-//	}
-//	return nil
-//}
-
 func (ob *EVMChainClient) WatchGasPrice() {
 
 	err := ob.PostGasPrice()
