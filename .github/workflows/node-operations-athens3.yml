@@ -1,0 +1,99 @@
+name: Node Operations - Athens 3 
+on:
+  workflow_dispatch:
+    inputs:
+      ZETACORED_STATUS:
+        description: "Do you want to stop, or restart zetacored?"
+        type: choice
+        options:
+          - "stop"
+          - "restart"
+        required: true
+      ZETACLIENTD_STATUS:
+        description: "Do you want to stop, or restart zetaclientd?"
+        type: choice
+        options:
+          - "stop"
+          - "restart"
+        required: true
+      DELETE_ZETACLIENT_DB:
+        description: "Which environment to update?"
+        type: environment
+        required: true
+      # ENVIRONMENT:
+      #   description: "Which environment to update?"
+      #   type: environment
+      #   required: true
+
+env:
+  AWS_REGION: "us-east-1"
+
+jobs:
+  start-stop-processes:
+    runs-on: ubuntu-latest
+    # environment: ${{ github.event.inputs.ENVIRONMENT }}
+    environment: athens3-validators
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          skip_python: "true"
+          skip_docker_compose: "true"
+          skip_go: "true"
+          # cpu_architecture: "arm64"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Stop zetacored
+        if: ${{ github.event.inputs.ZETACORED_STATUS == 'stop' }}
+        run: |
+          source .github/actions/node-operations/functions
+          set_regions 
+          for region in "${regions[@]}"; do
+              stop_zetavisor "$region"
+          done
+
+      - name: Restart zetacored
+        if: ${{ github.event.inputs.ZETACORED_STATUS == 'restart' }}
+        run: |
+          source .github/actions/node-operations/functions
+          set_regions 
+          for region in "${regions[@]}"; do
+              restart_zetavisor "$region"
+          done
+
+      - name: Stop zetaclientd
+        if: ${{ github.event.inputs.ZETACORED_STATUS == 'stop' }}
+        run: |
+          source .github/actions/node-operations/functions
+          set_regions 
+          for region in "${regions[@]}"; do
+              stop_zetaclient "$region"
+          done
+
+      - name: Delete zetaclientd db (/home/zetachain/.zetaclient/*)
+        if: ${{ github.event.inputs.DELETE_ZETACLIENT_DB == 'true' }}
+        run: |
+          source .github/actions/node-operations/functions
+          set_regions 
+          for region in "${regions[@]}"; do
+            echo "Deleting zetaclient db in $region"
+            delete_zetaclient_db "$region" 
+          done
+
+      - name: Restart zetaclientd
+        if: ${{ github.event.inputs.ZETACORED_STATUS == 'restart' }}
+        run: |
+          source .github/actions/node-operations/functions
+          set_regions 
+          for region in "${regions[@]}"; do
+              restart_zetaclient "$region"
+          done

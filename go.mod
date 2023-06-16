@@ -21,7 +21,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
-	gitlab.com/thorchain/tss/go-tss v1.5.7
 	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37
 	google.golang.org/grpc v1.52.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -37,10 +36,12 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/emicklei/proto v1.11.1
 	github.com/evmos/ethermint v0.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05
+	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -58,7 +59,6 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/emicklei/proto v1.11.1 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.22.0
 	github.com/libp2p/go-libp2p-asn-util v0.2.0 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.0
+	github.com/libp2p/go-libp2p-core v0.20.0 // indirect
 	github.com/libp2p/go-libp2p-kad-dht v0.18.0
 	github.com/libp2p/go-libp2p-kbucket v0.4.7 // indirect
 	github.com/libp2p/go-libp2p-record v0.2.0 // indirect

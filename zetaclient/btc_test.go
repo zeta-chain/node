@@ -190,7 +190,7 @@ func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, 
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(witnessHash)
+	sig65B, err := tss.Sign(witnessHash, 10)
 	R := big.NewInt(0).SetBytes(sig65B[:32])
 	S := big.NewInt(0).SetBytes(sig65B[32:64])
 	sig := btcec.Signature{

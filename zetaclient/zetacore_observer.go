@@ -36,10 +36,13 @@ type CoreObserver struct {
 	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
+	ts        *TelemetryServer
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config) *CoreObserver {
-	co := CoreObserver{}
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+	co := CoreObserver{
+		ts: ts,
+	}
 	co.cfg = cfg
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
@@ -155,7 +158,7 @@ func (co *CoreObserver) startSendScheduler() {
 					if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 						outTxMan.StartTryProcess(outTxID)
 						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
-						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge)
+						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
 					}
 					if idx > int(lookahead) { // only look at 50 sends per chain
 						break
@@ -164,6 +167,7 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			// update last processed block number
 			lastBlockNum = bn
+			co.ts.SetCoreBlockNumber(lastBlockNum)
 		}
 
 	}
