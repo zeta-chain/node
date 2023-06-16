@@ -40,7 +40,9 @@ type CoreObserver struct {
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config) *CoreObserver {
-	co := CoreObserver{}
+	co := CoreObserver{
+		stop: make(chan struct{}),
+	}
 	co.cfg = cfg
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
@@ -93,7 +95,6 @@ func (co *CoreObserver) MonitorCore() {
 // retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
-	go outTxMan.StartMonitorHealth()
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
 	for {
