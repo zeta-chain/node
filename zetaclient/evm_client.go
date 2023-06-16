@@ -81,14 +81,16 @@ type EVMChainClient struct {
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    EVMLog
 	cfg                       *config.Config
+	ts                        *TelemetryServer
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain) (*EVMChainClient, error) {
+func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain, ts *TelemetryServer) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
+		ts:           ts,
 	}
 	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = EVMLog{
@@ -497,6 +499,7 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
+	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, block)
 }
 
 func (ob *EVMChainClient) GetLastBlockHeight() int64 {

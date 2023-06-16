@@ -36,10 +36,13 @@ type CoreObserver struct {
 	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
+	ts        *TelemetryServer
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config) *CoreObserver {
-	co := CoreObserver{}
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+	co := CoreObserver{
+		ts: ts,
+	}
 	co.cfg = cfg
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
@@ -164,6 +167,7 @@ func (co *CoreObserver) startSendScheduler() {
 			}
 			// update last processed block number
 			lastBlockNum = bn
+			co.ts.SetCoreBlockNumber(lastBlockNum)
 		}
 
 	}

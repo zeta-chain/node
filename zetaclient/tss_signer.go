@@ -303,7 +303,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 }
 
 func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*TSS, error) {
-	server, _, err := SetupTSSServer(peer, privkey, preParams, cfg)
+	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -360,7 +360,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	return &tss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, *HTTPServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -370,7 +370,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		homedir, err := os.UserHomeDir()
 		if err != nil {
 			log.Error().Err(err).Msgf("cannot get UserHomeDir")
-			return nil, nil, err
+			return nil, err
 		}
 		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
@@ -397,7 +397,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
-		return nil, nil, fmt.Errorf("NewTSS error: %w", err)
+		return nil, fmt.Errorf("NewTSS error: %w", err)
 	}
 
 	err = tssServer.Start()
@@ -411,17 +411,10 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
 		tssServer.GetLocalPeerID() == peer2.ID("").String() {
 		log.Error().Msg("tss server start error")
-		return nil, nil, fmt.Errorf("tss server start error")
+		return nil, fmt.Errorf("tss server start error")
 	}
 
-	s := NewHTTPServer(tssServer.GetLocalPeerID())
-	go func() {
-		log.Info().Msg("Starting TSS HTTP Server...")
-		if err := s.Start(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-	return tssServer, s, nil
+	return tssServer, nil
 }
 
 func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
