@@ -3,7 +3,6 @@ package zetaclient
 import (
 	"github.com/rs/zerolog"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -59,29 +58,4 @@ func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 		return time.Since(outTxMan.outTxStartTime[outTxID])
 	}
 	return 0
-}
-
-// suicide whole zetaclient if keysign appears deadlocked.
-func (outTxMan *OutTxProcessorManager) StartMonitorHealth() {
-	outTxMan.Logger.Info().Msgf("StartMonitorHealth")
-	ticker := time.NewTicker(60 * time.Second)
-	for range ticker.C {
-		count := 0
-		for outTxID := range outTxMan.outTxActive {
-			if outTxMan.TimeInTryProcess(outTxID).Minutes() > 2 {
-				count++
-			}
-		}
-		if count > 0 {
-			outTxMan.Logger.Warn().Msgf("Health: %d OutTx are more than 2min in process!", count)
-		} else {
-			outTxMan.Logger.Info().Msgf("Monitor: healthy; numActiveProcessor %d", outTxMan.numActiveProcessor)
-		}
-		if count > 10 {
-			// suicide:
-			outTxMan.Logger.Error().Msgf("suicide zetaclient because keysign appears deadlocked; kill this process and the process supervisor should restart it")
-			outTxMan.Logger.Info().Msgf("numActiveProcessor: %d", outTxMan.numActiveProcessor)
-			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-		}
-	}
 }
