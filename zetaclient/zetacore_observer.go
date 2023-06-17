@@ -37,11 +37,13 @@ type CoreObserver struct {
 	logger    ZetaCoreLog
 	cfg       *config.Config
 	ts        *TelemetryServer
+	stop      chan struct{}
 }
 
 func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
 	co := CoreObserver{
-		ts: ts,
+		ts:   ts,
+		stop: make(chan struct{}),
 	}
 	co.cfg = cfg
 	chainLogger := logger.With().
@@ -79,97 +81,114 @@ func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.keys.GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
+
+	go func() {
+		// bridge queries UpgradePlan from zetacore and send to its pause channel if upgrade height is reached
+		<-co.bridge.pause
+		// now stop everything
+		close(co.stop) // this stops the startSendScheduler() loop
+		for _, c := range co.clientMap {
+			c.Stop()
+		}
+	}()
 }
 
 // ZetaCore block is heart beat; each block we schedule some send according to
 // retry schedule. ses
 func (co *CoreObserver) startSendScheduler() {
 	outTxMan := NewOutTxProcessorManager(co.logger.ChainLogger)
-	go outTxMan.StartMonitorHealth()
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
-	for range observeTicker.C {
-		bn, err := co.bridge.GetZetaBlockHeight()
-		if err != nil {
-			co.logger.ZetaChainWatcher.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
-			continue
-		}
-		if lastBlockNum == 0 {
-			lastBlockNum = bn - 1
-		}
-		if bn > lastBlockNum { // we have a new block
-			bn = lastBlockNum + 1
-			if bn%10 == 0 {
-				co.logger.ZetaChainWatcher.Debug().Msgf("ZetaCore heart beat: %d", bn)
-			}
-			//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
-
-			supportedChains := GetSupportedChains()
-			for _, c := range supportedChains {
-
-				signer := co.signerMap[*c]
-				chainClient := co.clientMap[*c]
-				sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
+	for {
+		select {
+		case <-co.stop:
+			co.logger.ZetaChainWatcher.Warn().Msg("stop sendScheduler")
+			return
+		case <-observeTicker.C:
+			{
+				bn, err := co.bridge.GetZetaBlockHeight()
 				if err != nil {
-					co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
+					co.logger.ZetaChainWatcher.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 					continue
 				}
+				if lastBlockNum == 0 {
+					lastBlockNum = bn - 1
+				}
+				if bn > lastBlockNum { // we have a new block
+					bn = lastBlockNum + 1
+					if bn%10 == 0 {
+						co.logger.ZetaChainWatcher.Debug().Msgf("ZetaCore heart beat: %d", bn)
+					}
+					//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 
-				for idx, send := range sendList {
-					ob, err := co.getTargetChainOb(send)
-					if err != nil {
-						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
-						continue
-					}
+					supportedChains := GetSupportedChains()
+					for _, c := range supportedChains {
 
-					// Monitor Core Logger for OutboundTxTssNonce
-					included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
-					if err != nil {
-						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", c.ChainName)
-						continue
-					}
-					if included {
-						co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
-						continue
-					}
-					chain := GetTargetChain(send)
-					nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
-					outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
+						signer := co.signerMap[*c]
+						chainClient := co.clientMap[*c]
+						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
+							continue
+						}
 
-					// FIXME: config this schedule; this value is for localnet fast testing
-					if bn >= math.MaxInt64 {
-						continue
+						for idx, send := range sendList {
+							ob, err := co.getTargetChainOb(send)
+							if err != nil {
+								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
+								continue
+							}
+
+							// Monitor Core Logger for OutboundTxTssNonce
+							included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
+							if err != nil {
+								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", c.ChainName)
+								continue
+							}
+							if included {
+								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
+								continue
+							}
+							chain := GetTargetChain(send)
+							nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
+							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
+
+							// FIXME: config this schedule; this value is for localnet fast testing
+							if bn >= math.MaxInt64 {
+								continue
+							}
+							currentHeight := uint64(bn)
+							var interval uint64
+							var lookahead int64
+							// FIXME: fix these ugly type switches and conversions
+							switch v := ob.(type) {
+							case *EVMChainClient:
+								interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
+								lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
+							case *BitcoinChainClient:
+								interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
+								lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
+							default:
+								co.logger.ZetaChainWatcher.Error().Msgf("unknown ob type on chain %s: type %T", chain, ob)
+								continue
+							}
+							if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
+								outTxMan.StartTryProcess(outTxID)
+								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
+								go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
+							}
+							if idx > int(lookahead) { // only look at 50 sends per chain
+								break
+							}
+						}
 					}
-					currentHeight := uint64(bn)
-					var interval uint64
-					var lookahead int64
-					// FIXME: fix these ugly type switches and conversions
-					switch v := ob.(type) {
-					case *EVMChainClient:
-						interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
-						lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
-					case *BitcoinChainClient:
-						interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
-						lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
-					default:
-						co.logger.ZetaChainWatcher.Error().Msgf("unknown ob type on chain %s: type %T", chain, ob)
-						continue
-					}
-					if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
-						outTxMan.StartTryProcess(outTxID)
-						co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
-						go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
-					}
-					if idx > int(lookahead) { // only look at 50 sends per chain
-						break
-					}
+					// update last processed block number
+					lastBlockNum = bn
+					co.ts.SetCoreBlockNumber(lastBlockNum)
 				}
 			}
-			// update last processed block number
-			lastBlockNum = bn
-			co.ts.SetCoreBlockNumber(lastBlockNum)
-		}
 
+		}
 	}
 }
 

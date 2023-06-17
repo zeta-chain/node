@@ -50,6 +50,8 @@ type ZetaCoreBridge struct {
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
+
+	pause chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -93,6 +95,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		lastOutTxReportTime: map[string]time.Time{},
 		stop:                make(chan struct{}),
 		zetaChainID:         chainID,
+		pause:               make(chan struct{}),
 	}, nil
 }
 
@@ -148,6 +151,20 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 }
 
 func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
+	bn, err := b.GetZetaBlockHeight()
+	if err != nil {
+		return err
+	}
+	plan, err := b.GetUpgradePlan()
+	// if there is no active upgrade plan, plan will be nil, err will be nil as well.
+	if err != nil {
+		return err
+	}
+	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
+		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped; please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
+	}
+
 	coreParams, err := b.GetCoreParams()
 	if err != nil {
 		return err
