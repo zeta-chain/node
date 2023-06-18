@@ -122,9 +122,9 @@ lint: lint-pre
 
 proto:
 	@echo "--> Generating Go from protocol buffer files"
-	@sh ./scripts/protoc-gen-go.sh
+	@bash ./scripts/protoc-gen-go.sh
 	@echo "--> Generating OpenAPI specs"
-	@sh ./scripts/protoc-gen-openapi.sh
+	@bash ./scripts/protoc-gen-openapi.sh
 .PHONY: proto
 
 specs:
