@@ -1,0 +1,30 @@
+name: Generated Go/OpenAPI to Match Protobuf
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - uses: bufbuild/buf-setup-action@v1
+
+      - name: Add protoc plugins to PATH
+        run: |
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Generate Go and OpenAPI
+        run: make proto
+
+      - name: Check for changes
+        run: |
+          if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol; then
+            echo "Generated Go files are up-to-date."
+          else
+            echo "::error::Generated Go and/or OpenAPI files are not up-to-date. Please run 'make proto' locally and commit any changes."
+            exit 1
+          fi
