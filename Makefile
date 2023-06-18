@@ -148,6 +148,10 @@ start-smoketest:
 	@echo "--> Starting smoketest"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-smoketest-upgrade:
+	@echo "--> Starting smoketest with upgrade proposal"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
+
 start-smoketest-p2p-diag:
 	@echo "--> Starting smoketest in p2p diagnostic mode"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
