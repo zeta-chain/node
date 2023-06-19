@@ -53,13 +53,13 @@ type TransactionDB struct {
 
 type ReceiptSQLType struct {
 	gorm.Model
-	Nonce   int
-	Receipt ReceiptDB `gorm:"embedded"`
+	Identifier string
+	Receipt    ReceiptDB `gorm:"embedded"`
 }
 
 type TransactionSQLType struct {
 	gorm.Model
-	Nonce       int
+	Identifier  string
 	Transaction TransactionDB `gorm:"embedded"`
 }
 
@@ -110,14 +110,14 @@ func FromReceiptDBType(receipt ReceiptDB) (*ethtypes.Receipt, error) {
 	return res, err
 }
 
-func ToReceiptSQLType(receipt *ethtypes.Receipt, nonce int) (*ReceiptSQLType, error) {
+func ToReceiptSQLType(receipt *ethtypes.Receipt, index string) (*ReceiptSQLType, error) {
 	r, err := ToReceiptDBType(receipt)
 	if err != nil {
 		return nil, err
 	}
 	return &ReceiptSQLType{
-		Nonce:   nonce,
-		Receipt: r,
+		Identifier: index,
+		Receipt:    r,
 	}, nil
 }
 
@@ -142,13 +142,13 @@ func FromTransactionDBType(transaction TransactionDB) (*ethtypes.Transaction, er
 	return res, err
 }
 
-func ToTransactionSQLType(transaction *ethtypes.Transaction, nonce int) (*TransactionSQLType, error) {
+func ToTransactionSQLType(transaction *ethtypes.Transaction, index string) (*TransactionSQLType, error) {
 	trans, err := ToTransactionDBType(transaction)
 	if err != nil {
 		return nil, err
 	}
 	return &TransactionSQLType{
-		Nonce:       nonce,
+		Identifier:  index,
 		Transaction: trans,
 	}, nil
 }
