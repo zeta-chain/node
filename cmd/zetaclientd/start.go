@@ -120,9 +120,11 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	err = TestTSS(tss, masterLogger)
-	if err != nil {
-		startLogger.Error().Err(err).Msg("TestTSS error")
+	if cfg.TestTssKeysign {
+		err = TestTSS(tss, masterLogger)
+		if err != nil {
+			startLogger.Error().Err(err).Msg("TestTSS error")
+		}
 	}
 
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)

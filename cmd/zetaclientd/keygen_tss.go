@@ -39,6 +39,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
 		if cfg.Keygen.Status == crosschaintypes.KeygenStatus_KeyGenSuccess {
+			cfg.TestTssKeysign = true
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
