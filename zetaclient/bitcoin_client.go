@@ -53,6 +53,7 @@ type BitcoinChainClient struct {
 	BlockTime     uint64                                  // block time in seconds
 	minedTx       map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
+	nextNonce     int
 	mu            *sync.Mutex
 	utxos         []btcjson.ListUnspentResult
 	db            *gorm.DB
@@ -104,6 +105,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	//Load btc chain client DB
 	err := ob.loadDB(dbpath)
+	if err != nil {
+		return nil, err
+	}
+
+	//Set Next Nonce
+	err = ob.SetNextNonce()
 	if err != nil {
 		return nil, err
 	}
@@ -343,6 +350,13 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		return true, false, nil
 	}
 
+	ob.mu.Lock()
+	nextNonce := ob.nextNonce
+	ob.mu.Unlock()
+	if nonce != nextNonce {
+		return true, false, nil
+	}
+
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
@@ -357,6 +371,10 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		logger.Error().Err(err).Msgf("error posting to zeta core")
 	} else {
 		logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+
+		ob.mu.Lock()
+		ob.nextNonce++
+		ob.mu.Unlock()
 	}
 	return true, true, nil
 }
@@ -733,6 +751,22 @@ func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 	for _, entry := range broadcastedTransactions {
 		ob.broadcastedTx[entry.Key] = entry.Hash
 	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) SetNextNonce() error {
+	//Next Nonce was not found in DB, query core for pending cctx's to get next nonce
+	sends, err := ob.zetaClient.GetAllPendingCctx(uint64(ob.chain.ChainId))
+	if err != nil {
+		return err
+	}
+	//Sort txn list to retrieve next pending nonce
+	sort.Slice(sends, func(i, j int) bool {
+		return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
+	})
+	//Set next nonce
+	ob.nextNonce = int(sends[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+
 	return nil
 }
 
