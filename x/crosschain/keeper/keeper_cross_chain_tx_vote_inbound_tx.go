@@ -26,6 +26,26 @@ import (
 // (prices and nonce are updated) and status changes to "pending outbound". If
 // the finalization fails, the status of CCTX is changed to 'aborted'.
 //
+// ```mermaid
+// stateDiagram-v2
+//
+//	state is_zetachain <<choice>>
+//	state evm_deposit_success <<choice>>
+//	state finalize_inbound <<choice>>
+//	[*] --> PendingInbound: Create New CCTX
+//	PendingInbound --> is_zetachain
+//	is_zetachain --> evm_deposit_success: Receiver is ZetaChain
+//	evm_deposit_success --> OutboundMined: EVM deposit success
+//	evm_deposit_success --> Aborted: EVM deposit error
+//	is_zetachain --> finalize_inbound: Receiver is connected chain
+//	finalize_inbound --> Aborted: Finalize inbound error
+//	finalize_inbound --> PendingOutbound: Finalize inbound success
+//	Aborted --> [*]
+//	PendingOutbound --> [*]
+//	OutboundMined --> [*]
+//
+// ```
+//
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

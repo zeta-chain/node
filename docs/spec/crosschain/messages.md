@@ -109,6 +109,28 @@ If there's an error in the finalization process, the CCTX status is set to
 After finalization the outbound transaction tracker and pending nonces are
 removed, and the CCTX is updated in the store.
 
+```mermaid
+stateDiagram-v2
+
+	state finalize_outbound <<choice>>
+	state observation <<choice>>
+	state success_old_status <<choice>>
+	state fail_old_status <<choice>>
+	[*] --> finalize_outbound
+	finalize_outbound --> observation: Finalize outbound
+	observation --> success_old_status: Observation succeeded
+	success_old_status --> Reverted: Old status is PendingRevert
+	success_old_status --> OutboundMined: Old status is PendingOutbound
+	observation --> fail_old_status: Observation failed
+	fail_old_status --> PendingRevert: Old status is PendingOutbound
+	fail_old_status --> Aborted: Old status is PendingRevert
+	finalize_outbound --> Aborted: Finalize outbound error
+	Aborted --> [*]
+	Reverted --> [*]
+	OutboundMined --> [*]
+	PendingRevert --> [*]
+
+```
 Only observer validators are authorized to broadcast this message.
 
 ```proto
@@ -139,6 +161,23 @@ the status of CCTX is chagned to 'aborted'.
 If the receiver chain is a connected chain, the inbound CCTX is finalized
 (prices and nonce are updated) and status changes to "pending outbound". If
 the finalization fails, the status of CCTX is changed to 'aborted'.
+
+```mermaid
+stateDiagram
+
+	state is_zetachain <<choice>>
+	state evm_deposit_success <<choice>>
+	state finalize_inbound <<choice>>
+	[*] --> PendingInbound: Create New CCTX
+	PendingInbound --> is_zetachain
+	is_zetachain --> evm_deposit_success: Receiver is ZetaChain
+	evm_deposit_success --> OutboundMined: EVM deposit success
+	evm_deposit_success --> Aborted: EVM deposit error
+	is_zetachain --> finalize_inbound: Receiver is connected chain
+	finalize_inbound --> Aborted: Finalize inbound error
+	finalize_inbound --> PendingOutbound: Finalize inbound success
+
+```
 
 Only observer validators are authorized to broadcast this message.
 
