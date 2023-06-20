@@ -22,6 +22,10 @@ func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot
 	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
 	return ballot, err
 }
+
+// CheckIfBallotIsFinalized checks if the ballot is finalized in this block and if it is, it sets the ballot in the store
+// This function with only return true if the ballot moves for pending to success or failed status in this block .
+// If the ballot is already finalized in the previous block , it will return false
 func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool) {
 	ballot, isFinalized := ballot.IsBallotFinalized()
 	if !isFinalized {

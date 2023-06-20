@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"testing"
 	"time"
 
@@ -37,8 +38,10 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 	} else {
 		cfg = configs[0]
 	}
-	net, _ := network.New(t, app.NodeDir, cfg)
-	t.Cleanup(net.Cleanup)
+	net, err := network.New(t, app.NodeDir, cfg)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return net
 }
 
@@ -64,9 +67,9 @@ func DefaultConfig() network.Config {
 		GenesisState:    app.ModuleBasics.DefaultGenesis(encoding.Codec),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "athens_8888-2",
-		NumValidators:   1,
-		BondDenom:       sdk.DefaultBondDenom,
-		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		NumValidators:   4,
+		BondDenom:       config.BaseDenom,
+		MinGasPrices:    fmt.Sprintf("0.000006%s", config.BaseDenom),
 		AccountTokens:   sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
 		StakingTokens:   sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
 		BondedTokens:    sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),

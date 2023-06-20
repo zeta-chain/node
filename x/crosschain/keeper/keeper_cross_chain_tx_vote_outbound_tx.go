@@ -74,7 +74,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
-		// Only set this the first time when the ballot is created
+		// Set this the first time when the ballot is created
+		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
 		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 		k.SetCrossChainTx(ctx, cctx)
 	}
@@ -111,7 +112,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SetCrossChainTx(ctx, cctx)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-
+	// Set the ballot index to the finalized ballot
+	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.SetCrossChainTx(ctx, cctx)
