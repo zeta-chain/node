@@ -736,17 +736,20 @@ func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 }
 
 func (ob *BitcoinChainClient) SetNextNonce() error {
-	//Next Nonce was not found in DB, query core for pending cctx's to get next nonce
-	sends, err := ob.zetaClient.GetAllPendingCctx(uint64(ob.chain.ChainId))
+	nonces, err := ob.zetaClient.GetPendingNonces()
 	if err != nil {
 		return err
 	}
-	//Sort txn list to retrieve next pending nonce
-	sort.Slice(sends, func(i, j int) bool {
-		return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
-	})
-	//Set next nonce
-	ob.nextNonce = int(sends[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+	found := false
+	for _, nonce := range nonces.PendingNonces {
+		if ob.chain.ChainId == nonce.ChainId {
+			ob.nextNonce = int(nonce.NonceLow)
+			found = true
+		}
+	}
+	if !found {
+		return fmt.Errorf("initial nonce for Chain ID: %d not found", ob.chain.ChainId)
+	}
 
 	return nil
 }
