@@ -2,6 +2,8 @@
 
 ## MsgAddObserver
 
+Not implemented.
+
 ```proto
 message MsgAddObserver {
 	string creator = 1;
@@ -11,6 +13,14 @@ message MsgAddObserver {
 ```
 
 ## MsgUpdateCoreParams
+
+Updates core parameters for a specific chain. Core parameters include
+confirmation count, outbound transaction schedule interval, ZETA token,
+connector and ERC20 custody contract addresses, etc.
+
+Throws an error if the chain ID is not supported.
+
+Only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgUpdateCoreParams {
