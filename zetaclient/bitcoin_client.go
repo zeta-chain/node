@@ -66,7 +66,7 @@ type BitcoinChainClient struct {
 const (
 	minConfirmations = 1
 	chunkSize        = 500
-	maxHeightDiff    = 1000
+	maxHeightDiff    = 10000
 )
 
 func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
