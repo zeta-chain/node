@@ -1,10 +1,10 @@
 package zetaclient
 
 import (
+	"bytes"
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
-
-	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -740,9 +740,17 @@ func (ob *BitcoinChainClient) SetNextNonce() error {
 	if err != nil {
 		return err
 	}
+
 	found := false
 	for _, nonce := range nonces.PendingNonces {
-		if ob.chain.ChainId == nonce.ChainId {
+		if len(nonce.Tss) == 0 {
+			continue
+		}
+		tssKey, err := NewTSSKey(nonce.Tss)
+		if err != nil {
+			continue
+		}
+		if ob.chain.ChainId == nonce.ChainId && bytes.Equal(tssKey.PubkeyInBytes, ob.Tss.Pubkey()) {
 			ob.nextNonce = int(nonce.NonceLow)
 			found = true
 		}
