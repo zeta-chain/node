@@ -30,7 +30,7 @@ jobs:
           [
             buildjet-4vcpu-ubuntu-2204-arm,
             buildjet-4vcpu-ubuntu-2204,
-            buildjet-4vcpu-ubuntu-2004
+            buildjet-4vcpu-ubuntu-2004,
           ]
 
     runs-on: ${{matrix.runs-on}}
@@ -91,17 +91,21 @@ jobs:
           ./zetacored version
 
       - name: Name Binaries
-        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        if:
+          startsWith(github.ref, 'refs/tags/') || startsWith(github.ref,
+          'refs/heads/develop')
         env:
           CPU_ARCH: ${{ env.CPU_ARCH }}
         run: |
-            OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
-            cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
-            cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
+          OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
+          cp zetacored zetacored-ubuntu-$OS_VERSION-$CPU_ARCH
+          cp zetaclientd zetaclientd-ubuntu-$OS_VERSION-$CPU_ARCH
 
       - name: Save Binaries as Artifacts
         uses: actions/upload-artifact@v3
-        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        if:
+          startsWith(github.ref, 'refs/tags/') || startsWith(github.ref,
+          'refs/heads/develop')
         with:
           name: binaries-${{ github.sha }}
           path: |
@@ -140,14 +144,7 @@ jobs:
           branch: v3.17
           arch: x86_64
           packages: >
-            build-base
-            pkgconf
-            lld
-            go
-            gcc 
-            g++
-            libusb-dev 
-            linux-headers
+            build-base pkgconf lld go gcc  g++ libusb-dev  linux-headers
           shell-name: alpine.sh
 
       - name: setup-git-credentials
@@ -184,7 +181,9 @@ jobs:
           mv zetaclientd zetaclientd-alpine-$CPU_ARCH
 
       - name: Save Binaries as Artifacts
-        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        if:
+          startsWith(github.ref, 'refs/tags/') || startsWith(github.ref,
+          'refs/heads/develop')
         uses: actions/upload-artifact@v3
         with:
           name: binaries-${{ github.sha }}
@@ -243,7 +242,9 @@ jobs:
   upload:
     runs-on: ["zeta-runners"]
     timeout-minutes: 15
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if:
+      startsWith(github.ref, 'refs/tags/') || startsWith(github.ref,
+      'refs/heads/develop')
     needs:
       - build-and-test
       - smoke-test
@@ -343,6 +344,7 @@ jobs:
       - name: Create GitHub Release for ZetaCore/ZetaClient
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
+        generate_release_notes: true
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           files: |
@@ -358,7 +360,9 @@ jobs:
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release')
+    if:
+      startsWith(github.ref, 'refs/tags/') || startsWith(github.ref,
+      'refs/heads/release')
     needs:
       - build-and-test
       - build-alpine-and-test
@@ -369,7 +373,9 @@ jobs:
           fetch-depth: 0
 
       - name: Major Version in Upgrade Handler Must Match Tag
-        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') 
+        if:
+          startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref,
+          'refs/heads/release')
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
           echo $UPGRADE_HANDLER_MAJOR_VERSION
