@@ -1,10 +1,10 @@
 package zetaclient
 
 import (
+	"bytes"
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
-
-	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -53,6 +53,7 @@ type BitcoinChainClient struct {
 	BlockTime     uint64                                  // block time in seconds
 	minedTx       map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
+	nextNonce     int
 	mu            *sync.Mutex
 	utxos         []btcjson.ListUnspentResult
 	db            *gorm.DB
@@ -65,6 +66,7 @@ type BitcoinChainClient struct {
 const (
 	minConfirmations = 1
 	chunkSize        = 500
+	maxHeightDiff    = 10000
 )
 
 func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
@@ -102,12 +104,6 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.minedTx = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
-	//Load btc chain client DB
-	err := ob.loadDB(dbpath)
-	if err != nil {
-		return nil, err
-	}
-
 	// initialize the Client
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), ob.GetRPCHost())
 	connCfg := &rpcclient.ConnConfig{
@@ -127,29 +123,17 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	if err != nil {
 		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
 	}
-	bn, err := ob.rpcClient.GetBlockCount()
+
+	//Load btc chain client DB
+	err = ob.loadDB(dbpath)
 	if err != nil {
-		return nil, fmt.Errorf("error getting block count: %s", err)
+		return nil, err
 	}
 
-	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", chain.String(), bn)
-
-	envvar := ob.chain.String() + "_SCAN_FROM"
-	scanFromBlock := os.Getenv(envvar)
-	if scanFromBlock != "" {
-		ob.logger.ChainLogger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
-		if scanFromBlock == clienttypes.EnvVarLatest {
-			ob.SetLastBlockHeight(bn)
-		} else {
-			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			ob.SetLastBlockHeight(scanFromBlockInt)
-		}
-	}
-	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
-		ob.SetLastBlockHeight(100)
+	//Set Next Nonce
+	err = ob.SetNextNonce()
+	if err != nil {
+		return nil, err
 	}
 
 	return &ob, nil
@@ -293,7 +277,11 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
+		// Save LastBlockHeight
 		ob.SetLastBlockHeight(bn)
+		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
+			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
+		}
 	}
 
 	return nil
@@ -343,6 +331,13 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		return true, false, nil
 	}
 
+	ob.mu.Lock()
+	nextNonce := ob.nextNonce
+	ob.mu.Unlock()
+	if nonce != nextNonce {
+		return true, false, nil
+	}
+
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
@@ -357,6 +352,10 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		logger.Error().Err(err).Msgf("error posting to zeta core")
 	} else {
 		logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+
+		ob.mu.Lock()
+		ob.nextNonce++
+		ob.mu.Unlock()
 	}
 	return true, true, nil
 }
@@ -736,6 +735,62 @@ func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 	return nil
 }
 
+func (ob *BitcoinChainClient) SetNextNonce() error {
+	nonces, err := ob.zetaClient.GetPendingNonces()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, nonce := range nonces.PendingNonces {
+		if len(nonce.Tss) == 0 {
+			continue
+		}
+		tssKey, err := NewTSSKey(nonce.Tss)
+		if err != nil {
+			continue
+		}
+		if ob.chain.ChainId == nonce.ChainId && bytes.Equal(tssKey.PubkeyInBytes, ob.Tss.Pubkey()) {
+			ob.nextNonce = int(nonce.NonceLow)
+			found = true
+		}
+	}
+	if !found {
+		return fmt.Errorf("initial nonce for Chain ID: %d not found", ob.chain.ChainId)
+	}
+
+	return nil
+}
+
+func (ob *BitcoinChainClient) LoadLastBlock() error {
+	bn, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return err
+	}
+
+	//Load persisted block number
+	var lastBlockNum clienttypes.LastBlockSQLType
+	if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
+		ob.logger.ChainLogger.Info().Msg("LastBlockNum not found in DB, scan from latest")
+		ob.SetLastBlockHeight(bn)
+	} else {
+		ob.SetLastBlockHeight(lastBlockNum.Num)
+
+		//If persisted block number is too low, use the latest height
+		if (bn - lastBlockNum.Num) > maxHeightDiff {
+			ob.logger.ChainLogger.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
+			ob.SetLastBlockHeight(bn)
+		}
+	}
+
+	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
+		ob.SetLastBlockHeight(100)
+	}
+	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.lastBlock)
+
+	return nil
+}
+
 func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	if _, err := os.Stat(dbpath); os.IsNotExist(err) {
 		err := os.MkdirAll(dbpath, os.ModePerm)
@@ -752,7 +807,8 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 
 	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{},
 		&clienttypes.TransactionResultSQLType{},
-		&clienttypes.TransactionHashSQLType{})
+		&clienttypes.TransactionHashSQLType{},
+		&clienttypes.LastBlockSQLType{})
 	if err != nil {
 		return err
 	}
@@ -765,6 +821,12 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 
 	//Load submitted transactions
 	err = ob.BuildSubmittedTxMap()
+	if err != nil {
+		return err
+	}
+
+	//Load last block
+	err = ob.LoadLastBlock()
 	if err != nil {
 		return err
 	}
