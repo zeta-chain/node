@@ -131,7 +131,6 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain *common.Chain) error {
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
-	cctx.GetCurrentOutTxParam().OutboundTxGasLimit = 90_000
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
