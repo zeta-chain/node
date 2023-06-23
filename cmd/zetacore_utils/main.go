@@ -15,9 +15,9 @@ import (
 
 const node = "tcp://3.218.170.198:26657"
 const signer = ""
-const chain_id = "athens_7001-1"
+const chainID = "athens_7001-1"
 const amount = "100000000000000000000"
-const broadcast_mode = "sync"
+const broadcastMode = "sync"
 
 //const node = "tcp://localhost:26657"
 //const signer = "zeta"
@@ -39,7 +39,7 @@ func main() {
 		panic(err)
 	}
 	addresses = removeDuplicates(addresses)
-	fileS, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successfull_address.json"))
+	fileS, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
 	fileF, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
 
 	distributionList := make([]TokenDistribution, len(addresses))
@@ -72,8 +72,8 @@ func main() {
 		args = append(args, address)
 	}
 
-	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chain_id, "--yes",
-		"--broadcast-mode", broadcast_mode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
+	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chainID, "--yes",
+		"--broadcast-mode", broadcastMode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
 
 	cmd := exec.Command("zetacored", args...)
 	output, err := cmd.CombinedOutput()
