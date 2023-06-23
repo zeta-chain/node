@@ -224,3 +224,12 @@ func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.Query
 	}
 	return *resp, nil
 }
+
+func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.PendingNoncesAll(context.Background(), &types.QueryAllPendingNoncesRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
