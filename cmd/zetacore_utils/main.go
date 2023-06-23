@@ -14,9 +14,9 @@ import (
 )
 
 const node = "tcp://3.218.170.198:26657"
-const signer = "tanmay"
+const signer = ""
 const chain_id = "athens_7001-1"
-const amount = "100000000"
+const amount = "100000000000000000000"
 const broadcast_mode = "sync"
 
 //const node = "tcp://localhost:26657"
@@ -25,7 +25,7 @@ const broadcast_mode = "sync"
 //const amount = "100000000" // Amount in azeta
 //const broadcast_mode = "block"
 
-type TokeDistribution struct {
+type TokenDistribution struct {
 	Address           string   `json:"address"`
 	BalanceBefore     sdk.Coin `json:"balance_before"`
 	BalanceAfter      sdk.Coin `json:"balance_after"`
@@ -38,18 +38,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	addresses = removeDuplicates(addresses)
 	fileS, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successfull_address.json"))
-	addresses, err = readLines(file)
-	if err != nil {
-		panic(err)
-	}
 	fileF, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
-	addresses, err = readLines(file)
-	if err != nil {
-		panic(err)
-	}
 
-	distributionList := make([]TokeDistribution, len(addresses))
+	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
 		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
 		output, err := cmd.CombinedOutput()
@@ -67,7 +60,7 @@ func main() {
 		if !ok {
 			panic("parse error for amount")
 		}
-		distributionList[i] = TokeDistribution{
+		distributionList[i] = TokenDistribution{
 			Address:           address,
 			BalanceBefore:     balance,
 			TokensDistributed: sdk.NewCoin(config.BaseDenom, distributionAmount),
@@ -108,8 +101,8 @@ func main() {
 		}
 		distributionList[i].BalanceAfter = balance
 	}
-	var successfullDistributions []TokeDistribution
-	var failedDistributions []TokeDistribution
+	var successfullDistributions []TokenDistribution
+	var failedDistributions []TokenDistribution
 	for _, distribution := range distributionList {
 		if distribution.BalanceAfter.Sub(distribution.BalanceBefore).IsEqual(distribution.TokensDistributed) {
 			successfullDistributions = append(successfullDistributions, distribution)
@@ -117,8 +110,8 @@ func main() {
 			failedDistributions = append(failedDistributions, distribution)
 		}
 	}
-	succesFile, _ := json.MarshalIndent(successfullDistributions, "", " ")
-	_ = os.WriteFile(fileS, succesFile, 0600)
+	successFile, _ := json.MarshalIndent(successfullDistributions, "", " ")
+	_ = os.WriteFile(fileS, successFile, 0600)
 	failedFile, _ := json.MarshalIndent(failedDistributions, "", " ")
 	_ = os.WriteFile(fileF, failedFile, 0600)
 
@@ -137,4 +130,16 @@ func readLines(path string) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 	return lines, scanner.Err()
+}
+
+func removeDuplicates(s []string) []string {
+	bucket := make(map[string]bool)
+	var result []string
+	for _, str := range s {
+		if _, ok := bucket[str]; !ok {
+			bucket[str] = true
+			result = append(result, str)
+		}
+	}
+	return result
 }
