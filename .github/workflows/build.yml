@@ -19,6 +19,7 @@ on:
 
 env:
   S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
+  S3_PUBLIC_BUCKET_PATH: "zetachain-external-files"
   AWS_REGION: "us-east-1"
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
@@ -370,10 +371,11 @@ jobs:
           fetch-depth: 0
 
       - name: Major Version in Upgrade Handler Must Match Tag
-        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release') 
+        if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release')
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
           echo $UPGRADE_HANDLER_MAJOR_VERSION
+          echo "GITHUB_TAG_NAME=${{ github.ref_name }}" >> ${GITHUB_ENV}
           GITHUB_TAG_MAJOR_VERSION=$(echo ${{ github.ref_name }} | cut -d '.' -f1)
           if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
             echo "ERROR: The major version of this release (${{ github.ref_name }}) does not match the major version in the releaseVersion constant ($UPGRADE_HANDLER_MAJOR_VERSION) found in app/setup_handlers.go"
@@ -386,3 +388,60 @@ jobs:
         uses: ./.github/actions/upgrade-testing
         with:
           github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
+  upload_s3_public:
+    runs-on: ["zeta-runners"]
+    timeout-minutes: 15
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build-and-test
+      - smoke-test
+      - build-alpine-and-test
+      - upgrade_path_testing
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "false"
+          skip_docker_compose: "true"
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries-${{ github.sha }}
+          path: ./
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: upload-files-to-s3
+        uses: ./.github/actions/upload-to-s3
+        with:
+          bucket-name: ${{ env.S3_PUBLIC_BUCKET_PATH }}
+          release-name: "/binaries/athens3/${{ env.GITHUB_TAG_NAME }}/"
+          git-sha: ${{ github.sha }}
+          files: |
+            zetacored-alpine-amd64
+            zetaclientd-alpine-amd64
+            zetacored-ubuntu-22-arm64
+            zetaclientd-ubuntu-22-arm64
+            zetacored-ubuntu-22-amd64
+            zetaclientd-ubuntu-22-amd64
+            zetacored-ubuntu-20-amd64
+            zetaclientd-ubuntu-20-amd64
+
+
