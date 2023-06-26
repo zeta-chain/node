@@ -3,6 +3,7 @@ package cli_test
 import (
 	"cosmossdk.io/math"
 	"fmt"
+	"github.com/zeta-chain/zetacore/app"
 	"strconv"
 	"testing"
 
@@ -42,7 +43,9 @@ func networkWithSendObjects(t *testing.T, n int) (*network.Network, []*types.Cro
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), state.CrossChainTxs
+	net, err := network.New(t, app.NodeDir, cfg)
+	require.NoError(t, err)
+	return net, state.CrossChainTxs
 }
 
 func TestShowSend(t *testing.T) {
