@@ -76,9 +76,15 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if !found {
 		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
 	}
+	// CheckIfBallotIsFinalized checks status and sets the ballot if finalized . This only returns trye if the ballot gets finalized by the current TX .
+	/* Returns false
+	1. If the ballot is already finalized
+	2. If the ballot is not finalized but the threshold is not reached
+	*/
 
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
 	if !isFinalized {
+		// Return nil here to add vote to ballot and commit state
 		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
 	// Set TSS only on success , set Keygen either way.
