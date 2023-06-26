@@ -39,7 +39,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	}
 	// USE a separate transaction to update KEYGEN status to pending when trying to change the TSS address
 	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
-		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenNotFound
+		return &types.MsgCreateTSSVoterResponse{}, types.ErrKeygenCompleted
 	}
 	index := msg.Digest()
 	// Add votes and Set Ballot
@@ -72,6 +72,9 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
+	}
+	if !found {
+		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
 	}
 
 	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
