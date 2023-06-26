@@ -265,31 +265,31 @@ source /root/.bashrc
 cd ${DAEMON_HOME}
 
 echo "CHECK CURRENT BINARY"
-ls -lah cosmovisor/genesis/bin/zetacored
-ls -lah cosmovisor/current/bin/zetacored
+ls -lah zetavisor/genesis/bin/zetacored
+ls -lah zetavisor/current/bin/zetacored
 
-echo "KILL ALL COSMOVISOR"
-killall cosmovisor
+echo "KILL ALL ZETAVISOR"
+killall zetavisor
 
-rm -rf cosmovisor/current/bin/zetacored
+rm -rf zetavisor/current/bin/zetacored
 
 echo "COPY BINARY TO CURRENT ONE"
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
 
 echo "CHECK CURRENT BINARY"
-ls -lah cosmovisor/genesis/bin/zetacored
-ls -lah cosmovisor/current/bin/zetacored
+ls -lah zetavisor/genesis/bin/zetacored
+ls -lah zetavisor/current/bin/zetacored
 
 echo "RESTART COSMOVISOR"
-nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
 
 echo "SLEEP FOR 15 SECONDS"
 sleep 15
 
 echo "CHECK VERSION"
-cosmovisor version
+zetavisor version
 EOF"""
         self.logger.info(command)
 
