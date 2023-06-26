@@ -32,8 +32,9 @@ import (
 // called to prepare the CCTX to be processed as an outbound transaction. To
 // cover the outbound transaction fee, the required amount of tokens submitted
 // with the CCTX are swapped using a Uniswap pool on ZetaChain for the ZRC20 of
-// the gas token of the receiver chain. The ZRC20 tokens are then burned. If
-// everything is successful, the CCTX status is changed to `PendingOutbound`.
+// the gas token of the receiver chain. The ZRC20 tokens are then burned. The
+// nonce is updated. If everything is successful, the CCTX status is changed to
+// `PendingOutbound`.
 //
 // ```mermaid
 // stateDiagram-v2
