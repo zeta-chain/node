@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 // TelemetryServer provide http endpoint for Tss server
@@ -25,6 +26,7 @@ type TelemetryServer struct {
 	lastCoreBlockNumber    int64
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
+	status                 types.Status
 }
 
 // NewTelemetryServer should only listen to the loopback
@@ -88,6 +90,18 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 	return t.lastCoreBlockNumber
 }
 
+func (t *TelemetryServer) SetNextNonce(nextNonce int) {
+	t.mu.Lock()
+	t.status.NextNonce = nextNonce
+	t.mu.Unlock()
+}
+
+func (t *TelemetryServer) GetNextNonce() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.status.NextNonce
+}
+
 // NewHandler registers the API routes and returns a new HTTP handler
 func (t *TelemetryServer) Handlers() http.Handler {
 	router := mux.NewRouter()
@@ -97,6 +111,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/lastscannedblock", http.HandlerFunc(t.lastScannedBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/laststarttimestamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
+	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
 	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -178,6 +193,14 @@ func (t *TelemetryServer) lastCoreBlockHandler(w http.ResponseWriter, _ *http.Re
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%d", t.lastCoreBlockNumber)
+}
+
+func (t *TelemetryServer) statusHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	s, _ := json.MarshalIndent(t.status, "", "\t")
+	fmt.Fprintf(w, "%s", s)
 }
 
 func (t *TelemetryServer) versionHandler(w http.ResponseWriter, _ *http.Request) {
