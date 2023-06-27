@@ -255,7 +255,7 @@ class Utilities:
     def non_governance_upgrade(self, VERSION):
         command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
 echo "********************RESTART VARS********************"
-echo "VERSION: """ + VERSION + """ "
+echo "VERSION: """ + VERSION + """"
 echo "GAS_PRICES: ${GAS_PRICES}"
 echo "DAEMON_HOME: ${DAEMON_HOME}"
 echo "********************RESTART VARS********************"
@@ -263,6 +263,9 @@ echo "********************RESTART VARS********************"
 source /root/.bashrc
 
 cd ${DAEMON_HOME}
+
+ls -lah ./
+pwd
 
 echo "CHECK CURRENT BINARY"
 ls -lah zetavisor/genesis/bin/zetacored
@@ -274,8 +277,8 @@ killall zetavisor
 rm -rf zetavisor/current/bin/zetacored
 
 echo "COPY BINARY TO CURRENT ONE"
-cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
-cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored zetavisor/genesis/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored zetavisor/current/bin/zetacored
 cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
 
 echo "CHECK CURRENT BINARY"
