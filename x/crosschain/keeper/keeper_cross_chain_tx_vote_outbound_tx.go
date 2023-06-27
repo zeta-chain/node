@@ -60,6 +60,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
+	// Check if CCTX exists
+	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
+	if !found {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
+	}
+
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
 	ballot, isNew, err := k.GetBallot(ctx, ballotIndex, observationChain, observationType)
@@ -68,19 +74,22 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
+		// Set this the first time when the ballot is created
+		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
+		// A new ballot is created everytime for every outtxhash for a cctx , but only the ballot with max votes gets finalized
+		// If an observer adds their vote to a different ballot , it would be treated as NotYetVoted on the finalized one
+		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
+		k.SetCrossChainTx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
-	// Check CCTX exists after confirmed vote
-	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
-	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
-	}
-	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
+
+	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
+		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
@@ -106,7 +115,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SetCrossChainTx(ctx, cctx)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-
+	// Set the ballot index to the finalized ballot
+	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.SetCrossChainTx(ctx, cctx)
