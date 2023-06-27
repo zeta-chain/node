@@ -358,6 +358,7 @@ jobs:
             zetaclientd-ubuntu-20-amd64
 
 
+
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
