@@ -94,7 +94,6 @@ func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string,
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	require.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
-	fmt.Println("GasPriceVote | Account : ", account.GetAccountNumber(), " : ", account.GetSequence())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
 	require.NoError(t, err)
@@ -118,7 +117,6 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	require.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
-	fmt.Println("TssVote | Account : ", account.GetAccountNumber(), " : ", account.GetSequence())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
 	require.NoError(t, err)

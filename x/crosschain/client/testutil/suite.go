@@ -1,5 +1,5 @@
-//go:build TESTNET
-// +build TESTNET
+//go:build PRIVNET
+// +build PRIVNET
 
 package testutil
 
@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
@@ -43,12 +44,44 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg.StakingTokens = minOBsDel.Mul(sdk.NewInt(int64(10)))
 	s.cfg.BondedTokens = minOBsDel
 	genesisState := s.cfg.GenesisState
+	observerList := []string{"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
+		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4",
+		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c",
+		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca",
+		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt",
+		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4",
+		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy",
+		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav",
+		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t",
+	}
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
+	var nodeAccountList []*types.NodeAccount
+	for _, operator := range observerList {
+		nodeAccountList = append(nodeAccountList, &types.NodeAccount{
+			Operator:   operator,
+			NodeStatus: types.NodeStatus_Active,
+		})
+	}
+
+	crossChainGenesis.NodeAccountList = nodeAccountList
+	crossChainGenesis.Keygen = &types.Keygen{
+		Status:         types.KeygenStatus_PendingKeygen,
+		GranteePubkeys: observerList,
+		BlockNumber:    5,
+	}
 	crossChainGenesis.Params.Enabled = true
 	crossChainGenesisBz, err := s.cfg.Codec.MarshalJSON(&crossChainGenesis)
+	s.Require().NoError(err)
+
+	// Cross-chain genesis state
+	var evmGenesisState evmtypes.GenesisState
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
+	evmGenesisState.Params.EvmDenom = cmdcfg.BaseDenom
+	evmGenesisBz, err := s.cfg.Codec.MarshalJSON(&evmGenesisState)
 	s.Require().NoError(err)
 
 	// Staking genesis state
@@ -62,17 +95,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var observerGenesis observerTypes.GenesisState
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &observerGenesis))
 	var observerMapper []*observerTypes.ObserverMapper
-	observerList := []string{"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
-		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
-		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4",
-		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c",
-		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca",
-		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt",
-		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4",
-		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy",
-		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav",
-		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t",
-	}
+
 	for _, chain := range common.DefaultChainsList() {
 		observerMapper = append(observerMapper, &observerTypes.ObserverMapper{
 			ObserverChain: chain,
@@ -86,6 +109,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[types.ModuleName] = crossChainGenesisBz
 	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
 	genesisState[observerTypes.ModuleName] = observerGenesisBz
+	genesisState[evmtypes.ModuleName] = evmGenesisBz
 	s.cfg.GenesisState = genesisState
 
 	s.network, err = network.New(s.T(), app.NodeDir, s.cfg)

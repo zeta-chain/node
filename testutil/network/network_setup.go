@@ -554,8 +554,7 @@ func (n *Network) WaitForNBlocks(numberOfBlocks int64) error {
 	if err != nil {
 		return err
 	}
-
-	_, err = n.WaitForHeight(lastBlock + numberOfBlocks)
+	_, err = n.WaitForHeightWithTimeout(lastBlock+numberOfBlocks, time.Duration(10*numberOfBlocks)*time.Second)
 	if err != nil {
 		return err
 	}

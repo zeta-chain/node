@@ -1,5 +1,5 @@
-//go:build TESTNET
-// +build TESTNET
+//go:build PRIVNET
+// +build PRIVNET
 
 package testutil
 

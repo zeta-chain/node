@@ -1,9 +1,10 @@
-//go:build TESTNET
-// +build TESTNET
+//go:build PRIVNET
+// +build PRIVNET
 
 package testutil
 
 import (
+	"fmt"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,9 +16,11 @@ import (
 
 func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 	tt := []struct {
-		name        string
-		votes       map[string]observerTypes.VoteType
-		finalresult observerTypes.BallotStatus
+		name                  string
+		votes                 map[string]observerTypes.VoteType
+		ballotResult          observerTypes.BallotStatus
+		cctxStatus            crosschaintypes.CctxStatus
+		falseBallotIdentifier string
 	}{
 		{
 			name: "All observers voted success",
@@ -33,88 +36,95 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_SuccessObservation,
 				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_SuccessObservation,
 			},
-			finalresult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			ballotResult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			cctxStatus:   crosschaintypes.CctxStatus_PendingOutbound,
 		},
-		//{
-		//	name: "5 votes only ballot does not get finalized",
-		//	votes: map[string]observerTypes.VoteType{
-		//		"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_NotYetVoted,
-		//	},
-		//	finalresult: observerTypes.BallotStatus_BallotInProgress,
-		//},
-		//{
-		//	name: "1 byzantine vote but correct ballot is still finalized",
-		//	votes: map[string]observerTypes.VoteType{
-		//		"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
-		//		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_NotYetVoted,
-		//	},
-		//	finalresult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
-		//},
-		//{
-		//	name: "2 ballots with 5 votes each no ballot gets finalized",
-		//	votes: map[string]observerTypes.VoteType{
-		//		"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_FailureObservation,
-		//		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_FailureObservation,
-		//		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
-		//		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_FailureObservation,
-		//		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_FailureObservation,
-		//	},
-		//	finalresult: observerTypes.BallotStatus_BallotInProgress,
-		//},
-		//{
-		//	name: "false ballot finalized majority byzantine votes",
-		//	votes: map[string]observerTypes.VoteType{
-		//		"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_FailureObservation,
-		//		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_FailureObservation,
-		//		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_FailureObservation,
-		//		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_FailureObservation,
-		//		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
-		//		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_FailureObservation,
-		//		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_FailureObservation,
-		//	},
-		//	finalresult: observerTypes.BallotStatus_BallotInProgress,
-		//},
-		//{
-		//	name: "7 votes only just crossed threshold",
-		//	votes: map[string]observerTypes.VoteType{
-		//		"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_SuccessObservation,
-		//		"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_NotYetVoted,
-		//		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_SuccessObservation,
-		//	},
-		//	finalresult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
-		//},
+		{
+			name: "5 votes only ballot does not get finalized",
+			votes: map[string]observerTypes.VoteType{
+				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
+				"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
+				"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
+				"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
+				"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
+				"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_NotYetVoted,
+				"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_NotYetVoted,
+				"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_NotYetVoted,
+				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_NotYetVoted,
+				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_NotYetVoted,
+			},
+			ballotResult: observerTypes.BallotStatus_BallotInProgress,
+			cctxStatus:   crosschaintypes.CctxStatus_PendingRevert,
+		},
+		{
+			name: "1 false vote but correct ballot is still finalized",
+			votes: map[string]observerTypes.VoteType{
+				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
+				"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
+				"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
+				"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
+				"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
+				"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_SuccessObservation,
+				"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_SuccessObservation,
+				"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
+				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_SuccessObservation,
+				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_NotYetVoted,
+			},
+			ballotResult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			cctxStatus:   crosschaintypes.CctxStatus_PendingOutbound,
+		},
+		{
+			name: "2 ballots with 5 votes each no ballot gets finalized",
+			votes: map[string]observerTypes.VoteType{
+				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
+				"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
+				"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
+				"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
+				"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
+				"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_FailureObservation,
+				"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_FailureObservation,
+				"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
+				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_FailureObservation,
+				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_FailureObservation,
+			},
+			ballotResult: observerTypes.BallotStatus_BallotInProgress,
+			cctxStatus:   crosschaintypes.CctxStatus_PendingRevert,
+		},
+		{
+			name: "majority wrong votes incorrect ballot finalized / correct ballot still in progress",
+			votes: map[string]observerTypes.VoteType{
+				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
+				"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
+				"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
+				"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_FailureObservation,
+				"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_FailureObservation,
+				"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_FailureObservation,
+				"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_FailureObservation,
+				"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_FailureObservation,
+				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_FailureObservation,
+				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_FailureObservation,
+			},
+			ballotResult:          observerTypes.BallotStatus_BallotInProgress,
+			cctxStatus:            crosschaintypes.CctxStatus_PendingOutbound,
+			falseBallotIdentifier: GetBallotIdentifier("majority wrong votes incorrect ballot finalized / correct ballot still in progress" + "falseVote"),
+		},
+		{
+			name: "7 votes only just crossed threshold",
+			votes: map[string]observerTypes.VoteType{
+				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax": observerTypes.VoteType_SuccessObservation,
+				"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2": observerTypes.VoteType_SuccessObservation,
+				"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4": observerTypes.VoteType_SuccessObservation,
+				"zeta16h3y7s7030l4chcznwq3n6uz2m9wvmzu5vwt7c": observerTypes.VoteType_SuccessObservation,
+				"zeta1xl2rfsrmx8nxryty3lsjuxwdxs59cn2q65e5ca": observerTypes.VoteType_SuccessObservation,
+				"zeta1ktmprjdvc72jq0mpu8tn8sqx9xwj685qx0q6kt": observerTypes.VoteType_NotYetVoted,
+				"zeta1ygeyr8pqfjvclxay5234gulnjzv2mkz6lph9y4": observerTypes.VoteType_SuccessObservation,
+				"zeta1zegyenj7xg5nck04ykkzndm2qxdzc6v83mklsy": observerTypes.VoteType_NotYetVoted,
+				"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav": observerTypes.VoteType_NotYetVoted,
+				"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t": observerTypes.VoteType_SuccessObservation,
+			},
+			ballotResult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
+			cctxStatus:   crosschaintypes.CctxStatus_PendingOutbound,
+		},
 	}
 	for _, test := range tt {
 		test := test
@@ -128,6 +138,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				_, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
+			s.Require().NoError(s.network.WaitForNBlocks(2))
 			for _, val := range s.network.Validators {
 				out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{val.Address.String(), "--output", "json"})
 				var account authtypes.AccountI
@@ -136,6 +147,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
+			s.Require().NoError(s.network.WaitForNBlocks(2))
 			for _, val := range s.network.Validators {
 				vote := test.votes[val.Address.String()]
 				if vote == observerTypes.VoteType_NotYetVoted {
@@ -160,6 +172,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
+
 			s.Assert().Equal(len(test.votes), len(ballot.Voters))
 			for _, vote := range ballot.Voters {
 				if test.votes[vote.VoterAddress] == observerTypes.VoteType_FailureObservation {
@@ -168,13 +181,21 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				}
 				s.Assert().Equal(test.votes[vote.VoterAddress], vote.VoteType)
 			}
-			s.Assert().Equal(test.finalresult, ballot.BallotStatus)
+			s.Assert().Equal(test.ballotResult, ballot.BallotStatus)
 
-			if test.finalresult == observerTypes.BallotStatus_BallotFinalized_SuccessObservation {
-				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{ballotIdentifier, "--output", "json"})
-				cctx := crosschaintypes.QueryGetCctxResponse{}
+			cctxIdentifier := ballotIdentifier
+			if test.falseBallotIdentifier != "" {
+				cctxIdentifier = test.falseBallotIdentifier
+			}
+			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
+			cctx := crosschaintypes.QueryGetCctxResponse{}
+			if test.cctxStatus == crosschaintypes.CctxStatus_PendingRevert {
+				s.Require().Error(err)
+				s.Require().Contains(out.String(), "not found")
+			} else {
+				fmt.Println(out.String())
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
-
+				s.Assert().Equal(test.cctxStatus, cctx.CrossChainTx.CctxStatus.Status)
 			}
 		})
 	}
