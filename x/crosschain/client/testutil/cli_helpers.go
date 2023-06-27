@@ -76,6 +76,55 @@ func GetTempDir(t testing.TB) string {
 	return tempdir
 }
 
+func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
+	cmd := cli.CmdGasPriceVoter()
+	inboundVoterArgs := []string{
+		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		"10000000000",
+		"100",
+		"100",
+	}
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+	}
+	args := append(inboundVoterArgs, txArgs...)
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	fmt.Println("GasPriceVote | Account : ", account.GetAccountNumber(), " : ", account.GetSequence())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
+}
+
+func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
+	cmd := cli.CmdCreateTSSVoter()
+	inboundVoterArgs := []string{
+		"tsspubkey",
+		"5",
+		"0",
+	}
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+	}
+	args := append(inboundVoterArgs, txArgs...)
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	fmt.Println("TssVote | Account : ", account.GetAccountNumber(), " : ", account.GetSequence())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
+}
+
 func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string) *os.File {
 	cmd := cli.CmdCCTXInboundVoter()
 	inboundVoterArgs := []string{
