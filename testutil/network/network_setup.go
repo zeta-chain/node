@@ -549,6 +549,20 @@ func (n *Network) WaitForNextBlock() error {
 	return err
 }
 
+func (n *Network) WaitForNBlocks(numberOfBlocks int64) error {
+	lastBlock, err := n.LatestHeight()
+	if err != nil {
+		return err
+	}
+
+	_, err = n.WaitForHeight(lastBlock + numberOfBlocks)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // Cleanup removes the root testing (temporary) directory and stops both the
 // Tendermint and API services. It allows other callers to create and start
 // test networks. This method must be called when a test is finished, typically

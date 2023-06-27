@@ -50483,27 +50483,6 @@ definitions:
         $ref: '#/definitions/observerPolicy_Type'
       address:
         type: string
-  observerBallot:
-    type: object
-    properties:
-      index:
-        type: string
-      ballot_identifier:
-        type: string
-      voter_list:
-        type: array
-        items:
-          type: string
-      votes:
-        type: array
-        items:
-          $ref: '#/definitions/observerVoteType'
-      observation_type:
-        $ref: '#/definitions/observerObservationType'
-      BallotThreshold:
-        type: string
-      ballot_status:
-        $ref: '#/definitions/observerBallotStatus'
   observerBallotStatus:
     type: string
     enum:
@@ -50607,8 +50586,17 @@ definitions:
   observerQueryBallotByIdentifierResponse:
     type: object
     properties:
-      ballot:
-        $ref: '#/definitions/observerBallot'
+      BallotIdentifier:
+        type: string
+      voters:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerVoterList'
+      observation_type:
+        $ref: '#/definitions/observerObservationType'
+      ballot_status:
+        $ref: '#/definitions/observerBallotStatus'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
@@ -50642,6 +50630,13 @@ definitions:
       - NotYetVoted
     default: SuccessObservation
     description: ' - FailureObservation: Failure observation means , the the message that this voter is observing failed / reverted . It does not mean it was unable to observe.'
+  observerVoterList:
+    type: object
+    properties:
+      voter_address:
+        type: string
+      vote_type:
+        $ref: '#/definitions/observerVoteType'
   protobufAny:
     type: object
     properties:
