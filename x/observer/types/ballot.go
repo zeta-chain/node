@@ -7,9 +7,6 @@ import (
 )
 
 func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
-	if m.BallotStatus != BallotStatus_BallotInProgress {
-		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot :%s | Ballot Already Finalized", address, m.String()))
-	}
 	if m.HasVoted(address) {
 		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot :%s | Already Voted", address, m.String()))
 	}
