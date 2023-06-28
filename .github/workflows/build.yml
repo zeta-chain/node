@@ -430,7 +430,7 @@ jobs:
         uses: ./.github/actions/upload-to-s3
         with:
           bucket-name: ${{ env.S3_PUBLIC_BUCKET_PATH }}
-          release-name: "/binaries/athens3/${{ env.BINARY_VERSION }}"
+          release-name: "binaries/athens3/${{ env.BINARY_VERSION }}"
           git-sha: ${{ github.sha }}
           files: |
             zetacored-alpine-amd64
