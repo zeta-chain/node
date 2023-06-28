@@ -5,6 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -15,11 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
-	"math/rand"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type EVMSigner struct {
@@ -290,8 +291,13 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
-			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			if send.GetCurrentOutTxParam().Amount.Uint64() == 0 {
+				logger.Info().Msgf("SignWhitelistTx: %d => %s, nonce %d, gasprice %d", common.ZetaChain().ChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+				tx, err = signer.SignWhitelistTx(send.RelayedMessage, to, asset, gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			} else {
+				logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
+				tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			}
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
 			//srcChainID := config.ChainConfigs[send.InboundTxParams.SenderChainId].Chain.ChainId

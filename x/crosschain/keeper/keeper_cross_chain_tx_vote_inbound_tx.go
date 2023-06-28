@@ -78,7 +78,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
 		return nil, types.ErrUnableToSendCoinType
 	}
-
+	// Check special case for ERC whitelist/unwhitelist CCTX, if msg.Message is whitelist/unwhitelist then msg.Amount must be 0 and vice-versa.
+	if (msg.Amount.Uint64() == 0) != (msg.Message == "whitelist" || msg.Message == "unwhitelist") {
+		return nil, types.ErrInvalidTxParams
+	}
 	// ******************************************************************************
 	// below only happens when ballot is finalized: exactly when threshold vote is in
 	// ******************************************************************************

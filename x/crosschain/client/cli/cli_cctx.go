@@ -2,9 +2,10 @@ package cli
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
 	"strconv"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -161,6 +162,40 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), argsSendHash, argsOutTxHash, uint64(argsOutBlockHeight), math.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// Transaction CLI /////////////////////////
+//zetacored tx zetacore whitelist-voter ETH whitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
+//zetacored tx zetacore whitelist-voter ETH unwhitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
+
+func CmdCCTXWhitelistVoter() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "whitelist-voter [receiverChainID] [message] [asset]",
+		Short: "Broadcast message sendVoter",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			argsReceiverChain, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+			argsMessage := args[1]
+			argsAsset := args[2]
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), "", common.ZetaChain().ChainId, "", "", int64((argsReceiverChain)), math.ZeroUint(), (argsMessage), "", 0, 250_000, common.CoinType_ERC20, argsAsset)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

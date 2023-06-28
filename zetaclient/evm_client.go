@@ -351,21 +351,70 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 				logger.Warn().Msgf("NewERC20Custody err: %s", err)
 			}
 			for _, vLog := range logs {
-				event, err := ERC20Custody.ParseWithdrawn(*vLog)
 				confHeight := vLog.BlockNumber + ob.GetChainConfig().CoreParams.ConfCount
-				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+				if confHeight >= math2.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
+				eventWithdrawn, err := ERC20Custody.ParseWithdrawn(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					if int64(confHeight) < ob.GetLastBlockHeight() {
-
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
-							event.Amount,
+							eventWithdrawn.Amount,
+							common.ReceiveStatus_Success,
+							ob.chain,
+							nonce,
+							common.CoinType_ERC20,
+						)
+						if err != nil {
+							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							continue
+						}
+						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						return true, true, nil
+					}
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					return true, false, nil
+				}
+				eventWhitelisted, err := ERC20Custody.ParseWhitelisted(*vLog)
+				if err == nil {
+					logger.Info().Msgf("Found (ERC20Custody.Whitelisted Event) sendHash %s on chain %s txhash %s asset %s", sendHash, ob.chain.String(), vLog.TxHash.Hex(), eventWhitelisted.Asset.String())
+					if int64(confHeight) < ob.GetLastBlockHeight() {
+						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+							sendHash,
+							vLog.TxHash.Hex(),
+							vLog.BlockNumber,
+							big.NewInt(0),
+							common.ReceiveStatus_Success,
+							ob.chain,
+							nonce,
+							common.CoinType_ERC20,
+						)
+						if err != nil {
+							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							continue
+						}
+						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						return true, true, nil
+					}
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+ob.GetChainConfig().CoreParams.ConfCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					return true, false, nil
+				}
+				eventUnwhitelisted, err := ERC20Custody.ParseUnwhitelisted(*vLog)
+				if err == nil {
+					logger.Info().Msgf("Found (ERC20Custody.Unwhitelisted Event) sendHash %s on chain %s txhash %s asset %s", sendHash, ob.chain.String(), vLog.TxHash.Hex(), eventUnwhitelisted.Asset.String())
+					if int64(confHeight) < ob.GetLastBlockHeight() {
+						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
+						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+							sendHash,
+							vLog.TxHash.Hex(),
+							vLog.BlockNumber,
+							big.NewInt(0),
 							common.ReceiveStatus_Success,
 							ob.chain,
 							nonce,
@@ -481,7 +530,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainConfig().CoreParams.ConfCount
-	if confHeight < 0 || confHeight >= math2.MaxInt64 {
+	if confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
 	if int64(confHeight) > ob.GetLastBlockHeight() {
@@ -495,9 +544,6 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math2.MaxInt64 {
-		panic("lastBlock is too large")
-	}
 	atomic.StoreInt64(&ob.lastBlock, block)
 	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, block)
 }
@@ -506,9 +552,6 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	height := atomic.LoadInt64(&ob.lastBlock)
 	if height < 0 {
 		panic("lastBlock is negative")
-	}
-	if height >= math2.MaxInt64 {
-		panic("lastBlock is too large")
 	}
 	return height
 }
@@ -554,10 +597,6 @@ func (ob *EVMChainClient) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.GetChainConfig().CoreParams.ConfCount
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
-	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
-		sampledLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
-		return nil
-	}
 	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
 		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
@@ -568,10 +607,10 @@ func (ob *EVMChainClient) observeInTX() error {
 	if uint64(toBlock) >= confirmedBlockNum {
 		toBlock = int64(confirmedBlockNum)
 	}
-	if startBlock < 0 || startBlock >= math2.MaxInt64 {
+	if startBlock < 0 {
 		return fmt.Errorf("startBlock is negative or too large")
 	}
-	if toBlock < 0 || toBlock >= math2.MaxInt64 {
+	if toBlock < 0 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
 	ob.logger.ExternalChainWatcher.Info().Msgf("Checking for all inTX : startBlock %d, toBlock %d", startBlock, toBlock)

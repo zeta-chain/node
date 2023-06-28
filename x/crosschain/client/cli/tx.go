@@ -35,6 +35,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdNonceVoter())
 	cmd.AddCommand(CmdCCTXOutboundVoter())
 	cmd.AddCommand(CmdCCTXInboundVoter())
+	cmd.AddCommand(CmdCCTXWhitelistVoter())
 	cmd.AddCommand(CmdSetNodeKeys())
 	cmd.AddCommand(CmdRemoveFromWatchList())
 	cmd.AddCommand(CmdUpdatePermissionFlags())
