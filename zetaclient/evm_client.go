@@ -352,7 +352,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 			}
 			for _, vLog := range logs {
 				confHeight := vLog.BlockNumber + ob.GetChainConfig().CoreParams.ConfCount
-				if confHeight >= math2.MaxInt64 {
+				if confHeight < 0 || confHeight >= math2.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				eventWithdrawn, err := ERC20Custody.ParseWithdrawn(*vLog)
@@ -530,7 +530,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainConfig().CoreParams.ConfCount
-	if confHeight >= math2.MaxInt64 {
+	if confHeight < 0 || confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
 	if int64(confHeight) > ob.GetLastBlockHeight() {
@@ -544,6 +544,9 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
 	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlock is too large")
+	}
 	atomic.StoreInt64(&ob.lastBlock, block)
 	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, block)
 }
@@ -552,6 +555,9 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	height := atomic.LoadInt64(&ob.lastBlock)
 	if height < 0 {
 		panic("lastBlock is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlock is too large")
 	}
 	return height
 }
@@ -597,6 +603,10 @@ func (ob *EVMChainClient) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.GetChainConfig().CoreParams.ConfCount
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
+	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
+		sampledLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
+		return nil
+	}
 	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
 		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
@@ -607,10 +617,10 @@ func (ob *EVMChainClient) observeInTX() error {
 	if uint64(toBlock) >= confirmedBlockNum {
 		toBlock = int64(confirmedBlockNum)
 	}
-	if startBlock < 0 {
+	if startBlock < 0 || startBlock >= math2.MaxInt64 {
 		return fmt.Errorf("startBlock is negative or too large")
 	}
-	if toBlock < 0 {
+	if toBlock < 0 || toBlock >= math2.MaxInt64 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
 	ob.logger.ExternalChainWatcher.Info().Msgf("Checking for all inTX : startBlock %d, toBlock %d", startBlock, toBlock)

@@ -63,10 +63,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		return nil, err
 	}
-	// CheckIfBallotIsFinalized checks status and sets the ballot if finalized
 
-	ballot, isFinalized := k.CheckIfBallotIsFinalized(ctx, ballot)
+	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
+		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 
@@ -82,6 +82,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if (msg.Amount.Uint64() == 0) != (msg.Message == "whitelist" || msg.Message == "unwhitelist") {
 		return nil, types.ErrInvalidTxParams
 	}
+
 	// ******************************************************************************
 	// below only happens when ballot is finalized: exactly when threshold vote is in
 	// ******************************************************************************

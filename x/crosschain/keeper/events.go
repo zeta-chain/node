@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	"strconv"
+
+	types2 "github.com/coinbase/rosetta-sdk-go/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -58,13 +59,14 @@ func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	)
 }
 
-func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, observationHash string, obserVationChain string) {
+func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, observationHash, obserVationChain string) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.BallotCreated,
 			sdk.NewAttribute(types.BallotIdentifier, ballot.BallotIdentifier),
 			sdk.NewAttribute(types.CCTXIndex, ballot.BallotIdentifier),
 			sdk.NewAttribute(types.BallotObservationHash, observationHash),
 			sdk.NewAttribute(types.BallotObservationChain, obserVationChain),
+			sdk.NewAttribute(types.BallotType, ballot.ObservationType.String()),
 		),
 	)
 }

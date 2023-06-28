@@ -1,8 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"math/big"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
@@ -10,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
@@ -22,7 +23,11 @@ func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot
 	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
 	return ballot, err
 }
-func (k Keeper) CheckIfBallotIsFinalized(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool) {
+
+// CheckIfFinalizingVote checks if the ballot is finalized in this block and if it is, it sets the ballot in the store
+// This function with only return true if the ballot moves for pending to success or failed status with this vote.
+// If the ballot is already finalized in the previous vote , it will return false
+func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool) {
 	ballot, isFinalized := ballot.IsBallotFinalized()
 	if !isFinalized {
 		return ballot, false

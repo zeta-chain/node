@@ -28,5 +28,6 @@ var (
 	ErrKeygenBlockTooLow        = sdkerrors.Register(ModuleName, 1125, "Please set a block number at-least 10 blocks higher than the current block number")
 	ErrNotFoundCoreParams       = sdkerrors.Register(ModuleName, 1126, "Not found chain core params")
 	ErrUnableToSendCoinType     = sdkerrors.Register(ModuleName, 1127, "Unable to send this coin type to a receiver chain")
-	ErrInvalidTxParams          = sdkerrors.Register(ModuleName, 1128, "Err invalid tx params")
+	ErrKeygenCompleted          = sdkerrors.Register(ModuleName, 1128, "Keygen already completed")
+	ErrInvalidTxParams          = sdkerrors.Register(ModuleName, 1129, "Err invalid tx params")
 )

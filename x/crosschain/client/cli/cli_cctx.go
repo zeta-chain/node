@@ -175,9 +175,8 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 }
 
 // Transaction CLI /////////////////////////
-//zetacored tx zetacore whitelist-voter ETH whitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
-//zetacored tx zetacore whitelist-voter ETH unwhitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
-
+// zetacored tx zetacore whitelist-voter ETH whitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
+// zetacored tx zetacore whitelist-voter ETH unwhitelist 0x96B05C238b99768F349135de0653b687f9c13fEE --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
 func CmdCCTXWhitelistVoter() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whitelist-voter [receiverChainID] [message] [asset]",
