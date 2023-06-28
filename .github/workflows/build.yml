@@ -377,7 +377,6 @@ jobs:
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
           echo $UPGRADE_HANDLER_MAJOR_VERSION
-          echo "GITHUB_TAG_NAME=${{ github.ref_name }}" >> ${GITHUB_ENV}
           GITHUB_TAG_MAJOR_VERSION=$(echo ${{ github.ref_name }} | cut -d '.' -f1)
           if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
             echo "ERROR: The major version of this release (${{ github.ref_name }}) does not match the major version in the releaseVersion constant ($UPGRADE_HANDLER_MAJOR_VERSION) found in app/setup_handlers.go"
@@ -385,11 +384,6 @@ jobs:
             exit 1
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
-
-      - name: upgrade-path-testing
-        uses: ./.github/actions/upgrade-testing
-        with:
-          github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
   upload_s3_public:
     runs-on: ["zeta-runners"]
@@ -427,11 +421,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Get Version
+        run: |
+          VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
+
       - name: upload-files-to-s3
         uses: ./.github/actions/upload-to-s3
         with:
           bucket-name: ${{ env.S3_PUBLIC_BUCKET_PATH }}
-          release-name: "/binaries/athens3/${{ env.GITHUB_TAG_NAME }}/"
+          release-name: "/binaries/athens3/${{ env.BINARY_VERSION }}"
           git-sha: ${{ github.sha }}
           files: |
             zetacored-alpine-amd64
