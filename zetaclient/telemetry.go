@@ -92,14 +92,14 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 
 func (t *TelemetryServer) SetNextNonce(nextNonce int) {
 	t.mu.Lock()
-	t.status.NextNonce = nextNonce
+	t.status.BTCNextNonce = nextNonce
 	t.mu.Unlock()
 }
 
 func (t *TelemetryServer) GetNextNonce() int {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.status.NextNonce
+	return t.status.BTCNextNonce
 }
 
 // NewHandler registers the API routes and returns a new HTTP handler
