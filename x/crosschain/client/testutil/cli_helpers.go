@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package testutil
 
 import (
@@ -114,6 +117,35 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
 	}
 	args := append(inboundVoterArgs, txArgs...)
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
+}
+
+func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string, cctxIndex string) *os.File {
+	cmd := cli.CmdCCTXOutboundVoter()
+	outboundVoterArgs := []string{
+		cctxIndex,
+		"hashout",
+		"1",
+		"7994133567654108159",
+		//"7994721005120625032",
+		"0",
+		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		"1",
+		"Gas",
+	}
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+	}
+	args := append(outboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	require.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
