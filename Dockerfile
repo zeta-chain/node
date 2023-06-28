@@ -38,6 +38,8 @@ COPY contrib/localnet/zetacored /root/zetacored
 COPY contrib/localnet/tss /root/tss
 
 RUN chmod 755 /root/*.sh
+RUN chmod 700 /root/.ssh
+RUN chmod 600 /root/.ssh/*
 
 WORKDIR /usr/local/bin
 ENV SHELL /bin/sh
