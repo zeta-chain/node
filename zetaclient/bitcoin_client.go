@@ -67,6 +67,7 @@ const (
 	minConfirmations = 1
 	chunkSize        = 500
 	maxHeightDiff    = 10000
+	maxScanDiff      = 100
 )
 
 func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
@@ -224,61 +225,73 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 	// query incoming gas asset
 	if confirmedBlockNum > lastBN {
+		// Set upper bound for block scan range
+		scanTo := confirmedBlockNum
+
+		// Verify the difference isn't greater than the max ~ 100 blocks, if it is then only process the max
+		if confirmedBlockNum-lastBN > maxScanDiff {
+			scanTo = lastBN + maxScanDiff
+		}
 		bn := lastBN + 1
-		ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
-		hash, err := ob.rpcClient.GetBlockHash(bn)
-		if err != nil {
-			return err
-		}
 
-		block, err := ob.rpcClient.GetBlockVerboseTx(hash)
-		if err != nil {
-			return err
-		}
-		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
-		if len(block.Tx) > 1 {
-			for idx, tx := range block.Tx {
-				ob.logger.WatchInTx.Info().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
-				for vidx, vout := range tx.Vout {
-					ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
-				}
-				//ob.rpcClient.GetTransaction(tx.Txid)
-			}
-		}
-
-		tssAddress := ob.Tss.BTCAddress()
-		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
-
-		for _, inTx := range inTxs {
-			ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
-			amount := big.NewFloat(inTx.Value)
-			amount = amount.Mul(amount, big.NewFloat(1e8))
-			amountInt, _ := amount.Int(nil)
-			message := hex.EncodeToString(inTx.MemoBytes)
-			zetaHash, err := ob.zetaClient.PostSend(
-				inTx.FromAddress,
-				ob.chain.ChainId,
-				inTx.FromAddress,
-				inTx.FromAddress,
-				common.ZetaChain().ChainId,
-				math.NewUintFromBigInt(amountInt),
-				message,
-				inTx.TxHash,
-				inTx.BlockNumber,
-				0,
-				common.CoinType_Gas,
-				PostSendEVMGasLimit,
-				"",
-			)
+		// Scan blocks in range from lastBlock + 1 -> latest (Max maxScanDiff)
+		for i := bn; i <= scanTo; i++ {
+			ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", i, cnt, lastBN)
+			hash, err := ob.rpcClient.GetBlockHash(i)
 			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
-				continue
+				return err
 			}
-			ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+
+			block, err := ob.rpcClient.GetBlockVerboseTx(hash)
+			if err != nil {
+				return err
+			}
+			ob.logger.WatchInTx.Info().Msgf("block %d has %d txs", i, len(block.Tx))
+			if len(block.Tx) > 1 {
+				for idx, tx := range block.Tx {
+					ob.logger.WatchInTx.Info().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
+					for vidx, vout := range tx.Vout {
+						ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
+					}
+					//ob.rpcClient.GetTransaction(tx.Txid)
+				}
+			}
+
+			tssAddress := ob.Tss.BTCAddress()
+			inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
+
+			for _, inTx := range inTxs {
+				ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
+				amount := big.NewFloat(inTx.Value)
+				amount = amount.Mul(amount, big.NewFloat(1e8))
+				amountInt, _ := amount.Int(nil)
+				message := hex.EncodeToString(inTx.MemoBytes)
+				zetaHash, err := ob.zetaClient.PostSend(
+					inTx.FromAddress,
+					ob.chain.ChainId,
+					inTx.FromAddress,
+					inTx.FromAddress,
+					common.ZetaChain().ChainId,
+					math.NewUintFromBigInt(amountInt),
+					message,
+					inTx.TxHash,
+					inTx.BlockNumber,
+					0,
+					common.CoinType_Gas,
+					PostSendEVMGasLimit,
+					"",
+				)
+				if err != nil {
+					ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
+					continue
+				}
+				ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+			}
+			lastBN++
 		}
 
 		// Save LastBlockHeight
-		ob.SetLastBlockHeight(bn)
+		ob.SetLastBlockHeight(lastBN)
 		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
 			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
 		}
