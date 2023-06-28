@@ -18,13 +18,43 @@ import (
 // reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 // created.
 //
-// If the receiver chain is a ZetaChain, the EVM deposit is handled and the
-// status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
-// the status of CCTX is chagned to 'aborted'.
+// If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the
+// tokens being deposited are ZETA, `MintZetaToEVMAccount` is called and the
+// tokens are minted to the receiver account on ZetaChain. If the tokens being
+// deposited are gas tokens or ERC20 of a connected chain, ZRC20's `deposit`
+// method is called and the tokens are deposited to the receiver account on
+// ZetaChain. If the message is not empty, system contract's `depositAndCall`
+// method is also called and an omnichain contract on ZetaChain is executed.
+// Omnichain contract address and arguments are passed as part of the message.
+// If everything is successful, the CCTX status is changed to `OutboundMined`.
 //
-// If the receiver chain is a connected chain, the inbound CCTX is finalized
-// (prices and nonce are updated) and status changes to "pending outbound". If
-// the finalization fails, the status of CCTX is changed to 'aborted'.
+// If the receiver chain is a connected chain, the `FinalizeInbound` method is
+// called to prepare the CCTX to be processed as an outbound transaction. To
+// cover the outbound transaction fee, the required amount of tokens submitted
+// with the CCTX are swapped using a Uniswap pool on ZetaChain for the ZRC20 of
+// the gas token of the receiver chain. The ZRC20 tokens are then burned. The
+// nonce is updated. If everything is successful, the CCTX status is changed to
+// `PendingOutbound`.
+//
+// ```mermaid
+// stateDiagram-v2
+//
+//	state is_zetachain <<choice>>
+//	state evm_deposit_success <<choice>>
+//	state finalize_inbound <<choice>>
+//	[*] --> PendingInbound: Create New CCTX
+//	PendingInbound --> is_zetachain
+//	is_zetachain --> evm_deposit_success: Receiver is ZetaChain
+//	evm_deposit_success --> OutboundMined: EVM deposit success
+//	evm_deposit_success --> Aborted: EVM deposit error
+//	is_zetachain --> finalize_inbound: Receiver is connected chain
+//	finalize_inbound --> Aborted: Finalize inbound error
+//	finalize_inbound --> PendingOutbound: Finalize inbound success
+//	Aborted --> [*]
+//	PendingOutbound --> [*]
+//	OutboundMined --> [*]
+//
+// ```
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
