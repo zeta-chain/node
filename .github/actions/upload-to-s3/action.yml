@@ -20,19 +20,16 @@ runs:
     - name: Upload Files
       run: |
         echo "Running Upload-To-S3 Action"
-        RELEASE_NAME=${{ inputs.release-name }}
-        GIT_SHA=${{ inputs.git-sha }}
-
-        if [[ "$RELEASE_NAME" == "develop" ]]; then
-          echo "Use GITHUB_SHA instead of develop branch name"
-          S3_PREFIX=$GIT_SHA
+        if [[ "${{ inputs.release-name }}" == "develop" ]]; then
+           echo "Use GITHUB_SHA instead of develop branch name"
+           S3_PREFIX=${{ inputs.git-sha }}
         else
-           S3_PREFIX=$RELEASE_NAME
+           S3_PREFIX=${{ inputs.release-name }}
         fi
 
         while IFS= read -r FILEPATH; do
-            FILENAME=$(echo "$FILEPATH" | cut -d / -f2)
-            aws s3 cp "$FILEPATH" s3://"$S3_BUCKET_PATH"/"$RELEASE_NAME"/"$FILENAME"
+            FILENAME=$(echo "${FILEPATH}" | cut -d / -f2)
+            aws s3 cp "${FILEPATH}" "s3://${{ inputs.bucket-name }}/${{ inputs.release-name }}/${FILENAME}"
         done <<< $(echo "${{ inputs.files }}" | awk NF)
       shell: bash   
 
