@@ -17,8 +17,8 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain *common.Chain, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	var tx *evmtypes.MsgEthereumTxResponse
+func (k Keeper) ZRC20DepositAndCallContract(ctx sdk.Context, to eth.Address, amount *big.Int, senderChain *common.Chain, message string, contract eth.Address, data []byte, coinType common.CoinType, asset string) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	var evmTxResponse *evmtypes.MsgEthereumTxResponse
 	withdrawMessage := false
 	var Zrc20Contract eth.Address
 	var coin fungibletypes.ForeignCoins
@@ -26,7 +26,7 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 		var found bool
 		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
 		if !found {
-			return tx, false, types.ErrGasCoinNotFound
+			return nil, false, types.ErrGasCoinNotFound
 		}
 	} else {
 		foreignCoinList := k.GetAllForeignCoinsForChain(ctx, senderChain.ChainId)
@@ -47,9 +47,9 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 		var txNoWithdraw *evmtypes.MsgEthereumTxResponse
 		txNoWithdraw, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
 		if err != nil {
-			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
+			return txNoWithdraw, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
-		tx = txNoWithdraw
+		evmTxResponse = txNoWithdraw
 	} else { // non-empty message = [contractaddress, calldata]
 		var txWithWithdraw *evmtypes.MsgEthereumTxResponse
 		var err error
@@ -59,11 +59,11 @@ func (k Keeper) DepositCoin(ctx sdk.Context, to eth.Address, amount *big.Int, se
 			txWithWithdraw, err = k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
 		}
 		if err != nil {
-			return tx, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
+			return txWithWithdraw, false, errors.Wrap(types.ErrUnableToDepositZRC20, err.Error())
 		}
 		withdrawMessage = true
-		tx = txWithWithdraw
+		evmTxResponse = txWithWithdraw
 	}
-	return tx, withdrawMessage, nil
+	return evmTxResponse, withdrawMessage, nil
 
 }
