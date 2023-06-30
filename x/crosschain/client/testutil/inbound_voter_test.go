@@ -3,7 +3,16 @@
 
 package testutil
 
-/*
+import (
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	crosschainCli "github.com/zeta-chain/zetacore/x/crosschain/client/cli"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+)
+
 func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 	tt := []struct {
 		name                  string
@@ -183,7 +192,6 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), "not found")
 			} else {
-				fmt.Println(out.String())
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
 				s.Assert().Equal(test.cctxStatus, cctx.CrossChainTx.CctxStatus.Status)
 			}
@@ -191,5 +199,3 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 	}
 
 }
-
-*/

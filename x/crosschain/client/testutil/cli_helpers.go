@@ -4,6 +4,7 @@
 package testutil
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -126,15 +127,14 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string, cctxIndex string) *os.File {
+func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, cctxIndex, outTxHash, zetaminted, status string) *os.File {
 	cmd := cli.CmdCCTXOutboundVoter()
 	outboundVoterArgs := []string{
 		cctxIndex,
-		"hashout",
+		outTxHash,
 		"1",
-		"7994133567654108159",
-		//"7994721005120625032",
-		"0",
+		zetaminted,
+		status,
 		strconv.FormatInt(common.GoerliChain().ChainId, 10),
 		"1",
 		"Gas",
@@ -148,6 +148,7 @@ func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string,
 	args := append(outboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	require.NoError(t, err)
+
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
@@ -201,6 +202,23 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Gas,
 		"",
+	)
+	return msg.Digest()
+}
+
+func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string {
+	math.NewUintFromString(zetaminted)
+
+	msg := types.NewMsgReceiveConfirmation(
+		"",
+		cctxindex,
+		outtxHash,
+		1,
+		math.NewUintFromString(zetaminted),
+		0,
+		common.GoerliChain().ChainId,
+		1,
+		common.CoinType_Gas,
 	)
 	return msg.Digest()
 }
