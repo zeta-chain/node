@@ -24,7 +24,8 @@ then
    clibuilder
 fi
 
-
+KEYRING=test
+CHAINID="localnet_101-1"
 export DAEMON_HOME=$HOME/.zetacored
 export DAEMON_NAME=zetacored
 export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
@@ -65,10 +66,9 @@ echo "Generating deterministic account - mario"
 echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=test
 
 
-zetacored add-genesis-account $(zetacored keys show zeta -a --keyring-backend=test) 500000000000000000000000000000000azeta --keyring-backend=test
-zetacored add-genesis-account $(zetacored keys show mario -a --keyring-backend=test)  500000000000000000000000000000000azeta --keyring-backend=test
 
-zetacored gentx zeta 1000000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored add-observer-list standalone-network/observers.json --keygen-block=0
+zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
 
 echo "Collecting genesis txs..."
 zetacored collect-gentxs
@@ -108,11 +108,10 @@ echo "${contents}" > $DAEMON_HOME/config/genesis.json
 # Add state data here if required
 
 cosmovisor start --home ~/.zetacored/ --p2p.laddr 0.0.0.0:27655  --grpc.address 0.0.0.0:9096 --grpc-web.address 0.0.0.0:9093 --address tcp://0.0.0.0:27659 --rpc.laddr tcp://127.0.0.1:26657 >> zetanode.log 2>&1  &
-exit 0
-sleep 7
-zetacored tx gov submit-proposal software-upgrade $UpgradeName --from zeta --deposit 100000000azeta --upgrade-height 6 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id localnet_101-1 --yes
-sleep 7
-zetacored tx gov vote 1 yes --from zeta --keyring-backend test --chain-id localnet_101-1 --yes
+sleep 8
+zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from zeta --deposit 100000000azeta --upgrade-height 6 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id localnet_101-1 --yes --no-validate --fees=200azeta --broadcast-mode block
+sleep 8
+zetacored tx gov vote 1 yes --from zeta --keyring-backend test --chain-id localnet_101-1 --yes --fees=200azeta --broadcast-mode block
 clear
 sleep 7
 zetacored query gov proposal 1
