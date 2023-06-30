@@ -16,25 +16,28 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
 
 	if msg.CoinType == common.CoinType_Zeta {
+		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
 		if err != nil {
 			return err
 		}
+		// TODO: is it not better to record the finalizing cosmos tx hash here?
 		cctx.GetCurrentOutTxParam().OutboundTxHash = "Mined directly to ZetaEVM without TX"
-	} else { // cointype is Gas or ERC20
+	} else {
+		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
 			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		tx, _, err := k.fungibleKeeper.DepositCoin(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		evmTxResponse, _, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			return err
 		}
-		// TODO : Return error if TX failed ?
 
-		if !tx.Failed() && len(msg.Message) > 0 {
-			logs := evmtypes.LogsToEthereum(tx.Logs)
-			// TODO: is passing by ctx KV a good choice?
+		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
+		// a withdrawal event in the logs could generate cctxs for outbound transactions.
+		if !evmTxResponse.Failed() && len(msg.Message) > 0 {
+			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 			txOrigin := msg.TxOrigin
 			if txOrigin == "" {
@@ -51,16 +54,16 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			}
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
-					sdk.NewAttribute(sdk.AttributeKeyModule, "zetacore"),
-					sdk.NewAttribute("action", "depositZRC4AndCallContract"),
+					sdk.NewAttribute(sdk.AttributeKeyModule, "crosschain"),
+					sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
 					sdk.NewAttribute("contract", contract.String()),
 					sdk.NewAttribute("data", hex.EncodeToString(data)),
 					sdk.NewAttribute("cctxIndex", cctx.Index),
 				),
 			)
 
-			if tx != nil {
-				cctx.GetCurrentOutTxParam().OutboundTxHash = tx.Hash
+			if evmTxResponse != nil {
+				cctx.GetCurrentOutTxParam().OutboundTxHash = evmTxResponse.Hash
 			}
 		}
 	}
