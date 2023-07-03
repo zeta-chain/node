@@ -1,4 +1,4 @@
-//go:generate sh -c " solc --allow-paths ..,  --combined-json abi,bin --base-path .. ZEVMSwapApp.sol     | jq '.contracts.\"zevmswap/ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
+//go:generate sh -c " solc --evm-version paris --allow-paths ..,  --combined-json abi,bin --base-path .. ZEVMSwapApp.sol     | jq '.contracts.\"zevmswap/ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
 //go:generate sh -c "cat ZEVMSwapApp.json | jq .abi > ZEVMSwapApp.abi"
 //go:generate sh -c "cat ZEVMSwapApp.json | jq .bin  | tr -d '\"'  > ZEVMSwapApp.bin"
 

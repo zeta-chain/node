@@ -67,6 +67,7 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 
 // Tx
 
+// Not implemented.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	_ = sdk.UnwrapSDKContext(goCtx)
 	return &types.MsgAddObserverResponse{}, nil

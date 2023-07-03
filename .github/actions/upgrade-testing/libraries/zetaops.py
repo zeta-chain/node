@@ -255,7 +255,7 @@ class Utilities:
     def non_governance_upgrade(self, VERSION):
         command = """docker exec -i """+self.CONTAINER_ID.strip()+""" bash << EOF
 echo "********************RESTART VARS********************"
-echo "VERSION: """ + VERSION + """ "
+echo "VERSION: """ + VERSION + """"
 echo "GAS_PRICES: ${GAS_PRICES}"
 echo "DAEMON_HOME: ${DAEMON_HOME}"
 echo "********************RESTART VARS********************"
@@ -264,32 +264,35 @@ source /root/.bashrc
 
 cd ${DAEMON_HOME}
 
+ls -lah ./
+pwd
+
 echo "CHECK CURRENT BINARY"
-ls -lah cosmovisor/genesis/bin/zetacored
-ls -lah cosmovisor/current/bin/zetacored
+ls -lah zetavisor/genesis/bin/zetacored
+ls -lah zetavisor/current/bin/zetacored
 
-echo "KILL ALL COSMOVISOR"
-killall cosmovisor
+echo "KILL ALL ZETAVISOR"
+killall zetavisor
 
-rm -rf cosmovisor/current/bin/zetacored
+rm -rf zetavisor/current/bin/zetacored
 
 echo "COPY BINARY TO CURRENT ONE"
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/genesis/bin/zetacored
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored cosmovisor/current/bin/zetacored
-cp cosmovisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored zetavisor/genesis/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored zetavisor/current/bin/zetacored
+cp zetavisor/upgrades/""" + VERSION + """/bin/zetacored /usr/bin/zetacored
 
 echo "CHECK CURRENT BINARY"
-ls -lah cosmovisor/genesis/bin/zetacored
-ls -lah cosmovisor/current/bin/zetacored
+ls -lah zetavisor/genesis/bin/zetacored
+ls -lah zetavisor/current/bin/zetacored
 
 echo "RESTART COSMOVISOR"
-nohup cosmovisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
 
 echo "SLEEP FOR 15 SECONDS"
 sleep 15
 
 echo "CHECK VERSION"
-cosmovisor version
+zetavisor version
 EOF"""
         self.logger.info(command)
 

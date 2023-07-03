@@ -15,6 +15,14 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 )
 
+func (sm *SmokeTest) TestZRC20DepositAndCallRevert() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	LoudPrintf("Deposit ZRC20 into ZEVM and call a contract that reverts\n")
+}
+
 func (sm *SmokeTest) TestERC20Deposit() {
 	startTime := time.Now()
 	defer func() {

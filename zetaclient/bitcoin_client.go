@@ -355,6 +355,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 		ob.mu.Lock()
 		ob.nextNonce++
+		ob.ts.SetNextNonce(ob.nextNonce)
 		ob.mu.Unlock()
 	}
 	return true, true, nil
@@ -752,6 +753,7 @@ func (ob *BitcoinChainClient) SetNextNonce() error {
 		}
 		if ob.chain.ChainId == nonce.ChainId && bytes.Equal(tssKey.PubkeyInBytes, ob.Tss.Pubkey()) {
 			ob.nextNonce = int(nonce.NonceLow)
+			ob.ts.SetNextNonce(ob.nextNonce)
 			found = true
 		}
 	}
