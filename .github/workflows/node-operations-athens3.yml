@@ -68,6 +68,8 @@ jobs:
           set_regions 
           for region in "${regions[@]}"; do
               restart_zetavisor "$region"
+              sleep 60
+              echo "Sleeping for 60 seconds..."
           done
 
       - name: Stop zetaclientd
