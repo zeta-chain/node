@@ -99,7 +99,9 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 	}
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
-			Index: fmt.Sprintf("testchain-%d", i),
+			Index:   fmt.Sprintf("%d-%d", i, i),
+			ChainId: int64(i),
+			Nonce:   uint64(i),
 		}
 		nullify.Fill(&outTxTracker)
 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
