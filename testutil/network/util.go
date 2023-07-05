@@ -202,7 +202,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = os.WriteFile(file, contents, 0o644) // #nosec G301
+	err = os.WriteFile(file, contents, 0644) // #nosec
 	if err != nil {
 		return err
 	}
