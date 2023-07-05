@@ -1,4 +1,4 @@
-package cli_query
+package cli_query_tests
 
 import (
 	"fmt"

@@ -1,7 +1,7 @@
-//go:build PRIVNET
-// +build PRIVNET
+//go:build TESTNET
+// +build TESTNET
 
-package testutil
+package cli_integration_tests
 
 import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

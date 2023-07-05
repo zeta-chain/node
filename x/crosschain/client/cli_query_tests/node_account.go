@@ -1,4 +1,4 @@
-package cli_query
+package cli_query_tests
 
 import (
 	"fmt"
@@ -6,42 +6,51 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *CliTestSuite) TestShowKeygen() {
+func (s *CliTestSuite) TestShowNodeAccount() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.state.Keygen
+	objs := s.state.NodeAccountList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
 	for _, tc := range []struct {
 		desc string
+		id   string
 		args []string
 		err  error
-		obj  *types.Keygen
+		obj  *types.NodeAccount
 	}{
 		{
-			desc: "get",
+			desc: "found",
+			id:   objs[0].Operator,
 			args: common,
-			obj:  obj,
+			obj:  objs[0],
+		},
+		{
+			desc: "not found",
+			id:   "not_found",
+			args: common,
+			err:  status.Error(codes.InvalidArgument, "not found"),
 		},
 	} {
 		tc := tc
 		s.Run(tc.desc, func() {
-			var args []string
+			args := []string{tc.id}
 			args = append(args, tc.args...)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowKeygen(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowNodeAccount(), args)
 			if tc.err != nil {
 				stat, ok := status.FromError(tc.err)
 				s.Require().True(ok)
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetKeygenResponse
+				var resp types.QueryGetNodeAccountResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				s.Require().NotNil(resp.Keygen)
-				s.Require().Equal(tc.obj, resp.Keygen)
+				s.Require().NotNil(resp.NodeAccount)
+				s.Require().Equal(tc.obj, resp.NodeAccount)
 			}
 		})
 	}

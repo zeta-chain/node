@@ -31,7 +31,7 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
+	//cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
 	net, err := network.New(t, app.NodeDir, cfg)
 	return net, state.OutTxTrackerList
 }

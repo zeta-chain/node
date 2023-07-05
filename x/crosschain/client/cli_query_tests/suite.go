@@ -1,4 +1,4 @@
-package cli_query
+package cli_query_tests
 
 import (
 	"cosmossdk.io/math"
@@ -87,6 +87,13 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
 	state.Keygen = &types.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+	state.Tss = &types.TSS{
+		TssPubkey:           "tssPubkey",
+		TssParticipantList:  []string{"tssParticipantList"},
+		OperatorAddressList: []string{"operatorAddressList"},
+		FinalizedZetaHeight: 1,
+		KeyGenZetaHeight:    1,
+	}
 	for i := 0; i < n; i++ {
 		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
 	}

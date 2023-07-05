@@ -1,7 +1,7 @@
-//go:build PRIVNET
-// +build PRIVNET
+//go:build TESTNET
+// +build TESTNET
 
-package testutil
+package cli_integration_tests
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) Setconfig() {
 	ethcfg.SetBip44CoinType(config)
 	// Make sure address is compatible with ethereum
 	config.SetAddressVerifier(app.VerifyAddressFormat)
-	//config.Seal()
+	config.Seal()
 }
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")

@@ -1,7 +1,7 @@
-//go:build PRIVNET
-// +build PRIVNET
+//go:build TESTNET
+// +build TESTNET
 
-package testutil
+package cli_integration_tests
 
 import (
 	"github.com/stretchr/testify/suite"

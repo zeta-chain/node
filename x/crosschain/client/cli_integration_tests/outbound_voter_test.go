@@ -1,7 +1,7 @@
-//go:build PRIVNET
-// +build PRIVNET
+//go:build TESTNET
+// +build TESTNET
 
-package testutil
+package cli_integration_tests
 
 import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -22,7 +22,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 	tt := []struct {
 		name                  string
 		votes                 []Vote
-		zetaMinted            string
+		zetaMinted            string // TODO : calculate this value
 		correctBallotResult   observerTypes.BallotStatus
 		cctxStatus            crosschaintypes.CctxStatus
 		falseBallotIdentifier string

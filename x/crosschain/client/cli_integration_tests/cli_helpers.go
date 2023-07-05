@@ -1,7 +1,7 @@
-//go:build PRIVNET
-// +build PRIVNET
+//go:build TESTNET
+// +build TESTNET
 
-package testutil
+package cli_integration_tests
 
 import (
 	"cosmossdk.io/math"
@@ -108,7 +108,7 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	cmd := cli.CmdCreateTSSVoter()
 	inboundVoterArgs := []string{
 		"tsspubkey",
-		"5",
+		strconv.FormatInt(common.GoerliChain().ChainId, 10),
 		"0",
 	}
 	txArgs := []string{
