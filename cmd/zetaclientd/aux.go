@@ -95,7 +95,7 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 		}
 		if err != nil {
 			log.Err(err).Msgf("%s NewEVMChainClient", chain.String())
-			return nil, err
+			continue
 		}
 		clientMap[chain] = co
 	}
