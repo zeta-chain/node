@@ -1,4 +1,4 @@
-package cli_query_tests
+package querytests
 
 import (
 	"cosmossdk.io/math"

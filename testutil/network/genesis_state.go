@@ -30,12 +30,12 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
-	var nodeAccountList []*types.NodeAccount
-	for _, operator := range observerList {
-		nodeAccountList = append(nodeAccountList, &types.NodeAccount{
+	nodeAccountList := make([]*types.NodeAccount, len(observerList))
+	for i, operator := range observerList {
+		nodeAccountList[i] = &types.NodeAccount{
 			Operator:   operator,
 			NodeStatus: types.NodeStatus_Active,
-		})
+		}
 	}
 
 	crossChainGenesis.NodeAccountList = nodeAccountList
@@ -65,13 +65,13 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	// Observer genesis state
 	var observerGenesis observerTypes.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &observerGenesis))
-	var observerMapper []*observerTypes.ObserverMapper
+	observerMapper := make([]*observerTypes.ObserverMapper, len(common.DefaultChainsList()))
 
-	for _, chain := range common.DefaultChainsList() {
-		observerMapper = append(observerMapper, &observerTypes.ObserverMapper{
+	for i, chain := range common.DefaultChainsList() {
+		observerMapper[i] = &observerTypes.ObserverMapper{
 			ObserverChain: chain,
 			ObserverList:  observerList,
-		})
+		}
 	}
 	observerGenesis.Observers = observerMapper
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)

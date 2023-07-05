@@ -1,7 +1,7 @@
 //go:build TESTNET
 // +build TESTNET
 
-package cli_integration_tests
+package integrationtests
 
 import (
 	"cosmossdk.io/math"

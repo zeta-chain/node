@@ -50,13 +50,13 @@ func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallot
 		return nil, status.Error(codes.NotFound, "not found ballot")
 	}
 
-	var votersList []*types.VoterList
-	for _, voterAddress := range ballot.VoterList {
+	votersList := make([]*types.VoterList, len(ballot.VoterList))
+	for i, voterAddress := range ballot.VoterList {
 		voter := types.VoterList{
 			VoterAddress: voterAddress,
 			VoteType:     ballot.Votes[ballot.GetVoterIndex(voterAddress)],
 		}
-		votersList = append(votersList, &voter)
+		votersList[i] = &voter
 	}
 
 	return &types.QueryBallotByIdentifierResponse{

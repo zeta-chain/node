@@ -1,4 +1,4 @@
-package cli_query_tests
+package querytests
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *CliTestSuite) TestShowGasPrice() {
+func (s *CliTestSuite) TestShowChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.GasPriceList
+	objs := s.state.ChainNoncesList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -22,7 +22,7 @@ func (s *CliTestSuite) TestShowGasPrice() {
 		id   string
 		args []string
 		err  error
-		obj  *types.GasPrice
+		obj  *types.ChainNonces
 	}{
 		{
 			desc: "found",
@@ -41,25 +41,25 @@ func (s *CliTestSuite) TestShowGasPrice() {
 		s.Run(tc.desc, func() {
 			args := []string{tc.id}
 			args = append(args, tc.args...)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowGasPrice(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowChainNonces(), args)
 			if tc.err != nil {
 				stat, ok := status.FromError(tc.err)
 				s.Require().True(ok)
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetGasPriceResponse
+				var resp types.QueryGetChainNoncesResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				s.Require().NotNil(resp.GasPrice)
-				s.Require().Equal(tc.obj, resp.GasPrice)
+				s.Require().NotNil(resp.ChainNonces)
+				s.Require().Equal(tc.obj, resp.ChainNonces)
 			}
 		})
 	}
 }
 
-func (s *CliTestSuite) TestListGasPrice() {
+func (s *CliTestSuite) TestListChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.GasPriceList
+	objs := s.state.ChainNoncesList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
@@ -79,12 +79,12 @@ func (s *CliTestSuite) TestListGasPrice() {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListGasPrice(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllGasPriceResponse
+			var resp types.QueryAllChainNoncesResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				s.Assert().Equal(objs[j], resp.GasPrice[j-i])
+				s.Assert().Equal(objs[j], resp.ChainNonces[j-i])
 			}
 		}
 	})
@@ -93,24 +93,24 @@ func (s *CliTestSuite) TestListGasPrice() {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListGasPrice(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 			s.Require().NoError(err)
-			var resp types.QueryAllGasPriceResponse
+			var resp types.QueryAllChainNoncesResponse
 			s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			for j := i; j < len(objs) && j < i+step; j++ {
-				s.Assert().Equal(objs[j], resp.GasPrice[j-i])
+				s.Assert().Equal(objs[j], resp.ChainNonces[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
 	})
 	s.Run("Total", func() {
 		args := request(nil, 0, uint64(len(objs)), true)
-		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListGasPrice(), args)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 		s.Require().NoError(err)
-		var resp types.QueryAllGasPriceResponse
+		var resp types.QueryAllChainNoncesResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		s.Require().Equal(len(objs), int(resp.Pagination.Total))
-		s.Require().Equal(objs, resp.GasPrice)
+		s.Require().Equal(objs, resp.ChainNonces)
 	})
 }
