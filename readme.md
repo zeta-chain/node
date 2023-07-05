@@ -32,7 +32,7 @@ EVM-compatibility.
 make install
 ```
 
-This command will install the `zetacoded` and `zetaclientd` binaries in your
+This command will install the `zetacored` and `zetaclientd` binaries in your
 `$GOPATH/bin` directory.
 
 ## Making changes to the source code
