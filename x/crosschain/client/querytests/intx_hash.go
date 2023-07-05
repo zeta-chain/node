@@ -120,7 +120,6 @@ func (s *CliTestSuite) TestListInTxHashToCctx() {
 		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxHashToCctx(), args)
 		s.Require().NoError(err)
 		var resp types.QueryAllInTxHashToCctxResponse
-		fmt.Println(out.String())
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		// saving CCTX also adds a new mapping
