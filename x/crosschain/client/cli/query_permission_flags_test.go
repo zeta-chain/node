@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/app"
 	"testing"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -27,7 +28,9 @@ func networkWithPermissionFlagsObjects(t *testing.T) (*network.Network, types.Pe
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), *state.PermissionFlags
+	cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
+	net, err := network.New(t, app.NodeDir, cfg)
+	return net, *state.PermissionFlags
 }
 
 func TestShowPermissionFlags(t *testing.T) {

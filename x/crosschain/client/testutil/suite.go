@@ -5,16 +5,11 @@ package testutil
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type IntegrationTestSuite struct {
@@ -34,7 +29,7 @@ func (s *IntegrationTestSuite) Setconfig() {
 	ethcfg.SetBip44CoinType(config)
 	// Make sure address is compatible with ethereum
 	config.SetAddressVerifier(app.VerifyAddressFormat)
-	config.Seal()
+	//config.Seal()
 }
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
@@ -43,7 +38,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().True(ok)
 	s.cfg.StakingTokens = minOBsDel.Mul(sdk.NewInt(int64(10)))
 	s.cfg.BondedTokens = minOBsDel
-	genesisState := s.cfg.GenesisState
 	observerList := []string{"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
 		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
 		"zeta1szrskhdeleyt6wmn0nfxvcvt2l6f4fn06uaga4",
@@ -55,67 +49,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav",
 		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t",
 	}
+	s.cfg.GenesisState = network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
 
-	// Cross-chain genesis state
-	var crossChainGenesis types.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
-	var nodeAccountList []*types.NodeAccount
-	for _, operator := range observerList {
-		nodeAccountList = append(nodeAccountList, &types.NodeAccount{
-			Operator:   operator,
-			NodeStatus: types.NodeStatus_Active,
-		})
-	}
-
-	crossChainGenesis.NodeAccountList = nodeAccountList
-	crossChainGenesis.Keygen = &types.Keygen{
-		Status:         types.KeygenStatus_PendingKeygen,
-		GranteePubkeys: observerList,
-		BlockNumber:    5,
-	}
-	crossChainGenesis.Params.Enabled = true
-	crossChainGenesisBz, err := s.cfg.Codec.MarshalJSON(&crossChainGenesis)
-	s.Require().NoError(err)
-
-	// Cross-chain genesis state
-	var evmGenesisState evmtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
-	evmGenesisState.Params.EvmDenom = cmdcfg.BaseDenom
-	evmGenesisBz, err := s.cfg.Codec.MarshalJSON(&evmGenesisState)
-	s.Require().NoError(err)
-
-	// Staking genesis state
-	var stakingGenesisState stakingtypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[stakingtypes.ModuleName], &stakingGenesisState))
-	stakingGenesisState.Params.BondDenom = cmdcfg.BaseDenom
-	stakingGenesisStateBz, err := s.cfg.Codec.MarshalJSON(&stakingGenesisState)
-	s.Require().NoError(err)
-
-	// Observer genesis state
-	var observerGenesis observerTypes.GenesisState
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &observerGenesis))
-	var observerMapper []*observerTypes.ObserverMapper
-
-	for _, chain := range common.DefaultChainsList() {
-		observerMapper = append(observerMapper, &observerTypes.ObserverMapper{
-			ObserverChain: chain,
-			ObserverList:  observerList,
-		})
-	}
-	observerGenesis.Observers = observerMapper
-	observerGenesisBz, err := s.cfg.Codec.MarshalJSON(&observerGenesis)
-	s.Require().NoError(err)
-
-	genesisState[types.ModuleName] = crossChainGenesisBz
-	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
-	genesisState[observerTypes.ModuleName] = observerGenesisBz
-	genesisState[evmtypes.ModuleName] = evmGenesisBz
-	s.cfg.GenesisState = genesisState
-
-	s.network, err = network.New(s.T(), app.NodeDir, s.cfg)
+	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
+	s.network = net
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

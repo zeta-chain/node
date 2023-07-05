@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/app"
 	"strconv"
 	"testing"
 
@@ -37,7 +38,9 @@ func networkWithInTxHashToCctxObjects(t *testing.T, n int) (*network.Network, []
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), state.InTxHashToCctxList
+	cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
+	net, err := network.New(t, app.NodeDir, cfg)
+	return net, state.InTxHashToCctxList
 }
 
 func TestShowInTxHashToCctx(t *testing.T) {
