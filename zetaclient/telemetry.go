@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 	"net/http"
-	"net/http/pprof"
 	"sync"
 	"time"
 
@@ -102,6 +101,13 @@ func (t *TelemetryServer) GetNextNonce() int {
 	return t.status.BTCNextNonce
 }
 
+func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs, numberOfFilteredUTXOs int) {
+	t.mu.Lock()
+	t.status.BTCNumberOfUTXOs = numberOfUTXOs
+	t.status.BTCNumberOfFilteredUTXOs = numberOfFilteredUTXOs
+	t.mu.Unlock()
+}
+
 // NewHandler registers the API routes and returns a new HTTP handler
 func (t *TelemetryServer) Handlers() http.Handler {
 	router := mux.NewRouter()
@@ -112,10 +118,10 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/laststarttimestamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
-	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-	router.HandleFunc("/debug/pprof/", pprof.Index)
-	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	// router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	// router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	// router.HandleFunc("/debug/pprof/", pprof.Index)
+	// router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 
 	//router.Handle("/pending", http.HandlerFunc(t.pendingHandler)).Methods(http.MethodGet)
 	router.Use(logMiddleware())
