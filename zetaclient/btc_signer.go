@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -169,6 +170,14 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
+
+	var outBuff bytes.Buffer
+	serErr := signedTx.Serialize(&outBuff)
+	if serErr != nil {
+		return serErr
+	}
+	str := hex.EncodeToString(outBuff.Bytes())
+	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
 
 	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
 	if err != nil {
