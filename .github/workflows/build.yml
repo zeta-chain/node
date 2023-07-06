@@ -196,7 +196,9 @@ jobs:
             zetaclientd-alpine-*
 
   smoke-test:
-    runs-on: ["zeta-runners"]
+    # runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
+
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
@@ -244,7 +246,9 @@ jobs:
           docker compose down
 
   upload:
-    runs-on: ["zeta-runners"]
+    # runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
+
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
@@ -389,7 +393,9 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   upload_s3_public:
-    runs-on: ["zeta-runners"]
+    # runs-on: ["zeta-runners"]
+    runs-on: ubuntu-latest
+
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/')
     needs:
