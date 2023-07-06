@@ -604,7 +604,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 			if destChain == nil {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %s", event.DestinationChainId.Int64())
+				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
 				continue
 			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)

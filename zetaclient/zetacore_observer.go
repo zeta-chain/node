@@ -246,7 +246,7 @@ func GetTargetChain(send *types.CrossChainTx) (string, error) {
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
 	chainStr, err := GetTargetChain(send)
 	if err != nil {
-		return nil, fmt.Errorf("chain %s not found", send.GetCurrentOutTxParam().ReceiverChainId)
+		return nil, fmt.Errorf("chain %d not found", send.GetCurrentOutTxParam().ReceiverChainId)
 	}
 	chainName := common.ParseChainName(chainStr)
 	c := common.GetChainFromChainName(chainName)
