@@ -591,6 +591,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 			filtered = append(filtered, utxo)
 		}
 	}
+	ob.ts.SetNumberOfUTXOs(len(utxos), len(filtered))
 	// sort by value
 	sort.Slice(filtered, func(i, j int) bool {
 		return filtered[i].Amount < filtered[j].Amount
