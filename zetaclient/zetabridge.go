@@ -184,7 +184,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 		}
 		_, found := cfg.EVMChainConfigs[params.ChainId]
 		if !found {
-			panic(fmt.Sprintf("EvmConfig %s is nil for this client ", common.GetChainFromChainID(params.ChainId).String()))
+			panic(fmt.Sprintf("EvmConfig %s is nil for this client ", params.ChainId))
 		}
 		if cfg.EVMChainConfigs[params.ChainId].CoreParams == nil {
 			cfg.EVMChainConfigs[params.ChainId].CoreParams = config.NewCoreParams()

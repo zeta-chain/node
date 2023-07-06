@@ -603,6 +603,10 @@ func (ob *EVMChainClient) observeInTX() error {
 			event := logs.Event
 			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
+			if destChain == nil {
+				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %s", event.DestinationChainId.Int64())
+				continue
+			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 			if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainId].CoreParams.ZETATokenContractAddress) {
