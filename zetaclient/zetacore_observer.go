@@ -149,7 +149,11 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 								continue
 							}
-							chain := GetTargetChain(send)
+							chain, err := GetTargetChain(send)
+							if err != nil {
+								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail , Chain ID : %s", c.ChainName)
+								continue
+							}
 							nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
 							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
 
@@ -210,8 +214,8 @@ func trimSends(sends []*types.CrossChainTx) int {
 func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
 	sendMap := make(map[string][]*types.CrossChainTx)
 	for _, send := range sendList {
-		targetChain := GetTargetChain(send)
-		if targetChain == "" {
+		targetChain, err := GetTargetChain(send)
+		if targetChain == "" || err != nil {
 			continue
 		}
 		if _, found := sendMap[targetChain]; !found {
@@ -230,16 +234,25 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 	return sendMap
 }
 
-func GetTargetChain(send *types.CrossChainTx) string {
+func GetTargetChain(send *types.CrossChainTx) (string, error) {
 	chainID := send.GetCurrentOutTxParam().ReceiverChainId
-	return common.GetChainFromChainID(chainID).GetChainName().String()
+	chain := common.GetChainFromChainID(chainID)
+	if chain == nil {
+		return "", fmt.Errorf("chain %d not found", chainID)
+	}
+	return chain.GetChainName().String(), nil
 }
 
 func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
-	chainStr := GetTargetChain(send)
+	chainStr, err := GetTargetChain(send)
+	if err != nil {
+		return nil, fmt.Errorf("chain %s not found", send.GetCurrentOutTxParam().ReceiverChainId)
+	}
 	chainName := common.ParseChainName(chainStr)
 	c := common.GetChainFromChainName(chainName)
-
+	if c == nil {
+		return nil, fmt.Errorf("chain %s not found", chainName)
+	}
 	chainOb, found := co.clientMap[*c]
 	if !found {
 		return nil, fmt.Errorf("chain %s not found", c)
