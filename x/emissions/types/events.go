@@ -14,7 +14,7 @@ const (
 )
 
 const (
-	ValidatorEmissons = "emissions/ValidatorEmissions"
+	ValidatorEmissons = "ValidatorEmissions"
 )
 
 func EmitValidatorEmissions(ctx sdk.Context, bondFactor, reservesFactor, durationsFactor, validatorRewards, observerRewards, tssRewards string) {
