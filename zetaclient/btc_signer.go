@@ -249,7 +249,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	logger.Info().Msgf("SignWithdrawTx: to %s, value %d", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64()/1e8)
+	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	// FIXME: gas price?
 	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.db, height)
@@ -303,6 +303,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 }
 
 func (signer *BTCSigner) updatePendingUTXOs(db *gorm.DB, utxos []btcjson.ListUnspentResult) error {
+	fmt.Printf("updatePendingUTXOs: %d\n", len(utxos))
 	for _, utxo := range utxos {
 		// Try to find existing record in DB to populate primary key
 		var pendingUTXO clienttypes.PendingUTXOSQLType
