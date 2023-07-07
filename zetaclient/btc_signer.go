@@ -51,7 +51,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
-	estimateFee := 0.00001 // FIXME: proper fee estimation
+	estimateFee := 0.00005 // 5000 sats, should be good for testnet
 	for _, utxo := range utxos {
 		// check for pending utxos
 		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
@@ -88,7 +88,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	// add txout with remaining btc
-	btcFees := float64(tx.SerializeSize()) * feeRate / 1024 //FIXME: feeRate KB is 1000B or 1024B?
+	btcFees := float64(tx.SerializeSize()) * feeRate / 1000 //FIXME: feeRate KB is 1000B or 1024B?
 	fees, err := getSatoshis(btcFees)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,9 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	remainderValue := remainingSatoshis - fees
 	if remainderValue < 0 {
-		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative!!!! : %d", remainderValue)
+		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
+		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %\n", len(tx.TxIn))
+		return nil, fmt.Errorf("remainder value is negative")
 	}
 
 	txOut.Value = remainderValue
