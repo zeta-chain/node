@@ -603,8 +603,15 @@ func (ob *EVMChainClient) observeInTX() error {
 			event := logs.Event
 			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
+			if destChain == nil {
+				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
+				continue
+			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-
+			if ob.cfg.EVMChainConfigs[destChain.ChainId] == nil {
+				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+				continue
+			}
 			if strings.EqualFold(destAddr, ob.cfg.EVMChainConfigs[destChain.ChainId].CoreParams.ZETATokenContractAddress) {
 				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 				continue
