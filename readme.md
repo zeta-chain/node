@@ -36,6 +36,12 @@ to build.
 This command will install the `zetacoded` and `zetaclientd` binaries in your
 `$GOPATH/bin` directory.
 
+Verify that the version of the binaries match the release tag.  
+```
+zetacored version
+zetaclientd version
+```
+
 ## Making changes to the source code
 
 After making changes to any of the protocol buffer files, run the following
