@@ -104,7 +104,13 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
-	txOut.Value = remainingSatoshis - fees
+
+	remainderValue := remainingSatoshis - fees
+	if remainderValue < 0 {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative!!!! : %d", remainderValue)
+	}
+
+	txOut.Value = remainderValue
 	tx.AddTxOut(txOut)
 
 	// add txout
