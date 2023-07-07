@@ -27,7 +27,7 @@ EVM-compatibility.
   core functionality of ZetaChain.
 
 ## Building the zetacored/zetaclientd binaries
-For athens3 testnet, clone this repository and checkout the latest release tag, and type
+For the Athens 3 testnet, clone this repository, checkout the latest release tag, and type the following command to build the binaries:
 ```
 make install-testnet
 ```
