@@ -2,7 +2,7 @@ name: 'Build Docker Images'
 description: 'Builds Docker images and pushes them to ECR and GHCR'
 inputs:
   DOCKER_FILENAME:  
-    description: 'Name of the docker file to use for the build'
+    description: 'Name of the docker file to be used for the build'
     required: true
   REPOSITORY_NAME:  
     description: 'Name of the Repository'
