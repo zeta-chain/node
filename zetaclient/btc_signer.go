@@ -108,7 +108,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	remainderValue := remainingSatoshis - fees
 	if remainderValue < 0 {
 		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
-		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %\n", len(tx.TxIn))
+		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
 		return nil, fmt.Errorf("remainder value is negative")
 	}
 
