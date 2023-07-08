@@ -445,7 +445,10 @@ type BTCInTxEvnet struct {
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
-	for _, tx := range txs {
+	for idx, tx := range txs {
+		if idx == 0 {
+			continue // the first tx is coinbase; we do not process coinbase tx
+		}
 		found := false
 		var value float64
 		var memo []byte
