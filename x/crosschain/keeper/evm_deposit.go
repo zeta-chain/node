@@ -28,6 +28,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 			ethTxHash := ethcommon.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
 			cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+			cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
