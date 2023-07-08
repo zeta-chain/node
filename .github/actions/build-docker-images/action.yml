@@ -21,6 +21,9 @@ runs:
   using: "composite"
 
   steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
     - name: Set Environment Variables"
       run: |
         echo "DOCKER_FILENAME=${{ inputs.DOCKER_FILENAME }}" >> $GITHUB_ENV
