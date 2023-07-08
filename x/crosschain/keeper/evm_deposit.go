@@ -7,6 +7,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -21,8 +23,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return err
 		}
-		// TODO: is it not better to record the finalizing cosmos tx hash here?
-		cctx.GetCurrentOutTxParam().OutboundTxHash = "Mined directly to ZetaEVM without TX"
+		if len(ctx.TxBytes()) > 0 {
+			// add event for tendermint transaction hash format
+			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+			ethTxHash := ethcommon.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
+			cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
