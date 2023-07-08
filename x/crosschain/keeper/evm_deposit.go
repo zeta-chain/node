@@ -16,19 +16,20 @@ import (
 func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
+	var ethTxHash ethcommon.Hash
+	if len(ctx.TxBytes()) > 0 {
+		// add event for tendermint transaction hash format
+		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+		ethTxHash = ethcommon.BytesToHash(hash)
+		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+	}
 
 	if msg.CoinType == common.CoinType_Zeta {
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
 		if err != nil {
 			return err
-		}
-		if len(ctx.TxBytes()) > 0 {
-			// add event for tendermint transaction hash format
-			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
-			ethTxHash := ethcommon.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
-			cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
-			cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
@@ -68,10 +69,6 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 					sdk.NewAttribute("cctxIndex", cctx.Index),
 				),
 			)
-
-			if evmTxResponse != nil {
-				cctx.GetCurrentOutTxParam().OutboundTxHash = evmTxResponse.Hash
-			}
 		}
 	}
 	return nil
