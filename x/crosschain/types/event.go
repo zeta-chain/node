@@ -36,13 +36,13 @@ const (
 )
 
 const (
-	OutboundTxSuccessful = "crosschain/OutboundTxSuccessful"
-	OutboundTxFailed     = "crosschain/OutboundTxFailed"
-	ZrcWithdrawCreated   = "crosschain/ZrcWithdrawCreated"
-	BallotCreated        = "crosschain/BallotCreated"
-	ZetaWithdrawCreated  = "crosschain/ZetaWithdrawCreated"
-	InboundFinalized     = "crosschain/InboundFinalized"
-	StatusChanged        = "crosschain/StatusChanged"
-	CctxScrubbed         = "crosschain/CCTXScrubbed"
-	CctxNewKeygenBlock   = "crosschain/CCTXNewKeygenBlock"
+	OutboundTxSuccessful = "OutboundTxSuccessful"
+	OutboundTxFailed     = "OutboundTxFailed"
+	ZrcWithdrawCreated   = "ZrcWithdrawCreated"
+	BallotCreated        = "BallotCreated"
+	ZetaWithdrawCreated  = "ZetaWithdrawCreated"
+	InboundFinalized     = "InboundFinalized"
+	StatusChanged        = "StatusChanged"
+	CctxScrubbed         = "CCTXScrubbed"
+	CctxNewKeygenBlock   = "CCTXNewKeygenBlock"
 )
