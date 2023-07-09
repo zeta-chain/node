@@ -193,12 +193,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
-	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
-	if err != nil {
-		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
-		return
-	}
-	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
+
+	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), send.GetCurrentOutTxParam().Receiver)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
@@ -223,8 +219,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
+	addr, err := btcutil.DecodeAddress(send.GetCurrentOutTxParam().Receiver, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
 		return

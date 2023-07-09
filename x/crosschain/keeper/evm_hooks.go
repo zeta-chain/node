@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
-
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -64,9 +63,9 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	}
 
 	for _, log := range logs {
-		eZRC20, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
+		eventWithdrawal, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
 		if err == nil {
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, emittingContract, txOrigin); err != nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventWithdrawal, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
@@ -92,8 +91,10 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 
 	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
-	// TODO: this is a bit hacky; how do we tell whether it's Ethereum or Bitcoin address?
-	toAddr := "0x" + hex.EncodeToString(event.To)
+	toAddr, err := recvChain.EncodeAddress(event.To)
+	if err != nil {
+		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
+	}
 	gasLimit := foreignCoin.GasLimit
 	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
