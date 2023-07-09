@@ -31,6 +31,7 @@ runs:
         echo "IMAGE_TAG=${{ inputs.IMAGE_TAG }}" >> $GITHUB_ENV
         echo "GHCR_USERNAME=${{ inputs.GHCR_USERNAME }}" >> $GITHUB_ENV
         echo "GHCR_TOKEN=${{ inputs.GHCR_TOKEN }}" >> $GITHUB_ENV
+        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
       shell: bash
 
     - name: Log in to the GitHub Container Registry 
