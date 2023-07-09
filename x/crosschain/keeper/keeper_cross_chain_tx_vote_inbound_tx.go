@@ -85,16 +85,28 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Inbound Ballot has been finalized , Create CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
+	defer func() {
+		EmitEventInboundFinalized(ctx, &cctx)
+		k.SetCrossChainTx(ctx, cctx)
+	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-
 	if receiverChain.IsZetaChain() {
 		isContractReverted, err := k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
+			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
+			if chain == nil {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+			if !isFound {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "cannot find gas price", cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
 			// create new OutboundTxParams for the revert
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
 				Receiver:           cctx.InboundTxParams.Sender,
@@ -102,42 +114,28 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				Amount:             cctx.InboundTxParams.Amount,
 				CoinType:           cctx.InboundTxParams.CoinType,
 				OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
-			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
-			if chain == nil {
-				goto ABORT
+			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
-			if !isFound {
-				goto ABORT
-			}
-			medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
-			cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
-			gasLimit := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-			outTxGasFee := gasLimit.Mul(medianGasPrice)
 
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "HandleEVMDeposit calling contract reverted", cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		} else { // successful HandleEVMDeposit;
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 	} else { // Cross Chain SWAP
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
-
-	// defaults to aborted
-ABORT:
-	EmitEventInboundFinalized(ctx, &cctx)
-	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-	k.SetCrossChainTx(ctx, cctx)
-	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
 // TODO: is LastBlockHeight needed?

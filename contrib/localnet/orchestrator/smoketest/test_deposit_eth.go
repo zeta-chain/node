@@ -119,7 +119,6 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 	LoudPrintf("Deposit ZRC20 into ZEVM and call a contract that reverts; should refund\n")
 
 	goerliClient := sm.goerliClient
-	LoudPrintf("Deposit Ether into ZEVM\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
