@@ -89,9 +89,34 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// Aborts is any of the updates fail
 
 	if receiverChain.IsZetaChain() {
-		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
-		if err != nil {
+		isContractReverted, err := k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
+		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			k.SetCrossChainTx(ctx, cctx)
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		} else if err != nil && isContractReverted { // contract call reverted; should refund
+			// create new OutboundTxParams for the revert
+			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+				Receiver:           cctx.InboundTxParams.Sender,
+				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+				Amount:             cctx.InboundTxParams.Amount,
+				CoinType:           cctx.InboundTxParams.CoinType,
+				OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+			})
+			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
+			if chain == nil {
+				goto ABORT
+			}
+			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+			if !isFound {
+				goto ABORT
+			}
+			medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
+			cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
+			gasLimit := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+			outTxGasFee := gasLimit.Mul(medianGasPrice)
+
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "HandleEVMDeposit calling contract reverted", cctx.LogIdentifierForCCTX())
 			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
@@ -106,7 +131,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
 	}
+
+	// defaults to aborted
+ABORT:
 	EmitEventInboundFinalized(ctx, &cctx)
+	cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }

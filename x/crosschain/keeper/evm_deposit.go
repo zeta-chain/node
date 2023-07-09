@@ -13,9 +13,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
+// returns (isContractReverted, err)
+// (true, non-nil) means CallEVM() reverted
+func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
-	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
 	var ethTxHash ethcommon.Hash
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
@@ -29,17 +30,21 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
 		if err != nil {
-			return err
+			return false, err
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
-			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
+			return false, errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		evmTxResponse, _, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
-			return err
+			isContractReverted := false
+			if evmTxResponse != nil && evmTxResponse.Failed() {
+				isContractReverted = true
+			}
+			return isContractReverted, err
 		}
 
 		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
@@ -54,11 +59,8 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 
 			err = k.ProcessLogs(ctx, logs, contract, txOrigin)
 			if err != nil {
-				return err
-			}
-
-			if err != nil {
-				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				// ProcessLogs should not error; error indicates exception, should abort
+				return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 			}
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
@@ -71,7 +73,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 			)
 		}
 	}
-	return nil
+	return false, nil
 }
 
 // message is hex encoded byte array

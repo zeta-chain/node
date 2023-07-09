@@ -50,8 +50,10 @@ func (k Keeper) PostTxProcessing(
 	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From().Hex())
 }
 
+// ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event
+// from registered ZRC20 contract, new CCTX will be created to trigger and track outbound
+// transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
-
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
 		return fmt.Errorf("cannot find system contract")
@@ -78,6 +80,8 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	return nil
 }
 
+// create a new CCTX to process the withdrawal event
+// error indicates system error and non-recoverable; should abort
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
@@ -152,6 +156,9 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
+// given a log entry, try extracting Withdrawal event from registered ZRC20 contract;
+// returns error if the log entry is not a Withdrawal event, or is not emitted from a
+// registered ZRC20 contract
 func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
 	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
