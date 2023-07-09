@@ -158,6 +158,69 @@ func (sm *SmokeTest) DepositBTC() {
 	}
 }
 
+func (sm *SmokeTest) DepositBTCRefund() {
+	LoudPrintf("Deposit BTC with invalid memo; should be refunded\n")
+	btc := sm.btcRPCClient
+	utxos, err := sm.btcRPCClient.ListUnspent()
+	if err != nil {
+		panic(err)
+	}
+	spendableAmount := 0.0
+	spendableUTXOs := 0
+	for _, utxo := range utxos {
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
+	}
+	fmt.Printf("ListUnspent:\n")
+	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
+	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
+	fmt.Printf("Now sending two txs to TSS address...\n")
+	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
+	if err != nil {
+		panic(err)
+	}
+	err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
+
+	// check if the deposit is successful
+	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
+	if err != nil {
+		panic(err)
+	}
+	sm.BTCZRC20Addr = BTCZRC20Addr
+	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.BTCZRC20 = BTCZRC20
+	initialBalance, err := BTCZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	for {
+		time.Sleep(5 * time.Second)
+		balance, err := BTCZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+		if err != nil {
+			panic(err)
+		}
+		diff := big.NewInt(0)
+		diff.Sub(balance, initialBalance)
+		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
+			fmt.Printf("waiting for BTC balance to show up in ZRC contract... current bal %d\n", balance)
+		} else {
+			fmt.Printf("BTC balance is in ZRC contract! Success\n")
+			break
+		}
+	}
+}
+
 func (sm *SmokeTest) TestBitcoinWithdraw() {
 	startTime := time.Now()
 	defer func() {
