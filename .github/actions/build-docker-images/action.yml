@@ -32,6 +32,8 @@ runs:
         echo "GHCR_USERNAME=${{ inputs.GHCR_USERNAME }}" >> $GITHUB_ENV
         echo "GHCR_TOKEN=${{ inputs.GHCR_TOKEN }}" >> $GITHUB_ENV
         echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+        mkdir -p ~/.docker
+        echo '{"experimental": "enabled"}' > ~/.docker/config.json
       shell: bash
 
     - name: Log in to the GitHub Container Registry 
