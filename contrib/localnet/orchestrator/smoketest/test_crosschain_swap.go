@@ -4,11 +4,8 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
@@ -196,13 +193,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 			fmt.Printf("  vout %d\n", vout.N)
 			fmt.Printf("  value %f\n", vout.Value)
 			fmt.Printf("  scriptPubKey %s\n", vout.ScriptPubKey.Hex)
-			pkh, err := hex.DecodeString(vout.ScriptPubKey.Hex[4:])
-			if err == nil {
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(pkh, &chaincfg.RegressionNetParams)
-				if err == nil {
-					fmt.Printf("  address %s\n", addr.EncodeAddress())
-				}
-			}
+			fmt.Printf("  p2wpkh address: %s\n", ScriptPKToAddress(vout.ScriptPubKey.Hex))
 		}
 	}
 }
