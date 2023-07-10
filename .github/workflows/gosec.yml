@@ -10,7 +10,9 @@ env:
   
 jobs:
   gosec:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    # runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
+
     env:
       GO111MODULE: on
     steps:
@@ -40,7 +42,9 @@ jobs:
           gosec ./...
 
   git-guardian:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    # runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
+
     env:
       GO111MODULE: on
     steps:

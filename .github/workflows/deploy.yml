@@ -24,7 +24,7 @@ env:
 
 jobs:
   deploy-cosmovisor-upgrade:
-    runs-on: ["zeta-runners"]
+    runs-on: ["zeta-runners-athens2"]
     environment: ${{ github.event.inputs.ENVIRONMENT }}
     steps:
       - uses: actions/checkout@v3

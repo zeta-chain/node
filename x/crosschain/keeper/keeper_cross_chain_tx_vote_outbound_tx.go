@@ -95,8 +95,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 		// Set this the first time when the ballot is created
 		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
-		// A new ballot is created everytime for every outtxhash for a cctx , but only the ballot with max votes gets finalized
-		// If an observer adds their vote to a different ballot , it would be treated as NotYetVoted on the finalized one
 		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 		k.SetCrossChainTx(ctx, cctx)
 	}
