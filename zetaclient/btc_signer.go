@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -50,21 +51,18 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
-	estimateFee := 0.00001 // FIXME: proper fee estimation
+	estimateFee := 0.0002 // FIXME: proper fee estimation
+	minFee := 0.0001
 	for _, utxo := range utxos {
 		// check for pending utxos
-		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
-			if err == gorm.ErrRecordNotFound {
-				total = total + utxo.Amount
-				prevOuts = append(prevOuts, utxo)
 
-				if total >= amount+estimateFee {
-					break
-				}
-			} else {
-				return nil, err
-			}
+		total = total + utxo.Amount
+		prevOuts = append(prevOuts, utxo)
+
+		if total >= amount+estimateFee {
+			break
 		}
+
 	}
 	if total < amount {
 		return nil, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
@@ -87,10 +85,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	// add txout with remaining btc
-	btcFees := float64(tx.SerializeSize()) * feeRate / 1024 //FIXME: feeRate KB is 1000B or 1024B?
-	fees, err := getSatoshis(btcFees)
-	if err != nil {
-		return nil, err
+	fees := round(float64(tx.SerializeSize()) * feeRate)
+	if float64(fees) < minFee*1e8 {
+		fmt.Printf("fees %d is less than minFee %d; use minFee", fees, minFee*1e8)
+		fees = round(minFee * 1e8)
 	}
 
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
@@ -105,6 +103,14 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
 	txOut.Value = remainingSatoshis - fees
 	tx.AddTxOut(txOut)
+	if remainingSatoshis < fees {
+		fmt.Printf("*** WARNING *** : remaining satoshis %d is less than fees %d\n", remainingSatoshis, fees)
+		fmt.Printf("amount requested %d\n", amountSatoshis)
+		for _, utxo := range prevOuts {
+			fmt.Printf("utxo: %d ", round(utxo.Amount*1e8))
+		}
+		return nil, fmt.Errorf("remaining satoshis %d is less than fees %d", remainingSatoshis, fees)
+	}
 
 	// add txout
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
@@ -169,6 +175,9 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
+	var buf bytes.Buffer
+	_ = signedTx.Serialize(&buf)
+	fmt.Printf("signedTx: %x\n", buf.Bytes())
 
 	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
 	if err != nil {
