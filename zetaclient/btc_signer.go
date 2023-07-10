@@ -48,7 +48,7 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
 	var total float64
-	var prevOuts []btcjson.ListUnspentResult
+	prevOuts := make([]btcjson.ListUnspentResult, 0, 20)
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
 	estimateFee := 0.0002 // FIXME: proper fee estimation
@@ -87,7 +87,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// add txout with remaining btc
 	fees := round(float64(tx.SerializeSize()) * feeRate)
 	if float64(fees) < minFee*1e8 {
-		fmt.Printf("fees %d is less than minFee %d; use minFee", fees, minFee*1e8)
+		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
 		fees = round(minFee * 1e8)
 	}
 

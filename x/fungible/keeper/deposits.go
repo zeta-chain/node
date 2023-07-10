@@ -43,11 +43,11 @@ func (k Keeper) ZRC20DepositAndCallContract(ctx sdk.Context, to eth.Address, amo
 	Zrc20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
 	if len(message) == 0 { // no message; transfer
 		return k.DepositZRC20(ctx, Zrc20Contract, to, amount)
-	} else { // non-empty message = [contractaddress, calldata]
-		if len(data) == 0 {
-			return k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
-		} else {
-			return k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
-		}
 	}
+	// non-empty message = [contractaddress, calldata]
+	if len(data) == 0 {
+		return k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
+	}
+	return k.DepositZRC20AndCallContract(ctx, Zrc20Contract, contract, amount, data)
+
 }
