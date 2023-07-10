@@ -255,9 +255,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
@@ -301,10 +298,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Check Binaries
-        run: |
-          ls -lah
 
       - name: upload-files-to-s3
         uses: ./.github/actions/upload-to-s3
@@ -362,8 +355,6 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
-
-
 
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
