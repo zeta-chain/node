@@ -92,7 +92,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
 	if receiverChain.IsZetaChain() {
-		isContractReverted, err := k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
+		tmpCtx, commit := ctx.CacheContext()
+		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -120,10 +121,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-
+			// do not commit() here;
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "HandleEVMDeposit calling contract reverted", cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else { // successful HandleEVMDeposit;
+			commit()
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
