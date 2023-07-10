@@ -4,8 +4,11 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
@@ -173,7 +176,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		}
 
 		cctx := WaitCctxMinedByInTxHash(txid.String(), sm.cctxClient)
-		fmt.Printf("cctx3 index %s\n", cctx.Index)
+		fmt.Printf("cctx3 index http://localhost:1317/zeta-chain/crosschain/cctx/%s\n", cctx.Index)
 		fmt.Printf("  inboudn tx hash %s\n", cctx.InboundTxParams.InboundTxObservedHash)
 		fmt.Printf("  status %s\n", cctx.CctxStatus.Status.String())
 		fmt.Printf("  status msg: %s\n", cctx.CctxStatus.StatusMessage)
@@ -188,8 +191,18 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("out txid %s\n", txraw.Hex)
-		fmt.Printf("  amount %f\n", txraw.Vout[0].Value)
-		fmt.Printf("  confirmation %d\n", txraw.Confirmations)
+		fmt.Printf("out txid %s\n", txraw.Txid)
+		for _, vout := range txraw.Vout {
+			fmt.Printf("  vout %d\n", vout.N)
+			fmt.Printf("  value %f\n", vout.Value)
+			fmt.Printf("  scriptPubKey %s\n", vout.ScriptPubKey.Hex)
+			pkh, err := hex.DecodeString(vout.ScriptPubKey.Hex[4:])
+			if err == nil {
+				addr, err := btcutil.NewAddressWitnessPubKeyHash(pkh, &chaincfg.RegressionNetParams)
+				if err == nil {
+					fmt.Printf("  address %s\n", addr.EncodeAddress())
+				}
+			}
+		}
 	}
 }
