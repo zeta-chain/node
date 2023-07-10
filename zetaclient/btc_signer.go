@@ -52,6 +52,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
+	minFee := 0.00005
 	for _, utxo := range utxos {
 		// check for pending utxos
 		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
@@ -90,6 +91,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// add txout with remaining btc
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
+	if fees.Int64() < int64(minFee*1e8) {
+		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
+		fees = big.NewInt(int64(minFee * 1e8))
+	}
 
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
 	pkScript2, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
