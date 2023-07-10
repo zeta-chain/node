@@ -16,6 +16,7 @@ func AllStatus() []CctxStatus {
 	}
 }
 
+// empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	oldStatus := m.Status
 	if len(msg) > 0 {
