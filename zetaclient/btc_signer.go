@@ -46,12 +46,12 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
 	var total float64
 	var prevOuts []btcjson.ListUnspentResult
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
-	estimateFee := 0.00005 // 5000 sats, should be good for testnet
+	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	for _, utxo := range utxos {
 		// check for pending utxos
 		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
@@ -88,11 +88,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	// add txout with remaining btc
-	btcFees := float64(tx.SerializeSize()) * feeRate / 1000 //FIXME: feeRate KB is 1000B or 1024B?
-	fees, err := getSatoshis(btcFees)
-	if err != nil {
-		return nil, err
-	}
+	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
+	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
 
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
 	pkScript2, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
@@ -105,7 +102,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	}
 	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
 
-	remainderValue := remainingSatoshis - fees
+	remainderValue := remainingSatoshis - fees.Int64()
 	if remainderValue < 0 {
 		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
 		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
@@ -251,8 +248,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	// FIXME: gas price?
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.db, height)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, btcClient.db, height)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
