@@ -113,7 +113,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
 				Amount:             cctx.InboundTxParams.Amount,
 				CoinType:           cctx.InboundTxParams.CoinType,
-				OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+				OutboundTxGasLimit: 0, // for fungible refund, use default gasLimit
 				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
 			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
