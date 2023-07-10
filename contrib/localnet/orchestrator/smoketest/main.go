@@ -270,22 +270,44 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestDepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestERC20Deposit()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestERC20Withdraw()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestSendZetaOut()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestSendZetaOutBTCRevert()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestMessagePassing()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestZRC20Swap()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestBitcoinWithdraw()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestCrosschainSwap()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestMessagePassingRevertFail()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestMessagePassingRevertSuccess()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here
 	smokeTest.TestMyTest()
 
-	smokeTest.TestAccounting()
 	smokeTest.wg.Wait()
 }
 

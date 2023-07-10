@@ -72,7 +72,7 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	if err != nil {
 		panic(err)
 	}
-	_, err = btc.GenerateToAddress(4, BTCTSSAddress, nil)
+	_, err = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}

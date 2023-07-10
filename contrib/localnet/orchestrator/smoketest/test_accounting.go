@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
@@ -6,19 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-func (sm *SmokeTest) TestAccounting() {
-	LoudPrintf("Accouting: inventory check\n")
-
+func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 	{
-		fmt.Printf("ZRC20 <-> Ether\n")
 		tssBal, _ := sm.goerliClient.BalanceAt(context.Background(), TSSAddress, nil)
 		zrc20Supply, _ := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
-		fmt.Printf("Ether TSS Balance:  %d\n", tssBal)
-		fmt.Printf("ZRC20 Total Supply: %d\n", zrc20Supply)
+		if tssBal.Int64() < zrc20Supply.Int64() {
+			panic(fmt.Sprintf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply))
+		} else {
+			fmt.Printf("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply)
+		}
 	}
 
 	{
-		fmt.Printf("ZRC20 <-> BTC\n")
 		utxos, err := sm.btcRPCClient.ListUnspent()
 		if err != nil {
 			panic(err)
@@ -28,7 +30,10 @@ func (sm *SmokeTest) TestAccounting() {
 			btcBalance += utxo.Amount
 		}
 		zrc20Supply, _ := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
-		fmt.Printf("BTC Balance:        %d\n", int64(btcBalance*1e8))
-		fmt.Printf("ZRC20 Total Supply: %d\n", zrc20Supply)
+		if int64(btcBalance*1e8) < zrc20Supply.Int64() {
+			panic(fmt.Sprintf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply))
+		} else {
+			fmt.Printf("BTC: Balance (%d) >= ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply)
+		}
 	}
 }
