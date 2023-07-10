@@ -98,6 +98,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
+			revertMessage := err.Error()
 			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
 				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
@@ -122,11 +123,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// do not commit() here;
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "HandleEVMDeposit calling contract reverted", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, revertMessage, cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else { // successful HandleEVMDeposit;
 			commit()
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Remote omnichain contract call completed", cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 	} else { // Cross Chain SWAP
@@ -135,7 +136,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "", cctx.LogIdentifierForCCTX())
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }
