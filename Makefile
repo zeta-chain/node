@@ -46,9 +46,14 @@ test-coverage:
 
 coverage-report: test-coverage
 	@go tool cover -html=cover.txt
+clean-test-dir:
+	@rm -rf x/crosschain/client/integrationtests/.zetacored
+	@rm -rf x/crosschain/client/querytests/.zetacored/
 
-test:
+run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
+
+test :clean-test-dir run-test
 
 test-priv:
 	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}

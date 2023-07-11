@@ -59,9 +59,16 @@ message QueryParamsResponse {
 message QueryBallotByIdentifierRequest {
   string ballot_identifier = 1;
 }
+message VoterList {
+	string voter_address = 1;
+	VoteType vote_type = 2;
+}
 
 message QueryBallotByIdentifierResponse {
-  Ballot ballot = 1;
+	string BallotIdentifier = 1;
+	repeated VoterList voters = 2;
+	ObservationType observation_type = 3;
+	BallotStatus ballot_status = 4;
 }
 
 message QueryObserversByChainRequest {
