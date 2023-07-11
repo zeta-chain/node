@@ -194,8 +194,8 @@ jobs:
             zetaclientd-alpine-*
 
   smoke-test:
-    # runs-on: ["zeta-runners"]
-    runs-on: ubuntu-latest
+    runs-on: ["zeta-runners"]
+    #runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
@@ -243,14 +243,14 @@ jobs:
           docker compose down
 
   upload:
-    # runs-on: ["zeta-runners"]
-    runs-on: ubuntu-latest
+    runs-on: ["zeta-runners"]
+    #runs-on: ubuntu-latest
 
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
       - build-and-test
-      # - smoke-test
+      - smoke-test
       - build-alpine-and-test
     steps:
       - uses: actions/checkout@v3
@@ -298,10 +298,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Check Binaries
-        run: |
-          ls -lah
 
       - name: upload-files-to-s3
         uses: ./.github/actions/upload-to-s3
@@ -360,8 +356,6 @@ jobs:
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
 
-
-
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
@@ -389,8 +383,8 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   upload_s3_public:
-    runs-on: ubuntu-latest
-    # runs-on: ["zeta-runners"]
+    #runs-on: ubuntu-latest
+    runs-on: ["zeta-runners"]
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/')
     needs:
