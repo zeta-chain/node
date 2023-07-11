@@ -8,6 +8,7 @@ import (
 	"fmt"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
 	"math/big"
 	"time"
 
@@ -36,34 +37,13 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		panic(err)
 	}
 	fmt.Printf("GOERLI deployer balance: %s\n", bal.String())
-	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
+
 	value := big.NewInt(1000000000000000000) // in wei (1 eth)
-	gasLimit := uint64(21000)                // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	tx := ethtypes.NewTransaction(nonce, TSSAddress, value, gasLimit, gasPrice, nil)
-	chainID, err := goerliClient.NetworkID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	signedTx, err := sm.SendEther(TSSAddress, value, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
-	if err != nil {
-		panic(err)
-	}
-	err = goerliClient.SendTransaction(context.Background(), signedTx)
-	if err != nil {
-		panic(err)
-	}
 	fmt.Printf("GOERLI tx sent: %s; to %s, nonce %d\n", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 	receipt := MustWaitForTxReceipt(sm.goerliClient, signedTx)
 	fmt.Printf("GOERLI tx receipt: %d\n", receipt.Status)
@@ -71,6 +51,15 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	fmt.Printf("  to: %s\n", signedTx.To().String())
 	fmt.Printf("  value: %d\n", signedTx.Value())
 	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
+
+	{
+		tx, err := sm.SendEther(TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
+		if err != nil {
+			panic(err)
+		}
+		receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+		fmt.Printf("GOERLI donation tx receipt: %d\n", receipt.Status)
+	}
 
 	c := make(chan any)
 	sm.wg.Add(1)
@@ -103,11 +92,13 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		if err != nil {
 			panic(err)
 		}
+
 		fmt.Printf("eth zrc20 balance: %s\n", ethZRC20Balance.String())
 		if ethZRC20Balance.Cmp(value) != 0 {
 			fmt.Printf("eth zrc20 bal wanted %d, got %d\n", value, ethZRC20Balance)
 			panic("bal mismatch")
 		}
+
 	}()
 	sm.wg.Wait()
 }
@@ -188,4 +179,38 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 			panic(fmt.Sprintf("expected cctx status PendingRevert; got %s", cctx.CctxStatus.Status))
 		}
 	}()
+}
+
+func (sm *SmokeTest) SendEther(to ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+	goerliClient := sm.goerliClient
+
+	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
+	if err != nil {
+		return nil, err
+	}
+	gasLimit := uint64(30000) // in units
+	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	tx := ethtypes.NewTransaction(nonce, TSSAddress, value, gasLimit, gasPrice, data)
+	chainID, err := goerliClient.NetworkID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
+	if err != nil {
+		return nil, err
+	}
+	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return signedTx, nil
 }

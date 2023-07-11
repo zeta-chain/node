@@ -486,6 +486,10 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
 						continue
 					}
+					if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
+						logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
+						continue
+					}
 					memo = memoBytes
 					found = true
 

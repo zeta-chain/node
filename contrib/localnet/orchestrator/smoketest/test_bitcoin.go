@@ -122,6 +122,10 @@ func (sm *SmokeTest) DepositBTC() {
 	if err != nil {
 		panic(err)
 	}
+	_, err = SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.11, utxos[4:5], btc, []byte(zetaclient.DonationMessage))
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
 
