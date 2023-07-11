@@ -221,20 +221,13 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "false"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: Start Private Network
-        env:
-          DOCKER_BUILDKIT: 1
         run: |
           make zetanode
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
       - name: Run Smoke Test
-        env:
-          DOCKER_BUILDKIT: 1
         run: |
           cd contrib/localnet
           docker-compose up orchestrator --exit-code-from orchestrator
