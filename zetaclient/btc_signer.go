@@ -46,23 +46,20 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, feeRate float64, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
 	var total float64
-	prevOuts := make([]btcjson.ListUnspentResult, 0, 20)
+	prevOuts := make([]btcjson.ListUnspentResult, 0, len(utxos))
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
-	estimateFee := 0.0002 // FIXME: proper fee estimation
-	minFee := 0.0001
+	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
+	minFee := 0.00005
 	for _, utxo := range utxos {
-		// check for pending utxos
-
 		total = total + utxo.Amount
 		prevOuts = append(prevOuts, utxo)
 
 		if total >= amount+estimateFee {
 			break
 		}
-
 	}
 	if total < amount {
 		return nil, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
@@ -85,10 +82,11 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	// add txout with remaining btc
-	fees := round(float64(tx.SerializeSize()) * feeRate)
-	if float64(fees) < minFee*1e8 {
+	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
+	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
+	if fees.Int64() < int64(minFee*1e8) {
 		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
-		fees = round(minFee * 1e8)
+		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
@@ -101,16 +99,16 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
-	txOut.Value = remainingSatoshis - fees
-	tx.AddTxOut(txOut)
-	if remainingSatoshis < fees {
-		fmt.Printf("*** WARNING *** : remaining satoshis %d is less than fees %d\n", remainingSatoshis, fees)
-		fmt.Printf("amount requested %d\n", amountSatoshis)
-		for _, utxo := range prevOuts {
-			fmt.Printf("utxo: %d ", round(utxo.Amount*1e8))
-		}
-		return nil, fmt.Errorf("remaining satoshis %d is less than fees %d", remainingSatoshis, fees)
+
+	remainderValue := remainingSatoshis - fees.Int64()
+	if remainderValue < 0 {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
+		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
+		return nil, fmt.Errorf("remainder value is negative")
 	}
+
+	txOut.Value = remainderValue
+	tx.AddTxOut(txOut)
 
 	// add txout
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
@@ -164,20 +162,16 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
 	}
-
-	// update pending utxos pendingUtxos
-	err = signer.updatePendingUTXOs(db, prevOuts)
-	if err != nil {
-		return nil, err
-	}
 	return tx, nil
 }
 
 func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
-	var buf bytes.Buffer
-	_ = signedTx.Serialize(&buf)
-	fmt.Printf("signedTx: %x\n", buf.Bytes())
+
+	var outBuff bytes.Buffer
+	_ = signedTx.Serialize(&outBuff)
+	str := hex.EncodeToString(outBuff.Bytes())
+	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
 
 	hash, err := signer.rpcClient.SendRawTransaction(signedTx, true)
 	if err != nil {
@@ -202,8 +196,12 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
-
-	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), send.GetCurrentOutTxParam().Receiver)
+	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
+	if err != nil {
+		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
+		return
+	}
+	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
@@ -228,7 +226,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	addr, err := btcutil.DecodeAddress(send.GetCurrentOutTxParam().Receiver, config.BitconNetParams)
+	// FIXME: config chain params
+	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
 		return
@@ -239,10 +238,9 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	logger.Info().Msgf("SignWithdrawTx: to %s, value %d", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64()/1e8)
+	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	// FIXME: gas price?
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, float64(gasprice.Int64())/1e8*1024, btcClient.utxos, btcClient.db, height)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, btcClient.db, height)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
@@ -288,22 +286,4 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 
 	}
-	//}
-
-}
-
-func (signer *BTCSigner) updatePendingUTXOs(db *gorm.DB, utxos []btcjson.ListUnspentResult) error {
-	for _, utxo := range utxos {
-		// Try to find existing record in DB to populate primary key
-		var pendingUTXO clienttypes.PendingUTXOSQLType
-		db.Where("Key = ?", utxoKey(utxo)).First(&pendingUTXO)
-
-		// If record doesn't exist, it will be created by the Save function
-		pendingUTXO.UTXO = utxo
-		pendingUTXO.Key = utxoKey(utxo)
-		if err := db.Save(&pendingUTXO).Error; err != nil {
-			return err
-		}
-	}
-	return nil
 }
