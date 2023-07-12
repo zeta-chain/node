@@ -33,7 +33,7 @@ make install-testnet
 ```
 to build. 
 
-This command will install the `zetacoded` and `zetaclientd` binaries in your
+This command will install the `zetacored` and `zetaclientd` binaries in your
 `$GOPATH/bin` directory.
 
 Verify that the version of the binaries match the release tag.  
