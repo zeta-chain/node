@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
@@ -101,10 +102,9 @@ func (t *TelemetryServer) GetNextNonce() int {
 	return t.status.BTCNextNonce
 }
 
-func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs, numberOfFilteredUTXOs int) {
+func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
-	t.status.BTCNumberOfFilteredUTXOs = numberOfFilteredUTXOs
 	t.mu.Unlock()
 }
 

@@ -48,24 +48,17 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
 	var total float64
-	var prevOuts []btcjson.ListUnspentResult
+	prevOuts := make([]btcjson.ListUnspentResult, 0, len(utxos))
 	// select N utxo sufficient to cover the amount
 	//estimateFee := size (100 inputs + 2 output) * feeRate
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
 	for _, utxo := range utxos {
-		// check for pending utxos
-		if _, err := getPendingUTXO(db, utxoKey(utxo)); err != nil {
-			if err == gorm.ErrRecordNotFound {
-				total = total + utxo.Amount
-				prevOuts = append(prevOuts, utxo)
+		total = total + utxo.Amount
+		prevOuts = append(prevOuts, utxo)
 
-				if total >= amount+estimateFee {
-					break
-				}
-			} else {
-				return nil, err
-			}
+		if total >= amount+estimateFee {
+			break
 		}
 	}
 	if total < amount {
@@ -168,12 +161,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
-	}
-
-	// update pending utxos pendingUtxos
-	err = signer.updatePendingUTXOs(db, prevOuts)
-	if err != nil {
-		return nil, err
 	}
 	return tx, nil
 }
@@ -299,23 +286,4 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 
 	}
-	//}
-
-}
-
-func (signer *BTCSigner) updatePendingUTXOs(db *gorm.DB, utxos []btcjson.ListUnspentResult) error {
-	fmt.Printf("updatePendingUTXOs: %d\n", len(utxos))
-	for _, utxo := range utxos {
-		// Try to find existing record in DB to populate primary key
-		var pendingUTXO clienttypes.PendingUTXOSQLType
-		db.Where("Key = ?", utxoKey(utxo)).First(&pendingUTXO)
-
-		// If record doesn't exist, it will be created by the Save function
-		pendingUTXO.UTXO = utxo
-		pendingUTXO.Key = utxoKey(utxo)
-		if err := db.Save(&pendingUTXO).Error; err != nil {
-			return err
-		}
-	}
-	return nil
 }
