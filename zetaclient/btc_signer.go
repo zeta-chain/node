@@ -196,11 +196,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
-	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
-	if err != nil {
-		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
-		return
-	}
+	toAddr := send.GetCurrentOutTxParam().Receiver
+
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
