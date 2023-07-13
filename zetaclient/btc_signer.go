@@ -224,7 +224,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
+	addr, err := btcutil.DecodeAddress(toAddr, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
 		return
