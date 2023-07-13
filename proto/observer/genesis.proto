@@ -5,11 +5,13 @@ import "gogoproto/gogo.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
 import "observer/params.proto";
+import "observer/node_account.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message GenesisState {
   repeated Ballot ballots =1;
   repeated ObserverMapper observers = 2;
+  repeated NodeAccount nodeAccountList = 8;
   Params params = 3;
 }

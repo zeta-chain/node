@@ -8,7 +8,9 @@ import "gogoproto/gogo.proto";
 import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
+import "observer/node_account.proto";
 import "common/common.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -43,6 +45,16 @@ service Query {
 // Queries a list of GetCoreParams items.
 	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
+	}
+
+	// Queries a nodeAccount by index.
+	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount/{index}";
+	}
+
+	// Queries a list of nodeAccount items.
+	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -107,6 +119,23 @@ message QueryGetCoreParamsRequest {
 
 message QueryGetCoreParamsResponse {
 	CoreParamsList core_params = 1;
+}
+
+message QueryGetNodeAccountRequest {
+	string index = 1;
+}
+
+message QueryGetNodeAccountResponse {
+	NodeAccount NodeAccount = 1;
+}
+
+message QueryAllNodeAccountRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeAccountResponse {
+	repeated NodeAccount NodeAccount = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3

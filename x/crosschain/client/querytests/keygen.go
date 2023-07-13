@@ -11,7 +11,7 @@ import (
 
 func (s *CliTestSuite) TestShowKeygen() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.state.Keygen
+	obj := s.crossChainState.Keygen
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

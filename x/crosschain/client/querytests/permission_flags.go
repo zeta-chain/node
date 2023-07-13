@@ -12,7 +12,7 @@ import (
 
 func (s *CliTestSuite) TestShowPermissionFlags() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.state.PermissionFlags
+	obj := s.crossChainState.PermissionFlags
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

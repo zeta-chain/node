@@ -14,7 +14,6 @@ import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
-import "crosschain/node_account.proto";
 import "crosschain/params.proto";
 import "crosschain/nonce_to_cctx.proto";
 
@@ -131,15 +130,7 @@ service Query {
 	rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
 		option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
 	}
-	// Queries a nodeAccount by index.
-	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount/{index}";
-	}
 
-	// Queries a list of nodeAccount items.
-	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount";
-	}
 
 	// Queries a list of lastMetaHeight items.
 	rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
@@ -318,22 +309,7 @@ message QueryAllCctxPendingResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetNodeAccountRequest {
-	string index = 1;
-}
 
-message QueryGetNodeAccountResponse {
-	NodeAccount NodeAccount = 1;
-}
-
-message QueryAllNodeAccountRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllNodeAccountResponse {
-	repeated NodeAccount NodeAccount = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
 message QueryLastZetaHeightRequest {
 }
 

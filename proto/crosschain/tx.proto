@@ -18,7 +18,6 @@ service Msg {
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
-  rpc SetNodeKeys(MsgSetNodeKeys) returns (MsgSetNodeKeysResponse);
   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 // this line is used by starport scaffolding # proto/tx/rpc

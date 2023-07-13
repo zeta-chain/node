@@ -1,6 +1,7 @@
 package types
 
 const (
+	NodeAccountKey = "NodeAccount-value-"
 	// ModuleName defines the module name
 	ModuleName = "observer"
 

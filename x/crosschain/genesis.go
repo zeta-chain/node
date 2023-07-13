@@ -49,11 +49,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetCrossChainTx(ctx, *elem)
 	}
 
-	// Set all the nodeAccount
-	for _, elem := range genState.NodeAccountList {
-		k.SetNodeAccount(ctx, *elem)
-	}
-
 	if genState.Tss != nil {
 		k.SetTSS(ctx, *genState.Tss)
 	}
@@ -109,12 +104,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
-	// Get all nodeAccount
-	nodeAccountList := k.GetAllNodeAccount(ctx)
-	for _, elem := range nodeAccountList {
-		e := elem
-		genesis.NodeAccountList = append(genesis.NodeAccountList, &e)
-	}
 	return genesis
 }
 

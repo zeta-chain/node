@@ -166,9 +166,9 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 	return resp.ChainNonces, nil
 }
 
-func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*types.NodeAccount, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.NodeAccountAll(context.Background(), &types.QueryAllNodeAccountRequest{})
+func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.NodeAccountAll(context.Background(), &zetaObserverTypes.QueryAllNodeAccountRequest{})
 	if err != nil {
 		return nil, err
 	}

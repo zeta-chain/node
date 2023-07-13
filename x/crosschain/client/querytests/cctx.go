@@ -13,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestListCCTX() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.CrossChainTxs
+	objs := s.crossChainState.CrossChainTxs
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
@@ -72,7 +72,7 @@ func (s *CliTestSuite) TestListCCTX() {
 
 func (s *CliTestSuite) TestShowSend() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.CrossChainTxs
+	objs := s.crossChainState.CrossChainTxs
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

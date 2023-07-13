@@ -35,9 +35,9 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	TxinKey              = "Txin-value-"
-	TxinVoterKey         = "TxinVoter-value-"
-	NodeAccountKey       = "NodeAccount-value-"
+	TxinKey      = "Txin-value-"
+	TxinVoterKey = "TxinVoter-value-"
+
 	TxoutKey             = "Txout-value-"
 	TxoutCountKey        = "Txout-count-"
 	TxoutConfirmationKey = "TxoutConfirmation-value-"

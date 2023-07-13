@@ -49,7 +49,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	if !found {
 		var voterList []string
 
-		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
+		for _, nodeAccount := range k.zetaObserverKeeper.GetAllNodeAccount(ctx) {
 			voterList = append(voterList, nodeAccount.Operator)
 		}
 		ballot = observerTypes.Ballot{

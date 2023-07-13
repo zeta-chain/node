@@ -13,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestShowLastBlockHeight() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.LastBlockHeightList
+	objs := s.crossChainState.LastBlockHeightList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -59,7 +59,7 @@ func (s *CliTestSuite) TestShowLastBlockHeight() {
 
 func (s *CliTestSuite) TestListLastBlockHeight() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.LastBlockHeightList
+	objs := s.crossChainState.LastBlockHeightList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

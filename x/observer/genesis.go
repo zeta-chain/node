@@ -15,15 +15,26 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetObserverMapper(ctx, mapper)
 	}
 	k.SetCoreParams(ctx, types.GetCoreParams())
+	// Set all the nodeAccount
+	for _, elem := range genState.NodeAccountList {
+		k.SetNodeAccount(ctx, *elem)
+	}
 	k.SetParams(ctx, types.DefaultParams())
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
+	// Get all nodeAccount
+	nodeAccountList := k.GetAllNodeAccount(ctx)
+	nodeAccounts := make([]*types.NodeAccount, len(nodeAccountList))
+	for i, elem := range nodeAccountList {
+		nodeAccounts[i] = &elem
+	}
 	return &types.GenesisState{
-		Ballots:   k.GetAllBallots(ctx),
-		Observers: k.GetAllObserverMappers(ctx),
-		Params:    &params,
+		Ballots:         k.GetAllBallots(ctx),
+		Observers:       k.GetAllObserverMappers(ctx),
+		Params:          &params,
+		NodeAccountList: nodeAccounts,
 	}
 }

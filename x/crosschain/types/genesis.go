@@ -22,7 +22,7 @@ func DefaultGenesis() *GenesisState {
 		GasPriceList:    []*GasPrice{},
 		ChainNoncesList: []*ChainNonces{},
 		//CCTX:            []*Send{},
-		NodeAccountList: []*NodeAccount{},
+
 	}
 }
 
@@ -81,16 +81,6 @@ func (gs GenesisState) Validate() error {
 	//	}
 	//	sendIndexMap[elem.Index] = true
 	//}
-
-	// Check for duplicated index in nodeAccount
-	nodeAccountIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.NodeAccountList {
-		if _, ok := nodeAccountIndexMap[elem.GetOperator()]; ok {
-			return fmt.Errorf("duplicated index for nodeAccount")
-		}
-		nodeAccountIndexMap[elem.GetOperator()] = true
-	}
 
 	return nil
 }

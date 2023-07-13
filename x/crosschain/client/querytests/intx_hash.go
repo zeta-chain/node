@@ -16,7 +16,7 @@ import (
 
 func (s *CliTestSuite) TestShowInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.InTxHashToCctxList
+	objs := s.crossChainState.InTxHashToCctxList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -68,8 +68,8 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 
 func (s *CliTestSuite) TestListInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.InTxHashToCctxList
-	cctxCount := len(s.state.CrossChainTxs)
+	objs := s.crossChainState.InTxHashToCctxList
+	cctxCount := len(s.crossChainState.CrossChainTxs)
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

@@ -12,7 +12,6 @@ import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
-import "crosschain/node_account.proto";
 import "crosschain/params.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
@@ -25,7 +24,7 @@ message GenesisState {
 		repeated GasPrice gasPriceList = 5;
 		repeated ChainNonces chainNoncesList = 6;
 		repeated CrossChainTx CrossChainTxs = 7;
-		repeated NodeAccount nodeAccountList = 8;
+
 		repeated LastBlockHeight lastBlockHeightList = 9;
 	repeated InTxHashToCctx inTxHashToCctxList = 10 [(gogoproto.nullable) = false];
   PermissionFlags permissionFlags = 11;
