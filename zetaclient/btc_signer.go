@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	dustSats           = 0.00001 // 1000 sats
 	maxNoOfInputsPerTx = 20
 )
 
@@ -52,11 +51,6 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
-	// enforce dust limit
-	if amount < dustSats {
-		return nil, fmt.Errorf("must send at least %v BTC, got %v", dustSats, amount)
-	}
-
 	// select N UTXOs to cover the amount
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
