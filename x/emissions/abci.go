@@ -40,7 +40,7 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, observerKeeper types.ZetaObserverKeeper) error {
+func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, _ types.ZetaObserverKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, coin)
 }

@@ -41,14 +41,6 @@ message EventZrcWithdrawCreated {
   string new_status = 9;
 }
 
-message EventBallotCreated {
-  string msg_type_url = 1;
-  string cctx_index = 2;
-  string ballot_identifier = 3;
-  string observation_hash = 4;
-  string observation_chain = 5;
-  string ballot_type = 6;
-}
 
 
 message EventZetaWithdrawCreated {
@@ -60,7 +52,7 @@ message EventZetaWithdrawCreated {
 }
 
 
-message EmitOutboundFailure {
+message EventOutboundFailure {
   string msg_type_url = 1;
   string cctx_index = 2;
   string old_status = 3;
@@ -68,7 +60,7 @@ message EmitOutboundFailure {
   string zeta_minted = 5;
 }
 
-message EmitOutboundSuccess {
+message EventOutboundSuccess {
   string msg_type_url = 1;
   string cctx_index = 2;
   string old_status = 3;

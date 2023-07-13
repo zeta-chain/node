@@ -8,7 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // FIXME: use more specific error types & codes
@@ -29,7 +30,7 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := zetaObserverTypes.ObservationType_InBoundTx
+	observationType := observerTypes.ObservationType_InBoundTx
 	if !k.IsInboundAllowed(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
@@ -56,10 +57,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 	if err != nil {
 		return nil, err
 	}

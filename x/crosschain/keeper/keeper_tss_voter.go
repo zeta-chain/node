@@ -11,7 +11,8 @@ import (
 	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // MESSAGES
@@ -51,30 +52,30 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
 			voterList = append(voterList, nodeAccount.Operator)
 		}
-		ballot = zetaObserverTypes.Ballot{
+		ballot = observerTypes.Ballot{
 			Index:            "",
 			BallotIdentifier: index,
 			VoterList:        voterList,
-			Votes:            zetaObserverTypes.CreateVotes(len(voterList)),
-			ObservationType:  zetaObserverTypes.ObservationType_TSSKeyGen,
+			Votes:            observerTypes.CreateVotes(len(voterList)),
+			ObservationType:  observerTypes.ObservationType_TSSKeyGen,
 			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
-			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
+			BallotStatus:     observerTypes.BallotStatus_BallotInProgress,
 		}
 	}
 	err := error(nil)
 	if msg.Status == common.ReceiveStatus_Success {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	} else if msg.Status == common.ReceiveStatus_Failed {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_FailureObservation)
+		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_FailureObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	}
 	if !found {
-		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
 	}
 
 	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
@@ -84,7 +85,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	}
 	// Set TSS only on success , set Keygen either way.
 	// Keygen block can be updated using a policy transaction if keygen fails
-	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
+	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
 			TssParticipantList:  keygen.GetGranteePubkeys(),
@@ -108,7 +109,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			}
 			k.SetPendingNonces(ctx, p)
 		}
-	} else if ballot.BallotStatus == zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
+	} else if ballot.BallotStatus == observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
 		keygen.BlockNumber = math2.MaxInt64
 	}

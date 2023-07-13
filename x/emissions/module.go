@@ -120,6 +120,7 @@ func NewAppModule(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		stakingKeeper:  stakingKeeper,
+		observerKeeper: observerKeeper,
 	}
 }
 
