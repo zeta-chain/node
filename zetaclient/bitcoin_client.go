@@ -327,10 +327,14 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		ob.minedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
+	var amount float64
 	if res.Amount > 0 {
 		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount > 0")
+		amount = res.Amount
+	} else {
+		amount = -res.Amount
 	}
-	amountInSat, _ := big.NewFloat(-res.Amount * 1e8).Int(nil)
+	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
