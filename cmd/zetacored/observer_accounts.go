@@ -60,6 +60,9 @@ func AddObserverAccountsCmd() *cobra.Command {
 				return err
 			}
 			fmt.Println("TSS Pubkey: ", tssPubkey)
+			fmt.Println("InboundVote :", sdk.MsgTypeURL(&crosschaintypes.MsgVoteOnObservedInboundTx{}))
+			fmt.Println("OutboundVote :", sdk.MsgTypeURL(&crosschaintypes.MsgVoteOnObservedOutboundTx{}))
+			fmt.Println("Keygen :", sdk.MsgTypeURL(&crosschaintypes.MsgUpdateKeygen{}))
 			if keyGenBlock == 0 && tssPubkey == "" {
 				panic("TSS pubkey is required if keygen block is set to 0")
 			}

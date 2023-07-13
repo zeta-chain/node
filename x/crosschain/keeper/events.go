@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"fmt"
 	types2 "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,52 +10,54 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
+func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) error {
 	currentOutParam := cctx.GetCurrentOutTxParam()
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.InboundFinalized,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
-			sdk.NewAttribute(types.SenderChain, fmt.Sprintf("%d", cctx.InboundTxParams.SenderChainId)),
-			sdk.NewAttribute(types.TxOrigin, cctx.InboundTxParams.TxOrigin),
-			sdk.NewAttribute(types.Asset, cctx.InboundTxParams.Asset),
-			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
-			sdk.NewAttribute(types.InBlockHeight, fmt.Sprintf("%d", cctx.InboundTxParams.InboundTxObservedExternalHeight)),
-			sdk.NewAttribute(types.Receiver, currentOutParam.Receiver),
-			sdk.NewAttribute(types.ReceiverChain, fmt.Sprintf("%d", currentOutParam.ReceiverChainId)),
-			sdk.NewAttribute(types.Amount, cctx.InboundTxParams.Amount.String()),
-			//sdk.NewAttribute(types.ZetaMint, cctx.ZetaMint.String()),
-			sdk.NewAttribute(types.RelayedMessage, cctx.RelayedMessage),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
-			sdk.NewAttribute(types.StatusMessage, cctx.CctxStatus.StatusMessage),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
-		),
-	)
+	err := ctx.EventManager().EmitTypedEvents(&types.EventInboundFinalized{
+		MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgVoteOnObservedInboundTx{}),
+		CctxIndex:      cctx.Index,
+		Sender:         cctx.InboundTxParams.Sender,
+		SenderChain:    common.GetChainFromChainID(cctx.InboundTxParams.SenderChainId).ChainName.String(),
+		TxOrgin:        cctx.InboundTxParams.TxOrigin,
+		Asset:          cctx.InboundTxParams.Asset,
+		InTxHash:       cctx.InboundTxParams.InboundTxObservedHash,
+		InBlockHeight:  strconv.FormatUint(cctx.InboundTxParams.InboundTxObservedExternalHeight, 10),
+		Receiver:       currentOutParam.Receiver,
+		ReceiverChain:  common.GetChainFromChainID(currentOutParam.ReceiverChainId).ChainName.String(),
+		Amount:         cctx.InboundTxParams.Amount.String(),
+		RelayedMessage: cctx.RelayedMessage,
+		NewStatus:      cctx.CctxStatus.Status.String(),
+		StatusMessage:  cctx.CctxStatus.StatusMessage,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.CctxNewKeygenBlock,
-			sdk.NewAttribute(types.KeyGenBlock, strconv.Itoa(int(keygen.BlockNumber))),
-			sdk.NewAttribute(types.KeyGenPubKeys, types2.PrettyPrintStruct(keygen.GranteePubkeys)),
-		),
-	)
+func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) error {
+	err := ctx.EventManager().EmitTypedEvents(&types.EventKeygenBlockUpdated{
+		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgUpdateKeygen{}),
+		KeygenBlock:   strconv.Itoa(int(keygen.BlockNumber)),
+		KeygenPubkeys: types2.PrettyPrintStruct(keygen.GranteePubkeys),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.ZrcWithdrawCreated,
-			sdk.NewAttribute(types.CctxIndex, cctx.Index),
-			sdk.NewAttribute(types.Sender, cctx.InboundTxParams.Sender),
-			//sdk.NewAttribute(types.SenderChain, cctx.InboundTxParams.SenderChain),
-			sdk.NewAttribute(types.InTxHash, cctx.InboundTxParams.InboundTxObservedHash),
-			//sdk.NewAttribute(types.Receiver, cctx.OutboundTxParams.Receiver),
-			//sdk.NewAttribute(types.ReceiverChain, cctx.OutboundTxParams.ReceiverChain),
-			//sdk.NewAttribute(types.Amount, cctx.ZetaBurnt.String()),
-			sdk.NewAttribute(types.NewStatus, cctx.CctxStatus.Status.String()),
-			sdk.NewAttribute(types.Identifiers, cctx.LogIdentifierForCCTX()),
-		),
-	)
+func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) error {
+	err := ctx.EventManager().EmitTypedEvents(&types.EventZrcWithdrawCreated{
+		MsgTypeUrl: " /zetachain.zetacore.crosschain. ZRCWithdrawCreated",
+		CctxIndex:  cctx.Index,
+		Sender:     cctx.InboundTxParams.Sender,
+		InTxHash:   cctx.InboundTxParams.InboundTxObservedHash,
+		NewStatus:  cctx.CctxStatus.Status.String(),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func EmitEventBallotCreated(ctx sdk.Context, ballot zetaObserverTypes.Ballot, observationHash, obserVationChain string) {
