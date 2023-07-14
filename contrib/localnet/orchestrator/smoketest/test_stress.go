@@ -155,7 +155,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("eth zrc20 balance: %s\n Wei", ethZRC20Balance.String())
+	fmt.Printf("eth zrc20 balance: %s Wei \n", ethZRC20Balance.String())
 
 	//Pre-approve ETH withdraw on ZEVM
 	fmt.Printf("approving ETH ZRC20...\n")
