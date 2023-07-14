@@ -5,10 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strconv"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcjson"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -26,7 +24,6 @@ type BTCSignTestSuite struct {
 	suite.Suite
 	testSigner *TestSigner
 	db         *gorm.DB
-	utxos      []btcjson.ListUnspentResult
 }
 
 const (
@@ -55,21 +52,6 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	suite.NoError(err)
 
 	suite.db = db
-
-	//Create UTXOs
-	for i := 0; i < utxoCount; i++ {
-		suite.utxos = append(suite.utxos, btcjson.ListUnspentResult{
-			TxID:          strconv.Itoa(i),
-			Vout:          uint32(i),
-			Address:       "",
-			Account:       "",
-			ScriptPubKey:  "",
-			RedeemScript:  "",
-			Amount:        0,
-			Confirmations: 0,
-			Spendable:     false,
-		})
-	}
 }
 
 func (suite *BTCSignTestSuite) TearDownSuite() {
