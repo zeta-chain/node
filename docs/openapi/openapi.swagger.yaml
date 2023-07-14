@@ -50490,6 +50490,15 @@ definitions:
       - BallotFinalized_FailureObservation
       - BallotInProgress
     default: BallotFinalized_SuccessObservation
+  observerBlame:
+    type: object
+    properties:
+      index:
+        type: string
+      failure_reason:
+        type: string
+      node:
+        $ref: '#/definitions/observerNode'
   observerCoreParams:
     type: object
     properties:
@@ -50531,10 +50540,23 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
+  observerMsgAddBlameVoteResponse:
+    type: object
   observerMsgAddObserverResponse:
     type: object
   observerMsgUpdateCoreParamsResponse:
     type: object
+  observerNode:
+    type: object
+    properties:
+      pub_key:
+        type: string
+      blame_data:
+        type: string
+        format: byte
+      blame_signature:
+        type: string
+        format: byte
   observerObservationType:
     type: string
     enum:
