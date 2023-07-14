@@ -85,30 +85,60 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Inbound Ballot has been finalized , Create CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
+	defer func() {
+		EmitEventInboundFinalized(ctx, &cctx)
+		k.SetCrossChainTx(ctx, cctx)
+	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-
 	if receiverChain.IsZetaChain() {
-		err = k.HandleEVMDeposit(ctx, &cctx, *msg, observationChain)
-		if err != nil {
+		tmpCtx, commit := ctx.CacheContext()
+		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
+		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		} else if err != nil && isContractReverted { // contract call reverted; should refund
+			revertMessage := err.Error()
+			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
+			if chain == nil {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+			if !isFound {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "cannot find gas price", cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			// create new OutboundTxParams for the revert
+			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+				Receiver:           cctx.InboundTxParams.Sender,
+				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+				Amount:             cctx.InboundTxParams.Amount,
+				CoinType:           cctx.InboundTxParams.CoinType,
+				OutboundTxGasLimit: 0, // for fungible refund, use default gasLimit
+				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
+			})
+			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
+				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			// do not commit() here;
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, revertMessage, cctx.LogIdentifierForCCTX())
+			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		} else { // successful HandleEVMDeposit;
+			commit()
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Remote omnichain contract call completed", cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "First half of EVM transfer Completed", cctx.LogIdentifierForCCTX())
 	} else { // Cross Chain SWAP
 		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
-			k.SetCrossChainTx(ctx, cctx)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "Status Changed to Pending Outbound", cctx.LogIdentifierForCCTX())
+		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "", cctx.LogIdentifierForCCTX())
+		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
-	EmitEventInboundFinalized(ctx, &cctx)
-	k.SetCrossChainTx(ctx, cctx)
-	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
 // TODO: is LastBlockHeight needed?

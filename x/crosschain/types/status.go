@@ -16,9 +16,12 @@ func AllStatus() []CctxStatus {
 	}
 }
 
+// empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
 	oldStatus := m.Status
-	m.StatusMessage = msg
+	if len(msg) > 0 {
+		m.StatusMessage = msg
+	}
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
 		m.Status = CctxStatus_Aborted
@@ -49,6 +52,7 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 		CctxStatus_PendingOutbound,
 		CctxStatus_Aborted,
 		CctxStatus_OutboundMined, // EVM Deposit
+		CctxStatus_PendingRevert, // EVM Deposit contract call reverted; should refund
 	}
 	stateTransitionMap[CctxStatus_PendingOutbound] = []CctxStatus{
 		CctxStatus_Aborted,
