@@ -3,7 +3,10 @@ package zetaclient
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -11,6 +14,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 )
 
@@ -189,4 +193,62 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	}
 
 	fmt.Println("Transaction successfully signed")
+}
+
+func TestSelectUTXOs(t *testing.T) {
+	// Create 10 dummy UTXOs (22.44 BTC in total)
+	utxos := make([]btcjson.ListUnspentResult, 0, 10)
+	amounts := []float64{0.01, 0.12, 0.18, 0.24, 0.5, 1.26, 2.97, 3.28, 5.16, 8.72}
+	for _, amount := range amounts {
+		utxos = append(utxos, btcjson.ListUnspentResult{Amount: amount})
+	}
+
+	// Case1:
+	// 		input: utxoCap = 5, amount = 0.01,
+	// 		output: [0.01], 0.01
+	result, amount, err := selectUTXOs(utxos, 0.01, 5)
+	require.Nil(t, err)
+	require.Equal(t, 0.01, amount)
+	require.Equal(t, utxos[0:1], result)
+
+	// Case2:
+	// 		input: utxoCap = 5, amount = 0.5
+	// 		output: [0.01, 0.12, 0.18, 0.24], 0.55
+	result, amount, err = selectUTXOs(utxos, 0.5, 5)
+	require.Nil(t, err)
+	require.Equal(t, 0.55, amount)
+	require.Equal(t, utxos[0:4], result)
+
+	// Case3:
+	// 		input: utxoCap = 5, amount = 1.0
+	// 		output: [0.01, 0.12, 0.18, 0.24, 0.5], 1.05
+	result, amount, err = selectUTXOs(utxos, 1.0, 5)
+	require.Nil(t, err)
+	require.Equal(t, 1.05, amount)
+	require.Equal(t, utxos[0:5], result)
+
+	// Case4:
+	// 		input: utxoCap = 5, amount = 8.05
+	// 		output: [0.24, 0.5, 1.26, 2.97, 3.28], 8.25
+	result, amount, err = selectUTXOs(utxos, 8.05, 5)
+	require.Nil(t, err)
+	require.Equal(t, 8.25, amount)
+	require.Equal(t, utxos[3:8], result)
+
+	// Case5:
+	// 		input: utxoCap = 5, amount = 16.03
+	// 		output: [1.26, 2.97, 3.28, 5.16, 8.72], 21.39
+	result, amount, err = selectUTXOs(utxos, 16.03, 5)
+	require.Nil(t, err)
+	require.Equal(t, 21.39, amount)
+	require.Equal(t, utxos[5:], result)
+
+	// Case6:
+	// 		input: utxoCap = 5, amount = 21.4
+	// 		output: error
+	result, amount, err = selectUTXOs(utxos, 21.4, 5)
+	require.NotNil(t, err)
+	require.Nil(t, result)
+	require.Equal(t, 0.0, amount)
+	require.Equal(t, "not enough btc in reserve - available : 21.39 , tx amount : 21.4", err.Error())
 }
