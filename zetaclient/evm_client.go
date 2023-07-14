@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/hex"
@@ -57,6 +58,10 @@ type EVMLog struct {
 	ObserveOutTx         zerolog.Logger // Observes external Chains for Outgoing transactions
 
 }
+
+const (
+	DonationMessage = "I am rich!"
+)
 
 // Chain configuration struct
 // Filled with above constants depending on chain
@@ -669,6 +674,10 @@ func (ob *EVMChainClient) observeInTX() error {
 			event := depositedLogs.Event
 			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 			// TODO :add logger to POSTSEND
+			if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
+				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
+				continue
+			}
 			zetaHash, err := ob.zetaClient.PostSend(
 				"",
 				ob.chain.ChainId,
@@ -712,6 +721,10 @@ func (ob *EVMChainClient) observeInTX() error {
 				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
+						continue
+					}
+					if bytes.Compare(tx.Data(), []byte(DonationMessage)) == 0 {
+						ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", tx.Hash().Hex())
 						continue
 					}
 					if *tx.To() == tssAddress {
