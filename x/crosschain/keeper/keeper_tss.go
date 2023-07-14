@@ -9,14 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// SetTSS set a specific tSS in the store from its index
+// SetTSS sets tss information to the store
 func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 	b := k.cdc.MustMarshal(&tss)
 	store.Set([]byte{0}, b)
 }
 
-// GetTSS returns a tSS from its index
+// GetTSS returns the tss information
 func (k Keeper) GetTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 
@@ -29,13 +29,13 @@ func (k Keeper) GetTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	return val, true
 }
 
-// RemoveTSS removes a tSS from the store
+// RemoveTSS removes tss information from the store
 func (k Keeper) RemoveTSS(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 	store.Delete([]byte{0})
 }
 
-// GetAllTSS returns all tSS
+// GetAllTSS returns all tss information
 func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
