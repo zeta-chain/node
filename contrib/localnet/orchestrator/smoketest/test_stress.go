@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -81,7 +82,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Deployer address: %s, balance: %d Ether\n", DeployerAddress.Hex(), bal.Div(bal, big.NewInt(1e18)))
+	fmt.Printf("Deployer address: %s, balance: %d Wei\n", DeployerAddress.Hex(), bal)
 
 	chainid, err := goerliClient.ChainID(context.Background())
 	deployerPrivkey, err := crypto.HexToECDSA(stressTestArgs.deployerPrivateKey)
@@ -143,9 +144,20 @@ func StressTest(_ *cobra.Command, _ []string) {
 		smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 		smokeTest.TestDepositEtherIntoZRC20()
 		smokeTest.TestSendZetaIn()
+	} else {
+		ethZRC20Addr, _ := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		smokeTest.ETHZRC20Addr = ethZRC20Addr
+		smokeTest.ETHZRC20, _ = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
 	}
 
-	//Pre-approve USDT withdraw on ZEVM
+	// Check zrc20 balance of Deployer address
+	ethZRC20Balance, err := smokeTest.ETHZRC20.BalanceOf(nil, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("eth zrc20 balance: %s\n Wei", ethZRC20Balance.String())
+
+	//Pre-approve ETH withdraw on ZEVM
 	fmt.Printf("approving ETH ZRC20...\n")
 	ethZRC20 := smokeTest.ETHZRC20
 	tx, err := ethZRC20.Approve(smokeTest.zevmAuth, smokeTest.ETHZRC20Addr, big.NewInt(1e18))
