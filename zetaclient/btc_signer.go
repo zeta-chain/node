@@ -9,10 +9,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gorm.io/gorm"
-
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -20,13 +16,16 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 const (
 	maxNoOfInputsPerTx = 20
+	dustOffset         = 2000
 )
 
 type BTCSigner struct {
@@ -50,15 +49,15 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, height uint64, nonce uint64) (*wire.MsgTx, error) {
+	nonceMark := int64(nonce) + dustOffset // a separate tx output with very specific value to mark the nonce; +2000 to avoid being a dust rejection
 	// select N UTXOs to cover the amount
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
-	prevOuts, total, err := selectUTXOs(utxos, amount+estimateFee, maxNoOfInputsPerTx)
+	prevOuts, total, err := selectUTXOs(utxos, amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress())
 	if err != nil {
 		return nil, err
 	}
-	remaining := total - amount
 
 	// build tx with selected unspents
 	tx := wire.NewMsgTx(wire.TxVersion)
@@ -84,28 +83,34 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
+	// set output to tss address (change)
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
-	pkScript2, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
+	payToSelf, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
 	if err != nil {
 		return nil, err
 	}
-	remainingSatoshis, err := getSatoshis(remaining)
+	remaining := total - amount
+	remainingSats, err := getSatoshis(remaining)
 	if err != nil {
 		return nil, err
 	}
-	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
-
-	remainderValue := remainingSatoshis - fees.Int64()
-	if remainderValue < 0 {
-		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
+	remainingSats -= fees.Int64()
+	remainingSats -= nonceMark
+	if remainingSats < 0 {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainingSats)
 		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
 		return nil, fmt.Errorf("remainder value is negative")
 	}
-
-	txOut.Value = remainderValue
+	txOut := wire.NewTxOut(remainingSats, payToSelf)
 	tx.AddTxOut(txOut)
 
-	// add txout
+	// set output to tss address (change, but with specific value to mark the nonce)
+	{
+		txOut := wire.NewTxOut(nonceMark, payToSelf)
+		tx.AddTxOut(txOut)
+	}
+
+	// output to the recipient
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
 	if err != nil {
 		return nil, err
@@ -232,7 +237,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, btcClient.db, height)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, height, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
@@ -287,7 +292,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 //   - utxoCap: The maximum number of UTXOs to be selected.
 //
 // Returns: a sublist of selected UTXOs or an error if the qulifying sublist cannot be found.
-func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint8) ([]btcjson.ListUnspentResult, float64, error) {
+func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint8, nonce uint64, tssAddress string) ([]btcjson.ListUnspentResult, float64, error) {
 	total := 0.0
 	left, right := 0, 0
 
@@ -303,8 +308,27 @@ func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint
 			right++
 		}
 	}
+	results := utxos[left:right]
+	if nonce > 0 {
+		for i, utxo := range utxos {
+			// must include the previous nonce marked utxo in the selected list
+			if utxo.Address == tssAddress && uint64(utxo.Amount*1e8) == nonce-1+dustOffset {
+				if i < left || i >= right {
+					total += utxo.Amount
+					results = append(results, utxo)
+				}
+				if total < amount {
+					return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+				}
+				return results, total, nil
+			}
+		}
+		// cannot find marked utxo, return error
+		return nil, 0, fmt.Errorf("cannot find marked utxo with nonce %d", nonce)
+	}
+	// for nonce 0; make exception; no need to include marked output
 	if total < amount {
 		return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
 	}
-	return utxos[left:right], total, nil
+	return results, total, nil
 }
