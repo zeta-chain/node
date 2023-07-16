@@ -65,8 +65,8 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 1
-	chunkSize        = 500
+	minConfirmations = 0
+	chunkSize        = 1000
 	maxHeightDiff    = 10000
 )
 
@@ -339,13 +339,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		return true, false, nil
 	}
 
-	ob.mu.Lock()
-	nextNonce := ob.nextNonce
-	ob.mu.Unlock()
-	if nonce != nextNonce {
-		return true, false, nil
-	}
-
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
@@ -368,17 +361,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	}
 	return true, true, nil
 }
-
-//// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
-//// by the client to easily identify the cctx outbound command
-//func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
-//	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
-//	if err != nil {
-//		return errors.Wrap(err, "error posting nonce to zeta core")
-//	}
-//	logger.Info().Msgf("PostNonce zeta tx %s , signer %s , nonce %d", zetaHash, ob.zetaClient.keys.GetOperatorAddress(), 0)
-//	return nil
-//}
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
 
