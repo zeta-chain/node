@@ -315,7 +315,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		if err != nil {
 			return false, false, nil
 		}
-		getTxResult, err := ob.rpcClient.GetTransaction(hash)
+		getTxResult, err := ob.rpcClient.GetTransactionWatchOnly(hash, true)
 		if err != nil {
 			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
 			return false, false, nil
@@ -327,7 +327,14 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		ob.minedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
-	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
+	var amount float64
+	if res.Amount > 0 {
+		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount > 0")
+		amount = res.Amount
+	} else {
+		amount = -res.Amount
+	}
+	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
@@ -446,7 +453,10 @@ type BTCInTxEvnet struct {
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
-	for _, tx := range txs {
+	for idx, tx := range txs {
+		if idx == 0 {
+			continue // the first tx is coinbase; we do not process coinbase tx
+		}
 		found := false
 		var value float64
 		var memo []byte
@@ -482,6 +492,10 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					memoBytes, err := hex.DecodeString(script[4:])
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
+						continue
+					}
+					if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
+						logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 						continue
 					}
 					memo = memoBytes

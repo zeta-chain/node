@@ -7,31 +7,44 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) error {
+// returns (isContractReverted, err)
+// (true, non-nil) means CallEVM() reverted
+func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
-	//amount, ok := big.NewInt(0).SetString(msg.ZetaBurnt, 10)
+	var ethTxHash ethcommon.Hash
+	if len(ctx.TxBytes()) > 0 {
+		// add event for tendermint transaction hash format
+		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+		ethTxHash = ethcommon.BytesToHash(hash)
+		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
+	}
 
 	if msg.CoinType == common.CoinType_Zeta {
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
 		if err != nil {
-			return err
+			return false, err
 		}
-		// TODO: is it not better to record the finalizing cosmos tx hash here?
-		cctx.GetCurrentOutTxParam().OutboundTxHash = "Mined directly to ZetaEVM without TX"
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
 		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
 		if err != nil {
-			return errors.Wrap(types.ErrUnableToParseContract, err.Error())
+			return false, errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		evmTxResponse, _, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
-			return err
+			isContractReverted := false
+			if evmTxResponse != nil && evmTxResponse.Failed() {
+				isContractReverted = true
+			}
+			return isContractReverted, err
 		}
 
 		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
@@ -46,11 +59,8 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 
 			err = k.ProcessLogs(ctx, logs, contract, txOrigin)
 			if err != nil {
-				return err
-			}
-
-			if err != nil {
-				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				// ProcessLogs should not error; error indicates exception, should abort
+				return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 			}
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
@@ -61,13 +71,9 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 					sdk.NewAttribute("cctxIndex", cctx.Index),
 				),
 			)
-
-			if evmTxResponse != nil {
-				cctx.GetCurrentOutTxParam().OutboundTxHash = evmTxResponse.Hash
-			}
 		}
 	}
-	return nil
+	return false, nil
 }
 
 // message is hex encoded byte array
