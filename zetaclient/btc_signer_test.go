@@ -206,7 +206,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case1:
 	// 		input: utxoCap = 5, amount = 0.01,
 	// 		output: [0.01], 0.01
-	result, amount, err := selectUTXOs(utxos, 0.01, 5)
+	result, amount, err := selectUTXOs(utxos, 0.01, 5, 0, "")
 	require.Nil(t, err)
 	require.Equal(t, 0.01, amount)
 	require.Equal(t, utxos[0:1], result)
@@ -214,7 +214,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case2:
 	// 		input: utxoCap = 5, amount = 0.5
 	// 		output: [0.01, 0.12, 0.18, 0.24], 0.55
-	result, amount, err = selectUTXOs(utxos, 0.5, 5)
+	result, amount, err = selectUTXOs(utxos, 0.5, 5, 0, "")
 	require.Nil(t, err)
 	require.Equal(t, 0.55, amount)
 	require.Equal(t, utxos[0:4], result)
@@ -222,7 +222,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case3:
 	// 		input: utxoCap = 5, amount = 1.0
 	// 		output: [0.01, 0.12, 0.18, 0.24, 0.5], 1.05
-	result, amount, err = selectUTXOs(utxos, 1.0, 5)
+	result, amount, err = selectUTXOs(utxos, 1.0, 5, 0, "")
 	require.Nil(t, err)
 	require.Equal(t, 1.05, amount)
 	require.Equal(t, utxos[0:5], result)
@@ -230,7 +230,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case4:
 	// 		input: utxoCap = 5, amount = 8.05
 	// 		output: [0.24, 0.5, 1.26, 2.97, 3.28], 8.25
-	result, amount, err = selectUTXOs(utxos, 8.05, 5)
+	result, amount, err = selectUTXOs(utxos, 8.05, 5, 0, "")
 	require.Nil(t, err)
 	require.Equal(t, 8.25, amount)
 	require.Equal(t, utxos[3:8], result)
@@ -238,17 +238,19 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case5:
 	// 		input: utxoCap = 5, amount = 16.03
 	// 		output: [1.26, 2.97, 3.28, 5.16, 8.72], 21.39
-	result, amount, err = selectUTXOs(utxos, 16.03, 5)
+	result, amount, err = selectUTXOs(utxos, 16.03, 5, 0, "")
 	require.Nil(t, err)
 	require.Equal(t, 21.39, amount)
-	require.Equal(t, utxos[5:], result)
+	require.Equal(t, utxos[5:10], result)
 
 	// Case6:
 	// 		input: utxoCap = 5, amount = 21.4
 	// 		output: error
-	result, amount, err = selectUTXOs(utxos, 21.4, 5)
+	result, amount, err = selectUTXOs(utxos, 21.4, 5, 0, "")
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Equal(t, 0.0, amount)
 	require.Equal(t, "not enough btc in reserve - available : 21.39 , tx amount : 21.4", err.Error())
+
+	// TODO: add a case with nonce > 0 so that a utxo with value 2000+nonce needs to be selected
 }
