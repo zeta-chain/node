@@ -129,7 +129,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 	return balanceResponse.Value, nil
 }
 
-func (k *Keeper) QuerySystemContractGasCoinZRC4(ctx sdk.Context, chainid *big.Int) (ethcommon.Address, error) {
+func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.Int) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")

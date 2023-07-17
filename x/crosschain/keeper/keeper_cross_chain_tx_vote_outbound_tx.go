@@ -141,9 +141,9 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 	case observerTypes.BallotStatus_BallotFinalized_SuccessObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingRevert:
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "Set To Final status", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "", cctx.LogIdentifierForCCTX())
 		case types.CctxStatus_PendingOutbound:
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Set To Final status", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "", cctx.LogIdentifierForCCTX())
 		}
 
 		newStatus := cctx.CctxStatus.Status.String()

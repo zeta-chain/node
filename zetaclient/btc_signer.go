@@ -25,6 +25,10 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
+const (
+	maxNoOfInputsPerTx = 20
+)
+
 type BTCSigner struct {
 	tssSigner TSSSigner
 	rpcClient *rpcclient.Client
@@ -47,24 +51,15 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
-	var total float64
-	prevOuts := make([]btcjson.ListUnspentResult, 0, len(utxos))
-	// select N utxo sufficient to cover the amount
-	//estimateFee := size (100 inputs + 2 output) * feeRate
+	// select N UTXOs to cover the amount
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
-	for _, utxo := range utxos {
-		total = total + utxo.Amount
-		prevOuts = append(prevOuts, utxo)
-
-		if total >= amount+estimateFee {
-			break
-		}
-	}
-	if total < amount {
-		return nil, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+	prevOuts, total, err := selectUTXOs(utxos, amount+estimateFee, maxNoOfInputsPerTx)
+	if err != nil {
+		return nil, err
 	}
 	remaining := total - amount
+
 	// build tx with selected unspents
 	tx := wire.NewMsgTx(wire.TxVersion)
 	for _, prevOut := range prevOuts {
@@ -196,11 +191,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
-	toAddr, err := hex.DecodeString(send.GetCurrentOutTxParam().Receiver[2:])
-	if err != nil {
-		logger.Error().Msgf("BTC TryProcessOutTx: %s, decode to address err %v", send.Index, err)
-		return
-	}
+	toAddr := send.GetCurrentOutTxParam().Receiver
+
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
@@ -227,7 +219,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(string(toAddr), config.BitconNetParams)
+	addr, err := btcutil.DecodeAddress(toAddr, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
 		return
@@ -284,6 +276,35 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 			break // successful broadcast; no need to retry
 		}
-
 	}
+}
+
+// Selects a sublist of utxos to be used as inputs.
+//
+// Parameters:
+//   - utxos: A list of ordered (by amount in ascending order) UTXO
+//   - amount: The desired minimum total value of the selected UTXOs.
+//   - utxoCap: The maximum number of UTXOs to be selected.
+//
+// Returns: a sublist of selected UTXOs or an error if the qulifying sublist cannot be found.
+func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint8) ([]btcjson.ListUnspentResult, float64, error) {
+	total := 0.0
+	left, right := 0, 0
+
+	for total < amount && right < len(utxos) {
+		if utxoCap > 0 { // expand sublist
+			total += utxos[right].Amount
+			right++
+			utxoCap--
+		} else { // pop the smallest utxo and append the current one
+			total -= utxos[left].Amount
+			total += utxos[right].Amount
+			left++
+			right++
+		}
+	}
+	if total < amount {
+		return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+	}
+	return utxos[left:right], total, nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"cosmossdk.io/math"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -136,12 +135,30 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	if !found {
 		return nil, status.Error(codes.Internal, "pending nonces not found")
 	}
-
-	if p.NonceLow >= p.NonceHigh {
-		return &types.QueryAllCctxPendingResponse{CrossChainTx: []*types.CrossChainTx{}}, nil
-	}
-	//sends := k.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})
 	sends := make([]*types.CrossChainTx, 0)
+
+	// now query the previous nonces up to 100 prior to find any pending cctx that we might have missed
+	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
+	// therefore might mask some lower nonce cctx that is still pending.
+	startNonce := p.NonceLow - 100
+	if startNonce < 0 {
+		startNonce = 0
+	}
+	for i := startNonce; i < p.NonceLow; i++ {
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+		}
+		send, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+		}
+		if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+			sends = append(sends, &send)
+		}
+	}
+
+	// now query the pending nonces that we know are pending
 	for i := p.NonceLow; i < p.NonceHigh; i++ {
 		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
 		if !found {
