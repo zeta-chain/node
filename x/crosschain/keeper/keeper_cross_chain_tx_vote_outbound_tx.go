@@ -74,7 +74,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	if isNew {
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String(), sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}))
 		// Set this the first time when the ballot is created
 		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
 		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
