@@ -8,6 +8,7 @@ import (
 
 func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHash, obserVationChain string) {
 	err := ctx.EventManager().EmitTypedEvent(&types.EventBallotCreated{
+		MsgTypeUrl:       "/zetachain.zetacore.observer.internal.BallotCreated",
 		BallotIdentifier: ballot.BallotIdentifier,
 		BallotType:       ballot.ObservationType.String(),
 		ObservationHash:  observationHash,
