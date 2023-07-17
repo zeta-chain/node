@@ -33,7 +33,7 @@ zetacored tx crosschain inbound-voter \
 100 \
 Gas \
 "" \
---from=mario --keyring-backend=test --yes --chain-id=localnet_101-1 --broadcast-mode=block --gas=auto --gas-adjustment=2 --gas-prices=0.1azeta
+--from=mario --keyring-backend=test --yes --chain-id=localnet_101-1 --broadcast-mode=block --gas=auto --gas-adjustment=2 --gas-prices=0.1azeta --output=json
 
 zetacored q crosschain list-cctx
 
@@ -41,7 +41,7 @@ zetacored tx crosschain outbound-voter \
 0xead687de84b3969b4c18480f197d2812e0acb83f851acc2830f70e94c85cef55 \
 hashout \
 1 \
-7997428181981842964 \
+7994721005120625032 \
 0 \
 1337 \
 1 \
@@ -52,7 +52,7 @@ zetacored tx crosschain outbound-voter \
 0xead687de84b3969b4c18480f197d2812e0acb83f851acc2830f70e94c85cef55 \
 hashout \
 1 \
-7997428181981842964 \
+7994721005120625032 \
 0 \
 1337 \
 1 \
