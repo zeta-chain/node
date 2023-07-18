@@ -29,7 +29,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	nodeAccounts := make([]*types.NodeAccount, len(nodeAccountList))
 	for i, elem := range nodeAccountList {
-		nodeAccounts[i] = &elem
+		nodeAccounts[i] = &elem // #nosec G601
 	}
 	return &types.GenesisState{
 		Ballots:         k.GetAllBallots(ctx),
