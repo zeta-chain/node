@@ -303,7 +303,8 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 		if err != nil {
 			panic(err)
 		}
-		getTxRes, err := sm.btcRPCClient.GetTransaction(hash)
+		getTxRes, err := sm.btcRPCClient.GetTransactionWatchOnly(hash, true)
+
 		if err != nil {
 			panic(err)
 		}

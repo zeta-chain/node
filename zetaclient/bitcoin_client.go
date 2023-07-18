@@ -315,7 +315,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		if err != nil {
 			return false, false, nil
 		}
-		getTxResult, err := ob.rpcClient.GetTransaction(hash)
+		getTxResult, err := ob.rpcClient.GetTransactionWatchOnly(hash, true)
 		if err != nil {
 			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
 			return false, false, nil
@@ -327,7 +327,14 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		ob.minedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
-	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
+	var amount float64
+	if res.Amount > 0 {
+		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount > 0")
+		amount = res.Amount
+	} else {
+		amount = -res.Amount
+	}
+	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
