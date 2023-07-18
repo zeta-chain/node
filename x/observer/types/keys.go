@@ -28,4 +28,5 @@ const (
 	ObserverMapperKey    = "Observer-value-"
 	ObserverParamsKey    = "ObserverParams"
 	AdminPolicyParamsKey = "AdminParams"
+	PermissionFlagsKey   = "PermissionFlags-value-"
 )

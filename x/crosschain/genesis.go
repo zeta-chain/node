@@ -17,12 +17,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
 	}
-	// Set if defined
-	if genState.PermissionFlags != nil {
-		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
-	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
-	}
+
 	// this line is used by starport scaffolding # genesis/module/init
 	// Set if defined
 	if genState.Keygen != nil {
@@ -61,11 +56,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
-	// Get all permissionFlags
-	permissionFlags, found := k.GetPermissionFlags(ctx)
-	if found {
-		genesis.PermissionFlags = &permissionFlags
-	}
+
 	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
 	keygen, found := k.GetKeygen(ctx)

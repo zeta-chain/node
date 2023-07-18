@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -36,7 +37,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCCTXOutboundVoter())
 	cmd.AddCommand(CmdCCTXInboundVoter())
 	cmd.AddCommand(CmdRemoveFromWatchList())
-	cmd.AddCommand(CmdUpdatePermissionFlags())
+	cmd.AddCommand(cli.CmdUpdatePermissionFlags())
 	cmd.AddCommand(CmdUpdateKeygen())
 	// this line is used by starport scaffolding # 1
 

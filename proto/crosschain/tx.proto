@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # proto/tx/import
 import "crosschain/keygen.proto";
 import "common/common.proto";
@@ -18,7 +17,6 @@ service Msg {
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
-  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
@@ -44,11 +42,6 @@ message MsgRemoveFromOutTxTrackerResponse {
 }
 
 
-message MsgUpdatePermissionFlags {
-  string creator = 1;
-  bool isInboundEnabled = 3;
-}
-message MsgUpdatePermissionFlagsResponse {}
 
 message MsgUpdateKeygen {
   string creator = 1;

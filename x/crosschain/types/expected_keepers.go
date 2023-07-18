@@ -48,4 +48,5 @@ type ZetaObserverKeeper interface {
 	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *zetaObserverTypes.CoreParams, found bool)
 	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount zetaObserverTypes.NodeAccount, found bool)
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []zetaObserverTypes.NodeAccount)
+	IsInboundAllowed(ctx sdk.Context) (found bool)
 }

@@ -88,7 +88,3 @@ var (
 	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
 	//0xB73C0Aac4C1E606C6E495d848196355e6CB30381
 )
-
-const (
-	PermissionFlagsKey = "PermissionFlags-value-"
-)

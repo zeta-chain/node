@@ -10,6 +10,7 @@ import "observer/observer.proto";
 import "observer/ballot.proto";
 import "observer/node_account.proto";
 import "common/common.proto";
+import "observer/permission_flags.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
@@ -39,22 +40,25 @@ service Query {
 
 // Queries a list of GetClientParamsForChain items.
 	rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
+		option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chainID}";
 	}
 
 // Queries a list of GetCoreParams items.
 	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
+		option (google.api.http).get = "/zeta-chain/observer/get_core_params";
 	}
 
 	// Queries a nodeAccount by index.
 	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount/{index}";
+		option (google.api.http).get = "/zeta-chain/observer/nodeAccount/{index}";
 	}
 
 	// Queries a list of nodeAccount items.
 	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
-		option (google.api.http).get = "/zeta-chain/crosschain/nodeAccount";
+		option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
+	}
+	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/permission_flags";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -136,6 +140,12 @@ message QueryAllNodeAccountRequest {
 message QueryAllNodeAccountResponse {
 	repeated NodeAccount NodeAccount = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetPermissionFlagsRequest {}
+
+message QueryGetPermissionFlagsResponse {
+	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
 }
 
 // this line is used by starport scaffolding # 3

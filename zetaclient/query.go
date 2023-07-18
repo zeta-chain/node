@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PermissionFlags(context.Background(), &types.QueryGetPermissionFlagsRequest{})
+func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {
-		return types.PermissionFlags{}, err
+		return zetaObserverTypes.PermissionFlags{}, err
 	}
 	return resp.PermissionFlags, nil
 

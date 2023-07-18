@@ -7,6 +7,7 @@ import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/permission_flags.proto";
 
 
 
@@ -16,7 +17,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Msg {
 //  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
    rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
-  rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 
 }
@@ -34,10 +36,6 @@ message MsgUpdateCoreParams {
 message MsgUpdateCoreParamsResponse {
 }
 
-// this line is used by starport scaffolding # proto/tx/message
-//
-//message MsgSetSupportedChainsResponse{
-//}
 message MsgAddObserver {
   string creator = 1;
   int64 chain_id = 2;
@@ -46,5 +44,11 @@ message MsgAddObserver {
 
 message MsgAddObserverResponse {
 }
+
+message MsgUpdatePermissionFlags {
+  string creator = 1;
+  bool isInboundEnabled = 3;
+}
+message MsgUpdatePermissionFlagsResponse {}
 
 // this line is used by starport scaffolding # proto/tx/message

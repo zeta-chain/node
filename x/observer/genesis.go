@@ -20,6 +20,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetNodeAccount(ctx, *elem)
 	}
 	k.SetParams(ctx, types.DefaultParams())
+	// Set if defined
+	if genState.PermissionFlags != nil {
+		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
+	} else {
+		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -31,10 +37,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	for i, elem := range nodeAccountList {
 		nodeAccounts[i] = &elem // #nosec G601 // false positive
 	}
+	// Get all permissionFlags
+	pf := types.PermissionFlags{IsInboundEnabled: true}
+	permissionFlags, found := k.GetPermissionFlags(ctx)
+	if found {
+		pf = permissionFlags
+	}
 	return &types.GenesisState{
 		Ballots:         k.GetAllBallots(ctx),
 		Observers:       k.GetAllObserverMappers(ctx),
 		Params:          &params,
 		NodeAccountList: nodeAccounts,
+		PermissionFlags: &pf,
 	}
 }

@@ -8,21 +8,17 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	//cdc.RegisterConcrete(&MsgSetSupportedChains{}, "observer/SetSupportedChains", nil)
-	//cdc.RegisterConcrete(&MsgAddObserver{}, "observer/AddObserver", nil)
 	cdc.RegisterConcrete(&MsgUpdateCoreParams{}, "observer/UpdateClientParams", nil)
+	cdc.RegisterConcrete(&MsgUpdatePermissionFlags{}, "crosschain/UpdatePermissionFlags", nil)
 	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	//registry.RegisterImplementations((*sdk.Msg)(nil),
-	//	&MsgSetSupportedChains{},
-	//)
-	//registry.RegisterImplementations((*sdk.Msg)(nil),
-	//	&MsgAddObserver{},
-	//)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateCoreParams{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdatePermissionFlags{},
 	)
 	// this line is used by starport scaffolding # 3
 

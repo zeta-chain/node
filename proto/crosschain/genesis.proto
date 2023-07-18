@@ -3,7 +3,6 @@ package zetachain.zetacore.crosschain;
 
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
-import "crosschain/permission_flags.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 import "gogoproto/gogo.proto";
 import "crosschain/keygen.proto";
@@ -25,8 +24,8 @@ message GenesisState {
 		repeated ChainNonces chainNoncesList = 6;
 		repeated CrossChainTx CrossChainTxs = 7;
 
-		repeated LastBlockHeight lastBlockHeightList = 9;
-	repeated InTxHashToCctx inTxHashToCctxList = 10 [(gogoproto.nullable) = false];
-  PermissionFlags permissionFlags = 11;
+		repeated LastBlockHeight lastBlockHeightList = 8;
+  	repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
+
   // this line is used by starport scaffolding # genesis/proto/state
 }

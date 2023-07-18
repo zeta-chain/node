@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -18,7 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	// this line is used by starport scaffolding # ibc/module/import
 )
