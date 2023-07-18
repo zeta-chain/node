@@ -245,6 +245,9 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			logger.Error().Msgf("Unknown chain: %d", send.GetCurrentOutTxParam().ReceiverChainId)
 			return
 		}
+	} else {
+		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", send.CctxStatus)
+		return
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
