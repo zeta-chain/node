@@ -14,5 +14,5 @@ message Node {
 message Blame {
   string index = 1;
   string failure_reason = 2;
-  Node node = 3;
+  repeated Node nodes = 3;
 }

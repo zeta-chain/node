@@ -50497,8 +50497,11 @@ definitions:
         type: string
       failure_reason:
         type: string
-      node:
-        $ref: '#/definitions/observerNode'
+      nodes:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerNode'
   observerCoreParams:
     type: object
     properties:
