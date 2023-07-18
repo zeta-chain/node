@@ -246,7 +246,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			return
 		}
 	} else {
-		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", send.CctxStatus)
+		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", send.CctxStatus.Status)
 		return
 	}
 	if err != nil {
