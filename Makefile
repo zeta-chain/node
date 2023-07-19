@@ -127,10 +127,13 @@ lint: lint-pre
 	@golangci-lint run
 
 proto:
-	@echo "--> Generating Go from protocol buffer files"
+	@echo "--> Removing old Go types "
+	@find . -name '*.pb.go' -type f -delete
+	@echo "--> Generating new Go types from protocol buffer files"
 	@bash ./scripts/protoc-gen-go.sh
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
+
 .PHONY: proto
 
 specs:
