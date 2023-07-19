@@ -4,14 +4,15 @@ import (
 	"fmt"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	"github.com/zeta-chain/zetacore/x/observer/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowKeygen() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.crossChainState.Keygen
+	obj := s.observerState.Keygen
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -19,7 +20,7 @@ func (s *CliTestSuite) TestShowKeygen() {
 		desc string
 		args []string
 		err  error
-		obj  *types.Keygen
+		obj  *observerTypes.Keygen
 	}{
 		{
 			desc: "get",
