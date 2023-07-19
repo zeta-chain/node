@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
@@ -25,7 +24,6 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	dustOffset         = 2000
 )
 
 type BTCSigner struct {
@@ -49,12 +47,14 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, height uint64, nonce uint64) (*wire.MsgTx, error) {
-	nonceMark := int64(nonce) + dustOffset // a separate tx output with very specific value to mark the nonce; +2000 to avoid being a dust rejection
-	// select N UTXOs to cover the amount
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
-	prevOuts, total, err := selectUTXOs(utxos, amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress())
+	nonceMark := NonceMarkAmount(nonce)
+
+	// select N UTXOs to cover the total expense
+	tssAddress := signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, tssAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if err != nil {
 		return nil, err
 	}
-	// add txout with remaining btc
+
+	// fee checking
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
 	if fees.Int64() < int64(minFee*1e8) {
@@ -83,7 +84,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
-	// set output to tss address (change)
+	// add output with remaining btc to TSS self (change-1)
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
 	payToSelf, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
 	if err != nil {
@@ -100,11 +101,14 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainingSats)
 		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
 		return nil, fmt.Errorf("remainder value is negative")
+	} else if remainingSats == nonceMark {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Adjust remainder value to avoid duplicate nonce-mark: %d\n", remainingSats)
+		remainingSats--
 	}
 	txOut := wire.NewTxOut(remainingSats, payToSelf)
 	tx.AddTxOut(txOut)
 
-	// set output to tss address (change, but with specific value to mark the nonce)
+	// add output with nonce-mark btc to TSS self (change-2)
 	{
 		txOut := wire.NewTxOut(nonceMark, payToSelf)
 		tx.AddTxOut(txOut)
@@ -237,7 +241,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, height, send.GetCurrentOutTxParam().OutboundTxTssNonce)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient, height, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
@@ -282,53 +286,4 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			break // successful broadcast; no need to retry
 		}
 	}
-}
-
-// Selects a sublist of utxos to be used as inputs.
-//
-// Parameters:
-//   - utxos: A list of ordered (by amount in ascending order) UTXO
-//   - amount: The desired minimum total value of the selected UTXOs.
-//   - utxoCap: The maximum number of UTXOs to be selected.
-//
-// Returns: a sublist of selected UTXOs or an error if the qulifying sublist cannot be found.
-func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint8, nonce uint64, tssAddress string) ([]btcjson.ListUnspentResult, float64, error) {
-	total := 0.0
-	left, right := 0, 0
-
-	for total < amount && right < len(utxos) {
-		if utxoCap > 0 { // expand sublist
-			total += utxos[right].Amount
-			right++
-			utxoCap--
-		} else { // pop the smallest utxo and append the current one
-			total -= utxos[left].Amount
-			total += utxos[right].Amount
-			left++
-			right++
-		}
-	}
-	results := utxos[left:right]
-	if nonce > 0 {
-		for i, utxo := range utxos {
-			// must include the previous nonce marked utxo in the selected list
-			if utxo.Address == tssAddress && uint64(utxo.Amount*1e8) == nonce-1+dustOffset {
-				if i < left || i >= right {
-					total += utxo.Amount
-					results = append(results, utxo)
-				}
-				if total < amount {
-					return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
-				}
-				return results, total, nil
-			}
-		}
-		// cannot find marked utxo, return error
-		return nil, 0, fmt.Errorf("cannot find marked utxo with nonce %d", nonce)
-	}
-	// for nonce 0; make exception; no need to include marked output
-	if total < amount {
-		return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
-	}
-	return results, total, nil
 }
