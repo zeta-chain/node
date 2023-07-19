@@ -19,3 +19,7 @@ message ObserverMapper {
   common.Chain  observer_chain =2 ;
   repeated string observer_list =4;
 }
+
+message LastBlockObserverCount {
+  uint64 count = 1;
+}

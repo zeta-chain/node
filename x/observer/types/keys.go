@@ -1,7 +1,6 @@
 package types
 
 const (
-	NodeAccountKey = "NodeAccount-value-"
 	// ModuleName defines the module name
 	ModuleName = "observer"
 
@@ -23,10 +22,12 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	VoterKey             = "Voter-value-"
-	AllCoreParams        = "CoreParams"
-	ObserverMapperKey    = "Observer-value-"
-	ObserverParamsKey    = "ObserverParams"
-	AdminPolicyParamsKey = "AdminParams"
-	PermissionFlagsKey   = "PermissionFlags-value-"
+	VoterKey                  = "Voter-value-"
+	AllCoreParams             = "CoreParams"
+	ObserverMapperKey         = "Observer-value-"
+	ObserverParamsKey         = "ObserverParams"
+	AdminPolicyParamsKey      = "AdminParams"
+	PermissionFlagsKey        = "PermissionFlags-value-"
+	LastBlockObserverCountKey = "ObserverCount-value-"
+	NodeAccountKey            = "NodeAccount-value-"
 )
