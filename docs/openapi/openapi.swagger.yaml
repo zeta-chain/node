@@ -50567,6 +50567,7 @@ definitions:
       - InBoundTx
       - OutBoundTx
       - TSSKeyGen
+      - TSSKeySign
     default: EmptyObserverType
   observerObserverMapper:
     type: object

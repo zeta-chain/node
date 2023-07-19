@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const TypeMsgAddBlameVote = "add_blame_vote"
@@ -48,4 +49,11 @@ func (m *MsgAddBlameVote) GetSigners() []sdk.AccAddress {
 func (m *MsgAddBlameVote) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(m)
 	return sdk.MustSortJSON(bz)
+}
+
+func (m *MsgAddBlameVote) Digest() string {
+	m.Creator = ""
+	// Generate an Identifier for the ballot corresponding to specific blame data
+	hash := crypto.Keccak256Hash([]byte(m.String()))
+	return hash.Hex()
 }

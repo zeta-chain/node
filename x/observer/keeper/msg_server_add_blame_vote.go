@@ -5,13 +5,13 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVote) (*types.MsgAddBlameVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	observationType := types.ObservationType_TSSKeySign
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain := k.GetParams(ctx).GetChainFromChainID(vote.ChainId)
 	if observationChain == nil {
@@ -22,18 +22,31 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	if !ok {
 		return nil, err
 	}
-	return &types.MsgAddBlameVoteResponse{}, nil
-}
 
-func (k msgServer) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error) {
-	observerMapper, found := k.GetObserverMapper(ctx, chain)
-	if !found {
-		return false, sdkerrors.Wrap(crosschainTypes.ErrNotAuthorized, fmt.Sprintf("observer list not present for chain %s", chain.String()))
+	index := vote.Digest()
+	// Add votes and Set Ballot
+	// GetBallot checks against the supported chains list before querying for Ballot
+	ballot, _, _ := k.FindBallot(ctx, index, observationChain, observationType)
+	if err != nil {
+		return nil, err
 	}
-	for _, obs := range observerMapper.ObserverList {
-		if obs == address {
-			return true, nil
-		}
+
+	// AddVoteToBallot adds a vote and sets the ballot
+	ballot, err = k.AddVoteToBallot(ctx, ballot, vote.Creator, types.VoteType_SuccessObservation)
+	if err != nil {
+		return nil, err
 	}
-	return true, nil
+
+	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	if !isFinalized {
+		// Return nil here to add vote to ballot and commit state
+		return &types.MsgAddBlameVoteResponse{}, nil
+	}
+
+	// ******************************************************************************
+	// below only happens when ballot is finalized: exactly when threshold vote is in
+	// ******************************************************************************
+
+	k.SetBlame(ctx, vote.BlameInfo)
+	return &types.MsgAddBlameVoteResponse{}, nil
 }
