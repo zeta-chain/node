@@ -132,6 +132,11 @@ proto:
 	@bash ./scripts/protoc-gen-openapi.sh
 .PHONY: proto
 
+typescript:
+	@echo "--> Generating TypeScript bindings"
+	@bash ./scripts/protoc-gen-typescript.sh
+.PHONY: typescript
+
 specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
