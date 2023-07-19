@@ -17,7 +17,6 @@ func DefaultGenesis() *GenesisState {
 		OutTxTrackerList:   []OutTxTracker{},
 		InTxHashToCctxList: []InTxHashToCctx{},
 		// this line is used by starport scaffolding # genesis/types/default
-		Keygen:          nil,
 		GasPriceList:    []*GasPrice{},
 		ChainNoncesList: []*ChainNonces{},
 		//CCTX:            []*Send{},

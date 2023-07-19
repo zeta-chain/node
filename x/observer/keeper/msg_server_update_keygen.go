@@ -2,11 +2,10 @@ package keeper
 
 import (
 	"context"
-
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Updates the block height of the keygen and sets the status to "pending
@@ -16,7 +15,7 @@ import (
 func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_update_keygen_block) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_update_keygen_block) {
 		return &types.MsgUpdateKeygenResponse{}, zetaObserverTypes.ErrNotAuthorizedPolicy
 	}
 	keygen, found := k.GetKeygen(ctx)

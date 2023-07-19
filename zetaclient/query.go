@@ -176,9 +176,9 @@ func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount,
 	return resp.NodeAccount, nil
 }
 
-func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Keygen(context.Background(), &types.QueryGetKeygenRequest{})
+func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 	if err != nil {
 		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err

@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
@@ -38,17 +38,17 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		if cfg.Keygen.Status == crosschaintypes.KeygenStatus_KeyGenSuccess {
+		if cfg.Keygen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
 			cfg.TestTssKeysign = true
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
-		if cfg.Keygen.Status == crosschaintypes.KeygenStatus_KeyGenFailed {
+		if cfg.Keygen.Status == observerTypes.KeygenStatus_KeyGenFailed {
 			triedKeygenAtBlock = false
 			continue
 		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if cfg.Keygen.Status == crosschaintypes.KeygenStatus_PendingKeygen {
+		if cfg.Keygen.Status == observerTypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {

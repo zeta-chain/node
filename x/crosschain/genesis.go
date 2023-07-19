@@ -19,10 +19,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// this line is used by starport scaffolding # genesis/module/init
-	// Set if defined
-	if genState.Keygen != nil {
-		k.SetKeygen(ctx, *genState.Keygen)
-	}
 
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
@@ -59,10 +55,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
-	keygen, found := k.GetKeygen(ctx)
-	if found {
-		genesis.Keygen = &keygen
-	}
 
 	// Get all tSSVoter
 	// TODO : ADD for single TSS

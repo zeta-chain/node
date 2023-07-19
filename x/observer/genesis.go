@@ -26,6 +26,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	} else {
 		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
 	}
+	// Set if defined
+	if genState.Keygen != nil {
+		k.SetKeygen(ctx, *genState.Keygen)
+	}
+
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -43,11 +48,18 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		pf = permissionFlags
 	}
+	kn := &types.Keygen{}
+	keygen, found := k.GetKeygen(ctx)
+	if found {
+		kn = &keygen
+	}
+
 	return &types.GenesisState{
 		Ballots:         k.GetAllBallots(ctx),
 		Observers:       k.GetAllObserverMappers(ctx),
 		Params:          &params,
 		NodeAccountList: nodeAccounts,
 		PermissionFlags: &pf,
+		Keygen:          kn,
 	}
 }

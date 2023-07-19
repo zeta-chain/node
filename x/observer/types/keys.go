@@ -30,4 +30,5 @@ const (
 	PermissionFlagsKey        = "PermissionFlags-value-"
 	LastBlockObserverCountKey = "ObserverCount-value-"
 	NodeAccountKey            = "NodeAccount-value-"
+	KeygenKey                 = "Keygen-value-"
 )

@@ -156,15 +156,6 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
-			keyGenStatus := crosschaintypes.KeygenStatus_PendingKeygen
-			if keyGenBlock == 0 {
-				keyGenStatus = crosschaintypes.KeygenStatus_KeyGenSuccess
-			}
-			zetaCrossChainGenState.Keygen = &crosschaintypes.Keygen{
-				Status:         keyGenStatus,
-				GranteePubkeys: keygenPubKeys,
-				BlockNumber:    keyGenBlock,
-			}
 
 			if keyGenBlock == 0 {
 				operatorList := make([]string, len(nodeAccounts))
@@ -185,6 +176,15 @@ func AddObserverAccountsCmd() *cobra.Command {
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaObserverGenState.Observers = observerMapper
 			zetaObserverGenState.NodeAccountList = nodeAccounts
+			keyGenStatus := types.KeygenStatus_PendingKeygen
+			if keyGenBlock == 0 {
+				keyGenStatus = types.KeygenStatus_KeyGenSuccess
+			}
+			zetaObserverGenState.Keygen = &types.Keygen{
+				Status:         keyGenStatus,
+				GranteePubkeys: keygenPubKeys,
+				BlockNumber:    keyGenBlock,
+			}
 
 			// Add grant authorizations to authz genesis state
 			var authzGenState authz.GenesisState

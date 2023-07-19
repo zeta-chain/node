@@ -15,6 +15,7 @@ func DefaultGenesis() *GenesisState {
 		Observers:       nil,
 		NodeAccountList: []*NodeAccount{},
 		PermissionFlags: &PermissionFlags{IsInboundEnabled: true},
+		Keygen:          nil,
 	}
 }
 

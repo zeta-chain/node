@@ -67,6 +67,11 @@ func (s *CliTestSuite) AddObserverData(n int) {
 	for i := 0; i < n; i++ {
 		state.NodeAccountList = append(state.NodeAccountList, &observerTypes.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
 	}
+	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+	permissionFlags := &observerTypes.PermissionFlags{}
+	nullify.Fill(&permissionFlags)
+	state.PermissionFlags = permissionFlags
+
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[observerTypes.ModuleName] = buf
@@ -99,7 +104,7 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-	state.Keygen = &types.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+
 	state.Tss = &types.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},
@@ -124,9 +129,7 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 		nullify.Fill(&inTxHashToCctx)
 		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
 	}
-	permissionFlags := &types.PermissionFlags{}
-	nullify.Fill(&permissionFlags)
-	state.PermissionFlags = permissionFlags
+
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[types.ModuleName] = buf

@@ -48,10 +48,10 @@ const (
 	ChainNoncesKey       = "ChainNonces-value-"
 	GasPriceKey          = "GasPrice-value-"
 
-	GasBalanceKey         = "GasBalance-value-"
-	TSSKey                = "TSS-value-"
-	TSSVoterKey           = "TSSVoter-value-"
-	KeygenKey             = "Keygen-value-"
+	GasBalanceKey = "GasBalance-value-"
+	TSSKey        = "TSS-value-"
+	TSSVoterKey   = "TSSVoter-value-"
+
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"

@@ -26895,21 +26895,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/keygen:
-    get:
-      summary: Queries a keygen by index.
-      operationId: Query_Keygen
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryGetKeygenResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/crosschain/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
@@ -27259,6 +27244,21 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/observerQueryGetCoreParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/keygen:
+    get:
+      summary: Queries a keygen by index.
+      operationId: Query_Keygen
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetKeygenResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50052,27 +50052,6 @@ definitions:
       inbound_tx_finalized_zeta_height:
         type: string
         format: uint64
-  crosschainKeygen:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/crosschainKeygenStatus'
-        title: 0--to generate key; 1--generated; 2--error
-      granteePubkeys:
-        type: array
-        items:
-          type: string
-      blockNumber:
-        type: string
-        format: int64
-        title: the blocknum that the key needs to be generated
-  crosschainKeygenStatus:
-    type: string
-    enum:
-      - PendingKeygen
-      - KeyGenSuccess
-      - KeyGenFailed
-    default: PendingKeygen
   crosschainLastBlockHeight:
     type: object
     properties:
@@ -50097,8 +50076,6 @@ definitions:
   crosschainMsgNonceVoterResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
-    type: object
-  crosschainMsgUpdateKeygenResponse:
     type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
@@ -50284,11 +50261,6 @@ definitions:
     properties:
       inTxHashToCctx:
         $ref: '#/definitions/crosschainInTxHashToCctx'
-  crosschainQueryGetKeygenResponse:
-    type: object
-    properties:
-      Keygen:
-        $ref: '#/definitions/crosschainKeygen'
   crosschainQueryGetLastBlockHeightResponse:
     type: object
     properties:
@@ -50480,9 +50452,32 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
+  observerKeygen:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/observerKeygenStatus'
+        title: 0--to generate key; 1--generated; 2--error
+      granteePubkeys:
+        type: array
+        items:
+          type: string
+      blockNumber:
+        type: string
+        format: int64
+        title: the blocknum that the key needs to be generated
+  observerKeygenStatus:
+    type: string
+    enum:
+      - PendingKeygen
+      - KeyGenSuccess
+      - KeyGenFailed
+    default: PendingKeygen
   observerMsgAddObserverResponse:
     type: object
   observerMsgUpdateCoreParamsResponse:
+    type: object
+  observerMsgUpdateKeygenResponse:
     type: object
   observerMsgUpdatePermissionFlagsResponse:
     type: object
@@ -50594,6 +50589,11 @@ definitions:
     properties:
       core_params:
         $ref: '#/definitions/observerCoreParamsList'
+  observerQueryGetKeygenResponse:
+    type: object
+    properties:
+      Keygen:
+        $ref: '#/definitions/observerKeygen'
   observerQueryGetNodeAccountResponse:
     type: object
     properties:

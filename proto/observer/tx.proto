@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 import "observer/permission_flags.proto";
+import "observer/keygen.proto";
 
 
 
@@ -19,6 +20,7 @@ service Msg {
    rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
    rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
    rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 
 }
@@ -50,5 +52,13 @@ message MsgUpdatePermissionFlags {
   bool isInboundEnabled = 3;
 }
 message MsgUpdatePermissionFlagsResponse {}
+
+message MsgUpdateKeygen {
+  string creator = 1;
+  int64 block = 2;
+}
+
+message MsgUpdateKeygenResponse {
+}
 
 // this line is used by starport scaffolding # proto/tx/message

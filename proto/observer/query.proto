@@ -12,6 +12,7 @@ import "observer/node_account.proto";
 import "common/common.proto";
 import "observer/permission_flags.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "observer/keygen.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -60,8 +61,13 @@ service Query {
 	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
 		option (google.api.http).get = "/zeta-chain/observer/permission_flags";
 	}
+	// Queries a keygen by index.
+	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/keygen";
+	}
 
-// this line is used by starport scaffolding # 2
+
+	// this line is used by starport scaffolding # 2
 }
 
 message QueryParamsRequest {}
@@ -147,5 +153,12 @@ message QueryGetPermissionFlagsRequest {}
 message QueryGetPermissionFlagsResponse {
 	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
 }
+
+message QueryGetKeygenRequest {}
+
+message QueryGetKeygenResponse {
+	Keygen Keygen = 1;
+}
+
 
 // this line is used by starport scaffolding # 3

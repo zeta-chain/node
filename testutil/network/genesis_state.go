@@ -38,11 +38,6 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		}
 	}
 
-	crossChainGenesis.Keygen = &types.Keygen{
-		Status:         types.KeygenStatus_PendingKeygen,
-		GranteePubkeys: observerList,
-		BlockNumber:    5,
-	}
 	crossChainGenesis.Params.Enabled = true
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
 	assert.NoError(t, err)
@@ -74,6 +69,11 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	}
 	observerGenesis.Observers = observerMapper
 	observerGenesis.NodeAccountList = nodeAccountList
+	observerGenesis.Keygen = &observerTypes.Keygen{
+		Status:         observerTypes.KeygenStatus_PendingKeygen,
+		GranteePubkeys: observerList,
+		BlockNumber:    5,
+	}
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)
 	assert.NoError(t, err)
 
