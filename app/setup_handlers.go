@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const releaseVersion = "v6.0.0"
@@ -17,7 +18,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		vm[crosschaintypes.ModuleName] = vm[crosschaintypes.ModuleName] - 1
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
