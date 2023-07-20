@@ -68,6 +68,7 @@ const (
 	minConfirmations = 0
 	chunkSize        = 1000
 	maxHeightDiff    = 10000
+	dustOffset       = 2000
 )
 
 func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
@@ -577,14 +578,96 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
 		//}
 	}
-
-	ob.ts.SetNumberOfUTXOs(len(utxos))
 	// sort by value
 	sort.SliceStable(utxos, func(i, j int) bool {
 		return utxos[i].Amount < utxos[j].Amount
 	})
+
+	ob.mu.Lock()
+	ob.ts.SetNumberOfUTXOs(len(utxos))
 	ob.utxos = utxos
+	ob.mu.Unlock()
 	return nil
+}
+
+func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
+	outTxID := ob.GetTxID(nonce)
+	_, mined := ob.minedTx[outTxID]
+	if !mined {
+		return -1, fmt.Errorf("findNonceMarkUTXO: transaction %s not mined yet", outTxID)
+	}
+
+	amount := NonceMarkAmount(nonce)
+	for i, utxo := range ob.utxos {
+		sats, err := getSatoshis(utxo.Amount)
+		if err != nil {
+			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
+		}
+		// TODO: uncomment txid check after bootstrap (manually send 0.00002 BTC tss address)
+		if utxo.Address == tssAddress && sats == amount /*&& utxo.TxID == res.TxID*/ {
+			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %v", utxo.TxID, utxo.Amount)
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
+}
+
+// Selects a sublist of utxos to be used as inputs.
+//
+// Parameters:
+//   - amount: The desired minimum total value of the selected UTXOs.
+//   - utxoCap: The maximum number of UTXOs to be selected.
+//   - nonce: The nonce of the outbound transaction.
+//   - tssAddress: The TSS address.
+//
+// Returns: a sublist (includes previous nonce-mark) of UTXOs or an error if the qulifying sublist cannot be found.
+func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce uint64, tssAddress string) ([]btcjson.ListUnspentResult, float64, error) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	// for nonce > 0; we proceed only when we see the nonce-mark utxo
+	// for nonce = 0; make exception; no need to include nonce-mark utxo
+	idx := -1
+	if nonce > 0 {
+		index, err := ob.findNonceMarkUTXO(nonce-1, tssAddress)
+		if err != nil {
+			return nil, 0, err
+		}
+		idx = index
+	}
+
+	// select utxos
+	total := 0.0
+	left, right := 0, 0
+	for total < amount && right < len(ob.utxos) {
+		if utxoCap > 0 { // expand sublist
+			total += ob.utxos[right].Amount
+			right++
+			utxoCap--
+		} else { // pop the smallest utxo and append the current one
+			total -= ob.utxos[left].Amount
+			total += ob.utxos[right].Amount
+			left++
+			right++
+		}
+	}
+	results := ob.utxos[left:right]
+
+	// include nonce-mark utxo (for nonce > 0) in asending order
+	if nonce > 0 {
+		if idx < left {
+			total += ob.utxos[idx].Amount
+			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
+		}
+		if idx >= right {
+			total += ob.utxos[idx].Amount
+			results = append(results, ob.utxos[idx])
+		}
+	}
+	if total < amount {
+		return nil, 0, fmt.Errorf("SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+	}
+	return results, total, nil
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
@@ -761,4 +844,9 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.BTCAddress()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
+
+// A very special value to mark current nonce in UTXO
+func NonceMarkAmount(nonce uint64) int64 {
+	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
 }
