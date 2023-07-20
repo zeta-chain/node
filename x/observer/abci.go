@@ -11,6 +11,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	lastBlockObserverCount, found := k.GetLastBlockObserverCount(ctx)
 	if !found {
 		ctx.Logger().Error("LastBlockObserverCount not found at height", ctx.BlockHeight())
+		return
 	}
 
 	allObservers := k.GetAllObserverMappers(ctx)
