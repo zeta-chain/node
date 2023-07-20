@@ -17,9 +17,13 @@ on:
           - "restart"
         required: true
       DELETE_ZETACLIENT_DB:
-        description: "Which environment to update?"
-        type: environment
-        required: true
+        description: "Do you want to delete the Zetaclient DB file? ((/home/zetachain/.zetaclient/*))"
+        type: choice
+        options:
+          - "yes"
+          - "no"
+        default: "no"
+        required: false
       # ENVIRONMENT:
       #   description: "Which environment to update?"
       #   type: environment
@@ -68,8 +72,8 @@ jobs:
           set_regions 
           for region in "${regions[@]}"; do
               restart_zetavisor "$region"
-              sleep 60
-              echo "Sleeping for 60 seconds..."
+              sleep 90
+              echo "Sleeping for 90 seconds..."
           done
 
       - name: Stop zetaclientd
@@ -82,7 +86,7 @@ jobs:
           done
 
       - name: Delete zetaclientd db (/home/zetachain/.zetaclient/*)
-        if: ${{ github.event.inputs.DELETE_ZETACLIENT_DB == 'true' }}
+        if: ${{ github.event.inputs.DELETE_ZETACLIENT_DB == 'yes' }}
         run: |
           source .github/actions/node-operations/functions
           set_regions 
