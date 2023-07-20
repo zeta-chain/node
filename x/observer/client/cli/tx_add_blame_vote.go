@@ -18,20 +18,18 @@ var _ = strconv.Itoa(0)
 
 func CmdAddBlameVote() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-blame-vote [creator] [chain-id] [index] [failure-reason] [node-list]",
+		Use:   "add-blame-vote [chain-id] [index] [failure-reason] [node-list]",
 		Short: "Broadcast message add-blame-vote",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			println(args)
-			creator := args[0]
-			chainID, err := strconv.Atoi(args[1])
+			chainID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			index := args[2]
-			failureReason := args[3]
-			nodeList := args[4]
+			index := args[1]
+			failureReason := args[2]
+			nodeList := args[3]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -54,7 +52,7 @@ func CmdAddBlameVote() *cobra.Command {
 				Nodes:         nodes,
 			}
 
-			msg := types.NewMsgAddBlameVoteMsg(creator, int64(chainID), blameInfo)
+			msg := types.NewMsgAddBlameVoteMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

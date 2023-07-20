@@ -74,7 +74,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		}
 	}
 	if !found {
-		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
+		zetaObserverTypes.EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
 	}
 
 	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)

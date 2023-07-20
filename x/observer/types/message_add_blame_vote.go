@@ -52,8 +52,9 @@ func (m *MsgAddBlameVote) GetSignBytes() []byte {
 }
 
 func (m *MsgAddBlameVote) Digest() string {
-	m.Creator = ""
+	msg := *m
+	msg.Creator = ""
 	// Generate an Identifier for the ballot corresponding to specific blame data
-	hash := crypto.Keccak256Hash([]byte(m.String()))
+	hash := crypto.Keccak256Hash([]byte(msg.String()))
 	return hash.Hex()
 }

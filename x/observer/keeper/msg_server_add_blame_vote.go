@@ -26,9 +26,13 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	index := vote.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
-	ballot, _, _ := k.FindBallot(ctx, index, observationChain, observationType)
+	ballot, isNew, err := k.FindBallot(ctx, index, observationChain, observationType)
 	if err != nil {
 		return nil, err
+	}
+
+	if isNew {
+		types.EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String())
 	}
 
 	// AddVoteToBallot adds a vote and sets the ballot

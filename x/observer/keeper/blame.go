@@ -34,7 +34,7 @@ func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBla
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	blame, found := k.GetBlame(ctx, request.BlameIdentifier)
 	if !found {
-		return nil, status.Error(codes.NotFound, "not found ballot")
+		return nil, status.Error(codes.NotFound, "blame info not found")
 	}
 
 	return &types.QueryBlameByIdentifierResponse{

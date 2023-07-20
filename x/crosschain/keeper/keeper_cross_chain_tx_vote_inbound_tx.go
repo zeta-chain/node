@@ -56,7 +56,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
+		zetaObserverTypes.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
