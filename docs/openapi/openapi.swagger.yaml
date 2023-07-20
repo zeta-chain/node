@@ -27293,6 +27293,26 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/blame_by_identifier/{blame_identifier}:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_BlameByIdentifier
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryBlameByIdentifierResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: blame_identifier
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/observer/observers_by_chain/{observation_chain}:
     get:
       summary: Queries a list of ObserversByChainAndType items.
@@ -50623,6 +50643,11 @@ definitions:
         $ref: '#/definitions/observerObservationType'
       ballot_status:
         $ref: '#/definitions/observerBallotStatus'
+  observerQueryBlameByIdentifierResponse:
+    type: object
+    properties:
+      blameInfo:
+        $ref: '#/definitions/observerBlame'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
