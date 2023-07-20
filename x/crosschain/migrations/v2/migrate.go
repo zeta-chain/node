@@ -63,5 +63,14 @@ func MigrateStore(
 		observerKeeper.SetPermissionFlags(ctx, permissionFlags)
 	}
 
+	allObservers := observerKeeper.GetAllObserverMappers(ctx)
+	totalObserverCountCurrentBlock := 0
+	for _, observer := range allObservers {
+		totalObserverCountCurrentBlock += len(observer.ObserverList)
+	}
+	observerKeeper.SetLastBlockObserverCount(ctx, &observerTypes.LastBlockObserverCount{
+		Count: uint64(totalObserverCountCurrentBlock),
+	})
+
 	return nil
 }
