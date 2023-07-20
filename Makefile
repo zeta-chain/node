@@ -114,6 +114,10 @@ run:
 
 chain-init: clean install-zetacore init
 chain-run: clean install-zetacore init run
+chain-stop:
+	@killall zetacored
+	@killall tail
+
 
 chain-init-testnet: clean install-zetacore-testnet init
 chain-run-testnet: clean install-zetacore-testnet init run

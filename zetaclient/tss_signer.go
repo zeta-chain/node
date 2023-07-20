@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -96,9 +97,13 @@ func (tss *TSS) Sign(digest []byte, height uint64) ([65]byte, error) {
 		log.Warn().Msg("keysign fail")
 	}
 	signature := ksRes.Signatures
+
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
 	log.Info().Msgf("signature of digest is... %v", signature)
+
+	blameOutput, _ := json.Marshal(ksRes.Blame)
+	log.Info().Msgf("Blame output: %s", string(blameOutput))
 
 	if len(signature) == 0 {
 		log.Warn().Err(err).Msgf("signature has length 0")
