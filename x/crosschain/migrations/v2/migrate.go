@@ -10,24 +10,57 @@ import (
 )
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 1 to 2
-
+// This migration moves some data from the cross chain store to the observer store.
+// The data moved is the node accounts, permission flags and keygen.
 func MigrateStore(
 	ctx sdk.Context,
 	observerKeeper types.ZetaObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
+
+	// Using New Types from observer module as the structure is the same
+	var nodeAccounts []observerTypes.NodeAccount
+	var permissionFlags observerTypes.PermissionFlags
+	var keygen observerTypes.Keygen
+	writePermissionFlags := false
+	writeKeygen := false
+
+	// Fetch data from cross chain store using the legacy keys directly
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(LegacyNodeAccountKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
-	var nodeAccounts []observerTypes.NodeAccount
 	for ; iterator.Valid(); iterator.Next() {
 		var val observerTypes.NodeAccount
 		cdc.MustUnmarshal(iterator.Value(), &val)
 		nodeAccounts = append(nodeAccounts, val)
 	}
-	for _, nodeAccount := range nodeAccounts {
-		observerKeeper.SetNodeAccount(ctx, nodeAccount)
+
+	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(LegacyKeygenKey))
+	b := store.Get([]byte{0})
+	if b != nil {
+		cdc.MustUnmarshal(b, &keygen)
+		writeKeygen = true
+	}
+
+	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(LegacyPermissionFlagsKey))
+	b = store.Get([]byte{0})
+	if b != nil {
+		cdc.MustUnmarshal(b, &permissionFlags)
+		writePermissionFlags = true
+	}
+
+	// Write data to observer store using the new keys
+	if nodeAccounts != nil {
+		for _, nodeAccount := range nodeAccounts {
+			observerKeeper.SetNodeAccount(ctx, nodeAccount)
+		}
+	}
+	if writeKeygen {
+		observerKeeper.SetKeygen(ctx, keygen)
+	}
+	if writePermissionFlags {
+		observerKeeper.SetPermissionFlags(ctx, permissionFlags)
 	}
 
 	return nil

@@ -52,4 +52,5 @@ type ZetaObserverKeeper interface {
 	IsInboundAllowed(ctx sdk.Context) (found bool)
 	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
+	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
 }
