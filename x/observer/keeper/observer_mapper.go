@@ -16,13 +16,13 @@ func GetObserverMapperIndex(chain *common.Chain) string {
 	return fmt.Sprintf("%d", chain.ChainId)
 }
 
-func (k Keeper) SetLastBlockObserverCount(ctx sdk.Context, lbc *types.LastBlockObserverCount) {
+func (k Keeper) SetLastBlockObserverCount(ctx sdk.Context, lbc *types.LastObserverCount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
 	b := k.cdc.MustMarshal(lbc)
 	store.Set([]byte{0}, b)
 }
 
-func (k Keeper) GetLastBlockObserverCount(ctx sdk.Context) (val types.LastBlockObserverCount, found bool) {
+func (k Keeper) GetLastBlockObserverCount(ctx sdk.Context) (val types.LastObserverCount, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
 
 	b := store.Get([]byte{0})

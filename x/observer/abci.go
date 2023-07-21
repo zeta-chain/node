@@ -32,5 +32,5 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
-	k.SetLastBlockObserverCount(ctx, &types.LastBlockObserverCount{Count: uint64(totalObserverCountCurrentBlock)})
+	k.SetLastBlockObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
 }
