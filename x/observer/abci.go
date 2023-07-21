@@ -23,12 +23,14 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		ctx.Logger().Error("TotalObserverCount is negative at height", ctx.BlockHeight())
 		return
 	}
-	if totalObserverCountCurrentBlock != int(lastBlockObserverCount.Count) {
-		ctx.Logger().Error("LastBlockObserverCount does not match the number of observers found at current height", ctx.BlockHeight())
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
-		k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+	if totalObserverCountCurrentBlock == int(lastBlockObserverCount.Count) {
+		return
 	}
-
+	ctx.Logger().Error("LastBlockObserverCount does not match the number of observers found at current height", ctx.BlockHeight())
+	for _, observer := range allObservers {
+		ctx.Logger().Error("Observes for | ", observer.ObserverChain.ChainName, ":", observer.ObserverList)
+	}
+	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
+	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	k.SetLastBlockObserverCount(ctx, &types.LastBlockObserverCount{Count: uint64(totalObserverCountCurrentBlock)})
-
 }
