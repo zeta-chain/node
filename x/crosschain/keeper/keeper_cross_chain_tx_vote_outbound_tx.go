@@ -10,7 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Casts a vote on an outbound transaction observed on a connected chain (after
@@ -41,16 +42,16 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := zetaObserverTypes.ObservationType_OutBoundTx
+	observationType := observerTypes.ObservationType_OutBoundTx
 	// Observer Chain already checked then inbound is created
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
 	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
 	if observationChain == nil {
-		return nil, zetaObserverTypes.ErrSupportedChains
+		return nil, observerTypes.ErrSupportedChains
 	}
-	err := zetaObserverTypes.CheckReceiveStatus(msg.Status)
+	err := observerTypes.CheckReceiveStatus(msg.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +74,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.ChainName.String(), sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}))
 		// Set this the first time when the ballot is created
 		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
 		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 		k.SetCrossChainTx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.ConvertReceiveStatusToVoteType(msg.Status))
+	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	if ballot.BallotStatus != zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation {
+	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ZetaMinted.Equal(cctx.GetCurrentOutTxParam().Amount) {
 			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount))
@@ -130,14 +131,14 @@ func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount math.Uint) er
 	return nil
 }
 
-func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status zetaObserverTypes.BallotStatus) error {
+func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, msg *types.MsgVoteOnObservedOutboundTx, status observerTypes.BallotStatus) error {
 	//cctx.GetCurrentOutTxParam().OutboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
 	cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	zetaBurnt := cctx.InboundTxParams.Amount
 	zetaMinted := cctx.GetCurrentOutTxParam().Amount
 	oldStatus := cctx.CctxStatus.Status
 	switch status {
-	case zetaObserverTypes.BallotStatus_BallotFinalized_SuccessObservation:
+	case observerTypes.BallotStatus_BallotFinalized_SuccessObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingRevert:
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "", cctx.LogIdentifierForCCTX())
@@ -157,7 +158,7 @@ func FinalizeOutbound(k msgServer, ctx sdk.Context, cctx *types.CrossChainTx, ms
 			}
 		}
 		EmitOutboundSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
-	case zetaObserverTypes.BallotStatus_BallotFinalized_FailureObservation:
+	case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
 			// create new OutboundTxParams for the revert
