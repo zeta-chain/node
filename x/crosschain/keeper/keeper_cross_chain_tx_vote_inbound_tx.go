@@ -44,7 +44,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	index := msg.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.GetBallot(ctx, index, observationChain, observationType)
+	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, index, observationChain, observationType)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +60,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.ChainName.String(), sdk.MsgTypeURL(&types.MsgVoteOnObservedInboundTx{}))
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
+	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 	if err != nil {
 		return nil, err
 	}
 
-	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
