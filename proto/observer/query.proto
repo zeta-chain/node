@@ -51,6 +51,11 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
 	}
 
+	// Queries a list of VoterByIdentifier items.
+	rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -121,6 +126,13 @@ message QueryBlameByIdentifierRequest {
 
 message QueryBlameByIdentifierResponse {
 	Blame blameInfo = 1;
+}
+
+message QueryAllBlameRecordsRequest {
+}
+
+message QueryAllBlameRecordsResponse {
+	repeated Blame blameInfo = 1;
 }
 
 // this line is used by starport scaffolding # 3

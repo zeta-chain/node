@@ -27313,6 +27313,21 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/get_all_blame_records:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_GetAllBlameRecords
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryAllBlameRecordsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/observers_by_chain/{observation_chain}:
     get:
       summary: Queries a list of ObserversByChainAndType items.
@@ -50621,6 +50636,14 @@ definitions:
       - out_tx_tracker
     default: stop_inbound_cctx
     title: '- stop_inbound_cctx: some observer sees inbound tx'
+  observerQueryAllBlameRecordsResponse:
+    type: object
+    properties:
+      blameInfo:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerBlame'
   observerQueryAllObserverMappersResponse:
     type: object
     properties:

@@ -25,6 +25,20 @@ func (k Keeper) GetBlame(ctx sdk.Context, index string) (val types.Blame, found 
 	return val, true
 }
 
+func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []*types.Blame, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	found = false
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Blame
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		BlameRecords = append(BlameRecords, &val)
+		found = true
+	}
+	return
+}
+
 // Query
 
 func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBlameByIdentifierRequest) (*types.QueryBlameByIdentifierResponse, error) {
@@ -39,5 +53,20 @@ func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBla
 
 	return &types.QueryBlameByIdentifierResponse{
 		BlameInfo: &blame,
+	}, nil
+}
+
+func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAllBlameRecordsRequest) (*types.QueryAllBlameRecordsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	blameRecords, found := k.GetAllBlame(ctx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "blame info not found")
+	}
+
+	return &types.QueryAllBlameRecordsResponse{
+		BlameInfo: blameRecords,
 	}, nil
 }

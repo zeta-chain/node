@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,15 +42,17 @@ func CmdAddBlameVote() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var nodes []*types.Node
+
+			var nodes []blame.Node
 			err = json.Unmarshal(dst, &nodes)
 			if err != nil {
 				return err
 			}
+			blameNodes := convertNodes(nodes)
 			blameInfo := &types.Blame{
 				Index:         index,
 				FailureReason: failureReason,
-				Nodes:         nodes,
+				Nodes:         blameNodes,
 			}
 
 			msg := types.NewMsgAddBlameVoteMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
@@ -64,6 +67,18 @@ func CmdAddBlameVote() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func convertNodes(n []blame.Node) (nodes []*types.Node) {
+	for _, node := range n {
+		var entry types.Node
+		entry.PubKey = node.Pubkey
+		entry.BlameSignature = node.BlameSignature
+		entry.BlameData = node.BlameData
+
+		nodes = append(nodes, &entry)
+	}
+	return
 }
 
 func CmdEncode() *cobra.Command {
