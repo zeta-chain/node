@@ -48,7 +48,7 @@ func CmdAddBlameVote() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			blameNodes := convertNodes(nodes)
+			blameNodes := types.ConvertNodes(nodes)
 			blameInfo := &types.Blame{
 				Index:         index,
 				FailureReason: failureReason,
@@ -67,18 +67,6 @@ func CmdAddBlameVote() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func convertNodes(n []blame.Node) (nodes []*types.Node) {
-	for _, node := range n {
-		var entry types.Node
-		entry.PubKey = node.Pubkey
-		entry.BlameSignature = node.BlameSignature
-		entry.BlameData = node.BlameData
-
-		nodes = append(nodes, &entry)
-	}
-	return
 }
 
 func CmdEncode() *cobra.Command {
