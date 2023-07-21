@@ -27546,6 +27546,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/observer/show_observer_count:
+    get:
+      summary: Queries a list of ShowObserverCount items.
+      operationId: Query_ShowObserverCount
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryShowObserverCountResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.AddressBytesToStringResponse:
     type: object
@@ -50473,6 +50488,15 @@ definitions:
       - KeyGenSuccess
       - KeyGenFailed
     default: PendingKeygen
+  observerLastObserverCount:
+    type: object
+    properties:
+      count:
+        type: string
+        format: uint64
+      last_change_height:
+        type: string
+        format: int64
   observerMsgAddObserverResponse:
     type: object
   observerMsgUpdateCoreParamsResponse:
@@ -50611,6 +50635,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryShowObserverCountResponse:
+    type: object
+    properties:
+      last_observer_count:
+        $ref: '#/definitions/observerLastObserverCount'
   observerQuerySupportedChainsResponse:
     type: object
     properties:

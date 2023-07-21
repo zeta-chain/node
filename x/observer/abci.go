@@ -8,7 +8,7 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	lastBlockObserverCount, found := k.GetLastBlockObserverCount(ctx)
+	lastBlockObserverCount, found := k.GetLastObserverCount(ctx)
 	if !found {
 		ctx.Logger().Error("LastBlockObserverCount not found at height", ctx.BlockHeight())
 		return
@@ -32,5 +32,5 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
-	k.SetLastBlockObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
 }

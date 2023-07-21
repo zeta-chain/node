@@ -67,7 +67,12 @@ service Query {
 	}
 
 
-	// this line is used by starport scaffolding # 2
+	// Queries a list of ShowObserverCount items.
+	rpc ShowObserverCount(QueryShowObserverCountRequest) returns (QueryShowObserverCountResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/observer/show_observer_count";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 message QueryParamsRequest {}
@@ -160,5 +165,12 @@ message QueryGetKeygenResponse {
 	Keygen Keygen = 1;
 }
 
+
+message QueryShowObserverCountRequest {
+}
+
+message QueryShowObserverCountResponse {
+	LastObserverCount last_observer_count = 1;
+}
 
 // this line is used by starport scaffolding # 3

@@ -68,7 +68,7 @@ func MigrateStore(
 	for _, observer := range allObservers {
 		totalObserverCountCurrentBlock += len(observer.ObserverList)
 	}
-	observerKeeper.SetLastBlockObserverCount(ctx, &observerTypes.LastObserverCount{
+	observerKeeper.SetLastObserverCount(ctx, &observerTypes.LastObserverCount{
 		Count:            uint64(totalObserverCountCurrentBlock),
 		LastChangeHeight: ctx.BlockHeight(),
 	})

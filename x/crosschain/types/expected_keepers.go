@@ -53,5 +53,5 @@ type ZetaObserverKeeper interface {
 	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
-	SetLastBlockObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastBlockObserverCount)
+	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
 }
