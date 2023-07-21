@@ -30,8 +30,8 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := observerTypes.ObservationType_InBoundTx
-	if !k.zetaObserverKeeper.IsInboundAllowed(ctx) {
+	observationType := zetaObserverTypes.ObservationType_InBoundTx
+	if !k.IsInboundAllowed(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
