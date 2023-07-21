@@ -22,6 +22,7 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
+	BlameKey             = "Blame-"
 	VoterKey             = "Voter-value-"
 	AllCoreParams        = "CoreParams"
 	ObserverMapperKey    = "Observer-value-"

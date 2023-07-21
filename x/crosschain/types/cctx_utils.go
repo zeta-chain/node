@@ -1,6 +1,9 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
+)
 
 // There can only be one active outtx.
 // OutboundTxParams[0] is the original outtx, if it reverts, then
@@ -22,5 +25,6 @@ func GetAllAuthzZetaclientTxTypes() []string {
 		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
+		sdk.MsgTypeURL(&types.MsgAddBlameVote{}),
 	}
 }
