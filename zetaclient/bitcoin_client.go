@@ -591,11 +591,12 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
-	outTxID := ob.GetTxID(nonce)
-	_, mined := ob.minedTx[outTxID]
-	if !mined {
-		return -1, fmt.Errorf("findNonceMarkUTXO: transaction %s not mined yet", outTxID)
-	}
+	// TODO: uncomment below checking after bootstrap
+	// outTxID := ob.GetTxID(nonce)
+	// _, mined := ob.minedTx[outTxID]
+	// if !mined {
+	// 	return -1, fmt.Errorf("findNonceMarkUTXO: transaction %s not mined yet", outTxID)
+	// }
 
 	amount := NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
@@ -629,10 +630,11 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	// for nonce = 0; make exception; no need to include nonce-mark utxo
 	idx := -1
 	if nonce > 0 {
-		index, err := ob.findNonceMarkUTXO(nonce-1, tssAddress)
-		if err != nil {
-			return nil, 0, err
-		}
+		index, _ := ob.findNonceMarkUTXO(nonce-1, tssAddress)
+		// TODO: uncomment below checking after bootstrap
+		// if err != nil {
+		// 	return nil, 0, err
+		// }
 		idx = index
 	}
 
@@ -654,7 +656,7 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	results := ob.utxos[left:right]
 
 	// include nonce-mark utxo (for nonce > 0) in asending order
-	if nonce > 0 {
+	if idx >= 0 {
 		if idx < left {
 			total += ob.utxos[idx].Amount
 			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
