@@ -10,10 +10,10 @@ const TypeMsgAddBlameVote = "add_blame_vote"
 
 var _ sdk.Msg = &MsgAddBlameVote{}
 
-func NewMsgAddBlameVoteMsg(creator string, chainId int64, blameInfo *Blame) *MsgAddBlameVote {
+func NewMsgAddBlameVoteMsg(creator string, chainID int64, blameInfo *Blame) *MsgAddBlameVote {
 	return &MsgAddBlameVote{
 		Creator:   creator,
-		ChainId:   chainId,
+		ChainId:   chainID,
 		BlameInfo: blameInfo,
 	}
 }

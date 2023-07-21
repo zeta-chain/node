@@ -41,7 +41,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 		return nil, err
 	}
 
-	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgAddBlameVoteResponse{}, nil
