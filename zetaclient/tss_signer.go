@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -99,16 +99,15 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 		log.Warn().Msg("keysign fail")
 	}
 	if ksRes.Status == thorcommon.Fail {
-		blameData, err := json.Marshal(ksRes.Blame)
-		if err != nil {
-			blameData = []byte{}
-		}
-		log.Warn().Msgf("keysign status FAIL posting blame to core, blame: %s", string(blameData))
-		index := hex.EncodeToString(digest)
+		log.Warn().Msg("keysign status FAIL posting blame to core")
+
+		digest := hex.EncodeToString(digest)
+		index := fmt.Sprintf("%s-%d", digest, height)
+
 		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
-			//return [65]byte{}, err
+			return [65]byte{}, err
 		}
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
@@ -147,7 +146,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 }
 
 // digest should be batch of Hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -158,6 +157,20 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64) ([][65]byte, error) {
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
 	}
+
+	if ksRes.Status == thorcommon.Fail {
+		log.Warn().Msg("keysign status FAIL posting blame to core")
+		digest := combineDigests(digestBase64)
+		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
+
+		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		if err != nil {
+			log.Error().Err(err).Msg("error sending blame data to core")
+			return [][65]byte{}, err
+		}
+		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+	}
+
 	signatures := ksRes.Signatures
 	// [{cyP8i/UuCVfQKDsLr1kpg09/CeIHje1FU6GhfmyMD5Q= D4jXTH3/CSgCg+9kLjhhfnNo3ggy9DTQSlloe3bbKAs= eY++Z2LwsuKG1JcghChrsEJ4u9grLloaaFZNtXI3Ujk= AA==}]
 	// 32B msg hash, 32B R, 32B S, 1B RC
@@ -485,4 +498,10 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
 	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
+}
+
+func combineDigests(digestList []string) []byte {
+	digestConcat := strings.Join(digestList[:], "")
+	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
+	return digestBytes.CloneBytes()
 }

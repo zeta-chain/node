@@ -159,7 +159,7 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chain *common.Chain, 
 		if err == nil {
 			return zetaTxHash, nil
 		}
-		b.logger.Info().Err(err).Msgf("PostBlame broadcast fail | Retry count : %d", i+1)
+		b.logger.Error().Err(err).Msgf("PostBlame broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
