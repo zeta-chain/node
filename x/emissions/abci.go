@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper) {
+func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, bankKeeper types.BankKeeper, observerKeeper types.ZetaObserverKeeper) {
 	reservesFactor, bondFactor, durationFactor := GetBlockRewardComponents(ctx, bankKeeper, stakingKeeper, keeper)
 	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 	if blockRewards.IsZero() {
@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Sta
 	if err != nil {
 		panic(err)
 	}
-	err = DistributeObserverRewards(ctx, observerRewards, bankKeeper)
+	err = DistributeObserverRewards(ctx, observerRewards, bankKeeper, observerKeeper)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, _ types.ZetaObserverKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, coin)
 }

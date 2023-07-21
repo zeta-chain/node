@@ -426,25 +426,26 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
 							ob.mu.Unlock()
 
-							// Convert to DB types
-							rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
-							if err != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
-								continue
-							}
-							trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
-							if err != nil {
-								ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
-								continue
-							}
-
-							//Save to DB
-							if dbc := ob.db.Create(rec); dbc.Error != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
-							}
-							if dbc := ob.db.Create(trans); dbc.Error != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
-							}
+							//DISABLING PERSISTENCE
+							//// Convert to DB types
+							//rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
+							//if err != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
+							//	continue
+							//}
+							//trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
+							//if err != nil {
+							//	ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
+							//	continue
+							//}
+							//
+							////Save to DB
+							//if dbc := ob.db.Create(rec); dbc.Error != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+							//}
+							//if dbc := ob.db.Create(trans); dbc.Error != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
+							//}
 
 							break TXHASHLOOP
 						}
@@ -1004,15 +1005,16 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 			return err
 		}
 
-		err = ob.BuildReceiptsMap()
-		if err != nil {
-			return err
-		}
-
-		err = ob.BuildTransactionsMap()
-		if err != nil {
-			return err
-		}
+		//DISABLING RECEIPT AND TRANSACTION PERSISTENCE
+		//err = ob.BuildReceiptsMap()
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//err = ob.BuildTransactionsMap()
+		//if err != nil {
+		//	return err
+		//}
 
 	}
 	return nil
