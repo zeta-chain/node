@@ -36,7 +36,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
 
 	// the following logic computes outbound tx gas fee, and convert into ZETA using system uniswapv2 pool wzeta/gasZRC20
-	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
+	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}

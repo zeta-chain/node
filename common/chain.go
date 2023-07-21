@@ -1,6 +1,10 @@
 package common
 
 import (
+	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"strings"
 )
 
@@ -39,15 +43,45 @@ func (chain Chain) IsExternalChain() bool {
 	return !chain.IsEqual(ZetaChain())
 }
 
+// bytes representations of address
+// on EVM chain, it is 20Bytes
+// on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
+func (chain Chain) EncodeAddress(b []byte) (string, error) {
+	if IsEVMChain(chain.ChainId) {
+		addr := ethcommon.BytesToAddress(b)
+		if addr == (ethcommon.Address{}) {
+			return "", fmt.Errorf("invalid EVM address")
+		}
+		return addr.Hex(), nil
+	} else if IsBitcoinChain(chain.ChainId) {
+		addrStr := string(b)
+		var chainParams *chaincfg.Params
+		switch chain.ChainId {
+		case 18444:
+			chainParams = &chaincfg.RegressionNetParams
+		case 18332:
+			chainParams = &chaincfg.TestNet3Params
+		case 8332:
+			chainParams = &chaincfg.MainNetParams
+		}
+		_, err := btcutil.DecodeAddress(addrStr, chainParams)
+		if err != nil {
+			return "", err
+		}
+		return addrStr, nil
+	}
+	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
+}
+
 func IsEVMChain(chainID int64) bool {
-	return chainID == 1 || // Ethereum
-		chainID == 56 || // BSC
-		chainID == 137 || // Polygon
-		chainID == 5 || // Goerli
+	return chainID == 5 || // Goerli
 		chainID == 80001 || // Polygon mumbai
 		chainID == 97 || // BSC testnet
 		chainID == 1001 || // klaytn baobab
-		chainID == 1337 // eth privnet
+		chainID == 1337 || // eth privnet
+		chainID == 1 || // eth mainnet
+		chainID == 56 || // bsc mainnet
+		chainID == 137 // polygon mainnet
 }
 
 func (chain Chain) IsKlaytnChain() bool {
