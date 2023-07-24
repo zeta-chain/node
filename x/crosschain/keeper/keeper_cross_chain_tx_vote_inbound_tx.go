@@ -65,7 +65,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
+	_, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -88,7 +88,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
-		k.SetCrossChainTx(ctx, cctx)
+		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
@@ -132,7 +132,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 	} else { // Cross Chain SWAP
-		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
+		err = func() error {
+			cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
+			err := k.UpdatePrices(ctx, receiverChain.ChainId, &cctx)
+			if err != nil {
+				return err
+			}
+			err = k.UpdateNonce(ctx, receiverChain.ChainId, &cctx)
+			if err != nil {
+				return err
+			}
+			return nil
+		}()
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -141,35 +152,3 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }
-
-// TODO: is LastBlockHeight needed?
-func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain common.Chain, numberofobservers int) error {
-	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	//k.UpdateLastBlockHeight(ctx, cctx)
-
-	err := k.UpdatePrices(ctx, receiveChain.ChainId, cctx)
-	if err != nil {
-		return err
-	}
-	err = k.UpdateNonce(ctx, receiveChain.ChainId, cctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainTx) {
-//	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InboundTxParams.SenderChain)
-//	if !isFound {
-//		lastblock = types.LastBlockHeight{
-//			Creator:           msg.Creator,
-//			Index:             msg.InboundTxParams.SenderChain, // ?
-//			Chain:             msg.InboundTxParams.SenderChain,
-//			LastSendHeight:    msg.InboundTxParams.InboundTxObservedExternalHeight,
-//			LastReceiveHeight: 0,
-//		}
-//	} else {
-//		lastblock.LastSendHeight = msg.InboundTxParams.InboundTxObservedExternalHeight
-//	}
-//	k.SetLastBlockHeight(ctx, lastblock)
-//}
