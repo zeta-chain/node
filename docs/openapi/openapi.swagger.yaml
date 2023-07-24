@@ -27214,6 +27214,41 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/blame_by_identifier/{blame_identifier}:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_BlameByIdentifier
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryBlameByIdentifierResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: blame_identifier
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/observer/get_all_blame_records:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_GetAllBlameRecords
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryAllBlameRecordsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/get_client_params_for_chain/{chainID}:
     get:
       summary: Queries a list of GetClientParamsForChain items.
@@ -50426,6 +50461,18 @@ definitions:
       - BallotFinalized_FailureObservation
       - BallotInProgress
     default: BallotFinalized_SuccessObservation
+  observerBlame:
+    type: object
+    properties:
+      index:
+        type: string
+      failure_reason:
+        type: string
+      nodes:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerNode'
   observerCoreParams:
     type: object
     properties:
@@ -50497,6 +50544,8 @@ definitions:
       last_change_height:
         type: string
         format: int64
+  observerMsgAddBlameVoteResponse:
+    type: object
   observerMsgAddObserverResponse:
     type: object
   observerMsgUpdateCoreParamsResponse:
@@ -50505,6 +50554,17 @@ definitions:
     type: object
   observerMsgUpdatePermissionFlagsResponse:
     type: object
+  observerNode:
+    type: object
+    properties:
+      pub_key:
+        type: string
+      blame_data:
+        type: string
+        format: byte
+      blame_signature:
+        type: string
+        format: byte
   observerNodeAccount:
     type: object
     properties:
@@ -50533,6 +50593,7 @@ definitions:
       - InBoundTx
       - OutBoundTx
       - TSSKeyGen
+      - TSSKeySign
     default: EmptyObserverType
   observerObserverMapper:
     type: object
@@ -50571,6 +50632,14 @@ definitions:
       - out_tx_tracker
     default: stop_inbound_cctx
     title: '- stop_inbound_cctx: some observer sees inbound tx'
+  observerQueryAllBlameRecordsResponse:
+    type: object
+    properties:
+      blameInfo:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerBlame'
   observerQueryAllNodeAccountResponse:
     type: object
     properties:
@@ -50603,6 +50672,11 @@ definitions:
         $ref: '#/definitions/observerObservationType'
       ballot_status:
         $ref: '#/definitions/observerBallotStatus'
+  observerQueryBlameByIdentifierResponse:
+    type: object
+    properties:
+      blameInfo:
+        $ref: '#/definitions/observerBlame'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:

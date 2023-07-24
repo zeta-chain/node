@@ -9,6 +9,7 @@ import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
 import "observer/node_account.proto";
+import "observer/blame.proto";
 import "common/common.proto";
 import "observer/permission_flags.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -70,6 +71,16 @@ service Query {
 	// Queries a list of ShowObserverCount items.
 	rpc ShowObserverCount(QueryShowObserverCountRequest) returns (QueryShowObserverCountResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/observer/show_observer_count";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc BlameByIdentifier(QueryBlameByIdentifierRequest) returns (QueryBlameByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -171,6 +182,21 @@ message QueryShowObserverCountRequest {
 
 message QueryShowObserverCountResponse {
 	LastObserverCount last_observer_count = 1;
+}
+
+message QueryBlameByIdentifierRequest {
+	string blame_identifier = 1;
+}
+
+message QueryBlameByIdentifierResponse {
+	Blame blameInfo = 1;
+}
+
+message QueryAllBlameRecordsRequest {
+}
+
+message QueryAllBlameRecordsResponse {
+	repeated Blame blameInfo = 1;
 }
 
 // this line is used by starport scaffolding # 3

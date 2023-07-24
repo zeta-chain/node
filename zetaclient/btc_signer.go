@@ -9,19 +9,16 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gorm.io/gorm"
-
-	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -50,15 +47,17 @@ func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerol
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, utxos []btcjson.ListUnspentResult, db *gorm.DB, height uint64) (*wire.MsgTx, error) {
-	// select N UTXOs to cover the amount
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
-	prevOuts, total, err := selectUTXOs(utxos, amount+estimateFee, maxNoOfInputsPerTx)
+	nonceMark := NonceMarkAmount(nonce)
+
+	// select N UTXOs to cover the total expense
+	tssAddress := signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, tssAddress)
 	if err != nil {
 		return nil, err
 	}
-	remaining := total - amount
 
 	// build tx with selected unspents
 	tx := wire.NewMsgTx(wire.TxVersion)
@@ -76,7 +75,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if err != nil {
 		return nil, err
 	}
-	// add txout with remaining btc
+
+	// fee checking
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
 	if fees.Int64() < int64(minFee*1e8) {
@@ -84,28 +84,37 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
+	// add output with remaining btc to TSS self (change-1)
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
-	pkScript2, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
+	payToSelf, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
 	if err != nil {
 		return nil, err
 	}
-	remainingSatoshis, err := getSatoshis(remaining)
+	remaining := total - amount
+	remainingSats, err := getSatoshis(remaining)
 	if err != nil {
 		return nil, err
 	}
-	txOut := wire.NewTxOut(remainingSatoshis, pkScript2)
-
-	remainderValue := remainingSatoshis - fees.Int64()
-	if remainderValue < 0 {
-		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainderValue)
+	remainingSats -= fees.Int64()
+	remainingSats -= nonceMark
+	if remainingSats < 0 {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Remainder Value is negative! : %d\n", remainingSats)
 		fmt.Printf("BTCSigner: SignWithdrawTx: Number of inputs : %d\n", len(tx.TxIn))
 		return nil, fmt.Errorf("remainder value is negative")
+	} else if remainingSats == nonceMark {
+		fmt.Printf("BTCSigner: SignWithdrawTx: Adjust remainder value to avoid duplicate nonce-mark: %d\n", remainingSats)
+		remainingSats--
 	}
-
-	txOut.Value = remainderValue
+	txOut := wire.NewTxOut(remainingSats, payToSelf)
 	tx.AddTxOut(txOut)
 
-	// add txout
+	// add output with nonce-mark btc to TSS self (change-2)
+	{
+		txOut := wire.NewTxOut(nonceMark, payToSelf)
+		tx.AddTxOut(txOut)
+	}
+
+	// output to the recipient
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
 	if err != nil {
 		return nil, err
@@ -135,7 +144,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if !ok {
 		return nil, fmt.Errorf("tssSigner is not a TSS")
 	}
-	sig65Bs, err := tss.SignBatch(witnessHashes, height)
+	sig65Bs, err := tss.SignBatch(witnessHashes, height, chain)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}
@@ -232,7 +241,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient.utxos, btcClient.db, height)
+	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient, height, send.GetCurrentOutTxParam().OutboundTxTssNonce, &btcClient.chain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
 		return
@@ -277,34 +286,4 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			break // successful broadcast; no need to retry
 		}
 	}
-}
-
-// Selects a sublist of utxos to be used as inputs.
-//
-// Parameters:
-//   - utxos: A list of ordered (by amount in ascending order) UTXO
-//   - amount: The desired minimum total value of the selected UTXOs.
-//   - utxoCap: The maximum number of UTXOs to be selected.
-//
-// Returns: a sublist of selected UTXOs or an error if the qulifying sublist cannot be found.
-func selectUTXOs(utxos []btcjson.ListUnspentResult, amount float64, utxoCap uint8) ([]btcjson.ListUnspentResult, float64, error) {
-	total := 0.0
-	left, right := 0, 0
-
-	for total < amount && right < len(utxos) {
-		if utxoCap > 0 { // expand sublist
-			total += utxos[right].Amount
-			right++
-			utxoCap--
-		} else { // pop the smallest utxo and append the current one
-			total -= utxos[left].Amount
-			total += utxos[right].Amount
-			left++
-			right++
-		}
-	}
-	if total < amount {
-		return nil, 0, fmt.Errorf("not enough btc in reserve - available : %v , tx amount : %v", total, amount)
-	}
-	return utxos[left:right], total, nil
 }

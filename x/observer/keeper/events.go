@@ -8,12 +8,12 @@ import (
 	types "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHash, obserVationChain string) {
+func EmitEventBallotCreated(ctx sdk.Context, ballot types.Ballot, observationHash, observationChain string) {
 	err := ctx.EventManager().EmitTypedEvent(&types.EventBallotCreated{
 		BallotIdentifier: ballot.BallotIdentifier,
 		BallotType:       ballot.ObservationType.String(),
 		ObservationHash:  observationHash,
-		ObservationChain: obserVationChain,
+		ObservationChain: observationChain,
 	})
 	if err != nil {
 		ctx.Logger().Error("failed to emit EventBallotCreated : %s", err.Error())

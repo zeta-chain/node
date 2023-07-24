@@ -54,4 +54,8 @@ type ZetaObserverKeeper interface {
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
 	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
+	AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error)
+	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
+	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
+	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
 }

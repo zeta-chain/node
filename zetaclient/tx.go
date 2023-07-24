@@ -6,11 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 	"math/big"
 	"time"
 
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const (
@@ -20,6 +22,7 @@ const (
 	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
+	PostBlameDataGasLimit           = 200_000
 	DefaultGasLimit                 = 200_000
 	DefaultRetryCount               = 5
 	DefaultRetryInterval            = 5
@@ -138,4 +141,26 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 			return
 		}
 	}
+}
+
+func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chain *common.Chain, index string) (string, error) {
+	signerAddress := b.keys.GetOperatorAddress().String()
+	zetaBlame := &observerTypes.Blame{
+		Index:         index,
+		FailureReason: blame.FailReason,
+		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
+	}
+	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chain.ChainId, zetaBlame)
+	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
+	var gasLimit uint64 = PostBlameDataGasLimit
+
+	for i := 0; i < DefaultRetryCount; i++ {
+		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		if err == nil {
+			return zetaTxHash, nil
+		}
+		b.logger.Error().Err(err).Msgf("PostBlame broadcast fail | Retry count : %d", i+1)
+		time.Sleep(DefaultRetryInterval * time.Second)
+	}
+	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }

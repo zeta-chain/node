@@ -7,8 +7,7 @@ import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-import "observer/permission_flags.proto";
-import "observer/keygen.proto";
+import "observer/blame.proto";
 
 
 
@@ -16,20 +15,14 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {
-//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
    rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
    rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
    rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
-  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
-// this line is used by starport scaffolding # proto/tx/rpc
-
+   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
+  // this line is used by starport scaffolding # proto/tx/rpc
 }
 
-//message MsgSetSupportedChains {
-//  string creator = 1;
-//  int64 chain_id=2;
-//  common.ChainName ChainName=3;
-//}
 message MsgUpdateCoreParams {
   string creator = 1;
   CoreParams coreParams = 2;
@@ -47,6 +40,14 @@ message MsgAddObserver {
 message MsgAddObserverResponse {
 }
 
+message MsgAddBlameVote {
+  string creator = 1;
+  int64 chain_id = 2;
+  Blame blame_info = 3;
+}
+
+message MsgAddBlameVoteResponse {
+}
 message MsgUpdatePermissionFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
