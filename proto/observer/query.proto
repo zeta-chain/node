@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
+import "observer/blame.proto";
 import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
@@ -43,6 +44,16 @@ service Query {
 // Queries a list of GetCoreParams items.
 	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
 		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc BlameByIdentifier(QueryBlameByIdentifierRequest) returns (QueryBlameByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -107,6 +118,21 @@ message QueryGetCoreParamsRequest {
 
 message QueryGetCoreParamsResponse {
 	CoreParamsList core_params = 1;
+}
+
+message QueryBlameByIdentifierRequest {
+	string blame_identifier = 1;
+}
+
+message QueryBlameByIdentifierResponse {
+	Blame blameInfo = 1;
+}
+
+message QueryAllBlameRecordsRequest {
+}
+
+message QueryAllBlameRecordsResponse {
+	repeated Blame blameInfo = 1;
 }
 
 // this line is used by starport scaffolding # 3

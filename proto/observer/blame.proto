@@ -1,0 +1,18 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "observer/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message Node {
+  string pub_key = 1;
+  bytes blame_data = 2;
+  bytes blame_signature = 3;
+}
+
+message Blame {
+  string index = 1;
+  string failure_reason = 2;
+  repeated Node nodes = 3;
+}

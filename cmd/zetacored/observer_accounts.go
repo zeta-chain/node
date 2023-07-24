@@ -59,7 +59,6 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("TSS Pubkey: ", tssPubkey)
 			if keyGenBlock == 0 && tssPubkey == "" {
 				panic("TSS pubkey is required if keygen block is set to 0")
 			}

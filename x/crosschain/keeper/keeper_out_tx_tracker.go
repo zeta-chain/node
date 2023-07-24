@@ -170,13 +170,13 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
 	isAdmin := msg.Creator == adminPolicyAccount
 
-	isObserver, err := k.IsAuthorized(ctx, msg.Creator, chain)
+	isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
 	if err != nil {
 		ctx.Logger().Error("Error while checking if the account is an observer", err)
 	}
 	// Sender needs to be either the admin policy account or an observer
 	if !(isAdmin || isObserver) {
-		return nil, sdkerrors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
