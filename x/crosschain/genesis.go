@@ -46,7 +46,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Set all the send
 	for _, elem := range genState.CrossChainTxs {
-		k.SetCrossChainTx(ctx, *elem)
+		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
 	}
 
 	// Set all the nodeAccount
