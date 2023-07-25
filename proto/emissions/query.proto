@@ -20,6 +20,11 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
 	}
 
+// Queries a list of GetEmmisonsFactors items.
+	rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -39,6 +44,15 @@ message QueryListPoolAddressesResponse {
   string undistributed_observer_balances_address = 1;
   string undistributed_tss_balances_address = 2;
   string emission_module_address = 3;
+}
+
+message QueryGetEmmisonsFactorsRequest {
+}
+
+message QueryGetEmmisonsFactorsResponse {
+  string reservesFactor = 1;
+  string bondFactor = 2;
+  string durationFactor = 3;
 }
 
 // this line is used by starport scaffolding # 3

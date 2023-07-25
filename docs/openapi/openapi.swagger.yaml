@@ -27442,6 +27442,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/emissions/get_emmisons_factors:
+    get:
+      summary: Queries a list of GetEmmisonsFactors items.
+      operationId: Query_GetEmmisonsFactors
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryGetEmmisonsFactorsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/zetacore/emissions/list_addresses:
     get:
       summary: Queries a list of ListBalances items.
@@ -50369,6 +50384,15 @@ definitions:
       tx_hash:
         type: string
       tx_signer:
+        type: string
+  emissionsQueryGetEmmisonsFactorsResponse:
+    type: object
+    properties:
+      reservesFactor:
+        type: string
+      bondFactor:
+        type: string
+      durationFactor:
         type: string
   emissionsQueryListPoolAddressesResponse:
     type: object

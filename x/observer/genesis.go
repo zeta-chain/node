@@ -30,6 +30,20 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Keygen != nil {
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
+	if len(genState.Ballots) > 0 {
+		for _, ballot := range genState.Ballots {
+			k.SetBallot(ctx, ballot)
+		}
+	}
+
+	totalObserverCountCurrentBlock := 0
+	for _, observer := range genesisObservers {
+		totalObserverCountCurrentBlock += len(observer.ObserverList)
+	}
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{
+		Count:            uint64(totalObserverCountCurrentBlock),
+		LastChangeHeight: ctx.BlockHeight(),
+	})
 
 }
 
