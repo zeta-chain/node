@@ -479,18 +479,4 @@ jobs:
       #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
       #       Please review the release notes for any specific upgrade instructions or considerations.
       
-      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
-      
-      # - name: "SEND:DISCORD:MESSAGE"
-      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
-      #   uses: gzukel/CosmosComposites/send_discord_message@main
-      #   with:
-      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
-      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-      #     discord_message: |
-      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
-      
-      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
-      #       Please review the release notes for any specific upgrade instructions or considerations.
-      
       #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
