@@ -5,6 +5,7 @@ import (
 )
 
 var (
-	ErrBech32ifyPubKey = errors.New("Bech32ifyPubKey fail in main")
-	ErrNewPubKey       = errors.New("NewPubKey error from string")
+	ErrBech32ifyPubKey   = errors.New("Bech32ifyPubKey fail in main")
+	ErrNewPubKey         = errors.New("NewPubKey error from string")
+	ErrKeySignStatusFail = errors.New("keysign failed with blame data")
 )

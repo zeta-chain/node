@@ -64,12 +64,12 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	}
 	err := error(nil)
 	if msg.Status == common.ReceiveStatus_Success {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
+		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	} else if msg.Status == common.ReceiveStatus_Failed {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_FailureObservation)
+		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_FailureObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
@@ -78,7 +78,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain", sdk.MsgTypeURL(&types.MsgCreateTSSVoter{}))
 	}
 
-	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgCreateTSSVoterResponse{}, nil

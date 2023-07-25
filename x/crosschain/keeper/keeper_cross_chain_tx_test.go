@@ -31,7 +31,7 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 		items[i].ZetaFees = math.OneUint()
 		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
 
-		keeper.SetCrossChainTx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
 	}
 	return items
 }
@@ -71,7 +71,7 @@ func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
-		keeper.SetCrossChainTx(ctx, items[i])
+		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
 	}
 	return items
 }
