@@ -94,11 +94,11 @@ func TestStatus_StatusTransition(t *testing.T) {
 			IsErr:        false,
 		},
 	}
-	_, ctx := setupKeeper(t)
+	_, _ = setupKeeper(t)
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.ChangeStatus(&ctx, test.NonErrStatus, test.Msg, "")
+			test.Status.ChangeStatus(test.NonErrStatus, test.Msg)
 			if test.IsErr {
 				assert.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {
