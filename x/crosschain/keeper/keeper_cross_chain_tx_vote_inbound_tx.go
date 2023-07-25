@@ -135,7 +135,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
 			cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-			err := k.UpdatePrices(tmpCtx, receiverChain.ChainId, &cctx)
+			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx)
 			if err != nil {
 				return err
 			}

@@ -55,7 +55,7 @@ import (
 //	//	NativeTokenSymbol:   "",
 //	//	MedianIndex:         0,
 //	//})
-//	err := keeper.UpdatePrices(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
+//	err := keeper.PayGasInZetaAndUpdateCctx(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
 //	assert.NoError(t, err)
 //	fmt.Println(cctx[0].String())
 //}

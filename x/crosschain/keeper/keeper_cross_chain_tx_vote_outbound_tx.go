@@ -128,7 +128,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 					CoinType:           cctx.InboundTxParams.CoinType,
 					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
 				})
-				err := k.UpdatePrices(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
 				if err != nil {
 					return err
 				}
