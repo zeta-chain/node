@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Keeper Tests
@@ -26,7 +26,7 @@ func createNNodeAccount(keeper *Keeper, ctx sdk.Context, n int) []types.NodeAcco
 }
 
 func TestNodeAccountGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetNodeAccount(ctx, item.Operator)
@@ -35,7 +35,7 @@ func TestNodeAccountGet(t *testing.T) {
 	}
 }
 func TestNodeAccountRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveNodeAccount(ctx, item.Operator)
@@ -45,7 +45,7 @@ func TestNodeAccountRemove(t *testing.T) {
 }
 
 func TestNodeAccountGetAll(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
 	assert.Equal(t, items, keeper.GetAllNodeAccount(ctx))
 }
@@ -53,7 +53,7 @@ func TestNodeAccountGetAll(t *testing.T) {
 // Querier Tests
 
 func TestNodeAccountQuerySingle(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNNodeAccount(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -95,7 +95,7 @@ func TestNodeAccountQuerySingle(t *testing.T) {
 }
 
 func TestNodeAccountQueryPaginated(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNNodeAccount(keeper, ctx, 5)
 

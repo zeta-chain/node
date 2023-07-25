@@ -67,11 +67,10 @@ func (s *CliTestSuite) AddObserverData(n int) {
 	for i := 0; i < n; i++ {
 		state.NodeAccountList = append(state.NodeAccountList, &observerTypes.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
 	}
-	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 	permissionFlags := &observerTypes.PermissionFlags{}
 	nullify.Fill(&permissionFlags)
 	state.PermissionFlags = permissionFlags
-
+	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[observerTypes.ModuleName] = buf
@@ -104,7 +103,6 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-
 	state.Tss = &types.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},

@@ -4,15 +4,15 @@ import (
 	"fmt"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowNodeAccount() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.NodeAccountList
+	objs := s.observerState.NodeAccountList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -21,7 +21,7 @@ func (s *CliTestSuite) TestShowNodeAccount() {
 		id   string
 		args []string
 		err  error
-		obj  *types.NodeAccount
+		obj  *zetaObserverTypes.NodeAccount
 	}{
 		{
 			desc: "found",
@@ -47,7 +47,7 @@ func (s *CliTestSuite) TestShowNodeAccount() {
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetNodeAccountResponse
+				var resp zetaObserverTypes.QueryGetNodeAccountResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.NodeAccount)
 				s.Require().Equal(tc.obj, resp.NodeAccount)

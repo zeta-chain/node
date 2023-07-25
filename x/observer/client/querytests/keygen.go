@@ -4,14 +4,14 @@ import (
 	"fmt"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowKeygen() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.state.Keygen
+	obj := s.observerState.Keygen
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -19,7 +19,7 @@ func (s *CliTestSuite) TestShowKeygen() {
 		desc string
 		args []string
 		err  error
-		obj  *types.Keygen
+		obj  *observerTypes.Keygen
 	}{
 		{
 			desc: "get",
@@ -38,7 +38,7 @@ func (s *CliTestSuite) TestShowKeygen() {
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetKeygenResponse
+				var resp observerTypes.QueryGetKeygenResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.Keygen)
 				s.Require().Equal(tc.obj, resp.Keygen)

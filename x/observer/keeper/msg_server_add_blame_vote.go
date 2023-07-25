@@ -32,7 +32,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	}
 
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String(), sdk.MsgTypeURL(&types.MsgAddBlameVote{}))
+		EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String())
 	}
 
 	// AddVoteToBallot adds a vote and sets the ballot
