@@ -38,6 +38,20 @@ func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 	return
 }
 
+func (k Keeper) GetFinalizedBallots(ctx sdk.Context) (voters []*types.Ballot) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Ballot
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		if val.BallotStatus != types.BallotStatus_BallotInProgress {
+			voters = append(voters, &val)
+		}
+	}
+	return
+}
+
 // Queries
 
 func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallotByIdentifierRequest) (*types.QueryBallotByIdentifierResponse, error) {

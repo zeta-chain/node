@@ -1,6 +1,7 @@
 package emissions
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
@@ -40,9 +41,25 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, _ types.ZetaObserverKeeper) error {
-	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
-	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, coin)
+func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, obsKeeper types.ZetaObserverKeeper) error {
+	ballots := obsKeeper.GetFinalizedBallots(ctx)
+	rewardsDistributer := map[string]int64{}
+	totalRewardsUnits := int64(0)
+	for _, ballot := range ballots {
+		totalRewardsUnits = totalRewardsUnits + ballot.BuildRewardsDistribution(rewardsDistributer)
+	}
+	rewardPerUnit := amount.Quo(sdk.NewInt(totalRewardsUnits))
+	for observer, rewardUnits := range rewardsDistributer {
+		if rewardUnits <= 0 {
+			continue
+		}
+		rewardAmount := rewardPerUnit.Mul(sdk.NewInt(rewardUnits))
+		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(observer), sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount)))
+		if err != nil {
+			ctx.Logger().Error("Error while distributing observer rewards", "observer", observer, "amount", rewardAmount, "error", err.Error())
+		}
+	}
+	return nil
 }
 
 func GetBlockRewardComponents(ctx sdk.Context, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, emissionKeeper keeper.Keeper) (sdk.Dec, sdk.Dec, sdk.Dec) {
