@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"strconv"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 

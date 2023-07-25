@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -95,11 +95,4 @@ func (k Keeper) NodeAccount(c context.Context, req *types.QueryGetNodeAccountReq
 	}
 
 	return &types.QueryGetNodeAccountResponse{NodeAccount: &val}, nil
-}
-
-// MESSAGES
-
-// Not implemented yet.
-func (k msgServer) SetNodeKeys(_ context.Context, _ *types.MsgSetNodeKeys) (*types.MsgSetNodeKeysResponse, error) {
-	return &types.MsgSetNodeKeysResponse{}, nil
 }

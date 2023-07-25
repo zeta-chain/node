@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 
@@ -29,17 +28,6 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	})
 	if err != nil {
 		ctx.Logger().Error("Error emitting EventInboundFinalized :", err)
-	}
-}
-
-func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
-	err := ctx.EventManager().EmitTypedEvents(&types.EventKeygenBlockUpdated{
-		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgUpdateKeygen{}),
-		KeygenBlock:   strconv.Itoa(int(keygen.BlockNumber)),
-		KeygenPubkeys: types2.PrettyPrintStruct(keygen.GranteePubkeys),
-	})
-	if err != nil {
-		ctx.Logger().Error("Error emitting EventKeygenBlockUpdated :", err)
 	}
 }
 

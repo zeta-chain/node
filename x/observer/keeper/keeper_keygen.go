@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
