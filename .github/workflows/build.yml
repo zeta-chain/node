@@ -442,17 +442,13 @@ jobs:
 
       - name: Determine Release Type
         run: |
-          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
-          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0$ ]]; then
-            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
-          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.0$ ]]; then
+          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
             echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
           elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
             echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
           else
             echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
-          fi
+          fi 
         id: determine_release_type
 
       - name: "SEND:DISCORD:MESSAGE"
@@ -463,13 +459,27 @@ jobs:
           discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
           discord_message: |
             Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
-            
+
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
             We will raise a governance proposal on Monday at 15:00 UTC with a 12-hour voting period. 
             The upgrade will be scheduled for Tuesday at approximately 15:00 UTC. 
             More specific information including block height will be shared on Monday as part of the governance proposal.
-      
+            
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+      
+      # - name: "SEND:DISCORD:MESSAGE"
+      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
+      #   uses: gzukel/CosmosComposites/send_discord_message@main
+      #   with:
+      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
+      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+      #     discord_message: |
+      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
+      
+      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
+      #       Please review the release notes for any specific upgrade instructions or considerations.
+      
+      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
       
       # - name: "SEND:DISCORD:MESSAGE"
       #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
