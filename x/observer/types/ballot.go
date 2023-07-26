@@ -83,7 +83,6 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 				continue
 			}
 			rewardsMap[address] = rewardsMap[address] - 1
-			totalUnits--
 		}
 	case BallotStatus_BallotFinalized_FailureObservation:
 		for _, address := range m.VoterList {
@@ -94,7 +93,6 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 				continue
 			}
 			rewardsMap[address] = rewardsMap[address] - 1
-			totalUnits--
 		}
 	}
 	return totalUnits

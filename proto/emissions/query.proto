@@ -25,6 +25,11 @@ service Query {
 		option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
 	}
 
+// Queries a list of ShowAvailableEmissions items.
+	rpc ShowAvailableEmissions(QueryShowAvailableEmissionsRequest) returns (QueryShowAvailableEmissionsResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/emissions/show_available_emissions/{address}";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -53,6 +58,14 @@ message QueryGetEmmisonsFactorsResponse {
   string reservesFactor = 1;
   string bondFactor = 2;
   string durationFactor = 3;
+}
+
+message QueryShowAvailableEmissionsRequest {
+  string address = 1;
+}
+
+message QueryShowAvailableEmissionsResponse {
+  string amount = 1;
 }
 
 // this line is used by starport scaffolding # 3

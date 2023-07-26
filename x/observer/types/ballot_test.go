@@ -146,7 +146,7 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				Votes:            test.votes,
 				ObservationType:  0,
 				BallotThreshold:  sdk.Dec{},
-				BallotStatus:     BallotStatus_BallotFinalized_SuccessObservation,
+				BallotStatus:     test.ballotStatus,
 			}
 			rewardsMap := map[string]int64{}
 			ballot.BuildRewardsDistribution(rewardsMap)

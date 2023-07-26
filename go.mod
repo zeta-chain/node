@@ -61,7 +61,10 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/golang/glog v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.1 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect

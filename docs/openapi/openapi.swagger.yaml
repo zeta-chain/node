@@ -27487,6 +27487,26 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/emissions/show_available_emissions/{address}:
+    get:
+      summary: Queries a list of ShowAvailableEmissions items.
+      operationId: Query_ShowAvailableEmissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryShowAvailableEmissionsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
@@ -50402,6 +50422,11 @@ definitions:
       undistributed_tss_balances_address:
         type: string
       emission_module_address:
+        type: string
+  emissionsQueryShowAvailableEmissionsResponse:
+    type: object
+    properties:
+      amount:
         type: string
   fungibleForeignCoins:
     type: object

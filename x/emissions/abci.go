@@ -2,7 +2,6 @@ package emissions
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
@@ -23,7 +22,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
-	err = DistributeObserverRewards(ctx, observerRewards, keeper.GetBankKeeper(), keeper.GetObserverKeeper())
+	err = DistributeObserverRewards(ctx, observerRewards, keeper)
 	if err != nil {
 		panic(err)
 	}
@@ -43,50 +42,67 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, obsKeeper types.ZetaObserverKeeper) error {
-	ballots := obsKeeper.GetFinalizedBallots(ctx)
-	//fmt.Println("amount", amount, ctx.BlockHeight())
-	//for _, ballot := range ballots {
-	//	fmt.Println("ballot : ", ballot.String())
-	//}
+func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {
+	ballots := keeper.GetObserverKeeper().GetFinalizedBallots(ctx)
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
+	err := keeper.GetBankKeeper().SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
+	if err != nil {
+		return err
+	}
+
 	if len(ballots) == 0 {
 		return nil
 	}
 	for _, ballot := range ballots {
 		totalRewardsUnits = totalRewardsUnits + ballot.BuildRewardsDistribution(rewardsDistributer)
 	}
-	if totalRewardsUnits == 0 || amount.IsZero() {
+	if totalRewardsUnits <= 0 || amount.IsZero() {
 		return nil
 	}
+
 	rewardPerUnit := amount.Quo(sdk.NewInt(totalRewardsUnits))
 	sortedKeys := make([]string, 0, len(rewardsDistributer))
 	for k := range rewardsDistributer {
 		sortedKeys = append(sortedKeys, k)
 	}
 	sort.Strings(sortedKeys)
-	finalDistributionList := []string{}
+
+	var finalDistributionList []*types.ObserverEmission
 	for _, key := range sortedKeys {
-		observerAddress := sdk.AccAddress(key)
-		rewardUnits := rewardsDistributer[key]
-		if rewardUnits <= 0 {
-			continue
-		}
-		rewardAmount := rewardPerUnit.Mul(sdk.NewInt(rewardUnits))
-		finalDistributionList = append(finalDistributionList, fmt.Sprintf("%s:%s", observerAddress.String(), rewardAmount.String()))
-		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, observerAddress, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount)))
+		observerAddress, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
-			// Check : Should we panic here, or add undistributed rewards to a keeper?
-			ctx.Logger().Error("Error while distributing observer rewards", "observer", observerAddress.String(), "amount", rewardAmount, "error", err.Error())
 			continue
 		}
+		observerRewardsRatio := rewardsDistributer[key]
+		if observerRewardsRatio == 0 {
+			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+				EmissionType:    types.EmissionType_Slash,
+				ObserverAddress: observerAddress.String(),
+				Amount:          sdkmath.ZeroInt().String(),
+			})
+			continue
+		}
+		if observerRewardsRatio < 0 {
+			keeper.SlashRewards(ctx, observerAddress.String(), sdkmath.NewInt(10000))
+			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+				EmissionType:    types.EmissionType_Slash,
+				ObserverAddress: observerAddress.String(),
+				Amount:          sdkmath.NewInt(10000).String(),
+			})
+			continue
+		}
+		rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardsRatio))
+		keeper.AddRewards(ctx, observerAddress.String(), rewardAmount)
+		finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+			EmissionType:    types.EmissionType_Rewards,
+			ObserverAddress: observerAddress.String(),
+			Amount:          rewardAmount.String(),
+		})
 	}
-	for _, d := range finalDistributionList {
-		fmt.Println(d)
-	}
-	fmt.Println("-----------------------------------")
-	obsKeeper.DeleteFinalizedBallots(ctx)
+	types.EmitObserverEmissions(ctx, finalDistributionList)
+
+	keeper.GetObserverKeeper().DeleteFinalizedBallots(ctx)
 	return nil
 }
 

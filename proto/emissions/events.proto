@@ -1,11 +1,25 @@
 syntax = "proto3";
 package zetachain.zetacore.emissions;
 
-
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
+enum EmissionType {
+    option (gogoproto.goproto_enum_stringer) = true;
+    Slash = 0;
+    Rewards = 1;
+}
+message ObserverEmission {
+    EmissionType emission_type = 1;
+    string observer_address = 2;
+    string amount = 3;
+}
 
+message EventObserverEmissions {
+    string msg_type_url = 1;
+    repeated ObserverEmission emissions = 2;
+}
 message EventBlockEmissions {
     string msg_type_url = 1;
     string bond_factor = 2 ;
