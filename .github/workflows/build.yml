@@ -205,7 +205,6 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           set -e # fail on error
-          shopt -s dotglob
           rm -rf *
         
       - name: Clean Up Workspace
