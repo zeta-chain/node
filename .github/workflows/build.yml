@@ -113,17 +113,6 @@ jobs:
         if: always()
         uses: AutoModality/action-clean@v1
 
-      - name: Build zetacored and zetaclientd
-        if: always()
-        run: |
-          pwd
-          ls -al 
-          ls -al ~/.zetacored/ || true 
-          ls -al x/crosschain/client/integrationtests/.zetacored || true
-          ls -al x/crosschain/client/querytests/.zetacored || true
-          ls -al x/observer/client/querytests/.zetacored || true
-
-
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
@@ -409,6 +398,7 @@ jobs:
             exit 1
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
+
       - name: Clean Up Workspace
         if: always()
         uses: AutoModality/action-clean@v1
