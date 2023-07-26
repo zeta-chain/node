@@ -2,9 +2,10 @@ package zetaclient
 
 import (
 	"bytes"
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -64,9 +65,10 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 1
-	chunkSize        = 500
+	minConfirmations = 0
+	chunkSize        = 1000
 	maxHeightDiff    = 10000
+	dustOffset       = 2000
 )
 
 func (ob *BitcoinChainClient) GetChainConfig() *config.BTCConfig {
@@ -314,7 +316,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		if err != nil {
 			return false, false, nil
 		}
-		getTxResult, err := ob.rpcClient.GetTransaction(hash)
+		getTxResult, err := ob.rpcClient.GetTransactionWatchOnly(hash, true)
 		if err != nil {
 			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
 			return false, false, nil
@@ -326,15 +328,15 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		ob.minedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
-	amountInSat, _ := big.NewFloat(res.Amount * 1e8).Int(nil)
-	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
-		return true, false, nil
+	var amount float64
+	if res.Amount > 0 {
+		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount > 0")
+		amount = res.Amount
+	} else {
+		amount = -res.Amount
 	}
-
-	ob.mu.Lock()
-	nextNonce := ob.nextNonce
-	ob.mu.Unlock()
-	if nonce != nextNonce {
+	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
+	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
 
@@ -360,17 +362,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 	}
 	return true, true, nil
 }
-
-//// FIXME: bitcoin tx does not have nonce; however, nonce can be maintained
-//// by the client to easily identify the cctx outbound command
-//func (ob *BitcoinChainClient) PostNonceIfNotRecorded(logger zerolog.Logger) error {
-//	zetaHash, err := ob.zetaClient.PostNonce(ob.chain, 0)
-//	if err != nil {
-//		return errors.Wrap(err, "error posting nonce to zeta core")
-//	}
-//	logger.Info().Msgf("PostNonce zeta tx %s , signer %s , nonce %d", zetaHash, ob.zetaClient.keys.GetOperatorAddress(), 0)
-//	return nil
-//}
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
 
@@ -445,7 +436,10 @@ type BTCInTxEvnet struct {
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
-	for _, tx := range txs {
+	for idx, tx := range txs {
+		if idx == 0 {
+			continue // the first tx is coinbase; we do not process coinbase tx
+		}
 		found := false
 		var value float64
 		var memo []byte
@@ -481,6 +475,10 @@ func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, tar
 					memoBytes, err := hex.DecodeString(script[4:])
 					if err != nil {
 						logger.Warn().Err(err).Msgf("error hex decoding memo")
+						continue
+					}
+					if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
+						logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 						continue
 					}
 					memo = memoBytes
@@ -580,66 +578,98 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
 		//}
 	}
-	// filter pending
-	var filtered []btcjson.ListUnspentResult
-	for _, utxo := range utxos {
-		pending, err := ob.isPending(utxoKey(utxo))
-		if err != nil {
-			return fmt.Errorf("btc: error accessing pending utxos pendingUtxos: %v", err.Error())
-		}
-		if !pending {
-			filtered = append(filtered, utxo)
-		}
-	}
-	ob.ts.SetNumberOfUTXOs(len(utxos), len(filtered))
 	// sort by value
-	sort.Slice(filtered, func(i, j int) bool {
-		return filtered[i].Amount < filtered[j].Amount
+	sort.SliceStable(utxos, func(i, j int) bool {
+		return utxos[i].Amount < utxos[j].Amount
 	})
-	ob.utxos = filtered
-	// remove completed from pending pendingUtxos
-	ob.housekeepPending()
+
+	ob.mu.Lock()
+	ob.ts.SetNumberOfUTXOs(len(utxos))
+	ob.utxos = utxos
+	ob.mu.Unlock()
 	return nil
 }
 
-func (ob *BitcoinChainClient) housekeepPending() {
-	// create map with utxos
-	utxosMap := make(map[string]bool, len(ob.utxos))
-	for _, utxo := range ob.utxos {
-		utxosMap[utxoKey(utxo)] = true
-	}
+func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
+	// TODO: uncomment below checking after bootstrap
+	// outTxID := ob.GetTxID(nonce)
+	// _, mined := ob.minedTx[outTxID]
+	// if !mined {
+	// 	return -1, fmt.Errorf("findNonceMarkUTXO: transaction %s not mined yet", outTxID)
+	// }
 
-	// traverse pending pendingUtxos
-	removed := 0
-	var utxos []clienttypes.PendingUTXOSQLType
-	if err := ob.db.Find(&utxos).Error; err != nil {
-		ob.logger.WatchUTXOS.Error().Err(err).Msg("error querying pending UTXOs from db")
-		return
-	}
-	for i := range utxos {
-		key := utxos[i].Key
-		// if key not in utxos map, remove from pendingUtxos
-		if !utxosMap[key] {
-			if err := ob.db.Where("Key = ?", key).Delete(&utxos[i]).Error; err != nil {
-				ob.logger.WatchUTXOS.Warn().Err(err).Msgf("btc: error removing key [%s] from pending utxos pendingUtxos", key)
-				continue
-			}
-			removed++
+	amount := NonceMarkAmount(nonce)
+	for i, utxo := range ob.utxos {
+		sats, err := getSatoshis(utxo.Amount)
+		if err != nil {
+			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
+		}
+		// TODO: uncomment txid check after bootstrap (manually send 0.00002 BTC tss address)
+		if utxo.Address == tssAddress && sats == amount /*&& utxo.TxID == res.TxID*/ {
+			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %v", utxo.TxID, utxo.Amount)
+			return i, nil
 		}
 	}
-	if removed > 0 {
-		ob.logger.WatchUTXOS.Info().Msgf("btc : %d txs purged from pending pendingUtxos", removed)
-	}
+	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }
 
-func (ob *BitcoinChainClient) isPending(utxoKey string) (bool, error) {
-	if _, err := getPendingUTXO(ob.db, utxoKey); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, nil
-		}
-		return false, err
+// Selects a sublist of utxos to be used as inputs.
+//
+// Parameters:
+//   - amount: The desired minimum total value of the selected UTXOs.
+//   - utxoCap: The maximum number of UTXOs to be selected.
+//   - nonce: The nonce of the outbound transaction.
+//   - tssAddress: The TSS address.
+//
+// Returns: a sublist (includes previous nonce-mark) of UTXOs or an error if the qulifying sublist cannot be found.
+func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce uint64, tssAddress string) ([]btcjson.ListUnspentResult, float64, error) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	// for nonce > 0; we proceed only when we see the nonce-mark utxo
+	// for nonce = 0; make exception; no need to include nonce-mark utxo
+	idx := -1
+	if nonce > 0 {
+		index, _ := ob.findNonceMarkUTXO(nonce-1, tssAddress)
+		// TODO: uncomment below checking after bootstrap
+		// if err != nil {
+		// 	return nil, 0, err
+		// }
+		idx = index
 	}
-	return true, nil
+
+	// select utxos
+	total := 0.0
+	left, right := 0, 0
+	for total < amount && right < len(ob.utxos) {
+		if utxoCap > 0 { // expand sublist
+			total += ob.utxos[right].Amount
+			right++
+			utxoCap--
+		} else { // pop the smallest utxo and append the current one
+			total -= ob.utxos[left].Amount
+			total += ob.utxos[right].Amount
+			left++
+			right++
+		}
+	}
+	results := ob.utxos[left:right]
+
+	// include nonce-mark utxo (for nonce > 0) in asending order
+	if idx >= 0 {
+		if idx < left {
+			total += ob.utxos[idx].Amount
+			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
+		}
+		if idx >= right {
+			total += ob.utxos[idx].Amount
+			results = append(results, ob.utxos[idx])
+		}
+	}
+	if total < amount {
+		return nil, 0, fmt.Errorf("SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+	}
+	return results, total, nil
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
@@ -687,26 +717,6 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			return
 		}
 	}
-}
-
-func getPendingUTXO(db *gorm.DB, key string) (*btcjson.ListUnspentResult, error) {
-	var utxo clienttypes.PendingUTXOSQLType
-	if err := db.Where("Key = ?", key).First(&utxo).Error; err != nil {
-		return nil, err
-	}
-	return &utxo.UTXO, nil
-}
-
-func (ob *BitcoinChainClient) BuildPendingUTXOList() error {
-	var pendingUtxos []clienttypes.PendingUTXOSQLType
-	if err := ob.db.Find(&pendingUtxos).Error; err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
-		return err
-	}
-	for _, entry := range pendingUtxos {
-		ob.utxos = append(ob.utxos, entry.UTXO)
-	}
-	return nil
 }
 
 func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
@@ -808,16 +818,9 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	}
 	ob.db = db
 
-	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{},
-		&clienttypes.TransactionResultSQLType{},
+	err = db.AutoMigrate(&clienttypes.TransactionResultSQLType{},
 		&clienttypes.TransactionHashSQLType{},
 		&clienttypes.LastBlockSQLType{})
-	if err != nil {
-		return err
-	}
-
-	//Load pending utxos
-	err = ob.BuildPendingUTXOList()
 	if err != nil {
 		return err
 	}
@@ -843,4 +846,9 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.BTCAddress()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
+
+// A very special value to mark current nonce in UTXO
+func NonceMarkAmount(nonce uint64) int64 {
+	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
 }

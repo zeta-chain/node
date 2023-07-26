@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"gorm.io/gorm"
@@ -20,12 +21,6 @@ type TransactionResultDB struct {
 	TimeReceived    int64
 	Details         []byte // btcjson.GetTransactionDetailsResult
 	Hex             string
-}
-
-type PendingUTXOSQLType struct {
-	gorm.Model
-	Key  string
-	UTXO btcjson.ListUnspentResult `gorm:"embedded"`
 }
 
 type TransactionResultSQLType struct {

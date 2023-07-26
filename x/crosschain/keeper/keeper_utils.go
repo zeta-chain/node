@@ -5,7 +5,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -13,73 +12,13 @@ import (
 	"math/big"
 )
 
-func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
-	ballot, err := ballot.AddVote(address, observationType)
-	if err != nil {
-		return ballot, err
-	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot idetifier %s", address, ballot.BallotIdentifier))
-	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
-	return ballot, err
-}
-
-// CheckIfFinalizingVote checks if the ballot is finalized in this block and if it is, it sets the ballot in the store
-// This function with only return true if the ballot moves for pending to success or failed status with this vote.
-// If the ballot is already finalized in the previous vote , it will return false
-func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool) {
-	ballot, isFinalized := ballot.IsBallotFinalized()
-	if !isFinalized {
-		return ballot, false
-	}
-	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
-	return ballot, true
-}
-
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
-	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("observer list not present for chain %s", chain.String()))
-	}
-	for _, obs := range observerMapper.ObserverList {
-		if obs == address {
-			return true, nil
-		}
-	}
-	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
-}
-
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
-	_, found := k.GetNodeAccount(ctx, address)
+	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
 		return true
 	}
 	return false
-}
-
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
-	isNew = false
-	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
-	if !found {
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
-		obsParams := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChain(chain)
-		if !obsParams.IsSupported {
-			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
-			return
-		}
-		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: index,
-			VoterList:        observerMapper.ObserverList,
-			Votes:            zetaObserverTypes.CreateVotes(len(observerMapper.ObserverList)),
-			ObservationType:  observationType,
-			BallotThreshold:  obsParams.BallotThreshold,
-			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
-		}
-		isNew = true
-	}
-	return
 }
 
 func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
@@ -97,7 +36,7 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	outTxGasFee := gasLimit.Mul(medianGasPrice)
 
 	// the following logic computes outbound tx gas fee, and convert into ZETA using system uniswapv2 pool wzeta/gasZRC20
-	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC4(ctx, big.NewInt(chain.ChainId))
+	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
 	}

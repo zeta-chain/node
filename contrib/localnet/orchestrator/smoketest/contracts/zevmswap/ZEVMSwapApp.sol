@@ -98,6 +98,6 @@ contract ZEVMSwapApp is zContract {
         (address gasZRC20Addr,uint256 gasFee) = IZRC20(targetZRC20).withdrawGasFee();
         IZRC20(gasZRC20Addr).approve(address(targetZRC20), gasFee);
         IZRC20(targetZRC20).approve(address(targetZRC20), amounts[1]); // this does not seem to be necessary
-        IZRC20(targetZRC20).withdraw(recipient, amounts[1]);
+        IZRC20(targetZRC20).withdraw(recipient, amounts[1]-gasFee);
     }
 }

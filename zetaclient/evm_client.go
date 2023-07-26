@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/hex"
@@ -57,6 +58,10 @@ type EVMLog struct {
 	ObserveOutTx         zerolog.Logger // Observes external Chains for Outgoing transactions
 
 }
+
+const (
+	DonationMessage = "I am rich!"
+)
 
 // Chain configuration struct
 // Filled with above constants depending on chain
@@ -421,25 +426,26 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
 							ob.mu.Unlock()
 
-							// Convert to DB types
-							rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
-							if err != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
-								continue
-							}
-							trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
-							if err != nil {
-								ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
-								continue
-							}
-
-							//Save to DB
-							if dbc := ob.db.Create(rec); dbc.Error != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
-							}
-							if dbc := ob.db.Create(trans); dbc.Error != nil {
-								ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
-							}
+							//DISABLING PERSISTENCE
+							//// Convert to DB types
+							//rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
+							//if err != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
+							//	continue
+							//}
+							//trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
+							//if err != nil {
+							//	ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
+							//	continue
+							//}
+							//
+							////Save to DB
+							//if dbc := ob.db.Create(rec); dbc.Error != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
+							//}
+							//if dbc := ob.db.Create(trans); dbc.Error != nil {
+							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
+							//}
 
 							break TXHASHLOOP
 						}
@@ -669,6 +675,10 @@ func (ob *EVMChainClient) observeInTX() error {
 			event := depositedLogs.Event
 			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 			// TODO :add logger to POSTSEND
+			if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
+				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
+				continue
+			}
 			zetaHash, err := ob.zetaClient.PostSend(
 				"",
 				ob.chain.ChainId,
@@ -712,6 +722,10 @@ func (ob *EVMChainClient) observeInTX() error {
 				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
+						continue
+					}
+					if bytes.Compare(tx.Data(), []byte(DonationMessage)) == 0 {
+						ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", tx.Hash().Hex())
 						continue
 					}
 					if *tx.To() == tssAddress {
@@ -991,15 +1005,16 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 			return err
 		}
 
-		err = ob.BuildReceiptsMap()
-		if err != nil {
-			return err
-		}
-
-		err = ob.BuildTransactionsMap()
-		if err != nil {
-			return err
-		}
+		//DISABLING RECEIPT AND TRANSACTION PERSISTENCE
+		//err = ob.BuildReceiptsMap()
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//err = ob.BuildTransactionsMap()
+		//if err != nil {
+		//	return err
+		//}
 
 	}
 	return nil

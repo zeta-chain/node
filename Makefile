@@ -48,7 +48,8 @@ coverage-report: test-coverage
 	@go tool cover -html=cover.txt
 clean-test-dir:
 	@rm -rf x/crosschain/client/integrationtests/.zetacored
-	@rm -rf x/crosschain/client/querytests/.zetacored/
+	@rm -rf x/crosschain/client/querytests/.zetacored
+	@rm -rf x/observer/client/querytests/.zetacored
 
 run-test:
 	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
@@ -114,6 +115,10 @@ run:
 
 chain-init: clean install-zetacore init
 chain-run: clean install-zetacore init run
+chain-stop:
+	@killall zetacored
+	@killall tail
+
 
 chain-init-testnet: clean install-zetacore-testnet init
 chain-run-testnet: clean install-zetacore-testnet init run
@@ -126,10 +131,13 @@ lint: lint-pre
 	@golangci-lint run
 
 proto:
-	@echo "--> Generating Go from protocol buffer files"
+	@echo "--> Removing old Go types "
+	@find . -name '*.pb.go' -type f -delete
+	@echo "--> Generating new Go types from protocol buffer files"
 	@bash ./scripts/protoc-gen-go.sh
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
+
 .PHONY: proto
 
 specs:

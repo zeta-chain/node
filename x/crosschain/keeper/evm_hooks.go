@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
-
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -50,8 +49,10 @@ func (k Keeper) PostTxProcessing(
 	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From().Hex())
 }
 
+// ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event
+// from registered ZRC20 contract, new CCTX will be created to trigger and track outbound
+// transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
-
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
 		return fmt.Errorf("cannot find system contract")
@@ -62,9 +63,9 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	}
 
 	for _, log := range logs {
-		eZRC20, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
+		eventWithdrawal, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
 		if err == nil {
-			if err := k.ProcessZRC20WithdrawalEvent(ctx, eZRC20, emittingContract, txOrigin); err != nil {
+			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventWithdrawal, emittingContract, txOrigin); err != nil {
 				return err
 			}
 		}
@@ -78,6 +79,8 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	return nil
 }
 
+// create a new CCTX to process the withdrawal event
+// error indicates system error and non-recoverable; should abort
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 
@@ -88,8 +91,10 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 
 	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
-	// TODO: this is a bit hacky; how do we tell whether it's Ethereum or Bitcoin address?
-	toAddr := "0x" + hex.EncodeToString(event.To)
+	toAddr, err := recvChain.EncodeAddress(event.To)
+	if err != nil {
+		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
+	}
 	gasLimit := foreignCoin.GasLimit
 	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
@@ -147,11 +152,14 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
-	k.SetCrossChainTx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }
 
+// given a log entry, try extracting Withdrawal event from registered ZRC20 contract;
+// returns error if the log entry is not a Withdrawal event, or is not emitted from a
+// registered ZRC20 contract
 func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
 	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {

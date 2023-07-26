@@ -8,7 +8,12 @@ import "gogoproto/gogo.proto";
 import "observer/params.proto";
 import "observer/observer.proto";
 import "observer/ballot.proto";
+import "observer/node_account.proto";
+import "observer/blame.proto";
 import "common/common.proto";
+import "observer/permission_flags.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "observer/keygen.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -37,12 +42,45 @@ service Query {
 
 // Queries a list of GetClientParamsForChain items.
 	rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
+		option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chainID}";
 	}
 
 // Queries a list of GetCoreParams items.
 	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
+		option (google.api.http).get = "/zeta-chain/observer/get_core_params";
+	}
+
+	// Queries a nodeAccount by index.
+	rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/nodeAccount/{index}";
+	}
+
+	// Queries a list of nodeAccount items.
+	rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
+	}
+	rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/permission_flags";
+	}
+	// Queries a keygen by index.
+	rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/keygen";
+	}
+
+
+	// Queries a list of ShowObserverCount items.
+	rpc ShowObserverCount(QueryShowObserverCountRequest) returns (QueryShowObserverCountResponse) {
+		option (google.api.http).get = "/zeta-chain/zetacore/observer/show_observer_count";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc BlameByIdentifier(QueryBlameByIdentifierRequest) returns (QueryBlameByIdentifierResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
+	}
+
+	// Queries a list of VoterByIdentifier items.
+	rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+		option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -107,6 +145,58 @@ message QueryGetCoreParamsRequest {
 
 message QueryGetCoreParamsResponse {
 	CoreParamsList core_params = 1;
+}
+
+message QueryGetNodeAccountRequest {
+	string index = 1;
+}
+
+message QueryGetNodeAccountResponse {
+	NodeAccount NodeAccount = 1;
+}
+
+message QueryAllNodeAccountRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeAccountResponse {
+	repeated NodeAccount NodeAccount = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetPermissionFlagsRequest {}
+
+message QueryGetPermissionFlagsResponse {
+	PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetKeygenRequest {}
+
+message QueryGetKeygenResponse {
+	Keygen Keygen = 1;
+}
+
+
+message QueryShowObserverCountRequest {
+}
+
+message QueryShowObserverCountResponse {
+	LastObserverCount last_observer_count = 1;
+}
+
+message QueryBlameByIdentifierRequest {
+	string blame_identifier = 1;
+}
+
+message QueryBlameByIdentifierResponse {
+	Blame blameInfo = 1;
+}
+
+message QueryAllBlameRecordsRequest {
+}
+
+message QueryAllBlameRecordsResponse {
+	repeated Blame blameInfo = 1;
 }
 
 // this line is used by starport scaffolding # 3

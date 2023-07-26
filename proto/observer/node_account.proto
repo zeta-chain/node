@@ -1,0 +1,24 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+import "gogoproto/gogo.proto";
+import "common/common.proto";
+
+enum NodeStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  Unknown = 0;
+  Whitelisted = 1;
+  Standby = 2;
+  Ready = 3;
+  Active = 4;
+  Disabled = 5;
+}
+
+message NodeAccount {
+  string operator = 1;
+  string granteeAddress = 2;
+  common.PubKeySet granteePubkey = 3;
+  NodeStatus nodeStatus = 4;
+}

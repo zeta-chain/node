@@ -35,9 +35,9 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	TxinKey              = "Txin-value-"
-	TxinVoterKey         = "TxinVoter-value-"
-	NodeAccountKey       = "NodeAccount-value-"
+	TxinKey      = "Txin-value-"
+	TxinVoterKey = "TxinVoter-value-"
+
 	TxoutKey             = "Txout-value-"
 	TxoutCountKey        = "Txout-count-"
 	TxoutConfirmationKey = "TxoutConfirmation-value-"
@@ -48,10 +48,10 @@ const (
 	ChainNoncesKey       = "ChainNonces-value-"
 	GasPriceKey          = "GasPrice-value-"
 
-	GasBalanceKey         = "GasBalance-value-"
-	TSSKey                = "TSS-value-"
-	TSSVoterKey           = "TSSVoter-value-"
-	KeygenKey             = "Keygen-value-"
+	GasBalanceKey = "GasBalance-value-"
+	TSSKey        = "TSS-value-"
+	TSSVoterKey   = "TSSVoter-value-"
+
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
@@ -87,8 +87,4 @@ var (
 	//ModuleAddressEVM common.EVMAddress
 	ModuleAddressEVM = common.BytesToAddress(ModuleAddress.Bytes())
 	//0xB73C0Aac4C1E606C6E495d848196355e6CB30381
-)
-
-const (
-	PermissionFlagsKey = "PermissionFlags-value-"
 )

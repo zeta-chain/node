@@ -1,0 +1,17 @@
+syntax = "proto3";
+package zetachain.zetacore.emissions;
+
+
+
+option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
+
+
+message EventBlockEmissions {
+    string msg_type_url = 1;
+    string bond_factor = 2 ;
+    string reserves_factor = 3 ;
+    string duration_factor = 4 ;
+    string validator_rewards_for_block = 5 ;
+    string observer_rewards_for_block = 6 ;
+    string tss_rewards_for_block = 7 ;
+}
