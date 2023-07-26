@@ -14,67 +14,53 @@ import (
 )
 
 func (s *CliTestSuite) TestObserverRewards() {
-	tt := []struct {
-		name         string
-		emissionPool string
-	}{
-		{
-			name:         "Test Observer Rewards",
-			emissionPool: "800000000000000000000azeta",
-		},
+	emissionPool := "800000000000000000000azeta"
+	val := s.network.Validators[0]
+
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdListPoolAddresses(), []string{"--output", "json"})
+	s.Require().NoError(err)
+	resPools := emmisonstypes.QueryListPoolAddressesResponse{}
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resPools))
+	txArgs := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(10))).String()),
 	}
 
-	for _, test := range tt {
-		s.Run(test.name, func() {
-			val := s.network.Validators[0]
+	// Fund the emission pool to start the emission process
+	sendArgs := []string{val.Address.String(),
+		resPools.EmissionModuleAddress, emissionPool}
+	args := append(sendArgs, txArgs...)
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewSendTxCmd(), args)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdListPoolAddresses(), []string{"--output", "json"})
-			s.Require().NoError(err)
-			resPools := emmisonstypes.QueryListPoolAddressesResponse{}
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resPools))
-			txArgs := []string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(10))).String()),
-			}
+	// Collect parameter values and build assertion map for the randomised ballot set created
+	emissionFactors := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionFactors))
+	emissionParams := emmisonstypes.QueryParamsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
+	s.Require().NoError(s.network.WaitForNextBlock())
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
+	resFactorsNewBlocks := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
+	// Duration factor is calcualted in the same block , so we need to query based from the committed state at which the distribution is done
+	// Would be cleaner to use `--height` flag but it is not supported by the ExecTestCLICmd function yet
+	emissionFactors.DurationFactor = resFactorsNewBlocks.DurationFactor
+	asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
 
-			// Fund the emission pool to start the emission process
-			sendArgs := []string{val.Address.String(),
-				resPools.EmissionModuleAddress, test.emissionPool}
-			args := append(sendArgs, txArgs...)
-			out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewSendTxCmd(), args)
-			s.Require().NoError(err)
-			s.Require().NoError(s.network.WaitForNextBlock())
-
-			// Collect parameter values and build assertion map for the randomised ballot set created
-			emissionFactors := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
-			out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionFactors))
-			emissionParams := emmisonstypes.QueryParamsResponse{}
-			out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
-			s.Require().NoError(s.network.WaitForNextBlock())
-			out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
-			resFactorsNewBlocks := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
-			// Duration factor is calcualted in the same block , so we need to query based from the committed state at which the distribution is done
-			// Would be cleaner to use `--height` flag but it is not supported by the ExecTestCLICmd function yet
-			emissionFactors.DurationFactor = resFactorsNewBlocks.DurationFactor
-			asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
-
-			// Assert withdrawable rewards for each validator
-			resAvailable := emmisonstypes.QueryShowAvailableEmissionsResponse{}
-			for i := 0; i < len(s.network.Validators); i++ {
-				out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdShowAvailableEmissions(), []string{s.network.Validators[i].Address.String(), "--output", "json"})
-				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resAvailable))
-				s.Require().Equal(sdk.NewCoin(config.BaseDenom, asertValues[s.network.Validators[i].Address.String()]).String(), resAvailable.Amount)
-			}
-
-		})
+	// Assert withdrawable rewards for each validator
+	resAvailable := emmisonstypes.QueryShowAvailableEmissionsResponse{}
+	for i := 0; i < len(s.network.Validators); i++ {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdShowAvailableEmissions(), []string{s.network.Validators[i].Address.String(), "--output", "json"})
+		s.Require().NoError(err)
+		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resAvailable))
+		s.Require().Equal(sdk.NewCoin(config.BaseDenom, asertValues[s.network.Validators[i].Address.String()]).String(), resAvailable.Amount)
 	}
 
 }
