@@ -198,7 +198,6 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
-
       - name: Clean Up Alpine Workspace
         if: always()
         shell: alpine.sh --root {0}
@@ -210,6 +209,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         uses: AutoModality/action-clean@v1
+
 
   smoke-test:
     runs-on: ["zeta-runners"]
