@@ -20,15 +20,17 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdAddToWatchList())
-	cmd.AddCommand(CmdCreateTSSVoter())
-	cmd.AddCommand(CmdGasPriceVoter())
-	cmd.AddCommand(CmdNonceVoter())
-	cmd.AddCommand(CmdCCTXOutboundVoter())
-	cmd.AddCommand(CmdCCTXInboundVoter())
-	cmd.AddCommand(CmdRemoveFromWatchList())
-	cmd.AddCommand(cli.CmdUpdatePermissionFlags())
-	cmd.AddCommand(cli.CmdUpdateKeygen())
+	cmd.AddCommand(
+		CmdAddToWatchList(),
+		CmdCreateTSSVoter(),
+		CmdGasPriceVoter(),
+		CmdNonceVoter(),
+		CmdCCTXOutboundVoter(),
+		CmdCCTXInboundVoter(),
+		CmdRemoveFromWatchList(),
+		cli.CmdUpdatePermissionFlags(),
+		cli.CmdUpdateKeygen(),
+	)
 	// this line is used by starport scaffolding # 1
 
 	return cmd
