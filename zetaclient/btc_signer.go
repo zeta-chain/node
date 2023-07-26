@@ -138,7 +138,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		if err != nil {
 			return nil, err
 		}
-
 	}
 	tss, ok := signer.tssSigner.(*TSS)
 	if !ok {
@@ -156,9 +155,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		sig := btcec.Signature{
 			R: R,
 			S: S,
-		}
-		if err != nil {
-			return nil, err
 		}
 
 		pkCompressed := signer.tssSigner.PubKeyCompressedBytes()

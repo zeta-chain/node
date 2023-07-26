@@ -52,7 +52,7 @@ type BitcoinChainClient struct {
 	Tss           TSSSigner
 	lastBlock     int64
 	BlockTime     uint64                                  // block time in seconds
-	minedTx       map[string]btcjson.GetTransactionResult // key: chain-nonce
+	includedTx    map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
 	nextNonce     int
 	mu            *sync.Mutex
@@ -103,7 +103,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
-	ob.minedTx = make(map[string]btcjson.GetTransactionResult)
+	ob.includedTx = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
 	// initialize the Client
@@ -304,10 +304,10 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 	ob.mu.Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
-	res, mined := ob.minedTx[outTxID]
+	res, included := ob.includedTx[outTxID]
 	ob.mu.Unlock()
 
-	if !mined {
+	if !included {
 		if !broadcasted {
 			return false, false, nil
 		}
@@ -325,7 +325,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 
 		// Save result to avoid unnecessary query
 		ob.mu.Lock()
-		ob.minedTx[outTxID] = res
+		ob.includedTx[outTxID] = res
 		ob.mu.Unlock()
 	}
 	var amount float64
@@ -591,12 +591,11 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
-	// TODO: uncomment below checking after bootstrap
-	// outTxID := ob.GetTxID(nonce)
-	// _, mined := ob.minedTx[outTxID]
-	// if !mined {
-	// 	return -1, fmt.Errorf("findNonceMarkUTXO: transaction %s not mined yet", outTxID)
-	// }
+	outTxID := ob.GetTxID(nonce)
+	_, mined := ob.includedTx[outTxID]
+	if !mined {
+		return -1, fmt.Errorf("findNonceMarkUTXO: outTx %s not included yet", outTxID)
+	}
 
 	amount := NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
@@ -630,11 +629,10 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	// for nonce = 0; make exception; no need to include nonce-mark utxo
 	idx := -1
 	if nonce > 0 {
-		index, _ := ob.findNonceMarkUTXO(nonce-1, tssAddress)
-		// TODO: uncomment below checking after bootstrap
-		// if err != nil {
-		// 	return nil, 0, err
-		// }
+		index, err := ob.findNonceMarkUTXO(nonce-1, tssAddress)
+		if err != nil {
+			return nil, 0, err
+		}
 		idx = index
 	}
 
@@ -691,19 +689,28 @@ func (ob *BitcoinChainClient) observeOutTx() {
 						ob.logger.ObserveOutTx.Error().Err(err).Msg("error NewHashFromStr")
 						continue
 					}
+					// The Bitcoin node has to be configured to watch TSS address
 					getTxResult, err := ob.rpcClient.GetTransaction(hash)
 					if err != nil {
-						ob.logger.ObserveOutTx.Warn().Err(err).Msg("error GetTransaction")
+						ob.logger.ObserveOutTx.Warn().Err(err).Msgf("error GetTransaction: %s", txHash.TxHash)
 						continue
 					}
+					// Check TSS outTx
+					err = ob.checkTssOutTxResult(hash, getTxResult)
+					if err != nil {
+						ob.logger.ObserveOutTx.Warn().Err(err).Msgf("error checkTssOutTxResult: %s", txHash.TxHash)
+						continue
+					}
+					ob.logger.ObserveOutTx.Info().Msgf("outTx %s has passed checkTssOutTxResult", txHash.TxHash)
 					if getTxResult.Confirmations >= 0 {
 						ob.mu.Lock()
-						ob.minedTx[outTxID] = *getTxResult
+						ob.includedTx[outTxID] = *getTxResult
 						ob.mu.Unlock()
 
 						//Save to db
 						tx, err := clienttypes.ToTransactionResultSQLType(*getTxResult, outTxID)
 						if err != nil {
+							ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error converting to TransactionResultSQLType")
 							continue
 						}
 						if err := ob.db.Create(&tx).Error; err != nil {
@@ -719,6 +726,54 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
+// Returns true if outTx passes basic checks
+func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
+	if res.Confirmations == 0 {
+		rawtx, err := ob.rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTransactionVerbose %s", res.TxID)
+		}
+		if len(rawtx.Vin) == 0 {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with no vin %s", res.TxID)
+		}
+		if !ob.isTSSVin(rawtx.Vin) {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
+		}
+	} else if res.Confirmations > 0 {
+		blkHash, err := chainhash.NewHashFromStr(res.BlockHash)
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: error NewHashFromStr %s", res.BlockHash)
+		}
+		block, err := ob.rpcClient.GetBlockVerboseTx(blkHash) // for confirmed tx, we query the block
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: error GetBlockVerboseTx %s", res.BlockHash)
+		}
+		if res.BlockIndex < 0 || res.BlockIndex >= int64(len(block.Tx)) {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
+		}
+		tx := block.Tx[res.BlockIndex]
+		if !ob.isTSSVin(tx.Vin) {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
+		}
+	}
+	return nil // ignore res.Confirmations < 0
+}
+
+// Returns true only if all inputs are TSS vins
+func (ob *BitcoinChainClient) isTSSVin(vins []btcjson.Vin) bool {
+	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
+	for _, vin := range vins {
+		// The length of the Witness should be always 2 for P2WPKH SegWit inputs.
+		if len(vin.Witness) != 2 {
+			return false
+		}
+		if vin.Witness[1] != pubKeyTss {
+			return false
+		}
+	}
+	return true
+}
+
 func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
 	var submittedTransactions []clienttypes.TransactionResultSQLType
 	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
@@ -730,7 +785,7 @@ func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
 		if err != nil {
 			return err
 		}
-		ob.minedTx[txResult.Key] = r
+		ob.includedTx[txResult.Key] = r
 	}
 	return nil
 }
