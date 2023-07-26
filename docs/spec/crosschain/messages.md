@@ -134,7 +134,7 @@ created.
 
 If the receiver chain is a ZetaChain, the EVM deposit is handled and the
 status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
-the status of CCTX is chagned to 'aborted'.
+the status of CCTX is changed to 'aborted'.
 
 If the receiver chain is a connected chain, the inbound CCTX is finalized
 (prices and nonce are updated) and status changes to "pending outbound". If
