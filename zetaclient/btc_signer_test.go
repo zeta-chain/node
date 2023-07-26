@@ -232,7 +232,7 @@ func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preM
 	// Set nonce mark
 	if preMarkIndex >= 0 {
 		tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-		nonceMark := btcjson.ListUnspentResult{Address: tssAddress, Amount: float64(NonceMarkAmount(nonce)) * 1e-8}
+		nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(NonceMarkAmount(nonce)) * 1e-8}
 		ob.utxos[preMarkIndex] = nonceMark
 		sort.SliceStable(ob.utxos, func(i, j int) bool {
 			return ob.utxos[i].Amount < ob.utxos[j].Amount
@@ -273,7 +273,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.Equal(t, "findNonceMarkUTXO: cannot find nonce-mark utxo with nonce 0", err.Error())
 
 	// add nonce-mark utxo for nonce 0
-	nonceMark0 := btcjson.ListUnspentResult{Address: tssAddress, Amount: float64(NonceMarkAmount(0)) * 1e-8}
+	nonceMark0 := btcjson.ListUnspentResult{TxID: dummyTxID, Address: tssAddress, Amount: float64(NonceMarkAmount(0)) * 1e-8}
 	ob.utxos = append([]btcjson.ListUnspentResult{nonceMark0}, ob.utxos...)
 
 	// Case4: nonce = 1, should pass now
