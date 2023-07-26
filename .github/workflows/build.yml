@@ -65,7 +65,7 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-      # - uses: actions/cache@v3
+      # - uses: buildjet/cache
       #   timeout-minutes: 5
       #   with:
       #     path: |
@@ -108,6 +108,10 @@ jobs:
           path: |
             zetacored-ubuntu-*
             zetaclientd-ubuntu-*
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
@@ -193,6 +197,11 @@ jobs:
             zetacored-alpine-*
             zetaclientd-alpine-*
 
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
+    
+
   smoke-test:
     runs-on: ["zeta-runners"]
     #runs-on: ubuntu-latest
@@ -241,6 +250,10 @@ jobs:
         run: |
           cd contrib/localnet/
           docker compose down
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   upload:
     runs-on: ["zeta-runners"]
@@ -356,6 +369,10 @@ jobs:
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
 
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
+
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
@@ -381,6 +398,10 @@ jobs:
             exit 1
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   upload_s3_public:
     #runs-on: ubuntu-latest
@@ -440,4 +461,47 @@ jobs:
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
 
+      - name: Determine Release Type
+        run: |
+          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
+            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
+          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
+            echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
+          else
+            echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
+          fi 
+        id: determine_release_type
 
+      - name: "SEND:DISCORD:MESSAGE"
+        if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
+        uses: gzukel/CosmosComposites/send_discord_message@main
+        with:
+          discord_token: "${{ secrets.DISCORD_TOKEN }}"
+          discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+          discord_message: |
+            Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
+
+            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
+            We will raise a governance proposal on Monday at 15:00 UTC with a 12-hour voting period. 
+            The upgrade will be scheduled for Tuesday at approximately 15:00 UTC. 
+            More specific information including block height will be shared on Monday as part of the governance proposal.
+            
+            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+      
+      # - name: "SEND:DISCORD:MESSAGE"
+      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
+      #   uses: gzukel/CosmosComposites/send_discord_message@main
+      #   with:
+      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
+      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+      #     discord_message: |
+      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
+      
+      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
+      #       Please review the release notes for any specific upgrade instructions or considerations.
+      
+      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+      
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1

@@ -133,6 +133,10 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 
 						for idx, send := range sendList {
+							if send.GetCurrentOutTxParam().ReceiverChainId != c.ChainId {
+								log.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, send.GetCurrentOutTxParam().ReceiverChainId)
+								continue
+							}
 							ob, err := co.getTargetChainOb(send)
 							if err != nil {
 								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
