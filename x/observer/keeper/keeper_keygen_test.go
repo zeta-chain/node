@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"github.com/stretchr/testify/require"
+
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Keeper Tests
@@ -20,14 +21,14 @@ func createTestKeygen(keeper *Keeper, ctx sdk.Context) types.Keygen {
 }
 
 func TestKeygenGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	item := createTestKeygen(keeper, ctx)
 	rst, found := keeper.GetKeygen(ctx)
 	assert.True(t, found)
 	assert.Equal(t, item, rst)
 }
 func TestKeygenRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	createTestKeygen(keeper, ctx)
 	keeper.RemoveKeygen(ctx)
 	_, found := keeper.GetKeygen(ctx)
@@ -37,7 +38,7 @@ func TestKeygenRemove(t *testing.T) {
 // Querier Tests
 
 func TestKeygenQuery(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := SetupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	item := createTestKeygen(keeper, ctx)
 	for _, tc := range []struct {

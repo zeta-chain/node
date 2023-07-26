@@ -65,7 +65,7 @@ make specs
 
 This command will run a script to update the modules' documentation. The script
 uses static code analysis to read the protocol buffer files and identify all
-Cosmos SDK messages. It then search the source code for the corresponding
+Cosmos SDK messages. It then searches the source code for the corresponding
 message handler functions and retrieves the documentation for those functions.
 Finally, it creates a `messages.md` file for each module, which contains the
 documentation for all the messages in that module.

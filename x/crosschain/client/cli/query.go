@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -26,7 +28,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdListOutTxTracker())
 	cmd.AddCommand(CmdShowOutTxTracker())
-	cmd.AddCommand(CmdShowKeygen())
+	cmd.AddCommand(cli.CmdShowKeygen())
 	cmd.AddCommand(CmdShowTSS())
 	cmd.AddCommand(CmdListGasPrice())
 	cmd.AddCommand(CmdShowGasPrice())
@@ -34,13 +36,11 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowChainNonces())
 	cmd.AddCommand(CmdListSend())
 	cmd.AddCommand(CmdShowSend())
-	cmd.AddCommand(CmdListNodeAccount())
-	cmd.AddCommand(CmdShowNodeAccount())
 	cmd.AddCommand(CmdLastZetaHeight())
 	cmd.AddCommand(CmdListInTxHashToCctx())
 	cmd.AddCommand(CmdShowInTxHashToCctx())
 	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(CmdShowPermissionFlags())
+	cmd.AddCommand(cli.CmdShowPermissionFlags())
 	cmd.AddCommand(CmdGetTssAddress())
 
 	// this line is used by starport scaffolding # 1

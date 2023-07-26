@@ -1,6 +1,7 @@
 package app
 
 import (
+	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -102,7 +103,6 @@ import (
 
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
-	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"

@@ -13,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestShowGasPrice() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.GasPriceList
+	objs := s.crossChainState.GasPriceList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -59,7 +59,7 @@ func (s *CliTestSuite) TestShowGasPrice() {
 
 func (s *CliTestSuite) TestListGasPrice() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.GasPriceList
+	objs := s.crossChainState.GasPriceList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

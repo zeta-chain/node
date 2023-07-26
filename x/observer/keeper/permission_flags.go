@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // SetPermissionFlags set permissionFlags in the store
@@ -29,7 +29,7 @@ func (k Keeper) GetPermissionFlags(ctx sdk.Context) (val types.PermissionFlags, 
 func (k Keeper) IsInboundAllowed(ctx sdk.Context) (found bool) {
 	flags, found := k.GetPermissionFlags(ctx)
 	if !found {
-		return found
+		return false
 	}
 	return flags.IsInboundEnabled
 }
