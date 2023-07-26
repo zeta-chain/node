@@ -17,6 +17,10 @@ on:
       - reopened
       - ready_for_review
 
+concurrency: 
+  group: ${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
 env:
   S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   S3_PUBLIC_BUCKET_PATH: "zetachain-external-files"
@@ -36,7 +40,6 @@ jobs:
 
     runs-on: ${{matrix.runs-on}}
     timeout-minutes: 30
-    concurrency: ${{ github.event.pull_request.head.ref }}
     steps:
       - uses: actions/checkout@v3
 
@@ -117,7 +120,6 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
-    concurrency: ${{ github.event.pull_request.head.ref }}
     steps:
       - uses: actions/checkout@v3
 
@@ -215,7 +217,6 @@ jobs:
     runs-on: ["zeta-runners"]
     #runs-on: ubuntu-latest
     timeout-minutes: 20
-    concurrency: ${{ github.event.pull_request.head.ref }}
     steps:
       - uses: actions/checkout@v3
 
