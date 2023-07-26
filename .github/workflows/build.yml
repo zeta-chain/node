@@ -109,6 +109,13 @@ jobs:
             zetacored-ubuntu-*
             zetaclientd-ubuntu-*
 
+      - name: Clean Up Workspace
+        if: always()
+        run: |
+          echo "Cleaning up the workspace..."
+          echo "GITHUB_WORKSPACE:$GITHUB_WORKSPACE "
+          rm -rf $GITHUB_WORKSPACE/*
+
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
@@ -193,6 +200,13 @@ jobs:
             zetacored-alpine-*
             zetaclientd-alpine-*
 
+      - name: Clean Up Workspace
+        if: always()
+        run: |
+          echo "Cleaning up the workspace..."
+          docker stop $(docker ps -q)
+          rm -rf $GITHUB_WORKSPACE/*
+
   smoke-test:
     runs-on: ["zeta-runners"]
     #runs-on: ubuntu-latest
@@ -241,6 +255,13 @@ jobs:
         run: |
           cd contrib/localnet/
           docker compose down
+
+      - name: Clean Up Workspace
+        if: always()
+        run: |
+          echo "Cleaning up the workspace..."
+          echo "GITHUB_WORKSPACE:$GITHUB_WORKSPACE "
+          rm -rf $GITHUB_WORKSPACE/*
 
   upload:
     runs-on: ["zeta-runners"]
@@ -355,6 +376,13 @@ jobs:
             zetaclientd-ubuntu-22-amd64
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
+
+      - name: Clean Up Workspace
+        if: always()
+        run: |
+          echo "Cleaning up the workspace..."
+          echo "GITHUB_WORKSPACE:$GITHUB_WORKSPACE "
+          rm -rf $GITHUB_WORKSPACE/*
 
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
