@@ -13,3 +13,9 @@ message EventBallotCreated {
   string observation_chain = 5;
   string ballot_type = 6;
 }
+
+message EventKeygenBlockUpdated {
+  string msg_type_url = 1;
+  string keygen_block = 2;
+  string keygen_pubkeys = 3;
+}

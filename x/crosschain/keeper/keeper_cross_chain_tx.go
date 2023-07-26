@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// SetCrossChainTx set a specific send in the store from its index
-func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
+// SetCctxAndNonceToCctxAndInTxHashToCctx set a specific send in the store from its index
+func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send types.CrossChainTx) {
 
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)

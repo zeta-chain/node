@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/zeta-chain/zetacore/common"
 	"strconv"
 
@@ -32,17 +31,6 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 	}
 }
 
-func EmitEventKeyGenBlockUpdated(ctx sdk.Context, keygen *types.Keygen) {
-	err := ctx.EventManager().EmitTypedEvents(&types.EventKeygenBlockUpdated{
-		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgUpdateKeygen{}),
-		KeygenBlock:   strconv.Itoa(int(keygen.BlockNumber)),
-		KeygenPubkeys: types2.PrettyPrintStruct(keygen.GranteePubkeys),
-	})
-	if err != nil {
-		ctx.Logger().Error("Error emitting EventKeygenBlockUpdated :", err)
-	}
-}
-
 func EmitZRCWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventZrcWithdrawCreated{
 		MsgTypeUrl: "/zetachain.zetacore.crosschain.internal.ZRCWithdrawCreated",
@@ -70,7 +58,7 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 
 }
 
-func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
+func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundSuccess{
 		MsgTypeUrl: sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
 		CctxIndex:  cctx.Index,
@@ -84,7 +72,7 @@ func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 
 }
 
-func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx *types.CrossChainTx) {
+func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundFailure{
 		MsgTypeUrl: sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
 		CctxIndex:  cctx.Index,

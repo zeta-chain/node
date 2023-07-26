@@ -6,22 +6,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdShowPermissionFlags() *cobra.Command {
+func CmdShowKeygen() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-permission-flags",
-		Short: "shows PermissionFlags",
+		Use:   "show-keygen",
+		Short: "shows keygen",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetPermissionFlagsRequest{}
+			params := &types.QueryGetKeygenRequest{}
 
-			res, err := queryClient.PermissionFlags(context.Background(), params)
+			res, err := queryClient.Keygen(context.Background(), params)
 			if err != nil {
 				return err
 			}

@@ -20,3 +20,8 @@ message ObserverMapper {
   common.Chain  observer_chain =2 ;
   repeated string observer_list =4;
 }
+
+message LastObserverCount {
+  uint64 count = 1;
+  int64 last_change_height = 2;
+}

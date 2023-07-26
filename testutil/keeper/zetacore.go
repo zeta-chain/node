@@ -3,6 +3,7 @@ package keeper
 import (
 	authkeeper2 "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper2 "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +16,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	zetaobserverKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"

@@ -22,12 +22,6 @@ message EventInboundFinalized {
 }
 
 
-message EventKeygenBlockUpdated {
-  string msg_type_url = 1;
-  string keygen_block = 2;
-  string keygen_pubkeys = 3;
-}
-
 
 message EventZrcWithdrawCreated {
   string msg_type_url = 1;
