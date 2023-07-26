@@ -46,22 +46,22 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain         common.Chain
-	rpcClient     *rpcclient.Client
-	zetaClient    *ZetaCoreBridge
-	Tss           TSSSigner
-	lastBlock     int64
-	BlockTime     uint64                                  // block time in seconds
-	includedTx    map[string]btcjson.GetTransactionResult // key: chain-nonce
-	broadcastedTx map[string]chainhash.Hash
-	nextNonce     int
-	mu            *sync.Mutex
-	utxos         []btcjson.ListUnspentResult
-	db            *gorm.DB
-	stop          chan struct{}
-	logger        BTCLog
-	cfg           *config.Config
-	ts            *TelemetryServer
+	chain              common.Chain
+	rpcClient          *rpcclient.Client
+	zetaClient         *ZetaCoreBridge
+	Tss                TSSSigner
+	lastBlock          int64
+	BlockTime          uint64                                  // block time in seconds
+	includedTx         map[string]btcjson.GetTransactionResult // key: chain-nonce
+	broadcastedTx      map[string]chainhash.Hash
+	nextNonceBroadcast int
+	mu                 *sync.Mutex
+	utxos              []btcjson.ListUnspentResult
+	db                 *gorm.DB
+	stop               chan struct{}
+	logger             BTCLog
+	cfg                *config.Config
+	ts                 *TelemetryServer
 }
 
 const (
@@ -132,8 +132,8 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, err
 	}
 
-	//Set Next Nonce
-	err = ob.SetNextNonce()
+	//Set Next Nonce for broadcasted tx
+	err = ob.SetNextNonceBroadcast()
 	if err != nil {
 		return nil, err
 	}
@@ -354,11 +354,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _
 		logger.Error().Err(err).Msgf("error posting to zeta core")
 	} else {
 		logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
-
-		ob.mu.Lock()
-		ob.nextNonce++
-		ob.ts.SetNextNonce(ob.nextNonce)
-		ob.mu.Unlock()
 	}
 	return true, true, nil
 }
@@ -669,6 +664,21 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	return results, total, nil
 }
 
+// Save successfully broadcasted transaction
+func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash chainhash.Hash, nonce uint64) {
+	outTxID := ob.GetTxID(nonce)
+	ob.mu.Lock()
+	ob.broadcastedTx[outTxID] = txHash
+	ob.nextNonceBroadcast++
+	ob.ts.SetNextNonce(ob.nextNonceBroadcast)
+	ob.mu.Unlock()
+
+	broadcastEntry := clienttypes.ToTransactionHashSQLType(txHash, outTxID)
+	if err := ob.db.Create(&broadcastEntry).Error; err != nil {
+		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
+	}
+}
+
 func (ob *BitcoinChainClient) observeOutTx() {
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
@@ -773,7 +783,7 @@ func (ob *BitcoinChainClient) isTSSVin(vins []btcjson.Vin) bool {
 	return true
 }
 
-func (ob *BitcoinChainClient) BuildSubmittedTxMap() error {
+func (ob *BitcoinChainClient) BuildIncludedTxMap() error {
 	var submittedTransactions []clienttypes.TransactionResultSQLType
 	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
@@ -801,7 +811,7 @@ func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 	return nil
 }
 
-func (ob *BitcoinChainClient) SetNextNonce() error {
+func (ob *BitcoinChainClient) SetNextNonceBroadcast() error {
 	nonces, err := ob.zetaClient.GetPendingNonces()
 	if err != nil {
 		return err
@@ -817,13 +827,22 @@ func (ob *BitcoinChainClient) SetNextNonce() error {
 			continue
 		}
 		if ob.chain.ChainId == nonce.ChainId && bytes.Equal(tssKey.PubkeyInBytes, ob.Tss.Pubkey()) {
-			ob.nextNonce = int(nonce.NonceLow)
-			ob.ts.SetNextNonce(ob.nextNonce)
+			// find lowest nonce that had not been broadcasted
+			next2Broadcast := int(nonce.NonceLow)
+			for nc := nonce.NonceLow; nc < nonce.NonceHigh; nc++ {
+				if _, exist := ob.broadcastedTx[ob.GetTxID(uint64(nc))]; exist {
+					next2Broadcast++
+					continue
+				}
+				break
+			}
+			ob.nextNonceBroadcast = next2Broadcast
+			ob.ts.SetNextNonce(ob.nextNonceBroadcast)
 			found = true
 		}
 	}
 	if !found {
-		return fmt.Errorf("initial nonce for Chain ID: %d not found", ob.chain.ChainId)
+		ob.logger.ChainLogger.Error().Msgf("initial nonce for Chain ID: %d not found", ob.chain.ChainId)
 	}
 
 	return nil
@@ -879,8 +898,8 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 		return err
 	}
 
-	//Load submitted transactions
-	err = ob.BuildSubmittedTxMap()
+	//Load included transactions
+	err = ob.BuildIncludedTxMap()
 	if err != nil {
 		return err
 	}
