@@ -2,22 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/x/observer/client/cli"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-)
-
-var (
-	DefaultRelativePacketTimeoutTimestamp = uint64((time.Duration(10) * time.Minute).Nanoseconds())
-)
-
-const (
-// flagPacketTimeoutTimestamp = "packet-timeout-timestamp"
 )
 
 // GetTxCmd returns the transaction commands for this module
