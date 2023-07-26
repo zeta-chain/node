@@ -60,7 +60,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdShowAvailableEmissions(), []string{s.network.Validators[i].Address.String(), "--output", "json"})
 		s.Require().NoError(err)
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resAvailable))
-		s.Require().Equal(sdk.NewCoin(config.BaseDenom, asertValues[s.network.Validators[i].Address.String()]).String(), resAvailable.Amount)
+		s.Require().Equal(sdk.NewCoin(config.BaseDenom, asertValues[s.network.Validators[i].Address.String()]).String(), resAvailable.Amount, "Validator %s has incorrect withdrawable rewards", s.network.Validators[i].Address.String())
 	}
 
 }
