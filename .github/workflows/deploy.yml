@@ -1,4 +1,4 @@
-name: Deploy ZetaChain Update
+name: Deploy ZetaChain Update - Athens2
 on:
   workflow_dispatch:
     inputs:

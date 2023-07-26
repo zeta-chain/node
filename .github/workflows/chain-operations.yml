@@ -1,4 +1,4 @@
-name: Chain Operations
+name: node operations - Athens2
 on:
   workflow_dispatch:
     inputs:
