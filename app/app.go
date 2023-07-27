@@ -1,6 +1,7 @@
 package app
 
 import (
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -68,9 +69,9 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	//"github.com/cosmos/cosmos-sdk/x/evidence"
+	//evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	//evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -88,9 +89,9 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	//"github.com/cosmos/cosmos-sdk/x/slashing"
+	//slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	//slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -175,9 +176,9 @@ var (
 		gov.NewAppModuleBasic(getGovProposalHandlers()),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
+		//slashing.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
+		//evidence.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
@@ -224,17 +225,17 @@ type App struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper        authkeeper.AccountKeeper
-	BankKeeper           bankkeeper.Keeper
-	CapabilityKeeper     *capabilitykeeper.Keeper
-	StakingKeeper        stakingkeeper.Keeper
-	SlashingKeeper       slashingkeeper.Keeper
-	DistrKeeper          distrkeeper.Keeper
-	GovKeeper            govkeeper.Keeper
-	CrisisKeeper         crisiskeeper.Keeper
-	UpgradeKeeper        upgradekeeper.Keeper
-	ParamsKeeper         paramskeeper.Keeper
-	EvidenceKeeper       evidencekeeper.Keeper
+	AccountKeeper    authkeeper.AccountKeeper
+	BankKeeper       bankkeeper.Keeper
+	CapabilityKeeper *capabilitykeeper.Keeper
+	StakingKeeper    stakingkeeper.Keeper
+	//SlashingKeeper       slashingkeeper.Keeper
+	DistrKeeper   distrkeeper.Keeper
+	GovKeeper     govkeeper.Keeper
+	CrisisKeeper  crisiskeeper.Keeper
+	UpgradeKeeper upgradekeeper.Keeper
+	ParamsKeeper  paramskeeper.Keeper
+	//EvidenceKeeper       evidencekeeper.Keeper
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
@@ -278,7 +279,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey,
 		group.StoreKey,
 		upgradetypes.StoreKey,
-		evidencetypes.StoreKey,
+		//evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		zetaCoreModuleTypes.StoreKey,
 		zetaObserverModuleTypes.StoreKey,
@@ -333,9 +334,9 @@ func New(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName,
 	)
-	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
-	)
+	//app.SlashingKeeper = slashingkeeper.NewKeeper(
+	//	appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
+	//)
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
@@ -352,9 +353,9 @@ func New(
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
-	)
+	//app.StakingKeeper = *stakingKeeper.SetHooks(
+	//stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
+	//)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey],
@@ -437,11 +438,11 @@ func New(
 	)
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
-	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
-	)
+	//evidenceKeeper := evidencekeeper.NewKeeper(
+	//	appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
+	//)
 	// If evidence needs to be handled for the app, set routes in router here and seal
-	app.EvidenceKeeper = *evidenceKeeper
+	//app.EvidenceKeeper = *evidenceKeeper
 
 	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
 
@@ -465,11 +466,11 @@ func New(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		//slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		//distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
+		//evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
@@ -492,7 +493,7 @@ func New(
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
+		//evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -512,7 +513,7 @@ func New(
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName, authtypes.ModuleName,
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, evidencetypes.ModuleName,
+		//slashingtypes.ModuleName, evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		vestingtypes.ModuleName, govtypes.ModuleName,
 		paramstypes.ModuleName, genutiltypes.ModuleName, group.ModuleName,
@@ -542,7 +543,7 @@ func New(
 		group.ModuleName,
 		genutiltypes.ModuleName,
 		upgradetypes.ModuleName,
-		evidencetypes.ModuleName,
+		//evidencetypes.ModuleName,
 		vestingtypes.ModuleName,
 		zetaCoreModuleTypes.ModuleName,
 		zetaObserverModuleTypes.ModuleName,
