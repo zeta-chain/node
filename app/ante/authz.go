@@ -2,13 +2,11 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // maxNestedMsgs defines a cap for the number of nested messages on a MsgExec message
@@ -48,8 +46,6 @@ func (ald AuthzLimiterDecorator) checkDisabledMsgs(msgs []sdk.Msg, isAuthzInnerM
 	}
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
-		case *stakingtypes.MsgUndelegate:
-			return errors.New("undelegate msg is disabled temporarily")
 		case *authz.MsgExec:
 			innerMsgs, err := msg.GetMessages()
 			if err != nil {
