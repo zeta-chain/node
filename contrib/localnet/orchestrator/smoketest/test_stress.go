@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -25,7 +24,6 @@ import (
 
 const (
 	StatInterval      = 5
-	WithdrawInterval  = 500
 	StressTestTimeout = 100 * time.Minute
 )
 
@@ -45,7 +43,8 @@ type stressArguments struct {
 	zevmURL            string
 	deployerAddress    string
 	deployerPrivateKey string
-	local              bool
+	network            string
+	txnInterval        int64
 }
 
 var stressTestArgs = stressArguments{}
@@ -57,7 +56,8 @@ func init() {
 	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", "http://zetacore0:8545", "--zevmURL http://zetacore0:8545")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
-	StressCmd.Flags().BoolVar(&stressTestArgs.local, "local", true, "--local")
+	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "PRIVNET", "--network PRIVNET")
+	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 
 	DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
 }
@@ -140,7 +140,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, nil)
 
 	// If stress test is running on local docker environment
-	if stressTestArgs.local {
+	if stressTestArgs.network == "PRIVNET" {
 		smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 		smokeTest.TestDepositEtherIntoZRC20()
 		smokeTest.TestSendZetaIn()
@@ -190,7 +190,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
 func (sm *SmokeTest) WithdrawCCtx() {
-	ticker := time.NewTicker(time.Millisecond * WithdrawInterval)
+	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {
 		select {
 		case <-ticker.C:
@@ -205,13 +205,14 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
+
 	for {
 		select {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
-				ChainId: uint64(common.GoerliChain().ChainId),
+				ChainId: getChainID(),
 			})
 			if err != nil {
 				continue
@@ -265,5 +266,19 @@ func (sm *SmokeTest) WithdrawETHZRC20() {
 	_, err := ethZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
+	}
+}
+
+// Get ETH based chain ID - Build flags are conflicting with current lib, need to do this manually
+func getChainID() uint64 {
+	switch stressTestArgs.network {
+	case "PRIVNET":
+		return 1337
+	case "TESTNET":
+		return 5
+	case "MAINNET":
+		return 1
+	default:
+		return 1337
 	}
 }
