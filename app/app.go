@@ -67,7 +67,6 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	//distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	//"github.com/cosmos/cosmos-sdk/x/evidence"
 	//evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -230,7 +229,7 @@ type App struct {
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	//SlashingKeeper       slashingkeeper.Keeper
-	DistrKeeper   distrkeeper.Keeper
+	//DistrKeeper   distrkeeper.Keeper
 	GovKeeper     govkeeper.Keeper
 	CrisisKeeper  crisiskeeper.Keeper
 	UpgradeKeeper upgradekeeper.Keeper
@@ -330,10 +329,10 @@ func New(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
 
-	app.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, authtypes.FeeCollectorName,
-	)
+	//app.DistrKeeper = distrkeeper.NewKeeper(
+	//	appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+	//	&stakingKeeper, authtypes.FeeCollectorName,
+	//)
 	//app.SlashingKeeper = slashingkeeper.NewKeeper(
 	//	appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	//)
@@ -353,9 +352,13 @@ func New(
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	//app.StakingKeeper = *stakingKeeper.SetHooks(
-	//stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
-	//)
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			//app.DistrKeeper.Hooks(),
+			//app.SlashingKeeper.Hooks(),
+			app.ZetaObserverKeeper.Hooks(),
+		),
+	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey],
