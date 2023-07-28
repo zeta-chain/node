@@ -117,7 +117,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
 
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
@@ -213,7 +213,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
 
 
   smoke-test:
@@ -268,7 +268,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
 
   upload:
     runs-on: ["zeta-runners"]
@@ -387,7 +387,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
 
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
@@ -418,7 +418,7 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
 
   upload_s3_public:
     #runs-on: ubuntu-latest
@@ -522,4 +522,4 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm rf *
+        run: rm -rf *
