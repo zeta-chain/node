@@ -17,6 +17,10 @@ on:
       - reopened
       - ready_for_review
 
+concurrency: 
+  group: ${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
 env:
   S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   S3_PUBLIC_BUCKET_PATH: "zetachain-external-files"
@@ -81,6 +85,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
+          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
@@ -169,6 +174,7 @@ jobs:
         run: |
           apk add --no-cache --update
           go mod tidy
+          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
@@ -196,11 +202,17 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
-
+      - name: Clean Up Alpine Workspace
+        if: always()
+        shell: alpine.sh --root {0}
+        run: |
+          set -e # fail on error
+          rm -rf *
+        
       - name: Clean Up Workspace
         if: always()
         uses: AutoModality/action-clean@v1
-    
+
 
   smoke-test:
     runs-on: ["zeta-runners"]
