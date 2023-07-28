@@ -746,10 +746,7 @@ func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btc
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTransactionVerbose %s", res.TxID)
 		}
-		if len(rawtx.Vin) == 0 {
-			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with no vin %s", res.TxID)
-		}
-		if !ob.isTSSVin(rawtx.Vin) {
+		if !ob.isValidTSSVin(rawtx.Vin) {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
 		}
 	} else if res.Confirmations > 0 {
@@ -765,7 +762,7 @@ func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btc
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
 		}
 		tx := block.Tx[res.BlockIndex]
-		if !ob.isTSSVin(tx.Vin) {
+		if !ob.isValidTSSVin(tx.Vin) {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
 		}
 	}
@@ -773,7 +770,10 @@ func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btc
 }
 
 // Returns true only if all inputs are TSS vins
-func (ob *BitcoinChainClient) isTSSVin(vins []btcjson.Vin) bool {
+func (ob *BitcoinChainClient) isValidTSSVin(vins []btcjson.Vin) bool {
+	if len(vins) == 0 {
+		return false
+	}
 	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
 	for _, vin := range vins {
 		// The length of the Witness should be always 2 for P2WPKH SegWit inputs.
