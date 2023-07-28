@@ -41,7 +41,7 @@ var (
 
 // DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
-// TODO Unit test for these funtion
+// TODO Unit test for these functions
 // https://github.com/zeta-chain/node/issues/864
 // TODO Remove repetitive code
 func (k Keeper) DeployZRC20Contract(
