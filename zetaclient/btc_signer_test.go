@@ -259,7 +259,7 @@ func TestSelectUTXOs(t *testing.T) {
 	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
 	require.NotNil(t, err)
 	require.Nil(t, result)
-	require.Equal(t, 0.0, amount)
+	require.Zero(t, amount)
 	require.Equal(t, "findNonceMarkUTXO: outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
 
@@ -269,7 +269,7 @@ func TestSelectUTXOs(t *testing.T) {
 	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
 	require.NotNil(t, err)
 	require.Nil(t, result)
-	require.Equal(t, 0.0, amount)
+	require.Zero(t, amount)
 	require.Equal(t, "findNonceMarkUTXO: cannot find nonce-mark utxo with nonce 0", err.Error())
 
 	// add nonce-mark utxo for nonce 0
@@ -336,6 +336,6 @@ func TestSelectUTXOs(t *testing.T) {
 	result, amount, err = ob.SelectUTXOs(21.64, 5, 24105433, tssAddress)
 	require.NotNil(t, err)
 	require.Nil(t, result)
-	require.Equal(t, 0.0, amount)
+	require.Zero(t, amount)
 	require.Equal(t, "SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64", err.Error())
 }
