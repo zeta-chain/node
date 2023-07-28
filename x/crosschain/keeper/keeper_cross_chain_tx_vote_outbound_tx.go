@@ -122,9 +122,13 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			if zetaBurnt.LT(zetaMinted) {
 				// TODO :Handle Error ?
+				// https://github.com/zeta-chain/node/issues/860
 			}
 			balanceAmount := zetaBurnt.Sub(zetaMinted)
-			if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta { // TODO : Handle Fee for other coins
+
+			// TODO : Handle Fee for other coins
+			// https://github.com/zeta-chain/node/issues/861
+			if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
 				err := HandleFeeBalances(k, ctx, balanceAmount)
 				if err != nil {
 					return err

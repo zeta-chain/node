@@ -177,7 +177,9 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	return height
 }
 
-// TODO
+// GetBaseGasPrice ...
+// TODO: implement
+// https://github.com/zeta-chain/node/issues/868
 func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 	return big.NewInt(0)
 }

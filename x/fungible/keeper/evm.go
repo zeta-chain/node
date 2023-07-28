@@ -39,10 +39,11 @@ var (
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
-// TODO Unit test for these funtions
-// TODO Remove repetitive code
-// DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
+// DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
+// TODO Unit test for these funtion
+// https://github.com/zeta-chain/node/issues/864
+// TODO Remove repetitive code
 func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
@@ -289,12 +290,13 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
+
+	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
+	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {
