@@ -135,12 +135,15 @@ proto:
 	@find . -name '*.pb.go' -type f -delete
 	@echo "--> Generating new Go types from protocol buffer files"
 	@bash ./scripts/protoc-gen-go.sh
+	
+openapi:
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
 
 .PHONY: proto
 
 specs:
+	@echo "--> Generating module documentation"
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
