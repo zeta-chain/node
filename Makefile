@@ -147,6 +147,9 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
+generated: proto openapi specs
+.PHONY: generated
+
 ###############################################################################
 ###                                Docker Images                             ###
 ###############################################################################
