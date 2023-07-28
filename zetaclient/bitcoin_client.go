@@ -46,22 +46,22 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain              common.Chain
-	rpcClient          *rpcclient.Client
-	zetaClient         *ZetaCoreBridge
-	Tss                TSSSigner
-	lastBlock          int64
-	BlockTime          uint64                                  // block time in seconds
-	includedTx         map[string]btcjson.GetTransactionResult // key: chain-nonce
-	broadcastedTx      map[string]chainhash.Hash
-	nextNonceBroadcast int
-	mu                 *sync.Mutex
-	utxos              []btcjson.ListUnspentResult
-	db                 *gorm.DB
-	stop               chan struct{}
-	logger             BTCLog
-	cfg                *config.Config
-	ts                 *TelemetryServer
+	chain                 common.Chain
+	rpcClient             *rpcclient.Client
+	zetaClient            *ZetaCoreBridge
+	Tss                   TSSSigner
+	lastBlock             int64
+	BlockTime             uint64                                  // block time in seconds
+	includedTx            map[string]btcjson.GetTransactionResult // key: chain-nonce
+	broadcastedTx         map[string]chainhash.Hash
+	nextTxNonce2Broadcast int
+	mu                    *sync.Mutex
+	utxos                 []btcjson.ListUnspentResult
+	db                    *gorm.DB
+	stop                  chan struct{}
+	logger                BTCLog
+	cfg                   *config.Config
+	ts                    *TelemetryServer
 }
 
 const (
@@ -669,8 +669,8 @@ func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash chainhash.Hash, nonce uin
 	outTxID := ob.GetTxID(nonce)
 	ob.mu.Lock()
 	ob.broadcastedTx[outTxID] = txHash
-	ob.nextNonceBroadcast++
-	ob.ts.SetNextNonce(ob.nextNonceBroadcast)
+	ob.nextTxNonce2Broadcast++
+	ob.ts.SetNextNonce(ob.nextTxNonce2Broadcast)
 	ob.mu.Unlock()
 
 	broadcastEntry := clienttypes.ToTransactionHashSQLType(txHash, outTxID)
@@ -836,8 +836,8 @@ func (ob *BitcoinChainClient) SetNextNonceBroadcast() error {
 				}
 				break
 			}
-			ob.nextNonceBroadcast = next2Broadcast
-			ob.ts.SetNextNonce(ob.nextNonceBroadcast)
+			ob.nextTxNonce2Broadcast = next2Broadcast
+			ob.ts.SetNextNonce(ob.nextTxNonce2Broadcast)
 			found = true
 		}
 	}
