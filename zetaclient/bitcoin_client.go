@@ -735,7 +735,11 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
-// Returns true if outTx passes basic checks
+// Basic TSS outTX checks:
+//   - locate the raw tx and find the Vin
+//   - check if all inputs are segwit && TSS inputs
+//
+// Returns: true if outTx passes basic checks.
 func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
 	if res.Confirmations == 0 {
 		rawtx, err := ob.rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
@@ -765,7 +769,7 @@ func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btc
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
 		}
 	}
-	return nil // ignore res.Confirmations < 0
+	return nil // ignore res.Confirmations < 0 (meaning not included)
 }
 
 // Returns true only if all inputs are TSS vins
