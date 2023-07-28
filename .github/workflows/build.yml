@@ -43,6 +43,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set CPU Architecture
         shell: bash
         run: |
@@ -116,7 +122,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
 
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
@@ -211,7 +218,8 @@ jobs:
         
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
 
 
   smoke-test:
@@ -265,7 +273,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
 
   upload:
     runs-on: ["zeta-runners"]
@@ -383,7 +392,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
 
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
@@ -413,7 +423,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
 
   upload_s3_public:
     #runs-on: ubuntu-latest
@@ -516,4 +527,5 @@ jobs:
       
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm rf *
