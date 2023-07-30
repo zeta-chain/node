@@ -65,7 +65,7 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-      # - uses: actions/cache@v3
+      # - uses: buildjet/cache
       #   timeout-minutes: 5
       #   with:
       #     path: |
@@ -108,6 +108,10 @@ jobs:
           path: |
             zetacored-ubuntu-*
             zetaclientd-ubuntu-*
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
@@ -193,6 +197,11 @@ jobs:
             zetacored-alpine-*
             zetaclientd-alpine-*
 
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
+    
+
   smoke-test:
     runs-on: ["zeta-runners"]
     #runs-on: ubuntu-latest
@@ -241,6 +250,10 @@ jobs:
         run: |
           cd contrib/localnet/
           docker compose down
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   upload:
     runs-on: ["zeta-runners"]
@@ -356,6 +369,10 @@ jobs:
             zetacored-ubuntu-20-amd64
             zetaclientd-ubuntu-20-amd64
 
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
+
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     timeout-minutes: 60
@@ -381,6 +398,10 @@ jobs:
             exit 1
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
+
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1
 
   upload_s3_public:
     #runs-on: ubuntu-latest
@@ -480,3 +501,7 @@ jobs:
       #       Please review the release notes for any specific upgrade instructions or considerations.
       
       #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+      
+      - name: Clean Up Workspace
+        if: always()
+        uses: AutoModality/action-clean@v1

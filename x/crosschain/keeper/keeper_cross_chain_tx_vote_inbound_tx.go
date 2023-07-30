@@ -51,9 +51,6 @@ import (
 //	is_zetachain --> finalize_inbound: Receiver is connected chain
 //	finalize_inbound --> Aborted: Finalize inbound error
 //	finalize_inbound --> PendingOutbound: Finalize inbound success
-//	Aborted --> [*]
-//	PendingOutbound --> [*]
-//	OutboundMined --> [*]
 //
 // ```
 //
