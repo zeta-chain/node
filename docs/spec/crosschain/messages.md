@@ -32,14 +32,14 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgCreateTSSVoter
 
-Vote on creating a TSS key and recording the information about it (public key,
-participant and operator addresses, finalized and keygen heights).
+Vote on creating a TSS key and recording the information about it (public
+key, participant and operator addresses, finalized and keygen heights).
 
-If the vote passes, the information about the TSS key is recorded on chain and
-the status of the keygen is set to "success".
+If the vote passes, the information about the TSS key is recorded on chain
+and the status of the keygen is set to "success".
 
-Fails if the keygen does not exist, the keygen has been already completed, or
-the keygen has failed.
+Fails if the keygen does not exist, the keygen has been already
+completed, or the keygen has failed.
 
 Only node accounts are authorized to broadcast this message.
 
@@ -84,23 +84,26 @@ message MsgNonceVoter {
 
 ## MsgVoteOnObservedOutboundTx
 
-Casts a vote on an outbound transaction observed on a connected chain (after it
-has been broadcasted to and finalized on a connected chain). If this is the
-first vote, a new ballot is created. When a threshold of votes is reached, the
-ballot is finalized. When a ballot is finalized, the outbound transaction is
-processed.
+Casts a vote on an outbound transaction observed on a connected chain (after
+it has been broadcasted to and finalized on a connected chain). If this is
+the first vote, a new ballot is created. When a threshold of votes is
+reached, the ballot is finalized. When a ballot is finalized, the outbound
+transaction is processed.
 
-If the observation is successful, the difference between zeta burned and minted
-is minted by the bank module and deposited into the module account.
+If the observation is successful, the difference between zeta burned
+and minted is minted by the bank module and deposited into the module
+account.
 
-If the observation is unsuccessful, the logic depends on the previous status.
+If the observation is unsuccessful, the logic depends on the previous
+status.
 
 If the previous status was `PendingOutbound`, a new revert transaction is
 created. To cover the revert transaction fee, the required amount of tokens
 submitted with the CCTX are swapped using a Uniswap V2 contract instance on
-ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens
-are then burned. The nonce is updated. If everything is successful, the CCTX
-status is changed to `PendingRevert`.
+ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
+tokens are then
+burned. The nonce is updated. If everything is successful, the CCTX status is
+changed to `PendingRevert`.
 
 If the previous status was `PendingRevert`, the CCTX is aborted.
 
@@ -120,10 +123,6 @@ stateDiagram-v2
 	fail_old_status --> PendingRevert: Old status is PendingOutbound
 	fail_old_status --> Aborted: Old status is PendingRevert
 	finalize_outbound --> Aborted: Finalize outbound error
-	Aborted --> [*]
-	Reverted --> [*]
-	OutboundMined --> [*]
-	PendingRevert --> [*]
 
 ```
 
@@ -145,27 +144,28 @@ message MsgVoteOnObservedOutboundTx {
 
 ## MsgVoteOnObservedInboundTx
 
-Casts a vote on an inbound transaction observed on a connected chain. If this is
-the first vote, a new ballot is created. When a threshold of votes is reached,
-the ballot is finalized. When a ballot is finalized, a new CCTX is created.
+Casts a vote on an inbound transaction observed on a connected chain. If this
+is the first vote, a new ballot is created. When a threshold of votes is
+reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
+created.
 
-If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the tokens
-being deposited are ZETA, `MintZetaToEVMAccount` is called and the tokens are
-minted to the receiver account on ZetaChain. If the tokens being deposited are
-gas tokens or ERC20 of a connected chain, ZRC20's `deposit` method is called and
-the tokens are deposited to the receiver account on ZetaChain. If the message is
-not empty, system contract's `depositAndCall` method is also called and an
-omnichain contract on ZetaChain is executed. Omnichain contract address and
-arguments are passed as part of the message. If everything is successful, the
-CCTX status is changed to `OutboundMined`.
+If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the
+tokens being deposited are ZETA, `MintZetaToEVMAccount` is called and the
+tokens are minted to the receiver account on ZetaChain. If the tokens being
+deposited are gas tokens or ERC20 of a connected chain, ZRC20's `deposit`
+method is called and the tokens are deposited to the receiver account on
+ZetaChain. If the message is not empty, system contract's `depositAndCall`
+method is also called and an omnichain contract on ZetaChain is executed.
+Omnichain contract address and arguments are passed as part of the message.
+If everything is successful, the CCTX status is changed to `OutboundMined`.
 
 If the receiver chain is a connected chain, the `FinalizeInbound` method is
-called to prepare the CCTX to be processed as an outbound transaction. To cover
-the outbound transaction fee, the required amount of tokens submitted with the
-CCTX are swapped using a Uniswap V2 contract instance on ZetaChain for the ZRC20
-of the gas token of the receiver chain. The ZRC20 tokens are then burned. The
-nonce is updated. If everything is successful, the CCTX status is changed to
-`PendingOutbound`.
+called to prepare the CCTX to be processed as an outbound transaction. To
+cover the outbound transaction fee, the required amount of tokens submitted
+with the CCTX are swapped using a Uniswap V2 contract instance on ZetaChain
+for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are
+then burned. The nonce is updated. If everything is successful, the CCTX
+status is changed to `PendingOutbound`.
 
 ```mermaid
 stateDiagram-v2
@@ -181,9 +181,6 @@ stateDiagram-v2
 	is_zetachain --> finalize_inbound: Receiver is connected chain
 	finalize_inbound --> Aborted: Finalize inbound error
 	finalize_inbound --> PendingOutbound: Finalize inbound success
-	Aborted --> [*]
-	PendingOutbound --> [*]
-	OutboundMined --> [*]
 
 ```
 
@@ -206,3 +203,4 @@ message MsgVoteOnObservedInboundTx {
 	string asset = 14;
 }
 ```
+
