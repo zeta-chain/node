@@ -90,7 +90,7 @@ the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, the outbound
 transaction is processed.
 
-If the observation was successful, the difference between zeta burned
+If the observation is successful, the difference between zeta burned
 and minted is minted by the bank module and deposited into the module
 account.
 
