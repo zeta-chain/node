@@ -53,12 +53,9 @@ import (
 //	fail_old_status --> PendingRevert: Old status is PendingOutbound
 //	fail_old_status --> Aborted: Old status is PendingRevert
 //	finalize_outbound --> Aborted: Finalize outbound error
-//	Aborted --> [*]
-//	Reverted --> [*]
-//	OutboundMined --> [*]
-//	PendingRevert --> [*]
 //
 // ```
+//
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
