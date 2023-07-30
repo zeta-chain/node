@@ -40,19 +40,17 @@ import (
 // ```mermaid
 // stateDiagram-v2
 //
-//	state finalize_outbound <<choice>>
 //	state observation <<choice>>
 //	state success_old_status <<choice>>
 //	state fail_old_status <<choice>>
-//	[*] --> finalize_outbound
-//	finalize_outbound --> observation: Finalize outbound
+//	PendingOutbound --> observation: Finalize outbound
 //	observation --> success_old_status: Observation succeeded
 //	success_old_status --> Reverted: Old status is PendingRevert
 //	success_old_status --> OutboundMined: Old status is PendingOutbound
 //	observation --> fail_old_status: Observation failed
 //	fail_old_status --> PendingRevert: Old status is PendingOutbound
 //	fail_old_status --> Aborted: Old status is PendingRevert
-//	finalize_outbound --> Aborted: Finalize outbound error
+//	PendingOutbound --> Aborted: Finalize outbound error
 //
 // ```
 //
