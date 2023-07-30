@@ -90,7 +90,7 @@ the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, the outbound
 transaction is processed.
 
-If the observation is successful, the difference between zeta burned
+If the observation was successful, the difference between zeta burned
 and minted is minted by the bank module and deposited into the module
 account.
 
@@ -99,8 +99,9 @@ status.
 
 If the previous status was `PendingOutbound`, a new revert transaction is
 created. To cover the revert transaction fee, the required amount of tokens
-submitted with the CCTX are swapped using a Uniswap pool on ZetaChain for the
-ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are then
+submitted with the CCTX are swapped using a Uniswap V2 contract instance on
+ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
+tokens are then
 burned. The nonce is updated. If everything is successful, the CCTX status is
 changed to `PendingRevert`.
 
@@ -164,10 +165,10 @@ If everything is successful, the CCTX status is changed to `OutboundMined`.
 If the receiver chain is a connected chain, the `FinalizeInbound` method is
 called to prepare the CCTX to be processed as an outbound transaction. To
 cover the outbound transaction fee, the required amount of tokens submitted
-with the CCTX are swapped using a Uniswap pool on ZetaChain for the ZRC20 of
-the gas token of the receiver chain. The ZRC20 tokens are then burned. The
-nonce is updated. If everything is successful, the CCTX status is changed to
-`PendingOutbound`.
+with the CCTX are swapped using a Uniswap V2 contract instance on ZetaChain
+for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are
+then burned. The nonce is updated. If everything is successful, the CCTX
+status is changed to `PendingOutbound`.
 
 ```mermaid
 stateDiagram-v2
@@ -206,46 +207,6 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
-}
-```
-
-## MsgSetNodeKeys
-
-Not implemented yet.
-
-```proto
-message MsgSetNodeKeys {
-	string creator = 1;
-	common.PubKeySet pubkeySet = 2;
-	string tss_signer_Address = 3;
-}
-```
-
-## MsgUpdatePermissionFlags
-
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdatePermissionFlags {
-	string creator = 1;
-	bool isInboundEnabled = 3;
-}
-```
-
-## MsgUpdateKeygen
-
-Updates the block height of the keygen and sets the status to "pending
-keygen".
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdateKeygen {
-	string creator = 1;
-	int64 block = 2;
 }
 ```
 
