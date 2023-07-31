@@ -68,7 +68,7 @@ func CreateRandomVoteList(numberOfVotes int) []observerTypes.VoteType {
 	max := len(voteOptions) - 1
 	voteList := make([]observerTypes.VoteType, numberOfVotes)
 	for i := 0; i < numberOfVotes; i++ {
-		voteList[i] = voteOptions[rand.Intn(max-min)+min]
+		voteList[i] = voteOptions[rand.Intn(max-min)+min] // #nosec G404
 	}
 	return voteList
 }
@@ -77,6 +77,7 @@ func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerT
 	ballotStatus := []observerTypes.BallotStatus{observerTypes.BallotStatus_BallotFinalized_FailureObservation, observerTypes.BallotStatus_BallotFinalized_SuccessObservation}
 	min := 0
 	max := len(ballotStatus) - 1
+	// #nosec G404 randomness is not a security issue here
 	for i := 0; i < numberOfBallots; i++ {
 		ballots[i] = &observerTypes.Ballot{
 			Index:            "",

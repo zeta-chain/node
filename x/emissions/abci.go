@@ -43,7 +43,7 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 }
 
 // DistributeObserverRewards /*  distributes the rewards to all observers who voted in any of the ballots finalized .
-// The total rewards are distributed equally among all Successfull votes
+// The total rewards are distributed equally among all Successful votes
 // NotVoted or Unsuccessful votes are slashed
 
 func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {

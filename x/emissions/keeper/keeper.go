@@ -21,7 +21,6 @@ type (
 		bankKeeper       types.BankKeeper
 		stakingKeeper    types.StakingKeeper
 		observerKeeper   types.ZetaObserverKeeper
-		accountKeeper    types.AccountKeeper
 	}
 )
 
