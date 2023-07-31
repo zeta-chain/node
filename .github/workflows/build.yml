@@ -482,7 +482,7 @@ jobs:
             Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
 
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
-            We will raise a governance proposal in the future with a 12-hour voting period. 
+            We will raise a governance proposal in the next few days with a 12-hour voting period. 
             More specific information including block height will be shared as part of the governance proposal.
             
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
