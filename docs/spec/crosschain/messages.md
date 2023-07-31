@@ -110,19 +110,17 @@ If the previous status was `PendingRevert`, the CCTX is aborted.
 ```mermaid
 stateDiagram-v2
 
-	state finalize_outbound <<choice>>
 	state observation <<choice>>
 	state success_old_status <<choice>>
 	state fail_old_status <<choice>>
-	[*] --> finalize_outbound
-	finalize_outbound --> observation: Finalize outbound
+	PendingOutbound --> observation: Finalize outbound
 	observation --> success_old_status: Observation succeeded
 	success_old_status --> Reverted: Old status is PendingRevert
 	success_old_status --> OutboundMined: Old status is PendingOutbound
 	observation --> fail_old_status: Observation failed
 	fail_old_status --> PendingRevert: Old status is PendingOutbound
 	fail_old_status --> Aborted: Old status is PendingRevert
-	finalize_outbound --> Aborted: Finalize outbound error
+	PendingOutbound --> Aborted: Finalize outbound error
 
 ```
 
@@ -170,15 +168,15 @@ status is changed to `PendingOutbound`.
 ```mermaid
 stateDiagram-v2
 
-	state is_zetachain <<choice>>
 	state evm_deposit_success <<choice>>
 	state finalize_inbound <<choice>>
-	[*] --> PendingInbound: Create New CCTX
-	PendingInbound --> is_zetachain
-	is_zetachain --> evm_deposit_success: Receiver is ZetaChain
+	state evm_deposit_error <<choice>>
+	PendingInbound --> evm_deposit_success: Receiver is ZetaChain
 	evm_deposit_success --> OutboundMined: EVM deposit success
-	evm_deposit_success --> Aborted: EVM deposit error
-	is_zetachain --> finalize_inbound: Receiver is connected chain
+	evm_deposit_success --> evm_deposit_error: EVM deposit error
+	evm_deposit_error --> PendingRevert: Contract error
+	evm_deposit_error --> Aborted: Internal error, invalid chain, gas, nonce
+	PendingInbound --> finalize_inbound: Receiver is connected chain
 	finalize_inbound --> Aborted: Finalize inbound error
 	finalize_inbound --> PendingOutbound: Finalize inbound success
 
