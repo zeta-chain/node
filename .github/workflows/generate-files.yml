@@ -17,7 +17,7 @@ jobs:
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: Generate Go
+      - name: Generate Go code from proto files
         run: make proto
 
       - name: Generate OpenAPI
