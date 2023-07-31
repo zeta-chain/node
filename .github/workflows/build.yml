@@ -17,6 +17,10 @@ on:
       - reopened
       - ready_for_review
 
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   S3_BUCKET_PATH: "zetachain-deployment-files/builds/zeta-node"
   S3_PUBLIC_BUCKET_PATH: "zetachain-external-files"
@@ -81,6 +85,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
+          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
@@ -111,7 +116,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm -rf *
 
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
@@ -169,6 +175,7 @@ jobs:
         run: |
           apk add --no-cache --update
           go mod tidy
+          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
@@ -196,11 +203,18 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
-
+      - name: Clean Up Alpine Workspace
+        if: always()
+        shell: alpine.sh --root {0}
+        run: |
+          set -e # fail on error
+          rm -rf *
+        
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
-    
+        shell: bash
+        run: rm -rf *
+
 
   smoke-test:
     runs-on: ["zeta-runners"]
@@ -253,7 +267,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm -rf *
 
   upload:
     runs-on: ["zeta-runners"]
@@ -371,7 +386,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm -rf *
 
   upgrade_path_testing:
     runs-on: ["buildjet-4vcpu-ubuntu-2204"]
@@ -401,7 +417,8 @@ jobs:
 
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm -rf *
 
   upload_s3_public:
     #runs-on: ubuntu-latest
@@ -504,4 +521,5 @@ jobs:
       
       - name: Clean Up Workspace
         if: always()
-        uses: AutoModality/action-clean@v1
+        shell: bash
+        run: rm -rf *
