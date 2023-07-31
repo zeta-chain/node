@@ -71,15 +71,17 @@ func CreateVotes(len int) []VoteType {
 	return voterList
 }
 
+// BuildRewardsDistribution builds the rewards distribution map for the ballot
+// It returns the total rewards units which account for the observer block rewards
 func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
-	totalUnits := int64(0)
+	totalRewardUnits := int64(0)
 	switch m.BallotStatus {
 	case BallotStatus_BallotFinalized_SuccessObservation:
 		for _, address := range m.VoterList {
 			vote := m.Votes[m.GetVoterIndex(address)]
 			if vote == VoteType_SuccessObservation {
 				rewardsMap[address] = rewardsMap[address] + 1
-				totalUnits++
+				totalRewardUnits++
 				continue
 			}
 			rewardsMap[address] = rewardsMap[address] - 1
@@ -89,11 +91,11 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 			vote := m.Votes[m.GetVoterIndex(address)]
 			if vote == VoteType_FailureObservation {
 				rewardsMap[address] = rewardsMap[address] + 1
-				totalUnits++
+				totalRewardUnits++
 				continue
 			}
 			rewardsMap[address] = rewardsMap[address] - 1
 		}
 	}
-	return totalUnits
+	return totalRewardUnits
 }

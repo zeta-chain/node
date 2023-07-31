@@ -42,26 +42,31 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
+// DistributeObserverRewards /*  distributes the rewards to all observers who voted in any of the ballots finalized .
+// The total rewards are distributed equally among all Successfull votes
+// NotVoted or Unsuccessful votes are slashed
+
 func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {
-	ballots := keeper.GetObserverKeeper().GetFinalizedBallots(ctx)
+
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
 	err := keeper.GetBankKeeper().SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
 	if err != nil {
 		return err
 	}
-
+	ballots := keeper.GetObserverKeeper().GetFinalizedBallots(ctx)
+	// do not distribute rewards if no ballots are finalized , the rewards can accumulate in the undistributed pool
 	if len(ballots) == 0 {
 		return nil
 	}
 	for _, ballot := range ballots {
 		totalRewardsUnits = totalRewardsUnits + ballot.BuildRewardsDistribution(rewardsDistributer)
 	}
-	if totalRewardsUnits <= 0 || amount.IsZero() {
-		return nil
+	rewardPerUnit := sdkmath.ZeroInt()
+	if totalRewardsUnits > 0 && amount.IsPositive() {
+		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
 	}
 
-	rewardPerUnit := amount.Quo(sdk.NewInt(totalRewardsUnits))
 	sortedKeys := make([]string, 0, len(rewardsDistributer))
 	for k := range rewardsDistributer {
 		sortedKeys = append(sortedKeys, k)
@@ -75,6 +80,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			continue
 		}
 		observerRewardsRatio := rewardsDistributer[key]
+
 		if observerRewardsRatio == 0 {
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
@@ -92,13 +98,16 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			})
 			continue
 		}
-		rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardsRatio))
-		keeper.AddRewards(ctx, observerAddress.String(), rewardAmount)
-		finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
-			EmissionType:    types.EmissionType_Rewards,
-			ObserverAddress: observerAddress.String(),
-			Amount:          rewardAmount.String(),
-		})
+		// Defensive check
+		if rewardPerUnit.GT(sdk.ZeroInt()) {
+			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardsRatio))
+			keeper.AddRewards(ctx, observerAddress.String(), rewardAmount)
+			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+				EmissionType:    types.EmissionType_Rewards,
+				ObserverAddress: observerAddress.String(),
+				Amount:          rewardAmount.String(),
+			})
+		}
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
 
