@@ -75,15 +75,15 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	genesisState[evmtypes.ModuleName] = evmGenesisBz
 }
 
-func AddObserverData(n int, t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observerTypes.Ballot) *observerTypes.GenesisState {
+func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observerTypes.Ballot) *observerTypes.GenesisState {
 	state := observerTypes.GenesisState{}
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &state))
-	//for i := 0; i < n; i++ {
-	//	state.NodeAccountList = append(state.NodeAccountList, &observerTypes.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
-	//}
 	if len(ballots) > 0 {
 		state.Ballots = ballots
 	}
+	//params := observerTypes.DefaultParams()
+	//params.BallotMaturityBlocks = 3
+	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 	permissionFlags := &observerTypes.PermissionFlags{}
 	nullify.Fill(&permissionFlags)

@@ -21,7 +21,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.NodeAccountList {
 		k.SetNodeAccount(ctx, *elem)
 	}
-	k.SetParams(ctx, types.DefaultParams())
+	params := types.DefaultParams()
+	if genState.Params != nil {
+		params = *genState.Params
+	}
+	k.SetParams(ctx, params)
 	// Set if defined
 	if genState.PermissionFlags != nil {
 		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
@@ -32,11 +36,21 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Keygen != nil {
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
+	ballotListForHeight := make(map[int64][]string)
 	if len(genState.Ballots) > 0 {
 		for _, ballot := range genState.Ballots {
 			k.SetBallot(ctx, ballot)
+			ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
 		}
 	}
+
+	for height, ballotList := range ballotListForHeight {
+		k.SetBallotList(ctx, &types.BallotListForHeight{
+			Height:           height,
+			BallotsIndexList: ballotList,
+		})
+	}
+
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{
 		Count:            observerCount,
 		LastChangeHeight: ctx.BlockHeight(),

@@ -52,7 +52,7 @@ func (s *CliTestSuite) SetupSuite() {
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
 	s.ballots = RandomBallotGenerator(20, observerList)
-	network.AddObserverData(2, s.T(), s.cfg.GenesisState, s.cfg.Codec, s.ballots)
+	network.AddObserverData(s.T(), s.cfg.GenesisState, s.cfg.Codec, s.ballots)
 
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
@@ -80,13 +80,14 @@ func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerT
 	// #nosec G404 randomness is not a security issue here
 	for i := 0; i < numberOfBallots; i++ {
 		ballots[i] = &observerTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: "TestBallot" + strconv.Itoa(i),
-			VoterList:        voterList,
-			Votes:            CreateRandomVoteList(len(voterList)),
-			ObservationType:  observerTypes.ObservationType_InBoundTx,
-			BallotThreshold:  sdk.MustNewDecFromStr("0.66"),
-			BallotStatus:     ballotStatus[rand.Intn(max-min)+min],
+			Index:                "",
+			BallotIdentifier:     "TestBallot" + strconv.Itoa(i),
+			VoterList:            voterList,
+			Votes:                CreateRandomVoteList(len(voterList)),
+			ObservationType:      observerTypes.ObservationType_InBoundTx,
+			BallotThreshold:      sdk.MustNewDecFromStr("0.66"),
+			BallotStatus:         ballotStatus[rand.Intn(max-min)+min],
+			BallotCreationHeight: 0,
 		}
 	}
 	return ballots

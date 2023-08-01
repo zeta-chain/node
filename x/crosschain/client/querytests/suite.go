@@ -44,7 +44,7 @@ func (s *CliTestSuite) SetupSuite() {
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
 	s.crossChainState = network.AddCrossChainData(2, s.T(), s.cfg.GenesisState, s.cfg.Codec)
-	s.observerState = network.AddObserverData(2, s.T(), s.cfg.GenesisState, s.cfg.Codec, nil)
+	s.observerState = network.AddObserverData(s.T(), s.cfg.GenesisState, s.cfg.Codec, nil)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
 	s.network = net

@@ -31,4 +31,10 @@ message Ballot {
     (gogoproto.nullable) = false
   ];
   BallotStatus ballot_status =7;
+  int64 Ballot_creation_height=8;
+}
+
+message BallotListForHeight {
+  int64 height = 1;
+  repeated string ballots_index_list = 2;
 }

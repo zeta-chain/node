@@ -15,8 +15,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
-	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
+func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy, ballotMaturityBlocks int64) Params {
+	return Params{ObserverParams: observerParams, AdminPolicy: adminParams, BallotMaturityBlocks: ballotMaturityBlocks}
 }
 
 func DefaultParams() Params {
@@ -53,7 +53,7 @@ func DefaultParams() Params {
 		},
 	}
 
-	return NewParams(observerParams, adminPolicy)
+	return NewParams(observerParams, adminPolicy, 100)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -61,6 +61,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPrefix(ObserverParamsKey), &p.ObserverParams, validateVotingThresholds),
 		paramtypes.NewParamSetPair(KeyPrefix(AdminPolicyParamsKey), &p.AdminPolicy, validateAdminPolicy),
+		paramtypes.NewParamSetPair(KeyPrefix(BallotMaturityBlocksParamsKey), &p.BallotMaturityBlocks, validateBallotMaturityBlocks),
 	}
 }
 
@@ -89,6 +90,14 @@ func validateVotingThresholds(i interface{}) error {
 }
 func validateAdminPolicy(i interface{}) error {
 	_, ok := i.([]*Admin_Policy)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+func validateBallotMaturityBlocks(i interface{}) error {
+	_, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

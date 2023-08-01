@@ -50935,6 +50935,9 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerAdmin_Policy'
+      ballot_maturity_blocks:
+        type: string
+        format: int64
     description: Params defines the parameters for the module.
   zetacoreobserverQueryParamsResponse:
     type: object

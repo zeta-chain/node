@@ -37,7 +37,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		tssSignerRewards.String())
 }
 
-func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper, feeCollector string) error {
+func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, feeCollector string) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
@@ -45,6 +45,7 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdk.Int, bankKeeper type
 // DistributeObserverRewards /*  distributes the rewards to all observers who voted in any of the ballots finalized .
 // The total rewards are distributed equally among all Successful votes
 // NotVoted or Unsuccessful votes are slashed
+// rewards given or slashed amounts are in azeta
 
 func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {
 
@@ -54,12 +55,16 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	if err != nil {
 		return err
 	}
-	ballots := keeper.GetObserverKeeper().GetFinalizedBallots(ctx)
+	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
 	// do not distribute rewards if no ballots are finalized , the rewards can accumulate in the undistributed pool
-	if len(ballots) == 0 {
+	if len(ballotIdentifiers) == 0 {
 		return nil
 	}
-	for _, ballot := range ballots {
+	for _, ballotIdentifier := range ballotIdentifiers {
+		ballot, found := keeper.GetObserverKeeper().GetBallot(ctx, ballotIdentifier)
+		if !found {
+			continue
+		}
 		totalRewardsUnits = totalRewardsUnits + ballot.BuildRewardsDistribution(rewardsDistributer)
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
@@ -114,7 +119,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
 
-	keeper.GetObserverKeeper().DeleteFinalizedBallots(ctx)
 	return nil
 }
 

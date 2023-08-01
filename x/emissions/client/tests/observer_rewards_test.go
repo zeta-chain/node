@@ -44,13 +44,14 @@ func (s *CliTestSuite) TestObserverRewards() {
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
-	s.Require().NoError(s.network.WaitForNextBlock())
+	//s.Require().NoError(s.network.WaitForNextBlock())
+	s.network.WaitForHeight(0 + 3)
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
 	resFactorsNewBlocks := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
-	// Duration factor is calcualted in the same block , so we need to query based from the committed state at which the distribution is done
-	// Would be cleaner to use `--height` flag but it is not supported by the ExecTestCLICmd function yet
+	// Duration factor is calculated in the same block , so we need to query based from the committed state at which the distribution is done
+	// Would be cleaner to use `--height` flag, but it is not supported by the ExecTestCLICmd function yet
 	emissionFactors.DurationFactor = resFactorsNewBlocks.DurationFactor
 	asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
 

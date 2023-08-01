@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "observer"
@@ -21,15 +23,24 @@ func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
 
+func BallotListKeyPrefix(p int64) []byte {
+	return []byte(fmt.Sprintf("%d", p))
+}
+
 const (
-	BlameKey                  = "Blame-"
-	VoterKey                  = "Voter-value-"
-	AllCoreParams             = "CoreParams"
-	ObserverMapperKey         = "Observer-value-"
-	ObserverParamsKey         = "ObserverParams"
-	AdminPolicyParamsKey      = "AdminParams"
+	BlameKey = "Blame-"
+	// TODO change identifier for VoterKey to something more descriptive
+	VoterKey                      = "Voter-value-"
+	AllCoreParams                 = "CoreParams"
+	ObserverMapperKey             = "Observer-value-"
+	ObserverParamsKey             = "ObserverParams"
+	AdminPolicyParamsKey          = "AdminParams"
+	BallotMaturityBlocksParamsKey = "BallotMaturityBlocksParams"
+
 	PermissionFlagsKey        = "PermissionFlags-value-"
 	LastBlockObserverCountKey = "ObserverCount-value-"
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
+
+	BallotListKey = "BallotList-value-"
 )

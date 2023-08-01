@@ -25,6 +25,7 @@ func NewParams() Params {
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
 		DurationFactorConstant:      "0.001877876953694702",
+		ObserverSlashAmount:         "100000000000000000",
 	}
 }
 
