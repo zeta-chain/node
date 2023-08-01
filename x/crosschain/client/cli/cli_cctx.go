@@ -14,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdListSend() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-cctx",

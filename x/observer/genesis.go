@@ -11,8 +11,10 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	genesisObservers := genState.Observers
 	types.VerifyObserverMapper(genesisObservers)
+	observerCount := uint64(0)
 	for _, mapper := range genesisObservers {
 		k.SetObserverMapper(ctx, mapper)
+		observerCount += uint64(len(mapper.ObserverList))
 	}
 	k.SetCoreParams(ctx, types.GetCoreParams())
 	// Set all the nodeAccount
@@ -35,13 +37,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			k.SetBallot(ctx, ballot)
 		}
 	}
-
-	totalObserverCountCurrentBlock := 0
-	for _, observer := range genesisObservers {
-		totalObserverCountCurrentBlock += len(observer.ObserverList)
-	}
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{
-		Count:            uint64(totalObserverCountCurrentBlock),
+		Count:            observerCount,
 		LastChangeHeight: ctx.BlockHeight(),
 	})
 

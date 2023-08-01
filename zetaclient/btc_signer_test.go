@@ -210,9 +210,9 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 
 	// Create BitcoinChainClient
 	client := &BitcoinChainClient{
-		Tss:     tss,
-		mu:      &sync.Mutex{},
-		minedTx: make(map[string]btcjson.GetTransactionResult),
+		Tss:        tss,
+		mu:         &sync.Mutex{},
+		includedTx: make(map[string]btcjson.GetTransactionResult),
 	}
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -227,12 +227,12 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
-	ob.minedTx[outTxID] = btcjson.GetTransactionResult{TxID: txid}
+	ob.includedTx[outTxID] = btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	if preMarkIndex >= 0 {
 		tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-		nonceMark := btcjson.ListUnspentResult{Address: tssAddress, Amount: float64(NonceMarkAmount(nonce)) * 1e-8}
+		nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(NonceMarkAmount(nonce)) * 1e-8}
 		ob.utxos[preMarkIndex] = nonceMark
 		sort.SliceStable(ob.utxos, func(i, j int) bool {
 			return ob.utxos[i].Amount < ob.utxos[j].Amount
@@ -253,27 +253,27 @@ func TestSelectUTXOs(t *testing.T) {
 	require.Equal(t, 0.01, amount)
 	require.Equal(t, ob.utxos[0:1], result)
 
-	// // Case2: nonce = 1, must FAIL and wait for previous transaction to be mined
-	// // 		input: utxoCap = 5, amount = 0.5, nonce = 1
-	// // 		output: error
-	// result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
-	// require.NotNil(t, err)
-	// require.Nil(t, result)
-	// require.Equal(t, 0.0, amount)
-	// require.Equal(t, "findNonceMarkUTXO: transaction 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not mined yet", err.Error())
-	// mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
+	// Case2: nonce = 1, must FAIL and wait for previous transaction to be mined
+	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
+	// 		output: error
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	require.NotNil(t, err)
+	require.Nil(t, result)
+	require.Zero(t, amount)
+	require.Equal(t, "findNonceMarkUTXO: outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
+	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
 
-	// // Case3: nonce = 1, must FAIL without nonce mark utxo
-	// // 		input: utxoCap = 5, amount = 0.5, nonce = 1
-	// // 		output: error
-	// result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
-	// require.NotNil(t, err)
-	// require.Nil(t, result)
-	// require.Equal(t, 0.0, amount)
-	// require.Equal(t, "findNonceMarkUTXO: cannot find nonce-mark utxo with nonce 0", err.Error())
+	// Case3: nonce = 1, must FAIL without nonce mark utxo
+	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
+	// 		output: error
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	require.NotNil(t, err)
+	require.Nil(t, result)
+	require.Zero(t, amount)
+	require.Equal(t, "findNonceMarkUTXO: cannot find nonce-mark utxo with nonce 0", err.Error())
 
 	// add nonce-mark utxo for nonce 0
-	nonceMark0 := btcjson.ListUnspentResult{Address: tssAddress, Amount: float64(NonceMarkAmount(0)) * 1e-8}
+	nonceMark0 := btcjson.ListUnspentResult{TxID: dummyTxID, Address: tssAddress, Amount: float64(NonceMarkAmount(0)) * 1e-8}
 	ob.utxos = append([]btcjson.ListUnspentResult{nonceMark0}, ob.utxos...)
 
 	// Case4: nonce = 1, should pass now
@@ -336,6 +336,6 @@ func TestSelectUTXOs(t *testing.T) {
 	result, amount, err = ob.SelectUTXOs(21.64, 5, 24105433, tssAddress)
 	require.NotNil(t, err)
 	require.Nil(t, result)
-	require.Equal(t, 0.0, amount)
+	require.Zero(t, amount)
 	require.Equal(t, "SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64", err.Error())
 }
