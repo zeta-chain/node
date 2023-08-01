@@ -1,15 +1,11 @@
 package cli
 
 import (
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdGetTssAddress() *cobra.Command {
 	cmd := &cobra.Command{
