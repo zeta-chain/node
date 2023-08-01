@@ -16,4 +16,5 @@ message Params {
   string observer_emission_percentage=6;
   string tss_signer_emission_percentage=7;
   string duration_factor_constant=8;
+  string observer_slash_amount=9;
 }

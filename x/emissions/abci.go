@@ -90,12 +90,15 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			continue
 		}
 		if observerRewardsRatio < 0 {
-			keeper.SlashRewards(ctx, observerAddress.String(), sdkmath.NewInt(10000))
-			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
-				EmissionType:    types.EmissionType_Slash,
-				ObserverAddress: observerAddress.String(),
-				Amount:          sdkmath.NewInt(10000).String(),
-			})
+			slashAmount, ok := sdkmath.NewIntFromString(keeper.GetParams(ctx).ObserverSlashAmount)
+			if ok {
+				keeper.SlashRewards(ctx, observerAddress.String(), slashAmount)
+				finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+					EmissionType:    types.EmissionType_Slash,
+					ObserverAddress: observerAddress.String(),
+					Amount:          slashAmount.String(),
+				})
+			}
 			continue
 		}
 		// Defensive check

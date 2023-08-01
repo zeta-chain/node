@@ -36,6 +36,13 @@ func (k Keeper) AddRewards(ctx sdk.Context, address string, amount sdkmath.Int) 
 	k.SetWithdrawableEmission(ctx, we)
 }
 
+// SlashRewards slashes the rewards of a given address, if the address has no rewards left, it will set the rewards to 0.
+/* This function is a basic implementation of slashing, it will be improved in the future, based on further discussions.
+Improvements will include:
+- Add a jailing mechanism
+- Slash observer below 0 , or remove from observer list if their rewards are below 0
+*/
+
 func (k Keeper) SlashRewards(ctx sdk.Context, address string, amount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {

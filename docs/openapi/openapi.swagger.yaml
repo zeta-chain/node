@@ -27442,6 +27442,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/emissions/get_emmisons_factors:
+    get:
+      summary: Queries a list of GetEmmisonsFactors items.
+      operationId: Query_GetEmmisonsFactors
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryGetEmmisonsFactorsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/zetacore/emissions/list_addresses:
     get:
       summary: Queries a list of ListBalances items.
@@ -27470,6 +27485,26 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/zetacore/emissions/show_available_emissions/{address}:
+    get:
+      summary: Queries a list of ShowAvailableEmissions items.
+      operationId: Query_ShowAvailableEmissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryShowAvailableEmissionsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
@@ -50370,6 +50405,15 @@ definitions:
         type: string
       tx_signer:
         type: string
+  emissionsQueryGetEmmisonsFactorsResponse:
+    type: object
+    properties:
+      reservesFactor:
+        type: string
+      bondFactor:
+        type: string
+      durationFactor:
+        type: string
   emissionsQueryListPoolAddressesResponse:
     type: object
     properties:
@@ -50378,6 +50422,11 @@ definitions:
       undistributed_tss_balances_address:
         type: string
       emission_module_address:
+        type: string
+  emissionsQueryShowAvailableEmissionsResponse:
+    type: object
+    properties:
+      amount:
         type: string
   fungibleForeignCoins:
     type: object
@@ -50852,6 +50901,8 @@ definitions:
       tss_signer_emission_percentage:
         type: string
       duration_factor_constant:
+        type: string
+      observer_slash_amount:
         type: string
     description: Params defines the parameters for the module.
   zetacoreemissionsQueryParamsResponse:
