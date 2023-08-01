@@ -2,18 +2,14 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/app"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-// Prevent strconv unused error
-var _ = strconv.IntSize
 
 func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []types.OutTxTracker) {
 	t.Helper()

@@ -3,24 +3,10 @@ package fungible
 import (
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	fungiblesimulation "github.com/zeta-chain/zetacore/x/fungible/simulation"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-)
-
-// avoid unused import issue
-var (
-	_ = sample.AccAddress
-	_ = fungiblesimulation.FindAccount
-	_ = simappparams.StakePerAccount
-	_ = simulation.MsgEntryKind
-	_ = baseapp.Paramspace
 )
 
 const (
