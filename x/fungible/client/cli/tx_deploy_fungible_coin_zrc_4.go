@@ -13,8 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdDeployFungibleCoinZRC4() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit]",

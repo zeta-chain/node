@@ -26,22 +26,24 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdListOutTxTracker())
-	cmd.AddCommand(CmdShowOutTxTracker())
-	cmd.AddCommand(cli.CmdShowKeygen())
-	cmd.AddCommand(CmdShowTSS())
-	cmd.AddCommand(CmdListGasPrice())
-	cmd.AddCommand(CmdShowGasPrice())
-	cmd.AddCommand(CmdListChainNonces())
-	cmd.AddCommand(CmdShowChainNonces())
-	cmd.AddCommand(CmdListSend())
-	cmd.AddCommand(CmdShowSend())
-	cmd.AddCommand(CmdLastZetaHeight())
-	cmd.AddCommand(CmdListInTxHashToCctx())
-	cmd.AddCommand(CmdShowInTxHashToCctx())
-	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(cli.CmdShowPermissionFlags())
-	cmd.AddCommand(CmdGetTssAddress())
+	cmd.AddCommand(
+		CmdListOutTxTracker(),
+		CmdShowOutTxTracker(),
+		cli.CmdShowKeygen(),
+		CmdShowTSS(),
+		CmdListGasPrice(),
+		CmdShowGasPrice(),
+		CmdListChainNonces(),
+		CmdShowChainNonces(),
+		CmdListSend(),
+		CmdShowSend(),
+		CmdLastZetaHeight(),
+		CmdListInTxHashToCctx(),
+		CmdShowInTxHashToCctx(),
+		CmdQueryParams(),
+		cli.CmdShowPermissionFlags(),
+		CmdGetTssAddress(),
+	)
 
 	// this line is used by starport scaffolding # 1
 
