@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -12,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdUpdateCoreParams() *cobra.Command {
 	cmd := &cobra.Command{
