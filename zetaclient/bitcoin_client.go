@@ -46,22 +46,21 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain                 common.Chain
-	rpcClient             *rpcclient.Client
-	zetaClient            *ZetaCoreBridge
-	Tss                   TSSSigner
-	lastBlock             int64
-	BlockTime             uint64                                  // block time in seconds
-	includedTx            map[string]btcjson.GetTransactionResult // key: chain-nonce
-	broadcastedTx         map[string]chainhash.Hash
-	nextTxNonce2Broadcast int
-	mu                    *sync.Mutex
-	utxos                 []btcjson.ListUnspentResult
-	db                    *gorm.DB
-	stop                  chan struct{}
-	logger                BTCLog
-	cfg                   *config.Config
-	ts                    *TelemetryServer
+	chain         common.Chain
+	rpcClient     *rpcclient.Client
+	zetaClient    *ZetaCoreBridge
+	Tss           TSSSigner
+	lastBlock     int64
+	BlockTime     uint64                                  // block time in seconds
+	includedTx    map[string]btcjson.GetTransactionResult // key: chain-nonce
+	broadcastedTx map[string]chainhash.Hash
+	mu            *sync.Mutex
+	utxos         []btcjson.ListUnspentResult
+	db            *gorm.DB
+	stop          chan struct{}
+	logger        BTCLog
+	cfg           *config.Config
+	ts            *TelemetryServer
 }
 
 const (
@@ -128,12 +127,6 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	//Load btc chain client DB
 	err = ob.loadDB(dbpath)
-	if err != nil {
-		return nil, err
-	}
-
-	//Set Next Nonce for broadcasted tx
-	err = ob.SetNextNonceBroadcast()
 	if err != nil {
 		return nil, err
 	}
@@ -669,8 +662,6 @@ func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash chainhash.Hash, nonce uin
 	outTxID := ob.GetTxID(nonce)
 	ob.mu.Lock()
 	ob.broadcastedTx[outTxID] = txHash
-	ob.nextTxNonce2Broadcast++
-	ob.ts.SetNextNonce(ob.nextTxNonce2Broadcast)
 	ob.mu.Unlock()
 
 	broadcastEntry := clienttypes.ToTransactionHashSQLType(txHash, outTxID)
@@ -715,16 +706,6 @@ func (ob *BitcoinChainClient) observeOutTx() {
 						ob.mu.Lock()
 						ob.includedTx[outTxID] = *getTxResult
 						ob.mu.Unlock()
-
-						//Save to db
-						tx, err := clienttypes.ToTransactionResultSQLType(*getTxResult, outTxID)
-						if err != nil {
-							ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error converting to TransactionResultSQLType")
-							continue
-						}
-						if err := ob.db.Create(&tx).Error; err != nil {
-							ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving submitted tx")
-						}
 					}
 				}
 			}
@@ -787,22 +768,6 @@ func (ob *BitcoinChainClient) isValidTSSVin(vins []btcjson.Vin) bool {
 	return true
 }
 
-func (ob *BitcoinChainClient) BuildIncludedTxMap() error {
-	var submittedTransactions []clienttypes.TransactionResultSQLType
-	if err := ob.db.Find(&submittedTransactions).Error; err != nil {
-		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
-		return err
-	}
-	for _, txResult := range submittedTransactions {
-		r, err := clienttypes.FromTransactionResultSQLType(txResult)
-		if err != nil {
-			return err
-		}
-		ob.includedTx[txResult.Key] = r
-	}
-	return nil
-}
-
 func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.TransactionHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
@@ -812,43 +777,6 @@ func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
 	for _, entry := range broadcastedTransactions {
 		ob.broadcastedTx[entry.Key] = entry.Hash
 	}
-	return nil
-}
-
-func (ob *BitcoinChainClient) SetNextNonceBroadcast() error {
-	nonces, err := ob.zetaClient.GetPendingNonces()
-	if err != nil {
-		return err
-	}
-
-	found := false
-	for _, nonce := range nonces.PendingNonces {
-		if len(nonce.Tss) == 0 {
-			continue
-		}
-		tssKey, err := NewTSSKey(nonce.Tss)
-		if err != nil {
-			continue
-		}
-		if ob.chain.ChainId == nonce.ChainId && bytes.Equal(tssKey.PubkeyInBytes, ob.Tss.Pubkey()) {
-			// find lowest nonce that had not been broadcasted
-			next2Broadcast := int(nonce.NonceLow)
-			for nc := nonce.NonceLow; nc < nonce.NonceHigh; nc++ {
-				if _, exist := ob.broadcastedTx[ob.GetTxID(uint64(nc))]; exist {
-					next2Broadcast++
-					continue
-				}
-				break
-			}
-			ob.nextTxNonce2Broadcast = next2Broadcast
-			ob.ts.SetNextNonce(ob.nextTxNonce2Broadcast)
-			found = true
-		}
-	}
-	if !found {
-		ob.logger.ChainLogger.Error().Msgf("initial nonce for Chain ID: %d not found", ob.chain.ChainId)
-	}
-
 	return nil
 }
 
@@ -898,12 +826,6 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	err = db.AutoMigrate(&clienttypes.TransactionResultSQLType{},
 		&clienttypes.TransactionHashSQLType{},
 		&clienttypes.LastBlockSQLType{})
-	if err != nil {
-		return err
-	}
-
-	//Load included transactions
-	err = ob.BuildIncludedTxMap()
 	if err != nil {
 		return err
 	}
