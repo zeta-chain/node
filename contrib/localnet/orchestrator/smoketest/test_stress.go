@@ -6,6 +6,8 @@ package main
 import (
 	"context"
 	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -100,6 +102,8 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+	bankClient := banktypes.NewQueryClient(grpcConn)
+	authClient := authtypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
@@ -136,7 +140,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, nil)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, goerliAuth, zevmAuth, nil)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.local {

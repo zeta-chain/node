@@ -88,6 +88,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
+		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
@@ -96,18 +97,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
 			revertMessage := err.Error()
 			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 			if !isFound {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "cannot find gas price", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "cannot find gas price")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// create new OutboundTxParams for the revert
@@ -120,35 +121,37 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
 			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// do not commit() here;
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, revertMessage, cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else { // successful HandleEVMDeposit;
 			commit()
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Remote omnichain contract call completed", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 	} else { // Cross Chain SWAP
+		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
-			cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-			err := k.UpdatePrices(ctx, receiverChain.ChainId, &cctx)
+			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, receiverChain.ChainId, &cctx)
+			err = k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
 			if err != nil {
 				return err
 			}
 			return nil
 		}()
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			// do not commit anything here as the CCTX should be aborted
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "", cctx.LogIdentifierForCCTX())
+		commit()
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }

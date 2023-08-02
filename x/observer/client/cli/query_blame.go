@@ -5,10 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdBlameByIdentifier() *cobra.Command {
 	cmd := &cobra.Command{
