@@ -123,7 +123,7 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
-    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     concurrency:
       group: "alpine-build-test"
     steps:
@@ -171,6 +171,13 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
+      - name: Test
+        shell: alpine.sh --root {0}
+        run: |
+          echo "Running Build Tests"
+          apk add --no-cache --update
+          make clean
+          make test
 
       - name: Build zetacored and zetaclientd
         env:
@@ -179,17 +186,11 @@ jobs:
           GOARCH: ${{ env.CPU_ARCH }}
         shell: alpine.sh --root {0}
         run: |
-          apk add --no-cache --update
-          make clean
           go mod tidy
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
-      - name: Test
-        shell: alpine.sh --root {0}
-        run: |
-          echo "Running Build Tests"
-          make test
+
 
       - name: Binary Docker Test
         env:
