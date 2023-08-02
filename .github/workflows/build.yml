@@ -122,6 +122,8 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
+    concurrency:
+      group: "alpine-build-test"
     steps:
       - uses: actions/checkout@v3
 
