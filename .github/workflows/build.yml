@@ -159,12 +159,14 @@ jobs:
             g++
             libusb-dev 
             linux-headers
+            git
           shell-name: alpine.sh
 
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
 
       - name: Build zetacored and zetaclientd
         env:
@@ -174,6 +176,7 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           apk add --no-cache --update
+          make clean
           go mod tidy
           make clean
           make install-testnet
@@ -203,6 +206,7 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
+            
       - name: Clean Up Alpine Workspace
         if: always()
         shell: alpine.sh --root {0}
