@@ -2,17 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-)
-
-var (
-	DefaultRelativePacketTimeoutTimestamp = uint64((time.Duration(10) * time.Minute).Nanoseconds())
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -25,8 +19,10 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdDeployFungibleCoinZRC4())
-	cmd.AddCommand(CmdRemoveForeignCoin())
+	cmd.AddCommand(
+		CmdDeployFungibleCoinZRC4(),
+		CmdRemoveForeignCoin(),
+	)
 	// this line is used by starport scaffolding # 1
 
 	return cmd
