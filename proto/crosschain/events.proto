@@ -1,7 +1,9 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
-import "gogoproto/gogo.proto";
+
 import "common/common.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 message EventInboundFinalized {
@@ -21,8 +23,6 @@ message EventInboundFinalized {
   string sender_chain = 14;
 }
 
-
-
 message EventZrcWithdrawCreated {
   string msg_type_url = 1;
   string cctx_index = 2;
@@ -35,8 +35,6 @@ message EventZrcWithdrawCreated {
   string new_status = 9;
 }
 
-
-
 message EventZetaWithdrawCreated {
   string msg_type_url = 1;
   string cctx_index = 2;
@@ -44,7 +42,6 @@ message EventZetaWithdrawCreated {
   string in_tx_hash = 4;
   string new_status = 5;
 }
-
 
 message EventOutboundFailure {
   string msg_type_url = 1;
@@ -61,4 +58,3 @@ message EventOutboundSuccess {
   string new_status = 4;
   string zeta_minted = 5;
 }
-

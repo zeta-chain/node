@@ -1,5 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
+
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
