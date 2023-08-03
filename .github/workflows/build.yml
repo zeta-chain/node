@@ -28,7 +28,62 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  build-and-test:
+  build-and-test-single-arch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ! startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "true"
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2.0.8
+        with:
+          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
+      - name: Test
+        run: |
+          echo "Running Build Tests"
+          make clean
+          make test
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install-testnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  build-and-test-multi-arch:
     strategy:
       matrix:
         runs-on:
@@ -40,6 +95,7 @@ jobs:
 
     runs-on: ${{matrix.runs-on}}
     timeout-minutes: 30
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     steps:
       - uses: actions/checkout@v3
 
@@ -123,7 +179,7 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
-    # if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     concurrency:
       group: "alpine-build-test"
     steps:
