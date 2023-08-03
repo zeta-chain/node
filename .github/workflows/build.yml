@@ -29,7 +29,8 @@ env:
 
 jobs:
   build-and-test-single-arch:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: ["zeta-runners"]
     timeout-minutes: 20
     if: (! startsWith(github.ref, 'refs/tags/')) || (! startsWith(github.ref, 'refs/heads/develop') )
     concurrency:
@@ -270,8 +271,6 @@ jobs:
           go mod tidy
           make install-testnet
           cp "$HOME"/go/bin/* ./
-
-
 
       - name: Binary Docker Test
         env:
