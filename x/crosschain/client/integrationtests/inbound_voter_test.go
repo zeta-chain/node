@@ -125,6 +125,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			cctxStatus:   crosschaintypes.CctxStatus_PendingOutbound,
 		},
 	}
+	sleepTime := 5
 	for _, test := range tt {
 		test := test
 		s.Run(test.name, func() {
