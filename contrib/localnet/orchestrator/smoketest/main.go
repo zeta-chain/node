@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/btcsuite/btcutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -52,11 +54,15 @@ var (
 )
 
 type SmokeTest struct {
-	zevmClient       *ethclient.Client
-	goerliClient     *ethclient.Client
-	cctxClient       types.QueryClient
-	btcRPCClient     *rpcclient.Client
-	fungibleClient   fungibletypes.QueryClient
+	zevmClient   *ethclient.Client
+	goerliClient *ethclient.Client
+	btcRPCClient *rpcclient.Client
+
+	cctxClient     types.QueryClient
+	fungibleClient fungibletypes.QueryClient
+	authClient     authtypes.QueryClient
+	bankClient     banktypes.QueryClient
+
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
 	ZetaEthAddr      ethcommon.Address
@@ -104,6 +110,7 @@ func init() {
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
+	authClient authtypes.QueryClient, bankClient banktypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
 	// query system contract address
@@ -140,6 +147,8 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		goerliClient:       goerliClient,
 		cctxClient:         cctxClient,
 		fungibleClient:     fungibleClient,
+		authClient:         authClient,
+		bankClient:         bankClient,
 		wg:                 sync.WaitGroup{},
 		goerliAuth:         goerliAuth,
 		zevmAuth:           zevmAuth,
@@ -204,6 +213,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+	authClient := authtypes.NewQueryClient(grpcConn)
+	bankClient := banktypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
@@ -240,7 +251,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, btcRPCClient)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, goerliAuth, zevmAuth, btcRPCClient)
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================

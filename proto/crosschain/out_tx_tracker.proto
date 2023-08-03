@@ -13,5 +13,3 @@ message OutTxTracker {
   uint64 nonce = 3;
   repeated TxHashList hash_list = 4;
 }
-
-

@@ -90,18 +90,6 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 	return t.lastCoreBlockNumber
 }
 
-func (t *TelemetryServer) SetNextNonce(nextNonce int) {
-	t.mu.Lock()
-	t.status.BTCNextNonce = nextNonce
-	t.mu.Unlock()
-}
-
-func (t *TelemetryServer) GetNextNonce() int {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.status.BTCNextNonce
-}
-
 func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
