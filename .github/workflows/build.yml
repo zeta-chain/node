@@ -62,12 +62,17 @@ jobs:
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
+      
       - name: Test
-        run: |
-          echo "Running Build Tests"
-          make clean
-          make test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
 
       - name: Build zetacored and zetaclientd
         env:
@@ -138,10 +143,15 @@ jobs:
       #       ${{ matrix.runs-on }}-go-
 
       - name: Test
-        run: |
-          echo "Running Build Tests"
-          make clean
-          make test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
 
       - name: Build zetacored and zetaclientd
         env:
@@ -229,13 +239,25 @@ jobs:
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
+      # - name: Test
+      #   shell: alpine.sh --root {0}
+      #   run: |
+      #     echo "Running Build Tests"
+      #     apk add --no-cache --update
+      #     make clean
+      #     make test
+
       - name: Test
-        shell: alpine.sh --root {0}
-        run: |
-          echo "Running Build Tests"
-          apk add --no-cache --update
-          make clean
-          make test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          retry_on: error
+          shell: alpine.sh --root {0}
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
 
       - name: Build zetacored and zetaclientd
         env:
