@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math/big"
 	"time"
 
@@ -171,6 +172,15 @@ func (sm *SmokeTest) TestMessagePassingRevertSuccess() {
 	if err != nil {
 		panic(err)
 	}
+
+	res2, err := sm.bankClient.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{
+		Denom: "azeta",
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("$$$ Before: SUPPLY OF AZETA: %d\n", res2.Amount.Amount)
+
 	tx, err = testDApp.SendHelloWorld(auth, sm.TestDAppAddr, big.NewInt(1337), amount, true)
 	if err != nil {
 		panic(err)
@@ -198,4 +208,12 @@ func (sm *SmokeTest) TestMessagePassingRevertSuccess() {
 			fmt.Printf("  Message: %x\n", event.Message)
 		}
 	}
+	res3, err := sm.bankClient.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{
+		Denom: "azeta",
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("$$$ After: SUPPLY OF AZETA: %d\n", res3.Amount.Amount.BigInt())
+	fmt.Printf("$$$ Diff: SUPPLY OF AZETA: %d\n", res3.Amount.Amount.Sub(res2.Amount.Amount).BigInt())
 }

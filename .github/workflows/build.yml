@@ -122,6 +122,9 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    concurrency:
+      group: "alpine-build-test"
     steps:
       - uses: actions/checkout@v3
 
@@ -159,12 +162,14 @@ jobs:
             g++
             libusb-dev 
             linux-headers
+            git
           shell-name: alpine.sh
 
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2.0.8
         with:
           credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
 
       - name: Build zetacored and zetaclientd
         env:
@@ -174,6 +179,7 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           apk add --no-cache --update
+          make clean
           go mod tidy
           make clean
           make install-testnet
@@ -203,6 +209,7 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
+            
       - name: Clean Up Alpine Workspace
         if: always()
         shell: alpine.sh --root {0}
@@ -499,9 +506,8 @@ jobs:
             Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
 
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
-            We will raise a governance proposal on Monday at 15:00 UTC with a 12-hour voting period. 
-            The upgrade will be scheduled for Tuesday at approximately 15:00 UTC. 
-            More specific information including block height will be shared on Monday as part of the governance proposal.
+            We will submit a governance proposal in the next few days with a 12-hour voting period. 
+            More specific information including block height will be shared as part of the governance proposal.
             
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
       
