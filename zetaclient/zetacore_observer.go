@@ -138,12 +138,12 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 
-						guage, err := ob.GetPromGauge(metrics.PendingTxs)
+						gauge, err := ob.GetPromGauge(metrics.PendingTxs)
 						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to get prometheus gauge: ", metrics.PendingTxs)
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to get prometheus gauge: %s", metrics.PendingTxs)
 							continue
 						}
-						guage.Set(float64(len(sendList)))
+						gauge.Set(float64(len(sendList)))
 
 						for idx, send := range sendList {
 							if send.GetCurrentOutTxParam().ReceiverChainId != c.ChainId {
