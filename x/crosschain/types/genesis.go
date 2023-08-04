@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	// this line is used by starport scaffolding # ibc/genesistype/import
 )

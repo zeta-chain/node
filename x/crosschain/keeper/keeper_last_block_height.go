@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
+	math2 "math"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	math2 "math"
 )
 
 // SetLastBlockHeight set a specific lastBlockHeight in the store from its index

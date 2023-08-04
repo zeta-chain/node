@@ -1,9 +1,10 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"testing"
 )
 
 // FIXME: make it work

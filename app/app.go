@@ -1,8 +1,9 @@
 package app
 
 import (
-	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"time"
+
+	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"

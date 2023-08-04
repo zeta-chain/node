@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"testing"
+
 	authkeeper2 "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper2 "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	fungibleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

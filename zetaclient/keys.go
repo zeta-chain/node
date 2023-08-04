@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -13,8 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	"io"
-	"os"
 )
 
 // Keys manages all the keys used by zeta client

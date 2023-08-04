@@ -1,8 +1,9 @@
 package crosschain_test
 
 import (
-	"github.com/zeta-chain/zetacore/x/crosschain"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/x/crosschain"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

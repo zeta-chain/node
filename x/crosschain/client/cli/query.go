@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
 
 	// "strings"
