@@ -131,7 +131,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 	fmt.Printf("memo length %d\n", len(memo))
 
-	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.01, utxos[0:2], sm.btcRPCClient, memo)
 	fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 	if err != nil {

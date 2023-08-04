@@ -1469,8 +1469,8 @@ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05 h1:+E0O/WaGpx2hnhKeQtpDyuglrqFGZGlabd85WLbVleg=
-github.com/zeta-chain/protocol-contracts v0.0.0-20230511074447-d04544b98b05/go.mod h1:v79f+eY6PMpmLv188FAubst4XV2Mm8mUmx1OgmdFG3c=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230801035930-e6b6b96172fa h1:vF+NeXbXjOIYyqNFf6oNQoIbaH0i+4bG+4eHUmDK2d0=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230801035930-e6b6b96172fa/go.mod h1:v79f+eY6PMpmLv188FAubst4XV2Mm8mUmx1OgmdFG3c=
 github.com/zondax/hid v0.9.0/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
 github.com/zondax/hid v0.9.1 h1:gQe66rtmyZ8VeGFcOpbuH3r7erYtNEAezCAYu8LdkJo=
 github.com/zondax/hid v0.9.1/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
