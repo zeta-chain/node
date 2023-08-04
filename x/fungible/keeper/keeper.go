@@ -14,14 +14,14 @@ import (
 
 type (
 	Keeper struct {
-		cdc                codec.BinaryCodec
-		storeKey           storetypes.StoreKey
-		memKey             storetypes.StoreKey
-		paramstore         paramtypes.Subspace
-		authKeeper         types.AccountKeeper
-		evmKeeper          evmkeeper.Keeper
-		bankKeeper         types.BankKeeper
-		zetaobserverKeeper types.ZetaObserverKeeper
+		cdc            codec.BinaryCodec
+		storeKey       storetypes.StoreKey
+		memKey         storetypes.StoreKey
+		paramstore     paramtypes.Subspace
+		authKeeper     types.AccountKeeper
+		evmKeeper      evmkeeper.Keeper
+		bankKeeper     types.BankKeeper
+		observerKeeper types.ObserverKeeper
 	}
 )
 
@@ -33,7 +33,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	evmKeeper evmkeeper.Keeper,
 	bankKeeper types.BankKeeper,
-	zetacobservKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -42,14 +42,14 @@ func NewKeeper(
 
 	return &Keeper{
 
-		cdc:                cdc,
-		storeKey:           storeKey,
-		memKey:             memKey,
-		paramstore:         ps,
-		authKeeper:         authKeeper,
-		evmKeeper:          evmKeeper,
-		bankKeeper:         bankKeeper,
-		zetaobserverKeeper: zetacobservKeeper,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		memKey:         memKey,
+		paramstore:     ps,
+		authKeeper:     authKeeper,
+		evmKeeper:      evmKeeper,
+		bankKeeper:     bankKeeper,
+		observerKeeper: observerKeeper,
 	}
 }
 
