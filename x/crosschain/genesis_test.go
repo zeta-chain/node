@@ -31,7 +31,6 @@ func TestGenesis(t *testing.T) {
 		//PermissionFlags: &types.PermissionFlags{
 		//	IsInboundEnabled: true,
 		//},
-		// this line is used by starport scaffolding # genesis/test/state
 	}
 
 	k, ctx := keepertest.CrosschainKeeper(t)
@@ -45,5 +44,4 @@ func TestGenesis(t *testing.T) {
 	require.ElementsMatch(t, genesisState.OutTxTrackerList, got.OutTxTrackerList)
 	require.ElementsMatch(t, genesisState.InTxHashToCctxList, got.InTxHashToCctxList)
 	//require.Equal(t, genesisState.PermissionFlags, got.PermissionFlags)
-	// this line is used by starport scaffolding # genesis/test/assert
 }

@@ -18,8 +18,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetInTxHashToCctx(ctx, elem)
 	}
 
-	// this line is used by starport scaffolding # genesis/module/init
-
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
 		k.SetGasPrice(ctx, *elem)
@@ -53,7 +51,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
 
-	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
 
 	// Get all tSSVoter
