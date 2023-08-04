@@ -1,12 +1,12 @@
 package crosschain_test
 
 import (
-	"github.com/zeta-chain/zetacore/x/crosschain"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
+	"github.com/zeta-chain/zetacore/x/crosschain"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -33,7 +33,7 @@ func TestGenesis(t *testing.T) {
 		//},
 	}
 
-	k, ctx := keepertest.ZetacoreKeeper(t)
+	k, ctx := keepertest.CrosschainKeeper(t)
 	crosschain.InitGenesis(ctx, *k, genesisState)
 	got := crosschain.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)

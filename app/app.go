@@ -402,7 +402,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
-		app.FungibleKeeper,
+		&app.FungibleKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.

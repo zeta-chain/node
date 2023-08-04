@@ -4,7 +4,6 @@ import (
 	"fmt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -24,7 +23,7 @@ type (
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
 		zetaObserverKeeper types.ZetaObserverKeeper
-		fungibleKeeper     fungibleModuleKeeper.Keeper
+		fungibleKeeper     types.FungibleKeeper
 	}
 )
 
@@ -37,7 +36,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ZetaObserverKeeper,
-	fungibleKeeper fungibleModuleKeeper.Keeper,
+	fungibleKeeper types.FungibleKeeper,
 ) *Keeper {
 	// ensure governance module account is set
 	// FIXME: enable this check! (disabled for now to avoid unit test panic)
