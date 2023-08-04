@@ -19,13 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	// this line is used by starport scaffolding # ibc/module/import
 )
 
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
-	// this line is used by starport scaffolding # ibc/module/interface
 )
 
 // ----------------------------------------------------------------------------
