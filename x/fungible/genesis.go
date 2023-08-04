@@ -17,7 +17,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	if genState.SystemContract != nil {
 		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
-	// this line is used by starport scaffolding # genesis/module/init
+
 	k.SetParams(ctx, genState.Params)
 	// ensure fungible module account is set on genesis
 	if acc := authKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
@@ -37,7 +37,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		genesis.SystemContract = &system
 	}
-	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
 }
