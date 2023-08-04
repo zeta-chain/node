@@ -68,7 +68,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 20
-          max_attempts: 3
+          max_attempts: 2
           retry_on: error
           command: |
             echo "Running Build Tests"
@@ -147,7 +147,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 20
-          max_attempts: 3
+          max_attempts: 2
           retry_on: error
           command: |
             echo "Running Build Tests"
@@ -252,7 +252,7 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 20
-          max_attempts: 3
+          max_attempts: 2
           retry_on: error
           shell: alpine.sh --root {0}
           command: |
