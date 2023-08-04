@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-
     env:
       GO111MODULE: on
     steps:
@@ -39,6 +38,8 @@ jobs:
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
+
         with:
           version: v1.50
           skip-cache: false
+          
