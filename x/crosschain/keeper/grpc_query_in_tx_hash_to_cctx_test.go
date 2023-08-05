@@ -19,7 +19,7 @@ import (
 var _ = strconv.IntSize
 
 func TestInTxHashToCctxQuerySingle(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNInTxHashToCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -70,7 +70,7 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 }
 
 func TestInTxHashToCctxQueryPaginated(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNInTxHashToCctx(keeper, ctx, 5)
 

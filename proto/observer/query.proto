@@ -3,7 +3,6 @@ package zetachain.zetacore.observer;
 
 import "common/common.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-// this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
@@ -80,8 +79,6 @@ service Query {
   rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
   }
-
-  // this line is used by starport scaffolding # 2
 }
 
 message QueryParamsRequest {}
@@ -188,5 +185,3 @@ message QueryAllBlameRecordsRequest {}
 message QueryAllBlameRecordsResponse {
   repeated Blame blameInfo = 1;
 }
-
-// this line is used by starport scaffolding # 3
