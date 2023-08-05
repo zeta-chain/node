@@ -231,7 +231,6 @@ func (m *MsgRemoveFromOutTxTrackerResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRemoveFromOutTxTrackerResponse proto.InternalMessageInfo
 
-// this line is used by starport scaffolding # proto/tx/message
 type MsgCreateTSSVoter struct {
 	Creator          string               `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	TssPubkey        string               `protobuf:"bytes,2,opt,name=tss_pubkey,json=tssPubkey,proto3" json:"tss_pubkey,omitempty"`

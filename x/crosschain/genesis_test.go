@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
+	"github.com/zeta-chain/zetacore/x/crosschain"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -32,10 +33,9 @@ func TestGenesis(t *testing.T) {
 		//PermissionFlags: &types.PermissionFlags{
 		//	IsInboundEnabled: true,
 		//},
-		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.ZetacoreKeeper(t)
+	k, ctx := keepertest.CrosschainKeeper(t)
 	crosschain.InitGenesis(ctx, *k, genesisState)
 	got := crosschain.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
@@ -46,5 +46,4 @@ func TestGenesis(t *testing.T) {
 	require.ElementsMatch(t, genesisState.OutTxTrackerList, got.OutTxTrackerList)
 	require.ElementsMatch(t, genesisState.InTxHashToCctxList, got.InTxHashToCctxList)
 	//require.Equal(t, genesisState.PermissionFlags, got.PermissionFlags)
-	// this line is used by starport scaffolding # genesis/test/assert
 }

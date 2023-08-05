@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	// this line is used by starport scaffolding # ibc/genesistype/import
 )
 
 // DefaultIndex is the default capability global index
@@ -14,12 +13,10 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		// this line is used by starport scaffolding # ibc/genesistype/default
 		OutTxTrackerList:   []OutTxTracker{},
 		InTxHashToCctxList: []InTxHashToCctx{},
-		// this line is used by starport scaffolding # genesis/types/default
-		GasPriceList:    []*GasPrice{},
-		ChainNoncesList: []*ChainNonces{},
+		GasPriceList:       []*GasPrice{},
+		ChainNoncesList:    []*ChainNonces{},
 		//CCTX:            []*Send{},
 
 	}
@@ -28,8 +25,6 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// this line is used by starport scaffolding # ibc/genesistype/validate
-
 	// Check for duplicated index in outTxTracker
 	outTxTrackerIndexMap := make(map[string]struct{})
 

@@ -151,8 +151,6 @@ var (
 	Bech32PrefixConsPub = AccountAddressPrefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
-// this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
-
 func getGovProposalHandlers() []govclient.ProposalHandler {
 	var govProposalHandlers []govclient.ProposalHandler
 	govProposalHandlers = append(govProposalHandlers,
@@ -405,7 +403,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
-		app.FungibleKeeper,
+		&app.FungibleKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
@@ -759,7 +757,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
-	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
 	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
 	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)

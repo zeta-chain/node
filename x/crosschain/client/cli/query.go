@@ -46,7 +46,5 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdGetTssAddress(),
 	)
 
-	// this line is used by starport scaffolding # 1
-
 	return cmd
 }
