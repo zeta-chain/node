@@ -9,7 +9,6 @@ import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
 import "crosschain/tss.proto";
-// this line is used by starport scaffolding # genesis/proto/import
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
@@ -25,6 +24,4 @@ message GenesisState {
 
   repeated LastBlockHeight lastBlockHeightList = 8;
   repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
-
-  // this line is used by starport scaffolding # genesis/proto/state
 }
