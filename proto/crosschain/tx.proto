@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-// this line is used by starport scaffolding # proto/tx/import
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 
@@ -16,7 +15,6 @@ service Msg {
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
-  // this line is used by starport scaffolding # proto/tx/rpc
 }
 
 message MsgAddToOutTxTracker {
@@ -36,7 +34,6 @@ message MsgRemoveFromOutTxTracker {
 
 message MsgRemoveFromOutTxTrackerResponse {}
 
-// this line is used by starport scaffolding # proto/tx/message
 message MsgCreateTSSVoter {
   string creator = 1;
   string tss_pubkey = 2;
