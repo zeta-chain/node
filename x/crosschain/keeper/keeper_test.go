@@ -1,10 +1,6 @@
 package keeper
 
 import (
-	authkeeper2 "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper2 "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	fungibleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,14 +8,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
-	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 )
 
 func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
@@ -41,10 +41,10 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		memStoreKey,
 		"ZetacoreParams",
 	)
-	bankkeeper := bankkeeper2.BaseKeeper{}
-	authkeeper := authkeeper2.AccountKeeper{}
-	zetaobserverKeeper := keeper.Keeper{}
-	fungibleKeeper := fungibleKeeper.Keeper{}
+	bankKeeper := bankkeeper.BaseKeeper{}
+	authKeeper := authkeeper.AccountKeeper{}
+	observerKeeper := keeper.Keeper{}
+	fungibleKeeper := fungiblekeeper.Keeper{}
 
 	k := NewKeeper(
 		codec.NewProtoCodec(registry),
@@ -52,10 +52,10 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		memStoreKey,
 		stakingkeeper.Keeper{}, // custom
 		paramsSubspace,
-		authkeeper,
-		bankkeeper,
-		zetaobserverKeeper,
-		fungibleKeeper,
+		authKeeper,
+		bankKeeper,
+		observerKeeper,
+		&fungibleKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

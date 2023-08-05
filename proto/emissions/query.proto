@@ -5,7 +5,6 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-// this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
@@ -19,8 +18,6 @@ service Query {
   rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
   }
-
-  // this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -39,5 +36,3 @@ message QueryListPoolAddressesResponse {
   string undistributed_tss_balances_address = 2;
   string emission_module_address = 3;
 }
-
-// this line is used by starport scaffolding # 3

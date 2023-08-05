@@ -282,7 +282,6 @@ func (ac appCreator) appExport(
 			homePath,
 			uint(1),
 			ac.encCfg,
-			// this line is used by starport scaffolding # stargate/root/exportArgument
 			appOpts,
 		)
 
@@ -299,7 +298,6 @@ func (ac appCreator) appExport(
 			homePath,
 			uint(1),
 			ac.encCfg,
-			// this line is used by starport scaffolding # stargate/root/noHeightExportArgument
 			appOpts,
 		)
 	}
