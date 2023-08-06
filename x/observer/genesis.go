@@ -11,8 +11,10 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	genesisObservers := genState.Observers
 	types.VerifyObserverMapper(genesisObservers)
+	observerCount := uint64(0)
 	for _, mapper := range genesisObservers {
 		k.SetObserverMapper(ctx, mapper)
+		observerCount += uint64(len(mapper.ObserverList))
 	}
 	k.SetCoreParams(ctx, types.GetCoreParams())
 	// Set all the nodeAccount
@@ -30,6 +32,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Keygen != nil {
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{
+		Count:            observerCount,
+		LastChangeHeight: 0,
+	})
 
 }
 

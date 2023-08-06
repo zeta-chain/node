@@ -1,9 +1,5 @@
 package types
 
-import "encoding/binary"
-
-var _ binary.ByteOrder
-
 const (
 	// ForeignCoinsKeyPrefix is the prefix to retrieve all ForeignCoins
 	ForeignCoinsKeyPrefix = "ForeignCoins/value/"

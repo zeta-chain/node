@@ -16,38 +16,20 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTxResponse{}, "crosschain/ReceiveConfirmation", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/SendVoter", nil)
 	cdc.RegisterConcrete(&MsgSetNodeKeys{}, "crosschain/SetNodeKeys", nil)
-
-	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddToOutTxTracker{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgRemoveFromOutTxTracker{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateTSSVoter{},
-	)
-
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgGasPriceVoter{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgNonceVoter{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgVoteOnObservedOutboundTx{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgVoteOnObservedInboundTx{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetNodeKeys{},
 	)
 
-	// this line is used by starport scaffolding # 3
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

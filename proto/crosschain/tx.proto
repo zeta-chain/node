@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-// this line is used by starport scaffolding # proto/tx/import
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 
@@ -16,9 +15,7 @@ service Msg {
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
-// this line is used by starport scaffolding # proto/tx/rpc
 }
-
 
 message MsgAddToOutTxTracker {
   string creator = 1;
@@ -27,8 +24,7 @@ message MsgAddToOutTxTracker {
   string tx_hash = 4;
 }
 
-message MsgAddToOutTxTrackerResponse {
-}
+message MsgAddToOutTxTrackerResponse {}
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
@@ -36,14 +32,8 @@ message MsgRemoveFromOutTxTracker {
   uint64 nonce = 3;
 }
 
-message MsgRemoveFromOutTxTrackerResponse {
-}
+message MsgRemoveFromOutTxTrackerResponse {}
 
-
-
-
-
-// this line is used by starport scaffolding # proto/tx/message
 message MsgCreateTSSVoter {
   string creator = 1;
   string tss_pubkey = 2;
@@ -51,7 +41,7 @@ message MsgCreateTSSVoter {
   common.ReceiveStatus status = 4;
 }
 
-message MsgCreateTSSVoterResponse { }
+message MsgCreateTSSVoterResponse {}
 
 message MsgGasPriceVoter {
   string creator = 1;
@@ -61,8 +51,7 @@ message MsgGasPriceVoter {
   string supply = 5;
 }
 
-message MsgGasPriceVoterResponse {
-}
+message MsgGasPriceVoterResponse {}
 
 message MsgNonceVoter {
   string creator = 1;
@@ -70,18 +59,17 @@ message MsgNonceVoter {
   uint64 nonce = 3;
 }
 
-message MsgNonceVoterResponse {
-}
+message MsgNonceVoterResponse {}
 
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
-  string zeta_minted = 5[
-  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
-  (gogoproto.nullable) = false,
-  (gogoproto.moretags) = "yaml:\"zeta_minted\""
+  string zeta_minted = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"zeta_minted\""
   ];
   common.ReceiveStatus status = 6;
   int64 outTx_chain = 7;
@@ -89,8 +77,7 @@ message MsgVoteOnObservedOutboundTx {
   common.CoinType coin_type = 9;
 }
 
-message MsgVoteOnObservedOutboundTxResponse {
-}
+message MsgVoteOnObservedOutboundTxResponse {}
 
 message MsgVoteOnObservedInboundTx {
   string creator = 1;
@@ -98,12 +85,12 @@ message MsgVoteOnObservedInboundTx {
   int64 sender_chain_id = 3;
   string receiver = 4;
   int64 receiver_chain = 5;
-//  string zeta_burnt = 6;
+  //  string zeta_burnt = 6;
   string amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
-//  string mMint = 7;
+  //  string mMint = 7;
   string message = 8;
   string in_tx_hash = 9;
   uint64 in_block_height = 10;
@@ -113,8 +100,7 @@ message MsgVoteOnObservedInboundTx {
   string asset = 14;
 }
 
-message MsgVoteOnObservedInboundTxResponse {
-}
+message MsgVoteOnObservedInboundTxResponse {}
 
 message MsgSetNodeKeys {
   string creator = 1;
@@ -122,5 +108,4 @@ message MsgSetNodeKeys {
   string tss_signer_Address = 3;
 }
 
-message MsgSetNodeKeysResponse {
-}
+message MsgSetNodeKeysResponse {}

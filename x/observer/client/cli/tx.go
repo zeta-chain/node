@@ -17,15 +17,16 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	//cmd.AddCommand(CmdSetSupportedChains())
-	//cmd.AddCommand(CmdAddObserver())
-	cmd.AddCommand(CmdUpdateCoreParams())
-	cmd.AddCommand(CmdUpdatePermissionFlags())
-	cmd.AddCommand(CmdUpdateKeygen())
 
-	cmd.AddCommand(CmdAddBlameVote())
-	cmd.AddCommand(CmdEncode())
-	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(
+		//CmdSetSupportedChains(),
+		//CmdAddObserver(),
+		CmdUpdateCoreParams(),
+		CmdUpdatePermissionFlags(),
+		CmdUpdateKeygen(),
+		CmdAddBlameVote(),
+		CmdEncode(),
+	)
 
 	return cmd
 }
