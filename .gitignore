@@ -10,6 +10,7 @@
 coverage
 coverage.json
 coverage.out
+coverage.html
 node_modules
 release/
 typechain
