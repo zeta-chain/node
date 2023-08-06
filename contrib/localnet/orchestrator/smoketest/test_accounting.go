@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"io/ioutil"
 	"math/big"
 	"net/http"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
 func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {

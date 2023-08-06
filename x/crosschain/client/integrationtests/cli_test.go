@@ -4,9 +4,10 @@
 package integrationtests
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	"testing"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
