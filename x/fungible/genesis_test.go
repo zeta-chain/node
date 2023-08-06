@@ -16,7 +16,6 @@ package fungible_test
 //		SystemContract: &types.SystemContract{
 //			SystemContract: "29",
 //		},
-//		// this line is used by starport scaffolding # genesis/test/state
 //	}
 //
 //	k, ctx := keepertest.FungibleKeeper(t)
@@ -28,5 +27,4 @@ package fungible_test
 //	nullify.Fill(got)
 //
 //	require.ElementsMatch(t, genesisState.ForeignCoinsList, got.ForeignCoinsList)
-//	// this line is used by starport scaffolding # genesis/test/assert
 //}

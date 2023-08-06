@@ -3,15 +3,12 @@ package zetachain.zetacore.fungible;
 
 import "common/common.proto";
 
-// this line is used by starport scaffolding # proto/tx/import
-
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
 // Msg defines the Msg service.
 service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
-  // this line is used by starport scaffolding # proto/tx/rpc
 }
 
 message MsgDeployFungibleCoinZRC20 {
@@ -33,5 +30,3 @@ message MsgRemoveForeignCoin {
 }
 
 message MsgRemoveForeignCoinResponse {}
-
-// this line is used by starport scaffolding # proto/tx/message
