@@ -3,8 +3,6 @@ package crosschain_test
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/x/crosschain"
-
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
