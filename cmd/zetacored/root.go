@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -144,7 +145,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 
 	// replace the default hd-path for the key add command
 	if err := SetEthereumHDPath(rootCmd); err != nil {
-		panic(err)
+		fmt.Printf("warning: unable to set default HD path: %v\n", err)
 	}
 
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
