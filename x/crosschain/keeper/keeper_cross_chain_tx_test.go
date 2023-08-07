@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"math/rand"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"

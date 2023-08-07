@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"testing"
 )
 
 func TestKeeper_GetSystemContract(t *testing.T) {

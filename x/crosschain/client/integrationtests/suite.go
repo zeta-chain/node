@@ -4,6 +4,8 @@
 package integrationtests
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
 	"github.com/stretchr/testify/suite"
@@ -54,6 +56,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
 	s.network = net
+	time.Sleep(3 * time.Second)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
