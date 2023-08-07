@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"strings"
 )
 
 var (

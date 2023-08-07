@@ -1,8 +1,10 @@
 package querytests
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strconv"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
 	"github.com/stretchr/testify/suite"
@@ -12,7 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 type CliTestSuite struct {

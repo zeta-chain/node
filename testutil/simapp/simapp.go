@@ -2,6 +2,9 @@ package simapp
 
 import (
 	"encoding/json"
+	"testing"
+	"time"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -14,8 +17,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	"testing"
-	"time"
+
 	//"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"

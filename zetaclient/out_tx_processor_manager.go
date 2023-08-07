@@ -1,9 +1,10 @@
 package zetaclient
 
 import (
-	"github.com/rs/zerolog"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type OutTxProcessorManager struct {

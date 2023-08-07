@@ -4,6 +4,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -97,6 +98,5 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 }
 
 func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	return nil
 }
