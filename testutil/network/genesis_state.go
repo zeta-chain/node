@@ -2,6 +2,8 @@ package network
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -13,7 +15,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func Setconfig() {
@@ -30,20 +31,14 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
-	nodeAccountList := make([]*types.NodeAccount, len(observerList))
+	nodeAccountList := make([]*observerTypes.NodeAccount, len(observerList))
 	for i, operator := range observerList {
-		nodeAccountList[i] = &types.NodeAccount{
+		nodeAccountList[i] = &observerTypes.NodeAccount{
 			Operator:   operator,
-			NodeStatus: types.NodeStatus_Active,
+			NodeStatus: observerTypes.NodeStatus_Active,
 		}
 	}
 
-	crossChainGenesis.NodeAccountList = nodeAccountList
-	crossChainGenesis.Keygen = &types.Keygen{
-		Status:         types.KeygenStatus_PendingKeygen,
-		GranteePubkeys: observerList,
-		BlockNumber:    5,
-	}
 	crossChainGenesis.Params.Enabled = true
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
 	assert.NoError(t, err)
@@ -74,6 +69,12 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		}
 	}
 	observerGenesis.Observers = observerMapper
+	observerGenesis.NodeAccountList = nodeAccountList
+	observerGenesis.Keygen = &observerTypes.Keygen{
+		Status:         observerTypes.KeygenStatus_PendingKeygen,
+		GranteePubkeys: observerList,
+		BlockNumber:    5,
+	}
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)
 	assert.NoError(t, err)
 

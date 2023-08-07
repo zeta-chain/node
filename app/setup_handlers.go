@@ -5,19 +5,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-const releaseVersion = "v5.0.0"
+const releaseVersion = "v7.0.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
 
-		// This needs to be set one time only , would be removed in all future upgrades
+		// Updated version map to thelatest consensus versions from each module
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
 
+		// Decrement the consensus version of the cross chain module to trigger the migration v1 -> v2
+		vm[crosschaintypes.ModuleName] = vm[crosschaintypes.ModuleName] - 1
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 

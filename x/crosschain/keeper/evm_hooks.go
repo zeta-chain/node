@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -152,7 +153,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
-	k.SetCrossChainTx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	ctx.Logger().Debug("ProcessCCTX successful \n")
 	return nil
 }

@@ -2,9 +2,10 @@ package cli
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
 	"strconv"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -13,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdListSend() *cobra.Command {
 	cmd := &cobra.Command{

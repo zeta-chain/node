@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 
+	"github.com/zeta-chain/zetacore/common"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,7 +16,7 @@ import (
 
 type TSSSigner interface {
 	Pubkey() []byte
-	Sign(data []byte, height uint64) ([65]byte, error)
+	Sign(data []byte, height uint64, chain *common.Chain) ([65]byte, error)
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
 	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
@@ -28,7 +30,7 @@ type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
 
-func (s TestSigner) Sign(digest []byte, _ uint64) ([65]byte, error) {
+func (s TestSigner) Sign(digest []byte, _ uint64, _ *common.Chain) ([65]byte, error) {
 	sig, err := crypto.Sign(digest, s.PrivKey)
 	if err != nil {
 		return [65]byte{}, err

@@ -1,88 +1,33 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"math/big"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
-
-func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error) {
-	ballot, err := ballot.AddVote(address, observationType)
-	if err != nil {
-		return ballot, err
-	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot idetifier %s", address, ballot.BallotIdentifier))
-	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
-	return ballot, err
-}
-
-// CheckIfFinalizingVote checks if the ballot is finalized in this block and if it is, it sets the ballot in the store
-// This function with only return true if the ballot moves for pending to success or failed status with this vote.
-// If the ballot is already finalized in the previous vote , it will return false
-func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool) {
-	ballot, isFinalized := ballot.IsBallotFinalized()
-	if !isFinalized {
-		return ballot, false
-	}
-	k.zetaObserverKeeper.SetBallot(ctx, &ballot)
-	return ballot, true
-}
-
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error) {
-	observerMapper, found := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
-	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("observer list not present for chain %s", chain.String()))
-	}
-	for _, obs := range observerMapper.ObserverList {
-		if obs == address {
-			return true, nil
-		}
-	}
-	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
-}
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
-	_, found := k.GetNodeAccount(ctx, address)
+	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
 		return true
 	}
 	return false
 }
 
-func (k Keeper) GetBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error) {
-	isNew = false
-	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
-	if !found {
-		observerMapper, _ := k.zetaObserverKeeper.GetObserverMapper(ctx, chain)
-		obsParams := k.zetaObserverKeeper.GetParams(ctx).GetParamsForChain(chain)
-		if !obsParams.IsSupported {
-			err = errors.Wrap(zetaObserverTypes.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
-			return
-		}
-		ballot = zetaObserverTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: index,
-			VoterList:        observerMapper.ObserverList,
-			Votes:            zetaObserverTypes.CreateVotes(len(observerMapper.ObserverList)),
-			ObservationType:  observationType,
-			BallotThreshold:  obsParams.BallotThreshold,
-			BallotStatus:     zetaObserverTypes.BallotStatus_BallotInProgress,
-		}
-		isNew = true
-	}
-	return
-}
+// PayGasInZetaAndUpdateCctx updates parameter cctx with the gas price and gas fee for the outbound tx;
+// it also makes a trade to fulfill the outbound tx gas fee in ZETA by swapping ZETA for some gas ZRC20 balances
+// The gas ZRC20 balance is subsequently burned to account for the expense of TSS address gas fee payment in the outbound tx.
+// **Caller should feed temporary ctx into this function**
+func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
 
-func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -99,30 +44,13 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	// the following logic computes outbound tx gas fee, and convert into ZETA using system uniswapv2 pool wzeta/gasZRC20
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to get system contract gas coin")
+		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
 	}
 	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
 	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to QueryUniswapv2RouterGetAmountsIn")
+		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
-
-	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it
-	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to mint coins")
-	}
-	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallUniswapv2RouterSwapExactETHForToken")
-	}
-	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
-	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
-	if err != nil {
-		return sdkerrors.Wrap(err, "UpdatePrices: unable to CallZRC20Burn")
-	}
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
@@ -131,9 +59,31 @@ func (k Keeper) UpdatePrices(ctx sdk.Context, chainID int64, cctx *types.CrossCh
 	}
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
 
+	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
+	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
+	{
+		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+		err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
+		}
+		amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
+		}
+		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
+		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
+		}
+	}
+
 	return nil
 }
 
+// UpdateNonce sets the CCTX outbound nonce to the next nonce, and updates the nonce of blockchain state.
+// It also updates the PendingNonces that is used to track the unfulfilled outbound txs.
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
 	if chain == nil {
@@ -166,9 +116,4 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 	k.SetChainNonces(ctx, nonce)
 	k.SetPendingNonces(ctx, p)
 	return nil
-}
-func CalculateFee(price, gasLimit, rate sdk.Uint) sdk.Uint {
-	gasFee := price.Mul(gasLimit).Mul(rate)
-	gasFee = reducePrecision(gasFee)
-	return gasFee.Add(types.GetProtocolFee())
 }

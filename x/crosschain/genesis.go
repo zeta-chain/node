@@ -17,17 +17,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
 	}
-	// Set if defined
-	if genState.PermissionFlags != nil {
-		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
-	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
-	}
-	// this line is used by starport scaffolding # genesis/module/init
-	// Set if defined
-	if genState.Keygen != nil {
-		k.SetKeygen(ctx, *genState.Keygen)
-	}
 
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
@@ -46,12 +35,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Set all the send
 	for _, elem := range genState.CrossChainTxs {
-		k.SetCrossChainTx(ctx, *elem)
-	}
-
-	// Set all the nodeAccount
-	for _, elem := range genState.NodeAccountList {
-		k.SetNodeAccount(ctx, *elem)
+		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
 	}
 
 	if genState.Tss != nil {
@@ -66,17 +50,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
-	// Get all permissionFlags
-	permissionFlags, found := k.GetPermissionFlags(ctx)
-	if found {
-		genesis.PermissionFlags = &permissionFlags
-	}
-	// this line is used by starport scaffolding # genesis/module/export
+
 	// Get all keygen
-	keygen, found := k.GetKeygen(ctx)
-	if found {
-		genesis.Keygen = &keygen
-	}
 
 	// Get all tSSVoter
 	// TODO : ADD for single TSS
@@ -109,12 +84,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
-	// Get all nodeAccount
-	nodeAccountList := k.GetAllNodeAccount(ctx)
-	for _, elem := range nodeAccountList {
-		e := elem
-		genesis.NodeAccountList = append(genesis.NodeAccountList, &e)
-	}
 	return genesis
 }
 

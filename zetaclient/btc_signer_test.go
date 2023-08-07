@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"encoding/hex"
 	"fmt"
+	"sort"
+	"sync"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -14,6 +16,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	. "gopkg.in/check.v1"
 )
@@ -195,60 +198,144 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	fmt.Println("Transaction successfully signed")
 }
 
-func TestSelectUTXOs(t *testing.T) {
-	// Create 10 dummy UTXOs (22.44 BTC in total)
-	utxos := make([]btcjson.ListUnspentResult, 0, 10)
-	amounts := []float64{0.01, 0.12, 0.18, 0.24, 0.5, 1.26, 2.97, 3.28, 5.16, 8.72}
-	for _, amount := range amounts {
-		utxos = append(utxos, btcjson.ListUnspentResult{Amount: amount})
+// helper function to create a new BitcoinChainClient
+func createTestClient(t *testing.T) *BitcoinChainClient {
+	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
+	privateKey, err := crypto.HexToECDSA(skHex)
+	require.Nil(t, err)
+	tss := TestSigner{
+		PrivKey: privateKey,
+	}
+	tssAddress := tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+
+	// Create BitcoinChainClient
+	client := &BitcoinChainClient{
+		Tss:        tss,
+		mu:         &sync.Mutex{},
+		includedTx: make(map[string]btcjson.GetTransactionResult),
 	}
 
-	// Case1:
-	// 		input: utxoCap = 5, amount = 0.01,
+	// Create 10 dummy UTXOs (22.44 BTC in total)
+	client.utxos = make([]btcjson.ListUnspentResult, 0, 10)
+	amounts := []float64{0.01, 0.12, 0.18, 0.24, 0.5, 1.26, 2.97, 3.28, 5.16, 8.72}
+	for _, amount := range amounts {
+		client.utxos = append(client.utxos, btcjson.ListUnspentResult{Address: tssAddress, Amount: amount})
+	}
+	return client
+}
+
+func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
+	// Mine transaction
+	outTxID := ob.GetTxID(nonce)
+	ob.includedTx[outTxID] = btcjson.GetTransactionResult{TxID: txid}
+
+	// Set nonce mark
+	if preMarkIndex >= 0 {
+		tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+		nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(NonceMarkAmount(nonce)) * 1e-8}
+		ob.utxos[preMarkIndex] = nonceMark
+		sort.SliceStable(ob.utxos, func(i, j int) bool {
+			return ob.utxos[i].Amount < ob.utxos[j].Amount
+		})
+	}
+}
+
+func TestSelectUTXOs(t *testing.T) {
+	ob := createTestClient(t)
+	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
+	dummyTxID := "6e6f71d281146c1fc5c755b35908ee449f26786c84e2ae18f98b268de40b7ec4"
+
+	// Case1: nonce = 0, bootstrap
+	// 		input: utxoCap = 5, amount = 0.01, nonce = 0
 	// 		output: [0.01], 0.01
-	result, amount, err := selectUTXOs(utxos, 0.01, 5)
+	result, amount, err := ob.SelectUTXOs(0.01, 5, 0, tssAddress)
 	require.Nil(t, err)
 	require.Equal(t, 0.01, amount)
-	require.Equal(t, utxos[0:1], result)
+	require.Equal(t, ob.utxos[0:1], result)
 
-	// Case2:
-	// 		input: utxoCap = 5, amount = 0.5
-	// 		output: [0.01, 0.12, 0.18, 0.24], 0.55
-	result, amount, err = selectUTXOs(utxos, 0.5, 5)
-	require.Nil(t, err)
-	require.Equal(t, 0.55, amount)
-	require.Equal(t, utxos[0:4], result)
-
-	// Case3:
-	// 		input: utxoCap = 5, amount = 1.0
-	// 		output: [0.01, 0.12, 0.18, 0.24, 0.5], 1.05
-	result, amount, err = selectUTXOs(utxos, 1.0, 5)
-	require.Nil(t, err)
-	require.Equal(t, 1.05, amount)
-	require.Equal(t, utxos[0:5], result)
-
-	// Case4:
-	// 		input: utxoCap = 5, amount = 8.05
-	// 		output: [0.24, 0.5, 1.26, 2.97, 3.28], 8.25
-	result, amount, err = selectUTXOs(utxos, 8.05, 5)
-	require.Nil(t, err)
-	require.Equal(t, 8.25, amount)
-	require.Equal(t, utxos[3:8], result)
-
-	// Case5:
-	// 		input: utxoCap = 5, amount = 16.03
-	// 		output: [1.26, 2.97, 3.28, 5.16, 8.72], 21.39
-	result, amount, err = selectUTXOs(utxos, 16.03, 5)
-	require.Nil(t, err)
-	require.Equal(t, 21.39, amount)
-	require.Equal(t, utxos[5:], result)
-
-	// Case6:
-	// 		input: utxoCap = 5, amount = 21.4
+	// Case2: nonce = 1, must FAIL and wait for previous transaction to be mined
+	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: error
-	result, amount, err = selectUTXOs(utxos, 21.4, 5)
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
 	require.NotNil(t, err)
 	require.Nil(t, result)
-	require.Equal(t, 0.0, amount)
-	require.Equal(t, "not enough btc in reserve - available : 21.39 , tx amount : 21.4", err.Error())
+	require.Zero(t, amount)
+	require.Equal(t, "findNonceMarkUTXO: outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
+	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
+
+	// Case3: nonce = 1, must FAIL without nonce mark utxo
+	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
+	// 		output: error
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	require.NotNil(t, err)
+	require.Nil(t, result)
+	require.Zero(t, amount)
+	require.Equal(t, "findNonceMarkUTXO: cannot find nonce-mark utxo with nonce 0", err.Error())
+
+	// add nonce-mark utxo for nonce 0
+	nonceMark0 := btcjson.ListUnspentResult{TxID: dummyTxID, Address: tssAddress, Amount: float64(NonceMarkAmount(0)) * 1e-8}
+	ob.utxos = append([]btcjson.ListUnspentResult{nonceMark0}, ob.utxos...)
+
+	// Case4: nonce = 1, should pass now
+	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
+	// 		output: [0.00002, 0.01, 0.12, 0.18, 0.24], 0.55002
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	require.Nil(t, err)
+	require.Equal(t, 0.55002, amount)
+	require.Equal(t, ob.utxos[0:5], result)
+	mineTxNSetNonceMark(ob, 1, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 1
+
+	// Case5:
+	// 		input: utxoCap = 5, amount = 1.0, nonce = 2
+	// 		output: [0.00002001, 0.01, 0.12, 0.18, 0.24, 0.5], 1.05002001
+	result, amount, err = ob.SelectUTXOs(1.0, 5, 2, tssAddress)
+	require.Nil(t, err)
+	assert.InEpsilon(t, 1.05002001, amount, 1e-8)
+	require.Equal(t, ob.utxos[0:6], result)
+	mineTxNSetNonceMark(ob, 2, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 2
+
+	// Case6: should include nonce-mark utxo on the LEFT
+	// 		input: utxoCap = 5, amount = 8.05, nonce = 3
+	// 		output: [0.00002002, 0.24, 0.5, 1.26, 2.97, 3.28], 8.25002002
+	result, amount, err = ob.SelectUTXOs(8.05, 5, 3, tssAddress)
+	require.Nil(t, err)
+	assert.InEpsilon(t, 8.25002002, amount, 1e-8)
+	expected := append([]btcjson.ListUnspentResult{ob.utxos[0]}, ob.utxos[4:9]...)
+	require.Equal(t, expected, result)
+	mineTxNSetNonceMark(ob, 24105431, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 24105431
+
+	// Case7: should include nonce-mark utxo on the RIGHT
+	// 		input: utxoCap = 5, amount = 0.503, nonce = 24105432
+	// 		output: [0.01, 0.12, 0.18, 0.24, 0.24107432], 0.55002002
+	result, amount, err = ob.SelectUTXOs(0.503, 5, 24105432, tssAddress)
+	require.Nil(t, err)
+	assert.InEpsilon(t, 0.79107431, amount, 1e-8)
+	require.Equal(t, ob.utxos[0:5], result)
+	mineTxNSetNonceMark(ob, 24105432, dummyTxID, 4) // mine a transaction and set nonce-mark utxo for nonce 24105432
+
+	// Case8: should include nonce-mark utxo in the MIDDLE
+	// 		input: utxoCap = 5, amount = 1.0, nonce = 24105433
+	// 		output: [0.12, 0.18, 0.24, 0.24107432, 0.5], 1.28107432
+	result, amount, err = ob.SelectUTXOs(1.0, 5, 24105433, tssAddress)
+	require.Nil(t, err)
+	assert.InEpsilon(t, 1.28107432, amount, 1e-8)
+	require.Equal(t, ob.utxos[1:6], result)
+
+	// Case9: should work with maximum amount
+	// 		input: utxoCap = 5, amount = 16.03
+	// 		output: [0.24107432, 1.26, 2.97, 3.28, 5.16, 8.72], 21.63107432
+	result, amount, err = ob.SelectUTXOs(16.03, 5, 24105433, tssAddress)
+	require.Nil(t, err)
+	assert.InEpsilon(t, 21.63107432, amount, 1e-8)
+	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[6:11]...)
+	require.Equal(t, expected, result)
+
+	// Case10: must FAIL due to insufficient funds
+	// 		input: utxoCap = 5, amount = 21.64
+	// 		output: error
+	result, amount, err = ob.SelectUTXOs(21.64, 5, 24105433, tssAddress)
+	require.NotNil(t, err)
+	require.Nil(t, result)
+	require.Zero(t, amount)
+	require.Equal(t, "SelectUTXOs: not enough btc in reserve - available : 21.63107432 , tx amount : 21.64", err.Error())
 }

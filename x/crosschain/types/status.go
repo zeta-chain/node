@@ -2,23 +2,10 @@ package types
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func AllStatus() []CctxStatus {
-	return []CctxStatus{
-		CctxStatus_PendingInbound,
-		CctxStatus_PendingOutbound,
-		CctxStatus_OutboundMined,
-		CctxStatus_PendingRevert,
-		CctxStatus_Reverted,
-		CctxStatus_Aborted,
-	}
-}
-
 // empty msg does not overwrite old status message
-func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
-	oldStatus := m.Status
+func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {
 		m.StatusMessage = msg
 	}
@@ -28,7 +15,7 @@ func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logId
 		return
 	}
 	m.Status = newStatus
-	EmitStatusChangeEvent(ctx, oldStatus.String(), newStatus.String(), logIdentifier)
+
 } //nolint:typecheck
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {
@@ -68,14 +55,4 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	}
 	return stateTransitionMap
 
-}
-
-func EmitStatusChangeEvent(ctx *sdk.Context, oldStatus, newStatus, logIdentifier string) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(StatusChanged,
-			sdk.NewAttribute(OldStatus, oldStatus),
-			sdk.NewAttribute(NewStatus, newStatus),
-			sdk.NewAttribute(Identifiers, logIdentifier),
-		),
-	)
 }

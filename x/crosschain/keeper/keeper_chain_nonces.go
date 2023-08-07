@@ -111,7 +111,7 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 
-	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {
 		return nil, err
 	}

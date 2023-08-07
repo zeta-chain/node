@@ -8,7 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // FIXME: use more specific error types & codes
@@ -29,8 +30,8 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := zetaObserverTypes.ObservationType_InBoundTx
-	if !k.IsInboundAllowed(ctx) {
+	observationType := observerTypes.ObservationType_InBoundTx
+	if !k.zetaObserverKeeper.IsInboundAllowed(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
@@ -43,7 +44,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	ok, err := k.IsAuthorized(ctx, msg.Creator, observationChain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
@@ -51,20 +52,20 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	index := msg.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.GetBallot(ctx, index, observationChain, observationType)
+	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, index, observationChain, observationType)
 	if err != nil {
 		return nil, err
 	}
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, zetaObserverTypes.VoteType_SuccessObservation)
+	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 	if err != nil {
 		return nil, err
 	}
 
-	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	_, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -87,7 +88,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
-		k.SetCrossChainTx(ctx, cctx)
+		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
@@ -95,18 +97,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
 			revertMessage := err.Error()
 			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 			if !isFound {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "cannot find gas price", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "cannot find gas price")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// create new OutboundTxParams for the revert
@@ -119,56 +121,37 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
 			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// do not commit() here;
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, revertMessage, cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else { // successful HandleEVMDeposit;
 			commit()
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Remote omnichain contract call completed", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 	} else { // Cross Chain SWAP
-		err = k.FinalizeInbound(ctx, &cctx, *receiverChain, len(ballot.VoterList))
+		tmpCtx, commit := ctx.CacheContext()
+		err = func() error {
+			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx)
+			if err != nil {
+				return err
+			}
+			err = k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
+			if err != nil {
+				return err
+			}
+			return nil
+		}()
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			// do not commit anything here as the CCTX should be aborted
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "", cctx.LogIdentifierForCCTX())
+		commit()
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }
-
-// TODO: is LastBlockHeight needed?
-func (k msgServer) FinalizeInbound(ctx sdk.Context, cctx *types.CrossChainTx, receiveChain common.Chain, numberofobservers int) error {
-	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-	//k.UpdateLastBlockHeight(ctx, cctx)
-
-	err := k.UpdatePrices(ctx, receiveChain.ChainId, cctx)
-	if err != nil {
-		return err
-	}
-	err = k.UpdateNonce(ctx, receiveChain.ChainId, cctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (k msgServer) UpdateLastBlockHeight(ctx sdk.Context, msg *types.CrossChainTx) {
-//	lastblock, isFound := k.GetLastBlockHeight(ctx, msg.InboundTxParams.SenderChain)
-//	if !isFound {
-//		lastblock = types.LastBlockHeight{
-//			Creator:           msg.Creator,
-//			Index:             msg.InboundTxParams.SenderChain, // ?
-//			Chain:             msg.InboundTxParams.SenderChain,
-//			LastSendHeight:    msg.InboundTxParams.InboundTxObservedExternalHeight,
-//			LastReceiveHeight: 0,
-//		}
-//	} else {
-//		lastblock.LastSendHeight = msg.InboundTxParams.InboundTxObservedExternalHeight
-//	}
-//	k.SetLastBlockHeight(ctx, lastblock)
-//}

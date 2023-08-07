@@ -1,50 +1,54 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-// this line is used by starport scaffolding # proto/tx/import
-
 import "common/common.proto";
 import "gogoproto/gogo.proto";
+import "observer/blame.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-
-
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {
-//  rpc SetSupportedChains(MsgSetSupportedChains) returns (MsgSetSupportedChainsResponse);
-   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
+  rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
-// this line is used by starport scaffolding # proto/tx/rpc
-
+  rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
+  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 }
 
-//message MsgSetSupportedChains {
-//  string creator = 1;
-//  int64 chain_id=2;
-//  common.ChainName ChainName=3;
-//}
 message MsgUpdateCoreParams {
   string creator = 1;
   CoreParams coreParams = 2;
 }
 
-message MsgUpdateCoreParamsResponse {
-}
+message MsgUpdateCoreParamsResponse {}
 
-// this line is used by starport scaffolding # proto/tx/message
-//
-//message MsgSetSupportedChainsResponse{
-//}
 message MsgAddObserver {
   string creator = 1;
   int64 chain_id = 2;
   ObservationType observationType = 3;
 }
 
-message MsgAddObserverResponse {
+message MsgAddObserverResponse {}
+
+message MsgAddBlameVote {
+  string creator = 1;
+  int64 chain_id = 2;
+  Blame blame_info = 3;
 }
 
-// this line is used by starport scaffolding # proto/tx/message
+message MsgAddBlameVoteResponse {}
+message MsgUpdatePermissionFlags {
+  string creator = 1;
+  bool isInboundEnabled = 3;
+}
+message MsgUpdatePermissionFlagsResponse {}
+
+message MsgUpdateKeygen {
+  string creator = 1;
+  int64 block = 2;
+}
+
+message MsgUpdateKeygenResponse {}
