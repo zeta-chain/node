@@ -76,8 +76,6 @@ status is changed to final.
 | MsgVoteOnObservedInboundTx  |                      | ✅                 |
 | MsgAddToOutTxTracker        | ✅                   | ✅                 |
 | MsgRemoveFromOutTxTracker   | ✅                   |                    |
-| MsgUpdatePermissionFlags    | ✅                   |                    |
-| MsgUpdateKeygenPermission   | ✅                   |                    |
 
 ## State
 
@@ -87,8 +85,6 @@ The module stores the following information in the state:
 - List of chain nonces
 - List of last chain heights
 - List of cross-chain transactions
-- List of
 - Mapping between inbound transactions and cross-chain transactions
-- Keygen
 - TSS key
 - Gas prices on connected chains submitted by observers

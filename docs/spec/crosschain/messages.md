@@ -147,6 +147,7 @@ is the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 created.
 
+<<<<<<< HEAD
 If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the
 tokens being deposited are ZETA, `MintZetaToEVMAccount` is called and the
 tokens are minted to the receiver account on ZetaChain. If the tokens being
@@ -156,6 +157,11 @@ ZetaChain. If the message is not empty, system contract's `depositAndCall`
 method is also called and an omnichain contract on ZetaChain is executed.
 Omnichain contract address and arguments are passed as part of the message.
 If everything is successful, the CCTX status is changed to `OutboundMined`.
+=======
+If the receiver chain is a ZetaChain, the EVM deposit is handled and the
+status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
+the status of CCTX is chagned to 'aborted'.
+>>>>>>> develop
 
 If the receiver chain is a connected chain, the `FinalizeInbound` method is
 called to prepare the CCTX to be processed as an outbound transaction. To

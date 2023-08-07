@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Overview
 
-The `fungible` facilitates the deployment of fungible tokens of connected
+The `fungible` module facilitates the deployment of fungible tokens of connected
 blockchains (called "foreign coins") on ZetaChain.
 
 Foreign coins are represented as ZRC20 tokens on ZetaChain.
