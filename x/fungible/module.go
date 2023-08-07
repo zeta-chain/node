@@ -183,7 +183,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 		if err != nil {
 			ctx.Logger().Error("Unable To update system contracts", "err", err.Error())
 		} else {
-			ctx.Logger().Info("System contracts updated")
+			ctx.Logger().Info("System contract updated")
 		}
 	}
 }

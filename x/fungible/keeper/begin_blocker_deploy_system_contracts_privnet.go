@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // This is for privnet/testnet only
@@ -116,15 +115,15 @@ func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
 
 	wzeta, err := k.GetWZetaContractAddress(ctx)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to GetWZetaContractAddress")
+		return sdkerrors.Wrap(err, "failed to GetWZetaContractAddress")
 	}
 	uniswapV2Factory, err := k.GetUniswapv2FacotryAddress(ctx)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to GetUniswapv2FacotryAddress")
+		return sdkerrors.Wrap(err, "failed to GetUniswapv2FacotryAddress")
 	}
 	router, err := k.GetUniswapV2Router02Address(ctx)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+		return sdkerrors.Wrap(err, "failed to GetUniswapV2Router02Address")
 	}
 
 	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, router)

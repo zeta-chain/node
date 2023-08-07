@@ -3,15 +3,13 @@ package keeper
 import (
 	"math/big"
 
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error {
@@ -53,7 +51,7 @@ func (k Keeper) ZRC20DepositAndCallContract(ctx sdk.Context, from []byte, to eth
 	}
 	context := systemcontract.Context{
 		Origin:  from,
-		Sender:  (eth.Address{}),
+		Sender:  eth.Address{},
 		ChainID: big.NewInt(senderChain.ChainId),
 	}
 	return k.DepositZRC20AndCallContract(ctx, context, Zrc20Contract, contract, amount, data)

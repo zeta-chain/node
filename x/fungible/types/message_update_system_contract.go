@@ -8,7 +8,7 @@ import (
 
 const TypeMsgUpdateSystemContract = "update_system_contract"
 
-var _ sdk.Msg = &MsgDeployFungibleCoinZRC20{}
+var _ sdk.Msg = &MsgUpdateSystemContract{}
 
 func NewMessageUpdateSystemContract(creator string, systemContractAddr string) *MsgUpdateSystemContract {
 	return &MsgUpdateSystemContract{
