@@ -2,8 +2,9 @@ package zetaclient
 
 import (
 	"fmt"
-	. "gopkg.in/check.v1"
 	"regexp"
+
+	. "gopkg.in/check.v1"
 )
 
 type BcastSuite struct {

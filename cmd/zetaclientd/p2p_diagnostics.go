@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"sync"
+	"time"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -19,9 +23,6 @@ import (
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
-	"os"
-	"sync"
-	"time"
 )
 
 func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cryptotypes.PrivKey, cfg *config.Config) error {

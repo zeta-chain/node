@@ -3,6 +3,13 @@ package emissions_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,12 +22,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/simapp"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"testing"
 )
 
 func getaZetaFromString(amount string) sdk.Coins {

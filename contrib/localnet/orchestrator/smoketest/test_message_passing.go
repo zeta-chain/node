@@ -6,9 +6,10 @@ package main
 import (
 	"context"
 	"fmt"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math/big"
 	"time"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"

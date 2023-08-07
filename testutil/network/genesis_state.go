@@ -2,6 +2,8 @@ package network
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -13,7 +15,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func Setconfig() {

@@ -1,10 +1,11 @@
 package observer
 
 import (
+	"math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"math"
 )
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
