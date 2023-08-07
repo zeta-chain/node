@@ -10,6 +10,7 @@ package contextapp
 import (
 	_ "embed"
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )

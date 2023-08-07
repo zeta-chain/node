@@ -1,17 +1,17 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
-
-func (sm *SmokeTest) TestSystemContractUpdateAddress() {
-
-}
 
 // this tests sending ZETA out of ZetaChain to Ethereum
 func (sm *SmokeTest) TestContextUpgrade() {

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -10,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
 )
 
 func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
