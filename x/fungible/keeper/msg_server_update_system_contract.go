@@ -61,14 +61,21 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 	if !found {
 		k.Logger(ctx).Error("system contract not found")
 	}
+	oldSystemContractAddress := sys.SystemContract
 	sys.SystemContract = newSystemContractAddr.Hex()
 	k.SetSystemContract(ctx, sys)
 	commit()
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(sdk.EventTypeMessage,
-			sdk.NewAttribute("action", "UpdateSystemContract"),
-			sdk.NewAttribute("new_system_contract_address", msg.NewSystemContractAddress),
-		),
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventSystemContractUpdated{
+			MsgTypeUrl:         sdk.MsgTypeURL(&types.MsgUpdateSystemContract{}),
+			NewContractAddress: msg.NewSystemContractAddress,
+			OldContractAddress: oldSystemContractAddress,
+			Signer:             msg.Creator,
+		},
 	)
+	if err != nil {
+		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to emit event (%s)", err.Error())
+	}
 	return &types.MsgUpdateSystemContractResponse{}, nil
 }
