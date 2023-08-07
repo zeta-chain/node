@@ -134,7 +134,7 @@ created.
 
 If the receiver chain is a ZetaChain, the EVM deposit is handled and the
 status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
-the status of CCTX is changed to 'aborted'.
+the status of CCTX is chagned to 'aborted'.
 
 If the receiver chain is a connected chain, the inbound CCTX is finalized
 (prices and nonce are updated) and status changes to "pending outbound". If
@@ -157,46 +157,6 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
-}
-```
-
-## MsgSetNodeKeys
-
-Not implemented yet.
-
-```proto
-message MsgSetNodeKeys {
-	string creator = 1;
-	common.PubKeySet pubkeySet = 2;
-	string tss_signer_Address = 3;
-}
-```
-
-## MsgUpdatePermissionFlags
-
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdatePermissionFlags {
-	string creator = 1;
-	bool isInboundEnabled = 3;
-}
-```
-
-## MsgUpdateKeygen
-
-Updates the block height of the keygen and sets the status to "pending
-keygen".
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdateKeygen {
-	string creator = 1;
-	int64 block = 2;
 }
 ```
 
