@@ -123,6 +123,7 @@ func readLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	/* #nosec G307 */
 	defer file.Close()
 
 	var lines []string
