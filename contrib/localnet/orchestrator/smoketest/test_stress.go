@@ -6,6 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"os"
+	"sort"
+	"time"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -18,10 +23,6 @@ import (
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"google.golang.org/grpc"
-	"math/big"
-	"os"
-	"sort"
-	"time"
 )
 
 const (

@@ -2,6 +2,9 @@ package querytests
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -15,8 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	"testing"
-	"time"
 )
 
 func TestCLIQuerySuite(t *testing.T) {

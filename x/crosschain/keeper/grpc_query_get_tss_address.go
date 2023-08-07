@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
