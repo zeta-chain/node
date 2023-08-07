@@ -95,3 +95,8 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	return nil
 }
+
+func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return nil
+}

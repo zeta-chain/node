@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+func (sm *SmokeTest) TestSystemContractUpdateAddress() {
+
+}
+
 // this tests sending ZETA out of ZetaChain to Ethereum
 func (sm *SmokeTest) TestContextUpgrade() {
 	startTime := time.Now()
@@ -53,7 +57,7 @@ func (sm *SmokeTest) TestContextUpgrade() {
 			continue
 		}
 		for eventIter.Next() {
-			fmt.Printf("event: %s\n", eventIter.Event)
+			fmt.Printf("event: ContextData\n")
 			fmt.Printf("  origin: %x\n", eventIter.Event.Origin)
 			fmt.Printf("  sender: %s\n", eventIter.Event.Sender.Hex())
 			fmt.Printf("  chainid: %d\n", eventIter.Event.ChainID)

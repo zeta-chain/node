@@ -5,6 +5,8 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -106,4 +108,30 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	//ctx.Logger().Info("Deployed ZEVM Swap App at " + ZEVMSwapAddress.String())
 	fmt.Println("Successfully deployed contracts")
 	return nil
+}
+
+func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	wzeta, err := k.GetWZetaContractAddress(ctx)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to GetWZetaContractAddress")
+	}
+	uniswapV2Factory, err := k.GetUniswapv2FacotryAddress(ctx)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to GetUniswapv2FacotryAddress")
+	}
+	router, err := k.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+	}
+
+	SystemContractAddress, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, router)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
+	}
+	creator := k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin)
+	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
+	_, err = k.UpdateSystemContract(ctx, msg)
+	return err
 }
