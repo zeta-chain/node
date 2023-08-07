@@ -579,11 +579,12 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
-	outTxID := ob.GetTxID(nonce)
-	res, mined := ob.includedTx[outTxID]
-	if !mined {
-		return -1, fmt.Errorf("findNonceMarkUTXO: outTx %s not included yet", outTxID)
-	}
+	// TODO: find a reliable way to check if the nonce-mark utxo is mined
+	// outTxID := ob.GetTxID(nonce)
+	// res, mined := ob.includedTx[outTxID]
+	// if !mined {
+	// 	return -1, fmt.Errorf("findNonceMarkUTXO: outTx %s not included yet", outTxID)
+	// }
 
 	amount := NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
@@ -591,7 +592,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
-		if utxo.Address == tssAddress && sats == amount && utxo.TxID == res.TxID {
+		if utxo.Address == tssAddress && sats == amount /* && utxo.TxID == res.TxID*/ {
 			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %v", utxo.TxID, utxo.Amount)
 			return i, nil
 		}
