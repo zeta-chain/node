@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

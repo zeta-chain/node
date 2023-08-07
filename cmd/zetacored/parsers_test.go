@@ -5,12 +5,13 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/app"
-	"io/ioutil"
-	"os"
 
 	//"os"
 	"testing"
