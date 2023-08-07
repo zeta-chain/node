@@ -5,9 +5,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
+
+	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -130,7 +131,7 @@ func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
 	}
-	creator := k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin)
+	creator := k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
 	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
 	return err
