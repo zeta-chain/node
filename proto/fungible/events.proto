@@ -12,3 +12,15 @@ message EventSystemContractUpdated {
   string old_contract_address = 3;
   string signer = 4;
 }
+
+message EventZRC20Deployed {
+  string msg_type_url = 1;
+  string chain = 2;
+  string contract = 3;
+  string name = 4;
+  string symbol = 5;
+  int64 decimals = 6;
+  common.CoinType coin_type = 7;
+  string erc20 = 8;
+  int64 gasLimit = 9;
+}

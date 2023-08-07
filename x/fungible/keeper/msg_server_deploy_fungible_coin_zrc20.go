@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,19 +49,23 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		}
 
 		//FIXME : declare the attributes as constants , in x/fungible/types
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(sdk.EventTypeMessage,
-				sdk.NewAttribute("action", "DeployFungibleCoinZRC20"),
-				sdk.NewAttribute("chain", msg.ForeignChain),
-				sdk.NewAttribute("contract", addr.String()),
-				sdk.NewAttribute("name", msg.Name),
-				sdk.NewAttribute("symbol", msg.Symbol),
-				sdk.NewAttribute("decimals", fmt.Sprintf("%d", msg.Decimals)),
-				sdk.NewAttribute("coinType", msg.CoinType.String()),
-				sdk.NewAttribute("erc20", msg.ERC20),
-				sdk.NewAttribute("gasLimit", fmt.Sprintf("%d", msg.GasLimit)),
-			),
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.EventZRC20Deployed{
+				MsgTypeUrl: sdk.MsgTypeURL(&types.MsgDeployFungibleCoinZRC20{}),
+				Chain:      msg.ForeignChain,
+				Contract:   addr.String(),
+				Name:       msg.Name,
+				Symbol:     msg.Symbol,
+				Decimals:   int64(msg.Decimals),
+				CoinType:   msg.CoinType,
+				Erc20:      msg.ERC20,
+				GasLimit:   msg.GasLimit,
+			},
 		)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(err, "failed to emit event")
+		}
+
 	}
 
 	return &types.MsgDeployFungibleCoinZRC20Response{}, nil
