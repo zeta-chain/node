@@ -43,7 +43,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 
 	bankkeeper := bankkeeper2.BaseKeeper{}
 	authkeeper := authkeeper2.AccountKeeper{}
-	evmKeeper := evmkeeper.Keeper{}
+	evmKeeper := &evmkeeper.Keeper{}
 	zetaObserverKeeper := zetaObserverModuleKeeper.Keeper{}
 	keeper := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),

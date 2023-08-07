@@ -389,7 +389,7 @@ func New(
 		keys[fungibleModuleTypes.MemStoreKey],
 		app.GetSubspace(fungibleModuleTypes.ModuleName),
 		app.AccountKeeper,
-		*app.EvmKeeper,
+		app.EvmKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
 	)

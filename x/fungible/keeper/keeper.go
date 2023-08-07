@@ -3,13 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -20,7 +19,7 @@ type (
 		memKey             storetypes.StoreKey
 		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
-		evmKeeper          evmkeeper.Keeper
+		evmKeeper          types.EVMKeeper
 		bankKeeper         types.BankKeeper
 		zetaobserverKeeper types.ZetaObserverKeeper
 	}
@@ -32,7 +31,7 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
-	evmKeeper evmkeeper.Keeper,
+	evmKeeper types.EVMKeeper,
 	bankKeeper types.BankKeeper,
 	zetacobservKeeper types.ZetaObserverKeeper,
 ) *Keeper {
@@ -42,7 +41,6 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-
 		cdc:                cdc,
 		storeKey:           storeKey,
 		memKey:             memKey,
