@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var KeyAddCommand = []string{"key", "add"}
+var KeyAddCommand = []string{"keys", "add"}
 
 const (
 	HDPathFlag     = "hd-path"

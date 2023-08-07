@@ -142,6 +142,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
+	// replace the default hd-path for the key add command
+	if err := SetEthereumHDPath(rootCmd); err != nil {
+		panic(err)
+	}
+
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 
 }
