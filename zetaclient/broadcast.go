@@ -2,6 +2,11 @@ package zetaclient
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -10,10 +15,6 @@ import (
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error

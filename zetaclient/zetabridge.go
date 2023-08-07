@@ -2,8 +2,9 @@ package zetaclient
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	"sync"
 
