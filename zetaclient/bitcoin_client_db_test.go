@@ -1,13 +1,14 @@
 package zetaclient
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/suite"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"strconv"
-	"testing"
 )
 
 type BitcoinClientDBTestSuite struct {

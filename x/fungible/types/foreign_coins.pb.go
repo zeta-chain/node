@@ -5,11 +5,12 @@ package types
 
 import (
 	fmt "fmt"
-	proto "github.com/gogo/protobuf/proto"
-	common "github.com/zeta-chain/zetacore/common"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+
+	proto "github.com/gogo/protobuf/proto"
+	common "github.com/zeta-chain/zetacore/common"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

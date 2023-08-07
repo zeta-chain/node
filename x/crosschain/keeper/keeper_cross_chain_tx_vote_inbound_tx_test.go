@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"testing"
 )
 
 // FIMXE: make it work

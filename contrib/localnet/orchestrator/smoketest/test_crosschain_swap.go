@@ -5,10 +5,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
+
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )

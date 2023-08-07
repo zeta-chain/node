@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/zeta-chain/zetacore/app"
