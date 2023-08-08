@@ -311,7 +311,7 @@ require (
 
 replace (
 	github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
-	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// replace broken goleveldb
