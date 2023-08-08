@@ -396,11 +396,16 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	// read env variables if set
 	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
 	if err != nil || timeoutNonce <= 0 {
 		timeoutNonce = 100 * 3 // process up to 100 hashes
 	}
-	ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx using timeoutNonce %d seconds", timeoutNonce)
+	rpcRestTime, err := strconv.Atoi(os.Getenv("OS_RPC_REST_TIME"))
+	if err != nil || rpcRestTime <= 0 {
+		rpcRestTime = 500 // 500ms
+	}
+	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
 
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
@@ -426,6 +431,7 @@ func (ob *EVMChainClient) observeOutTx() {
 						break TRACKERLOOP
 					default:
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
+						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[ob.GetIndex(int(nonceInt))] = receipt
@@ -454,6 +460,9 @@ func (ob *EVMChainClient) observeOutTx() {
 							//}
 
 							break TXHASHLOOP
+						}
+						if err != nil {
+							ob.logger.ObserveOutTx.Error().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
 						}
 						//<-inTimeout
 					}
