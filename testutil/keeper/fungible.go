@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
-	
+
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
