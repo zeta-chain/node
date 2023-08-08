@@ -24,3 +24,13 @@ message EventZRC20Deployed {
   string erc20 = 8;
   int64 gasLimit = 9;
 }
+
+message EventZRC20WithdrawFeeUpdated {
+  string msg_type_url = 1;
+  int64 chain_id = 2;
+  common.CoinType coin_type = 3;
+  string zrc20_address = 4;
+  string old_withdraw_fee = 5;
+  string new_withdraw_fee = 6;
+  string signer = 7;
+}

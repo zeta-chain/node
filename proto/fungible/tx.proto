@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.fungible;
 
 import "common/common.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -10,7 +11,19 @@ service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
   rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
+  rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
 }
+
+message MsgUpdateZRC20WithdrawFee {
+  string creator = 1;
+  string zrc20 = 2; // zrc20 address
+  string newWithdrawFee = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateZRC20WithdrawFeeResponse {}
 
 message MsgUpdateSystemContract {
   string creator = 1;
