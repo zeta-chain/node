@@ -24,14 +24,14 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.NewSystemContractAddress)
 	}
 
-	// update contracts'
+	// update contracts
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to get zrc20 abi")
+		return nil, sdkerrors.Wrapf(types.ErrABIGet, "failed to get zrc20 abi")
 	}
 	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to get system contract abi")
+		return nil, sdkerrors.Wrapf(types.ErrABIGet, "failed to get system contract abi")
 	}
 	foreignCoins := k.GetAllForeignCoins(ctx)
 	tmpCtx, commit := ctx.CacheContext()
@@ -43,16 +43,16 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 		}
 		_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, "updateSystemContractAddress", newSystemContractAddr)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to call zrc20 contract method updateSystemContractAddress (%s)", err.Error())
+			return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract method updateSystemContractAddress (%s)", err.Error())
 		}
 		if fcoin.CoinType == common.CoinType_Gas {
 			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, "setGasCoinZRC20", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to call system contract method setGasCoinZRC20 (%s)", err.Error())
+				return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call system contract method setGasCoinZRC20 (%s)", err.Error())
 			}
 			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, "setGasZetaPool", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to call system contract method setGasZetaPool (%s)", err.Error())
+				return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call system contract method setGasZetaPool (%s)", err.Error())
 			}
 		}
 	}
@@ -75,7 +75,7 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 	)
 	if err != nil {
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to emit event (%s)", err.Error())
+		return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
 	return &types.MsgUpdateSystemContractResponse{}, nil
 }
