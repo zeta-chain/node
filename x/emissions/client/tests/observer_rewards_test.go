@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	emmisonscli "github.com/zeta-chain/zetacore/x/emissions/client/cli"
 	emmisonstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -44,13 +45,17 @@ func (s *CliTestSuite) TestObserverRewards() {
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
-	//s.Require().NoError(s.network.WaitForNextBlock())
-	s.network.WaitForHeight(0 + 3)
+	observerParams := observerTypes.QueryParamsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, observerCli.CmdQueryParams(), []string{"--output", "json"})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &observerParams))
+	_, err = s.network.WaitForHeight(s.ballots[0].BallotCreationHeight + observerParams.Params.BallotMaturityBlocks)
+	s.Require().NoError(err)
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
 	resFactorsNewBlocks := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
-	// Duration factor is calculated in the same block , so we need to query based from the committed state at which the distribution is done
+	// Duration factor is calculated in the same block,so we need to query based from the committed state at which the distribution is done
 	// Would be cleaner to use `--height` flag, but it is not supported by the ExecTestCLICmd function yet
 	emissionFactors.DurationFactor = resFactorsNewBlocks.DurationFactor
 	asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)

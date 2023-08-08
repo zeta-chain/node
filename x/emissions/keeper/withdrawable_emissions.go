@@ -23,39 +23,31 @@ func (k Keeper) GetWithdrawableEmission(ctx sdk.Context, address string) (val ty
 	return val, true
 }
 
-func (k Keeper) AddRewards(ctx sdk.Context, address string, amount sdkmath.Int) {
+func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {
-		we = types.WithdrawableEmissions{
-			Address: address,
-			Amount:  amount,
-		}
-	} else {
-		we.Amount = we.Amount.Add(amount)
+		we = types.WithdrawableEmissions{Address: address, Amount: sdkmath.ZeroInt()}
 	}
+	we.Amount = we.Amount.Add(amount)
 	k.SetWithdrawableEmission(ctx, we)
 }
 
-// SlashRewards slashes the rewards of a given address, if the address has no rewards left, it will set the rewards to 0.
-/* This function is a basic implementation of slashing, it will be improved in the future, based on further discussions.
+// SlashObserverEmission slashes the rewards of a given address, if the address has no rewards left, it will set the rewards to 0.
+/* This function is a basic implementation of slashing; it will be improved in the future .
 Improvements will include:
 - Add a jailing mechanism
-- Slash observer below 0 , or remove from observer list if their rewards are below 0
+- Slash observer below 0, or remove from an observer list if their rewards are below 0
 */
 
-func (k Keeper) SlashRewards(ctx sdk.Context, address string, amount sdkmath.Int) {
+func (k Keeper) SlashObserverEmission(ctx sdk.Context, address string, slashAmount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {
-		we = types.WithdrawableEmissions{
-			Address: address,
-			Amount:  sdk.ZeroInt(),
-		}
+		we = types.WithdrawableEmissions{Address: address, Amount: sdkmath.ZeroInt()}
 	} else {
-		slashedRewards := we.Amount.Sub(amount)
-		if slashedRewards.IsNegative() {
+		we.Amount = we.Amount.Sub(slashAmount)
+		if we.Amount.IsNegative() {
 			we.Amount = sdkmath.ZeroInt()
 		}
-		we.Amount = we.Amount.Sub(amount)
 	}
 	k.SetWithdrawableEmission(ctx, we)
 }

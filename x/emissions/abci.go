@@ -42,7 +42,7 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper 
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
-// DistributeObserverRewards /*  distributes the rewards to all observers who voted in any of the ballots finalized .
+// DistributeObserverRewards distributes the rewards to all observers who voted in any of the matured ballots
 // The total rewards are distributed equally among all Successful votes
 // NotVoted or Unsuccessful votes are slashed
 // rewards given or slashed amounts are in azeta
@@ -56,7 +56,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		return err
 	}
 	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
-	// do not distribute rewards if no ballots are finalized , the rewards can accumulate in the undistributed pool
+	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
 	if len(ballotIdentifiers) == 0 {
 		return nil
 	}
@@ -97,7 +97,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		if observerRewardsRatio < 0 {
 			slashAmount, ok := sdkmath.NewIntFromString(keeper.GetParams(ctx).ObserverSlashAmount)
 			if ok {
-				keeper.SlashRewards(ctx, observerAddress.String(), slashAmount)
+				keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 				finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 					EmissionType:    types.EmissionType_Slash,
 					ObserverAddress: observerAddress.String(),
@@ -109,7 +109,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		// Defensive check
 		if rewardPerUnit.GT(sdk.ZeroInt()) {
 			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardsRatio))
-			keeper.AddRewards(ctx, observerAddress.String(), rewardAmount)
+			keeper.AddObserverEmission(ctx, observerAddress.String(), rewardAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Rewards,
 				ObserverAddress: observerAddress.String(),
@@ -118,7 +118,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		}
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
-
+	// TODO : Delete Ballots after distribution
 	return nil
 }
 

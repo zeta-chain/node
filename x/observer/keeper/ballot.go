@@ -85,9 +85,9 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	list, found := k.GetBallotList(ctx, ballot.BallotCreationHeight)
 	if !found {
 		list = types.BallotListForHeight{Height: ballot.BallotCreationHeight, BallotsIndexList: []string{}}
-		list.BallotsIndexList = append(list.BallotsIndexList, ballot.BallotIdentifier)
-		k.SetBallotList(ctx, &list)
 	}
+	list.BallotsIndexList = append(list.BallotsIndexList, ballot.BallotIdentifier)
+	k.SetBallotList(ctx, &list)
 }
 func (k Keeper) GetMaturedBallotList(ctx sdk.Context) []string {
 	maturityBlocks := k.GetParams(ctx).BallotMaturityBlocks
