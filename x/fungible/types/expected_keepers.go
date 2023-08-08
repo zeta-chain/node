@@ -1,9 +1,16 @@
 package types
 
 import (
+	"context"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/vm"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -11,7 +18,6 @@ import (
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
-	// Methods imported from account should be defined here
 	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
 }
@@ -38,4 +44,20 @@ type ObserverKeeper interface {
 	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
+}
+
+type EVMKeeper interface {
+	ChainID() *big.Int
+	GetBlockBloomTransient(ctx sdk.Context) *big.Int
+	GetLogSizeTransient(ctx sdk.Context) uint64
+	WithChainID(ctx sdk.Context)
+	SetBlockBloomTransient(ctx sdk.Context, bloom *big.Int)
+	SetLogSizeTransient(ctx sdk.Context, logSize uint64)
+	EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error)
+	ApplyMessage(
+		ctx sdk.Context,
+		msg core.Message,
+		tracer vm.EVMLogger,
+		commit bool,
+	) (*evmtypes.MsgEthereumTxResponse, error)
 }

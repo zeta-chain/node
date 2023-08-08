@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -13,7 +15,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
-	"testing"
 )
 
 func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {

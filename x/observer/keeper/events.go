@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"strconv"
+
 	types2 "github.com/coinbase/rosetta-sdk-go/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 
 	types "github.com/zeta-chain/zetacore/x/observer/types"
 )

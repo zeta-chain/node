@@ -53,7 +53,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		memStoreKey,
 		paramsSubspace,
 		authKeeper,
-		evmKeeper,
+		&evmKeeper,
 		bankKeeper,
 		observerKeeper,
 	)
