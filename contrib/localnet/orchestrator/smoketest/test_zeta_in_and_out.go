@@ -6,9 +6,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"

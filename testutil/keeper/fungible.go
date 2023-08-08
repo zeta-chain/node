@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -17,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	"testing"
 )
 
 func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
@@ -42,7 +43,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 
 	bankkeeper := bankkeeper2.BaseKeeper{}
 	authkeeper := authkeeper2.AccountKeeper{}
-	evmKeeper := evmkeeper.Keeper{}
+	evmKeeper := &evmkeeper.Keeper{}
 	zetaObserverKeeper := zetaObserverModuleKeeper.Keeper{}
 	keeper := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),

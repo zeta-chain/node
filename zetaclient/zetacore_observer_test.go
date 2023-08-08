@@ -4,6 +4,10 @@
 package zetaclient
 
 import (
+	"os"
+	"path/filepath"
+	"time"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
@@ -11,9 +15,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	. "gopkg.in/check.v1"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type COSuite struct {
