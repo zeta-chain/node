@@ -37,7 +37,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	//cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -175,6 +176,14 @@ func (ob *EVMChainClient) GetChainConfig() *config.EVMConfig {
 	return ob.cfg.EVMChainConfigs[ob.chain.ChainId]
 }
 
+func (ob *EVMChainClient) GetCoreParameters() config.CoreParams {
+	return *ob.GetChainConfig().CoreParams
+}
+
+func (ob *EVMChainClient) PreSendSchedule(_ []*types.CrossChainTx) {
+	// Do nothing for now
+}
+
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ConnectorContractAddress)
 }
@@ -224,7 +233,7 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	ob.mu.Lock()
 	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetIndex(nonce)]
 	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetIndex(nonce)]
@@ -419,11 +428,11 @@ func (ob *EVMChainClient) observeOutTx() {
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
-						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
+						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							ob.outTXConfirmedReceipts[ob.GetIndex(int(nonceInt))] = receipt
-							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
+							ob.outTXConfirmedReceipts[ob.GetIndex(nonceInt)] = receipt
+							ob.outTXConfirmedTransaction[ob.GetIndex(nonceInt)] = transaction
 							ob.mu.Unlock()
 
 							//DISABLING PERSISTENCE
@@ -464,9 +473,9 @@ func (ob *EVMChainClient) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
-	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
-	if ob.outTXConfirmedReceipts[ob.GetIndex(int(nonce))] != nil && ob.outTXConfirmedTransaction[ob.GetIndex(int(nonce))] != nil {
+func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
+	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Uint64("nonce", nonce).Logger()
+	if ob.outTXConfirmedReceipts[ob.GetIndex(nonce)] != nil && ob.outTXConfirmedTransaction[ob.GetIndex(nonce)] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -483,7 +492,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	if err != nil {
 		return nil, nil, err
 	}
-	if transaction.Nonce() != uint64(nonce) {
+	if transaction.Nonce() != nonce {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainConfig().CoreParams.ConfCount
@@ -1020,7 +1029,7 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 	return nil
 }
 
-func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {
+func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv := tracker.Nonce
@@ -1044,7 +1053,7 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) e
 	return nil
 }
 
-func (ob *EVMChainClient) GetIndex(nonce int) string {
+func (ob *EVMChainClient) GetIndex(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }

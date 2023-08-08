@@ -26,6 +26,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -51,7 +52,8 @@ type BitcoinChainClient struct {
 	zetaClient    *ZetaCoreBridge
 	Tss           TSSSigner
 	lastBlock     int64
-	BlockTime     uint64                                  // block time in seconds
+	BlockTime     uint64 // block time in seconds
+	pendingCctx   map[string]*types.CrossChainTx
 	includedTx    map[string]btcjson.GetTransactionResult // key: chain-nonce
 	broadcastedTx map[string]chainhash.Hash
 	mu            *sync.Mutex
@@ -78,6 +80,14 @@ func (ob *BitcoinChainClient) GetRPCHost() string {
 	return ob.GetChainConfig().RPCHost
 }
 
+func (ob *BitcoinChainClient) GetCoreParameters() config.CoreParams {
+	return *ob.GetChainConfig().CoreParams
+}
+
+func (ob *BitcoinChainClient) PreSendSchedule(sendList []*types.CrossChainTx) {
+	ob.UpdatePendingCctx(sendList)
+}
+
 // Return configuration based on supplied target chain
 func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
@@ -102,6 +112,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
+	ob.pendingCctx = make(map[string]*types.CrossChainTx)
 	ob.includedTx = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
@@ -291,8 +302,8 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce int, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
-	outTxID := ob.GetTxID(uint64(nonce))
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
 	ob.mu.Lock()
@@ -580,9 +591,9 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
 	outTxID := ob.GetTxID(nonce)
-	res, mined := ob.includedTx[outTxID]
-	if !mined {
-		return -1, fmt.Errorf("findNonceMarkUTXO: outTx %s not included yet", outTxID)
+	res, included := ob.includedTx[outTxID]
+	if !included {
+		return -1, fmt.Errorf("findNonceMarkUTXO: prior outTx %s not included yet", outTxID)
 	}
 
 	amount := NonceMarkAmount(nonce)
@@ -668,6 +679,53 @@ func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash chainhash.Hash, nonce uin
 	if err := ob.db.Create(&broadcastEntry).Error; err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
 	}
+}
+
+// Save newly observed cctx and remove confirmed cctx
+func (ob *BitcoinChainClient) UpdatePendingCctx(sendList []*types.CrossChainTx) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	// add newly observed cctx
+	sendMap := make(map[string]*types.CrossChainTx)
+	for _, send := range sendList {
+		params := send.GetCurrentOutTxParam()
+		if params == nil {
+			ob.logger.ObserveOutTx.Error().Msgf("UpdatePendingCctx: observed bitcoin cctx %s has no outTxParam", send.Index)
+			continue
+		}
+		sendMap[ob.GetTxID(params.OutboundTxTssNonce)] = send
+		_, found := ob.pendingCctx[ob.GetTxID(params.OutboundTxTssNonce)]
+		if !found {
+			ob.pendingCctx[ob.GetTxID(params.OutboundTxTssNonce)] = send
+			ob.logger.ObserveOutTx.Info().Msgf("UpdatePendingCctx: observed bitcoin cctx %s with nonce %d value %d sats",
+				send.Index, params.OutboundTxTssNonce, params.Amount.Uint64())
+		}
+	}
+	// remove confirmed cctx
+	for _, send := range ob.pendingCctx {
+		params := send.GetCurrentOutTxParam() // never be nil
+		_, found := sendMap[ob.GetTxID(params.OutboundTxTssNonce)]
+		if !found {
+			ob.logger.ObserveOutTx.Info().Msgf("UpdatePendingCctx: removed bitcoin cctx %s with nonce %d value %d sats",
+				send.Index, params.OutboundTxTssNonce, params.Amount.Uint64())
+			delete(ob.pendingCctx, ob.GetTxID(params.OutboundTxTssNonce))
+		}
+	}
+}
+
+func (ob *BitcoinChainClient) GetPendingCctx(outTxID string) (string, types.OutboundTxParams) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+	if send, found := ob.pendingCctx[outTxID]; found {
+		params := send.GetCurrentOutTxParam()
+		if params == nil { // never happen
+			ob.logger.ObserveOutTx.Error().Msgf("Nil outTxParam for cctx %s, bug found!", send.Index)
+			return "", types.OutboundTxParams{}
+		}
+		return send.Index, *params
+	}
+	return "", types.OutboundTxParams{}
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {

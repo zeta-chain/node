@@ -5,6 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -15,11 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
-	"math/rand"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type EVMSigner struct {
@@ -256,7 +257,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// Early return if the cctx is already processed
-	included, confirmed, _ := evmClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, logger)
+	included, confirmed, _ := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
