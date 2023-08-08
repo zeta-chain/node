@@ -179,11 +179,19 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 		}
 	}
 	if ctx.BlockHeight() == 20 {
-		err := am.keeper.UpdateSystemContractAddress(sdk.WrapSDKContext(ctx))
+		err := am.keeper.TestUpdateSystemContractAddress(sdk.WrapSDKContext(ctx))
 		if err != nil {
 			ctx.Logger().Error("Unable To update system contracts", "err", err.Error())
 		} else {
 			ctx.Logger().Info("System contract updated")
+		}
+	}
+	if ctx.BlockHeight() == 25 {
+		err := am.keeper.TestUpdateZRC20WithdrawFee(sdk.WrapSDKContext(ctx))
+		if err != nil {
+			ctx.Logger().Error("Unable To update zrc20 withdraw fee", "err", err.Error())
+		} else {
+			ctx.Logger().Info("zrc20 withdraw fee updated")
 		}
 	}
 }
