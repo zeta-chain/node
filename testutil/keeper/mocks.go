@@ -18,3 +18,8 @@ type FungibleBankKeeper interface {
 type FungibleObserverKeeper interface {
 	fungibletypes.ObserverKeeper
 }
+
+//go:generate mockery --name FungibleEVMKeeper --filename evm.go --case underscore --output ./mocks/fungible
+type FungibleEVMKeeper interface {
+	fungibletypes.EVMKeeper
+}

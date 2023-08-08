@@ -9,7 +9,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -43,9 +42,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	bankKeeper := fungiblemocks.NewFungibleBankKeeper(t)
 	authKeeper := fungiblemocks.NewFungibleAccountKeeper(t)
 	observerKeeper := fungiblemocks.NewFungibleObserverKeeper(t)
-
-	// TODO: Use mock once interface is implemented
-	evmKeeper := evmkeeper.Keeper{}
+	evmKeeper := fungiblemocks.NewFungibleEVMKeeper(t)
 
 	k := keeper.NewKeeper(
 		codec.NewProtoCodec(registry),
@@ -53,7 +50,7 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		memStoreKey,
 		paramsSubspace,
 		authKeeper,
-		&evmKeeper,
+		evmKeeper,
 		bankKeeper,
 		observerKeeper,
 	)
