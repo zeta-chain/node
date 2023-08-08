@@ -225,7 +225,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
-// QueryZRC20Data returns the data of a deployed ZRC4 contract
+// QueryZRC20Data returns the data of a deployed ZRC20 contract
 func (k Keeper) QueryZRC20Data(
 	ctx sdk.Context,
 	contract common.Address,
