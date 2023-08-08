@@ -396,6 +396,12 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
+	if err != nil || timeoutNonce <= 0 {
+		timeoutNonce = 100 * 3 // process up to 100 hashes
+	}
+	ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx using timeoutNonce %d seconds", timeoutNonce)
+
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
 		select {
@@ -407,13 +413,13 @@ func (ob *EVMChainClient) observeOutTx() {
 			sort.Slice(trackers, func(i, j int) bool {
 				return trackers[i].Nonce < trackers[j].Nonce
 			})
-			outTimeout := time.After(90 * time.Second)
+			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(3000 * time.Millisecond)
+					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
@@ -449,7 +455,7 @@ func (ob *EVMChainClient) observeOutTx() {
 
 							break TXHASHLOOP
 						}
-						<-inTimeout
+						//<-inTimeout
 					}
 				}
 			}
