@@ -393,6 +393,25 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	return false, false, nil
 }
 
+// Hardcoded true outTx hashes for Goerli
+var goerliHashes = map[uint64]string{
+	7340: "0xca860fed89f53d9cf5141e8a16446c72d159bbd78d6ef01a02d882120822c645",
+	7341: "0x66d015ca4e894ef27d89b95f54e438be721c7c52a49581c92f935fd75b8ac830",
+	7342: "0x7f50bdecc8085e441dc741be38c4564a6e53af86a243eea927021cb87c3b4888",
+	7343: "0xc6b305928934e983e536f8af28c556e70b7b7294c07ff58331c4258e435ac34b",
+	7344: "0x3a690fd9f0a1671d4c6ae2dd9daea121e037d66da399758cf51143d96c7b5abf",
+	7345: "0x50a9a97f6c81cbf03eb9c9d8149917af1e2398288635b6aadd196575020215f3",
+	7346: "0x5fd6cc339f9a2a533e6a03aa794e46498197f2631e9b061169e21b27c7070508",
+	7347: "0x4450f56de6eaaf6846021dd16641c93fed424d6ebe5d88fcd9225f17231d5793",
+	7348: "0x6d711b87e9e7d84be53716575116ec5e80226d35784dc06842b0a4d19bc42448",
+	7349: "0x295774fc3dd0c2134dff5002f8613d98ee3d8e07f1e00d37d8d29b679851bb53",
+	7350: "0xcc102fc807800c3aeb5f107c90eae3eb11666e4a26f19f72586c1c3b3f4921d1",
+	7351: "0x65c88f7259d79a967741e005e8c7977664a00df2c0627ed239405a75cd2114fa",
+	7352: "0x49661e5c8a27e387dd137229859a3f68ade19f58de344312abd3a73135480647",
+	7353: "0x5dda64418a0d0de4030574eab1ae15b0daaaad4b5496e02b0a91c145355fdd0d",
+	7354: "0x1e1956c38d812c164ffd672f64b41a7e3bcb6c7ea47fa7bee0b66ec37ae00a1f",
+}
+
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -430,6 +449,13 @@ func (ob *EVMChainClient) observeOutTx() {
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
+						if tracker.ChainId == 5 { // use true Goerli hashes
+							hash, found := goerliHashes[nonceInt]
+							if found {
+								txHash.TxHash = hash
+								ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using hardcoded Goerli hash %s for nonce %d", hash, nonceInt)
+							}
+						}
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
