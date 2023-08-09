@@ -33,14 +33,14 @@ func (vad VestingAccountDecorator) AnteHandle(
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 	for _, msg := range tx.GetMsgs() {
-		typeUrl := sdk.MsgTypeURL(msg)
+		typeURL := sdk.MsgTypeURL(msg)
 
 		for _, disabledTypeUrl := range vad.disabledMsgTypeUrls {
-			if typeUrl == disabledTypeUrl {
+			if typeURL == disabledTypeUrl {
 				return ctx, errorsmod.Wrapf(
 					sdkerrors.ErrUnauthorized,
 					"MsgTypeURL %s not supported",
-					typeUrl,
+					typeURL,
 				)
 			}
 		}
