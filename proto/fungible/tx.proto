@@ -16,8 +16,8 @@ service Msg {
 
 message MsgUpdateZRC20WithdrawFee {
   string creator = 1;
-  string zrc20 = 2; // zrc20 address
-  string newWithdrawFee = 6 [
+  string zrc20_address = 2; // zrc20 address
+  string new_withdraw_fee = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
@@ -27,7 +27,7 @@ message MsgUpdateZRC20WithdrawFeeResponse {}
 
 message MsgUpdateSystemContract {
   string creator = 1;
-  string newSystemContractAddress = 2;
+  string new_system_contract_address = 2;
 }
 
 message MsgUpdateSystemContractResponse {}

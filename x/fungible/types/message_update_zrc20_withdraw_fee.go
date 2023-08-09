@@ -13,7 +13,7 @@ var _ sdk.Msg = &MsgUpdateZRC20WithdrawFee{}
 func NewMsgUpdateZRC20WithdrawFee(creator string, zrc20 string, newFee sdk.Uint) *MsgUpdateZRC20WithdrawFee {
 	return &MsgUpdateZRC20WithdrawFee{
 		Creator:        creator,
-		Zrc20:          zrc20,
+		Zrc20Address:   zrc20,
 		NewWithdrawFee: newFee,
 	}
 }
@@ -45,8 +45,8 @@ func (msg *MsgUpdateZRC20WithdrawFee) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	if ethcommon.HexToAddress(msg.Zrc20) == (ethcommon.Address{}) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20)
+	if ethcommon.HexToAddress(msg.Zrc20Address) == (ethcommon.Address{}) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20Address)
 	}
 
 	return nil

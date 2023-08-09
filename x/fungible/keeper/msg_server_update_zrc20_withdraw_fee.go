@@ -17,9 +17,9 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	if msg.Creator != k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
-	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20)
+	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20Address)
 	if zrc20Addr == (ethcommon.Address{}) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", msg.Zrc20)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", msg.Zrc20Address)
 	}
 
 	// update contracts
@@ -45,7 +45,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20)
+		return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
 	}
 
 	res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, false, "PROTOCOL_FLAT_FEE")
