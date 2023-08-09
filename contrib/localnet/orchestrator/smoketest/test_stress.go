@@ -223,6 +223,8 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			})
 			if len(sends) > 0 {
 				fmt.Printf("pending nonces %d to %d\n", sends[0].GetCurrentOutTxParam().OutboundTxTssNonce, sends[len(sends)-1].GetCurrentOutTxParam().OutboundTxTssNonce)
+			} else {
+				continue
 			}
 			//
 			// Get all trackers
