@@ -48,7 +48,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	if err := CheckNonce(goerliClient, DeployerAddress, 0); err != nil {
 		panic(err)
 	}
-	zetaEthAddr, tx, ZetaEth, err := zetaeth.DeployZetaEth(auth, goerliClient, big.NewInt(21_000_000_000))
+	zetaEthAddr, tx, ZetaEth, err := zetaeth.DeployZetaEth(auth, goerliClient, DeployerAddress, big.NewInt(21_000_000_000))
 	if err != nil {
 		panic(err)
 	}

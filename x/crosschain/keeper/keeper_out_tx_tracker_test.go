@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"strconv"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -30,7 +31,7 @@ func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.
 }
 
 func TestOutTxTrackerGet(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetOutTxTracker(ctx,
@@ -45,7 +46,7 @@ func TestOutTxTrackerGet(t *testing.T) {
 	}
 }
 func TestOutTxTrackerRemove(t *testing.T) {
-	k, ctx := keepertest.ZetacoreKeeper(t)
+	k, ctx := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(k, ctx, 10)
 	for _, item := range items {
 		k.RemoveOutTxTracker(ctx,
@@ -61,7 +62,7 @@ func TestOutTxTrackerRemove(t *testing.T) {
 }
 
 func TestOutTxTrackerGetAll(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),

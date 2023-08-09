@@ -17,9 +17,10 @@ package ante
 
 import (
 	"fmt"
+	"runtime/debug"
+
 	ethante "github.com/evmos/ethermint/app/ante"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"runtime/debug"
 
 	tmlog "github.com/tendermint/tendermint/libs/log"
 

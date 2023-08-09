@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -3,8 +3,15 @@ pragma solidity ^0.8.7;
 
 import "interfaces/IUniswapV2Router02.sol";
 
+struct Context {
+    bytes origin;
+    address sender;
+    uint256 chainID;
+}
+
 interface zContract {
     function onCrossChainCall(
+        Context calldata context,
         address zrc20,
         uint256 amount,
         bytes calldata message
@@ -78,7 +85,7 @@ contract ZEVMSwapApp is zContract {
 
     
     // Call this function to perform a cross-chain swap
-    function onCrossChainCall(address zrc20, uint256 amount, bytes calldata message) external override {
+    function onCrossChainCall(Context calldata, address zrc20, uint256 amount, bytes calldata message) external override {
         if (msg.sender != systemContract) {
             revert InvalidSender();
         }

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -31,7 +33,6 @@ func GetTxCmd() *cobra.Command {
 		cli.CmdUpdatePermissionFlags(),
 		cli.CmdUpdateKeygen(),
 	)
-	// this line is used by starport scaffolding # 1
 
 	return cmd
 }

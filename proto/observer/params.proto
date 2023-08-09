@@ -1,8 +1,9 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
+
+import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/observer.proto";
-import "common/common.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -24,16 +25,16 @@ message CoreParams {
 }
 
 message ObserverParams {
-    common.Chain chain =1;
-    string ballot_threshold =3 [
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-      (gogoproto.nullable) = false
-    ];
-    string min_observer_delegation = 4 [
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-      (gogoproto.nullable) = false
-    ];
-    bool is_supported=5;
+  common.Chain chain = 1;
+  string ballot_threshold = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string min_observer_delegation = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bool is_supported = 5;
 }
 
 enum Policy_Type {
@@ -54,7 +55,7 @@ message Admin_Policy {
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated ObserverParams observer_params =1;
-  repeated Admin_Policy admin_policy= 2;
+  repeated ObserverParams observer_params = 1;
+  repeated Admin_Policy admin_policy = 2;
   int64 ballot_maturity_blocks = 3;
 }

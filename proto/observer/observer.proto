@@ -17,8 +17,8 @@ enum ObservationType {
 
 message ObserverMapper {
   string index = 1;
-  common.Chain  observer_chain =2 ;
-  repeated string observer_list =4;
+  common.Chain observer_chain = 2;
+  repeated string observer_list = 4;
 }
 
 message LastObserverCount {

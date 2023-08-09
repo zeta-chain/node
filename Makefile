@@ -26,7 +26,7 @@ TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags TESTNET,pebbledb,ledger
 PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb,ledger
 
-clean: clean-binaries clean-dir clean-test-dir
+clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
 clean-binaries:
 	@rm -rf ${GOBIN}/zetacored
@@ -39,13 +39,18 @@ clean-dir:
 all: install
 
 test-coverage-exclude-core:
-	@go test {TEST_BUILD_FLAGS} -v -coverprofile coverage.out $(go list ./... | grep -v /x/zetacore/)
+	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out $(go list ./... | grep -v /x/zetacore/)
 
 test-coverage:
-	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}
+	-@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}
 
 coverage-report: test-coverage
-	@go tool cover -html=cover.txt
+	@go tool cover -html=coverage.out -o coverage.html
+
+clean-coverage:
+	@rm -f coverage.out
+	@rm -f coverage.html
+
 clean-test-dir:
 	@rm -rf x/crosschain/client/integrationtests/.zetacored
 	@rm -rf x/crosschain/client/querytests/.zetacored
@@ -135,14 +140,20 @@ proto:
 	@find . -name '*.pb.go' -type f -delete
 	@echo "--> Generating new Go types from protocol buffer files"
 	@bash ./scripts/protoc-gen-go.sh
-	@echo "--> Generating OpenAPI specs"
-	@bash ./scripts/protoc-gen-openapi.sh
-
 .PHONY: proto
 
+openapi:
+	@echo "--> Generating OpenAPI specs"
+	@bash ./scripts/protoc-gen-openapi.sh
+.PHONY: openapi
+
 specs:
+	@echo "--> Generating module documentation"
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
+
+generate: proto openapi specs
+.PHONY: generate
 
 ###############################################################################
 ###                                Docker Images                             ###

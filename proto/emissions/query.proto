@@ -1,11 +1,10 @@
 syntax = "proto3";
 package zetachain.zetacore.emissions;
 
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";
-// this line is used by starport scaffolding # 1
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
@@ -42,8 +41,7 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryListPoolAddressesRequest {
-}
+message QueryListPoolAddressesRequest {}
 
 message QueryListPoolAddressesResponse {
   string undistributed_observer_balances_address = 1;

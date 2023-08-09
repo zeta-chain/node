@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the fungible module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, authKeeper types.AccountKeeper) {
 	// Set all the foreignCoins
@@ -17,7 +17,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	if genState.SystemContract != nil {
 		k.SetSystemContract(ctx, *genState.SystemContract)
 	}
-	// this line is used by starport scaffolding # genesis/module/init
+
 	k.SetParams(ctx, genState.Params)
 	// ensure fungible module account is set on genesis
 	if acc := authKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
@@ -26,7 +26,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	}
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the fungible module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
@@ -37,7 +37,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		genesis.SystemContract = &system
 	}
-	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
 }

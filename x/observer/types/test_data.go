@@ -1,10 +1,11 @@
 package types
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/common"
-	"strconv"
 )
 
 func CreateObserverMapperList(items int, chain common.Chain) (list []*ObserverMapper) {

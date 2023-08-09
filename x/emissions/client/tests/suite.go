@@ -1,6 +1,9 @@
 package querytests
 
 import (
+	"math/rand"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
 	"github.com/stretchr/testify/suite"
@@ -8,8 +11,6 @@ import (
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/rand"
-	"strconv"
 )
 
 type CliTestSuite struct {

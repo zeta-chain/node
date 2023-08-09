@@ -4,8 +4,12 @@
 package integrationtests
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"os"
+	"strconv"
+	"testing"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,9 +20,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"os"
-	"strconv"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"

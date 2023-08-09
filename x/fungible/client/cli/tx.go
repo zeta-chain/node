@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -23,7 +24,6 @@ func GetTxCmd() *cobra.Command {
 		CmdDeployFungibleCoinZRC4(),
 		CmdRemoveForeignCoin(),
 	)
-	// this line is used by starport scaffolding # 1
 
 	return cmd
 }
