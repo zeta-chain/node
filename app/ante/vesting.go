@@ -11,13 +11,13 @@ var _ sdk.AnteDecorator = VestingAccountDecorator{}
 
 // VestingAccountDecorator blocks vesting messages from reaching the mempool
 type VestingAccountDecorator struct {
-	disabledMsgTypeUrls []string
+	disabledMsgTypeURLs []string
 }
 
 // NewVestingAccountDecorator creates a decorator to block vesting messages from reaching the mempool
 func NewVestingAccountDecorator() VestingAccountDecorator {
 	return VestingAccountDecorator{
-		disabledMsgTypeUrls: []string{
+		disabledMsgTypeURLs: []string{
 			sdk.MsgTypeURL(&vesting.MsgCreateVestingAccount{}),
 			sdk.MsgTypeURL(&vesting.MsgCreatePermanentLockedAccount{}),
 			sdk.MsgTypeURL(&vesting.MsgCreatePeriodicVestingAccount{}),
@@ -35,7 +35,7 @@ func (vad VestingAccountDecorator) AnteHandle(
 	for _, msg := range tx.GetMsgs() {
 		typeURL := sdk.MsgTypeURL(msg)
 
-		for _, disabledTypeUrl := range vad.disabledMsgTypeUrls {
+		for _, disabledTypeUrl := range vad.disabledMsgTypeURLs {
 			if typeURL == disabledTypeUrl {
 				return ctx, errorsmod.Wrapf(
 					sdkerrors.ErrUnauthorized,
