@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"strings"
 )
 
 var (
@@ -92,6 +93,12 @@ func IsBitcoinChain(chainID int64) bool {
 	return chainID == 18444 || // regtest
 		chainID == 18332 || //testnet
 		chainID == 8332 // mainnet
+}
+
+func IsEthereumChain(chainID int64) bool {
+	return chainID == 1 || // eth mainnet
+		chainID == 5 || // Goerli
+		chainID == 1337 // eth privnet
 }
 
 // IsEmpty is to determinate whether the chain is empty
