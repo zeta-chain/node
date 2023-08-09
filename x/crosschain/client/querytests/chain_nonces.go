@@ -13,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestShowChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crossChainState.ChainNoncesList
+	objs := s.crosschainState.ChainNoncesList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -59,7 +59,7 @@ func (s *CliTestSuite) TestShowChainNonces() {
 
 func (s *CliTestSuite) TestListChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crossChainState.ChainNoncesList
+	objs := s.crosschainState.ChainNoncesList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

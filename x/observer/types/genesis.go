@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -10,12 +11,13 @@ import (
 func DefaultGenesis() *GenesisState {
 	params := DefaultParams()
 	return &GenesisState{
-		Params:          &params,
-		Ballots:         nil,
-		Observers:       nil,
-		NodeAccountList: []*NodeAccount{},
-		PermissionFlags: &PermissionFlags{IsInboundEnabled: true},
-		Keygen:          nil,
+		Params:            &params,
+		Ballots:           nil,
+		Observers:         nil,
+		NodeAccountList:   []*NodeAccount{},
+		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true},
+		Keygen:            nil,
+		LastObserverCount: nil,
 	}
 }
 

@@ -11,7 +11,6 @@ func (k Keeper) GetEmmisonsFactors(goCtx context.Context, _ *types.QueryGetEmmis
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx)
-
 	return &types.QueryGetEmmisonsFactorsResponse{
 		ReservesFactor: reservesFactor.String(),
 		BondFactor:     bondFactor.String(),

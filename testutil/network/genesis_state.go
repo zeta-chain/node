@@ -1,9 +1,12 @@
 package network
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"testing"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -13,8 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
-	"testing"
 )
 
 func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) {
@@ -94,7 +95,7 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	genesisState[observerTypes.ModuleName] = buf
 	return &state
 }
-func AddCrossChainData(n int, t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {
+func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {
 	state := types.GenesisState{}
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &state))
 	// TODO : Fix add EVM balance to deploy contracts

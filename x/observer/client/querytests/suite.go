@@ -16,7 +16,7 @@ type CliTestSuite struct {
 
 	cfg             network.Config
 	network         *network.Network
-	crossChainState *types.GenesisState
+	crosschainState *types.GenesisState
 	observerState   *observerTypes.GenesisState
 }
 
@@ -43,7 +43,7 @@ func (s *CliTestSuite) SetupSuite() {
 		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
-	s.crossChainState = network.AddCrossChainData(2, s.T(), s.cfg.GenesisState, s.cfg.Codec)
+	s.crosschainState = network.AddCrosschainData(s.T(), 2, s.cfg.GenesisState, s.cfg.Codec)
 	s.observerState = network.AddObserverData(s.T(), s.cfg.GenesisState, s.cfg.Codec, nil)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)

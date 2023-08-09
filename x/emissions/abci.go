@@ -1,12 +1,13 @@
 package emissions
 
 import (
+	"sort"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
-	"sort"
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
@@ -37,6 +38,9 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		tssSignerRewards.String())
 }
 
+// DistributeValidatorRewards distributes the rewards to validators who signed the block .
+// The block proposer gets a bonus reward
+// This function uses the distribution module of cosmos-sdk , by directly sending funds to the feecollector.
 func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, feeCollector string) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
@@ -65,7 +69,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		if !found {
 			continue
 		}
-		totalRewardsUnits = totalRewardsUnits + ballot.BuildRewardsDistribution(rewardsDistributer)
+		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributer)
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
@@ -82,11 +86,14 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	for _, key := range sortedKeys {
 		observerAddress, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
+			ctx.Logger().Error("Error while parsing observer address ", "error", err, "address", key)
 			continue
 		}
-		observerRewardsRatio := rewardsDistributer[key]
+		// observerRewardUnits can be negative if the observer has been slashed
+		// an observers earn 1 unit for a correct vote, and -1 unit for an incorrect vote
+		observerRewardUnits := rewardsDistributer[key]
 
-		if observerRewardsRatio == 0 {
+		if observerRewardUnits == 0 {
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
 				ObserverAddress: observerAddress.String(),
@@ -94,7 +101,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			})
 			continue
 		}
-		if observerRewardsRatio < 0 {
+		if observerRewardUnits < 0 {
 			slashAmount, ok := sdkmath.NewIntFromString(keeper.GetParams(ctx).ObserverSlashAmount)
 			if ok {
 				keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
@@ -108,7 +115,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		}
 		// Defensive check
 		if rewardPerUnit.GT(sdk.ZeroInt()) {
-			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardsRatio))
+			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardUnits))
 			keeper.AddObserverEmission(ctx, observerAddress.String(), rewardAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Rewards,
@@ -119,9 +126,12 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
 	// TODO : Delete Ballots after distribution
+	// https://github.com/zeta-chain/node/issues/942
 	return nil
 }
 
+// DistributeTssRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
+// This is done so that the reserves factor is properly calculated in the next block
 func DistributeTssRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTssRewardsPool, coin)

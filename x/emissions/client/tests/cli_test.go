@@ -1,9 +1,10 @@
 package querytests
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	"testing"
 )
 
 func TestCLIQuerySuite(t *testing.T) {

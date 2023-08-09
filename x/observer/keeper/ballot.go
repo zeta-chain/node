@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -54,33 +55,7 @@ func (k Keeper) GetAllBallots(ctx sdk.Context) (voters []*types.Ballot) {
 	return
 }
 
-func (k Keeper) GetFinalizedBallots(ctx sdk.Context) (voters []*types.Ballot) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Ballot
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.BallotStatus != types.BallotStatus_BallotInProgress {
-			voters = append(voters, &val)
-		}
-	}
-	return
-}
-
-func (k Keeper) DeleteFinalizedBallots(ctx sdk.Context) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VoterKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.Ballot
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.BallotStatus != types.BallotStatus_BallotInProgress {
-			store.Delete([]byte(val.Index))
-		}
-	}
-}
-
+// AddBallotToList adds a ballot to the list of ballots for a given height.
 func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	list, found := k.GetBallotList(ctx, ballot.BallotCreationHeight)
 	if !found {
@@ -89,6 +64,8 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	list.BallotsIndexList = append(list.BallotsIndexList, ballot.BallotIdentifier)
 	k.SetBallotList(ctx, &list)
 }
+
+// GetMaturedBallotList Returns a list of ballots which are matured at current height
 func (k Keeper) GetMaturedBallotList(ctx sdk.Context) []string {
 	maturityBlocks := k.GetParams(ctx).BallotMaturityBlocks
 	list, found := k.GetBallotList(ctx, ctx.BlockHeight()-maturityBlocks)

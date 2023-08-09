@@ -11,7 +11,7 @@ import (
 
 func (s *CliTestSuite) TestShowTSS() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.crossChainState.Tss
+	obj := s.crosschainState.Tss
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

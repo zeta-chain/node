@@ -50,12 +50,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			BallotsIndexList: ballotList,
 		})
 	}
-
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{
-		Count:            observerCount,
-		LastChangeHeight: ctx.BlockHeight(),
-	})
-
+	if genState.LastObserverCount != nil {
+		k.SetLastObserverCount(ctx, genState.LastObserverCount)
+	} else {
+		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -78,13 +77,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		kn = &keygen
 	}
+	oc := &types.LastObserverCount{}
+	observerCount, found := k.GetLastObserverCount(ctx)
+	if found {
+		oc = &observerCount
+	}
 
 	return &types.GenesisState{
-		Ballots:         k.GetAllBallots(ctx),
-		Observers:       k.GetAllObserverMappers(ctx),
-		Params:          &params,
-		NodeAccountList: nodeAccounts,
-		PermissionFlags: &pf,
-		Keygen:          kn,
+		Ballots:           k.GetAllBallots(ctx),
+		Observers:         k.GetAllObserverMappers(ctx),
+		Params:            &params,
+		NodeAccountList:   nodeAccounts,
+		PermissionFlags:   &pf,
+		Keygen:            kn,
+		LastObserverCount: oc,
 	}
 }

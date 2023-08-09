@@ -58,6 +58,5 @@ type ZetaObserverKeeper interface {
 	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
-
 	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
 }

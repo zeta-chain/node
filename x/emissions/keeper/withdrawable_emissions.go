@@ -38,7 +38,7 @@ Improvements will include:
 - Add a jailing mechanism
 - Slash observer below 0, or remove from an observer list if their rewards are below 0
 */
-
+// https://github.com/zeta-chain/node/issues/945
 func (k Keeper) SlashObserverEmission(ctx sdk.Context, address string, slashAmount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {

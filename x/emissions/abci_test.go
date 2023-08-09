@@ -3,6 +3,13 @@ package emissions_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,12 +22,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/simapp"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"testing"
 )
 
 func getaZetaFromString(amount string) sdk.Coins {
@@ -180,7 +181,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			startHeight := ctx.BlockHeight()
 			assert.Equal(t, startHeight, inputTestData[0].BlockHeight, "starting block height should be equal to the first block height in the input data")
 			for i := startHeight; i < tt.testMaxHeight; i++ {
-				//First distribution will occur only when begin-block is triggered
+				//The First distribution will occur only when begin-block is triggered
 				reservesFactor, bondFactor, durationFactor := app.EmissionsKeeper.GetBlockRewardComponents(ctx)
 				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))

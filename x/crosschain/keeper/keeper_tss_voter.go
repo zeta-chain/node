@@ -86,7 +86,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
-	// Set TSS only on success , set Keygen either way.
+	// Set TSS only on success, set Keygen either way.
 	// Keygen block can be updated using a policy transaction if keygen fails
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{

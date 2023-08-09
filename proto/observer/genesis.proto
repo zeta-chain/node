@@ -18,4 +18,5 @@ message GenesisState {
   PermissionFlags permissionFlags = 4;
   Params params = 5;
   Keygen keygen = 6;
+  LastObserverCount lastObserverCount = 7;
 }

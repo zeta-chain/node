@@ -1,21 +1,17 @@
 package cli
 
 import (
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdGetEmmisonsFactors() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-emmisons-factors",
 		Short: "Query GetEmmisonsFactors",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
