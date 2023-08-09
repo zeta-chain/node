@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     # runs-on: ["zeta-runners"]
     timeout-minutes: 20
+    if: (! startsWith(github.ref, 'refs/tags/')) || (! startsWith(github.ref, 'refs/heads/develop') )
     concurrency:
       group: "build-and-test-single-arch"
     steps:
@@ -231,9 +232,10 @@ jobs:
           GOARCH: ${{ env.CPU_ARCH }}
         shell: alpine.sh --root {0}
         run: |
-          echo "Running Build Tests"
-          make clean
-          make test
+            echo "Running Build Tests"
+            apk add --no-cache --update
+            make clean
+            make test
 
       - name: Build zetacored and zetaclientd
         env:
@@ -549,7 +551,7 @@ jobs:
           discord_token: "${{ secrets.DISCORD_TOKEN }}"
           discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
           discord_message: |
-            Hey <@&1122981184255840306>! A new version of the zetachain software has been released. 
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
 
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
             We will submit a governance proposal in the next few days.
