@@ -5,6 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -15,11 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"math/big"
-	"math/rand"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type EVMSigner struct {
@@ -285,9 +286,14 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	var sendhash [32]byte
 	copy(sendhash[:32], sendHash[:32])
-	gasprice, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-	if !ok {
-		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+	// gasprice, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	// if !ok {
+	// 	logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+	// 	return
+	// }
+	gasprice, err := signer.client.SuggestGasPrice(context.Background())
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
 		return
 	}
 
