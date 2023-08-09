@@ -231,16 +231,15 @@ jobs:
       #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - name: Test
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 20
-          max_attempts: 2
-          retry_on: error
-          shell: alpine.sh --root {0}
-          command: |
-            echo "Running Build Tests"
-            make clean
-            make test
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+          echo "Running Build Tests"
+          make clean
+          make test
 
       - name: Build zetacored and zetaclientd
         env:
