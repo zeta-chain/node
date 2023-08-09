@@ -205,7 +205,8 @@ func (k Keeper) DepositZRC20(
 // callable from fungible module
 // Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
-	zrc4Contract common.Address,
+	context systemcontract.ZContext,
+	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -215,17 +216,17 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 
-	abi, err := systemcontract.SystemContractMetaData.GetAbi()
+	sysConABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
-		"depositAndCall", zrc4Contract, amount, targetContract, message)
+	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
+		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
-// QueryZRC4Data returns the data of a deployed ZRC4 contract
-func (k Keeper) QueryZRC4Data(
+// QueryZRC20Data returns the data of a deployed ZRC20 contract
+func (k Keeper) QueryZRC20Data(
 	ctx sdk.Context,
 	contract common.Address,
 ) (types.ZRC20Data, error) {

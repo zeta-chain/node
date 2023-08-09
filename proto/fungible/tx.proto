@@ -9,7 +9,15 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
+  rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
 }
+
+message MsgUpdateSystemContract {
+  string creator = 1;
+  string newSystemContractAddress = 2;
+}
+
+message MsgUpdateSystemContractResponse {}
 
 message MsgDeployFungibleCoinZRC20 {
   string creator = 1;

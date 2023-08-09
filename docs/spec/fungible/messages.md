@@ -47,3 +47,12 @@ message MsgRemoveForeignCoin {
 }
 ```
 
+## MsgUpdateSystemContract
+
+```proto
+message MsgUpdateSystemContract {
+	string creator = 1;
+	string newSystemContractAddress = 2;
+}
+```
+
