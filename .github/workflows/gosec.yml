@@ -20,12 +20,6 @@ jobs:
         with:
           fetch-depth: 0 
 
-      # - name: setup-git-credentials
-      #   uses: de-vri-es/setup-git-credentials@v2.0.8
-      #   with:
-      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
