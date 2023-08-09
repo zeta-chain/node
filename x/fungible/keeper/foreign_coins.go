@@ -66,7 +66,7 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64
 }
 
 // GetAllForeignCoins returns all foreignCoins
-func (k Keeper) GetAllForeignCoins(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
+func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
