@@ -35,11 +35,6 @@ jobs:
 
       - name: Install Pipeline Dependencies
         uses:  ./.github/actions/install-dependencies
-
-      # - name: setup-git-credentials
-      #   uses: de-vri-es/setup-git-credentials@v2.0.8
-      #   with:
-      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }} 
           
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
