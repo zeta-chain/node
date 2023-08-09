@@ -178,6 +178,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 			ctx.Logger().Error("Unable To deploy contracts", "err", err.Error())
 		}
 	}
+
 	if ctx.BlockHeight() == 20 {
 		err := am.keeper.TestUpdateSystemContractAddress(sdk.WrapSDKContext(ctx))
 		if err != nil {

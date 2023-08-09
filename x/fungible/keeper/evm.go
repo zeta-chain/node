@@ -205,7 +205,7 @@ func (k Keeper) DepositZRC20(
 // callable from fungible module
 // Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
-	context systemcontract.Context,
+	context systemcontract.ZContext,
 	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,

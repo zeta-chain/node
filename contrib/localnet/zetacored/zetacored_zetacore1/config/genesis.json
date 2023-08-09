@@ -149,10 +149,6 @@
       ],
       "denom_metadata": []
     },
-    "capability": {
-      "index": "1",
-      "owners": []
-    },
     "crisis": {
       "constant_fee": {
         "denom": "azeta",

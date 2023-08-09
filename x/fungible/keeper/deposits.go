@@ -49,7 +49,7 @@ func (k Keeper) ZRC20DepositAndCallContract(ctx sdk.Context, from []byte, to eth
 	if len(data) == 0 {
 		return k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
 	}
-	context := systemcontract.Context{
+	context := systemcontract.ZContext{
 		Origin:  from,
 		Sender:  eth.Address{},
 		ChainID: big.NewInt(senderChain.ChainId),
