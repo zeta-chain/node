@@ -59,10 +59,10 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      # - name: setup-git-credentials
+      #   uses: de-vri-es/setup-git-credentials@v2.0.8
+      #   with:
+      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
       
       - name: Test
         uses: nick-fields/retry@v2
@@ -128,10 +128,10 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      # - name: setup-git-credentials
+      #   uses: de-vri-es/setup-git-credentials@v2.0.8
+      #   with:
+      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       # - uses: buildjet/cache
       #   timeout-minutes: 5
@@ -235,10 +235,10 @@ jobs:
             git
           shell-name: alpine.sh
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      # - name: setup-git-credentials
+      #   uses: de-vri-es/setup-git-credentials@v2.0.8
+      #   with:
+      #     credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       # - name: Test
       #   shell: alpine.sh --root {0}
