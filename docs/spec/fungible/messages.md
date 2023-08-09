@@ -52,7 +52,17 @@ message MsgRemoveForeignCoin {
 ```proto
 message MsgUpdateSystemContract {
 	string creator = 1;
-	string newSystemContractAddress = 2;
+	string new_system_contract_address = 2;
+}
+```
+
+## MsgUpdateZRC20WithdrawFee
+
+```proto
+message MsgUpdateZRC20WithdrawFee {
+	string creator = 1;
+	string zrc20_address = 2;
+	string new_withdraw_fee = 6;
 }
 ```
 
