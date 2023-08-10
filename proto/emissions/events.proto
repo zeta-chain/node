@@ -13,7 +13,10 @@ enum EmissionType {
 message ObserverEmission {
     EmissionType emission_type = 1;
     string observer_address = 2;
-    string amount = 3;
+    string amount = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
 }
 
 message EventObserverEmissions {

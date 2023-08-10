@@ -26,7 +26,7 @@ func CmdGetCoreParamsForChain() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryGetCoreParamsForChainRequest{
-				ChainID: reqChainID,
+				ChainId: reqChainID,
 			}
 			res, err := queryClient.GetCoreParamsForChain(cmd.Context(), params)
 			if err != nil {

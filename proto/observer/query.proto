@@ -40,7 +40,7 @@ service Query {
 
   // Queries a list of GetClientParamsForChain items.
   rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chainID}";
+    option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chain_id}";
   }
 
   // Queries a list of GetCoreParams items.
@@ -98,7 +98,7 @@ message VoterList {
 }
 
 message QueryBallotByIdentifierResponse {
-  string BallotIdentifier = 1;
+  string ballot_identifier = 1;
   repeated VoterList voters = 2;
   ObservationType observation_type = 3;
   BallotStatus ballot_status = 4;
@@ -124,7 +124,7 @@ message QuerySupportedChainsResponse {
 }
 
 message QueryGetCoreParamsForChainRequest {
-  int64 chainID = 1;
+  int64 chain_id = 1;
 }
 
 message QueryGetCoreParamsForChainResponse {
@@ -142,7 +142,7 @@ message QueryGetNodeAccountRequest {
 }
 
 message QueryGetNodeAccountResponse {
-  NodeAccount NodeAccount = 1;
+  NodeAccount node_account = 1;
 }
 
 message QueryAllNodeAccountRequest {
@@ -157,13 +157,13 @@ message QueryAllNodeAccountResponse {
 message QueryGetPermissionFlagsRequest {}
 
 message QueryGetPermissionFlagsResponse {
-  PermissionFlags PermissionFlags = 1 [(gogoproto.nullable) = false];
+  PermissionFlags permission_flags = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetKeygenRequest {}
 
 message QueryGetKeygenResponse {
-  Keygen Keygen = 1;
+  Keygen keygen = 1;
 }
 
 message QueryShowObserverCountRequest {}
@@ -177,11 +177,11 @@ message QueryBlameByIdentifierRequest {
 }
 
 message QueryBlameByIdentifierResponse {
-  Blame blameInfo = 1;
+  Blame blame_info = 1;
 }
 
 message QueryAllBlameRecordsRequest {}
 
 message QueryAllBlameRecordsResponse {
-  repeated Blame blameInfo = 1;
+  repeated Blame blame_info = 1;
 }

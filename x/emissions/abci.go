@@ -97,20 +97,18 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
 				ObserverAddress: observerAddress.String(),
-				Amount:          sdkmath.ZeroInt().String(),
+				Amount:          sdkmath.ZeroInt(),
 			})
 			continue
 		}
 		if observerRewardUnits < 0 {
-			slashAmount, ok := sdkmath.NewIntFromString(keeper.GetParams(ctx).ObserverSlashAmount)
-			if ok {
-				keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
-				finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
-					EmissionType:    types.EmissionType_Slash,
-					ObserverAddress: observerAddress.String(),
-					Amount:          slashAmount.String(),
-				})
-			}
+			slashAmount := keeper.GetParams(ctx).ObserverSlashAmount
+			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
+			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+				EmissionType:    types.EmissionType_Slash,
+				ObserverAddress: observerAddress.String(),
+				Amount:          slashAmount,
+			})
 			continue
 		}
 		// Defensive check
@@ -120,7 +118,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Rewards,
 				ObserverAddress: observerAddress.String(),
-				Amount:          rewardAmount.String(),
+				Amount:          rewardAmount,
 			})
 		}
 	}

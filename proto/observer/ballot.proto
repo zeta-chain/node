@@ -26,12 +26,12 @@ message Ballot {
   repeated string voter_list = 3;
   repeated VoteType votes = 4;
   ObservationType observation_type = 5;
-  string BallotThreshold = 6 [
+  string ballot_threshold = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  BallotStatus ballot_status =7;
-  int64 Ballot_creation_height=8;
+  BallotStatus ballot_status = 7;
+  int64 ballot_creation_height = 8;
 }
 
 message BallotListForHeight {
