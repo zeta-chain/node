@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -24,26 +27,24 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdListOutTxTracker())
-	cmd.AddCommand(CmdShowOutTxTracker())
-	cmd.AddCommand(CmdShowKeygen())
-	cmd.AddCommand(CmdShowTSS())
-	cmd.AddCommand(CmdListGasPrice())
-	cmd.AddCommand(CmdShowGasPrice())
-	cmd.AddCommand(CmdListChainNonces())
-	cmd.AddCommand(CmdShowChainNonces())
-	cmd.AddCommand(CmdListSend())
-	cmd.AddCommand(CmdShowSend())
-	cmd.AddCommand(CmdListNodeAccount())
-	cmd.AddCommand(CmdShowNodeAccount())
-	cmd.AddCommand(CmdLastZetaHeight())
-	cmd.AddCommand(CmdListInTxHashToCctx())
-	cmd.AddCommand(CmdShowInTxHashToCctx())
-	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(CmdShowPermissionFlags())
-	cmd.AddCommand(CmdGetTssAddress())
-
-	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(
+		CmdListOutTxTracker(),
+		CmdShowOutTxTracker(),
+		cli.CmdShowKeygen(),
+		CmdShowTSS(),
+		CmdListGasPrice(),
+		CmdShowGasPrice(),
+		CmdListChainNonces(),
+		CmdShowChainNonces(),
+		CmdListSend(),
+		CmdShowSend(),
+		CmdLastZetaHeight(),
+		CmdListInTxHashToCctx(),
+		CmdShowInTxHashToCctx(),
+		CmdQueryParams(),
+		cli.CmdShowPermissionFlags(),
+		CmdGetTssAddress(),
+	)
 
 	return cmd
 }

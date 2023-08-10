@@ -3,6 +3,13 @@ package emissions_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,12 +22,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/simapp"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"testing"
 )
 
 func getaZetaFromString(amount string) sdk.Coins {
@@ -185,7 +186,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper)
+				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper, app.ZetaObserverKeeper)
 				ctx = ctx.WithBlockHeight(i + 1)
 			}
 		})

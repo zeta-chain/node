@@ -4,6 +4,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -93,5 +94,13 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 
+	return nil
+}
+
+func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
+	return nil
+}
+
+func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
 	return nil
 }

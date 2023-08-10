@@ -12,10 +12,16 @@ enum ObservationType {
   InBoundTx = 1;
   OutBoundTx = 2;
   TSSKeyGen = 3;
+  TSSKeySign = 4;
 }
 
 message ObserverMapper {
   string index = 1;
-  common.Chain  observer_chain =2 ;
-  repeated string observer_list =4;
+  common.Chain observer_chain = 2;
+  repeated string observer_list = 4;
+}
+
+message LastObserverCount {
+  uint64 count = 1;
+  int64 last_change_height = 2;
 }

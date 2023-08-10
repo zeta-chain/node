@@ -7,11 +7,12 @@
 package zetaclient
 
 import (
-	"github.com/rs/zerolog/log"
-	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	. "gopkg.in/check.v1"
 )
 
 type VoterSuite struct {

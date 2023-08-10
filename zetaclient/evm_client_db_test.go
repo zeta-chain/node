@@ -1,6 +1,9 @@
 package zetaclient
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -9,8 +12,6 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"strconv"
-	"testing"
 )
 
 const TempSQLiteDbPath = "file::memory:?cache=shared"

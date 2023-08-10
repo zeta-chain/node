@@ -2,9 +2,10 @@ package cli
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
 	"strconv"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -13,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdListSend() *cobra.Command {
 	cmd := &cobra.Command{
@@ -82,7 +81,7 @@ func CmdShowSend() *cobra.Command {
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount]  [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
+		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {

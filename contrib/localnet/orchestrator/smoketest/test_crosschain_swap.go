@@ -8,6 +8,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -129,7 +132,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 	fmt.Printf("memo length %d\n", len(memo))
 
-	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.01, utxos[0:2], sm.btcRPCClient, memo)
 	fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 	if err != nil {
@@ -146,4 +149,52 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	fmt.Printf("cctx4 index %s\n", cctx4.Index)
 	fmt.Printf("  outbound tx hash %s\n", cctx4.GetCurrentOutTxParam().OutboundTxHash)
 	fmt.Printf("  status %s\n", cctx4.CctxStatus.Status.String())
+
+	{
+		fmt.Printf("******* Third test: BTC -> ETH with contract call reverted; should refund BTC\n")
+		utxos, err := sm.btcRPCClient.ListUnspent()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("#utxos %d\n", len(utxos))
+		// the following memo will result in a revert in the contract call as targetZRC20 is set to DeployerAddress
+		// which is apparently not a ZRC20 contract; the UNISWAP call will revert
+		memo, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, DeployerAddress, DeployerAddress.Bytes())
+		if err != nil {
+			panic(err)
+		}
+		memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
+		fmt.Printf("memo length %d\n", len(memo))
+
+		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+		fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
+		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		cctx := WaitCctxMinedByInTxHash(txid.String(), sm.cctxClient)
+		fmt.Printf("cctx3 index http://localhost:1317/zeta-chain/crosschain/cctx/%s\n", cctx.Index)
+		fmt.Printf("  inboudn tx hash %s\n", cctx.InboundTxParams.InboundTxObservedHash)
+		fmt.Printf("  status %s\n", cctx.CctxStatus.Status.String())
+		fmt.Printf("  status msg: %s\n", cctx.CctxStatus.StatusMessage)
+		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+			panic(fmt.Sprintf("expected reverted status; got %s", cctx.CctxStatus.Status.String()))
+		}
+		outTxHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutTxParam().OutboundTxHash)
+		if err != nil {
+			panic(err)
+		}
+		txraw, err := sm.btcRPCClient.GetRawTransactionVerbose(outTxHash)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("out txid %s\n", txraw.Txid)
+		for _, vout := range txraw.Vout {
+			fmt.Printf("  vout %d\n", vout.N)
+			fmt.Printf("  value %f\n", vout.Value)
+			fmt.Printf("  scriptPubKey %s\n", vout.ScriptPubKey.Hex)
+			fmt.Printf("  p2wpkh address: %s\n", ScriptPKToAddress(vout.ScriptPubKey.Hex))
+		}
+	}
 }

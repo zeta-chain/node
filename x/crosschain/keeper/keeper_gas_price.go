@@ -103,7 +103,6 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	fmt.Println(req.Index)
 	chainID, err := strconv.Atoi(req.Index)
 	if err != nil {
 		return nil, err
@@ -130,7 +129,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if chain == nil {
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
-	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {
 		return nil, err
 	}

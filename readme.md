@@ -26,14 +26,21 @@ EVM-compatibility.
   contains the source code for the Solidity smart contracts that implement the
   core functionality of ZetaChain.
 
-## Building the source code
-
+## Building the zetacored/zetaclientd binaries
+For the Athens 3 testnet, clone this repository, checkout the latest release tag, and type the following command to build the binaries:
 ```
-make install
+make install-testnet
 ```
+to build. 
 
-This command will install the `zetacoded` and `zetaclientd` binaries in your
+This command will install the `zetacored` and `zetaclientd` binaries in your
 `$GOPATH/bin` directory.
+
+Verify that the version of the binaries match the release tag.  
+```
+zetacored version
+zetaclientd version
+```
 
 ## Making changes to the source code
 
@@ -58,7 +65,7 @@ make specs
 
 This command will run a script to update the modules' documentation. The script
 uses static code analysis to read the protocol buffer files and identify all
-Cosmos SDK messages. It then search the source code for the corresponding
+Cosmos SDK messages. It then searches the source code for the corresponding
 message handler functions and retrieves the documentation for those functions.
 Finally, it creates a `messages.md` file for each module, which contains the
 documentation for all the messages in that module.

@@ -2,17 +2,14 @@ package cli_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-// Prevent strconv unused error
-var _ = strconv.IntSize
 
 func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []types.OutTxTracker) {
 	t.Helper()
@@ -30,7 +27,9 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-	return network.New(t, cfg), state.OutTxTrackerList
+	//cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
+	net, err := network.New(t, app.NodeDir, cfg)
+	return net, state.OutTxTrackerList
 }
 
 //

@@ -5,9 +5,13 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -89,4 +93,16 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 		}
 		time.Sleep(1 * time.Second)
 	}
+}
+
+// scriptPK is a hex string for P2WPKH script
+func ScriptPKToAddress(scriptPKHex string) string {
+	pkh, err := hex.DecodeString(scriptPKHex[4:])
+	if err == nil {
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pkh, &chaincfg.RegressionNetParams)
+		if err == nil {
+			return addr.EncodeAddress()
+		}
+	}
+	return ""
 }

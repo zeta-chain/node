@@ -16,6 +16,24 @@ func GetObserverMapperIndex(chain *common.Chain) string {
 	return fmt.Sprintf("%d", chain.ChainId)
 }
 
+func (k Keeper) SetLastObserverCount(ctx sdk.Context, lbc *types.LastObserverCount) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
+	b := k.cdc.MustMarshal(lbc)
+	store.Set([]byte{0}, b)
+}
+
+func (k Keeper) GetLastObserverCount(ctx sdk.Context) (val types.LastObserverCount, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
+
+	b := store.Get([]byte{0})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
 	om.Index = GetObserverMapperIndex(om.ObserverChain)
@@ -81,7 +99,10 @@ func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserver
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// TODO move parsing to client
+	// https://github.com/zeta-chain/node/issues/867
+
 	chainName := common.ParseChainName(req.ObservationChain)
 	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {

@@ -10,8 +10,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdAddObserver() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-observer [observer-chain-id] [observation-type]",

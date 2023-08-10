@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcd/btcjson"
-	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"math/big"
+	"testing"
+
+	"github.com/zeta-chain/zetacore/common"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"math/big"
-	"strconv"
-	"testing"
 
 	"github.com/stretchr/testify/suite"
 
@@ -26,7 +26,6 @@ type BTCSignTestSuite struct {
 	suite.Suite
 	testSigner *TestSigner
 	db         *gorm.DB
-	utxos      []btcjson.ListUnspentResult
 }
 
 const (
@@ -55,23 +54,6 @@ func (suite *BTCSignTestSuite) SetupTest() {
 	suite.NoError(err)
 
 	suite.db = db
-	err = db.AutoMigrate(&clienttypes.PendingUTXOSQLType{})
-	suite.NoError(err)
-
-	//Create UTXOs
-	for i := 0; i < utxoCount; i++ {
-		suite.utxos = append(suite.utxos, btcjson.ListUnspentResult{
-			TxID:          strconv.Itoa(i),
-			Vout:          uint32(i),
-			Address:       "",
-			Account:       "",
-			ScriptPubKey:  "",
-			RedeemScript:  "",
-			Amount:        0,
-			Confirmations: 0,
-			Spendable:     false,
-		})
-	}
 }
 
 func (suite *BTCSignTestSuite) TearDownSuite() {
@@ -93,32 +75,6 @@ func (suite *BTCSignTestSuite) TestSign() {
 	tssSignedTX, err := getTSSTX(suite.testSigner, tx, txSigHashes, idx, amt, subscript, txscript.SigHashAll)
 	suite.Require().NoError(err)
 	suite.T().Logf("tss signed tx :    %v\n", tssSignedTX)
-}
-
-func (suite *BTCSignTestSuite) TestPendingUTXO() {
-	//Update Pending Utxos
-	suite.updatePendingUtxos()
-
-	//Remove one and perform housekeeping
-	suite.utxos = suite.utxos[:len(suite.utxos)-1]
-	suite.housekeepPending()
-
-	//Modify utxos and update
-	suite.utxos[0].Amount = 0.0123
-	suite.updatePendingUtxos()
-
-	//Get Pending Utxos from db
-	var haveDB []clienttypes.PendingUTXOSQLType
-	var have []btcjson.ListUnspentResult
-	err := suite.db.Find(&haveDB).Error
-	suite.NoError(err)
-	for _, utxo := range haveDB {
-		have = append(have, utxo.UTXO)
-	}
-
-	//Assert utxos in db are Equal to utxos in memory
-	want := suite.utxos
-	suite.Equal(want, have)
 }
 
 func (suite *BTCSignTestSuite) TestSubmittedTx() {
@@ -190,7 +146,7 @@ func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, 
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(witnessHash, 10)
+	sig65B, err := tss.Sign(witnessHash, 10, &common.Chain{})
 	R := big.NewInt(0).SetBytes(sig65B[:32])
 	S := big.NewInt(0).SetBytes(sig65B[32:64])
 	sig := btcec.Signature{
@@ -213,43 +169,4 @@ func getTSSTX(tss *TestSigner, tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, 
 
 	tssTX := hex.EncodeToString(buf.Bytes())
 	return tssTX, nil
-}
-
-// Copied housekeepPending from btc_client and updatePendingUtxos from btc_signer since they are private
-func (suite *BTCSignTestSuite) housekeepPending() {
-	// create map with utxos
-	utxosMap := make(map[string]bool, len(suite.utxos))
-	for _, utxo := range suite.utxos {
-		utxosMap[utxoKey(utxo)] = true
-	}
-
-	// traverse pending pendingUtxos
-	removed := 0
-	var utxos []clienttypes.PendingUTXOSQLType
-	err := suite.db.Find(&utxos).Error
-	suite.NoError(err)
-
-	for _, utxo := range utxos {
-		key := utxo.Key
-		// if key not in utxos map, remove from pendingUtxos
-		if !utxosMap[key] {
-			err := suite.db.Where("Key = ?", key).Delete(&utxo).Error
-			suite.NoError(err)
-			removed++
-		}
-	}
-}
-
-func (suite *BTCSignTestSuite) updatePendingUtxos() {
-	for _, utxo := range suite.utxos {
-		// Try to find existing record in DB to populate primary key
-		var pendingUTXO clienttypes.PendingUTXOSQLType
-		suite.db.Where("Key = ?", utxoKey(utxo)).First(&pendingUTXO)
-
-		// If record doesn't exist, it will be created by the Save function
-		pendingUTXO.UTXO = utxo
-		pendingUTXO.Key = utxoKey(utxo)
-		err := suite.db.Save(&pendingUTXO).Error
-		suite.NoError(err)
-	}
 }

@@ -5,6 +5,9 @@ go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
 
+# Install goimports for formatting proto go imports.
+go install golang.org/x/tools/cmd/goimports@latest
+
 # Define a shell function for generating proto code.
 generate_proto() {
   local dir="$1"
@@ -31,3 +34,6 @@ cd ..
 # Move proto files to the right places.
 cp -r github.com/zeta-chain/zetacore/* ./
 rm -rf github.com
+
+# Format proto go imports.
+goimports -w .

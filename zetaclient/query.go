@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -11,14 +13,13 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
-	"time"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (types.PermissionFlags, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PermissionFlags(context.Background(), &types.QueryGetPermissionFlagsRequest{})
+func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {
-		return types.PermissionFlags{}, err
+		return zetaObserverTypes.PermissionFlags{}, err
 	}
 	return resp.PermissionFlags, nil
 
@@ -166,9 +167,9 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 	return resp.ChainNonces, nil
 }
 
-func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*types.NodeAccount, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.NodeAccountAll(context.Background(), &types.QueryAllNodeAccountRequest{})
+func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.NodeAccountAll(context.Background(), &zetaObserverTypes.QueryAllNodeAccountRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +177,9 @@ func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*types.NodeAccount, error) {
 	return resp.NodeAccount, nil
 }
 
-func (b *ZetaCoreBridge) GetKeyGen() (*types.Keygen, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.Keygen(context.Background(), &types.QueryGetKeygenRequest{})
+func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 	if err != nil {
 		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err

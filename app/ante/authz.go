@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // maxNestedMsgs defines a cap for the number of nested messages on a MsgExec message
@@ -55,6 +56,15 @@ func (ald AuthzLimiterDecorator) checkDisabledMsgs(msgs []sdk.Msg, isAuthzInnerM
 			if err := ald.checkDisabledMsgs(innerMsgs, true, nestedLvl); err != nil {
 				return err
 			}
+		case *group.MsgSubmitProposal:
+			innerMsgs, err := msg.GetMsgs()
+			if err != nil {
+				return err
+			}
+			nestedLvl++
+			if err := ald.checkDisabledMsgs(innerMsgs, true, nestedLvl); err != nil {
+				return err
+			}
 		case *authz.MsgGrant:
 			authorization, err := msg.GetAuthorization()
 			if err != nil {
@@ -65,6 +75,7 @@ func (ald AuthzLimiterDecorator) checkDisabledMsgs(msgs []sdk.Msg, isAuthzInnerM
 			if ald.isDisabledMsg(url) {
 				return fmt.Errorf("found disabled msg type: %s", url)
 			}
+
 		default:
 			url := sdk.MsgTypeURL(msg)
 			if isAuthzInnerMsg && ald.isDisabledMsg(url) {

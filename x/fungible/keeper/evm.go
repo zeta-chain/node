@@ -39,10 +39,11 @@ var (
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
-// TODO Unit test for these funtions
-// TODO Remove repetitive code
-// DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
+// DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
+// TODO Unit test for these functions
+// https://github.com/zeta-chain/node/issues/864
+// TODO Remove repetitive code
 func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
@@ -186,6 +187,7 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 
 // Depoisit ZRC4 tokens into to account;
 // Callable only by the fungible module account
+// returns directly CallEVM()
 func (k Keeper) DepositZRC20(
 	ctx sdk.Context,
 	contract common.Address,
@@ -197,18 +199,15 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
 }
 
 // Deposit into ZRC4 and call contract function in a single tx
 // callable from fungible module
+// Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
-	zrc4Contract common.Address,
+	context systemcontract.ZContext,
+	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -218,21 +217,17 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 
-	abi, err := systemcontract.SystemContractMetaData.GetAbi()
+	sysConABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
-		"depositAndCall", zrc4Contract, amount, targetContract, message)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
+		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
-// QueryZRC4Data returns the data of a deployed ZRC4 contract
-func (k Keeper) QueryZRC4Data(
+// QueryZRC20Data returns the data of a deployed ZRC20 contract
+func (k Keeper) QueryZRC20Data(
 	ctx sdk.Context,
 	contract common.Address,
 ) (types.ZRC20Data, error) {
@@ -296,12 +291,13 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
+
+	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
+	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {
@@ -312,6 +308,8 @@ func (k Keeper) BalanceOfZRC4(
 }
 
 // CallEVM performs a smart contract method call using given args
+// returns (msg,err) the EVM execution result if there is any, even if error is non-nil due to contract reverts
+// Furthermore, err!=nil && msg!=nil && msg.Failed() means the contract call reverted.
 func (k Keeper) CallEVM(
 	ctx sdk.Context,
 	abi abi.ABI,
@@ -330,17 +328,21 @@ func (k Keeper) CallEVM(
 		)
 	}
 
-	k.Logger(ctx).Info("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
+	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, value, gasLimit)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
+		return resp, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
 	}
 	return resp, nil
 }
 
 // CallEVMWithData performs a smart contract method call using contract data
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
-// to bisect the correct gas limit (this may sometimes results in insufficient gas limit; not sure why)
+// to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
+//
+// returns (msg,err) the EVM execution result if there is any, even if error is non-nil due to contract reverts
+// Furthermore, err!=nil && msg!=nil && msg.Failed() means the contract call reverted; in which case
+// msg.Ret gives the RET code if contract revert with REVERT opcode with parameters.
 func (k Keeper) CallEVMWithData(
 	ctx sdk.Context,
 	from common.Address,
@@ -393,14 +395,14 @@ func (k Keeper) CallEVMWithData(
 		!commit,               // isFake
 	)
 	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
-	k.Logger(ctx).Info("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
+	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
 	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
 	if err != nil {
 		return nil, err
 	}
 
 	if res.Failed() {
-		return nil, sdkerrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
+		return res, sdkerrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
 	}
 
 	msgBytes, _ := json.Marshal(msg)

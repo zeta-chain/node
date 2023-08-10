@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"testing"
 )
 
 // FIMXE: make it work
@@ -55,7 +56,7 @@ import (
 //	//	NativeTokenSymbol:   "",
 //	//	MedianIndex:         0,
 //	//})
-//	err := keeper.UpdatePrices(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
+//	err := keeper.PayGasInZetaAndUpdateCctx(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
 //	assert.NoError(t, err)
 //	fmt.Println(cctx[0].String())
 //}
@@ -94,11 +95,11 @@ func TestStatus_StatusTransition(t *testing.T) {
 			IsErr:        false,
 		},
 	}
-	_, ctx := setupKeeper(t)
+	_, _ = setupKeeper(t)
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.ChangeStatus(&ctx, test.NonErrStatus, test.Msg, "")
+			test.Status.ChangeStatus(test.NonErrStatus, test.Msg)
 			if test.IsErr {
 				assert.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {

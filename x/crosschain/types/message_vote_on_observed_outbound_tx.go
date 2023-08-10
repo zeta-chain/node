@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint sdk.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
+func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint math.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                  creator,
 		CctxHash:                 sendHash,
