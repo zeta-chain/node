@@ -57,6 +57,9 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 	if len(msg.TxHash) > 32 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.TxHash))
 	}
+	if len(msg.BlockHeader) > 1024 { // on ethereum the block header is ~538 bytes in RLP encoding
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.blockheader; too long (%d)", len(msg.BlockHeader))
+	}
 	if common.IsEthereum(msg.ChainId) {
 		// RLP encoded block header
 		var header types.Header
