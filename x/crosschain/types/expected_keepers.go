@@ -74,6 +74,7 @@ type ZetaObserverKeeper interface {
 		chain *common.Chain,
 		observationType zetaObserverTypes.ObservationType,
 	) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
+	GetBlockHeader(ctx sdk.Context, hash []byte) (val zetaObserverTypes.BlockHeader, found bool)
 }
 
 type FungibleKeeper interface {

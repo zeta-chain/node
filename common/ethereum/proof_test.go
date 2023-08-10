@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
 )
 
 func TestProofGeneration(t *testing.T) {
@@ -32,8 +31,8 @@ func TestProofGeneration(t *testing.T) {
 	t.Logf("block %d\n", block.Number())
 	t.Logf("  tx root %x\n", header.TxHash)
 
-	ttt := new(trie.Trie)
-	tr := NewTrie(block.Transactions(), ttt)
+	//ttt := new(trie.Trie)
+	tr := NewTrie(block.Transactions())
 	t.Logf("  sha2    %x\n", tr.trie.Hash())
 	if tr.trie.Hash() != header.TxHash {
 		t.Fatal("tx root mismatch")
@@ -48,7 +47,7 @@ func TestProofGeneration(t *testing.T) {
 
 		proof := NewProof()
 		tr.trie.Prove(indexBuf, 0, proof)
-		t.Logf("proof len %d\n", len(proof.Proof))
+		t.Logf("proof len %d\n", len(proof.Keys))
 		value, err := proof.Verify(block.Header().TxHash, i)
 		//value, err := trie.VerifyProof(tr.trie.Hash(), indexBuf, proof)
 		t.Logf("pass? %v\n", err == nil)
@@ -63,6 +62,9 @@ func TestProofGeneration(t *testing.T) {
 		} else {
 			t.Logf("  tx hash & block tx hash match\n")
 		}
+		signer := types.NewLondonSigner(txx.ChainId())
+		sender, err := types.Sender(signer, &txx)
+		t.Logf("  tx from %s\n", sender.Hex())
 	}
 
 	//for k, v := range proof.Proof {

@@ -50428,6 +50428,8 @@ definitions:
         type: string
       tx_signer:
         type: string
+      proved:
+        type: boolean
   emissionsQueryListPoolAddressesResponse:
     type: object
     properties:
@@ -50437,6 +50439,14 @@ definitions:
         type: string
       emission_module_address:
         type: string
+  ethereumProof:
+    type: object
+    properties:
+      proof:
+        type: object
+        additionalProperties:
+          type: string
+          format: byte
   fungibleForeignCoins:
     type: object
     properties:

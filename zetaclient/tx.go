@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
@@ -53,9 +54,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string, proof *ethereum.Proof, blockHash string, txIndex int64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {

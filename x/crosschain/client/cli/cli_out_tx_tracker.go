@@ -110,6 +110,9 @@ func CmdAddToWatchList() *cobra.Command {
 				argChain,
 				uint64(argNonce),
 				argTxHash,
+				nil, // TODO: add option to provide a proof from CLI arguments
+				"",
+				-1,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

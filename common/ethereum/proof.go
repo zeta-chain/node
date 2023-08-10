@@ -22,7 +22,6 @@ package ethereum
 
 import (
 	"bytes"
-	"encoding/base64"
 	"errors"
 	"sync"
 
@@ -34,39 +33,72 @@ import (
 
 func NewProof() *Proof {
 	return &Proof{
-		Proof: make(map[string][]byte),
+		Keys:   make([][]byte, 0),
+		Values: make([][]byte, 0),
 	}
 }
 
-func encodeKey(key []byte) string {
-	return base64.StdEncoding.EncodeToString(key)
-}
-
 func (m *Proof) Put(key []byte, value []byte) error {
-	m.Proof[encodeKey(key)] = value
+	for i := 0; i < len(m.Keys); i++ {
+		if bytes.Equal(m.Keys[i], key) {
+			m.Values[i] = value
+			return nil
+		}
+	}
+	m.Keys = append(m.Keys, key)
+	m.Values = append(m.Values, value)
+
 	return nil
 }
 
 func (m *Proof) Delete(key []byte) error {
-	_, exists := m.Proof[encodeKey(key)]
-	if !exists {
+	found := false
+	index := -1
+	for i := 0; i < len(m.Keys); i++ {
+		if bytes.Equal(m.Keys[i], key) {
+			found = true
+			index = i
+			continue
+		}
+	}
+	if !found {
 		return errors.New("key not found")
 	}
-	delete(m.Proof, encodeKey(key))
+	copy(m.Keys[index:len(m.Keys)-1], m.Keys[index+1:])
+	copy(m.Values[index:len(m.Values)-1], m.Values[index+1:])
+	m.Keys = m.Keys[:len(m.Keys)-1]
+	m.Values = m.Values[:len(m.Values)-1]
+
 	return nil
 }
 
 func (m *Proof) Has(key []byte) (bool, error) {
-	_, exists := m.Proof[encodeKey(key)]
-	return exists, nil
+	found := false
+	for i := 0; i < len(m.Keys); i++ {
+		if bytes.Equal(m.Keys[i], key) {
+			found = true
+			continue
+		}
+	}
+
+	return found, nil
 }
 
 func (m *Proof) Get(key []byte) ([]byte, error) {
-	value, exists := m.Proof[encodeKey(key)]
-	if !exists {
+	found := false
+	index := -1
+	for i := 0; i < len(m.Keys); i++ {
+		if bytes.Equal(m.Keys[i], key) {
+			found = true
+			index = i
+			continue
+		}
+	}
+	if !found {
 		return nil, errors.New("key not found")
 	}
-	return value, nil
+
+	return m.Values[index], nil
 }
 
 func (m *Proof) Verify(rootHash common.Hash, key int) ([]byte, error) {
@@ -102,7 +134,8 @@ func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
 
 // NewTrie builds a trie from a DerivableList. The DerivableList must be types.Transactions
 // or types.Receipts.
-func NewTrie(list types.DerivableList, hasher *trie.Trie) Trie {
+func NewTrie(list types.DerivableList) Trie {
+	hasher := new(trie.Trie)
 	hasher.Reset()
 
 	valueBuf := encodeBufferPool.Get().(*bytes.Buffer)

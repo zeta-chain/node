@@ -42,7 +42,9 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 				continue
 			}
 			for _, tracker := range res.OutTxTracker {
-				fmt.Printf("OutTxTracker: %+v\n", tracker.HashList)
+				for _, hash := range tracker.HashList {
+					fmt.Printf("OutTxTracker: %s proved %v\n", hash.TxHash, hash.Proved)
+				}
 			}
 		}
 		res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})

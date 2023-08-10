@@ -24,7 +24,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Proof struct {
-	Proof map[string][]byte `protobuf:"bytes,1,rep,name=proof,proto3" json:"proof,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// map<string,bytes> proof = 1;
+	Keys   [][]byte `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+	Values [][]byte `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 }
 
 func (m *Proof) Reset()         { *m = Proof{} }
@@ -60,35 +62,38 @@ func (m *Proof) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Proof proto.InternalMessageInfo
 
-func (m *Proof) GetProof() map[string][]byte {
+func (m *Proof) GetKeys() [][]byte {
 	if m != nil {
-		return m.Proof
+		return m.Keys
+	}
+	return nil
+}
+
+func (m *Proof) GetValues() [][]byte {
+	if m != nil {
+		return m.Values
 	}
 	return nil
 }
 
 func init() {
 	proto.RegisterType((*Proof)(nil), "ethereum.Proof")
-	proto.RegisterMapType((map[string][]byte)(nil), "ethereum.Proof.ProofEntry")
 }
 
 func init() { proto.RegisterFile("common/ethereum/ethereum.proto", fileDescriptor_93e74b59a4555c70) }
 
 var fileDescriptor_93e74b59a4555c70 = []byte{
-	// 199 bytes of a gzipped FileDescriptorProto
+	// 159 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xce, 0xcf, 0xcd,
 	0xcd, 0xcf, 0xd3, 0x4f, 0x2d, 0xc9, 0x48, 0x2d, 0x4a, 0x2d, 0xcd, 0x85, 0x33, 0xf4, 0x0a, 0x8a,
-	0xf2, 0x4b, 0xf2, 0x85, 0x38, 0x60, 0x7c, 0xa5, 0x62, 0x2e, 0xd6, 0x80, 0xa2, 0xfc, 0xfc, 0x34,
-	0x21, 0x03, 0x2e, 0xd6, 0x02, 0x10, 0x43, 0x82, 0x51, 0x81, 0x59, 0x83, 0xdb, 0x48, 0x4a, 0x0f,
-	0xae, 0x05, 0x2c, 0x0f, 0x21, 0x5d, 0xf3, 0x4a, 0x8a, 0x2a, 0x83, 0x20, 0x0a, 0xa5, 0x2c, 0xb8,
-	0xb8, 0x10, 0x82, 0x42, 0x02, 0x5c, 0xcc, 0xd9, 0xa9, 0x95, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c,
-	0x41, 0x20, 0xa6, 0x90, 0x08, 0x17, 0x6b, 0x59, 0x62, 0x4e, 0x69, 0xaa, 0x04, 0x93, 0x02, 0xa3,
-	0x06, 0x4f, 0x10, 0x84, 0x63, 0xc5, 0x64, 0xc1, 0xe8, 0xe4, 0x71, 0xe2, 0x91, 0x1c, 0xe3, 0x85,
-	0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3,
-	0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x7a, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9,
-	0xfa, 0x55, 0xa9, 0x25, 0x89, 0xba, 0xc9, 0x19, 0x89, 0x99, 0x79, 0x60, 0x66, 0x72, 0x7e, 0x51,
-	0xaa, 0x3e, 0x9a, 0xbf, 0x92, 0xd8, 0xc0, 0xfe, 0x31, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xf2,
-	0x82, 0x63, 0xb3, 0xf1, 0x00, 0x00, 0x00,
+	0xf2, 0x4b, 0xf2, 0x85, 0x38, 0x60, 0x7c, 0x25, 0x63, 0x2e, 0xd6, 0x80, 0xa2, 0xfc, 0xfc, 0x34,
+	0x21, 0x21, 0x2e, 0x96, 0xec, 0xd4, 0xca, 0x62, 0x09, 0x46, 0x05, 0x66, 0x0d, 0x9e, 0x20, 0x30,
+	0x5b, 0x48, 0x8c, 0x8b, 0xad, 0x2c, 0x31, 0xa7, 0x34, 0xb5, 0x58, 0x82, 0x09, 0x2c, 0x0a, 0xe5,
+	0x39, 0x79, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13,
+	0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x5e, 0x7a, 0x66,
+	0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x55, 0x6a, 0x49, 0xa2, 0x6e, 0x72, 0x46,
+	0x62, 0x66, 0x1e, 0x98, 0x99, 0x9c, 0x5f, 0x94, 0xaa, 0x8f, 0xe6, 0xae, 0x24, 0x36, 0xb0, 0x7b,
+	0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x31, 0x9b, 0x72, 0x4f, 0xb1, 0x00, 0x00, 0x00,
 }
 
 func (m *Proof) Marshal() (dAtA []byte, err error) {
@@ -111,23 +116,20 @@ func (m *Proof) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Proof) > 0 {
-		for k := range m.Proof {
-			v := m.Proof[k]
-			baseI := i
-			if len(v) > 0 {
-				i -= len(v)
-				copy(dAtA[i:], v)
-				i = encodeVarintEthereum(dAtA, i, uint64(len(v)))
-				i--
-				dAtA[i] = 0x12
-			}
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintEthereum(dAtA, i, uint64(len(k)))
+	if len(m.Values) > 0 {
+		for iNdEx := len(m.Values) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Values[iNdEx])
+			copy(dAtA[i:], m.Values[iNdEx])
+			i = encodeVarintEthereum(dAtA, i, uint64(len(m.Values[iNdEx])))
 			i--
-			dAtA[i] = 0xa
-			i = encodeVarintEthereum(dAtA, i, uint64(baseI-i))
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Keys) > 0 {
+		for iNdEx := len(m.Keys) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Keys[iNdEx])
+			copy(dAtA[i:], m.Keys[iNdEx])
+			i = encodeVarintEthereum(dAtA, i, uint64(len(m.Keys[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -152,16 +154,16 @@ func (m *Proof) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Proof) > 0 {
-		for k, v := range m.Proof {
-			_ = k
-			_ = v
-			l = 0
-			if len(v) > 0 {
-				l = 1 + len(v) + sovEthereum(uint64(len(v)))
-			}
-			mapEntrySize := 1 + len(k) + sovEthereum(uint64(len(k))) + l
-			n += mapEntrySize + 1 + sovEthereum(uint64(mapEntrySize))
+	if len(m.Keys) > 0 {
+		for _, b := range m.Keys {
+			l = len(b)
+			n += 1 + l + sovEthereum(uint64(l))
+		}
+	}
+	if len(m.Values) > 0 {
+		for _, b := range m.Values {
+			l = len(b)
+			n += 1 + l + sovEthereum(uint64(l))
 		}
 	}
 	return n
@@ -204,9 +206,9 @@ func (m *Proof) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Keys", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEthereum
@@ -216,119 +218,55 @@ func (m *Proof) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthEthereum
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthEthereum
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Proof == nil {
-				m.Proof = make(map[string][]byte)
+			m.Keys = append(m.Keys, make([]byte, postIndex-iNdEx))
+			copy(m.Keys[len(m.Keys)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
 			}
-			var mapkey string
-			mapvalue := []byte{}
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEthereum
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEthereum
 				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEthereum
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthEthereum
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthEthereum
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var mapbyteLen uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEthereum
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapbyteLen |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intMapbyteLen := int(mapbyteLen)
-					if intMapbyteLen < 0 {
-						return ErrInvalidLengthEthereum
-					}
-					postbytesIndex := iNdEx + intMapbyteLen
-					if postbytesIndex < 0 {
-						return ErrInvalidLengthEthereum
-					}
-					if postbytesIndex > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = make([]byte, mapbyteLen)
-					copy(mapvalue, dAtA[iNdEx:postbytesIndex])
-					iNdEx = postbytesIndex
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipEthereum(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthEthereum
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
 			}
-			m.Proof[mapkey] = mapvalue
+			if byteLen < 0 {
+				return ErrInvalidLengthEthereum
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEthereum
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Values = append(m.Values, make([]byte, postIndex-iNdEx))
+			copy(m.Values[len(m.Values)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
