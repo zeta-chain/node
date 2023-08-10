@@ -110,7 +110,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	return nil
 }
 
-func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
+func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	wzeta, err := k.GetWZetaContractAddress(ctx)
@@ -134,4 +134,21 @@ func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
 	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
 	return err
+}
+
+func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	foreignCoins := k.GetAllForeignCoins(ctx)
+	creator := k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
+
+	for _, foreignCoin := range foreignCoins {
+		msg := types.NewMsgUpdateZRC20WithdrawFee(creator, foreignCoin.Zrc20ContractAddress, sdk.NewUint(uint64(foreignCoin.ForeignChainId)))
+		_, err := k.UpdateZRC20WithdrawFee(ctx, msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
