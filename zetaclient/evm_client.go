@@ -16,11 +16,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-
-	"cosmossdk.io/math"
-	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -717,6 +717,16 @@ func (ob *EVMChainClient) observeInTX() error {
 				block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
+					continue
+				}
+				headerRLP, err := rlp.EncodeToBytes(block.Header())
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
+					continue
+				}
+				_, err = ob.zetaClient.PostAddBlockHeader(ob.chain.ChainId, block.Hash().Bytes(), block.Number().Int64(), headerRLP)
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 					continue
 				}
 				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))

@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "observer/blame.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/headers.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -16,7 +17,18 @@ service Msg {
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
+  rpc AddBlockHeader(MsgAddBlockHeader) returns (MsgAddBlockHeaderResponse);
 }
+
+message MsgAddBlockHeader {
+    string creator = 1;
+    int64 chain_id = 2;
+    bytes tx_hash = 3;
+    bytes block_header = 4;
+    int64 height = 5;
+}
+
+message MsgAddBlockHeaderResponse {}
 
 message MsgUpdateCoreParams {
   string creator = 1;

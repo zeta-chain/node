@@ -1,0 +1,9 @@
+syntax = "proto3";
+package ethereum;
+
+option go_package = "github.com/zeta-chain/zetacore/common/ethereum";
+
+message Proof {
+  map<string,bytes> proof = 1;
+}
+

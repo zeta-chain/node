@@ -12,6 +12,7 @@ import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 import "observer/permission_flags.proto";
+import "observer/headers.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -78,6 +79,10 @@ service Query {
   // Queries a list of VoterByIdentifier items.
   rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
+  }
+
+  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
   }
 }
 
@@ -184,4 +189,13 @@ message QueryAllBlameRecordsRequest {}
 
 message QueryAllBlameRecordsResponse {
   repeated Blame blameInfo = 1;
+}
+
+message QueryAllBlockHeaderRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBlockHeaderResponse {
+  repeated BlockHeader block_headers = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
