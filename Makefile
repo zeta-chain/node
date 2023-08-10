@@ -140,6 +140,7 @@ proto:
 	@find . -name '*.pb.go' -type f -delete
 	@echo "--> Generating new Go types from protocol buffer files"
 	@bash ./scripts/protoc-gen-go.sh
+	@buf format -w
 .PHONY: proto
 
 openapi:

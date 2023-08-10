@@ -48,9 +48,8 @@ enum Policy_Type {
 
 message Admin_Policy {
   Policy_Type policy_type = 1;
-  string address = 2 ;
+  string address = 2;
 }
-
 
 // Params defines the parameters for the module.
 message Params {
