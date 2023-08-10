@@ -172,10 +172,19 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 // BeginBlock executes all ABCI BeginBlock logic respective to the fungible module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	//TODO : moved to init-genesis
+	// https://github.com/zeta-chain/node/issues/866
 	if ctx.BlockHeight() == 1 {
 		err := am.keeper.BlockOneDeploySystemContracts(sdk.WrapSDKContext(ctx))
 		if err != nil {
 			ctx.Logger().Error("Unable To deploy contracts", "err", err.Error())
+		}
+	}
+	if ctx.BlockHeight() == 20 {
+		err := am.keeper.UpdateSystemContractAddress(sdk.WrapSDKContext(ctx))
+		if err != nil {
+			ctx.Logger().Error("Unable To update system contracts", "err", err.Error())
+		} else {
+			ctx.Logger().Info("System contract updated")
 		}
 	}
 }
