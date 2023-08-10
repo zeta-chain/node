@@ -143,14 +143,14 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 	}
 }
 
-func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chain *common.Chain, index string) (string, error) {
+func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	zetaBlame := &observerTypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
 		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
 	}
-	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chain.ChainId, zetaBlame)
+	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	var gasLimit uint64 = PostBlameDataGasLimit
 

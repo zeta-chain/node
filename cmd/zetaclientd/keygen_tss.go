@@ -116,7 +116,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		if err != nil {
 			return err
 		}
-		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, &cfg.ChainsEnabled[0], digest)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, common.ZetaChain().ChainId, digest) //common.GetChainFromChainID(common.ZetaChain().ChainId)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err

@@ -104,7 +104,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
 
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
@@ -163,7 +163,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digest := combineDigests(digestBase64)
 		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
