@@ -50409,6 +50409,8 @@ definitions:
     type: object
   fungibleMsgUpdateSystemContractResponse:
     type: object
+  fungibleMsgUpdateZRC20WithdrawFeeResponse:
+    type: object
   fungibleQueryAllForeignCoinsResponse:
     type: object
     properties:
