@@ -27249,7 +27249,7 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/get_client_params_for_chain/{chainID}:
+  /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
     get:
       summary: Queries a list of GetClientParamsForChain items.
       operationId: Query_GetCoreParamsForChain
@@ -27263,7 +27263,7 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainID
+        - name: chain_id
           in: path
           required: true
           type: string
@@ -50686,7 +50686,7 @@ definitions:
   observerQueryAllBlameRecordsResponse:
     type: object
     properties:
-      blameInfo:
+      blame_info:
         type: array
         items:
           type: object
@@ -50712,7 +50712,7 @@ definitions:
   observerQueryBallotByIdentifierResponse:
     type: object
     properties:
-      BallotIdentifier:
+      ballot_identifier:
         type: string
       voters:
         type: array
@@ -50726,7 +50726,7 @@ definitions:
   observerQueryBlameByIdentifierResponse:
     type: object
     properties:
-      blameInfo:
+      blame_info:
         $ref: '#/definitions/observerBlame'
   observerQueryGetCoreParamsForChainResponse:
     type: object
@@ -50741,17 +50741,17 @@ definitions:
   observerQueryGetKeygenResponse:
     type: object
     properties:
-      Keygen:
+      keygen:
         $ref: '#/definitions/observerKeygen'
   observerQueryGetNodeAccountResponse:
     type: object
     properties:
-      NodeAccount:
+      node_account:
         $ref: '#/definitions/observerNodeAccount'
   observerQueryGetPermissionFlagsResponse:
     type: object
     properties:
-      PermissionFlags:
+      permission_flags:
         $ref: '#/definitions/observerPermissionFlags'
   observerQueryObserversByChainResponse:
     type: object
