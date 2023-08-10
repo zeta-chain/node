@@ -14,7 +14,7 @@ import (
 
 func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20Address)
