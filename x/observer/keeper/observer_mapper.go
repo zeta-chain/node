@@ -99,7 +99,10 @@ func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserver
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// TODO move parsing to client
+	// https://github.com/zeta-chain/node/issues/867
+
 	chainName := common.ParseChainName(req.ObservationChain)
 	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {

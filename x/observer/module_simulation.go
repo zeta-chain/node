@@ -11,8 +11,7 @@ import (
 
 /* #nosec */
 const (
-	opWeightMsgUpdateClientParams = "op_weight_msg_update_client_params"
-	// TODO: Determine the simulation weight value
+	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
 	defaultWeightMsgUpdateClientParams int = 100
 )
 
