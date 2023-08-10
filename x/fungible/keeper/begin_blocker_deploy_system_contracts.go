@@ -10,3 +10,6 @@ import (
 func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	return nil
 }
+func (k Keeper) UpdateSystemContractAddress(goCtx context.Context) error {
+	return nil
+}

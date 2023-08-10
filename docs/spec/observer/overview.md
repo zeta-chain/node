@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Overview
 
 The `observer` module keeps track of ballots for voting, a mapping between
