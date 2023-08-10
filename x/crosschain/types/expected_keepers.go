@@ -86,6 +86,7 @@ type FungibleKeeper interface {
 	DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error
 	ZRC20DepositAndCallContract(
 		ctx sdk.Context,
+		from []byte,
 		to eth.Address,
 		amount *big.Int,
 		senderChain *common.Chain,

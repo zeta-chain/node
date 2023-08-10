@@ -135,7 +135,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, big.NewInt(2_100_000_000))
+	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, zevmAuth.From, big.NewInt(2_100_000_000))
 	_, _ = zetaContractAddress, zetaContract
 	if err != nil {
 		panic(err)
