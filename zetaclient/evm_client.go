@@ -409,7 +409,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C:
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, "")
 			if err != nil {
 				continue
 			}

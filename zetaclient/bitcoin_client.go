@@ -47,22 +47,23 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain         common.Chain
-	rpcClient     *rpcclient.Client
-	zetaClient    *ZetaCoreBridge
-	Tss           TSSSigner
-	lastBlock     int64
-	BlockTime     uint64 // block time in seconds
-	pendingCctx   map[string]*types.CrossChainTx
-	includedTx    map[string]btcjson.GetTransactionResult // key: chain-nonce
-	broadcastedTx map[string]chainhash.Hash
-	mu            *sync.Mutex
-	utxos         []btcjson.ListUnspentResult
-	db            *gorm.DB
-	stop          chan struct{}
-	logger        BTCLog
-	cfg           *config.Config
-	ts            *TelemetryServer
+	chain             common.Chain
+	rpcClient         *rpcclient.Client
+	zetaClient        *ZetaCoreBridge
+	Tss               TSSSigner
+	lastBlock         int64
+	BlockTime         uint64 // block time in seconds
+	pendingCctx       map[string]*types.CrossChainTx
+	includedTxHashes  map[string]uint64                       // key: tx hash
+	includedTxResults map[string]btcjson.GetTransactionResult // key: chain-tss-nonce
+	broadcastedTx     map[string]chainhash.Hash
+	mu                *sync.Mutex
+	utxos             []btcjson.ListUnspentResult
+	db                *gorm.DB
+	stop              chan struct{}
+	logger            BTCLog
+	cfg               *config.Config
+	ts                *TelemetryServer
 }
 
 const (
@@ -113,7 +114,8 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.pendingCctx = make(map[string]*types.CrossChainTx)
-	ob.includedTx = make(map[string]btcjson.GetTransactionResult)
+	ob.includedTxHashes = make(map[string]uint64)
+	ob.includedTxResults = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]chainhash.Hash)
 
 	// initialize the Client
@@ -308,29 +310,28 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 
 	ob.mu.Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
-	res, included := ob.includedTx[outTxID]
+	res, included := ob.includedTxResults[outTxID]
 	ob.mu.Unlock()
 
 	if !included {
 		if !broadcasted {
 			return false, false, nil
 		}
-		//Query txn hash on bitcoin chain
-		hash, err := chainhash.NewHashFromStr(txnHash.String())
-		if err != nil {
+		// Get original cctx parameters
+		outTxID := ob.GetTxID(nonce)
+		index, params := ob.GetPendingCctx(outTxID)
+		if index == "" {
+			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: haven't seen this pending cctx yet %s", outTxID)
 			return false, false, nil
 		}
-		getTxResult, err := ob.rpcClient.GetTransactionWatchOnly(hash, true)
-		if err != nil {
-			ob.logger.ObserveOutTx.Warn().Err(err).Msg("IsSendOutTxProcessed: transaction not found")
-			return false, false, nil
-		}
-		res = *getTxResult
 
-		// Save result to avoid unnecessary query
-		ob.mu.Lock()
-		ob.includedTx[outTxID] = res
-		ob.mu.Unlock()
+		// Check and save included tx
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checking pending outTx %s", txnHash.String())
+		err := ob.checkNSaveIncludedTx(txnHash.String(), params)
+		if err != nil {
+			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
+			return false, false, nil
+		}
 	}
 	var amount float64
 	if res.Amount > 0 {
@@ -357,7 +358,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	if err != nil {
 		logger.Error().Err(err).Msgf("error posting to zeta core")
 	} else {
-		logger.Info().Msgf("Bitcoin outTx confirmed: PostReceiveConfirmation zeta tx: %s", zetaHash)
+		logger.Info().Msgf("Bitcoin outTx %s confirmed: PostReceiveConfirmation zeta tx: %s", res.TxID, zetaHash)
 	}
 	return true, true, nil
 }
@@ -591,7 +592,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
 	outTxID := ob.GetTxID(nonce)
-	res, included := ob.includedTx[outTxID]
+	res, included := ob.includedTxResults[outTxID]
 	if !included {
 		return -1, fmt.Errorf("findNonceMarkUTXO: prior outTx %s not included yet", outTxID)
 	}
@@ -733,37 +734,31 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C:
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
 			if err != nil {
-				ob.logger.ObserveOutTx.Error().Err(err).Msg("error GetAllOutTxTrackerByChain")
+				ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error GetAllOutTxTrackerByChain")
 				continue
 			}
 			for _, tracker := range trackers {
+				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				ob.logger.ObserveOutTx.Info().Msgf("tracker outTxID: %s", outTxID)
+				index, params := ob.GetPendingCctx(outTxID)
+				if index == "" {
+					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: haven't seen this pending cctx yet %s", outTxID)
+					break
+				}
+				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: doesn't hurt to check
+					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: tracker nonce %d not match cctx nonce %d", tracker.Nonce, params.OutboundTxTssNonce)
+					break
+				}
+				if len(tracker.HashList) > 1 {
+					ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx: oops, outTxID %s got multiple (%d) outTx hashes", outTxID, len(tracker.HashList))
+				}
+				// verify outTx hashes
 				for _, txHash := range tracker.HashList {
-					hash, err := chainhash.NewHashFromStr(txHash.TxHash)
+					err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
 					if err != nil {
-						ob.logger.ObserveOutTx.Error().Err(err).Msg("error NewHashFromStr")
-						continue
-					}
-					// The Bitcoin node has to be configured to watch TSS address
-					getTxResult, err := ob.rpcClient.GetTransaction(hash)
-					if err != nil {
-						ob.logger.ObserveOutTx.Warn().Err(err).Msgf("error GetTransaction: %s", txHash.TxHash)
-						continue
-					}
-					// Check TSS outTx
-					err = ob.checkTssOutTxResult(hash, getTxResult)
-					if err != nil {
-						ob.logger.ObserveOutTx.Warn().Err(err).Msgf("error checkTssOutTxResult: %s", txHash.TxHash)
-						continue
-					}
-					ob.logger.ObserveOutTx.Info().Msgf("outTx %s has passed checkTssOutTxResult", txHash.TxHash)
-					if getTxResult.Confirmations >= 0 {
-						ob.mu.Lock()
-						ob.includedTx[outTxID] = *getTxResult
-						ob.mu.Unlock()
+						ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: checkNSaveIncludedTx failed")
 					}
 				}
 			}
@@ -774,56 +769,194 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
+func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) error {
+	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
+	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
+	if err != nil {
+		return errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
+	}
+	if getTxResult.Confirmations >= 0 { // check included tx only
+		err = ob.checkTssOutTxResult(hash, getTxResult, params, params.OutboundTxTssNonce)
+		if err != nil {
+			return errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
+		}
+
+		ob.mu.Lock()
+		defer ob.mu.Unlock()
+		nonce, foundHash := ob.includedTxHashes[txHash]
+		res, foundRes := ob.includedTxResults[outTxID]
+		if !foundHash && !foundRes { // enforce rigid 1-to-1 mapping: outTxID(nonce) <===> txHash
+			ob.includedTxHashes[txHash] = params.OutboundTxTssNonce
+			ob.includedTxResults[outTxID] = *getTxResult
+			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s", txHash, outTxID)
+		}
+		if foundHash && foundRes { // update tx result
+			ob.includedTxResults[outTxID] = *getTxResult
+			if getTxResult.Confirmations > res.Confirmations {
+				ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: bitcoin outTx %s got confirmations %d", txHash, getTxResult.Confirmations)
+			}
+		}
+		if !foundHash && foundRes { // be alert for duplicate payment!!! As we got a new hash paying same cctx. It might happen (e.g. majority of signers get crupted)
+			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: duplicate payment by bitcoin outTx %s outTxID %s, prior result %v, current result %v", txHash, outTxID, res, *getTxResult)
+		}
+		if foundHash && !foundRes {
+			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: unreachable code path! outTx %s outTxID %s, prior nonce %d, current nonce %d", txHash, outTxID, nonce, params.OutboundTxTssNonce)
+		}
+	}
+	return nil
+}
+
 // Basic TSS outTX checks:
-//   - locate the raw tx and find the Vin
+//   - should be able to query the raw tx
 //   - check if all inputs are segwit && TSS inputs
 //
 // Returns: true if outTx passes basic checks.
-func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
-	if res.Confirmations == 0 {
-		rawtx, err := ob.rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
-		if err != nil {
-			return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTransactionVerbose %s", res.TxID)
-		}
-		if !ob.isValidTSSVin(rawtx.Vin) {
-			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
-		}
-	} else if res.Confirmations > 0 {
-		blkHash, err := chainhash.NewHashFromStr(res.BlockHash)
-		if err != nil {
-			return errors.Wrapf(err, "checkTssOutTxResult: error NewHashFromStr %s", res.BlockHash)
-		}
-		block, err := ob.rpcClient.GetBlockVerboseTx(blkHash) // for confirmed tx, we query the block
-		if err != nil {
-			return errors.Wrapf(err, "checkTssOutTxResult: error GetBlockVerboseTx %s", res.BlockHash)
-		}
-		if res.BlockIndex < 0 || res.BlockIndex >= int64(len(block.Tx)) {
-			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
-		}
-		tx := block.Tx[res.BlockIndex]
-		if !ob.isValidTSSVin(tx.Vin) {
-			return errors.Wrapf(err, "checkTssOutTxResult: invalid outTx with non-TSS vin %s", res.TxID)
-		}
+func (ob *BitcoinChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult, params types.OutboundTxParams, nonce uint64) error {
+	rawResult, err := ob.getRawTxResult(hash, res)
+	if err != nil {
+		return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTxResultByHash %s", hash.String())
 	}
-	return nil // ignore res.Confirmations < 0 (meaning not included)
+	err = ob.checkTSSVin(rawResult.Vin, nonce)
+	if err != nil {
+		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vin in outTx %s nonce %d", hash, nonce)
+	}
+	err = ob.checkTSSVout(rawResult.Vout, params, nonce)
+	if err != nil {
+		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
+	}
+	return nil
 }
 
-// Returns true only if all inputs are TSS vins
-func (ob *BitcoinChainClient) isValidTSSVin(vins []btcjson.Vin) bool {
-	if len(vins) == 0 {
-		return false
+func (ob *BitcoinChainClient) GetTxResultByHash(txID string) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
+	hash, err := chainhash.NewHashFromStr(txID)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error NewHashFromStr: %s", txID)
+	}
+
+	// The Bitcoin node has to be configured to watch TSS address
+	txResult, err := ob.rpcClient.GetTransaction(hash)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "GetOutTxByTxHash: error GetTransaction %s", hash.String())
+	}
+	return hash, txResult, nil
+}
+
+func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult) (btcjson.TxRawResult, error) {
+	if res.Confirmations == 0 { // for pending tx, we query the raw tx directly
+		rawResult, err := ob.rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
+		if err != nil {
+			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetRawTransactionVerbose %s", res.TxID)
+		}
+		return *rawResult, nil
+	} else if res.Confirmations > 0 { // for confirmed tx, we query the block
+		blkHash, err := chainhash.NewHashFromStr(res.BlockHash)
+		if err != nil {
+			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error NewHashFromStr for block hash %s", res.BlockHash)
+		}
+		block, err := ob.rpcClient.GetBlockVerboseTx(blkHash)
+		if err != nil {
+			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetBlockVerboseTx %s", res.BlockHash)
+		}
+		if res.BlockIndex < 0 || res.BlockIndex >= int64(len(block.Tx)) {
+			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
+		}
+		return block.Tx[res.BlockIndex], nil
+	} else { // res.Confirmations < 0 (meaning not included)
+		return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
+	}
+}
+
+// Vin is valid if:
+//   - The first input is the nonce-mark
+//   - All inputs are from TSS address
+func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
+	// vins: [nonce-mark, UTXO1, UTXO2, ...]
+	if len(vins) <= 1 {
+		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
 	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
-	for _, vin := range vins {
-		// The length of the Witness should be always 2 for P2WPKH SegWit inputs.
+	for i, vin := range vins {
+		// The length of the Witness should be always 2 for SegWit inputs.
 		if len(vin.Witness) != 2 {
-			return false
+			return fmt.Errorf("checkTSSVin: expected 2 witness items, got %d", len(vin.Witness))
 		}
 		if vin.Witness[1] != pubKeyTss {
-			return false
+			return fmt.Errorf("checkTSSVin: witness pubkey %s not match TSS pubkey %s", vin.Witness[1], pubKeyTss)
+		}
+		// 1st vin: nonce-mark MUST come from prior TSS outTx
+		if i == 0 && nonce > 0 {
+			ob.mu.Lock()
+			res, found := ob.includedTxResults[ob.GetTxID(nonce-1)]
+			ob.mu.Unlock()
+			if found && vin.Txid != res.TxID {
+				return fmt.Errorf("checkTSSVin: invalid nonce-mark txid: %s, expected %s", vin.Txid, res.TxID)
+			}
 		}
 	}
-	return true
+	return nil
+}
+
+// Vout is valid if:
+//   - The first output is the nonce-mark
+//   - The second output is the correct payment to recipient
+//   - The third output is the change to TSS (optional)
+func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.OutboundTxParams, nonce uint64) error {
+	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
+	if !(len(vouts) == 2 || len(vouts) == 3) {
+		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
+	}
+
+	tssAddress := ob.Tss.BTCAddress()
+	for _, vout := range vouts {
+		amount, err := getSatoshis(vout.Value)
+		if err != nil {
+			return errors.Wrap(err, "checkTSSVout: error getting satoshis")
+		}
+		// decode P2WPKH scriptPubKey
+		scriptPubKey := vout.ScriptPubKey.Hex
+		decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+		if err != nil {
+			return errors.Wrapf(err, "checkTSSVout: error decoding scriptPubKey %s", scriptPubKey)
+		}
+		if len(decodedScriptPubKey) != 22 { // P2WPKH script
+			return fmt.Errorf("checkTSSVout: unsupported scriptPubKey: %s", scriptPubKey)
+		}
+		witnessVersion := decodedScriptPubKey[0]
+		witnessProgram := decodedScriptPubKey[2:]
+		if witnessVersion != 0 {
+			return fmt.Errorf("checkTSSVout: unsupported witness in scriptPubKey %s", scriptPubKey)
+		}
+		recvAddress, err := ob.chain.BTCAddressFromWitnessProgram(witnessProgram)
+		if err != nil {
+			return errors.Wrapf(err, "checkTSSVout: error getting receiver from witness program %s", witnessProgram)
+		}
+
+		// 1st vout: nonce-mark
+		if vout.N == 0 {
+			if recvAddress != tssAddress {
+				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
+			}
+			if amount != NonceMarkAmount(nonce) {
+				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, NonceMarkAmount(nonce))
+			}
+		}
+		// 2nd vout: payment to recipient
+		if vout.N == 1 {
+			if recvAddress != params.Receiver {
+				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", recvAddress, params.Receiver)
+			}
+			if amount != int64(params.Amount.Uint64()) {
+				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
+			}
+		}
+		// 3rd vout: change to TSS (optional)
+		if vout.N == 2 {
+			if recvAddress != tssAddress {
+				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", recvAddress, tssAddress)
+			}
+		}
+	}
+	return nil
 }
 
 func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {

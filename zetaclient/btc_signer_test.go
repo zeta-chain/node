@@ -210,9 +210,9 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 
 	// Create BitcoinChainClient
 	client := &BitcoinChainClient{
-		Tss:        tss,
-		mu:         &sync.Mutex{},
-		includedTx: make(map[string]btcjson.GetTransactionResult),
+		Tss:               tss,
+		mu:                &sync.Mutex{},
+		includedTxResults: make(map[string]btcjson.GetTransactionResult),
 	}
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -227,7 +227,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
-	ob.includedTx[outTxID] = btcjson.GetTransactionResult{TxID: txid}
+	ob.includedTxResults[outTxID] = btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	if preMarkIndex >= 0 {
@@ -260,7 +260,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "findNonceMarkUTXO: outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
+	require.Equal(t, "findNonceMarkUTXO: prior outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
 
 	// Case3: nonce = 1, must FAIL without nonce mark utxo

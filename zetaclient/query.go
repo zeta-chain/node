@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -11,7 +14,11 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
-	"time"
+)
+
+const (
+	Ascending  = "ASC"
+	Descending = "DESC"
 )
 
 func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
@@ -21,7 +28,6 @@ func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFl
 		return zetaObserverTypes.PermissionFlags{}, err
 	}
 	return resp.PermissionFlags, nil
-
 }
 
 func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
@@ -198,7 +204,7 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order string) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.ChainId,
@@ -212,6 +218,16 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	})
 	if err != nil {
 		return nil, err
+	}
+	if order == Ascending {
+		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
+			return resp.OutTxTracker[i].Nonce < resp.OutTxTracker[j].Nonce
+		})
+	}
+	if order == Descending {
+		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
+			return resp.OutTxTracker[i].Nonce > resp.OutTxTracker[j].Nonce
+		})
 	}
 	return resp.OutTxTracker, nil
 }
