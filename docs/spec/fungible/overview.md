@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Overview
 
 The `fungible` module facilitates the deployment of fungible tokens of connected

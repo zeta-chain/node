@@ -30,8 +30,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
+
 	// TODO move foreign coins to observer
+	// https://github.com/zeta-chain/node/issues/863
 	//genesis.ForeignCoinsList = k(ctx)
+
 	// Get all zetaDepositAndCallContract
 	system, found := k.GetSystemContract(ctx)
 	if found {

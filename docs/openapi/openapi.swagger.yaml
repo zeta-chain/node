@@ -50407,6 +50407,8 @@ definitions:
     type: object
   fungibleMsgRemoveForeignCoinResponse:
     type: object
+  fungibleMsgUpdateSystemContractResponse:
+    type: object
   fungibleQueryAllForeignCoinsResponse:
     type: object
     properties:

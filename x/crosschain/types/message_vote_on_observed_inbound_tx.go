@@ -61,8 +61,10 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	if msg.ReceiverChain < 0 {
 		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ReceiverChain)
 	}
+
 	// TODO: should parameterize the hardcoded max len
 	// FIXME: should allow this observation and handle errors in the state machine
+	// https://github.com/zeta-chain/node/issues/862
 	if len(msg.Message) > 10240 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
 	}
