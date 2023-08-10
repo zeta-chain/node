@@ -9,8 +9,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdGetCoreParamsForChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-core-params [chain-id]",

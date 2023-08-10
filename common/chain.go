@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"strings"
 )
 
 var (
@@ -71,6 +72,16 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		return addrStr, nil
 	}
 	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
+}
+
+// DecodeAddress decode the address string to bytes
+func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
+	if IsEVMChain(chain.ChainId) {
+		return ethcommon.HexToAddress(addr).Bytes(), nil
+	} else if IsBitcoinChain(chain.ChainId) {
+		return []byte(addr), nil
+	}
+	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
 func IsEVMChain(chainID int64) bool {

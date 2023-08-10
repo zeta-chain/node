@@ -1,24 +1,21 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-// this line is used by starport scaffolding # proto/tx/import
-
 import "common/common.proto";
 import "gogoproto/gogo.proto";
+import "observer/blame.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-import "observer/blame.proto";
-
-
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {
-   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
-   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
-   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
-  // this line is used by starport scaffolding # proto/tx/rpc
+  rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
+  rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+  rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
+  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 }
 
 message MsgUpdateCoreParams {
@@ -26,8 +23,7 @@ message MsgUpdateCoreParams {
   CoreParams coreParams = 2;
 }
 
-message MsgUpdateCoreParamsResponse {
-}
+message MsgUpdateCoreParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;
@@ -35,8 +31,7 @@ message MsgAddObserver {
   ObservationType observationType = 3;
 }
 
-message MsgAddObserverResponse {
-}
+message MsgAddObserverResponse {}
 
 message MsgAddBlameVote {
   string creator = 1;
@@ -44,7 +39,16 @@ message MsgAddBlameVote {
   Blame blame_info = 3;
 }
 
-message MsgAddBlameVoteResponse {
+message MsgAddBlameVoteResponse {}
+message MsgUpdatePermissionFlags {
+  string creator = 1;
+  bool isInboundEnabled = 3;
+}
+message MsgUpdatePermissionFlagsResponse {}
+
+message MsgUpdateKeygen {
+  string creator = 1;
+  int64 block = 2;
 }
 
-// this line is used by starport scaffolding # proto/tx/message
+message MsgUpdateKeygenResponse {}

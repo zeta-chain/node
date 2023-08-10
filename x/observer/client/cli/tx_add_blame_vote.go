@@ -4,18 +4,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"gitlab.com/thorchain/tss/go-tss/blame"
-	"os"
-	"path/filepath"
-	"strconv"
 )
-
-var _ = strconv.Itoa(0)
 
 func CmdAddBlameVote() *cobra.Command {
 	cmd := &cobra.Command{

@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"fmt"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	// this line is used by starport scaffolding # ibc/keeper/import
 )
 
 type (
@@ -25,9 +24,7 @@ type (
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
 		zetaObserverKeeper types.ZetaObserverKeeper
-		fungibleKeeper     fungibleModuleKeeper.Keeper
-		// this line is used by starport scaffolding # ibc/keeper/attribute
-
+		fungibleKeeper     types.FungibleKeeper
 	}
 )
 
@@ -40,9 +37,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ZetaObserverKeeper,
-	fungibleKeeper fungibleModuleKeeper.Keeper,
-	// this line is used by starport scaffolding # ibc/keeper/parameter
-
+	fungibleKeeper types.FungibleKeeper,
 ) *Keeper {
 	// ensure governance module account is set
 	// FIXME: enable this check! (disabled for now to avoid unit test panic)
@@ -60,7 +55,6 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		zetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
-		// this line is used by starport scaffolding # ibc/keeper/return
 	}
 }
 

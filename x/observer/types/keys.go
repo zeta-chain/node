@@ -22,10 +22,14 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	BlameKey             = "Blame-"
-	VoterKey             = "Voter-value-"
-	AllCoreParams        = "CoreParams"
-	ObserverMapperKey    = "Observer-value-"
-	ObserverParamsKey    = "ObserverParams"
-	AdminPolicyParamsKey = "AdminParams"
+	BlameKey                  = "Blame-"
+	VoterKey                  = "Voter-value-"
+	AllCoreParams             = "CoreParams"
+	ObserverMapperKey         = "Observer-value-"
+	ObserverParamsKey         = "ObserverParams"
+	AdminPolicyParamsKey      = "AdminParams"
+	PermissionFlagsKey        = "PermissionFlags-value-"
+	LastBlockObserverCountKey = "ObserverCount-value-"
+	NodeAccountKey            = "NodeAccount-value-"
+	KeygenKey                 = "Keygen-value-"
 )

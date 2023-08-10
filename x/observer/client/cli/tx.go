@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
+
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -18,12 +19,16 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	//cmd.AddCommand(CmdSetSupportedChains())
-	//cmd.AddCommand(CmdAddObserver())
-	cmd.AddCommand(CmdUpdateCoreParams())
-	cmd.AddCommand(CmdAddBlameVote())
-	cmd.AddCommand(CmdEncode())
-	// this line is used by starport scaffolding # 1
+
+	cmd.AddCommand(
+		//CmdSetSupportedChains(),
+		//CmdAddObserver(),
+		CmdUpdateCoreParams(),
+		CmdUpdatePermissionFlags(),
+		CmdUpdateKeygen(),
+		CmdAddBlameVote(),
+		CmdEncode(),
+	)
 
 	return cmd
 }

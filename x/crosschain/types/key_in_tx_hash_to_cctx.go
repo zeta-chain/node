@@ -1,9 +1,5 @@
 package types
 
-import "encoding/binary"
-
-var _ binary.ByteOrder
-
 const (
 	// InTxHashToCctxKeyPrefix is the prefix to retrieve all InTxHashToCctx
 	InTxHashToCctxKeyPrefix = "InTxHashToCctx/value/"

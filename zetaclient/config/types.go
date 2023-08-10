@@ -2,10 +2,10 @@ package config
 
 import (
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -69,7 +69,7 @@ type Config struct {
 	LogLevel      zerolog.Level
 	LogSampler    bool
 	PreParamsPath string
-	Keygen        crosschaintypes.Keygen
+	Keygen        zetaObserverTypes.Keygen
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string

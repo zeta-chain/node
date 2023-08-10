@@ -1,8 +1,10 @@
 package querytests
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strconv"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
 	"github.com/stretchr/testify/suite"
@@ -11,15 +13,16 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"strconv"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type CliTestSuite struct {
 	suite.Suite
 
-	cfg     network.Config
-	network *network.Network
-	state   *types.GenesisState
+	cfg             network.Config
+	network         *network.Network
+	crossChainState *types.GenesisState
+	observerState   *observerTypes.GenesisState
 }
 
 func NewCLITestSuite(cfg network.Config) *CliTestSuite {
@@ -46,6 +49,7 @@ func (s *CliTestSuite) SetupSuite() {
 	}
 	s.cfg.GenesisState = network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
 	s.AddCrossChainData(2)
+	s.AddObserverData(2)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
 	s.network = net
@@ -58,7 +62,22 @@ func (s *CliTestSuite) TearDownSuite() {
 	s.T().Log("tearing down genesis test suite")
 	s.network.Cleanup()
 }
+func (s *CliTestSuite) AddObserverData(n int) {
+	state := observerTypes.GenesisState{}
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[observerTypes.ModuleName], &state))
+	for i := 0; i < n; i++ {
+		state.NodeAccountList = append(state.NodeAccountList, &observerTypes.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
+	}
+	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+	permissionFlags := &observerTypes.PermissionFlags{}
+	nullify.Fill(&permissionFlags)
+	state.PermissionFlags = permissionFlags
 
+	buf, err := s.cfg.Codec.MarshalJSON(&state)
+	s.Require().NoError(err)
+	s.cfg.GenesisState[observerTypes.ModuleName] = buf
+	s.observerState = &state
+}
 func (s *CliTestSuite) AddCrossChainData(n int) {
 	state := types.GenesisState{}
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], &state))
@@ -86,16 +105,13 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-	state.Keygen = &types.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+
 	state.Tss = &types.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},
 		OperatorAddressList: []string{"operatorAddressList"},
 		FinalizedZetaHeight: 1,
 		KeyGenZetaHeight:    1,
-	}
-	for i := 0; i < n; i++ {
-		state.NodeAccountList = append(state.NodeAccountList, &types.NodeAccount{Operator: strconv.Itoa(i), GranteeAddress: "signer"})
 	}
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
@@ -114,11 +130,9 @@ func (s *CliTestSuite) AddCrossChainData(n int) {
 		nullify.Fill(&inTxHashToCctx)
 		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
 	}
-	permissionFlags := &types.PermissionFlags{}
-	nullify.Fill(&permissionFlags)
-	state.PermissionFlags = permissionFlags
+
 	buf, err := s.cfg.Codec.MarshalJSON(&state)
 	s.Require().NoError(err)
 	s.cfg.GenesisState[types.ModuleName] = buf
-	s.state = &state
+	s.crossChainState = &state
 }

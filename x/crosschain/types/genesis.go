@@ -3,34 +3,28 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	// this line is used by starport scaffolding # ibc/genesistype/import
 )
 
-// DefaultIndex is the default capability global index
+// DefaultIndex is the default crosschain global index
 const DefaultIndex uint64 = 1
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default crosschain genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		// this line is used by starport scaffolding # ibc/genesistype/default
 		OutTxTrackerList:   []OutTxTracker{},
 		InTxHashToCctxList: []InTxHashToCctx{},
-		PermissionFlags:    nil,
-		// this line is used by starport scaffolding # genesis/types/default
-		Keygen:          nil,
-		GasPriceList:    []*GasPrice{},
-		ChainNoncesList: []*ChainNonces{},
+		GasPriceList:       []*GasPrice{},
+		ChainNoncesList:    []*ChainNonces{},
 		//CCTX:            []*Send{},
-		NodeAccountList: []*NodeAccount{},
+
 	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// this line is used by starport scaffolding # ibc/genesistype/validate
-
 	// Check for duplicated index in outTxTracker
 	outTxTrackerIndexMap := make(map[string]struct{})
 
@@ -81,16 +75,6 @@ func (gs GenesisState) Validate() error {
 	//	}
 	//	sendIndexMap[elem.Index] = true
 	//}
-
-	// Check for duplicated index in nodeAccount
-	nodeAccountIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.NodeAccountList {
-		if _, ok := nodeAccountIndexMap[elem.GetOperator()]; ok {
-			return fmt.Errorf("duplicated index for nodeAccount")
-		}
-		nodeAccountIndexMap[elem.GetOperator()] = true
-	}
 
 	return nil
 }

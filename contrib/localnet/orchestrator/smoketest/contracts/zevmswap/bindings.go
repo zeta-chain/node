@@ -1,4 +1,5 @@
-//go:generate sh -c " solc --evm-version paris --allow-paths ..,  --combined-json abi,bin --base-path .. ZEVMSwapApp.sol     | jq '.contracts.\"zevmswap/ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
+// solc/abigen use version 0.8.7
+//go:generate sh -c " solc --evm-version london --allow-paths ..,  --combined-json abi,bin --base-path .. ZEVMSwapApp.sol     | jq '.contracts.\"ZEVMSwapApp.sol:ZEVMSwapApp\"'  > ZEVMSwapApp.json"
 //go:generate sh -c "cat ZEVMSwapApp.json | jq .abi > ZEVMSwapApp.abi"
 //go:generate sh -c "cat ZEVMSwapApp.json | jq .bin  | tr -d '\"'  > ZEVMSwapApp.bin"
 
@@ -9,6 +10,7 @@ package zevmswap
 import (
 	_ "embed"
 	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+enum KeygenStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  PendingKeygen = 0;
+  KeyGenSuccess = 1;
+  KeyGenFailed = 3;
+}
+message Keygen {
+  KeygenStatus status = 2; // 0--to generate key; 1--generated; 2--error
+  repeated string granteePubkeys = 3;
+  int64 blockNumber = 4; // the blocknum that the key needs to be generated
+}

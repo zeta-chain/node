@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -17,27 +15,42 @@ import (
 // Casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
-// reached, the ballot is finalized. When a ballot is finalized, if the amount
-// of zeta minted does not match the outbound transaction amount an error is
-// thrown. If the amounts match, the outbound transaction hash and the "last
-// updated" timestamp are updated.
+// reached, the ballot is finalized. When a ballot is finalized, the outbound
+// transaction is processed.
 //
-// The transaction is proceeded to be finalized:
-//
-// If the observation was successful, the status is changed from "pending
-// revert/outbound" to "reverted/mined". The difference between zeta burned
+// If the observation is successful, the difference between zeta burned
 // and minted is minted by the bank module and deposited into the module
 // account.
 //
-// If the observation was unsuccessful, and if the status is "pending outbound",
-// prices and nonce are updated and the status is changed to "pending revert".
-// If the status was "pending revert", the status is changed to "aborted".
+// If the observation is unsuccessful, the logic depends on the previous
+// status.
 //
-// If there's an error in the finalization process, the CCTX status is set to
-// 'aborted'.
+// If the previous status was `PendingOutbound`, a new revert transaction is
+// created. To cover the revert transaction fee, the required amount of tokens
+// submitted with the CCTX are swapped using a Uniswap V2 contract instance on
+// ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
+// tokens are then
+// burned. The nonce is updated. If everything is successful, the CCTX status is
+// changed to `PendingRevert`.
 //
-// After finalization the outbound transaction tracker and pending nonces are
-// removed, and the CCTX is updated in the store.
+// If the previous status was `PendingRevert`, the CCTX is aborted.
+//
+// ```mermaid
+// stateDiagram-v2
+//
+//	state observation <<choice>>
+//	state success_old_status <<choice>>
+//	state fail_old_status <<choice>>
+//	PendingOutbound --> observation: Finalize outbound
+//	observation --> success_old_status: Observation succeeded
+//	success_old_status --> Reverted: Old status is PendingRevert
+//	success_old_status --> OutboundMined: Old status is PendingOutbound
+//	observation --> fail_old_status: Observation failed
+//	fail_old_status --> PendingRevert: Old status is PendingOutbound
+//	fail_old_status --> Aborted: Old status is PendingRevert
+//	PendingOutbound --> Aborted: Finalize outbound error
+//
+// ```
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
@@ -74,7 +87,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	if isNew {
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.ChainName.String(), sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}))
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
 		// Set this the first time when the ballot is created
 		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
 		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
@@ -105,32 +118,20 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 
-	err = func() error { //err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus) // remove this line
+	tmpCtx, commit := ctx.CacheContext()
+	err = func() error { //err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
-		zetaBurnt := cctx.InboundTxParams.Amount
-		zetaMinted := cctx.GetCurrentOutTxParam().Amount
 		oldStatus := cctx.CctxStatus.Status
 		switch ballot.BallotStatus {
 		case observerTypes.BallotStatus_BallotFinalized_SuccessObservation:
 			switch oldStatus {
 			case types.CctxStatus_PendingRevert:
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Reverted, "", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Reverted, "")
 			case types.CctxStatus_PendingOutbound:
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "")
 			}
-
 			newStatus := cctx.CctxStatus.Status.String()
-			if zetaBurnt.LT(zetaMinted) {
-				// TODO :Handle Error ?
-			}
-			balanceAmount := zetaBurnt.Sub(zetaMinted)
-			if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta { // TODO : Handle Fee for other coins
-				err := HandleFeeBalances(k, ctx, balanceAmount)
-				if err != nil {
-					return err
-				}
-			}
-			EmitOutboundSuccess(ctx, msg, oldStatus.String(), newStatus, cctx)
+			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
 			switch oldStatus {
 			case types.CctxStatus_PendingOutbound:
@@ -142,17 +143,17 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 					CoinType:           cctx.InboundTxParams.CoinType,
 					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
 				})
-				err := k.UpdatePrices(ctx, cctx.InboundTxParams.SenderChainId, &cctx)
+				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
 				if err != nil {
 					return err
 				}
-				err = k.UpdateNonce(ctx, cctx.InboundTxParams.SenderChainId, &cctx)
+				err = k.UpdateNonce(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
 				if err != nil {
 					return err
 				}
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, "Outbound failed, start revert", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
 			case types.CctxStatus_PendingRevert:
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
 			}
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
@@ -160,7 +161,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil
 	}()
 	if err != nil {
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+		// do not commit tmpCtx
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		ctx.Logger().Error(err.Error())
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
@@ -168,19 +170,11 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
+	commit()
 	// Set the ballot index to the finalized ballot
 	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
-}
-
-func HandleFeeBalances(k msgServer, ctx sdk.Context, balanceAmount math.Uint) error {
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(common.ZETADenom, sdk.NewIntFromBigInt(balanceAmount.BigInt()))))
-	if err != nil {
-		log.Error().Msgf("ReceiveConfirmation: failed to mint coins: %s", err.Error())
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to mint coins: %s", err.Error()))
-	}
-	return nil
 }

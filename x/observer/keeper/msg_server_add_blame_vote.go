@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -32,7 +33,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	}
 
 	if isNew {
-		EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String(), sdk.MsgTypeURL(&types.MsgAddBlameVote{}))
+		EmitEventBallotCreated(ctx, ballot, vote.BlameInfo.Index, observationChain.String())
 	}
 
 	// AddVoteToBallot adds a vote and sets the ballot

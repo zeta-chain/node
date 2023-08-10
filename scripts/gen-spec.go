@@ -57,6 +57,7 @@ func processProtoFile(path string, outputBaseDir string) error {
 		fmt.Printf("Error opening proto file %q: %v\n", path, err)
 		return err
 	}
+	/* #nosec G307 */
 	defer reader.Close()
 
 	parser := proto.NewParser(reader)
@@ -104,6 +105,7 @@ func processProtoFile(path string, outputBaseDir string) error {
 			fmt.Printf("Error creating file %q: %v\n", safeOutputFile, err)
 			return err
 		}
+		/* #nosec G307 */
 		defer file.Close()
 
 		_, err = file.WriteString("# Messages\n\n")

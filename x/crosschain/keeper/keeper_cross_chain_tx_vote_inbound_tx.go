@@ -19,19 +19,46 @@ import (
 // reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 // created.
 //
-// If the receiver chain is a ZetaChain, the EVM deposit is handled and the
-// status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
-// the status of CCTX is chagned to 'aborted'.
+// If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the
+// tokens being deposited are ZETA, `MintZetaToEVMAccount` is called and the
+// tokens are minted to the receiver account on ZetaChain. If the tokens being
+// deposited are gas tokens or ERC20 of a connected chain, ZRC20's `deposit`
+// method is called and the tokens are deposited to the receiver account on
+// ZetaChain. If the message is not empty, system contract's `depositAndCall`
+// method is also called and an omnichain contract on ZetaChain is executed.
+// Omnichain contract address and arguments are passed as part of the message.
+// If everything is successful, the CCTX status is changed to `OutboundMined`.
 //
-// If the receiver chain is a connected chain, the inbound CCTX is finalized
-// (prices and nonce are updated) and status changes to "pending outbound". If
-// the finalization fails, the status of CCTX is changed to 'aborted'.
+// If the receiver chain is a connected chain, the `FinalizeInbound` method is
+// called to prepare the CCTX to be processed as an outbound transaction. To
+// cover the outbound transaction fee, the required amount of tokens submitted
+// with the CCTX are swapped using a Uniswap V2 contract instance on ZetaChain
+// for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are
+// then burned. The nonce is updated. If everything is successful, the CCTX
+// status is changed to `PendingOutbound`.
+//
+// ```mermaid
+// stateDiagram-v2
+//
+//	state evm_deposit_success <<choice>>
+//	state finalize_inbound <<choice>>
+//	state evm_deposit_error <<choice>>
+//	PendingInbound --> evm_deposit_success: Receiver is ZetaChain
+//	evm_deposit_success --> OutboundMined: EVM deposit success
+//	evm_deposit_success --> evm_deposit_error: EVM deposit error
+//	evm_deposit_error --> PendingRevert: Contract error
+//	evm_deposit_error --> Aborted: Internal error, invalid chain, gas, nonce
+//	PendingInbound --> finalize_inbound: Receiver is connected chain
+//	finalize_inbound --> Aborted: Finalize inbound error
+//	finalize_inbound --> PendingOutbound: Finalize inbound success
+//
+// ```
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := observerTypes.ObservationType_InBoundTx
-	if !k.IsInboundAllowed(ctx) {
+	if !k.zetaObserverKeeper.IsInboundAllowed(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
@@ -57,7 +84,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 	if isNew {
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.ChainName.String(), sdk.MsgTypeURL(&types.MsgVoteOnObservedInboundTx{}))
+		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
 	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
@@ -88,6 +115,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
+		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
@@ -96,18 +124,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
 			revertMessage := err.Error()
 			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "invalid sender chain", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 			if !isFound {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, "cannot find gas price", cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "cannot find gas price")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// create new OutboundTxParams for the revert
@@ -120,35 +148,37 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
 			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
-				cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			// do not commit() here;
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingRevert, revertMessage, cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else { // successful HandleEVMDeposit;
 			commit()
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_OutboundMined, "Remote omnichain contract call completed", cctx.LogIdentifierForCCTX())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
 	} else { // Cross Chain SWAP
+		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
-			cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeader().Height)
-			err := k.UpdatePrices(ctx, receiverChain.ChainId, &cctx)
+			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx)
 			if err != nil {
 				return err
 			}
-			err = k.UpdateNonce(ctx, receiverChain.ChainId, &cctx)
+			err = k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
 			if err != nil {
 				return err
 			}
 			return nil
 		}()
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_Aborted, err.Error(), cctx.LogIdentifierForCCTX())
+			// do not commit anything here as the CCTX should be aborted
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
-		cctx.CctxStatus.ChangeStatus(&ctx, types.CctxStatus_PendingOutbound, "", cctx.LogIdentifierForCCTX())
+		commit()
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }

@@ -2,22 +2,10 @@ package types
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func AllStatus() []CctxStatus {
-	return []CctxStatus{
-		CctxStatus_PendingInbound,
-		CctxStatus_PendingOutbound,
-		CctxStatus_OutboundMined,
-		CctxStatus_PendingRevert,
-		CctxStatus_Reverted,
-		CctxStatus_Aborted,
-	}
-}
-
 // empty msg does not overwrite old status message
-func (m *Status) ChangeStatus(ctx *sdk.Context, newStatus CctxStatus, msg, logIdentifier string) {
+func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {
 		m.StatusMessage = msg
 	}

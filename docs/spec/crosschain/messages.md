@@ -87,27 +87,42 @@ message MsgNonceVoter {
 Casts a vote on an outbound transaction observed on a connected chain (after
 it has been broadcasted to and finalized on a connected chain). If this is
 the first vote, a new ballot is created. When a threshold of votes is
-reached, the ballot is finalized. When a ballot is finalized, if the amount
-of zeta minted does not match the outbound transaction amount an error is
-thrown. If the amounts match, the outbound transaction hash and the "last
-updated" timestamp are updated.
+reached, the ballot is finalized. When a ballot is finalized, the outbound
+transaction is processed.
 
-The transaction is proceeded to be finalized:
-
-If the observation was successful, the status is changed from "pending
-revert/outbound" to "reverted/mined". The difference between zeta burned
+If the observation is successful, the difference between zeta burned
 and minted is minted by the bank module and deposited into the module
 account.
 
-If the observation was unsuccessful, and if the status is "pending outbound",
-prices and nonce are updated and the status is changed to "pending revert".
-If the status was "pending revert", the status is changed to "aborted".
+If the observation is unsuccessful, the logic depends on the previous
+status.
 
-If there's an error in the finalization process, the CCTX status is set to
-'aborted'.
+If the previous status was `PendingOutbound`, a new revert transaction is
+created. To cover the revert transaction fee, the required amount of tokens
+submitted with the CCTX are swapped using a Uniswap V2 contract instance on
+ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
+tokens are then
+burned. The nonce is updated. If everything is successful, the CCTX status is
+changed to `PendingRevert`.
 
-After finalization the outbound transaction tracker and pending nonces are
-removed, and the CCTX is updated in the store.
+If the previous status was `PendingRevert`, the CCTX is aborted.
+
+```mermaid
+stateDiagram-v2
+
+	state observation <<choice>>
+	state success_old_status <<choice>>
+	state fail_old_status <<choice>>
+	PendingOutbound --> observation: Finalize outbound
+	observation --> success_old_status: Observation succeeded
+	success_old_status --> Reverted: Old status is PendingRevert
+	success_old_status --> OutboundMined: Old status is PendingOutbound
+	observation --> fail_old_status: Observation failed
+	fail_old_status --> PendingRevert: Old status is PendingOutbound
+	fail_old_status --> Aborted: Old status is PendingRevert
+	PendingOutbound --> Aborted: Finalize outbound error
+
+```
 
 Only observer validators are authorized to broadcast this message.
 
@@ -132,13 +147,40 @@ is the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 created.
 
-If the receiver chain is a ZetaChain, the EVM deposit is handled and the
-status of CCTX is changed to "outbound mined". If EVM deposit handling fails,
-the status of CCTX is chagned to 'aborted'.
+If the receiver chain is ZetaChain, `HandleEVMDeposit` is called. If the
+tokens being deposited are ZETA, `MintZetaToEVMAccount` is called and the
+tokens are minted to the receiver account on ZetaChain. If the tokens being
+deposited are gas tokens or ERC20 of a connected chain, ZRC20's `deposit`
+method is called and the tokens are deposited to the receiver account on
+ZetaChain. If the message is not empty, system contract's `depositAndCall`
+method is also called and an omnichain contract on ZetaChain is executed.
+Omnichain contract address and arguments are passed as part of the message.
+If everything is successful, the CCTX status is changed to `OutboundMined`.
 
-If the receiver chain is a connected chain, the inbound CCTX is finalized
-(prices and nonce are updated) and status changes to "pending outbound". If
-the finalization fails, the status of CCTX is changed to 'aborted'.
+If the receiver chain is a connected chain, the `FinalizeInbound` method is
+called to prepare the CCTX to be processed as an outbound transaction. To
+cover the outbound transaction fee, the required amount of tokens submitted
+with the CCTX are swapped using a Uniswap V2 contract instance on ZetaChain
+for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are
+then burned. The nonce is updated. If everything is successful, the CCTX
+status is changed to `PendingOutbound`.
+
+```mermaid
+stateDiagram-v2
+
+	state evm_deposit_success <<choice>>
+	state finalize_inbound <<choice>>
+	state evm_deposit_error <<choice>>
+	PendingInbound --> evm_deposit_success: Receiver is ZetaChain
+	evm_deposit_success --> OutboundMined: EVM deposit success
+	evm_deposit_success --> evm_deposit_error: EVM deposit error
+	evm_deposit_error --> PendingRevert: Contract error
+	evm_deposit_error --> Aborted: Internal error, invalid chain, gas, nonce
+	PendingInbound --> finalize_inbound: Receiver is connected chain
+	finalize_inbound --> Aborted: Finalize inbound error
+	finalize_inbound --> PendingOutbound: Finalize inbound success
+
+```
 
 Only observer validators are authorized to broadcast this message.
 
@@ -157,46 +199,6 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
-}
-```
-
-## MsgSetNodeKeys
-
-Not implemented yet.
-
-```proto
-message MsgSetNodeKeys {
-	string creator = 1;
-	common.PubKeySet pubkeySet = 2;
-	string tss_signer_Address = 3;
-}
-```
-
-## MsgUpdatePermissionFlags
-
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdatePermissionFlags {
-	string creator = 1;
-	bool isInboundEnabled = 3;
-}
-```
-
-## MsgUpdateKeygen
-
-Updates the block height of the keygen and sets the status to "pending
-keygen".
-
-Only the admin policy account is authorized to broadcast this message.
-
-```proto
-message MsgUpdateKeygen {
-	string creator = 1;
-	int64 block = 2;
 }
 ```
 

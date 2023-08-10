@@ -2,6 +2,12 @@ package zetaclient
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,11 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	. "gopkg.in/check.v1"
-	"os"
-	"path/filepath"
-	"strconv"
-	"testing"
-	"time"
 
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common/cosmos"

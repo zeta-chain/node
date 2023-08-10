@@ -3,11 +3,10 @@ package zetachain.zetacore.crosschain;
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
-
 message LastBlockHeight {
   string creator = 1;
   string index = 2;
-  string chain = 3; 
+  string chain = 3;
   uint64 lastSendHeight = 4;
   uint64 lastReceiveHeight = 5;
 }
