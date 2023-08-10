@@ -18,6 +18,7 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -143,10 +144,21 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		return []*evmtypes.TxTraceResult{}, nil
 	}
 
+	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
+	if err != nil {
+		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
+		return nil, nil
+	}
+
 	txDecoder := b.clientCtx.TxConfig.TxDecoder()
 
 	var txsMessages []*evmtypes.MsgEthereumTx
 	for i, tx := range txs {
+		if !rpctypes.TxSuccessOrExceedsBlockGasLimit(blockRes.TxsResults[i]) {
+			b.logger.Debug("invalid tx result code", "cosmos-hash", hexutil.Encode(tx.Hash()))
+			continue
+		}
+
 		decodedTx, err := txDecoder(tx)
 		if err != nil {
 			b.logger.Error("failed to decode transaction", "hash", txs[i].Hash(), "error", err.Error())
