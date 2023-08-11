@@ -143,6 +143,9 @@ proto:
 	@buf format -w
 .PHONY: proto
 
+proto-format:
+	@bash ./scripts/proto-format.sh
+
 openapi:
 	@echo "--> Generating OpenAPI specs"
 	@bash ./scripts/protoc-gen-openapi.sh
