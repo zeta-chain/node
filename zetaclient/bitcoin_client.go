@@ -323,7 +323,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		outTxID := ob.GetTxID(nonce)
 		index, params := ob.GetPendingCctx(outTxID)
 		if index == "" {
-			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: haven't seen this pending cctx yet %s", outTxID)
+			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for %s", outTxID)
 			return false, false, nil
 		}
 
@@ -605,6 +605,7 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	return nil
 }
 
+// Set `test` flag to true in unit test to bypass query to zetacore
 func (ob *BitcoinChainClient) findTxIDByNonce(nonce uint64, test bool) (string, error) {
 	ob.mu.Lock()
 	res, included := ob.includedTxResults[ob.GetTxID(nonce)]
@@ -612,15 +613,15 @@ func (ob *BitcoinChainClient) findTxIDByNonce(nonce uint64, test bool) (string, 
 
 	if included {
 		return res.TxID, nil
-	} else if test {
-		return "", fmt.Errorf("findTxIDByNonce: error getting cctx for nonce %d", nonce)
-	} else {
+	}
+	if !test { // if not unit test, get cctx from zetacore
 		send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 		if err != nil {
 			return "", errors.Wrapf(err, "findTxIDByNonce: error getting cctx for nonce %d", nonce)
 		}
 		return send.GetCurrentOutTxParam().OutboundTxHash, nil
 	}
+	return "", fmt.Errorf("findTxIDByNonce: error getting cctx for nonce %d", nonce)
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
@@ -778,7 +779,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				outTxID := ob.GetTxID(tracker.Nonce)
 				index, params := ob.GetPendingCctx(outTxID)
 				if index == "" {
-					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: haven't seen this pending cctx yet %s", outTxID)
+					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find pending cctx for %s", outTxID)
 					break
 				}
 				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check

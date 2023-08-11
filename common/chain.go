@@ -166,6 +166,14 @@ func GetChainFromChainID(chainID int64) *Chain {
 	return nil
 }
 
+func GetChainNameFromChainID(chainID int64) (string, error) {
+	chain := GetChainFromChainID(chainID)
+	if chain == nil {
+		return "", fmt.Errorf("chain %d not found", chainID)
+	}
+	return chain.GetChainName().String(), nil
+}
+
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
 	case 18444:
@@ -174,6 +182,7 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 		return &chaincfg.TestNet3Params, nil
 	case 8332:
 		return &chaincfg.MainNetParams, nil
+	default:
+		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
 	}
-	return nil, fmt.Errorf("chain (%d) is not a supported Bitcoin chain", chainID)
 }

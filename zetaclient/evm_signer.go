@@ -257,7 +257,10 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// Early return if the cctx is already processed
-	included, confirmed, _ := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
+	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
+	if err != nil {
+		logger.Error().Err(err).Msg("IsSendOutTxProcessed failed")
+	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return

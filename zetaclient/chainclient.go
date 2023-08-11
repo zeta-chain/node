@@ -22,4 +22,5 @@ type ChainClient interface {
 	GetCoreParameters() config.CoreParams
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
+	GetTxID(nonce uint64) string
 }

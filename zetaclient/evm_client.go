@@ -38,7 +38,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	//cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -235,8 +234,8 @@ func (ob *EVMChainClient) Stop() {
 // If isConfirmed, it also post to ZetaCore
 func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	ob.mu.Lock()
-	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetIndex(nonce)]
-	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetIndex(nonce)]
+	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
+	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetTxID(nonce)]
 	ob.mu.Unlock()
 	found := found1 && found2
 	if !found {
@@ -409,7 +408,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C:
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, "")
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
 			if err != nil {
 				continue
 			}
@@ -431,8 +430,8 @@ func (ob *EVMChainClient) observeOutTx() {
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							ob.outTXConfirmedReceipts[ob.GetIndex(nonceInt)] = receipt
-							ob.outTXConfirmedTransaction[ob.GetIndex(nonceInt)] = transaction
+							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
+							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.mu.Unlock()
 
 							//DISABLING PERSISTENCE
@@ -475,7 +474,7 @@ func (ob *EVMChainClient) observeOutTx() {
 // receipt non-nil, err nil: txHash confirmed
 func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
 	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Uint64("nonce", nonce).Logger()
-	if ob.outTXConfirmedReceipts[ob.GetIndex(nonce)] != nil && ob.outTXConfirmedTransaction[ob.GetIndex(nonce)] != nil {
+	if ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransaction[ob.GetTxID(nonce)] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -1053,7 +1052,7 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error
 	return nil
 }
 
-func (ob *EVMChainClient) GetIndex(nonce uint64) string {
+func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }

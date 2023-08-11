@@ -135,7 +135,7 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
 							continue
 						}
-						chain, err := GetTargetChain(c.ChainId)
+						chain, err := common.GetChainNameFromChainID(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail, Chain ID: %s", c.ChainName)
 							continue
@@ -209,7 +209,7 @@ func trimSends(sends []*types.CrossChainTx) int {
 func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
 	sendMap := make(map[string][]*types.CrossChainTx)
 	for _, send := range sendList {
-		targetChain, err := GetTargetChain(send.GetCurrentOutTxParam().ReceiverChainId)
+		targetChain, err := common.GetChainNameFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
 		if targetChain == "" || err != nil {
 			continue
 		}
@@ -229,16 +229,8 @@ func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*t
 	return sendMap
 }
 
-func GetTargetChain(chainID int64) (string, error) {
-	chain := common.GetChainFromChainID(chainID)
-	if chain == nil {
-		return "", fmt.Errorf("chain %d not found", chainID)
-	}
-	return chain.GetChainName().String(), nil
-}
-
 func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
-	chainStr, err := GetTargetChain(chainID)
+	chainStr, err := common.GetChainNameFromChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("chain %d not found", chainID)
 	}
