@@ -206,7 +206,6 @@ func (co *CoreObserver) startSendScheduler() {
 								}
 								if nextFiveNonce {
 									isCritical = true
-									break
 								}
 							}
 
