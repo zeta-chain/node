@@ -19,7 +19,7 @@ import (
 
 func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC20) (*types.MsgWhitelistERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.ZetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
@@ -59,7 +59,7 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		GasLimit:             uint64(msg.GasLimit),
 	}
 
-	param, found := k.ZetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+	param, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidChainID, "core params not found for chain id (%d)", msg.ChainId)
 	}

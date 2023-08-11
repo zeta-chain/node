@@ -125,11 +125,11 @@ func (k Keeper) GasPrice(c context.Context, req *types.QueryGetGasPriceRequest) 
 func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVoter) (*types.MsgGasPriceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	chain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
-	ok, err := k.ZetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {
 		return nil, err
 	}

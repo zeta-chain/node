@@ -90,7 +90,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	recvChain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
+	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
 	toAddr, err := recvChain.EncodeAddress(event.To)
 	if err != nil {
@@ -112,12 +112,12 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
 	}
 	receiverChainID := event.DestinationChainId
-	receiverChain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
+	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
 	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
-	coreParams, found := k.ZetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
 		return zetacoretypes.ErrNotFoundCoreParams
 	}

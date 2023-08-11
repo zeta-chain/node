@@ -61,7 +61,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
 	if observationChain == nil {
 		return nil, observerTypes.ErrSupportedChains
 	}
@@ -70,7 +70,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.ZetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
+	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, isNew, err := k.ZetaObserverKeeper.FindBallot(ctx, ballotIndex, observationChain, observationType)
+	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, ballotIndex, observationChain, observationType)
 	if err != nil {
 		return nil, err
 	}
@@ -95,12 +95,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		//k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.ZetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
+	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
 
-	ballot, isFinalized := k.ZetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
+	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil

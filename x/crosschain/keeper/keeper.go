@@ -23,7 +23,7 @@ type (
 		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
-		ZetaObserverKeeper types.ZetaObserverKeeper
+		zetaObserverKeeper types.ZetaObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
 	}
 )
@@ -53,11 +53,15 @@ func NewKeeper(
 		paramstore:         paramstore,
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
-		ZetaObserverKeeper: zetaObserverKeeper,
+		zetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
+	return k.zetaObserverKeeper
 }

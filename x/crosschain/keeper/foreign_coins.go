@@ -6,7 +6,7 @@ import (
 )
 
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) ([]fungibleModuleTypes.ForeignCoins, error) {
-	chains := k.ZetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+	chains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
 	var fCoins []fungibleModuleTypes.ForeignCoins
 	for _, chain := range chains {
 		fCoins = append(fCoins, k.fungibleKeeper.GetAllForeignCoinsForChain(ctx, chain.ChainId)...)
