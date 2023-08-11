@@ -123,12 +123,15 @@ func (co *CoreObserver) startSendScheduler() {
 
 					supportedChains := GetSupportedChains()
 					for _, c := range supportedChains {
-
 						signer := co.signerMap[*c]
 						chainClient := co.clientMap[*c]
 						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
+							continue
+						}
+
+						if c.ChainId == common.ZetaChain().ChainId {
 							continue
 						}
 
