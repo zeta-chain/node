@@ -3,6 +3,7 @@ package sample
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // AccAddress returns a sample account address
@@ -18,4 +19,9 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 	addr := privKey.PubKey().Address()
 
 	return privKey, sdk.AccAddress(addr)
+}
+
+// EthAddress returns a sample ethereum address
+func EthAddress() ethcommon.Address {
+	return ethcommon.HexToAddress(AccAddress())
 }
