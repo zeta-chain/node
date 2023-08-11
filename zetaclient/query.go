@@ -105,6 +105,18 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxByNonce(context.Background(), &types.QueryGetCctxByNonceRequest{
+		ChainID: chainID,
+		Nonce:   nonce,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CrossChainTx, nil
+}
+
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{

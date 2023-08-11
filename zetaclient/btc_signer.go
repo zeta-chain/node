@@ -52,8 +52,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	nonceMark := NonceMarkAmount(nonce)
 
 	// select N UTXOs to cover the total expense
-	tssAddress := signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, tssAddress)
+	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, false)
 	if err != nil {
 		return nil, err
 	}

@@ -578,8 +578,15 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
 		//}
 	}
-	// sort by value
+
+	// rigid sort to make utxo list deterministic
 	sort.SliceStable(utxos, func(i, j int) bool {
+		if utxos[i].Amount == utxos[j].Amount {
+			if utxos[i].TxID == utxos[j].TxID {
+				return utxos[i].Vout < utxos[j].Vout
+			}
+			return utxos[i].TxID < utxos[j].TxID
+		}
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
@@ -590,20 +597,33 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	return nil
 }
 
-func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string) (int, error) {
-	outTxID := ob.GetTxID(nonce)
-	res, included := ob.includedTxResults[outTxID]
-	if !included {
-		return -1, fmt.Errorf("findNonceMarkUTXO: prior outTx %s not included yet", outTxID)
-	}
+func (ob *BitcoinChainClient) findTxIDByNonce(nonce uint64, test bool) (string, error) {
+	ob.mu.Lock()
+	res, included := ob.includedTxResults[ob.GetTxID(nonce)]
+	ob.mu.Unlock()
 
+	if included {
+		return res.TxID, nil
+	} else if test {
+		return "", fmt.Errorf("findTxIDByNonce: error getting cctx for nonce %d", nonce)
+	} else {
+		send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
+		if err != nil {
+			return "", errors.Wrapf(err, "findTxIDByNonce: error getting cctx for nonce %d", nonce)
+		}
+		return send.GetCurrentOutTxParam().OutboundTxHash, nil
+	}
+}
+
+func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
+	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := getSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
-		if utxo.Address == tssAddress && sats == amount && utxo.TxID == res.TxID {
+		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid {
 			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %v", utxo.TxID, utxo.Amount)
 			return i, nil
 		}
@@ -617,22 +637,27 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, tssAddress string)
 //   - amount: The desired minimum total value of the selected UTXOs.
 //   - utxoCap: The maximum number of UTXOs to be selected.
 //   - nonce: The nonce of the outbound transaction.
-//   - tssAddress: The TSS address.
+//   - test: true for unit test only.
 //
 // Returns: a sublist (includes previous nonce-mark) of UTXOs or an error if the qulifying sublist cannot be found.
-func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce uint64, tssAddress string) ([]btcjson.ListUnspentResult, float64, error) {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
-
-	// for nonce > 0; we proceed only when we see the nonce-mark utxo
-	// for nonce = 0; make exception; no need to include nonce-mark utxo
+func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce uint64, test bool) ([]btcjson.ListUnspentResult, float64, error) {
 	idx := -1
-	if nonce > 0 {
-		index, err := ob.findNonceMarkUTXO(nonce-1, tssAddress)
+	if nonce == 0 {
+		// for nonce = 0; make exception; no need to include nonce-mark utxo
+		ob.mu.Lock()
+		defer ob.mu.Unlock()
+	} else {
+		// for nonce > 0; we proceed only when we see the nonce-mark utxo
+		preTxid, err := ob.findTxIDByNonce(nonce-1, test)
 		if err != nil {
 			return nil, 0, err
 		}
-		idx = index
+		ob.mu.Lock()
+		defer ob.mu.Unlock()
+		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	// select utxos
@@ -650,17 +675,18 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 			right++
 		}
 	}
-	results := ob.utxos[left:right]
+	results := make([]btcjson.ListUnspentResult, right-left)
+	copy(results, ob.utxos[left:right])
 
-	// include nonce-mark utxo (for nonce > 0) in asending order
+	// Note: always put nonce-mark as 1st input
 	if idx >= 0 {
-		if idx < left {
+		if idx < left || idx >= right {
 			total += ob.utxos[idx].Amount
 			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
-		}
-		if idx >= right {
-			total += ob.utxos[idx].Amount
-			results = append(results, ob.utxos[idx])
+		} else { // move nonce-mark to left
+			for i := idx - left; i > 0; i-- {
+				results[i], results[i-1] = results[i-1], results[i]
+			}
 		}
 	}
 	if total < amount {
@@ -720,8 +746,8 @@ func (ob *BitcoinChainClient) GetPendingCctx(outTxID string) (string, types.Outb
 	defer ob.mu.Unlock()
 	if send, found := ob.pendingCctx[outTxID]; found {
 		params := send.GetCurrentOutTxParam()
-		if params == nil { // never happen
-			ob.logger.ObserveOutTx.Error().Msgf("Nil outTxParam for cctx %s, bug found!", send.Index)
+		if params == nil {
+			ob.logger.ObserveOutTx.Error().Msgf("unreachable code path! Nil outTxParam for cctx %s", send.Index)
 			return "", types.OutboundTxParams{}
 		}
 		return send.Index, *params
@@ -747,7 +773,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: haven't seen this pending cctx yet %s", outTxID)
 					break
 				}
-				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: doesn't hurt to check
+				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check
 					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: tracker nonce %d not match cctx nonce %d", tracker.Nonce, params.OutboundTxTssNonce)
 					break
 				}
@@ -884,12 +910,13 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 			return fmt.Errorf("checkTSSVin: witness pubkey %s not match TSS pubkey %s", vin.Witness[1], pubKeyTss)
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outTx
-		if i == 0 && nonce > 0 {
-			ob.mu.Lock()
-			res, found := ob.includedTxResults[ob.GetTxID(nonce-1)]
-			ob.mu.Unlock()
-			if found && vin.Txid != res.TxID {
-				return fmt.Errorf("checkTSSVin: invalid nonce-mark txid: %s, expected %s", vin.Txid, res.TxID)
+		if nonce > 0 && i == 0 {
+			preTxid, err := ob.findTxIDByNonce(nonce-1, false)
+			if err != nil {
+				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
+			}
+			if vin.Txid != preTxid || vin.Vout != 0 {
+				return fmt.Errorf("checkTSSVin: invalid nonce-mark txid %s vout %d, expected txid %s vout 0", vin.Txid, vin.Vout, preTxid)
 			}
 		}
 	}
