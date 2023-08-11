@@ -1,11 +1,12 @@
 package types
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"testing"
 )
 
 func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
