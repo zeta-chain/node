@@ -21,7 +21,7 @@ import (
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	name := fmt.Sprintf("%s-%s", gasAssetName, c)
 	chainName := common.ParseChainName(c)
-	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+	chain := k.observerKeeper.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
