@@ -23,7 +23,7 @@ type (
 		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
-		zetaObserverKeeper types.ZetaObserverKeeper
+		ZetaObserverKeeper types.ZetaObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
 	}
 )
@@ -53,7 +53,7 @@ func NewKeeper(
 		paramstore:         paramstore,
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
-		zetaObserverKeeper: zetaObserverKeeper,
+		ZetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
 	}
 }

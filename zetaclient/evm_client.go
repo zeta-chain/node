@@ -235,7 +235,28 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 	}
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
-	if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
+	if cointype == common.CoinType_Cmd {
+		recvStatus := common.ReceiveStatus_Failed
+		if receipt.Status == 1 {
+			recvStatus = common.ReceiveStatus_Success
+		}
+		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+			sendHash,
+			receipt.TxHash.Hex(),
+			receipt.BlockNumber.Uint64(),
+			transaction.Value(),
+			recvStatus,
+			ob.chain,
+			nonce,
+			common.CoinType_Cmd,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msg("error posting confirmation to meta core")
+		}
+		logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+		return true, true, nil
+
+	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
 			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,

@@ -9,7 +9,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -176,7 +178,18 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the crosschain module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	if ctx.BlockHeight() == 200 {
+		goCtx := sdk.UnwrapSDKContext(ctx)
+		creator := am.keeper.ZetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin)
+		msg := types.NewMsgWhitelistERC20(creator, types.ModuleAddressEVM.Hex(), common.GoerliChain().ChainId, "test", "testerc20", 17, 90_000)
+
+		_, err := am.keeper.WhitelistERC20(goCtx, msg)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
 // EndBlock executes all ABCI EndBlock logic respective to the crosschain module. It
 // returns no validator updates.

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -60,7 +61,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	observationChain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
 	if observationChain == nil {
 		return nil, observerTypes.ErrSupportedChains
 	}
@@ -69,7 +70,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
+	ok, err := k.ZetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
 		return nil, err
 	}
@@ -82,7 +83,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	ballotIndex := msg.Digest()
 	// Add votes and Set Ballot
-	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, ballotIndex, observationChain, observationType)
+	ballot, isNew, err := k.ZetaObserverKeeper.FindBallot(ctx, ballotIndex, observationChain, observationType)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +95,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		//k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
+	ballot, err = k.ZetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
 	if err != nil {
 		return nil, err
 	}
 
-	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
+	ballot, isFinalized := k.ZetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
@@ -133,27 +134,31 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
-			switch oldStatus {
-			case types.CctxStatus_PendingOutbound:
-				// create new OutboundTxParams for the revert
-				cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-					Receiver:           cctx.InboundTxParams.Sender,
-					ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-					Amount:             cctx.InboundTxParams.Amount,
-					CoinType:           cctx.InboundTxParams.CoinType,
-					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
-				})
-				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
-				if err != nil {
-					return err
+			if msg.CoinType == common.CoinType_Cmd {
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
+			} else {
+				switch oldStatus {
+				case types.CctxStatus_PendingOutbound:
+					// create new OutboundTxParams for the revert
+					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+						Receiver:           cctx.InboundTxParams.Sender,
+						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+						Amount:             cctx.InboundTxParams.Amount,
+						CoinType:           cctx.InboundTxParams.CoinType,
+						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+					})
+					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+					if err != nil {
+						return err
+					}
+					err = k.UpdateNonce(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+					if err != nil {
+						return err
+					}
+					cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
+				case types.CctxStatus_PendingRevert:
+					cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
 				}
-				err = k.UpdateNonce(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
-				if err != nil {
-					return err
-				}
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
-			case types.CctxStatus_PendingRevert:
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
 			}
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundFailure(ctx, msg, oldStatus.String(), newStatus, cctx)

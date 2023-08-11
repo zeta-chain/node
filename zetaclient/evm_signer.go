@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -216,6 +217,30 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
+func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.Address, nonce uint64, gasLimit uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+	if cmd == common.CMD_WHITELIST_ERC20 {
+		erc20 := ethcommon.HexToAddress(params)
+		if erc20 == (ethcommon.Address{}) {
+			return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
+		}
+		custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
+		if err != nil {
+			return nil, err
+		}
+		data, err := custodyAbi.Pack("whitelistERC20", erc20)
+		if err != nil {
+			return nil, err
+		}
+		tx, _, _, err := signer.Sign(data, to, gasLimit, gasPrice, nonce, height)
+		if err != nil {
+			return nil, fmt.Errorf("sign error: %w", err)
+		}
+		return tx, nil
+	}
+
+	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
+}
+
 func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
 	logger := signer.logger.With().
 		Str("outTxID", outTxID).
@@ -293,10 +318,21 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	var tx *ethtypes.Transaction
-	// FIXME: there is a chance wrong type of outbound tx is signed
-	// NOTE: if sender is zetachain, then the tx could be one of three types;
-	// otherwise, it's always a message passing tx, passing zeta & optionally message
-	if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+
+	if send.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
+		to := ethcommon.HexToAddress(send.GetCurrentOutTxParam().Receiver)
+		if to == (ethcommon.Address{}) {
+			logger.Error().Msgf("invalid receiver %s", send.GetCurrentOutTxParam().Receiver)
+			return
+		}
+
+		msg := strings.Split(send.RelayedMessage, ":")
+		if len(msg) != 2 {
+			logger.Error().Msgf("invalid message %s", msg)
+			return
+		}
+		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice.Uint64(), big.NewInt(int64(gasLimit)), height)
+	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(to, send.InboundTxParams.Amount.BigInt(), send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)

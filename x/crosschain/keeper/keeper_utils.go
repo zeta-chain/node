@@ -15,7 +15,7 @@ import (
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
-	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
+	_, found := k.ZetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
 		return true
 	}
@@ -28,7 +28,7 @@ func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 // **Caller should feed temporary ctx into this function**
 func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
 
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
+	chain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
@@ -85,7 +85,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 // UpdateNonce sets the CCTX outbound nonce to the next nonce, and updates the nonce of blockchain state.
 // It also updates the PendingNonces that is used to track the unfulfilled outbound txs.
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
+	chain := k.ZetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
