@@ -227,7 +227,7 @@ func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.A
 		if err != nil {
 			return nil, err
 		}
-		data, err := custodyAbi.Pack("whitelistERC20", erc20)
+		data, err := custodyAbi.Pack("whitelist", erc20)
 		if err != nil {
 			return nil, err
 		}
