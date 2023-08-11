@@ -37,9 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -167,7 +164,6 @@ var (
 		auth.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(getGovProposalHandlers()),
@@ -222,30 +218,27 @@ type App struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper        authkeeper.AccountKeeper
-	BankKeeper           bankkeeper.Keeper
-	CapabilityKeeper     *capabilitykeeper.Keeper
-	StakingKeeper        stakingkeeper.Keeper
-	SlashingKeeper       slashingkeeper.Keeper
-	DistrKeeper          distrkeeper.Keeper
-	GovKeeper            govkeeper.Keeper
-	CrisisKeeper         crisiskeeper.Keeper
-	UpgradeKeeper        upgradekeeper.Keeper
-	ParamsKeeper         paramskeeper.Keeper
-	EvidenceKeeper       evidencekeeper.Keeper
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ZetaCoreKeeper       zetaCoreModuleKeeper.Keeper
-	ZetaObserverKeeper   *zetaObserverModuleKeeper.Keeper
-	mm                   *module.Manager
-	sm                   *module.SimulationManager
-	configurator         module.Configurator
-	EvmKeeper            *evmkeeper.Keeper
-	FeeMarketKeeper      feemarketkeeper.Keeper
-	FungibleKeeper       fungibleModuleKeeper.Keeper
-	EmissionsKeeper      emissionsModuleKeeper.Keeper
-	GroupKeeper          groupkeeper.Keeper
-	AuthzKeeper          authzkeeper.Keeper
+	AccountKeeper      authkeeper.AccountKeeper
+	BankKeeper         bankkeeper.Keeper
+	StakingKeeper      stakingkeeper.Keeper
+	SlashingKeeper     slashingkeeper.Keeper
+	DistrKeeper        distrkeeper.Keeper
+	GovKeeper          govkeeper.Keeper
+	CrisisKeeper       crisiskeeper.Keeper
+	UpgradeKeeper      upgradekeeper.Keeper
+	ParamsKeeper       paramskeeper.Keeper
+	EvidenceKeeper     evidencekeeper.Keeper
+	ZetaCoreKeeper     zetaCoreModuleKeeper.Keeper
+	ZetaObserverKeeper *zetaObserverModuleKeeper.Keeper
+	mm                 *module.Manager
+	sm                 *module.SimulationManager
+	configurator       module.Configurator
+	EvmKeeper          *evmkeeper.Keeper
+	FeeMarketKeeper    feemarketkeeper.Keeper
+	FungibleKeeper     fungibleModuleKeeper.Keeper
+	EmissionsKeeper    emissionsModuleKeeper.Keeper
+	GroupKeeper        groupkeeper.Keeper
+	AuthzKeeper        authzkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -277,7 +270,6 @@ func New(
 		group.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
-		capabilitytypes.StoreKey,
 		zetaCoreModuleTypes.StoreKey,
 		zetaObserverModuleTypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
@@ -286,7 +278,7 @@ func New(
 		authzkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys()
 
 	app := &App{
 		BaseApp:           bApp,
@@ -305,11 +297,6 @@ func New(
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
-
-	// add capability keeper and ScopeToModule for ibc module
-	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
-
-	app.CapabilityKeeper.Seal()
 
 	// add keepers
 	// use custom Ethermint account for contracts
@@ -389,7 +376,7 @@ func New(
 		keys[fungibleModuleTypes.MemStoreKey],
 		app.GetSubspace(fungibleModuleTypes.ModuleName),
 		app.AccountKeeper,
-		*app.EvmKeeper,
+		app.EvmKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
 	)
@@ -460,7 +447,6 @@ func New(
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -486,7 +472,6 @@ func New(
 
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
-		capabilitytypes.ModuleName,
 		evmtypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -508,16 +493,26 @@ func New(
 		authz.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
-		banktypes.ModuleName, authtypes.ModuleName,
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, evidencetypes.ModuleName,
+		banktypes.ModuleName,
+		authtypes.ModuleName,
+		upgradetypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
-		vestingtypes.ModuleName, govtypes.ModuleName,
-		paramstypes.ModuleName, genutiltypes.ModuleName, group.ModuleName,
+		vestingtypes.ModuleName,
+		govtypes.ModuleName,
+		paramstypes.ModuleName,
+		genutiltypes.ModuleName,
+		group.ModuleName,
 		crisistypes.ModuleName,
-		evmtypes.ModuleName, feemarkettypes.ModuleName,
-		zetaCoreModuleTypes.ModuleName, zetaObserverModuleTypes.ModuleName,
-		fungibleModuleTypes.ModuleName, emissionsModuleTypes.ModuleName, authz.ModuleName,
+		evmtypes.ModuleName,
+		feemarkettypes.ModuleName,
+		zetaCoreModuleTypes.ModuleName,
+		zetaObserverModuleTypes.ModuleName,
+		fungibleModuleTypes.ModuleName,
+		emissionsModuleTypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -526,7 +521,6 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -572,6 +566,12 @@ func New(
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  maxGasWanted,
+		DisabledAuthzMsgs: []string{
+			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
+			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+		},
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)
@@ -586,16 +586,6 @@ func New(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}
-
-		// Initialize and seal the capability keeper so all persistent capabilities
-		// are loaded in-memory and prevent any further modules from creating scoped
-		// sub-keepers.
-		// This must be done during creation of baseapp rather than in InitChain so
-		// that in-memory capabilities get regenerated on app restart.
-		// Note that since this reads from the store, we can only perform it when
-		// `loadLatest` is set to true.
-		//ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-		//app.CapabilityKeeper.InitializeAndSeal(ctx)
 	}
 
 	return app
@@ -764,7 +754,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	return paramsKeeper
 }
 
-// VerifyAddressFormat verifis the address is compatible with ethereum
+// VerifyAddressFormat verifies the address is compatible with ethereum
 func VerifyAddressFormat(bz []byte) error {
 	if len(bz) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "invalid address; cannot be empty")

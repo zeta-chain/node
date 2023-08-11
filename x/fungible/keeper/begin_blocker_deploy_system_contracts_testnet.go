@@ -96,3 +96,11 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	return nil
 }
+
+func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
+	return nil
+}
+
+func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
+	return nil
+}
