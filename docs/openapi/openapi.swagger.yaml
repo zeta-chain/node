@@ -49962,10 +49962,12 @@ definitions:
       - Zeta
       - Gas
       - ERC20
+      - Cmd
     default: Zeta
     title: |-
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
+       - Cmd: not a real coin, rather a command
   commonPubKeySet:
     type: object
     properties:
@@ -50131,6 +50133,8 @@ definitions:
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
   crosschainMsgVoteOnObservedOutboundTxResponse:
+    type: object
+  crosschainMsgWhitelistERC20Response:
     type: object
   crosschainOutTxTracker:
     type: object
