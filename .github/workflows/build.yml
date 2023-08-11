@@ -58,11 +58,6 @@ jobs:
           skip_python: "true"
           skip_aws_cli: "true"
           skip_docker_compose: "true"
-
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
       
       - name: Test
         uses: nick-fields/retry@v2
@@ -127,11 +122,6 @@ jobs:
           skip_python: "true"
           skip_aws_cli: "true"
           skip_docker_compose: "true"
-
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       # - uses: buildjet/cache
       #   timeout-minutes: 5
@@ -235,28 +225,15 @@ jobs:
             git
           shell-name: alpine.sh
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-      # - name: Test
-      #   shell: alpine.sh --root {0}
-      #   run: |
-      #     echo "Running Build Tests"
-      #     apk add --no-cache --update
-      #     make clean
-      #     make test
-
       - name: Test
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 20
-          max_attempts: 2
-          retry_on: error
-          shell: alpine.sh --root {0}
-          command: |
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
             echo "Running Build Tests"
+            apk add --no-cache --update
             make clean
             make test
 
@@ -370,11 +347,6 @@ jobs:
       - build-alpine-and-test
     steps:
       - uses: actions/checkout@v3
-
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
@@ -519,11 +491,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
         timeout-minutes: 8
@@ -584,10 +551,10 @@ jobs:
           discord_token: "${{ secrets.DISCORD_TOKEN }}"
           discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
           discord_message: |
-            Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
 
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
-            We will submit a governance proposal in the next few days with a 12-hour voting period. 
+            We will submit a governance proposal in the next few days.
             More specific information including block height will be shared as part of the governance proposal.
             
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}

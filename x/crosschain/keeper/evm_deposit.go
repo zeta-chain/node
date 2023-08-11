@@ -39,7 +39,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
-		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		from, err := senderChain.DecodeAddress(msg.Sender)
+		if err != nil {
+			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
+		}
+
+		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			isContractReverted := false
 			if evmTxResponse != nil && evmTxResponse.Failed() {
