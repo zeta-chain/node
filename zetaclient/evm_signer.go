@@ -331,7 +331,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			logger.Error().Msgf("invalid message %s", msg)
 			return
 		}
-		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice.Uint64(), big.NewInt(int64(gasLimit)), height)
+		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasLimit, gasprice, height)
 	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
