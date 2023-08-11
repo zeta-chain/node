@@ -6,7 +6,10 @@
 import { proto3 } from "@bufbuild/protobuf";
 import { Ballot } from "./ballot_pb.js";
 import { ObserverMapper } from "./observer_pb.js";
+import { NodeAccount } from "./node_account_pb.js";
+import { PermissionFlags } from "./permission_flags_pb.js";
 import { Params } from "./params_pb.js";
+import { Keygen } from "./keygen_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.GenesisState
@@ -16,7 +19,10 @@ export const GenesisState = proto3.makeMessageType(
   () => [
     { no: 1, name: "ballots", kind: "message", T: Ballot, repeated: true },
     { no: 2, name: "observers", kind: "message", T: ObserverMapper, repeated: true },
-    { no: 3, name: "params", kind: "message", T: Params },
+    { no: 3, name: "nodeAccountList", kind: "message", T: NodeAccount, repeated: true },
+    { no: 4, name: "permissionFlags", kind: "message", T: PermissionFlags },
+    { no: 5, name: "params", kind: "message", T: Params },
+    { no: 6, name: "keygen", kind: "message", T: Keygen },
   ],
 );
 

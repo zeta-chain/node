@@ -48,46 +48,6 @@ export const MsgRemoveFromOutTxTrackerResponse = proto3.makeMessageType(
 );
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdatePermissionFlags
- */
-export const MsgUpdatePermissionFlags = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.MsgUpdatePermissionFlags",
-  () => [
-    { no: 1, name: "creator", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "isInboundEnabled", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdatePermissionFlagsResponse
- */
-export const MsgUpdatePermissionFlagsResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.MsgUpdatePermissionFlagsResponse",
-  [],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdateKeygen
- */
-export const MsgUpdateKeygen = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.MsgUpdateKeygen",
-  () => [
-    { no: 1, name: "creator", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "block", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdateKeygenResponse
- */
-export const MsgUpdateKeygenResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.MsgUpdateKeygenResponse",
-  [],
-);
-
-/**
- * this line is used by starport scaffolding # proto/tx/message
- *
  * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
  */
 export const MsgCreateTSSVoter = proto3.makeMessageType(

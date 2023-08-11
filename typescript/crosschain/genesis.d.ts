@@ -7,15 +7,12 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
-import type { Keygen } from "./keygen_pb.js";
 import type { TSS } from "./tss_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { CrossChainTx } from "./cross_chain_tx_pb.js";
-import type { NodeAccount } from "./node_account_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
-import type { PermissionFlags } from "./permission_flags_pb.js";
 
 /**
  * GenesisState defines the metacore module's genesis state.
@@ -32,11 +29,6 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 2;
    */
   outTxTrackerList: OutTxTracker[];
-
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.Keygen keygen = 3;
-   */
-  keygen?: Keygen;
 
   /**
    * @generated from field: zetachain.zetacore.crosschain.TSS tss = 4;
@@ -59,26 +51,14 @@ export declare class GenesisState extends Message<GenesisState> {
   CrossChainTxs: CrossChainTx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.NodeAccount nodeAccountList = 8;
-   */
-  nodeAccountList: NodeAccount[];
-
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 9;
+   * @generated from field: repeated zetachain.zetacore.crosschain.LastBlockHeight lastBlockHeightList = 8;
    */
   lastBlockHeightList: LastBlockHeight[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 10;
+   * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 9;
    */
   inTxHashToCctxList: InTxHashToCctx[];
-
-  /**
-   * this line is used by starport scaffolding # genesis/proto/state
-   *
-   * @generated from field: zetachain.zetacore.crosschain.PermissionFlags permissionFlags = 11;
-   */
-  permissionFlags?: PermissionFlags;
 
   constructor(data?: PartialMessage<GenesisState>);
 

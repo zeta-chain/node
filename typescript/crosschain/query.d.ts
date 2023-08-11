@@ -9,15 +9,12 @@ import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
-import type { PermissionFlags } from "./permission_flags_pb.js";
-import type { Keygen } from "./keygen_pb.js";
 import type { TSS } from "./tss_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PendingNonces } from "./nonce_to_cctx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { CrossChainTx } from "./cross_chain_tx_pb.js";
-import type { NodeAccount } from "./node_account_pb.js";
 
 /**
  * QueryParamsRequest is request type for the Query/Params RPC method.
@@ -334,49 +331,6 @@ export declare class QueryAllInTxHashToCctxResponse extends Message<QueryAllInTx
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryGetPermissionFlagsRequest
- */
-export declare class QueryGetPermissionFlagsRequest extends Message<QueryGetPermissionFlagsRequest> {
-  constructor(data?: PartialMessage<QueryGetPermissionFlagsRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetPermissionFlagsRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetPermissionFlagsRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsRequest;
-
-  static equals(a: QueryGetPermissionFlagsRequest | PlainMessage<QueryGetPermissionFlagsRequest> | undefined, b: QueryGetPermissionFlagsRequest | PlainMessage<QueryGetPermissionFlagsRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetPermissionFlagsResponse
- */
-export declare class QueryGetPermissionFlagsResponse extends Message<QueryGetPermissionFlagsResponse> {
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.PermissionFlags PermissionFlags = 1;
-   */
-  PermissionFlags?: PermissionFlags;
-
-  constructor(data?: PartialMessage<QueryGetPermissionFlagsResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetPermissionFlagsResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetPermissionFlagsResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsResponse;
-
-  static equals(a: QueryGetPermissionFlagsResponse | PlainMessage<QueryGetPermissionFlagsResponse> | undefined, b: QueryGetPermissionFlagsResponse | PlainMessage<QueryGetPermissionFlagsResponse> | undefined): boolean;
-}
-
-/**
  * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressRequest
  */
 export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddressRequest> {
@@ -422,51 +376,6 @@ export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddre
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
 
   static equals(a: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined, b: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined): boolean;
-}
-
-/**
- * this line is used by starport scaffolding # 3
- *
- * @generated from message zetachain.zetacore.crosschain.QueryGetKeygenRequest
- */
-export declare class QueryGetKeygenRequest extends Message<QueryGetKeygenRequest> {
-  constructor(data?: PartialMessage<QueryGetKeygenRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetKeygenRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetKeygenRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetKeygenRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetKeygenRequest;
-
-  static equals(a: QueryGetKeygenRequest | PlainMessage<QueryGetKeygenRequest> | undefined, b: QueryGetKeygenRequest | PlainMessage<QueryGetKeygenRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetKeygenResponse
- */
-export declare class QueryGetKeygenResponse extends Message<QueryGetKeygenResponse> {
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.Keygen Keygen = 1;
-   */
-  Keygen?: Keygen;
-
-  constructor(data?: PartialMessage<QueryGetKeygenResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetKeygenResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetKeygenResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetKeygenResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetKeygenResponse;
-
-  static equals(a: QueryGetKeygenResponse | PlainMessage<QueryGetKeygenResponse> | undefined, b: QueryGetKeygenResponse | PlainMessage<QueryGetKeygenResponse> | undefined): boolean;
 }
 
 /**
@@ -1015,107 +924,6 @@ export declare class QueryAllCctxPendingResponse extends Message<QueryAllCctxPen
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllCctxPendingResponse;
 
   static equals(a: QueryAllCctxPendingResponse | PlainMessage<QueryAllCctxPendingResponse> | undefined, b: QueryAllCctxPendingResponse | PlainMessage<QueryAllCctxPendingResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetNodeAccountRequest
- */
-export declare class QueryGetNodeAccountRequest extends Message<QueryGetNodeAccountRequest> {
-  /**
-   * @generated from field: string index = 1;
-   */
-  index: string;
-
-  constructor(data?: PartialMessage<QueryGetNodeAccountRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetNodeAccountRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetNodeAccountRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetNodeAccountRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetNodeAccountRequest;
-
-  static equals(a: QueryGetNodeAccountRequest | PlainMessage<QueryGetNodeAccountRequest> | undefined, b: QueryGetNodeAccountRequest | PlainMessage<QueryGetNodeAccountRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetNodeAccountResponse
- */
-export declare class QueryGetNodeAccountResponse extends Message<QueryGetNodeAccountResponse> {
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.NodeAccount NodeAccount = 1;
-   */
-  NodeAccount?: NodeAccount;
-
-  constructor(data?: PartialMessage<QueryGetNodeAccountResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetNodeAccountResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetNodeAccountResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetNodeAccountResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetNodeAccountResponse;
-
-  static equals(a: QueryGetNodeAccountResponse | PlainMessage<QueryGetNodeAccountResponse> | undefined, b: QueryGetNodeAccountResponse | PlainMessage<QueryGetNodeAccountResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryAllNodeAccountRequest
- */
-export declare class QueryAllNodeAccountRequest extends Message<QueryAllNodeAccountRequest> {
-  /**
-   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
-   */
-  pagination?: PageRequest;
-
-  constructor(data?: PartialMessage<QueryAllNodeAccountRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAllNodeAccountRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllNodeAccountRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllNodeAccountRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllNodeAccountRequest;
-
-  static equals(a: QueryAllNodeAccountRequest | PlainMessage<QueryAllNodeAccountRequest> | undefined, b: QueryAllNodeAccountRequest | PlainMessage<QueryAllNodeAccountRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryAllNodeAccountResponse
- */
-export declare class QueryAllNodeAccountResponse extends Message<QueryAllNodeAccountResponse> {
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.NodeAccount NodeAccount = 1;
-   */
-  NodeAccount: NodeAccount[];
-
-  /**
-   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
-   */
-  pagination?: PageResponse;
-
-  constructor(data?: PartialMessage<QueryAllNodeAccountResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAllNodeAccountResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllNodeAccountResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllNodeAccountResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllNodeAccountResponse;
-
-  static equals(a: QueryAllNodeAccountResponse | PlainMessage<QueryAllNodeAccountResponse> | undefined, b: QueryAllNodeAccountResponse | PlainMessage<QueryAllNodeAccountResponse> | undefined): boolean;
 }
 
 /**

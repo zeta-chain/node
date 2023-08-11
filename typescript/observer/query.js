@@ -6,8 +6,13 @@
 import { proto3 } from "@bufbuild/protobuf";
 import { CoreParams, CoreParamsList, Params } from "./params_pb.js";
 import { BallotStatus, VoteType } from "./ballot_pb.js";
-import { ObservationType, ObserverMapper } from "./observer_pb.js";
+import { LastObserverCount, ObservationType, ObserverMapper } from "./observer_pb.js";
 import { Chain } from "../common/common_pb.js";
+import { NodeAccount } from "./node_account_pb.js";
+import { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
+import { PermissionFlags } from "./permission_flags_pb.js";
+import { Keygen } from "./keygen_pb.js";
+import { Blame } from "./blame_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryParamsRequest
@@ -154,6 +159,139 @@ export const QueryGetCoreParamsResponse = proto3.makeMessageType(
   "zetachain.zetacore.observer.QueryGetCoreParamsResponse",
   () => [
     { no: 1, name: "core_params", kind: "message", T: CoreParamsList },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetNodeAccountRequest
+ */
+export const QueryGetNodeAccountRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetNodeAccountRequest",
+  () => [
+    { no: 1, name: "index", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetNodeAccountResponse
+ */
+export const QueryGetNodeAccountResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetNodeAccountResponse",
+  () => [
+    { no: 1, name: "NodeAccount", kind: "message", T: NodeAccount },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllNodeAccountRequest
+ */
+export const QueryAllNodeAccountRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryAllNodeAccountRequest",
+  () => [
+    { no: 1, name: "pagination", kind: "message", T: PageRequest },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllNodeAccountResponse
+ */
+export const QueryAllNodeAccountResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryAllNodeAccountResponse",
+  () => [
+    { no: 1, name: "NodeAccount", kind: "message", T: NodeAccount, repeated: true },
+    { no: 2, name: "pagination", kind: "message", T: PageResponse },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetPermissionFlagsRequest
+ */
+export const QueryGetPermissionFlagsRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetPermissionFlagsRequest",
+  [],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetPermissionFlagsResponse
+ */
+export const QueryGetPermissionFlagsResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetPermissionFlagsResponse",
+  () => [
+    { no: 1, name: "PermissionFlags", kind: "message", T: PermissionFlags },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetKeygenRequest
+ */
+export const QueryGetKeygenRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetKeygenRequest",
+  [],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetKeygenResponse
+ */
+export const QueryGetKeygenResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryGetKeygenResponse",
+  () => [
+    { no: 1, name: "Keygen", kind: "message", T: Keygen },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryShowObserverCountRequest
+ */
+export const QueryShowObserverCountRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryShowObserverCountRequest",
+  [],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryShowObserverCountResponse
+ */
+export const QueryShowObserverCountResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryShowObserverCountResponse",
+  () => [
+    { no: 1, name: "last_observer_count", kind: "message", T: LastObserverCount },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBlameByIdentifierRequest
+ */
+export const QueryBlameByIdentifierRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryBlameByIdentifierRequest",
+  () => [
+    { no: 1, name: "blame_identifier", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBlameByIdentifierResponse
+ */
+export const QueryBlameByIdentifierResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryBlameByIdentifierResponse",
+  () => [
+    { no: 1, name: "blameInfo", kind: "message", T: Blame },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsRequest
+ */
+export const QueryAllBlameRecordsRequest = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryAllBlameRecordsRequest",
+  [],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsResponse
+ */
+export const QueryAllBlameRecordsResponse = proto3.makeMessageType(
+  "zetachain.zetacore.observer.QueryAllBlameRecordsResponse",
+  () => [
+    { no: 1, name: "blameInfo", kind: "message", T: Blame, repeated: true },
   ],
 );
 

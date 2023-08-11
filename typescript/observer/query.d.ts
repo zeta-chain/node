@@ -7,8 +7,13 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoreParams, CoreParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
-import type { ObservationType, ObserverMapper } from "./observer_pb.js";
+import type { LastObserverCount, ObservationType, ObserverMapper } from "./observer_pb.js";
 import type { Chain } from "../common/common_pb.js";
+import type { NodeAccount } from "./node_account_pb.js";
+import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
+import type { PermissionFlags } from "./permission_flags_pb.js";
+import type { Keygen } from "./keygen_pb.js";
+import type { Blame } from "./blame_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryParamsRequest
@@ -372,5 +377,326 @@ export declare class QueryGetCoreParamsResponse extends Message<QueryGetCorePara
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetCoreParamsResponse;
 
   static equals(a: QueryGetCoreParamsResponse | PlainMessage<QueryGetCoreParamsResponse> | undefined, b: QueryGetCoreParamsResponse | PlainMessage<QueryGetCoreParamsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetNodeAccountRequest
+ */
+export declare class QueryGetNodeAccountRequest extends Message<QueryGetNodeAccountRequest> {
+  /**
+   * @generated from field: string index = 1;
+   */
+  index: string;
+
+  constructor(data?: PartialMessage<QueryGetNodeAccountRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetNodeAccountRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetNodeAccountRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetNodeAccountRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetNodeAccountRequest;
+
+  static equals(a: QueryGetNodeAccountRequest | PlainMessage<QueryGetNodeAccountRequest> | undefined, b: QueryGetNodeAccountRequest | PlainMessage<QueryGetNodeAccountRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetNodeAccountResponse
+ */
+export declare class QueryGetNodeAccountResponse extends Message<QueryGetNodeAccountResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.NodeAccount NodeAccount = 1;
+   */
+  NodeAccount?: NodeAccount;
+
+  constructor(data?: PartialMessage<QueryGetNodeAccountResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetNodeAccountResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetNodeAccountResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetNodeAccountResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetNodeAccountResponse;
+
+  static equals(a: QueryGetNodeAccountResponse | PlainMessage<QueryGetNodeAccountResponse> | undefined, b: QueryGetNodeAccountResponse | PlainMessage<QueryGetNodeAccountResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllNodeAccountRequest
+ */
+export declare class QueryAllNodeAccountRequest extends Message<QueryAllNodeAccountRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryAllNodeAccountRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllNodeAccountRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllNodeAccountRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllNodeAccountRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllNodeAccountRequest;
+
+  static equals(a: QueryAllNodeAccountRequest | PlainMessage<QueryAllNodeAccountRequest> | undefined, b: QueryAllNodeAccountRequest | PlainMessage<QueryAllNodeAccountRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllNodeAccountResponse
+ */
+export declare class QueryAllNodeAccountResponse extends Message<QueryAllNodeAccountResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.NodeAccount NodeAccount = 1;
+   */
+  NodeAccount: NodeAccount[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryAllNodeAccountResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllNodeAccountResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllNodeAccountResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllNodeAccountResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllNodeAccountResponse;
+
+  static equals(a: QueryAllNodeAccountResponse | PlainMessage<QueryAllNodeAccountResponse> | undefined, b: QueryAllNodeAccountResponse | PlainMessage<QueryAllNodeAccountResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetPermissionFlagsRequest
+ */
+export declare class QueryGetPermissionFlagsRequest extends Message<QueryGetPermissionFlagsRequest> {
+  constructor(data?: PartialMessage<QueryGetPermissionFlagsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetPermissionFlagsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetPermissionFlagsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsRequest;
+
+  static equals(a: QueryGetPermissionFlagsRequest | PlainMessage<QueryGetPermissionFlagsRequest> | undefined, b: QueryGetPermissionFlagsRequest | PlainMessage<QueryGetPermissionFlagsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetPermissionFlagsResponse
+ */
+export declare class QueryGetPermissionFlagsResponse extends Message<QueryGetPermissionFlagsResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.PermissionFlags PermissionFlags = 1;
+   */
+  PermissionFlags?: PermissionFlags;
+
+  constructor(data?: PartialMessage<QueryGetPermissionFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetPermissionFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetPermissionFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetPermissionFlagsResponse;
+
+  static equals(a: QueryGetPermissionFlagsResponse | PlainMessage<QueryGetPermissionFlagsResponse> | undefined, b: QueryGetPermissionFlagsResponse | PlainMessage<QueryGetPermissionFlagsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetKeygenRequest
+ */
+export declare class QueryGetKeygenRequest extends Message<QueryGetKeygenRequest> {
+  constructor(data?: PartialMessage<QueryGetKeygenRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetKeygenRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetKeygenRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetKeygenRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetKeygenRequest;
+
+  static equals(a: QueryGetKeygenRequest | PlainMessage<QueryGetKeygenRequest> | undefined, b: QueryGetKeygenRequest | PlainMessage<QueryGetKeygenRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetKeygenResponse
+ */
+export declare class QueryGetKeygenResponse extends Message<QueryGetKeygenResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.Keygen Keygen = 1;
+   */
+  Keygen?: Keygen;
+
+  constructor(data?: PartialMessage<QueryGetKeygenResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetKeygenResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetKeygenResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetKeygenResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetKeygenResponse;
+
+  static equals(a: QueryGetKeygenResponse | PlainMessage<QueryGetKeygenResponse> | undefined, b: QueryGetKeygenResponse | PlainMessage<QueryGetKeygenResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryShowObserverCountRequest
+ */
+export declare class QueryShowObserverCountRequest extends Message<QueryShowObserverCountRequest> {
+  constructor(data?: PartialMessage<QueryShowObserverCountRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryShowObserverCountRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryShowObserverCountRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryShowObserverCountRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryShowObserverCountRequest;
+
+  static equals(a: QueryShowObserverCountRequest | PlainMessage<QueryShowObserverCountRequest> | undefined, b: QueryShowObserverCountRequest | PlainMessage<QueryShowObserverCountRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryShowObserverCountResponse
+ */
+export declare class QueryShowObserverCountResponse extends Message<QueryShowObserverCountResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.LastObserverCount last_observer_count = 1;
+   */
+  lastObserverCount?: LastObserverCount;
+
+  constructor(data?: PartialMessage<QueryShowObserverCountResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryShowObserverCountResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryShowObserverCountResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryShowObserverCountResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryShowObserverCountResponse;
+
+  static equals(a: QueryShowObserverCountResponse | PlainMessage<QueryShowObserverCountResponse> | undefined, b: QueryShowObserverCountResponse | PlainMessage<QueryShowObserverCountResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBlameByIdentifierRequest
+ */
+export declare class QueryBlameByIdentifierRequest extends Message<QueryBlameByIdentifierRequest> {
+  /**
+   * @generated from field: string blame_identifier = 1;
+   */
+  blameIdentifier: string;
+
+  constructor(data?: PartialMessage<QueryBlameByIdentifierRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBlameByIdentifierRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBlameByIdentifierRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBlameByIdentifierRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBlameByIdentifierRequest;
+
+  static equals(a: QueryBlameByIdentifierRequest | PlainMessage<QueryBlameByIdentifierRequest> | undefined, b: QueryBlameByIdentifierRequest | PlainMessage<QueryBlameByIdentifierRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBlameByIdentifierResponse
+ */
+export declare class QueryBlameByIdentifierResponse extends Message<QueryBlameByIdentifierResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.Blame blameInfo = 1;
+   */
+  blameInfo?: Blame;
+
+  constructor(data?: PartialMessage<QueryBlameByIdentifierResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBlameByIdentifierResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBlameByIdentifierResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBlameByIdentifierResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBlameByIdentifierResponse;
+
+  static equals(a: QueryBlameByIdentifierResponse | PlainMessage<QueryBlameByIdentifierResponse> | undefined, b: QueryBlameByIdentifierResponse | PlainMessage<QueryBlameByIdentifierResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsRequest
+ */
+export declare class QueryAllBlameRecordsRequest extends Message<QueryAllBlameRecordsRequest> {
+  constructor(data?: PartialMessage<QueryAllBlameRecordsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllBlameRecordsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllBlameRecordsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllBlameRecordsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllBlameRecordsRequest;
+
+  static equals(a: QueryAllBlameRecordsRequest | PlainMessage<QueryAllBlameRecordsRequest> | undefined, b: QueryAllBlameRecordsRequest | PlainMessage<QueryAllBlameRecordsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsResponse
+ */
+export declare class QueryAllBlameRecordsResponse extends Message<QueryAllBlameRecordsResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.Blame blameInfo = 1;
+   */
+  blameInfo: Blame[];
+
+  constructor(data?: PartialMessage<QueryAllBlameRecordsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllBlameRecordsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllBlameRecordsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllBlameRecordsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllBlameRecordsResponse;
+
+  static equals(a: QueryAllBlameRecordsResponse | PlainMessage<QueryAllBlameRecordsResponse> | undefined, b: QueryAllBlameRecordsResponse | PlainMessage<QueryAllBlameRecordsResponse> | undefined): boolean;
 }
 

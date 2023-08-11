@@ -30,6 +30,11 @@ export declare enum ObservationType {
    * @generated from enum value: TSSKeyGen = 3;
    */
   TSSKeyGen = 3,
+
+  /**
+   * @generated from enum value: TSSKeySign = 4;
+   */
+  TSSKeySign = 4,
 }
 
 /**
@@ -64,5 +69,34 @@ export declare class ObserverMapper extends Message<ObserverMapper> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverMapper;
 
   static equals(a: ObserverMapper | PlainMessage<ObserverMapper> | undefined, b: ObserverMapper | PlainMessage<ObserverMapper> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.LastObserverCount
+ */
+export declare class LastObserverCount extends Message<LastObserverCount> {
+  /**
+   * @generated from field: uint64 count = 1;
+   */
+  count: bigint;
+
+  /**
+   * @generated from field: int64 last_change_height = 2;
+   */
+  lastChangeHeight: bigint;
+
+  constructor(data?: PartialMessage<LastObserverCount>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.LastObserverCount";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LastObserverCount;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LastObserverCount;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LastObserverCount;
+
+  static equals(a: LastObserverCount | PlainMessage<LastObserverCount> | undefined, b: LastObserverCount | PlainMessage<LastObserverCount> | undefined): boolean;
 }
 

@@ -8,15 +8,12 @@ import { Params } from "./params_pb.js";
 import { OutTxTracker } from "./out_tx_tracker_pb.js";
 import { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
-import { PermissionFlags } from "./permission_flags_pb.js";
-import { Keygen } from "./keygen_pb.js";
 import { TSS } from "./tss_pb.js";
 import { GasPrice } from "./gas_price_pb.js";
 import { ChainNonces } from "./chain_nonces_pb.js";
 import { PendingNonces } from "./nonce_to_cctx_pb.js";
 import { LastBlockHeight } from "./last_block_height_pb.js";
 import { CrossChainTx } from "./cross_chain_tx_pb.js";
-import { NodeAccount } from "./node_account_pb.js";
 
 /**
  * QueryParamsRequest is request type for the Query/Params RPC method.
@@ -146,24 +143,6 @@ export const QueryAllInTxHashToCctxResponse = proto3.makeMessageType(
 );
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryGetPermissionFlagsRequest
- */
-export const QueryGetPermissionFlagsRequest = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetPermissionFlagsRequest",
-  [],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetPermissionFlagsResponse
- */
-export const QueryGetPermissionFlagsResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetPermissionFlagsResponse",
-  () => [
-    { no: 1, name: "PermissionFlags", kind: "message", T: PermissionFlags },
-  ],
-);
-
-/**
  * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressRequest
  */
 export const QueryGetTssAddressRequest = proto3.makeMessageType(
@@ -179,26 +158,6 @@ export const QueryGetTssAddressResponse = proto3.makeMessageType(
   () => [
     { no: 1, name: "eth", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "btc", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
-);
-
-/**
- * this line is used by starport scaffolding # 3
- *
- * @generated from message zetachain.zetacore.crosschain.QueryGetKeygenRequest
- */
-export const QueryGetKeygenRequest = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetKeygenRequest",
-  [],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetKeygenResponse
- */
-export const QueryGetKeygenResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetKeygenResponse",
-  () => [
-    { no: 1, name: "Keygen", kind: "message", T: Keygen },
   ],
 );
 
@@ -420,47 +379,6 @@ export const QueryAllCctxPendingResponse = proto3.makeMessageType(
   "zetachain.zetacore.crosschain.QueryAllCctxPendingResponse",
   () => [
     { no: 1, name: "CrossChainTx", kind: "message", T: CrossChainTx, repeated: true },
-    { no: 2, name: "pagination", kind: "message", T: PageResponse },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetNodeAccountRequest
- */
-export const QueryGetNodeAccountRequest = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetNodeAccountRequest",
-  () => [
-    { no: 1, name: "index", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetNodeAccountResponse
- */
-export const QueryGetNodeAccountResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryGetNodeAccountResponse",
-  () => [
-    { no: 1, name: "NodeAccount", kind: "message", T: NodeAccount },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryAllNodeAccountRequest
- */
-export const QueryAllNodeAccountRequest = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryAllNodeAccountRequest",
-  () => [
-    { no: 1, name: "pagination", kind: "message", T: PageRequest },
-  ],
-);
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryAllNodeAccountResponse
- */
-export const QueryAllNodeAccountResponse = proto3.makeMessageType(
-  "zetachain.zetacore.crosschain.QueryAllNodeAccountResponse",
-  () => [
-    { no: 1, name: "NodeAccount", kind: "message", T: NodeAccount, repeated: true },
     { no: 2, name: "pagination", kind: "message", T: PageResponse },
   ],
 );

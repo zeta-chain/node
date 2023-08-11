@@ -16,6 +16,7 @@ export const ObservationType = proto3.makeEnum(
     {no: 1, name: "InBoundTx"},
     {no: 2, name: "OutBoundTx"},
     {no: 3, name: "TSSKeyGen"},
+    {no: 4, name: "TSSKeySign"},
   ],
 );
 
@@ -28,6 +29,17 @@ export const ObserverMapper = proto3.makeMessageType(
     { no: 1, name: "index", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "observer_chain", kind: "message", T: Chain },
     { no: 4, name: "observer_list", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ],
+);
+
+/**
+ * @generated from message zetachain.zetacore.observer.LastObserverCount
+ */
+export const LastObserverCount = proto3.makeMessageType(
+  "zetachain.zetacore.observer.LastObserverCount",
+  () => [
+    { no: 1, name: "count", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
+    { no: 2, name: "last_change_height", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
   ],
 );
 
