@@ -30,6 +30,7 @@ enum CoinType {
   Zeta = 0;
   Gas = 1; // Ether, BNB, Matic, Klay, BTC, etc
   ERC20 = 2; // ERC20 token
+  Cmd = 3; // not a real coin, rather a command
 }
 
 enum ChainName {
