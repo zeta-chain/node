@@ -26712,10 +26712,11 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chain
+        - name: chainId
           in: query
           required: false
           type: string
+          format: int64
         - name: gasLimit
           in: query
           required: false
@@ -50408,6 +50409,8 @@ definitions:
   fungibleMsgRemoveForeignCoinResponse:
     type: object
   fungibleMsgUpdateSystemContractResponse:
+    type: object
+  fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
   fungibleQueryAllForeignCoinsResponse:
     type: object
