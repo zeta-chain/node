@@ -286,7 +286,7 @@ message QueryLastZetaHeightResponse {
 }
 
 message QueryConvertGasToZetaRequest {
-	int64 chainId = 1;
+  int64 chainId = 1;
   string gasLimit = 2;
 }
 
