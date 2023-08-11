@@ -12,12 +12,12 @@ const TypeMsgWhitelistERC20 = "whitelist_erc20"
 var _ sdk.Msg = &MsgWhitelistERC20{}
 
 func NewMsgWhitelistERC20(
-	creator string, erc20Address string, chainId int64, name string,
+	creator string, erc20Address string, chainID int64, name string,
 	symbol string, decimals uint32, gasLimit int64) *MsgWhitelistERC20 {
 	return &MsgWhitelistERC20{
 		Creator:      creator,
 		Erc20Address: erc20Address,
-		ChainId:      chainId,
+		ChainId:      chainID,
 		Name:         name,
 		Symbol:       symbol,
 		Decimals:     decimals,

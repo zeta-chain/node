@@ -5,20 +5,15 @@ import (
 	"fmt"
 	"math/big"
 
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	"github.com/zeta-chain/zetacore/common"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -78,17 +73,17 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 	hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 
 	index := crypto.Keccak256Hash(hash.Bytes())
-	cctx := crosschaintypes.CrossChainTx{
+	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
 		Index:          index.String(),
 		ZetaFees:       sdk.NewUint(0),
-		RelayedMessage: fmt.Sprintf("%s:%s", common.CMD_WHITELIST_ERC20, msg.Erc20Address),
-		CctxStatus: &crosschaintypes.Status{
-			Status:              crosschaintypes.CctxStatus_PendingOutbound,
+		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
+		CctxStatus: &types.Status{
+			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",
 			LastUpdateTimestamp: 0,
 		},
-		InboundTxParams: &crosschaintypes.InboundTxParams{
+		InboundTxParams: &types.InboundTxParams{
 			Sender:                          "",
 			SenderChainId:                   0,
 			TxOrigin:                        "",
@@ -100,8 +95,8 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 			InboundTxBallotIndex:            "",
 			InboundTxFinalizedZetaHeight:    0,
 		},
-		OutboundTxParams: []*crosschaintypes.OutboundTxParams{
-			&crosschaintypes.OutboundTxParams{
+		OutboundTxParams: []*types.OutboundTxParams{
+			&types.OutboundTxParams{
 				Receiver:                         param.Erc20CustodyContractAddress,
 				ReceiverChainId:                  msg.ChainId,
 				CoinType:                         common.CoinType_Cmd,

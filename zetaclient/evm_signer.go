@@ -218,7 +218,7 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 }
 
 func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.Address, nonce uint64, gasLimit uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
-	if cmd == common.CMD_WHITELIST_ERC20 {
+	if cmd == common.CmdWhitelistERC20 {
 		erc20 := ethcommon.HexToAddress(params)
 		if erc20 == (ethcommon.Address{}) {
 			return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)

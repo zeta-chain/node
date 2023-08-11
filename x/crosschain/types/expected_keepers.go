@@ -110,7 +110,7 @@ type FungibleKeeper interface {
 		ctx sdk.Context,
 		name, symbol string,
 		decimals uint8,
-		chainId int64,
+		chainID int64,
 		coinType common.CoinType,
 		erc20Contract string,
 		gasLimit *big.Int,

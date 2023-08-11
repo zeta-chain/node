@@ -48,12 +48,12 @@ func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
 	decimals uint8,
-	chainId int64,
+	chainID int64,
 	coinType zetacommon.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) {
-	chain := zetacommon.GetChainFromChainID(chainId)
+	chain := zetacommon.GetChainFromChainID(chainID)
 	chainStr := chain.ChainName.String()
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)

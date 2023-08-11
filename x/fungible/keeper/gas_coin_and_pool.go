@@ -18,8 +18,8 @@ import (
 // setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
 // FIXME: use chainid instead of chain name; add cointype and use proper gas limit based on cointype/chain
-func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chainId int64, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
-	chain := common.GetChainFromChainID(chainId)
+func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
+	chain := common.GetChainFromChainID(chainID)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
