@@ -569,6 +569,12 @@ func New(
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  maxGasWanted,
+		DisabledAuthzMsgs: []string{
+			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
+			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+		},
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)

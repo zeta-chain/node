@@ -16,7 +16,7 @@ import (
 
 func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaobserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	newSystemContractAddr := ethcommon.HexToAddress(msg.NewSystemContractAddress)
@@ -64,7 +64,6 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 	oldSystemContractAddress := sys.SystemContract
 	sys.SystemContract = newSystemContractAddr.Hex()
 	k.SetSystemContract(ctx, sys)
-	commit()
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventSystemContractUpdated{
 			MsgTypeUrl:         sdk.MsgTypeURL(&types.MsgUpdateSystemContract{}),
@@ -77,5 +76,6 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
 		return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 	return &types.MsgUpdateSystemContractResponse{}, nil
 }
