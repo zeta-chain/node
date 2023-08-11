@@ -1,15 +1,17 @@
-package keeper
+package keeper_test
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 )
@@ -19,37 +21,55 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 	t.Run("apply new message", func(t *testing.T) {
 		k, ctx := testkeeper.FungibleKeeper(t)
 
-		mockAuthKeeper := testkeeper.GetFungibleAccountKeeper(t, k.authKeeper)
-		mockEVMKeeper := testkeeper.GetFungibleEVMKeeper(t, k.evmKeeper)
+		mockAuthKeeper := testkeeper.GetFungibleAccountKeeper(t, k)
+		mockEVMKeeper := testkeeper.GetFungibleEVMKeeper(t, k)
 
 		// Set up expectations
-		fromAddr := common.HexToAddress("0xSomeAddress")
+		fromAddr := sample.EthAddress()
+		contractAddress := sample.EthAddress()
 		nonce := uint64(1)
-		mockAuthKeeper.On("GetSequence", mock.Anything, fromAddr.Bytes()).Return(nonce, nil)
+		chainID := big.NewInt(1)
+		mockAuthKeeper.On("GetSequence", mock.Anything, sdk.AccAddress(fromAddr.Bytes())).Return(nonce, nil)
 
 		data := []byte("some data")
 		args, _ := json.Marshal(evmtypes.TransactionArgs{
 			From: &fromAddr,
+			To:   &contractAddress,
 			Data: (*hexutil.Bytes)(&data),
 		})
 		gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
-		mockEVMKeeper.On("EstimateGas", mock.Anything, &evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap}).Return(gasRes, nil)
+		mockEVMKeeper.On(
+			"EstimateGas",
+			mock.Anything,
+			&evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap},
+		).Return(gasRes, nil)
 
+		value := big.NewInt(100)
 		msgRes := &evmtypes.MsgEthereumTxResponse{}
-		mockEVMKeeper.On("ApplyMessage", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(msgRes, nil)
+		mockEVMKeeper.On(
+			"ApplyMessage",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(msgRes, nil)
+
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(chainID)
+		mockEVMKeeper.On("SetBlockBloomTransient", mock.Anything).Maybe()
+		mockEVMKeeper.On("SetLogSizeTransient", mock.Anything).Maybe()
+		mockEVMKeeper.On("GetLogSizeTransient", mock.Anything, mock.Anything).Maybe()
 
 		// Call the method
 		res, err := k.CallEVMWithData(
 			ctx,
 			fromAddr,
-			nil,
+			&contractAddress,
 			data,
 			true,
-			nil,
+			value,
 			nil,
 		)
-
-		// Assertions
 		require.NoError(t, err)
 		require.Equal(t, msgRes, res)
 
@@ -57,12 +77,4 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		mockAuthKeeper.AssertExpectations(t)
 		mockEVMKeeper.AssertExpectations(t)
 	})
-
-	// k.authKeeper.GetSequence(ctx, from.Bytes())
-	// k.evmKeeper.EstimateGas(sdk.WrapSDKContext(ctx), &evmtypes.EthCallRequest{})
-	// k.evmKeeper.WithChainID(ctx)
-	// k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
-	// k.evmKeeper.GetBlockBloomTransient(ctx)
-	// k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
-	// k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
 }

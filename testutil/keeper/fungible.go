@@ -61,25 +61,25 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	return k, ctx
 }
 
-func GetFungibleAccountKeeper(t testing.TB, keeper keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
+func GetFungibleAccountKeeper(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
 	fak, ok := keeper.GetAuthKeeper().(*fungiblemocks.FungibleAccountKeeper)
 	assert.True(t, ok)
 	return fak
 }
 
-func GetFungibleBankKeeper(t testing.TB, keeper keeper.Keeper) *fungiblemocks.FungibleBankKeeper {
+func GetFungibleBankKeeper(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleBankKeeper {
 	fbk, ok := keeper.GetBankKeeper().(*fungiblemocks.FungibleBankKeeper)
 	assert.True(t, ok)
 	return fbk
 }
 
-func GetFungibleObserverKeeper(t testing.TB, keeper keeper.Keeper) *fungiblemocks.FungibleObserverKeeper {
+func GetFungibleObserverKeeper(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleObserverKeeper {
 	fok, ok := keeper.GetObserverKeeper().(*fungiblemocks.FungibleObserverKeeper)
 	assert.True(t, ok)
 	return fok
 }
 
-func GetFungibleEVMKeeper(t testing.TB, keeper keeper.Keeper) *fungiblemocks.FungibleEVMKeeper {
+func GetFungibleEVMKeeper(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleEVMKeeper {
 	fek, ok := keeper.GetEVMKeeper().(*fungiblemocks.FungibleEVMKeeper)
 	assert.True(t, ok)
 	return fek
