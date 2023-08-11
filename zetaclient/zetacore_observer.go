@@ -132,6 +132,10 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 
+						if c.ChainId == common.ZetaChain().ChainId {
+							continue
+						}
+
 						ob, err := co.getTargetChainOb(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
