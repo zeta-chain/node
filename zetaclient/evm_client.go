@@ -404,6 +404,17 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	// read env variables if set
+	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
+	if err != nil || timeoutNonce <= 0 {
+		timeoutNonce = 100 * 3 // process up to 100 hashes
+	}
+	rpcRestTime, err := strconv.Atoi(os.Getenv("OS_RPC_REST_TIME"))
+	if err != nil || rpcRestTime <= 0 {
+		rpcRestTime = 500 // 500ms
+	}
+	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
+
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
 		select {
@@ -415,19 +426,20 @@ func (ob *EVMChainClient) observeOutTx() {
 			sort.Slice(trackers, func(i, j int) bool {
 				return trackers[i].Nonce < trackers[j].Nonce
 			})
-			outTimeout := time.After(90 * time.Second)
+			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(3000 * time.Millisecond)
+					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
+						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
@@ -457,7 +469,10 @@ func (ob *EVMChainClient) observeOutTx() {
 
 							break TXHASHLOOP
 						}
-						<-inTimeout
+						if err != nil {
+							ob.logger.ObserveOutTx.Error().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
+						}
+						//<-inTimeout
 					}
 				}
 			}

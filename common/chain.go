@@ -112,6 +112,12 @@ func IsBitcoinChain(chainID int64) bool {
 		chainID == 8332 // mainnet
 }
 
+func IsEthereumChain(chainID int64) bool {
+	return chainID == 1 || // eth mainnet
+		chainID == 5 || // Goerli
+		chainID == 1337 // eth privnet
+}
+
 // IsEmpty is to determinate whether the chain is empty
 func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""
