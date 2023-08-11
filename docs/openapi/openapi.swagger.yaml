@@ -50073,7 +50073,9 @@ definitions:
       in_tx_hash:
         type: string
       cctx_index:
-        type: string
+        type: array
+        items:
+          type: string
   crosschainInboundTxParams:
     type: object
     properties:
