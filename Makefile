@@ -14,6 +14,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-X github.com/zeta-chain/zetacore/common.Name=zetacored \
 	-X github.com/zeta-chain/zetacore/common.Version=$(VERSION) \
 	-X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT) \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
