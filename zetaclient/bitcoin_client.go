@@ -919,13 +919,14 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outTx
 		if nonce > 0 && i == 0 {
-			preTxid, err := ob.findTxIDByNonce(nonce-1, false)
+			_, err := ob.findTxIDByNonce(nonce-1, false)
 			if err != nil {
 				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
 			}
-			if vin.Txid != preTxid || vin.Vout != 0 {
-				return fmt.Errorf("checkTSSVin: invalid nonce-mark txid %s vout %d, expected txid %s vout 0", vin.Txid, vin.Vout, preTxid)
-			}
+			// TODO: enable this check after bootstrap
+			// if vin.Txid != preTxid || vin.Vout != 0 {
+			// 	return fmt.Errorf("checkTSSVin: invalid nonce-mark txid %s vout %d, expected txid %s vout 0", vin.Txid, vin.Vout, preTxid)
+			// }
 		}
 	}
 	return nil
