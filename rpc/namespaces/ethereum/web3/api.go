@@ -16,7 +16,10 @@
 package web3
 
 import (
-	"github.com/evmos/ethermint/version"
+	"fmt"
+	"runtime"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -32,7 +35,7 @@ func NewPublicAPI() *PublicAPI {
 
 // ClientVersion returns the client version in the Web3 user agent format.
 func (a *PublicAPI) ClientVersion() string {
-	return version.Version()
+	return fmt.Sprintf("%s/%s/%s/%s", common.Name, common.Version, runtime.GOOS+"-"+runtime.GOARCH, runtime.Version())
 }
 
 // Sha3 returns the keccak-256 hash of the passed-in input.
