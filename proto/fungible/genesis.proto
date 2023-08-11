@@ -5,7 +5,6 @@ import "fungible/foreign_coins.proto";
 import "fungible/params.proto";
 import "fungible/system_contract.proto";
 import "gogoproto/gogo.proto";
-// this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -14,5 +13,4 @@ message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated ForeignCoins foreignCoinsList = 2 [(gogoproto.nullable) = false];
   SystemContract systemContract = 3;
-  // this line is used by starport scaffolding # genesis/proto/state
 }

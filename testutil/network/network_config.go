@@ -2,8 +2,9 @@ package network
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"time"
+
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

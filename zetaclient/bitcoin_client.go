@@ -183,7 +183,9 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	return height
 }
 
-// TODO
+// GetBaseGasPrice ...
+// TODO: implement
+// https://github.com/zeta-chain/node/issues/868
 func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 	return big.NewInt(0)
 }
@@ -333,18 +335,24 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 			return false, false, nil
 		}
 	}
+
 	var amount float64
 	if res.Amount > 0 {
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount > 0")
+		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
 		amount = res.Amount
+	} else if res.Amount == 0 {
+		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
+		return false, false, nil
 	} else {
 		amount = -res.Amount
 	}
+
 	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
 
+	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %f\n", res.TxID, res.Amount)
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,

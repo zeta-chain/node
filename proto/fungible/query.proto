@@ -7,7 +7,6 @@ import "fungible/params.proto";
 import "fungible/system_contract.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-// this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -31,7 +30,6 @@ service Query {
   rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
   }
-  // this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -65,4 +63,3 @@ message QueryGetSystemContractRequest {}
 message QueryGetSystemContractResponse {
   SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
 }
-// this line is used by starport scaffolding # 3

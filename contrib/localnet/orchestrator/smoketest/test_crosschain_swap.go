@@ -5,10 +5,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
+
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
@@ -131,7 +132,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 	fmt.Printf("memo length %d\n", len(memo))
 
-	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+	txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.01, utxos[0:2], sm.btcRPCClient, memo)
 	fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 	if err != nil {

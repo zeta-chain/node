@@ -11,11 +11,8 @@ import (
 
 /* #nosec */
 const (
-	opWeightMsgUpdateClientParams = "op_weight_msg_update_client_params"
-	// TODO: Determine the simulation weight value
+	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
 	defaultWeightMsgUpdateClientParams int = 100
-
-	// this line is used by starport scaffolding # simapp/module/const
 )
 
 // GenerateGenesisState creates a randomized GenState of the module
@@ -27,7 +24,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	defaultParams := types.DefaultParams()
 	observerGenesis := types.GenesisState{
 		Params: &defaultParams,
-		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&observerGenesis)
 }
@@ -56,8 +52,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 			weightMsgUpdateClientParams = defaultWeightMsgUpdateClientParams
 		},
 	)
-
-	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
 }

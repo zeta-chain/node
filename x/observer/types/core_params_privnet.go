@@ -5,6 +5,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/zeta-chain/zetacore/common"
 )

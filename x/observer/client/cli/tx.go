@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -27,8 +29,6 @@ func GetTxCmd() *cobra.Command {
 		CmdAddBlameVote(),
 		CmdEncode(),
 	)
-
-	// this line is used by starport scaffolding # 1
 
 	return cmd
 }

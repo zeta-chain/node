@@ -3,10 +3,11 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default observer genesis state
 func DefaultGenesis() *GenesisState {
 	params := DefaultParams()
 	return &GenesisState{

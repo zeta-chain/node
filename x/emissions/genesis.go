@@ -6,10 +6,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the emissions module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genState types.GenesisState) {
-	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
 	ak.GetModuleAccount(ctx, types.ModuleName)
 	ak.GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
@@ -17,12 +16,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genSt
 
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the emissions module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
-
-	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
 }

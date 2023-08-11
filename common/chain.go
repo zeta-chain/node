@@ -81,6 +81,16 @@ func (chain Chain) BTCAddressFromWitnessProgram(witnessProgram []byte) (string, 
 	return address.EncodeAddress(), nil
 }
 
+// DecodeAddress decode the address string to bytes
+func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
+	if IsEVMChain(chain.ChainId) {
+		return ethcommon.HexToAddress(addr).Bytes(), nil
+	} else if IsBitcoinChain(chain.ChainId) {
+		return []byte(addr), nil
+	}
+	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
+}
+
 func IsEVMChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
 		chainID == 80001 || // Polygon mumbai
