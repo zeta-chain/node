@@ -194,21 +194,26 @@ func (co *CoreObserver) startSendScheduler() {
 							// determining critical outtx; if it satisfies following criteria
 							// 1. it's the first pending outtx for this chain
 							// 2. the following 5 nonces have been in tracker
-							isCritical := false
-							criticalInterval := uint64(10) // for critical pending outTx we reduce re-try interval
-							if nonce%criticalInterval == currentHeight%criticalInterval && idx < 2 {
-								numNoncesInTracker := 0
+							criticalInterval := uint64(10)      // for critical pending outTx we reduce re-try interval
+							nonCriticalInterval := interval * 2 // for non-critical pending outTx we increase re-try interval
+							if nonce%criticalInterval == currentHeight%criticalInterval {
+								count := 0
 								for i := nonce + 1; i <= nonce+10; i++ {
 									if _, found := trackerMap[i]; found {
-										numNoncesInTracker++
+										count++
 									}
 								}
-								if numNoncesInTracker >= 7 {
-									isCritical = true
+								if count >= 7 {
+									interval = criticalInterval
 								}
 							}
+							// if it's already in tracker, we increase re-try interval
+							if _, ok := trackerMap[nonce]; ok {
+								interval = nonCriticalInterval
+							}
 
-							if (isCritical || nonce%interval == currentHeight%interval) && !outTxMan.IsOutTxActive(outTxID) {
+							// otherwise, the normal interval is used
+							if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 								outTxMan.StartTryProcess(outTxID)
 								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 								go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
