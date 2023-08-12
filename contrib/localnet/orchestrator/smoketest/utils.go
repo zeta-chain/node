@@ -7,16 +7,15 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // wait until cctx is mined; returns the cctxIndex (the last one)
