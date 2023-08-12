@@ -464,31 +464,10 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
 							ob.mu.Unlock()
 
-							//DISABLING PERSISTENCE
-							//// Convert to DB types
-							//rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
-							//if err != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
-							//	continue
-							//}
-							//trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
-							//if err != nil {
-							//	ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
-							//	continue
-							//}
-							//
-							////Save to DB
-							//if dbc := ob.db.Create(rec); dbc.Error != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
-							//}
-							//if dbc := ob.db.Create(trans); dbc.Error != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
-							//}
-
 							break TXHASHLOOP
 						}
 						if err != nil {
-							ob.logger.ObserveOutTx.Error().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
+							ob.logger.ObserveOutTx.Debug().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
 						}
 						//<-inTimeout
 					}
