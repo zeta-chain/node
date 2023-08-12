@@ -196,15 +196,14 @@ func (co *CoreObserver) startSendScheduler() {
 							// 2. the following 5 nonces have been in tracker
 							isCritical := false
 							criticalInterval := uint64(10) // for critical pending outTx we reduce re-try interval
-							if nonce%criticalInterval == currentHeight%criticalInterval && idx == 0 {
-								nextFiveNonce := true
-								for i := nonce + 1; i <= nonce+5; i++ {
-									if _, found := trackerMap[i]; !found {
-										nextFiveNonce = false
-										break
+							if nonce%criticalInterval == currentHeight%criticalInterval && idx < 2 {
+								numNoncesInTracker := 0
+								for i := nonce + 1; i <= nonce+10; i++ {
+									if _, found := trackerMap[i]; found {
+										numNoncesInTracker++
 									}
 								}
-								if nextFiveNonce {
+								if numNoncesInTracker >= 7 {
 									isCritical = true
 								}
 							}
