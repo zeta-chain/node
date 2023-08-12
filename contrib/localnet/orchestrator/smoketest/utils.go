@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -19,9 +20,9 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-// wait until cctx is mined; returns the cctxIndex
+// wait until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
-	var cctxIndex string
+	var cctxIndexes []string
 	for {
 		time.Sleep(5 * time.Second)
 		fmt.Printf("Waiting for cctx to be mined by inTxHash: %s\n", inTxHash)
@@ -29,29 +30,29 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 		if err != nil {
 			continue
 		}
-		cctxIndex = res.InTxHashToCctx.CctxIndex
-		fmt.Printf("Deposit receipt cctx index: %s\n", cctxIndex)
+		cctxIndexes = res.InTxHashToCctx.CctxIndex
+		fmt.Printf("Deposit receipt cctx index: %v\n", cctxIndexes)
 		break
 	}
-	for {
-		time.Sleep(5 * time.Second)
-		{
-			res, err := cctxClient.OutTxTrackerAll(context.Background(), &types.QueryAllOutTxTrackerRequest{})
-			if err != nil {
-				fmt.Printf("OutTxTrackerAll err: %s\n", err.Error())
-				continue
+	var wg sync.WaitGroup
+	var cctxs []*types.CrossChainTx
+	for _, cctxIndex := range cctxIndexes {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				time.Sleep(3 * time.Second)
+				res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})
+				if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
+					fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
+					cctxs = append(cctxs, res.CrossChainTx)
+					break
+				}
 			}
-			for _, tracker := range res.OutTxTracker {
-				fmt.Printf("OutTxTracker: %+v\n", tracker.HashList)
-			}
-		}
-		res, err := cctxClient.Cctx(context.Background(), &types.QueryGetCctxRequest{Index: cctxIndex})
-		if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
-			fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
-			return res.CrossChainTx
-		}
-
+		}()
 	}
+	wg.Wait()
+	return cctxs[len(cctxs)-1]
 }
 
 func IsTerminalStatus(status types.CctxStatus) bool {
