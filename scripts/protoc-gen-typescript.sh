@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 
-cd proto
-rm -rf typescript
-buf generate --template buf.ts.yaml
+DIR="typescript"
 
-# Set the target directory
-DIR="../typescript"
+rm -rf $DIR
 
-# Loop through each file in the directory recursively
-find "$DIR" -type f -name "*_pb.*" | while read -r file; do
-    # Compute the new filename by removing '_pb'
-    new_file="${file/_pb/}"
-    
-    # Rename the file
-    mv "$file" "$new_file"
-done
+(cd proto && buf generate --template buf.ts.yaml)
 
-#!/bin/bash
+cat <<EOL > $DIR/package.json
+{
+  "name": "@zetachain/blockchain-types",
+  "version": "0.0.0-set-on-publish",
+  "description": "",
+  "main": "",
+  "keywords": [],
+  "author": "ZetaChain",
+  "license": "MIT"
+}
+EOL
 
 # Loop through all directories recursively
 find "$DIR" -type d | while read -r dir; do

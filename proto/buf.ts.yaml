@@ -4,3 +4,4 @@ managed:
 plugins:
   - plugin: buf.build/bufbuild/es:v1.3.0
     out: ../typescript
+    opt: target=dts
