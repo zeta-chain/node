@@ -24,4 +24,5 @@ var (
 	ErrKeygenBlockTooLow       = errorsmod.Register(ModuleName, 1114, "Please set a block number at-least 10 blocks higher than the current block number")
 	ErrKeygenCompleted         = errorsmod.Register(ModuleName, 1115, "Keygen already completed")
 	ErrNotAuthorized           = errorsmod.Register(ModuleName, 1116, "Err not authorized")
+	ErrBlockHeaderNotFound     = errorsmod.Register(ModuleName, 1117, "Block header not found")
 )

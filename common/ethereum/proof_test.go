@@ -4,10 +4,12 @@ import (
 	"context"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func TestProofGeneration(t *testing.T) {
@@ -16,7 +18,7 @@ func TestProofGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bn := int64(9485814)
+	bn := int64(9509129)
 	block, err := client.BlockByNumber(context.Background(), big.NewInt(bn))
 	if err != nil {
 		t.Fatal(err)
@@ -72,29 +74,52 @@ func TestProofGeneration(t *testing.T) {
 	//	t.Logf("k: %x, v: %x\n", key, v)
 	//}
 
-	//var receipts types.Receipts
-	//for _, tx := range block.Transactions() {
-	//	receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	receipts = append(receipts, receipt)
-	//	time.Sleep(200 * time.Millisecond)
-	//}
+	{
+		var receipts types.Receipts
+		for _, tx := range block.Transactions() {
+			receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+			if err != nil {
+				t.Fatal(err)
+			}
+			receipts = append(receipts, receipt)
+			time.Sleep(200 * time.Millisecond)
+		}
 
-	//receiptTree := NewTrie(receipts, new(trie.Trie))
-	//t.Logf("  block receipt root %x\n", block.Header().ReceiptHash)
-	//t.Logf("  receipt tree root  %x\n", receiptTree.trie.Hash())
-	//
-	//proof = memorydb.New()
-	//receiptTree.trie.Prove(indexBuf, 0, proof)
-	//t.Logf("proof len %d\n", proof.Len())
-	//value, err = trie.VerifyProof(receiptTree.trie.Hash(), indexBuf, proof)
-	//t.Logf("pass? %v\n", err == nil)
-	//t.Logf("value %x\n", value)
-	//
-	//var receipt types.Receipt
-	//receipt.UnmarshalBinary(value)
-	//t.Logf("  receipt %+v\n", receipt)
-	//t.Logf("  receipt tx hash %+v\n", receipt.TxHash.Hex())
+		receiptTree := NewTrie(receipts)
+		t.Logf("  block receipt root %x\n", block.Header().ReceiptHash)
+		t.Logf("  receipt tree root  %x\n", receiptTree.Hash())
+		if receiptTree.Hash() != block.Header().ReceiptHash {
+			t.Fatal("receipt root mismatch")
+		} else {
+			t.Logf("  receipt root hash & block receipt root match\n")
+		}
+
+		i := 1
+		proof := NewProof()
+		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+		err = receiptTree.Prove(indexBuf, 0, proof)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// NOTE: eth receipts only hashes the following fields
+		// 	data := &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs}
+		value, err := trie.VerifyProof(block.Header().ReceiptHash, indexBuf, proof)
+		t.Logf("pass? %v\n", err == nil)
+		t.Logf("value %x\n", value)
+		value, err = proof.Verify(block.Header().ReceiptHash, i)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var receipt types.Receipt
+		receipt.UnmarshalBinary(value)
+
+		t.Logf("  receipt %+v\n", receipt)
+		t.Logf("  receipt tx hash %+v\n", receipt.TxHash.Hex())
+
+		for _, log := range receipt.Logs {
+			t.Logf("  log %+v\n", log)
+		}
+	}
 }

@@ -25,4 +25,8 @@ var (
 	ErrNonceMismatch           = errorsmod.Register(ModuleName, 1123, "Err Nonce mismatch")
 	ErrNotFoundCoreParams      = errorsmod.Register(ModuleName, 1126, "Not found chain core params")
 	ErrUnableToSendCoinType    = errorsmod.Register(ModuleName, 1127, "Unable to send this coin type to a receiver chain")
+
+	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1128, "Proof verification fail")
+	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1129, "Cannot find cctx")
+	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1130, "Status not pending")
 )
