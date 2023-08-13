@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -185,9 +186,14 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 	if msg.Proof != nil {
 		blockHash := eth.HexToHash(msg.BlockHash)
-		header, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
+		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
+		var header ethtypes.Header
+		err = rlp.DecodeBytes(res.Header, &header)
+		if err != nil {
+			return nil, err
+		}
 		if found {
-			val, err := msg.Proof.Verify(eth.BytesToHash(header.Hash), int(msg.TxIndex))
+			val, err := msg.Proof.Verify(header.TxHash, int(msg.TxIndex))
 			if err == nil {
 				var txx ethtypes.Transaction
 				err = txx.UnmarshalBinary(val)

@@ -740,31 +740,49 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 					continue
 				}
-				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+
+				// this task scans the block for incoming tx from TSS addresses and report them as outtx
 				func() {
-					block, err := ob.GetBlockByNumberCached(bn - 2)
+					blk, err := ob.GetBlockByNumberCached(bn - 2)
 					if err != nil {
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
+						ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting blk: %d", bn)
 						return
 					}
-					trie := ethereum2.NewTrie(block.Transactions())
+					trie := ethereum2.NewTrie(blk.Transactions())
+					if trie.Hash() != blk.Header().TxHash {
+						ob.logger.ExternalChainWatcher.Error().Err(err).Msg("tx root hash & block tx root mismatch")
+						return
+					}
 					signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-					for i, tx := range block.Transactions() {
+					for i, tx := range blk.Transactions() {
 						from, err := signer.Sender(tx)
 
 						if err == nil && from == ob.Tss.EVMAddress() {
-							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s is from TSS address; don't act", tx.Hash().Hex())
+							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s is from TSS address; generating proof for outtx tracker", tx.Hash().Hex())
 							proof, err := trie.GenerateProof(i)
 							if err != nil {
 								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error generating proof")
-								return
+								continue
 							}
-							zetaHash, err := ob.zetaClient.AddTxHashToOutTxTracker(ob.chain.ChainId, tx.Nonce(), tx.Hash().Hex(), proof, block.Hash().Hex(), int64(i))
+							val, err := proof.Verify(blk.TxHash(), i)
+							if err != nil {
+								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error verifying proof")
+								continue
+							}
+							var txx ethtypes.Transaction
+							err = txx.UnmarshalBinary(val)
+							if err != nil {
+								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error unmarshalling proof'd tx")
+								continue
+							}
+
+							zetaHash, err := ob.zetaClient.AddTxHashToOutTxTracker(ob.chain.ChainId, tx.Nonce(), tx.Hash().Hex(), proof, blk.Hash().Hex(), int64(i))
 							if err != nil {
 								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-								return
+								continue
 							}
-							ob.logger.ExternalChainWatcher.Info().Msgf("Proof'd AddTxHashToOutTxTracker: PostSend zeta tx: %s", zetaHash)
+							ob.logger.ExternalChainWatcher.Info().Msgf("Proof'd AddTxHashToOutTxTracker: PostSend zeta tx: %s, blk hash %s, blk num %d",
+								zetaHash, blk.Hash().Hex(), blk.Number().Int64())
 						}
 					}
 				}()

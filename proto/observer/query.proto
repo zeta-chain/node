@@ -199,3 +199,12 @@ message QueryAllBlockHeaderResponse {
   repeated BlockHeader block_headers = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+message QueryGetBlockHeaderByHashRequest {
+  bytes block_hash = 1;
+}
+
+message QueryGetBlockHeaderByHashResponse {
+  BlockHeader block_header = 1;
+}
+

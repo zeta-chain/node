@@ -33,8 +33,8 @@ func TestProofGeneration(t *testing.T) {
 
 	//ttt := new(trie.Trie)
 	tr := NewTrie(block.Transactions())
-	t.Logf("  sha2    %x\n", tr.trie.Hash())
-	if tr.trie.Hash() != header.TxHash {
+	t.Logf("  sha2    %x\n", tr.Hash())
+	if tr.Hash() != header.TxHash {
 		t.Fatal("tx root mismatch")
 	} else {
 		t.Logf("  tx root hash & block tx root match\n")
@@ -46,7 +46,7 @@ func TestProofGeneration(t *testing.T) {
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 
 		proof := NewProof()
-		tr.trie.Prove(indexBuf, 0, proof)
+		tr.Prove(indexBuf, 0, proof)
 		t.Logf("proof len %d\n", len(proof.Keys))
 		value, err := proof.Verify(block.Header().TxHash, i)
 		//value, err := trie.VerifyProof(tr.trie.Hash(), indexBuf, proof)

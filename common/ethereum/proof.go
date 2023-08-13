@@ -108,7 +108,7 @@ func (m *Proof) Verify(rootHash common.Hash, key int) ([]byte, error) {
 }
 
 type Trie struct {
-	trie *trie.Trie
+	*trie.Trie
 }
 
 var encodeBufferPool = sync.Pool{
@@ -128,7 +128,7 @@ func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
 	var indexBuf []byte
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(txIndex))
 	proof := NewProof()
-	t.trie.Prove(indexBuf, 0, proof)
+	t.Prove(indexBuf, 0, proof)
 	return proof, nil
 }
 
