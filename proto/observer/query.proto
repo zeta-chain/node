@@ -84,6 +84,10 @@ service Query {
   rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
   }
+
+  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_block_header_by_hash/{block_hash}";
+  }
 }
 
 message QueryParamsRequest {}
