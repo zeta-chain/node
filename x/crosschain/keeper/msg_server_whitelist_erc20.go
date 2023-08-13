@@ -35,8 +35,11 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 			return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "ERC20 contract address (%s) already whitelisted on chain (%d)", msg.Erc20Address, msg.ChainId)
 		}
 	}
-	// TODO: check if this chain is supported
-	chain := common.GetChainFromChainID(msg.ChainId)
+
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	if chain == nil {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
+	}
 
 	tmpCtx, commit := ctx.CacheContext()
 	// add to the foreign coins. Deploy ZRC20 contract for it.
