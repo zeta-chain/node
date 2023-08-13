@@ -190,7 +190,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		blockHash := eth.HexToHash(msg.BlockHash)
 		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
 		var header ethtypes.Header
-		err = rlp.DecodeBytes(res.Header, &header)
+		err := rlp.DecodeBytes(res.Header, &header)
 		if err != nil {
 			return nil, err
 		}
