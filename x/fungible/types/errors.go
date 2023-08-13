@@ -26,4 +26,5 @@ var (
 	ErrInvalidDecimals        = sdkerrors.Register(ModuleName, 1115, "invalid decimals")
 	ErrGasPriceNotFound       = sdkerrors.Register(ModuleName, 1116, "gas price not found")
 	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
+	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
 )

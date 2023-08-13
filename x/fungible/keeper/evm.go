@@ -54,6 +54,9 @@ func (k Keeper) DeployZRC20Contract(
 	gasLimit *big.Int,
 ) (common.Address, error) {
 	chain := zetacommon.GetChainFromChainID(chainID)
+	if chain == nil {
+		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
+	}
 	chainStr := chain.ChainName.String()
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)

@@ -58,6 +58,8 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if msg.Decimals > 128 {
 		return sdkerrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
 	}
-
+	if msg.GasLimit <= 0 {
+		return sdkerrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
+	}
 	return nil
 }

@@ -47,17 +47,6 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 	if zrc20Addr == (ethcommon.Address{}) {
 		return nil, sdkerrors.Wrapf(types.ErrDeployContract, "deployed ZRC20 return 0 address for ERC20 contract address (%s) on chain (%d)", msg.Erc20Address, msg.ChainId)
 	}
-	// add to the foreign coins
-	foreignCoin := fungibletypes.ForeignCoins{
-		Zrc20ContractAddress: zrc20Addr.Hex(),
-		Asset:                msg.Erc20Address,
-		ForeignChainId:       msg.ChainId,
-		Decimals:             msg.Decimals,
-		Name:                 msg.Name,
-		Symbol:               msg.Symbol,
-		CoinType:             common.CoinType_ERC20,
-		GasLimit:             uint64(msg.GasLimit),
-	}
 
 	param, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
 	if !found {
@@ -96,7 +85,7 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 			InboundTxFinalizedZetaHeight:    0,
 		},
 		OutboundTxParams: []*types.OutboundTxParams{
-			&types.OutboundTxParams{
+			{
 				Receiver:                         param.Erc20CustodyContractAddress,
 				ReceiverChainId:                  msg.ChainId,
 				CoinType:                         common.CoinType_Cmd,
@@ -115,6 +104,17 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		return nil, err
 	}
 
+	// add to the foreign coins
+	foreignCoin := fungibletypes.ForeignCoins{
+		Zrc20ContractAddress: zrc20Addr.Hex(),
+		Asset:                msg.Erc20Address,
+		ForeignChainId:       msg.ChainId,
+		Decimals:             msg.Decimals,
+		Name:                 msg.Name,
+		Symbol:               msg.Symbol,
+		CoinType:             common.CoinType_ERC20,
+		GasLimit:             uint64(msg.GasLimit),
+	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	commit()
