@@ -170,20 +170,22 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 
-	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
-	isAdmin := msg.Creator == adminPolicyAccount
+	if msg.Proof == nil { // without proof, only certain accounts can send this message
+		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
+		isAdmin := msg.Creator == adminPolicyAccount
 
-	isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
-	if err != nil {
-		ctx.Logger().Error("Error while checking if the account is an observer", err)
-	}
-	// Sender needs to be either the admin policy account or an observer
-	if !(isAdmin || isObserver) {
-		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+		if err != nil {
+			ctx.Logger().Error("Error while checking if the account is an observer", err)
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("error  IsAuthorized %s", msg.Creator))
+		}
+		// Sender needs to be either the admin policy account or an observer
+		if !(isAdmin || isObserver) {
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		}
 	}
 
 	proven := false
-
 	if msg.Proof != nil {
 		blockHash := eth.HexToHash(msg.BlockHash)
 		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
