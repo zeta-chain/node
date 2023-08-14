@@ -1,10 +1,16 @@
 package types
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	eth "github.com/ethereum/go-ethereum/common"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
+
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -58,4 +64,35 @@ type ZetaObserverKeeper interface {
 	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
+	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
+}
+
+type FungibleKeeper interface {
+	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
+	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
+	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
+	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
+	QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
+	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
+	DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error
+	ZRC20DepositAndCallContract(
+		ctx sdk.Context,
+		from []byte,
+		to eth.Address,
+		amount *big.Int,
+		senderChain *common.Chain,
+		message string,
+		contract eth.Address,
+		data []byte,
+		coinType common.CoinType,
+		asset string,
+	) (*evmtypes.MsgEthereumTxResponse, error)
+	CallUniswapv2RouterSwapExactETHForToken(
+		ctx sdk.Context,
+		sender eth.Address,
+		to eth.Address,
+		amountIn *big.Int,
+		outZRC4 eth.Address,
+	) ([]*big.Int, error)
+	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
 }

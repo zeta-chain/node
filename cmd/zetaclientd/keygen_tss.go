@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/tendermint/crypto/sha3"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -15,7 +17,6 @@ import (
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
-	"time"
 )
 
 func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer) (*mc.TSS, error) {

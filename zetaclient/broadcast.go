@@ -2,6 +2,10 @@ package zetaclient
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -10,10 +14,6 @@ import (
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
@@ -94,8 +94,6 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
 			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
-		b.logger.Info().Msgf("retrying message in 3s: %s", commit.RawLog)
-		time.Sleep(3 * time.Second)
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
 	//b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)

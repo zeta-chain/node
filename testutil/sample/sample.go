@@ -11,3 +11,11 @@ func AccAddress() string {
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
 }
+
+// PrivKeyAddressPair returns a private key, address pair
+func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
+	privKey := ed25519.GenPrivKey()
+	addr := privKey.PubKey().Address()
+
+	return privKey, sdk.AccAddress(addr)
+}

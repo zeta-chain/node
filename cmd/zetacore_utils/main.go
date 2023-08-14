@@ -2,15 +2,16 @@ package main
 
 import (
 	"bufio"
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )
 
 const node = "tcp://3.218.170.198:26657"
@@ -122,6 +123,7 @@ func readLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	/* #nosec G307 */
 	defer file.Close()
 
 	var lines []string

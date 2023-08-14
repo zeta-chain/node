@@ -1,9 +1,10 @@
 package types
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestVoter_IsBallotFinalized(t *testing.T) {
@@ -101,4 +102,57 @@ func TestVoter_IsBallotFinalized(t *testing.T) {
 			assert.Equal(t, test.isFinalized, isFinalized)
 		})
 	}
+}
+
+func Test_BuildRewardsDistribution(t *testing.T) {
+	tt := []struct {
+		name         string
+		voterList    []string
+		votes        []VoteType
+		ballotStatus BallotStatus
+		expectedMap  map[string]int64
+	}{
+		{
+			name:         "BallotFinalized_SuccessObservation",
+			voterList:    []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes:        []VoteType{VoteType_SuccessObservation, VoteType_SuccessObservation, VoteType_SuccessObservation, VoteType_FailureObservation},
+			ballotStatus: BallotStatus_BallotFinalized_SuccessObservation,
+			expectedMap: map[string]int64{
+				"Observer1": 1,
+				"Observer2": 1,
+				"Observer3": 1,
+				"Observer4": -1,
+			},
+		},
+		{
+			name:         "BallotFinalized_FailureObservation",
+			voterList:    []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes:        []VoteType{VoteType_SuccessObservation, VoteType_SuccessObservation, VoteType_FailureObservation, VoteType_FailureObservation},
+			ballotStatus: BallotStatus_BallotFinalized_FailureObservation,
+			expectedMap: map[string]int64{
+				"Observer1": -1,
+				"Observer2": -1,
+				"Observer3": 1,
+				"Observer4": 1,
+			},
+		},
+	}
+	for _, test := range tt {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			ballot := Ballot{
+				Index:            "",
+				BallotIdentifier: "",
+				VoterList:        test.voterList,
+				Votes:            test.votes,
+				ObservationType:  0,
+				BallotThreshold:  sdk.Dec{},
+				BallotStatus:     test.ballotStatus,
+			}
+			rewardsMap := map[string]int64{}
+			ballot.BuildRewardsDistribution(rewardsMap)
+			assert.Equal(t, test.expectedMap, rewardsMap)
+		})
+	}
+
 }

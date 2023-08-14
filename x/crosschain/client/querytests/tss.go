@@ -2,6 +2,7 @@ package querytests
 
 import (
 	"fmt"
+
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
@@ -11,7 +12,7 @@ import (
 
 func (s *CliTestSuite) TestShowTSS() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.crossChainState.Tss
+	obj := s.crosschainState.Tss
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

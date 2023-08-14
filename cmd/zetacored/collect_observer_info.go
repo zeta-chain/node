@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/app"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/app"
 )
 
 func CollectObserverInfoCmd() *cobra.Command {

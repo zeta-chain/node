@@ -1,14 +1,15 @@
 package zetaclient
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"math/big"
+	"time"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/blame"
-	"math/big"
-	"time"
 
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"

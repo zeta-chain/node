@@ -1,4 +1,4 @@
-name: Generated Go/OpenAPI to Match Protobuf
+name: Generated Files are Updated
 on:
   pull_request:
     branches:
@@ -17,14 +17,20 @@ jobs:
         run: |
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: Generate Go and OpenAPI
+      - name: Generate Go code from proto files
         run: make proto
+
+      - name: Generate OpenAPI
+        run: make openapi
+
+      - name: Generate Module Documentation
+        run: make specs
 
       - name: Check for changes
         run: |
           if git diff --exit-code --ignore-space-change --ignore-all-space --ignore-cr-at-eol; then
             echo "Generated Go files are up-to-date."
           else
-            echo "::error::Generated Go and/or OpenAPI files are not up-to-date. Please run 'make proto' locally and commit any changes."
+            echo "::error::Generated files are not up-to-date. Please run 'make generate' locally and commit any changes."
             exit 1
           fi

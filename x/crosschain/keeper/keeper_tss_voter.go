@@ -45,6 +45,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	index := msg.Digest()
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
+	// TODO : https://github.com/zeta-chain/node/issues/896
 	ballot, found := k.zetaObserverKeeper.GetBallot(ctx, index)
 	if !found {
 		var voterList []string
@@ -53,14 +54,16 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			voterList = append(voterList, nodeAccount.Operator)
 		}
 		ballot = observerTypes.Ballot{
-			Index:            "",
-			BallotIdentifier: index,
-			VoterList:        voterList,
-			Votes:            observerTypes.CreateVotes(len(voterList)),
-			ObservationType:  observerTypes.ObservationType_TSSKeyGen,
-			BallotThreshold:  sdk.MustNewDecFromStr("1.00"),
-			BallotStatus:     observerTypes.BallotStatus_BallotInProgress,
+			Index:                "",
+			BallotIdentifier:     index,
+			VoterList:            voterList,
+			Votes:                observerTypes.CreateVotes(len(voterList)),
+			ObservationType:      observerTypes.ObservationType_TSSKeyGen,
+			BallotThreshold:      sdk.MustNewDecFromStr("1.00"),
+			BallotStatus:         observerTypes.BallotStatus_BallotInProgress,
+			BallotCreationHeight: ctx.BlockHeight(),
 		}
+		k.zetaObserverKeeper.AddBallotToList(ctx, ballot)
 	}
 	err := error(nil)
 	if msg.Status == common.ReceiveStatus_Success {
@@ -83,7 +86,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgCreateTSSVoterResponse{}, nil
 	}
-	// Set TSS only on success , set Keygen either way.
+	// Set TSS only on success, set Keygen either way.
 	// Keygen block can be updated using a policy transaction if keygen fails
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		k.SetTSS(ctx, types.TSS{

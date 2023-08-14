@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set all the outTxTracker
@@ -17,8 +17,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
 	}
-
-	// this line is used by starport scaffolding # genesis/module/init
 
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
@@ -46,14 +44,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the crosschain module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
 
-	// this line is used by starport scaffolding # genesis/module/export
 	// Get all keygen
 
 	// Get all tSSVoter

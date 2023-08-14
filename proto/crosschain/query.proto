@@ -11,7 +11,6 @@ import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
 import "crosschain/tss.proto";
-// this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -52,8 +51,6 @@ service Query {
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
   }
-
-  // this line is used by starport scaffolding # 2
 
   // Queries a tSS by index.
   rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
@@ -183,8 +180,6 @@ message QueryGetTssAddressResponse {
   string btc = 2;
 }
 
-// this line is used by starport scaffolding # 3
-
 message QueryGetTSSRequest {}
 
 message QueryGetTSSResponse {
@@ -281,7 +276,7 @@ message QueryLastZetaHeightResponse {
 }
 
 message QueryConvertGasToZetaRequest {
-  string chain = 1;
+  int64 chainId = 1;
   string gasLimit = 2;
 }
 

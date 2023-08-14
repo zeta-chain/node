@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"google.golang.org/grpc"
 	"net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"google.golang.org/grpc"
 )
 
 func setMYIP(cfg *config.Config, logger zerolog.Logger) {
