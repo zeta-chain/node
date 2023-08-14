@@ -27,6 +27,9 @@ process_files() {
             # Replace all instances of [appd] with zetacored
             sed -i.bak 's/\[appd\]/zetacored/g' "$file"
 
+            # Replace `--ip string The node's public IP (default "XYZ_IP")` with `--ip string The node's public IP (default "10.1.0.20")`
+            sed -i.bak 's/--ip string[[:space:]]*The node'\''s public IP \(default "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}"\)/--ip string                           The node'\''s public IP (default "10.1.0.20")/g' "$file"
+
             # Remove the backup files
             rm -f "$file.bak"
         elif [ -d "$file" ]; then

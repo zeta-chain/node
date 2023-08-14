@@ -12,7 +12,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	zetacoredconfig "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 )
 
 const node = "tcp://3.218.170.198:26657"
@@ -46,7 +45,7 @@ func main() {
 
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
-		cmd := exec.Command(zetacoredconfig.AppName, "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		cmd := exec.Command(config.AppName, "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
@@ -77,7 +76,7 @@ func main() {
 	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chainID, "--yes",
 		"--broadcast-mode", broadcastMode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
 
-	cmd := exec.Command(zetacoredconfig.AppName, args...)
+	cmd := exec.Command(config.AppName, args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(cmd.String())
@@ -89,7 +88,7 @@ func main() {
 	time.Sleep(7 * time.Second)
 
 	for i, address := range addresses {
-		cmd := exec.Command(zetacoredconfig.AppName, "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		cmd := exec.Command(config.AppName, "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
