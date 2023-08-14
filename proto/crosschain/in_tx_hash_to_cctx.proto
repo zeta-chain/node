@@ -7,4 +7,3 @@ message InTxHashToCctx {
   string in_tx_hash = 1;
   repeated string cctx_index = 2;
 }
-
