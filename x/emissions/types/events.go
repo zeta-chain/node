@@ -18,3 +18,13 @@ func EmitValidatorEmissions(ctx sdk.Context, bondFactor, reservesFactor, duratio
 		ctx.Logger().Error("Error emitting ValidatorEmissions :", err)
 	}
 }
+
+func EmitObserverEmissions(ctx sdk.Context, em []*ObserverEmission) {
+	err := ctx.EventManager().EmitTypedEvents(&EventObserverEmissions{
+		MsgTypeUrl: "/zetachain.zetacore.emissions.internal.ObserverEmissions",
+		Emissions:  em,
+	})
+	if err != nil {
+		ctx.Logger().Error("Error emitting ObserverEmissions :", err)
+	}
+}

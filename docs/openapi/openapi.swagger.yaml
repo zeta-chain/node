@@ -27276,7 +27276,7 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/get_client_params_for_chain/{chainID}:
+  /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
     get:
       summary: Queries a list of GetClientParamsForChain items.
       operationId: Query_GetCoreParamsForChain
@@ -27290,7 +27290,7 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainID
+        - name: chain_id
           in: path
           required: true
           type: string
@@ -27469,6 +27469,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/emissions/get_emmisons_factors:
+    get:
+      summary: Queries a list of GetEmmisonsFactors items.
+      operationId: Query_GetEmmisonsFactors
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryGetEmmisonsFactorsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/zetacore/emissions/list_addresses:
     get:
       summary: Queries a list of ListBalances items.
@@ -27497,6 +27512,26 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/zetacore/emissions/show_available_emissions/{address}:
+    get:
+      summary: Queries a list of ShowAvailableEmissions items.
+      operationId: Query_ShowAvailableEmissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/emissionsQueryShowAvailableEmissionsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /zeta-chain/zetacore/fungible/foreign_coins:
@@ -50399,6 +50434,15 @@ definitions:
         type: string
       tx_signer:
         type: string
+  emissionsQueryGetEmmisonsFactorsResponse:
+    type: object
+    properties:
+      reservesFactor:
+        type: string
+      bondFactor:
+        type: string
+      durationFactor:
+        type: string
   emissionsQueryListPoolAddressesResponse:
     type: object
     properties:
@@ -50407,6 +50451,11 @@ definitions:
       undistributed_tss_balances_address:
         type: string
       emission_module_address:
+        type: string
+  emissionsQueryShowAvailableEmissionsResponse:
+    type: object
+    properties:
+      amount:
         type: string
   fungibleForeignCoins:
     type: object
@@ -50668,7 +50717,7 @@ definitions:
   observerQueryAllBlameRecordsResponse:
     type: object
     properties:
-      blameInfo:
+      blame_info:
         type: array
         items:
           type: object
@@ -50694,7 +50743,7 @@ definitions:
   observerQueryBallotByIdentifierResponse:
     type: object
     properties:
-      BallotIdentifier:
+      ballot_identifier:
         type: string
       voters:
         type: array
@@ -50708,7 +50757,7 @@ definitions:
   observerQueryBlameByIdentifierResponse:
     type: object
     properties:
-      blameInfo:
+      blame_info:
         $ref: '#/definitions/observerBlame'
   observerQueryGetCoreParamsForChainResponse:
     type: object
@@ -50723,17 +50772,17 @@ definitions:
   observerQueryGetKeygenResponse:
     type: object
     properties:
-      Keygen:
+      keygen:
         $ref: '#/definitions/observerKeygen'
   observerQueryGetNodeAccountResponse:
     type: object
     properties:
-      NodeAccount:
+      node_account:
         $ref: '#/definitions/observerNodeAccount'
   observerQueryGetPermissionFlagsResponse:
     type: object
     properties:
-      PermissionFlags:
+      permission_flags:
         $ref: '#/definitions/observerPermissionFlags'
   observerQueryObserversByChainResponse:
     type: object
@@ -50886,6 +50935,8 @@ definitions:
         type: string
       duration_factor_constant:
         type: string
+      observer_slash_amount:
+        type: string
     description: Params defines the parameters for the module.
   zetacoreemissionsQueryParamsResponse:
     type: object
@@ -50917,6 +50968,9 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerAdmin_Policy'
+      ballot_maturity_blocks:
+        type: string
+        format: int64
     description: Params defines the parameters for the module.
   zetacoreobserverQueryParamsResponse:
     type: object

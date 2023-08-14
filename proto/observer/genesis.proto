@@ -15,7 +15,8 @@ message GenesisState {
   repeated Ballot ballots = 1;
   repeated ObserverMapper observers = 2;
   repeated NodeAccount nodeAccountList = 3;
-  PermissionFlags permissionFlags = 4;
+  PermissionFlags permission_flags = 4;
   Params params = 5;
   Keygen keygen = 6;
+  LastObserverCount last_observer_count = 7;
 }

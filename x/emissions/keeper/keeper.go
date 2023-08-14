@@ -19,6 +19,9 @@ type (
 		memKey           storetypes.StoreKey
 		paramstore       paramtypes.Subspace
 		feeCollectorName string
+		bankKeeper       types.BankKeeper
+		stakingKeeper    types.StakingKeeper
+		observerKeeper   types.ZetaObserverKeeper
 	}
 )
 
@@ -28,6 +31,9 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	feeCollectorName string,
+	bankKeeper types.BankKeeper,
+	stakingKeeper types.StakingKeeper,
+	observerKeeper types.ZetaObserverKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -42,6 +48,9 @@ func NewKeeper(
 		memKey:           memKey,
 		paramstore:       ps,
 		feeCollectorName: feeCollectorName,
+		bankKeeper:       bankKeeper,
+		stakingKeeper:    stakingKeeper,
+		observerKeeper:   observerKeeper,
 	}
 }
 
@@ -51,4 +60,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetFeeCollector() string {
 	return k.feeCollectorName
+}
+
+func (k Keeper) GetBankKeeper() types.BankKeeper {
+	return k.bankKeeper
+}
+
+func (k Keeper) GetStakingKeeper() types.StakingKeeper {
+	return k.stakingKeeper
+}
+
+func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
+	return k.observerKeeper
 }
