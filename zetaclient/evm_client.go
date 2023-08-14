@@ -179,10 +179,6 @@ func (ob *EVMChainClient) GetCoreParameters() config.CoreParams {
 	return *ob.GetChainConfig().CoreParams
 }
 
-func (ob *EVMChainClient) PreSendSchedule(_ []*types.CrossChainTx) {
-	// Do nothing for now
-}
-
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ConnectorContractAddress)
 }

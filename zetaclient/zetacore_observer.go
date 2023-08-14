@@ -141,9 +141,6 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 
-						// Any necessary preparation work (e.g. update pending sends)
-						ob.PreSendSchedule(sendList)
-
 						for idx, send := range sendList {
 							params := send.GetCurrentOutTxParam()
 							if params.ReceiverChainId != c.ChainId {
