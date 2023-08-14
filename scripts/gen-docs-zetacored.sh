@@ -21,14 +21,11 @@ process_files() {
             # Modify the heading by replacing ## zetacored with #
             sed -i.bak 's/^## zetacored /# /g' "$file" 
 
-            # Replace the (default "/path/to/ with (default "~/
-            sed -i.bak 's/\(default "\)[^"]*\//\1~\//g' "$file"
-
             # Replace all instances of [appd] with zetacored
             sed -i.bak 's/\[appd\]/zetacored/g' "$file"
 
-            # Replace `--ip string The node's public IP (default "XYZ_IP")` with `--ip string The node's public IP (default "10.1.0.20")`
-            sed -i.bak 's/--ip string[[:space:]]*The node'\''s public IP \(default "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}"\)/--ip string                           The node'\''s public IP (default "10.1.0.20")/g' "$file"
+            # Remove the pattern (default "SOMETHING")
+            sed -i.bak 's/(default ".*")//g' "$file"
 
             # Remove the backup files
             rm -f "$file.bak"

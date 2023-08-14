@@ -15,7 +15,7 @@ zetacored init [moniker] [flags]
 ```
       --chain-id string             genesis file chain-id, if left blank will be randomly created
   -h, --help                        help for init
-      --home string                 node's home directory (default "~/.zetacored")
+      --home string                 node's home directory 
   -o, --overwrite                   overwrite the genesis.json file
       --recover                     provide seed phrase to recover existing key instead of creating
       --staking-bond-denom string   genesis file staking bond denomination, if left blank default value is 'stake'
@@ -24,8 +24,8 @@ zetacored init [moniker] [flags]
 ### Options inherited from parent commands
 
 ```
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

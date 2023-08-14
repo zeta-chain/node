@@ -11,8 +11,8 @@ zetacored query tendermint-validator-set [height] [flags]
 ```
   -h, --help            help for tendermint-validator-set
       --limit int       Query number of results returned per page (default 100)
-      --node string     [host]:[port] to Tendermint RPC interface for this chain (default "~/localhost:26657")
-  -o, --output string   Output format (text|json) (default "text")
+      --node string     [host]:[port] to Tendermint RPC interface for this chain 
+  -o, --output string   Output format (text|json) 
       --page int        Query a specific page of paginated results (default 1)
 ```
 
@@ -20,9 +20,9 @@ zetacored query tendermint-validator-set [height] [flags]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "~/.zetacored")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

@@ -18,15 +18,15 @@ zetacored debug pubkey-raw [pubkey] -t [{ed25519, secp256k1}] [flags]
 
 ```
   -h, --help          help for pubkey-raw
-  -t, --type string   Pubkey type to decode (oneof secp256k1, ed25519) (default "ed25519")
+  -t, --type string   Pubkey type to decode (oneof secp256k1, ed25519) 
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --home string         directory for config and data (default "~/.zetacored")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

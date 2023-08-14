@@ -32,10 +32,10 @@ zetacored keys add [name] [flags]
 
 ```
       --account uint32           Account number for HD derivation (less than equal 2147483647)
-      --algo string              Key signing algorithm to generate keys for (default "eth_secp256k1")
+      --algo string              Key signing algorithm to generate keys for 
       --coin-type uint32         coin type number for HD derivation (default 118)
       --dry-run                  Perform action, but don't add key to local keystore
-      --hd-path string           Manual HD Path derivation (overrides BIP44 config) (default "~/0")
+      --hd-path string           Manual HD Path derivation (overrides BIP44 config) 
   -h, --help                     help for add
       --index uint32             Address index number for HD derivation (less than equal 2147483647)
   -i, --interactive              Interactively prompt user for BIP39 passphrase and mnemonic
@@ -51,12 +51,12 @@ zetacored keys add [name] [flags]
 ### Options inherited from parent commands
 
 ```
-      --home string              The application home directory (default "~/.zetacored")
-      --keyring-backend string   Select keyring's backend (os|file|test) (default "os")
+      --home string              The application home directory 
+      --keyring-backend string   Select keyring's backend (os|file|test) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --log_format string        The logging format (json|plain) (default "plain")
-      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
-      --output string            Output format (text|json) (default "text")
+      --log_format string        The logging format (json|plain) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --output string            Output format (text|json) 
       --trace                    print out full stack trace on errors
 ```
 

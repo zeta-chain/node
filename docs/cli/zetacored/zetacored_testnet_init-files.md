@@ -23,24 +23,24 @@ zetacored testnet init-files [flags]
 ### Options
 
 ```
-      --algo string                  Key signing algorithm to generate keys for (default "eth_secp256k1")
+      --algo string                  Key signing algorithm to generate keys for 
       --chain-id string              genesis file chain-id, if left blank will be randomly created
   -h, --help                         help for init-files
-      --keyring-backend string       Select keyring's backend (os|file|test) (default "os")
-      --minimum-gas-prices string    Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) (default "0.000006aphoton")
-      --node-daemon-home string      Home directory of the node's daemon configuration (default "ethermintd")
-      --node-dir-prefix string       Prefix the directory name for each node with (node results in node0, node1, ...) (default "node")
-  -o, --output-dir string            Directory to store initialization data for the testnet (default "~/.testnets")
-      --starting-ip-address string   Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...) (default "192.168.0.1")
+      --keyring-backend string       Select keyring's backend (os|file|test) 
+      --minimum-gas-prices string    Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) 
+      --node-daemon-home string      Home directory of the node's daemon configuration 
+      --node-dir-prefix string       Prefix the directory name for each node with (node results in node0, node1, ...) 
+  -o, --output-dir string            Directory to store initialization data for the testnet 
+      --starting-ip-address string   Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...) 
       --v int                        Number of validators to initialize the testnet with (default 4)
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --home string         directory for config and data (default "~/.zetacored")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

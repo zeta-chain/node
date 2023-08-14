@@ -34,7 +34,7 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
   -a, --account-number uint      The account number of the signing account (offline mode only)
       --append                   Combine all message and generate single signed transaction for broadcast.
       --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) (default "sync")
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) 
       --chain-id string          network chain ID
       --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
       --fee-granter string       Fee granter grants fees for the transaction
@@ -46,14 +46,14 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
   -h, --help                     help for sign-batch
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
+      --node string              [host]:[port] to tendermint rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) (default "json")
+  -o, --output string            Output format (text|json) 
       --output-document string   The document will be written to the given file instead of STDOUT
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
       --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
@@ -66,9 +66,9 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
 ### Options inherited from parent commands
 
 ```
-      --home string         directory for config and data (default "~/.zetacored")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

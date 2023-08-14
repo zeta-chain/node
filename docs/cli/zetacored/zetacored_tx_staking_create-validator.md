@@ -12,7 +12,7 @@ zetacored tx staking create-validator [flags]
   -a, --account-number uint                 The account number of the signing account (offline mode only)
       --amount string                       Amount of coins to bond
       --aux                                 Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) (default "sync")
+  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) 
       --commission-max-change-rate string   The maximum commission change rate percentage (per day)
       --commission-max-rate string          The maximum commission rate percentage
       --commission-rate string              The initial commission rate percentage
@@ -29,16 +29,16 @@ zetacored tx staking create-validator [flags]
   -h, --help                                help for create-validator
       --identity string                     The optional identity signature (ex. UPort or Keybase)
       --ip string                           The node's public IP. It takes effect only when used in combination with --generate-only
-      --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
+      --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string                  The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                              Use a connected Ledger device
       --min-self-delegation string          The minimum self delegation required on the validator
       --moniker string                      The validator's name
-      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
+      --node string                         [host]:[port] to tendermint rpc interface for this chain 
       --node-id string                      The node's ID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
-  -o, --output string                       Output format (text|json) (default "json")
+  -o, --output string                       Output format (text|json) 
       --pubkey string                       The validator's Protobuf JSON encoded public key
       --security-contact string             The validator's (optional) security contact email
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
@@ -53,9 +53,9 @@ zetacored tx staking create-validator [flags]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "~/.zetacored")
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

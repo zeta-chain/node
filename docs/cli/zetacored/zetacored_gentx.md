@@ -37,7 +37,7 @@ zetacored gentx [key_name] [amount] [flags]
   -a, --account-number uint                 The account number of the signing account (offline mode only)
       --amount string                       Amount of coins to bond
       --aux                                 Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) (default "sync")
+  -b, --broadcast-mode string               Transaction broadcasting mode (sync|async|block) 
       --chain-id string                     The network chain ID
       --commission-max-change-rate string   The maximum commission change rate percentage (per day)
       --commission-max-rate string          The maximum commission rate percentage
@@ -53,19 +53,19 @@ zetacored gentx [key_name] [amount] [flags]
       --gas-prices string                   Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only                       Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
   -h, --help                                help for gentx
-      --home string                         The application home directory (default "~/.zetacored")
+      --home string                         The application home directory 
       --identity string                     The (optional) identity signature (ex. UPort or Keybase)
-      --ip string                           The node's public IP (default "192.168.10.12")
-      --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
+      --ip string                           The node's public IP 
+      --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string                  The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                              Use a connected Ledger device
       --min-self-delegation string          The minimum self delegation required on the validator
       --moniker string                      The validator's (optional) moniker
-      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
+      --node string                         [host]:[port] to tendermint rpc interface for this chain 
       --node-id string                      The node's NodeID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
-  -o, --output string                       Output format (text|json) (default "json")
+  -o, --output string                       Output format (text|json) 
       --output-document string              Write the genesis transaction JSON document to the given file instead of the default location
       --pubkey string                       The validator's Protobuf JSON encoded public key
       --security-contact string             The validator's (optional) security contact email
@@ -80,8 +80,8 @@ zetacored gentx [key_name] [amount] [flags]
 ### Options inherited from parent commands
 
 ```
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 

@@ -21,14 +21,14 @@ zetacored rollback [flags]
 
 ```
   -h, --help          help for rollback
-      --home string   The application home directory (default "~/.zetacored")
+      --home string   The application home directory 
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 
