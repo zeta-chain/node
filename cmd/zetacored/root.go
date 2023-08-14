@@ -37,6 +37,7 @@ import (
 	ethermintclient "github.com/evmos/ethermint/client"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -140,6 +141,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
+		docsCommand(),
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
@@ -180,6 +182,46 @@ func queryCommand() *cobra.Command {
 	return cmd
 }
 
+func docsCmd(cmd *cobra.Command, args []string) error {
+	var path string
+
+	// If path is provided as an argument, use it. Else, get from flag.
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		var err error
+		path, err = cmd.Flags().GetString("path")
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = os.MkdirAll(path, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := doc.GenMarkdownTree(cmd.Root(), path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func docsCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "docs [path]",
+		Short: "Generate markdown documentation for zetacored",
+		RunE:  docsCmd,
+	}
+
+	cmd.Flags().String("path", "docs/cli/zetacored", "Path where the docs will be generated")
+
+	return cmd
+}
+
 func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
@@ -195,7 +237,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetMultiSignCommand(),
 		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
-		flags.LineBreak,
+		// flags.LineBreak,
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),

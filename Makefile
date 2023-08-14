@@ -153,7 +153,12 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
-generate: proto openapi specs
+cli-docs:
+	@echo "--> Generating zetacored documentation"
+	@bash ./scripts/gen-docs-zetacored.sh
+.PHONY: cli-docs
+
+generate: proto openapi specs cli-docs
 .PHONY: generate
 
 ###############################################################################
