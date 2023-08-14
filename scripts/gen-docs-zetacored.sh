@@ -23,7 +23,10 @@ process_files() {
 
             # Replace the (default "/path/to/ with (default "~/
             sed -i.bak 's/\(default "\)[^"]*\//\1~\//g' "$file"
-            
+
+            # Replace all instances of [appd] with zetacored
+            sed -i.bak 's/\[appd\]/zetacored/g' "$file"
+
             # Remove the backup files
             rm -f "$file.bak"
         elif [ -d "$file" ]; then

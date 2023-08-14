@@ -6,7 +6,7 @@ Query the current auth parameters
 
 Query the current auth parameters:
 
-$ [appd] query auth params
+$ zetacored query auth params
 
 ```
 zetacored query auth params [flags]

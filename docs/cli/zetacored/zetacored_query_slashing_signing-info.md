@@ -6,7 +6,7 @@ Query a validator's signing information
 
 Use a validators' consensus public key to find the signing-info for that validator:
 
-$ [appd] query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
+$ zetacored query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
 
 ```
 zetacored query slashing signing-info [validator-conspub] [flags]
