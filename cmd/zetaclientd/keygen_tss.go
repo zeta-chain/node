@@ -121,7 +121,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err
 		}
-		keygenLogger.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+		keygenLogger.Info().Msgf("keygen posted blame data tx hash: %s", zetaHash)
 		if err != nil {
 			return err
 		}
