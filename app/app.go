@@ -353,6 +353,9 @@ func New(
 		keys[emissionsModuleTypes.MemStoreKey],
 		app.GetSubspace(emissionsModuleTypes.ModuleName),
 		authtypes.FeeCollectorName,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.ZetaObserverKeeper,
 	)
 	// Create Ethermint keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
@@ -461,7 +464,7 @@ func New(
 		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper),
 		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
-		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.ZetaObserverKeeper),
+		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 

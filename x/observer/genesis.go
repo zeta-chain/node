@@ -21,7 +21,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.NodeAccountList {
 		k.SetNodeAccount(ctx, *elem)
 	}
-	k.SetParams(ctx, types.DefaultParams())
+	params := types.DefaultParams()
+	if genState.Params != nil {
+		params = *genState.Params
+	}
+	k.SetParams(ctx, params)
 	// Set if defined
 	if genState.PermissionFlags != nil {
 		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
@@ -32,11 +36,25 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Keygen != nil {
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{
-		Count:            observerCount,
-		LastChangeHeight: 0,
-	})
+	ballotListForHeight := make(map[int64][]string)
+	if len(genState.Ballots) > 0 {
+		for _, ballot := range genState.Ballots {
+			k.SetBallot(ctx, ballot)
+			ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+		}
+	}
 
+	for height, ballotList := range ballotListForHeight {
+		k.SetBallotList(ctx, &types.BallotListForHeight{
+			Height:           height,
+			BallotsIndexList: ballotList,
+		})
+	}
+	if genState.LastObserverCount != nil {
+		k.SetLastObserverCount(ctx, genState.LastObserverCount)
+	} else {
+		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
+	}
 }
 
 // ExportGenesis returns the observer module's exported genesis.
@@ -59,13 +77,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		kn = &keygen
 	}
+	oc := &types.LastObserverCount{}
+	observerCount, found := k.GetLastObserverCount(ctx)
+	if found {
+		oc = &observerCount
+	}
 
 	return &types.GenesisState{
-		Ballots:         k.GetAllBallots(ctx),
-		Observers:       k.GetAllObserverMappers(ctx),
-		Params:          &params,
-		NodeAccountList: nodeAccounts,
-		PermissionFlags: &pf,
-		Keygen:          kn,
+		Ballots:           k.GetAllBallots(ctx),
+		Observers:         k.GetAllObserverMappers(ctx),
+		Params:            &params,
+		NodeAccountList:   nodeAccounts,
+		PermissionFlags:   &pf,
+		Keygen:            kn,
+		LastObserverCount: oc,
 	}
 }

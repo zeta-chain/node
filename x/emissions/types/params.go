@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -16,7 +17,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
+
 func NewParams() Params {
+	defaultSlashAmount := sdk.ZeroInt()
+	intSlashAmount, ok := sdkmath.NewIntFromString("100000000000000000")
+	if ok {
+		defaultSlashAmount = intSlashAmount
+	}
 	return Params{
 		MaxBondFactor:               "1.25",
 		MinBondFactor:               "0.75",
@@ -26,6 +33,7 @@ func NewParams() Params {
 		ObserverEmissionPercentage:  "00.25",
 		TssSignerEmissionPercentage: "00.25",
 		DurationFactorConstant:      "0.001877876953694702",
+		ObserverSlashAmount:         defaultSlashAmount,
 	}
 }
 
