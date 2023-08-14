@@ -20,6 +20,7 @@ import (
 type Order string
 
 const (
+	NoOrder    Order = ""
 	Ascending  Order = "ASC"
 	Descending Order = "DESC"
 )
