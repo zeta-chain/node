@@ -19,10 +19,10 @@ import (
 func TestKeeper_CallEVMWithData(t *testing.T) {
 
 	t.Run("apply new message", func(t *testing.T) {
-		k, ctx := testkeeper.FungibleKeeper(t)
+		k, ctx := testkeeper.FungibleKeeperAllMocks(t)
 
-		mockAuthKeeper := testkeeper.GetFungibleAccountKeeper(t, k)
-		mockEVMKeeper := testkeeper.GetFungibleEVMKeeper(t, k)
+		mockAuthKeeper := testkeeper.GetFungibleAccountMock(t, k)
+		mockEVMKeeper := testkeeper.GetFungibleEVMMock(t, k)
 
 		// Set up expectations
 		fromAddr := sample.EthAddress()

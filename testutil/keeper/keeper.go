@@ -24,14 +24,33 @@ import (
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	tmdb "github.com/tendermint/tm-db"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+type SDKModules struct {
+	ParamsKeeper    paramskeeper.Keeper
+	AuthKeeper      authkeeper.AccountKeeper
+	BankKeeper      bankkeeper.Keeper
+	StakingKeeper   stakingkeeper.Keeper
+	FeeMarketKeeper feemarketkeeper.Keeper
+	EvmKeeper       *evmkeeper.Keeper
+}
+
 var moduleAccountPerms = map[string][]string{
-	authtypes.FeeCollectorName:     nil,
-	distrtypes.ModuleName:          nil,
-	stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	authtypes.FeeCollectorName:                      nil,
+	distrtypes.ModuleName:                           nil,
+	stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
+	evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+	crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	emissionstypes.ModuleName:                       nil,
+	emissionstypes.UndistributedObserverRewardsPool: nil,
+	emissionstypes.UndistributedTssRewardsPool:      nil,
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -44,9 +63,9 @@ func ModuleAccountAddrs(maccPerms map[string][]string) map[string]bool {
 	return modAccAddrs
 }
 
-// ParamKeeper instantiates a param keeper for testing purposes
+// ParamsKeeper instantiates a param keeper for testing purposes
 // TODO: remove https://github.com/zeta-chain/node/issues/848
-func ParamKeeper(
+func ParamsKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
@@ -212,7 +231,7 @@ func EVMKeeper(
 	paramKeeper paramskeeper.Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(evmtypes.StoreKey)
-	transientKey := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
+	transientKey := sdk.NewTransientStoreKey(evmtypes.TransientKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
@@ -233,18 +252,46 @@ func EVMKeeper(
 	)
 }
 
-// SDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
-func SDKKeepers(
+// NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
+func NewSDKKeepers(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-) (authkeeper.AccountKeeper, bankkeeper.Keeper, stakingkeeper.Keeper, feemarketkeeper.Keeper, *evmkeeper.Keeper) {
-	paramKeeper := ParamKeeper(cdc, db, ss)
-	authKeeper := AccountKeeper(cdc, db, ss, paramKeeper)
-	bankKeeper := BankKeeper(cdc, db, ss, paramKeeper, authKeeper)
-	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper, paramKeeper)
-	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramKeeper)
-	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramKeeper)
+) SDKModules {
+	paramsKeeper := ParamsKeeper(cdc, db, ss)
+	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
+	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
+	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper, paramsKeeper)
+	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
+	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
 
-	return authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, evmKeeper
+	return SDKModules{
+		ParamsKeeper:    paramsKeeper,
+		AuthKeeper:      authKeeper,
+		BankKeeper:      bankKeeper,
+		StakingKeeper:   stakingKeeper,
+		FeeMarketKeeper: feeMarketKeeper,
+		EvmKeeper:       evmKeeper,
+	}
+}
+
+// ObserverKeeper instantiates an observer keeper for testing purposes
+func ObserverKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	stakingKeeper stakingkeeper.Keeper,
+	paramKeeper paramskeeper.Keeper,
+) *observerkeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(observertypes.StoreKey)
+	memKey := sdk.NewKVStoreKey(observertypes.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	return observerkeeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKey,
+		paramKeeper.Subspace(observertypes.ModuleName),
+		stakingKeeper,
+	)
 }
