@@ -3,7 +3,6 @@ package zetaclient
 import (
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 	"time"
 
@@ -15,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	prom "github.com/prometheus/client_golang/prometheus"
-
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const (
@@ -123,6 +120,10 @@ func (co *CoreObserver) startSendScheduler() {
 
 					supportedChains := GetSupportedChains()
 					for _, c := range supportedChains {
+						if c == nil {
+							co.logger.ZetaChainWatcher.Error().Msg("chain nil")
+							continue
+						}
 						signer := co.signerMap[*c]
 						chainClient := co.clientMap[*c]
 						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
@@ -139,6 +140,15 @@ func (co *CoreObserver) startSendScheduler() {
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail, Chain ID: %s", c.ChainName)
 							continue
+						}
+						res, err := co.bridge.GetAllOutTxTrackerByChain(*c, Ascending)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Warn().Err(err).Msgf("failed to GetAllOutTxTrackerByChain for chain %s", c.ChainName.String())
+							continue
+						}
+						trackerMap := make(map[uint64]bool)
+						for _, v := range res {
+							trackerMap[v.Nonce] = true
 						}
 
 						for idx, send := range sendList {
@@ -168,9 +178,32 @@ func (co *CoreObserver) startSendScheduler() {
 							currentHeight := uint64(bn)
 							interval := uint64(ob.GetCoreParameters().OutboundTxScheduleInterval)
 							lookahead := uint64(ob.GetCoreParameters().OutboundTxScheduleLookahead)
+
+							// determining critical outtx; if it satisfies following criteria
+							// 1. it's the first pending outtx for this chain
+							// 2. the following 5 nonces have been in tracker
+							criticalInterval := uint64(10)      // for critical pending outTx we reduce re-try interval
+							nonCriticalInterval := interval * 2 // for non-critical pending outTx we increase re-try interval
+							if nonce%criticalInterval == currentHeight%criticalInterval {
+								count := 0
+								for i := nonce + 1; i <= nonce+10; i++ {
+									if _, found := trackerMap[i]; found {
+										count++
+									}
+								}
+								if count >= 5 {
+									interval = criticalInterval
+								}
+							}
+							// if it's already in tracker, we increase re-try interval
+							if _, ok := trackerMap[nonce]; ok {
+								interval = nonCriticalInterval
+							}
+
+							// otherwise, the normal interval is used
 							if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 								outTxMan.StartTryProcess(outTxID)
-								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d sats", chain, send.Index, params.Amount)
+								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 								go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
 							}
 							if idx > int(lookahead) { // only look at 50 sends per chain
@@ -186,44 +219,6 @@ func (co *CoreObserver) startSendScheduler() {
 
 		}
 	}
-}
-
-// trim "bogus" pending sends that are not actually pending
-// input sends must be sorted by nonce ascending
-func trimSends(sends []*types.CrossChainTx) int {
-	start := 0
-	for i := len(sends) - 1; i >= 1; i-- {
-		// from right to left, if there's a big hole, then before the gap are probably
-		// bogus "pending" sends that are already processed but not yet confirmed.
-		if sends[i].GetCurrentOutTxParam().OutboundTxTssNonce > sends[i-1].GetCurrentOutTxParam().OutboundTxTssNonce+1000 {
-			start = i
-			break
-		}
-	}
-	return start
-}
-
-func SplitAndSortSendListByChain(sendList []*types.CrossChainTx) map[string][]*types.CrossChainTx {
-	sendMap := make(map[string][]*types.CrossChainTx)
-	for _, send := range sendList {
-		targetChain, err := common.GetChainNameFromChainID(send.GetCurrentOutTxParam().ReceiverChainId)
-		if targetChain == "" || err != nil {
-			continue
-		}
-		if _, found := sendMap[targetChain]; !found {
-			sendMap[targetChain] = make([]*types.CrossChainTx, 0)
-		}
-		sendMap[targetChain] = append(sendMap[targetChain], send)
-	}
-	for chain, sends := range sendMap {
-		sort.Slice(sends, func(i, j int) bool {
-			return sends[i].GetCurrentOutTxParam().OutboundTxTssNonce < sends[j].GetCurrentOutTxParam().OutboundTxTssNonce
-		})
-		start := trimSends(sends)
-		sendMap[chain] = sends[start:]
-		log.Debug().Msgf("chain %s, start %d, len %d, start nonce %d", chain, start, len(sendMap[chain]), sends[start].GetCurrentOutTxParam().OutboundTxTssNonce)
-	}
-	return sendMap
 }
 
 func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
