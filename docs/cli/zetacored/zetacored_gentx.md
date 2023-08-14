@@ -53,7 +53,7 @@ zetacored gentx [key_name] [amount] [flags]
       --gas-prices string                   Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only                       Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
   -h, --help                                help for gentx
-      --home string                         The application home directory (default "/Users/fadeev/.zetacored")
+      --home string                         The application home directory (default "~/.zetacored")
       --identity string                     The (optional) identity signature (ex. UPort or Keybase)
       --ip string                           The node's public IP (default "192.168.10.12")
       --keyring-backend string              Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
@@ -61,7 +61,7 @@ zetacored gentx [key_name] [amount] [flags]
       --ledger                              Use a connected Ledger device
       --min-self-delegation string          The minimum self delegation required on the validator
       --moniker string                      The validator's (optional) moniker
-      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "tcp://localhost:26657")
+      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
       --node-id string                      The node's NodeID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)

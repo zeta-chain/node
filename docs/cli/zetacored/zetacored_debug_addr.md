@@ -23,7 +23,7 @@ zetacored debug addr [address] [flags]
 ### Options inherited from parent commands
 
 ```
-      --home string         directory for config and data (default "/Users/fadeev/.zetacored")
+      --home string         directory for config and data (default "~/.zetacored")
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors

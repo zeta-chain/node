@@ -25,7 +25,7 @@ zetacored tx group exec [proposal-id] [flags]
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to tendermint rpc interface for this chain (default "tcp://localhost:26657")
+      --node string              [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) (default "json")
@@ -40,7 +40,7 @@ zetacored tx group exec [proposal-id] [flags]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/fadeev/.zetacored")
+      --home string         directory for config and data (default "~/.zetacored")
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors

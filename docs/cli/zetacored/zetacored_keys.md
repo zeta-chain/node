@@ -31,7 +31,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 
 ```
   -h, --help                     help for keys
-      --home string              The application home directory (default "/Users/fadeev/.zetacored")
+      --home string              The application home directory (default "~/.zetacored")
       --keyring-backend string   Select keyring's backend (os|file|test) (default "os")
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --output string            Output format (text|json) (default "text")

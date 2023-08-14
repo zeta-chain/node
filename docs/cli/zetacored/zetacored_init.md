@@ -15,7 +15,7 @@ zetacored init [moniker] [flags]
 ```
       --chain-id string             genesis file chain-id, if left blank will be randomly created
   -h, --help                        help for init
-      --home string                 node's home directory (default "/Users/fadeev/.zetacored")
+      --home string                 node's home directory (default "~/.zetacored")
   -o, --overwrite                   overwrite the genesis.json file
       --recover                     provide seed phrase to recover existing key instead of creating
       --staking-bond-denom string   genesis file staking bond denomination, if left blank default value is 'stake'

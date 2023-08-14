@@ -21,7 +21,7 @@ zetacored rollback [flags]
 
 ```
   -h, --help          help for rollback
-      --home string   The application home directory (default "/Users/fadeev/.zetacored")
+      --home string   The application home directory (default "~/.zetacored")
 ```
 
 ### Options inherited from parent commands

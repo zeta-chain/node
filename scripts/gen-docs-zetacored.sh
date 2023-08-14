@@ -21,6 +21,9 @@ process_files() {
             # Modify the heading by replacing ## zetacored with #
             sed -i.bak 's/^## zetacored /# /g' "$file" 
 
+            # Replace the (default "/path/to/ with (default "~/
+            sed -i.bak 's/\(default "\)[^"]*\//\1~\//g' "$file"
+            
             # Remove the backup files
             rm -f "$file.bak"
         elif [ -d "$file" ]; then

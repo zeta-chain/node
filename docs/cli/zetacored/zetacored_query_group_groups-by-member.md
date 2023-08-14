@@ -15,7 +15,7 @@ zetacored query group groups-by-member [address] [flags]
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for groups-by-member
       --limit uint         pagination limit of groups-by-members to query for (default 100)
-      --node string        [host]:[port] to Tendermint RPC interface for this chain (default "tcp://localhost:26657")
+      --node string        [host]:[port] to Tendermint RPC interface for this chain (default "~/localhost:26657")
       --offset uint        pagination offset of groups-by-members to query for
   -o, --output string      Output format (text|json) (default "text")
       --page uint          pagination page of groups-by-members to query for. This sets offset to a multiple of limit (default 1)
@@ -27,7 +27,7 @@ zetacored query group groups-by-member [address] [flags]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/fadeev/.zetacored")
+      --home string         directory for config and data (default "~/.zetacored")
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors

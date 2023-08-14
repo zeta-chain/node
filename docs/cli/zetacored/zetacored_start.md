@@ -35,7 +35,7 @@ zetacored start [flags]
 
 ```
       --abci string                                     specify abci transport (socket | grpc) (default "socket")
-      --address string                                  Listen address (default "tcp://0.0.0.0:26658")
+      --address string                                  Listen address (default "~/0.0.0.0:26658")
       --api.enable                                      Defines if Cosmos-sdk REST server should be enabled
       --api.enabled-unsafe-cors                         Defines if CORS should be enabled (unsafe - use it at your own risk)
       --app-db-backend string                           The type of database for application and snapshots databases
@@ -57,7 +57,7 @@ zetacored start [flags]
       --halt-height uint                                Block height at which to gracefully halt the chain and shutdown the node
       --halt-time uint                                  Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node
   -h, --help                                            help for start
-      --home string                                     The application home directory (default "/Users/fadeev/.zetacored")
+      --home string                                     The application home directory (default "~/.zetacored")
       --inter-block-cache                               Enable inter-block caching (default true)
       --inv-check-period uint                           Assert registered invariants every N blocks
       --json-rpc.address string                         the JSON-RPC server address to listen on (default "127.0.0.1:8545")
@@ -80,7 +80,7 @@ zetacored start [flags]
       --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photon;0.0001stake)
       --moniker string                                  node name (default "Deniss-MacBook-Pro.local")
       --p2p.external-address string                     ip:port address to advertise to peers for them to dial
-      --p2p.laddr string                                node listen address. (0.0.0.0:0 means any interface, any port) (default "tcp://0.0.0.0:26656")
+      --p2p.laddr string                                node listen address. (0.0.0.0:0 means any interface, any port) (default "~/0.0.0.0:26656")
       --p2p.persistent_peers string                     comma-delimited ID@host:port persistent peers
       --p2p.pex                                         enable/disable Peer-Exchange (default true)
       --p2p.private_peer_ids string                     comma-delimited private peer IDs
@@ -89,12 +89,12 @@ zetacored start [flags]
       --p2p.unconditional_peer_ids string               comma-delimited IDs of unconditional peers
       --p2p.upnp                                        enable/disable UPNP port forwarding
       --priv_validator_laddr string                     socket address to listen on for connections from external priv_validator process
-      --proxy_app string                                proxy app address, or one of: 'kvstore', 'persistent_kvstore', 'counter', 'e2e' or 'noop' for local testing. (default "tcp://127.0.0.1:26658")
+      --proxy_app string                                proxy app address, or one of: 'kvstore', 'persistent_kvstore', 'counter', 'e2e' or 'noop' for local testing. (default "~/127.0.0.1:26658")
       --pruning string                                  Pruning strategy (default|nothing|everything|custom) (default "default")
       --pruning-interval uint                           Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')
       --pruning-keep-recent uint                        Number of recent heights to keep on disk (ignored if pruning is not 'custom')
       --rpc.grpc_laddr string                           GRPC listen address (BroadcastTx only). Port required
-      --rpc.laddr string                                RPC listen address. Port required (default "tcp://127.0.0.1:26657")
+      --rpc.laddr string                                RPC listen address. Port required (default "~/127.0.0.1:26657")
       --rpc.pprof_laddr string                          pprof listen address (https://golang.org/pkg/net/http/pprof)
       --rpc.unsafe                                      enabled unsafe rpc methods
       --state-sync.snapshot-interval uint               State sync snapshot interval

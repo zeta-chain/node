@@ -34,7 +34,7 @@ zetacored tx staking create-validator [flags]
       --ledger                              Use a connected Ledger device
       --min-self-delegation string          The minimum self delegation required on the validator
       --moniker string                      The validator's name
-      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "tcp://localhost:26657")
+      --node string                         [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
       --node-id string                      The node's ID
       --note string                         Note to add a description to the transaction (previously --memo)
       --offline                             Offline mode (does not allow any online functionality)
@@ -53,7 +53,7 @@ zetacored tx staking create-validator [flags]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/fadeev/.zetacored")
+      --home string         directory for config and data (default "~/.zetacored")
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors

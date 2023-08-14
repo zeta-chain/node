@@ -50,7 +50,7 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
       --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to tendermint rpc interface for this chain (default "tcp://localhost:26657")
+      --node string              [host]:[port] to tendermint rpc interface for this chain (default "~/localhost:26657")
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
   -o, --output string            Output format (text|json) (default "json")
@@ -66,7 +66,7 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
 ### Options inherited from parent commands
 
 ```
-      --home string         directory for config and data (default "/Users/fadeev/.zetacored")
+      --home string         directory for config and data (default "~/.zetacored")
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors

@@ -11,7 +11,7 @@ zetacored collect-gentxs [flags]
 ```
       --gentx-dir string   override default "gentx" directory from which collect and execute genesis transactions; default [--home]/config/gentx/
   -h, --help               help for collect-gentxs
-      --home string        The application home directory (default "/Users/fadeev/.zetacored")
+      --home string        The application home directory (default "~/.zetacored")
 ```
 
 ### Options inherited from parent commands

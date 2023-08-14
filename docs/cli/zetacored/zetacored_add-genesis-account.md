@@ -21,9 +21,9 @@ zetacored add-genesis-account [address_or_key_name] [coin][,[coin]] [flags]
       --grpc-insecure            allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int               Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help                     help for add-genesis-account
-      --home string              The application home directory (default "/Users/fadeev/.zetacored")
+      --home string              The application home directory (default "~/.zetacored")
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test) (default "os")
-      --node string              [host]:[port] to Tendermint RPC interface for this chain (default "tcp://localhost:26657")
+      --node string              [host]:[port] to Tendermint RPC interface for this chain (default "~/localhost:26657")
   -o, --output string            Output format (text|json) (default "text")
       --vesting-amount string    amount of coins for vesting accounts
       --vesting-end-time int     schedule end time (unix epoch) for vesting accounts
