@@ -40,6 +40,7 @@ func docsCommand() *cobra.Command {
 		Use:   "docs [path]",
 		Short: "Generate markdown documentation for zetacored",
 		RunE:  docsCmd,
+		Args:  cobra.MaximumNArgs(1),
 	}
 
 	cmd.Flags().String("path", "docs/cli/zetacored", "Path where the docs will be generated")
