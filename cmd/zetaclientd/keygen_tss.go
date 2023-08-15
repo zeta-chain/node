@@ -123,9 +123,6 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 			return err
 		}
 		keygenLogger.Info().Msgf("keygen posted blame data tx hash: %s", zetaHash)
-		if err != nil {
-			return err
-		}
 		return fmt.Errorf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 	}
 	if err != nil {
