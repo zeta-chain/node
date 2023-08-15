@@ -12,16 +12,13 @@ import (
 	"time"
 )
 
-func setMYIP(cfg *config.Config, logger zerolog.Logger) {
-	if os.Getenv("MYIP") == "" {
-		if cfg.PublicIP == "" {
-			logger.Fatal().Msg("Please set MYIP environment variable or use the PublicIP flag")
-		}
-		err := os.Setenv("MYIP", cfg.PublicIP)
-		if err != nil {
-			logger.Fatal().Err(err).Msg("Error setting MYIP")
-		}
+func getMYIP(logger zerolog.Logger) (string, error) {
+	ip := os.Getenv("MYIP")
+	if ip == "" {
+		logger.Fatal().Msg("Please set MYIP environment variable")
+		return "", errors.New("empty ip address")
 	}
+	return ip, nil
 }
 
 func waitForZetaCore(configData *config.Config, logger zerolog.Logger) {

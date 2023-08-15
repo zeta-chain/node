@@ -18,7 +18,6 @@ var initArgs = initArguments{}
 
 type initArguments struct {
 	peer               string
-	publicIP           string
 	logFormat          string
 	logSampler         bool
 	preParamsPath      string
@@ -40,7 +39,6 @@ func init() {
 	RootCmd.AddCommand(VersionCmd)
 
 	InitCmd.Flags().StringVar(&initArgs.peer, "peer", "", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
-	InitCmd.Flags().StringVar(&initArgs.publicIP, "public-ip", "", "public ip address")
 	InitCmd.Flags().StringVar(&initArgs.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	InitCmd.Flags().StringVar(&initArgs.chainID, "chain-id", "athens_7001-1", "chain id")
 	InitCmd.Flags().StringVar(&initArgs.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
@@ -73,7 +71,6 @@ func Initialize(_ *cobra.Command, _ []string) error {
 
 	//Populate new struct with cli arguments
 	configData.Peer = initArgs.peer
-	configData.PublicIP = initArgs.publicIP
 	configData.PreParamsPath = initArgs.preParamsPath
 	configData.ChainID = initArgs.chainID
 	configData.ZetaCoreURL = initArgs.zetacoreURL
