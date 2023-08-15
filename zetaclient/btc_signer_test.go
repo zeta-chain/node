@@ -210,9 +210,9 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 
 	// Create BitcoinChainClient
 	client := &BitcoinChainClient{
-		Tss:        tss,
-		mu:         &sync.Mutex{},
-		includedTx: make(map[string]btcjson.GetTransactionResult),
+		Tss:               tss,
+		mu:                &sync.Mutex{},
+		includedTxResults: make(map[string]btcjson.GetTransactionResult),
 	}
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -227,7 +227,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
-	ob.includedTx[outTxID] = btcjson.GetTransactionResult{TxID: txid}
+	ob.includedTxResults[outTxID] = btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	if preMarkIndex >= 0 {
@@ -248,7 +248,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case1: nonce = 0, bootstrap
 	// 		input: utxoCap = 5, amount = 0.01, nonce = 0
 	// 		output: [0.01], 0.01
-	result, amount, err := ob.SelectUTXOs(0.01, 5, 0, tssAddress)
+	result, amount, err := ob.SelectUTXOs(0.01, 5, 0, true)
 	require.Nil(t, err)
 	require.Equal(t, 0.01, amount)
 	require.Equal(t, ob.utxos[0:1], result)
@@ -256,17 +256,17 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case2: nonce = 1, must FAIL and wait for previous transaction to be mined
 	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: error
-	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, true)
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "findNonceMarkUTXO: outTx 0-mgaRVNhouhVaiKx8xVtLNHBbSUe1o36qZJ-0 not included yet", err.Error())
+	require.Equal(t, "findTxIDByNonce: error getting cctx for nonce 0", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
 
 	// Case3: nonce = 1, must FAIL without nonce mark utxo
 	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: error
-	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, true)
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
@@ -279,7 +279,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case4: nonce = 1, should pass now
 	// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 	// 		output: [0.00002, 0.01, 0.12, 0.18, 0.24], 0.55002
-	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, tssAddress)
+	result, amount, err = ob.SelectUTXOs(0.5, 5, 1, true)
 	require.Nil(t, err)
 	require.Equal(t, 0.55002, amount)
 	require.Equal(t, ob.utxos[0:5], result)
@@ -288,7 +288,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case5:
 	// 		input: utxoCap = 5, amount = 1.0, nonce = 2
 	// 		output: [0.00002001, 0.01, 0.12, 0.18, 0.24, 0.5], 1.05002001
-	result, amount, err = ob.SelectUTXOs(1.0, 5, 2, tssAddress)
+	result, amount, err = ob.SelectUTXOs(1.0, 5, 2, true)
 	require.Nil(t, err)
 	assert.InEpsilon(t, 1.05002001, amount, 1e-8)
 	require.Equal(t, ob.utxos[0:6], result)
@@ -297,7 +297,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case6: should include nonce-mark utxo on the LEFT
 	// 		input: utxoCap = 5, amount = 8.05, nonce = 3
 	// 		output: [0.00002002, 0.24, 0.5, 1.26, 2.97, 3.28], 8.25002002
-	result, amount, err = ob.SelectUTXOs(8.05, 5, 3, tssAddress)
+	result, amount, err = ob.SelectUTXOs(8.05, 5, 3, true)
 	require.Nil(t, err)
 	assert.InEpsilon(t, 8.25002002, amount, 1e-8)
 	expected := append([]btcjson.ListUnspentResult{ob.utxos[0]}, ob.utxos[4:9]...)
@@ -306,25 +306,28 @@ func TestSelectUTXOs(t *testing.T) {
 
 	// Case7: should include nonce-mark utxo on the RIGHT
 	// 		input: utxoCap = 5, amount = 0.503, nonce = 24105432
-	// 		output: [0.01, 0.12, 0.18, 0.24, 0.24107432], 0.55002002
-	result, amount, err = ob.SelectUTXOs(0.503, 5, 24105432, tssAddress)
+	// 		output: [0.24107432, 0.01, 0.12, 0.18, 0.24], 0.55002002
+	result, amount, err = ob.SelectUTXOs(0.503, 5, 24105432, true)
 	require.Nil(t, err)
 	assert.InEpsilon(t, 0.79107431, amount, 1e-8)
-	require.Equal(t, ob.utxos[0:5], result)
+	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:4]...)
+	require.Equal(t, expected, result)
 	mineTxNSetNonceMark(ob, 24105432, dummyTxID, 4) // mine a transaction and set nonce-mark utxo for nonce 24105432
 
 	// Case8: should include nonce-mark utxo in the MIDDLE
 	// 		input: utxoCap = 5, amount = 1.0, nonce = 24105433
-	// 		output: [0.12, 0.18, 0.24, 0.24107432, 0.5], 1.28107432
-	result, amount, err = ob.SelectUTXOs(1.0, 5, 24105433, tssAddress)
+	// 		output: [0.24107432, 0.12, 0.18, 0.24, 0.5], 1.28107432
+	result, amount, err = ob.SelectUTXOs(1.0, 5, 24105433, true)
 	require.Nil(t, err)
 	assert.InEpsilon(t, 1.28107432, amount, 1e-8)
-	require.Equal(t, ob.utxos[1:6], result)
+	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[1:4]...)
+	expected = append(expected, ob.utxos[5])
+	require.Equal(t, expected, result)
 
 	// Case9: should work with maximum amount
 	// 		input: utxoCap = 5, amount = 16.03
 	// 		output: [0.24107432, 1.26, 2.97, 3.28, 5.16, 8.72], 21.63107432
-	result, amount, err = ob.SelectUTXOs(16.03, 5, 24105433, tssAddress)
+	result, amount, err = ob.SelectUTXOs(16.03, 5, 24105433, true)
 	require.Nil(t, err)
 	assert.InEpsilon(t, 21.63107432, amount, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[6:11]...)
@@ -333,7 +336,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// Case10: must FAIL due to insufficient funds
 	// 		input: utxoCap = 5, amount = 21.64
 	// 		output: error
-	result, amount, err = ob.SelectUTXOs(21.64, 5, 24105433, tssAddress)
+	result, amount, err = ob.SelectUTXOs(21.64, 5, 24105433, true)
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
