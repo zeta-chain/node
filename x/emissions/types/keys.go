@@ -20,7 +20,8 @@ const (
 	QuerierRoute = ModuleName
 
 	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_emissions"
+	MemStoreKey              = "mem_emissions"
+	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
 
 	SecsInMonth = 30 * 24 * 60 * 60
 )

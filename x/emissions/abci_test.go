@@ -181,12 +181,12 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 			startHeight := ctx.BlockHeight()
 			assert.Equal(t, startHeight, inputTestData[0].BlockHeight, "starting block height should be equal to the first block height in the input data")
 			for i := startHeight; i < tt.testMaxHeight; i++ {
-				//First distribution will occur only when begin-block is triggered
-				reservesFactor, bondFactor, durationFactor := emissionsModule.GetBlockRewardComponents(ctx, app.BankKeeper, app.StakingKeeper, app.EmissionsKeeper)
+				//The First distribution will occur only when begin-block is triggered
+				reservesFactor, bondFactor, durationFactor := app.EmissionsKeeper.GetBlockRewardComponents(ctx)
 				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper, app.StakingKeeper, app.BankKeeper, app.ZetaObserverKeeper)
+				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper)
 				ctx = ctx.WithBlockHeight(i + 1)
 			}
 		})
@@ -227,8 +227,8 @@ func GenerateTestDataMaths(app *zetaapp.App, ctx sdk.Context, testMaxHeight int6
 	startHeight := ctx.BlockHeight()
 	for i := startHeight; i < testMaxHeight; i++ {
 		reservesFactor := sdk.NewDecFromInt(reserverCoins.Amount)
-		bondFactor := emissionsModule.GetBondFactor(ctx, app.StakingKeeper, app.EmissionsKeeper)
-		durationFactor := emissionsModule.GetDurationFactor(ctx, app.EmissionsKeeper)
+		bondFactor := app.EmissionsKeeper.GetBondFactor(ctx, app.StakingKeeper)
+		durationFactor := app.EmissionsKeeper.GetDurationFactor(ctx)
 		blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
 		generatedTestData = append(generatedTestData, EmissionTestData{
 			BlockHeight:    i,
