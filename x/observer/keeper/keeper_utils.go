@@ -56,15 +56,17 @@ func (k Keeper) FindBallot(ctx sdk.Context, index string, chain *common.Chain, o
 			return
 		}
 		ballot = types.Ballot{
-			Index:            "",
-			BallotIdentifier: index,
-			VoterList:        observerMapper.ObserverList,
-			Votes:            types.CreateVotes(len(observerMapper.ObserverList)),
-			ObservationType:  observationType,
-			BallotThreshold:  obsParams.BallotThreshold,
-			BallotStatus:     types.BallotStatus_BallotInProgress,
+			Index:                "",
+			BallotIdentifier:     index,
+			VoterList:            observerMapper.ObserverList,
+			Votes:                types.CreateVotes(len(observerMapper.ObserverList)),
+			ObservationType:      observationType,
+			BallotThreshold:      obsParams.BallotThreshold,
+			BallotStatus:         types.BallotStatus_BallotInProgress,
+			BallotCreationHeight: ctx.BlockHeight(),
 		}
 		isNew = true
+		k.AddBallotToList(ctx, ballot)
 	}
 	return
 }
