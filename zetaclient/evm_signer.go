@@ -282,7 +282,10 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// Early return if the cctx is already processed
-	included, confirmed, _ := evmClient.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, logger)
+	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
+	if err != nil {
+		logger.Error().Err(err).Msg("IsSendOutTxProcessed failed")
+	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
@@ -311,10 +314,23 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	var sendhash [32]byte
 	copy(sendhash[:32], sendHash[:32])
-	gasprice, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-	if !ok {
-		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
-		return
+
+	// use dynamic gas price for ethereum chains
+	var gasprice *big.Int
+	if common.IsEthereumChain(toChain.ChainId) {
+		suggested, err := signer.client.SuggestGasPrice(context.Background())
+		if err != nil {
+			logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
+			return
+		}
+		gasprice = roundUpToNearestGwei(suggested)
+	} else {
+		specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+		if !ok {
+			logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+			return
+		}
+		gasprice = specified
 	}
 
 	var tx *ethtypes.Transaction
@@ -459,4 +475,14 @@ func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Addr
 	}
 
 	return tx, nil
+}
+
+func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
+	oneGwei := big.NewInt(1_000_000_000) // 1 Gwei
+	mod := new(big.Int)
+	mod.Mod(gasPrice, oneGwei)
+	if mod.Cmp(big.NewInt(0)) == 0 { // gasprice is already a multiple of 1 Gwei
+		return gasPrice
+	}
+	return new(big.Int).Add(gasPrice, new(big.Int).Sub(oneGwei, mod))
 }

@@ -131,6 +131,27 @@ func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
 }
 
+func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceRequest) (*types.QueryGetCctxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", req.Nonce, req.ChainID))
+	}
+	val, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+	}
+
+	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
+}
+
 func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPendingRequest) (*types.QueryAllCctxPendingResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

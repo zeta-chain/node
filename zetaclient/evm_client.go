@@ -37,7 +37,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -175,6 +175,10 @@ func (ob *EVMChainClient) GetChainConfig() *config.EVMConfig {
 	return ob.cfg.EVMChainConfigs[ob.chain.ChainId]
 }
 
+func (ob *EVMChainClient) GetCoreParameters() config.CoreParams {
+	return *ob.GetChainConfig().CoreParams
+}
+
 func (ob *EVMChainClient) ConnectorAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(ob.GetChainConfig().CoreParams.ConnectorContractAddress)
 }
@@ -224,10 +228,10 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	ob.mu.Lock()
-	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetIndex(nonce)]
-	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetIndex(nonce)]
+	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
+	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetTxID(nonce)]
 	ob.mu.Unlock()
 	found := found1 && found2
 	if !found {
@@ -417,60 +421,54 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce int, coint
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	// read env variables if set
+	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
+	if err != nil || timeoutNonce <= 0 {
+		timeoutNonce = 100 * 3 // process up to 100 hashes
+	}
+	rpcRestTime, err := strconv.Atoi(os.Getenv("OS_RPC_REST_TIME"))
+	if err != nil || rpcRestTime <= 0 {
+		rpcRestTime = 500 // 500ms
+	}
+	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
+
 	ticker := time.NewTicker(time.Duration(ob.GetChainConfig().CoreParams.OutTxTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
 			if err != nil {
 				continue
 			}
 			sort.Slice(trackers, func(i, j int) bool {
 				return trackers[i].Nonce < trackers[j].Nonce
 			})
-			outTimeout := time.After(90 * time.Second)
+			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					inTimeout := time.After(3000 * time.Millisecond)
+					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
 						break TRACKERLOOP
 					default:
-						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, int64(nonceInt))
+						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
+						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							ob.outTXConfirmedReceipts[ob.GetIndex(int(nonceInt))] = receipt
-							ob.outTXConfirmedTransaction[ob.GetIndex(int(nonceInt))] = transaction
+							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
+							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.mu.Unlock()
-
-							//DISABLING PERSISTENCE
-							//// Convert to DB types
-							//rec, err := clienttypes.ToReceiptSQLType(receipt, ob.GetIndex(int(nonceInt)))
-							//if err != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("error converting receipt to db type")
-							//	continue
-							//}
-							//trans, err := clienttypes.ToTransactionSQLType(transaction, ob.GetIndex(int(nonceInt)))
-							//if err != nil {
-							//	ob.logger.ObserveOutTx.Err(err).Msgf("error converting transaction to db type")
-							//	continue
-							//}
-							//
-							////Save to DB
-							//if dbc := ob.db.Create(rec); dbc.Error != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, receipt.TxHash.Hex())
-							//}
-							//if dbc := ob.db.Create(trans); dbc.Error != nil {
-							//	ob.logger.ObserveOutTx.Error().Err(err).Msgf("PurgeTxHashWatchList: error putting nonce %d tx hashes %s to db", nonceInt, transaction.Hash())
-							//}
 
 							break TXHASHLOOP
 						}
-						<-inTimeout
+						if err != nil {
+							ob.logger.ObserveOutTx.Debug().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
+						}
+						//<-inTimeout
 					}
 				}
 			}
@@ -485,9 +483,9 @@ func (ob *EVMChainClient) observeOutTx() {
 // receipt nil, err non-nil: txHash not found
 // receipt nil, err nil: txHash receipt recorded, but may not be confirmed
 // receipt non-nil, err nil: txHash confirmed
-func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
-	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Int64("nonce", nonce).Logger()
-	if ob.outTXConfirmedReceipts[ob.GetIndex(int(nonce))] != nil && ob.outTXConfirmedTransaction[ob.GetIndex(int(nonce))] != nil {
+func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, error) {
+	logger := ob.logger.ObserveOutTx.With().Str("txHash", txHash).Uint64("nonce", nonce).Logger()
+	if ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransaction[ob.GetTxID(nonce)] != nil {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s receipts already recorded", txHash)
 	}
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -504,7 +502,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce int64) (*ethtypes.R
 	if err != nil {
 		return nil, nil, err
 	}
-	if transaction.Nonce() != uint64(nonce) {
+	if transaction.Nonce() != nonce {
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainConfig().CoreParams.ConfCount
@@ -1041,7 +1039,7 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 	return nil
 }
 
-func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) error {
+func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv := tracker.Nonce
@@ -1065,7 +1063,7 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []cctxtypes.OutTxTracker) e
 	return nil
 }
 
-func (ob *EVMChainClient) GetIndex(nonce int) string {
+func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
