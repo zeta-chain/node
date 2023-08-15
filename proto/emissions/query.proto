@@ -18,6 +18,18 @@ service Query {
   rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
   }
+
+  // Queries a list of GetEmmisonsFactors items.
+  rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+  }
+
+  // Queries a list of ShowAvailableEmissions items.
+  rpc ShowAvailableEmissions(QueryShowAvailableEmissionsRequest) returns (QueryShowAvailableEmissionsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/show_available_emissions/{address}";
+  }
+
+  // this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -36,3 +48,21 @@ message QueryListPoolAddressesResponse {
   string undistributed_tss_balances_address = 2;
   string emission_module_address = 3;
 }
+
+message QueryGetEmmisonsFactorsRequest {}
+
+message QueryGetEmmisonsFactorsResponse {
+  string reservesFactor = 1;
+  string bondFactor = 2;
+  string durationFactor = 3;
+}
+
+message QueryShowAvailableEmissionsRequest {
+  string address = 1;
+}
+
+message QueryShowAvailableEmissionsResponse {
+  string amount = 1;
+}
+
+// this line is used by starport scaffolding # 3

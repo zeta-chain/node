@@ -52,8 +52,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	nonceMark := NonceMarkAmount(nonce)
 
 	// select N UTXOs to cover the total expense
-	tssAddress := signer.tssSigner.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, tssAddress)
+	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, false)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
-	// add output with remaining btc to TSS self (change-1)
+	// calculate remaining btc to TSS self
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
 	payToSelf, err := payToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
 	if err != nil {
@@ -104,22 +103,24 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fmt.Printf("BTCSigner: SignWithdrawTx: Adjust remainder value to avoid duplicate nonce-mark: %d\n", remainingSats)
 		remainingSats--
 	}
-	txOut := wire.NewTxOut(remainingSats, payToSelf)
-	tx.AddTxOut(txOut)
 
-	// add output with nonce-mark btc to TSS self (change-2)
-	{
-		txOut := wire.NewTxOut(nonceMark, payToSelf)
-		tx.AddTxOut(txOut)
-	}
+	// 1st output: the nonce-mark btc to TSS self
+	txOut1 := wire.NewTxOut(nonceMark, payToSelf)
+	tx.AddTxOut(txOut1)
 
-	// output to the recipient
+	// 2nd output: the payment to the recipient
 	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
 	if err != nil {
 		return nil, err
 	}
 	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
 	tx.AddTxOut(txOut2)
+
+	// 3rd output: the remaining btc to TSS self
+	if remainingSats > 0 {
+		txOut3 := wire.NewTxOut(remainingSats, payToSelf)
+		tx.AddTxOut(txOut3)
+	}
 
 	// sign the tx
 	sigHashes := txscript.NewTxSigHashes(tx)
@@ -191,13 +192,14 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		Str("OutTxID", outTxID).
 		Str("SendHash", send.Index).
 		Logger()
-	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Gas {
+
+	params := send.GetCurrentOutTxParam()
+	if params.CoinType != common.CoinType_Gas {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
-	toAddr := send.GetCurrentOutTxParam().Receiver
 
-	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, send.GetCurrentOutTxParam().Amount.BigInt(), toAddr)
+	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, params.Amount.BigInt(), params.Receiver)
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
@@ -210,36 +212,36 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	myid := zetaBridge.keys.GetAddress()
 	// Early return if the send is already processed
 	// FIXME: handle revert case
-	outboundTxTssNonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, int(outboundTxTssNonce), common.CoinType_Gas, logger)
+	outboundTxTssNonce := params.OutboundTxTssNonce
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
 	}
 
-	gasprice, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
 	if !ok {
-		logger.Error().Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
 		return
 	}
 
 	// FIXME: config chain params
-	addr, err := btcutil.DecodeAddress(toAddr, config.BitconNetParams)
+	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
+		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
-		logger.Error().Err(err).Msgf("cannot decode address %s ", send.GetCurrentOutTxParam().Receiver)
+		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
 
-	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), send.GetCurrentOutTxParam().Amount.Uint64())
+	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(send.GetCurrentOutTxParam().Amount.Uint64())/1e8, gasprice, btcClient, height, outboundTxTssNonce, &btcClient.chain)
+	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height, outboundTxTssNonce, &btcClient.chain)
 	if err != nil {
-		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, send.GetCurrentOutTxParam().ReceiverChainId)
+		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)

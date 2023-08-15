@@ -2,31 +2,23 @@ package network
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethcfg "github.com/evmos/ethermint/cmd/config"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func Setconfig() {
-	config := sdk.GetConfig()
-	cmdcfg.SetBech32Prefixes(config)
-	ethcfg.SetBip44CoinType(config)
-	// Make sure address is compatible with ethereum
-	config.SetAddressVerifier(app.VerifyAddressFormat)
-	//config.Seal()
-}
-
-func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) map[string]json.RawMessage {
+func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) {
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
@@ -82,5 +74,82 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
 	genesisState[observerTypes.ModuleName] = observerGenesisBz
 	genesisState[evmtypes.ModuleName] = evmGenesisBz
-	return genesisState
+}
+
+func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observerTypes.Ballot) *observerTypes.GenesisState {
+	state := observerTypes.GenesisState{}
+	assert.NoError(t, codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &state))
+	if len(ballots) > 0 {
+		state.Ballots = ballots
+	}
+	//params := observerTypes.DefaultParams()
+	//params.BallotMaturityBlocks = 3
+	state.Params.BallotMaturityBlocks = 3
+	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+	permissionFlags := &observerTypes.PermissionFlags{}
+	nullify.Fill(&permissionFlags)
+	state.PermissionFlags = permissionFlags
+
+	buf, err := codec.MarshalJSON(&state)
+	assert.NoError(t, err)
+	genesisState[observerTypes.ModuleName] = buf
+	return &state
+}
+func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {
+	state := types.GenesisState{}
+	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &state))
+	// TODO : Fix add EVM balance to deploy contracts
+	for i := 0; i < n; i++ {
+		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
+			Creator: "ANY",
+			Index:   strconv.Itoa(i),
+			CctxStatus: &types.Status{
+				Status:              types.CctxStatus_PendingInbound,
+				StatusMessage:       "",
+				LastUpdateTimestamp: 0,
+			},
+			InboundTxParams:  &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("Hash-%d", i), Amount: math.OneUint()},
+			OutboundTxParams: []*types.OutboundTxParams{},
+			ZetaFees:         math.OneUint()},
+		)
+	}
+	for i := 0; i < n; i++ {
+		state.ChainNoncesList = append(state.ChainNoncesList, &types.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
+	}
+	for i := 0; i < n; i++ {
+		state.GasPriceList = append(state.GasPriceList, &types.GasPrice{Creator: "ANY", ChainId: int64(i), Index: strconv.Itoa(i), Prices: []uint64{}, BlockNums: []uint64{}, Signers: []string{}})
+	}
+	for i := 0; i < n; i++ {
+		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
+	}
+
+	state.Tss = &types.TSS{
+		TssPubkey:           "tssPubkey",
+		TssParticipantList:  []string{"tssParticipantList"},
+		OperatorAddressList: []string{"operatorAddressList"},
+		FinalizedZetaHeight: 1,
+		KeyGenZetaHeight:    1,
+	}
+	for i := 0; i < n; i++ {
+		outTxTracker := types.OutTxTracker{
+			Index:   fmt.Sprintf("%d-%d", i, i),
+			ChainId: int64(i),
+			Nonce:   uint64(i),
+		}
+		nullify.Fill(&outTxTracker)
+		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
+	}
+
+	for i := 0; i < n; i++ {
+		inTxHashToCctx := types.InTxHashToCctx{
+			InTxHash: strconv.Itoa(i),
+		}
+		nullify.Fill(&inTxHashToCctx)
+		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
+	}
+
+	buf, err := codec.MarshalJSON(&state)
+	assert.NoError(t, err)
+	genesisState[types.ModuleName] = buf
+	return &state
 }

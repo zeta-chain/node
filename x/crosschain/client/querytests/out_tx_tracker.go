@@ -13,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestListOutTxTracker() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crossChainState.OutTxTrackerList
+	objs := s.crosschainState.OutTxTrackerList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
