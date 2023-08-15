@@ -27,8 +27,9 @@ message MsgUpdateCoreParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;
-  int64 chain_id = 2;
-  ObservationType observationType = 3;
+  string observer_address = 3;
+  string zetaclient_grantee_address = 4;
+  string zetaclient_grantee_pubkey = 5;
 }
 
 message MsgAddObserverResponse {}

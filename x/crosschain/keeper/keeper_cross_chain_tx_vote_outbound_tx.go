@@ -55,6 +55,9 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.zetaObserverKeeper.IsOutboundAllowed(ctx) {
+		return nil, types.ErrNotEnoughPermissions
+	}
 	observationType := observerTypes.ObservationType_OutBoundTx
 	// Observer Chain already checked then inbound is created
 	/* EDGE CASE : Params updated in during the finalization process

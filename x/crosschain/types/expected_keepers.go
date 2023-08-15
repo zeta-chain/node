@@ -56,6 +56,7 @@ type ZetaObserverKeeper interface {
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []zetaObserverTypes.NodeAccount)
 	SetNodeAccount(ctx sdk.Context, nodeAccount zetaObserverTypes.NodeAccount)
 	IsInboundAllowed(ctx sdk.Context) (found bool)
+	IsOutboundAllowed(ctx sdk.Context) (found bool)
 	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)

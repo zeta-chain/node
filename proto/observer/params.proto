@@ -44,6 +44,7 @@ enum Policy_Type {
   update_client_params = 2;
   update_keygen_block = 3;
   out_tx_tracker = 4;
+  add_observer = 5;
 }
 
 message Admin_Policy {

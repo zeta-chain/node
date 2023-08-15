@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,9 +86,25 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 
 // Tx
 
-// Not implemented.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
+		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
+	}
+	observerMappers := k.GetAllObserverMappers(ctx)
+	totalObserverCountCurrentBlock := uint64(0)
+	for _, mapper := range observerMappers {
+		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
+		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
+		k.SetObserverMapper(ctx, mapper)
+	}
+	if totalObserverCountCurrentBlock < 0 {
+		return &types.MsgAddObserverResponse{}, types.ErrObserverCountNegative
+	}
+	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
+	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
+	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, msg.ZetaclientGranteeAddress, msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
 }
 

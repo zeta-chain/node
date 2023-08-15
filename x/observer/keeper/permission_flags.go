@@ -34,6 +34,14 @@ func (k Keeper) IsInboundAllowed(ctx sdk.Context) (found bool) {
 	return flags.IsInboundEnabled
 }
 
+func (k Keeper) IsOutboundAllowed(ctx sdk.Context) (found bool) {
+	flags, found := k.GetPermissionFlags(ctx)
+	if !found {
+		return false
+	}
+	return flags.IsOutboundEnabled
+}
+
 // RemovePermissionFlags removes permissionFlags from the store
 func (k Keeper) RemovePermissionFlags(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
