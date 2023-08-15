@@ -116,6 +116,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
 	if err != nil {
 		return err
