@@ -88,7 +88,7 @@ func (ob *BitcoinChainClient) GetCoreParameters() config.CoreParams {
 // Return configuration based on supplied target chain
 func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
-		ChainMetrics: NewChainMetrics(chain.String(), metrics),
+		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
 	}
 	ob.cfg = cfg
@@ -132,6 +132,11 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	err = client.Ping()
 	if err != nil {
 		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+	}
+
+	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
+	if err != nil {
+		return nil, err
 	}
 
 	//Load btc chain client DB
