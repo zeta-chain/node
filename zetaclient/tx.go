@@ -87,7 +87,7 @@ func (b *ZetaCoreBridge) PostProveOutboundTx(txProof, receiptProof ethereum.Proo
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgProveOutboundTx(signerAddress, txProof, receiptProof, blockHash, txIndex)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	gasLimit := DefaultGasLimit
+	gasLimit := PostProveOutboundTxGasLimit
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(uint64(gasLimit), authzMsg, authzSigner)
 		if err == nil {
