@@ -48,6 +48,9 @@ func (msg *MsgUpdateZRC20WithdrawFee) ValidateBasic() error {
 	if ethcommon.HexToAddress(msg.Zrc20Address) == (ethcommon.Address{}) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20Address)
 	}
+	if msg.NewWithdrawFee.IsNil() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid withdraw fee (%s)", msg.NewWithdrawFee)
+	}
 
 	return nil
 }
