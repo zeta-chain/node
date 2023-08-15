@@ -14,8 +14,6 @@ service Msg {
   rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
 }
 
-
-
 message MsgUpdateZRC20WithdrawFee {
   string creator = 1;
   string zrc20_address = 2; // zrc20 address
