@@ -81,14 +81,14 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, amount *big.Int, status common.ReceiveStatus, chain common.Chain, nonce int, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, amount *big.Int, status common.ReceiveStatus, chain common.Chain, nonce uint64, coinType common.CoinType) (string, error) {
 	lastReport, found := b.lastOutTxReportTime[outTxHash]
 	if found && time.Since(lastReport) < 10*time.Minute {
 		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
 	}
 
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(amount), status, chain.ChainId, uint64(nonce), coinType)
+	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(amount), status, chain.ChainId, nonce, coinType)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.
