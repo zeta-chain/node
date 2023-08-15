@@ -1,9 +1,13 @@
 package sample
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 // AccAddress returns a sample account address
@@ -11,6 +15,19 @@ func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
+}
+
+func PubKey() (string, string) {
+	priKey := ed25519.GenPrivKey()
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
+	if err != nil {
+		fmt.Println(err)
+	}
+	pubkey, err := common.NewPubKey(s)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return sdk.AccAddress(priKey.PubKey().Address()).String(), pubkey.String()
 }
 
 // PrivKeyAddressPair returns a private key, address pair

@@ -537,7 +537,7 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
-	permssions, err := ob.zetaClient.GetInboundPermissions()
+	permssions, err := ob.zetaClient.GetPermissionFlags()
 	if err != nil {
 		return err
 	}

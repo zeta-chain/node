@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -12,23 +10,20 @@ import (
 
 func CmdAddObserver() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [observer-chain-id] [observation-type]",
+		Use:   "add-observer [observer-address] [zetaclient-grantee-address] [zetaclient-grantee-pubkey]",
 		Short: "Broadcast message add-observer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argObservationType := args[1]
+
 			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			chainID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 			msg := types.NewMsgAddObserver(
 				clientCtx.GetFromAddress().String(),
-				int64(chainID),
-				types.ParseStringToObservationType(argObservationType),
+				args[1],
+				args[2],
+				args[3],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

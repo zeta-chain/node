@@ -101,7 +101,18 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if totalObserverCountCurrentBlock < 0 {
 		return &types.MsgAddObserverResponse{}, types.ErrObserverCountNegative
 	}
-	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
+	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
+	pubkeySet := common.PubKeySet{
+		Secp256k1: pubkey,
+		Ed25519:   "",
+	}
+	k.SetNodeAccount(ctx, types.NodeAccount{
+		Operator:       msg.ObserverAddress,
+		GranteeAddress: msg.ZetaclientGranteeAddress,
+		GranteePubkey:  &pubkeySet,
+		NodeStatus:     types.NodeStatus_Active,
+	})
+	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
 	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, msg.ZetaclientGranteeAddress, msg.ZetaclientGranteePubkey)

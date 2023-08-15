@@ -1,8 +1,10 @@
 package v2
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -13,16 +15,14 @@ import (
 */
 func MigrateStore(
 	ctx sdk.Context,
-	observerKeeper keeper.Keeper,
+	observerStoreKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
 ) error {
-
-	observerKeeper.SetPermissionFlags(ctx, types.PermissionFlags{
+	store := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.PermissionFlagsKey))
+	b := cdc.MustMarshal(&types.PermissionFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
 	})
-	params := observerKeeper.GetParams(ctx)
-	params.AdminPolicy = types.DefaultAdminPolicy()
-	observerKeeper.SetParams(ctx, params)
-
+	store.Set([]byte{0}, b)
 	return nil
 }

@@ -58,5 +58,6 @@ func (msg *MsgAddObserver) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "invalid zetaclient grantee pubkey (%s)", err)
 	}
+	// https://github.com/zeta-chain/node/issues/988
 	return nil
 }

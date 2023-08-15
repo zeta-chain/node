@@ -47,3 +47,12 @@ func (k Keeper) RemovePermissionFlags(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
 	store.Delete([]byte{0})
 }
+
+func (k Keeper) DisableInboundOnly(ctx sdk.Context) {
+	flags, found := k.GetPermissionFlags(ctx)
+	if !found {
+		flags.IsOutboundEnabled = true
+	}
+	flags.IsInboundEnabled = false
+	k.SetPermissionFlags(ctx, flags)
+}

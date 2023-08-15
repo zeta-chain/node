@@ -19,6 +19,7 @@ func SetupHandlers(app *App) {
 			vm[m] = mb.ConsensusVersion()
 		}
 		vm[observerTypes.ModuleName] = vm[observerTypes.ModuleName] - 1
+		SetParams(app, ctx)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -36,4 +37,10 @@ func SetupHandlers(app *App) {
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
 		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+}
+
+func SetParams(app *App, ctx sdk.Context) {
+	params := app.ZetaObserverKeeper.GetParams(ctx)
+	params.AdminPolicy = observerTypes.DefaultAdminPolicy()
+	app.ZetaObserverKeeper.SetParams(ctx, params)
 }

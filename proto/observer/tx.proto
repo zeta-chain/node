@@ -44,6 +44,7 @@ message MsgAddBlameVoteResponse {}
 message MsgUpdatePermissionFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
+  bool isOutboundEnabled = 4;
 }
 message MsgUpdatePermissionFlagsResponse {}
 

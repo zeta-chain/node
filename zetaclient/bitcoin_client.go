@@ -210,7 +210,7 @@ func (ob *BitcoinChainClient) WatchInTx() {
 
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
-	permssions, err := ob.zetaClient.GetInboundPermissions()
+	permssions, err := ob.zetaClient.GetPermissionFlags()
 	if err != nil {
 		return err
 	}

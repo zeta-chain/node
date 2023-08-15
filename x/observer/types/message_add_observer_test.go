@@ -22,9 +22,7 @@ func TestMsgAddObserver_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgAddObserver{
-				Creator: sample.AccAddress(),
-			},
+			msg:  GenerateObserverMsg(),
 		},
 	}
 	for _, tt := range tests {
@@ -36,5 +34,15 @@ func TestMsgAddObserver_ValidateBasic(t *testing.T) {
 			}
 			require.NoError(t, err)
 		})
+	}
+}
+
+func GenerateObserverMsg() MsgAddObserver {
+	address, pubkey := sample.PubKey()
+	return MsgAddObserver{
+		Creator:                  sample.AccAddress(),
+		ObserverAddress:          sample.AccAddress(),
+		ZetaclientGranteeAddress: address,
+		ZetaclientGranteePubkey:  pubkey,
 	}
 }
