@@ -776,7 +776,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						from, err := signer.Sender(tx)
 
 						if err == nil && from == ob.Tss.EVMAddress() {
-							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s is from TSS address; generating txProof for outtx tracker", tx.Hash().Hex())
+							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s (nonce %d) is from TSS address; generating txProof for outtx tracker", tx.Hash().Hex(), tx.Nonce())
 							txProof, err := trie.GenerateProof(i)
 							if err != nil {
 								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error generating txProof")

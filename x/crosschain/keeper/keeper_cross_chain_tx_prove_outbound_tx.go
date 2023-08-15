@@ -107,6 +107,13 @@ func (k msgServer) ProveOutboundTx(goCtx context.Context, msg *types.MsgProveOut
 		return nil, sdkerrors.Wrapf(types.ErrStatusNotPending, "Cctx status is not pending")
 	}
 
+	// this is important; otherwise smoketest "Goerli->Goerli Message Passing (revert fail)"
+	// will appear to be successful but it's not correct, because the same outtx are used
+	// accepted here. The scond one should be rejected because the nonce is not correct
+	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != nonce {
+		return nil, sdkerrors.Wrapf(types.ErrNonceMismatch, "Nonce mismatch")
+	}
+
 	if receipt.Status == ethtypes.ReceiptStatusFailed {
 
 	}
