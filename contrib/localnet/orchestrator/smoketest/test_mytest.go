@@ -22,7 +22,7 @@ func (sm *SmokeTest) TestMyTest() {
 	}()
 
 	res, err := sm.observerClient.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{
-		ChainID: int64(1337),
+		ChainId: int64(1337),
 	})
 	if err != nil {
 		panic(err)
