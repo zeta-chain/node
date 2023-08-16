@@ -44,6 +44,7 @@ func (sm *SmokeTest) TestSendZetaIn() {
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
 	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
@@ -127,7 +128,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
-		ZetaValueAndGas:     big.NewInt(1e17),
+		ZetaValueAndGas:     big.NewInt(1e18),
 		ZetaParams:          nil,
 	})
 	if err != nil {
