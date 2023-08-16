@@ -40,7 +40,7 @@ require (
 	github.com/evmos/ethermint v0.22.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816052441-576bf80a5c58
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	gopkg.in/yaml.v2 v2.4.0
