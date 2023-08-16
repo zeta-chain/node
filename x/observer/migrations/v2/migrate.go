@@ -11,7 +11,6 @@ import (
 // MigrateStore migrates the x/observer module state from the consensus version 1 to 2
 /* This migration adds a
 - new permission flag to the observer module called IsOutboundEnabled
-- a new policy Policy_Type_add_observer
 */
 func MigrateStore(
 	ctx sdk.Context,

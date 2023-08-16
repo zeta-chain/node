@@ -17,7 +17,7 @@ func NewMigrator(keeper Keeper) Migrator {
 	}
 }
 
-// Migrate2to3 migrates the store from consensus version 2 to 3
+// Migrate1to2 migrates the store from consensus version 1 to 2
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	return v2.MigrateStore(ctx, m.observerKeeper.storeKey, m.observerKeeper.cdc)
 }

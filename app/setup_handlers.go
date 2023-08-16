@@ -39,6 +39,8 @@ func SetupHandlers(app *App) {
 	}
 }
 
+// SetParams sets the default params for the observer module
+// A new policy has been added for add_observer.
 func SetParams(app *App, ctx sdk.Context) {
 	params := app.ZetaObserverKeeper.GetParams(ctx)
 	params.AdminPolicy = observerTypes.DefaultAdminPolicy()

@@ -1,8 +1,6 @@
 package sample
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -17,15 +15,16 @@ func AccAddress() string {
 	return sdk.AccAddress(addr).String()
 }
 
+// PubKey returns a sample public key and address
 func PubKey() (string, string) {
 	priKey := ed25519.GenPrivKey()
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	pubkey, err := common.NewPubKey(s)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	return sdk.AccAddress(priKey.PubKey().Address()).String(), pubkey.String()
 }

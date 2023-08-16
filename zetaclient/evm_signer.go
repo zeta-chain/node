@@ -317,7 +317,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	// FIXME: there is a chance wrong type of outbound tx is signed
 	// NOTE: if sender is zetachain, then the tx could be one of three types;
 	// otherwise, it's always a message passing tx, passing zeta & optionally message
-	// Do not sign outbound TX if outbound is disabled CctxStatus_PendingOutbound , outbound TX can still be signed for PendingRevert
+	// Do not sign outbound TX if outbound is disabled and status is CctxStatus_PendingOutbound , outbound TX can still be signed for PendingRevert
 	if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
