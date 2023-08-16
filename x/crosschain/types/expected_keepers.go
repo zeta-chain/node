@@ -60,24 +60,17 @@ type ZetaObserverKeeper interface {
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
 	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
-	AddVoteToBallot(
-		ctx sdk.Context,
-		ballot zetaObserverTypes.Ballot,
-		address string,
-		observationType zetaObserverTypes.VoteType,
-	) (zetaObserverTypes.Ballot, error)
+	AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
-	FindBallot(
-		ctx sdk.Context,
-		index string,
-		chain *common.Chain,
-		observationType zetaObserverTypes.ObservationType,
-	) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
+	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
+	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
 }
 
 type FungibleKeeper interface {
 	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
+	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
+	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
@@ -104,4 +97,13 @@ type FungibleKeeper interface {
 		outZRC4 eth.Address,
 	) ([]*big.Int, error)
 	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	DeployZRC20Contract(
+		ctx sdk.Context,
+		name, symbol string,
+		decimals uint8,
+		chainID int64,
+		coinType common.CoinType,
+		erc20Contract string,
+		gasLimit *big.Int,
+	) (eth.Address, error)
 }

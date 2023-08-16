@@ -120,8 +120,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					supportedChains := GetSupportedChains()
 					for _, c := range supportedChains {
-						if c == nil {
-							co.logger.ZetaChainWatcher.Error().Msg("chain nil")
+						if c == nil || c.ChainId == common.ZetaChain().ChainId {
 							continue
 						}
 						signer := co.signerMap[*c]
@@ -150,6 +149,13 @@ func (co *CoreObserver) startSendScheduler() {
 						for _, v := range res {
 							trackerMap[v.Nonce] = true
 						}
+
+						gauge, err := ob.GetPromGauge(metrics.PendingTxs)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to get prometheus gauge: %s", metrics.PendingTxs)
+							continue
+						}
+						gauge.Set(float64(len(sendList)))
 
 						for idx, send := range sendList {
 							params := send.GetCurrentOutTxParam()

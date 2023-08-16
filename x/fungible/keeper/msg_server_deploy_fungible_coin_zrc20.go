@@ -38,12 +38,12 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 256")
 	}
 	if msg.CoinType == zetacommon.CoinType_Gas {
-		_, err := k.setupChainGasCoinAndPool(ctx, msg.ForeignChain, msg.Name, msg.Symbol, uint8(msg.Decimals))
+		_, err := k.setupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
 	} else {
-		addr, err := k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChain, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
+		addr, err := k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		err = ctx.EventManager().EmitTypedEvent(
 			&types.EventZRC20Deployed{
 				MsgTypeUrl: sdk.MsgTypeURL(&types.MsgDeployFungibleCoinZRC20{}),
-				Chain:      msg.ForeignChain,
+				ChainId:    msg.ForeignChainId,
 				Contract:   addr.String(),
 				Name:       msg.Name,
 				Symbol:     msg.Symbol,
