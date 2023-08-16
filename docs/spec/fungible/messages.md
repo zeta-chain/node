@@ -25,12 +25,12 @@ Only the admin policy account is authorized to broadcast this message.
 message MsgDeployFungibleCoinZRC20 {
 	string creator = 1;
 	string ERC20 = 2;
-	string foreignChain = 3;
+	int64 foreign_chain_id = 3;
 	uint32 decimals = 4;
 	string name = 5;
 	string symbol = 6;
-	common.CoinType coinType = 7;
-	int64 gasLimit = 8;
+	common.CoinType coin_type = 7;
+	int64 gas_limit = 8;
 }
 ```
 

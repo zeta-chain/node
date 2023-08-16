@@ -20,7 +20,10 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argERC20 := args[0]
-			argForeignChain := args[1]
+			argForeignChain, err := strconv.ParseInt(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
 			argDecimals, err := strconv.ParseInt(args[2], 10, 32)
 			if err != nil {
 				return err
