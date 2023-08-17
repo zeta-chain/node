@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	"cosmossdk.io/math"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
