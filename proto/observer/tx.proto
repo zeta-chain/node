@@ -27,9 +27,8 @@ message MsgUpdateCoreParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;
-  string observer_address = 3;
-  string zetaclient_grantee_address = 4;
-  string zetaclient_grantee_pubkey = 5;
+  string observer_address = 2;
+  string zetaclient_grantee_pubkey = 3;
 }
 
 message MsgAddObserverResponse {}
@@ -43,8 +42,8 @@ message MsgAddBlameVote {
 message MsgAddBlameVoteResponse {}
 message MsgUpdatePermissionFlags {
   string creator = 1;
-  bool isInboundEnabled = 3;
-  bool isOutboundEnabled = 4;
+  bool isInboundEnabled = 2;
+  bool isOutboundEnabled = 3;
 }
 message MsgUpdatePermissionFlagsResponse {}
 

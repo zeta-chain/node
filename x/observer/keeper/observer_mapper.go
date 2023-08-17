@@ -86,6 +86,8 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 
 // Tx
 
+// AddObserver adds in a new observer to the store.It can be executed using an admin policy account
+// Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
@@ -98,24 +100,19 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
 		k.SetObserverMapper(ctx, mapper)
 	}
-	if totalObserverCountCurrentBlock < 0 {
-		return &types.MsgAddObserverResponse{}, types.ErrObserverCountNegative
-	}
 	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
-	pubkeySet := common.PubKeySet{
-		Secp256k1: pubkey,
-		Ed25519:   "",
-	}
+	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
 	k.SetNodeAccount(ctx, types.NodeAccount{
 		Operator:       msg.ObserverAddress,
-		GranteeAddress: msg.ZetaclientGranteeAddress,
+		GranteeAddress: granteeAddress.String(),
 		GranteePubkey:  &pubkeySet,
 		NodeStatus:     types.NodeStatus_Active,
 	})
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
-	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, msg.ZetaclientGranteeAddress, msg.ZetaclientGranteePubkey)
+	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
 }
 

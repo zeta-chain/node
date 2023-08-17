@@ -11,12 +11,11 @@ const TypeMsgAddObserver = "add_observer"
 
 var _ sdk.Msg = &MsgAddObserver{}
 
-func NewMsgAddObserver(creator string, observerAdresss, zetaclientGranteeAddress, zetaclientGranteePubKey string) *MsgAddObserver {
+func NewMsgAddObserver(creator string, observerAdresss, zetaclientGranteePubKey string) *MsgAddObserver {
 	return &MsgAddObserver{
-		Creator:                  creator,
-		ObserverAddress:          observerAdresss,
-		ZetaclientGranteeAddress: zetaclientGranteeAddress,
-		ZetaclientGranteePubkey:  zetaclientGranteePubKey,
+		Creator:                 creator,
+		ObserverAddress:         observerAdresss,
+		ZetaclientGranteePubkey: zetaclientGranteePubKey,
 	}
 }
 
@@ -50,14 +49,13 @@ func (msg *MsgAddObserver) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid observer address (%s)", err)
 	}
-	_, err = sdk.AccAddressFromBech32(msg.ZetaclientGranteeAddress)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zetaclient grantee address (%s)", err)
-	}
 	_, err = common.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "invalid zetaclient grantee pubkey (%s)", err)
 	}
-	// https://github.com/zeta-chain/node/issues/988
+	_, err = common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "invalid zetaclient grantee pubkey (%s)", err)
+	}
 	return nil
 }

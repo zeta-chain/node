@@ -16,7 +16,7 @@ func AccAddress() string {
 }
 
 // PubKey returns a sample public key and address
-func PubKey() (string, string) {
+func PubKey() string {
 	priKey := ed25519.GenPrivKey()
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
@@ -26,7 +26,7 @@ func PubKey() (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	return sdk.AccAddress(priKey.PubKey().Address()).String(), pubkey.String()
+	return pubkey.String()
 }
 
 // PrivKeyAddressPair returns a private key, address pair

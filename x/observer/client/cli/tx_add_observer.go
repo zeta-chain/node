@@ -10,9 +10,9 @@ import (
 
 func CmdAddObserver() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-observer [observer-address] [zetaclient-grantee-address] [zetaclient-grantee-pubkey]",
+		Use:   "add-observer [observer-address] [zetaclient-grantee-pubkey]",
 		Short: "Broadcast message add-observer",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -21,9 +21,8 @@ func CmdAddObserver() *cobra.Command {
 			}
 			msg := types.NewMsgAddObserver(
 				clientCtx.GetFromAddress().String(),
+				args[0],
 				args[1],
-				args[2],
-				args[3],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

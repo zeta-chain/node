@@ -210,11 +210,11 @@ func (ob *BitcoinChainClient) WatchInTx() {
 
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
-	permssions, err := ob.zetaClient.GetPermissionFlags()
+	permissions, err := ob.zetaClient.GetPermissionFlags()
 	if err != nil {
 		return err
 	}
-	if !permssions.IsInboundEnabled {
+	if !permissions.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
