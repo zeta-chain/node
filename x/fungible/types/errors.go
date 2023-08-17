@@ -23,4 +23,8 @@ var (
 	ErrStateVaraibleNotFound  = sdkerrors.Register(ModuleName, 1112, "state variable not found")
 	ErrDeployContract         = sdkerrors.Register(ModuleName, 1113, "deploy contract error")
 	ErrEmitEvent              = sdkerrors.Register(ModuleName, 1114, "emit event error")
+	ErrInvalidDecimals        = sdkerrors.Register(ModuleName, 1115, "invalid decimals")
+	ErrGasPriceNotFound       = sdkerrors.Register(ModuleName, 1116, "gas price not found")
+	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
+	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
 )

@@ -18,20 +18,19 @@ import (
 // setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
 // FIXME: use chainid instead of chain name; add cointype and use proper gas limit based on cointype/chain
-func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, c string, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
-	name := fmt.Sprintf("%s-%s", gasAssetName, c)
-	chainName := common.ParseChainName(c)
-	chain := k.observerKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
+	chain := common.GetChainFromChainID(chainID)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
+	name := fmt.Sprintf("%s-%s", gasAssetName, chain.ChainName)
 
 	transferGasLimit := big.NewInt(21_000)
 	if common.IsBitcoinChain(chain.ChainId) {
 		transferGasLimit = big.NewInt(100) // 100B for a typical tx
 	}
 
-	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainName.String(), common.CoinType_Gas, "", transferGasLimit)
+	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}

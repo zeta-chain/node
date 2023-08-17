@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
@@ -64,6 +65,7 @@ type SmokeTest struct {
 	fungibleClient fungibletypes.QueryClient
 	authClient     authtypes.QueryClient
 	bankClient     banktypes.QueryClient
+	observerClient observertypes.QueryClient
 
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
@@ -114,7 +116,7 @@ func init() {
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
-	authClient authtypes.QueryClient, bankClient banktypes.QueryClient,
+	authClient authtypes.QueryClient, bankClient banktypes.QueryClient, observerClient observertypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
 	// query system contract address
@@ -153,6 +155,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		fungibleClient:     fungibleClient,
 		authClient:         authClient,
 		bankClient:         bankClient,
+		observerClient:     observerClient,
 		wg:                 sync.WaitGroup{},
 		goerliAuth:         goerliAuth,
 		zevmAuth:           zevmAuth,
@@ -219,6 +222,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
 	bankClient := banktypes.NewQueryClient(grpcConn)
+	observerClient := observertypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
@@ -255,7 +259,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, goerliAuth, zevmAuth, btcRPCClient)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, observerClient, goerliAuth, zevmAuth, btcRPCClient)
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
