@@ -196,6 +196,15 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 			ctx.Logger().Info("zrc20 withdraw fee updated")
 		}
 	}
+
+	if ctx.BlockHeight() == 30 {
+		err := am.keeper.TestUpdateContractBytecode(sdk.WrapSDKContext(ctx))
+		if err != nil {
+			ctx.Logger().Error("Unable To update zrc20 bytecode", "err", err.Error())
+		} else {
+			ctx.Logger().Info("zrc20 contract bytecode updated")
+		}
+	}
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the fungible module. It

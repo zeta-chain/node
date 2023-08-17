@@ -7,8 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/zetacore/common"
@@ -60,4 +62,8 @@ type EVMKeeper interface {
 		tracer vm.EVMLogger,
 		commit bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
+	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
+	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
+	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
+	SetCode(ctx sdk.Context, codeHash, code []byte)
 }
