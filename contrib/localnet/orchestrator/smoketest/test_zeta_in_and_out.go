@@ -104,8 +104,12 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	}
 	fmt.Printf("zevm chainid: %d\n", zchainid)
 
+	// 10 Zeta
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(10))
+
 	zauth := sm.zevmAuth
-	zauth.Value = big.NewInt(1e18)
+	zauth.Value = amount
 	tx, err := wzeta.Deposit(zauth)
 	if err != nil {
 		panic(err)
@@ -116,7 +120,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 	receipt := MustWaitForTxReceipt(zevmClient, tx)
 	fmt.Printf("Deposit tx receipt: status %d\n", receipt.Status)
 
-	tx, err = wzeta.Approve(zauth, ConnectorZEVMAddr, big.NewInt(1e18))
+	tx, err = wzeta.Approve(zauth, ConnectorZEVMAddr, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +132,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 		DestinationAddress:  DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
-		ZetaValueAndGas:     big.NewInt(1e18),
+		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
 	})
 	if err != nil {
@@ -163,7 +167,7 @@ func (sm *SmokeTest) TestSendZetaOut() {
 				fmt.Printf("    Dest Addr: %s\n", event.DestinationAddress.Hex())
 				fmt.Printf("    sender addr: %x\n", event.ZetaTxSenderAddress)
 				fmt.Printf("    Zeta Value: %d\n", event.ZetaValue)
-				if event.ZetaValue.Cmp(big.NewInt(1e17)) != 0 {
+				if event.ZetaValue.CmpAbs(amount) != 0 {
 					panic("wrong zeta value")
 				}
 			}
