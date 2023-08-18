@@ -60,6 +60,7 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 				var resp types.QueryGetInTxHashToCctxResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.InTxHashToCctx)
+				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
 					nullify.Fill(&resp.InTxHashToCctx),
 				)
