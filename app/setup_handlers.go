@@ -17,7 +17,9 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		observerParams := app.ZetaObserverKeeper.GetParams(ctx)
+		observerParams.BallotMaturityBlocks = 1000
+		app.ZetaObserverKeeper.SetParams(ctx, observerParams)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
