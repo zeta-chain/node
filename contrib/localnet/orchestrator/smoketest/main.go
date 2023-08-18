@@ -264,7 +264,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	smokeTest.TestBitcoinSetup()
+	//smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()

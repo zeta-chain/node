@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 
-	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	types "github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -96,7 +96,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
 	gasLimit := foreignCoin.GasLimit
-	msg := zetacoretypes.NewMsgSendVoter(
+	msg := types.NewMsgSendVoter(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -113,7 +113,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, recvChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
@@ -138,17 +138,17 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
 	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
-		return zetacoretypes.ErrNotFoundCoreParams
+		return types.ErrNotFoundCoreParams
 	}
 	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" {
-		return zetacoretypes.ErrUnableToSendCoinType
+		return types.ErrUnableToSendCoinType
 	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := zetacoretypes.NewMsgSendVoter(
+	msg := types.NewMsgSendVoter(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -165,12 +165,12 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	sendHash := msg.Digest()
 
 	// Create the CCTX
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain *common.Chain) error {
+func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *common.Chain) error {
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {

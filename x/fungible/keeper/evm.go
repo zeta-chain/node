@@ -447,14 +447,14 @@ func (k Keeper) CallEVMWithData(
 
 	// emit events
 	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			evmtypes.EventTypeEthereumTx,
-			attrs...,
-		),
-		sdk.NewEvent(
-			evmtypes.EventTypeTxLog,
-			txLogAttrs...,
-		),
+		//sdk.NewEvent(
+		//	evmtypes.EventTypeEthereumTx,
+		//	attrs...,
+		//),
+		//sdk.NewEvent(
+		//	evmtypes.EventTypeTxLog,
+		//	txLogAttrs...,
+		//),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
