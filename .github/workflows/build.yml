@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
+      - 
     tags:
       - "*"
   pull_request:
