@@ -114,12 +114,18 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	sendHash := msg.Digest()
 
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
-	EmitZRCWithdrawCreated(ctx, cctx)
+	EmitZRCWithdrawCreated(ctx, cctx) //TODOLUCAS: change position
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
-	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
+	ctx.Logger().Info(fmt.Sprintf(
+		"Zeta withdrawal to %s amount %d to chain with chainId %d",
+		hex.EncodeToString(event.DestinationAddress),
+		event.ZetaValueAndGas,
+		event.DestinationChainId,
+	))
+
 	if err := k.bankKeeper.BurnCoins(ctx, "fungible", sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas)))); err != nil {
 		fmt.Printf("burn coins failed: %s\n", err.Error())
 		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())
@@ -160,27 +166,23 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 
 	// Create the CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
-	EmitZetaWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
 func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain *common.Chain) error {
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
-	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
-	if !found {
-		fmt.Printf("gasprice not found for %s\n", receiverChain)
-		return fmt.Errorf("gasprice not found for %s", receiverChain)
-	}
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
 		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
 	}
 
+	// Pay gas in Zeta and update the amount for the cctx
 	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
 	}
+
+	// Emit the event with cctx with updated amount for Zetaclient
+	EmitZetaWithdrawCreated(ctx, cctx)
 
 	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())

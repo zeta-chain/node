@@ -107,7 +107,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ZetaMinted.Equal(cctx.GetCurrentOutTxParam().Amount) {
-			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s vs %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount)
+			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s zeta minted vs %s cctx amount", msg.ZetaMinted,
+				cctx.GetCurrentOutTxParam().Amount)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount))
 		}
 	}

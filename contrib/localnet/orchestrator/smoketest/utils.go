@@ -50,6 +50,11 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 					fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
 					cctxs = append(cctxs, res.CrossChainTx)
 					break
+				} else if err != nil {
+					fmt.Println("Error getting cctx by index: ", err.Error())
+				} else {
+					fmt.Printf("Waiting for cctx to be processed (current status: %s)\n",
+						res.CrossChainTx.CctxStatus.Status.String())
 				}
 			}
 		}()
