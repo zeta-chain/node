@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - athens2-develop
-      - 
+      - hotfix-v8.2.0
     tags:
       - "*"
   pull_request:
