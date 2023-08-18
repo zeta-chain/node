@@ -78,7 +78,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	go.etcd.io/bbolt v1.3.6 // indirect
+	go.etcd.io/bbolt v1.3.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 )
 
@@ -322,3 +322,5 @@ replace (
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
 	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230724230849-ce080275bbad
 )
+
+replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345
