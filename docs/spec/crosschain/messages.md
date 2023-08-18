@@ -202,3 +202,17 @@ message MsgVoteOnObservedInboundTx {
 }
 ```
 
+## MsgWhitelistERC20
+
+```proto
+message MsgWhitelistERC20 {
+	string creator = 1;
+	string erc20_address = 2;
+	int64 chain_id = 3;
+	string name = 4;
+	string symbol = 5;
+	uint32 decimals = 6;
+	int64 gas_limit = 7;
+}
+```
+
