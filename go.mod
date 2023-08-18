@@ -313,6 +313,8 @@ replace (
 	github.com/binance-chain/tss-lib => gitlab.com/thorchain/tss/tss-lib v0.0.0-20201118045712-70b2cb4bf916
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.3
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+
+	github.com/cosmos/cosmos-sdk => github.com/brewmaster012/cosmos-sdk v0.46.14-0.20230818184835-7b40e2ee9f2f
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
@@ -321,4 +323,5 @@ replace (
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
 	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20230724230849-ce080275bbad
+
 )
