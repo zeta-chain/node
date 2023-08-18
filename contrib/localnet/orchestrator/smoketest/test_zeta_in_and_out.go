@@ -167,8 +167,8 @@ func (sm *SmokeTest) TestSendZetaOut() {
 				fmt.Printf("    Dest Addr: %s\n", event.DestinationAddress.Hex())
 				fmt.Printf("    sender addr: %x\n", event.ZetaTxSenderAddress)
 				fmt.Printf("    Zeta Value: %d\n", event.ZetaValue)
-				if event.ZetaValue.CmpAbs(amount) != 0 {
-					panic("wrong zeta value")
+				if event.ZetaValue.Cmp(amount) != -1 {
+					panic("wrong zeta value, gas should be paid in the amount")
 				}
 			}
 		}

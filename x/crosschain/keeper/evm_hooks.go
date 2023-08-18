@@ -114,7 +114,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	sendHash := msg.Digest()
 
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
-	EmitZRCWithdrawCreated(ctx, cctx) //TODOLUCAS: change position
+	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
@@ -166,6 +166,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 
 	// Create the CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	EmitZetaWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
@@ -180,9 +181,6 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
 	}
-
-	// Emit the event with cctx with updated amount for Zetaclient
-	EmitZetaWithdrawCreated(ctx, cctx)
 
 	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
