@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const releaseVersion = "v8.1.0"
@@ -17,7 +18,11 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		oldParams := app.ZetaObserverKeeper.GetParamsIfExists(ctx)
+		newParams := zetaObserverModuleTypes.DefaultParams()
+		newParams.ObserverParams = oldParams.ObserverParams
+		newParams.AdminPolicy = oldParams.AdminPolicy
+		app.ZetaObserverKeeper.SetParams(ctx, newParams)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
