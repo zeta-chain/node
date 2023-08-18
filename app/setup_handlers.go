@@ -18,7 +18,11 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		app.ZetaObserverKeeper.SetParams(ctx, zetaObserverModuleTypes.DefaultParams())
+		oldParams := app.ZetaObserverKeeper.GetParamsIfExists(ctx)
+		newParams := zetaObserverModuleTypes.DefaultParams()
+		newParams.ObserverParams = oldParams.ObserverParams
+		newParams.AdminPolicy = oldParams.AdminPolicy
+		app.ZetaObserverKeeper.SetParams(ctx, newParams)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
