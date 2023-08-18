@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
@@ -136,6 +137,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
 	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
+	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
 	return err
 }
 
@@ -163,41 +165,98 @@ const (
 func (k Keeper) TestUpdateContractBytecode(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
-
-	//types.NewMsgUpdateContractBytecode(creator, )
-	addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliChain().ChainId, common.CoinType_ERC20, "0xff3135df4F2775f4091b81f4c7B6359CfA07862a", big.NewInt(90_000))
-	if err != nil {
-		panic(err)
-	}
-	if addr == (ethcommon.Address{}) {
-		panic("empty address")
-	}
-	k.Logger(ctx).Info("Deployed USDT ZRC20 at " + addr.String())
+	_ = creator
+	////types.NewMsgUpdateContractBytecode(creator, )
+	//addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliChain().ChainId, common.CoinType_ERC20, "0xff3135df4F2775f4091b81f4c7B6359CfA07862a", big.NewInt(90_000))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//if addr == (ethcommon.Address{}) {
+	//	panic("empty address")
+	//}
+	//k.Logger(ctx).Info("Deployed USDT ZRC20 at " + addr.String())
 	bytecode, err := hex.DecodeString(NewZRC20Bytecode[2:])
+	_ = bytecode
 	if err != nil {
 		panic(err)
 	}
-	msg := types.NewMsgUpdateContractBytecode(creator, addr, bytecode)
-	_, err = k.UpdateContractBytecode(ctx, msg)
-	if err != nil {
-		panic(err)
-	}
-	k.Logger(ctx).Info("UpdateContractBytecode")
-	data, err := k.QueryZRC20Data(ctx, addr)
-	if err != nil {
-		panic(err)
-	}
-	k.Logger(ctx).Info("QueryZRC20Data", "data", data)
+	//msg := types.NewMsgUpdateContractBytecode(creator, addr, bytecode)
+	//_, err = k.UpdateContractBytecode(ctx, msg)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//k.Logger(ctx).Info("UpdateContractBytecode")
+	//data, err := k.QueryZRC20Data(ctx, addr)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//k.Logger(ctx).Info("QueryZRC20Data", "data", data)
+	//zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	//if err != nil || zrc20ABI == nil {
+	//	panic(err)
+	//}
+
+	//res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, addr, big.NewInt(0), big.NewInt(90000), true,
+	//	"increaseAllowance", addr, big.NewInt(1000000000000000000))
+	//if err == nil {
+	//	panic("increaseAllowance should fail")
+	//}
+	//k.Logger(ctx).Info("CallEVM", "res", res, "err", err, "revert code", res.Revert())
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil || zrc20ABI == nil {
-		panic(err)
+		panic("zrc20ABI is nil")
 	}
+	coins := k.GetAllForeignCoins(ctx)
+	for _, coin := range coins {
+		zrc20Addr := ethcommon.HexToAddress(coin.Zrc20ContractAddress)
+		msg := types.NewMsgUpdateContractBytecode(creator, zrc20Addr, bytecode)
+		//_, err = k.UpdateContractBytecode(ctx, msg)
+		//if err != nil {
+		//	panic(err)
+		//}
+		_ = msg
+		k.Logger(ctx).Info("UpdateContractBytecode", "zrc20Addr", zrc20Addr.String(), "coin", coin.Name)
+		data, err := k.QueryZRC20Data(ctx, zrc20Addr)
+		if err != nil {
+			panic(err)
+		}
+		k.Logger(ctx).Info("QueryZRC20Data", "data", data)
+		res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, big.NewInt(0), big.NewInt(90000), false,
+			"SYSTEM_CONTRACT_ADDRESS")
+		if err != nil {
+			k.Logger(ctx).Error("CallEVM SYSTEM_CONTRACT_ADDRESS()", "err", err, "revert code", res.Revert())
+			panic(err)
+		}
+		{
+			out, err := zrc20ABI.Unpack("SYSTEM_CONTRACT_ADDRESS", res.Ret)
+			if err != nil {
+				panic(err)
+			}
+			if len(out) != 1 {
+				panic("output length is not 1")
+			}
+			out0 := *abi.ConvertType(out[0], new(ethcommon.Address)).(*ethcommon.Address)
+			k.Logger(ctx).Info("CallEVM SYSTEM_CONTRACT_ADDRESS", "out0", out0.String())
+		}
 
-	res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, addr, big.NewInt(0), big.NewInt(90000), true,
-		"increaseAllowance", addr, big.NewInt(1000000000000000000))
-	if err == nil {
-		panic("increaseAllowance should fail")
+		res, err = k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, big.NewInt(0), big.NewInt(90000), false,
+			"withdrawGasFee")
+		if err != nil {
+			k.Logger(ctx).Error("CallEVM withdrawGasFee", "err", err, "revert code", res.Revert())
+			panic(err)
+		}
+		{
+			out, err := zrc20ABI.Unpack("withdrawGasFee", res.Ret)
+			if err != nil {
+				panic(err)
+			}
+			if len(out) != 2 {
+				panic("output length is not 2")
+			}
+			out0 := *abi.ConvertType(out[0], new(ethcommon.Address)).(*ethcommon.Address)
+			out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+			k.Logger(ctx).Info("CallEVM", "out0", out0.String(), "out1", out1.String())
+		}
 	}
-	k.Logger(ctx).Info("CallEVM", "res", res, "err", err, "revert code", res.Revert())
 	return nil
 }

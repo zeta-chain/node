@@ -1,14 +1,12 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -25,39 +23,20 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 
 	acct := k.evmKeeper.GetAccount(ctx, contractAddress)
 	if acct == nil {
-		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "contract (%s) not found", contractAddress.String())
-	}
-	oldCodeHash := acct.CodeHash
-
-	newByteCode := msg.NewBytecode
-	if len(newByteCode) == 0 { // empty bytecode will disable the contract; turning it into an EOA?
-		acct.CodeHash = evmtypes.EmptyCodeHash
+		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "contract (%s) not found", contractAddress.Hex())
 	}
 
-	newCodeHash := crypto.Keccak256(newByteCode)
-	if bytes.Compare(oldCodeHash, newCodeHash) == 0 {
-		return nil, sdkerrors.Wrapf(types.ErrDeployContract, "contract (%s) bytecode not changed; code hash %x", contractAddress.String(), oldCodeHash)
-	}
-
-	k.evmKeeper.SetCode(ctx, newCodeHash, newByteCode)
+	oldCodeHash := ethcommon.BytesToHash(acct.CodeHash)
+	oldBytecode := k.evmKeeper.GetCode(ctx, oldCodeHash)
+	newCodeHash := crypto.Keccak256(msg.NewBytecode)
+	newBytecode := msg.NewBytecode
+	k.evmKeeper.SetCode(ctx, newCodeHash, newBytecode)
 	acct.CodeHash = newCodeHash
 	err := k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrDeployContract, "failed to update contract (%s) bytecode; code hash %x", contractAddress.String(), oldCodeHash)
+		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "failed to update contract (%s) bytecode (%s)", contractAddress.Hex(), err.Error())
 	}
+	k.Logger(ctx).Info("updated contract bytecode", "contract", contractAddress.Hex(), "oldBytecode", len(oldBytecode), "newBytecode", len(msg.NewBytecode))
 
-	//err = ctx.EventManager().EmitTypedEvent(
-	//	&types.EventSystemContractUpdated{
-	//		MsgTypeUrl:         sdk.MsgTypeURL(&types.MsgUpdateSystemContract{}),
-	//		NewContractAddress: msg.NewSystemContractAddress,
-	//		OldContractAddress: oldSystemContractAddress,
-	//		Signer:             msg.Creator,
-	//	},
-	//)
-	//if err != nil {
-	//	k.Logger(ctx).Error("failed to emit event", "error", err.Error())
-	//	return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
-	//}
-	//commit()
 	return &types.MsgUpdateContractBytecodeResponse{}, nil
 }

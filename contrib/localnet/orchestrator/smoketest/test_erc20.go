@@ -114,7 +114,9 @@ func (sm *SmokeTest) WithdrawERC20() {
 
 	gasZRC20, gasFee, err := usdtZRC20.WithdrawGasFee(&bind.CallOpts{})
 	if err != nil {
+
 		panic(err)
+
 	}
 	fmt.Printf("gasZRC20: %s, gasFee: %d\n", gasZRC20.Hex(), gasFee)
 

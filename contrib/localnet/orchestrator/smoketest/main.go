@@ -347,6 +347,16 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// add your dev test here
 	smokeTest.TestMyTest()
 
+	tx, err = smokeTest.ETHZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ZEVMSwapAppAddr, big.NewInt(1000000000000000000))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	if receipt.Status != 0 {
+		panic("IncreaseAllowance should fail")
+	} else {
+		fmt.Printf("OK: IncreaseAllowance failed as expected\n")
+	}
 	smokeTest.wg.Wait()
 }
 
