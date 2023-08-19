@@ -18,7 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 
 	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 var _ evmtypes.EvmHooks = Hooks{}
@@ -114,7 +114,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	receiverChainID := event.DestinationChainId
 	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
 	if receiverChain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
 	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)

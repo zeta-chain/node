@@ -13,7 +13,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
 )
 
@@ -25,30 +25,30 @@ const (
 	Descending Order = "DESC"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
+func (b *ZetaCoreBridge) GetInboundPermissions() (observertypes.PermissionFlags, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PermissionFlags(context.Background(), &observertypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {
-		return zetaObserverTypes.PermissionFlags{}, err
+		return observertypes.PermissionFlags{}, err
 	}
 	return resp.PermissionFlags, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainId: externalChainID})
+func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*observertypes.CoreParams, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{ChainId: externalChainID})
 	if err != nil {
-		return &zetaObserverTypes.CoreParams{}, err
+		return &observertypes.CoreParams{}, err
 	}
 	return resp.CoreParams, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+func (b *ZetaCoreBridge) GetCoreParams() ([]*observertypes.CoreParams, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
 	err := error(nil)
-	resp := &zetaObserverTypes.QueryGetCoreParamsResponse{}
+	resp := &observertypes.QueryGetCoreParamsResponse{}
 	for i := 0; i <= DefaultRetryCount; i++ {
-		resp, err = client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})
+		resp, err = client.GetCoreParams(context.Background(), &observertypes.QueryGetCoreParamsRequest{})
 		if err == nil {
 			return resp.CoreParams.CoreParams, nil
 		}
@@ -57,11 +57,11 @@ func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error
 	return nil, fmt.Errorf("failed to get core params | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) GetObserverParams() (zetaObserverTypes.Params, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.Params(context.Background(), &zetaObserverTypes.QueryParamsRequest{})
+func (b *ZetaCoreBridge) GetObserverParams() (observertypes.Params, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Params(context.Background(), &observertypes.QueryParamsRequest{})
 	if err != nil {
-		return zetaObserverTypes.Params{}, err
+		return observertypes.Params{}, err
 	}
 	return resp.Params, nil
 }
@@ -122,8 +122,8 @@ func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.Cro
 }
 
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ObserversByChain(context.Background(), &observertypes.QueryObserversByChainRequest{
 		ObservationChain: chain.ChainName.String(),
 	})
 	if err != nil {
@@ -188,9 +188,9 @@ func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces
 	return resp.ChainNonces, nil
 }
 
-func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.NodeAccountAll(context.Background(), &zetaObserverTypes.QueryAllNodeAccountRequest{})
+func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*observertypes.NodeAccount, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.NodeAccountAll(context.Background(), &observertypes.QueryAllNodeAccountRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -198,9 +198,9 @@ func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount,
 	return resp.NodeAccount, nil
 }
 
-func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
+func (b *ZetaCoreBridge) GetKeyGen() (*observertypes.Keygen, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Keygen(context.Background(), &observertypes.QueryGetKeygenRequest{})
 	if err != nil {
 		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err
@@ -248,11 +248,11 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Ord
 	return resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetCoreParamsForChainResponse, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainId: chainID})
+func (b *ZetaCoreBridge) GetClientParams(chainID int64) (observertypes.QueryGetCoreParamsForChainResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{ChainId: chainID})
 	if err != nil {
-		return zetaObserverTypes.QueryGetCoreParamsForChainResponse{}, err
+		return observertypes.QueryGetCoreParamsForChainResponse{}, err
 	}
 	return *resp, nil
 }

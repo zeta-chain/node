@@ -13,7 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	hd "github.com/cosmos/cosmos-sdk/crypto/hd"
-	cKeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	. "gopkg.in/check.v1"
@@ -65,10 +65,10 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
+	kb, err := cryptokeyring.New(cosmos.KeyringServiceName(), cryptokeyring.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
 
-	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cryptokeyring.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
 	c.Assert(err, IsNil)
 	return metaCliDir
 }

@@ -17,7 +17,7 @@ import (
 	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -55,11 +55,11 @@ func (k Keeper) DeployZRC20Contract(
 ) (common.Address, error) {
 	chain := zetacommon.GetChainFromChainID(chainID)
 	if chain == nil {
-		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
+		return common.Address{}, sdkerrors.Wrapf(observertypes.ErrSupportedChains, "chain %d not found", chainID)
 	}
 	chainStr := chain.ChainName.String()
 	if chain == nil {
-		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
+		return common.Address{}, sdkerrors.Wrapf(observertypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
 	system, found := k.GetSystemContract(ctx)
 	if !found {

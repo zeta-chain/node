@@ -13,7 +13,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const (
@@ -146,12 +146,12 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 
 func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chain *common.Chain, index string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	zetaBlame := &observerTypes.Blame{
+	zetaBlame := &observertypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
-		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
+		Nodes:         observertypes.ConvertNodes(blame.BlameNodes),
 	}
-	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chain.ChainId, zetaBlame)
+	msg := observertypes.NewMsgAddBlameVoteMsg(signerAddress, chain.ChainId, zetaBlame)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	var gasLimit uint64 = PostBlameDataGasLimit
 

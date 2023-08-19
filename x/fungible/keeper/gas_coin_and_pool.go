@@ -12,7 +12,7 @@ import (
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // setup gas ZRC20, and ZETA/gas pool for a chain
@@ -21,7 +21,7 @@ import (
 func (k Keeper) setupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
 	chain := common.GetChainFromChainID(chainID)
 	if chain == nil {
-		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
+		return ethcommon.Address{}, observertypes.ErrSupportedChains
 	}
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain.ChainName)
 

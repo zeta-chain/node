@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/app"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type CliTestSuite struct {
@@ -18,7 +18,7 @@ type CliTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
-	ballots []*observerTypes.Ballot
+	ballots []*observertypes.Ballot
 }
 
 func NewCLITestSuite(cfg network.Config) *CliTestSuite {
@@ -63,29 +63,29 @@ func (s *CliTestSuite) SetupSuite() {
 
 }
 
-func CreateRandomVoteList(numberOfVotes int) []observerTypes.VoteType {
-	voteOptions := []observerTypes.VoteType{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_FailureObservation, observerTypes.VoteType_NotYetVoted}
+func CreateRandomVoteList(numberOfVotes int) []observertypes.VoteType {
+	voteOptions := []observertypes.VoteType{observertypes.VoteType_SuccessObservation, observertypes.VoteType_FailureObservation, observertypes.VoteType_NotYetVoted}
 	min := 0
 	max := len(voteOptions) - 1
-	voteList := make([]observerTypes.VoteType, numberOfVotes)
+	voteList := make([]observertypes.VoteType, numberOfVotes)
 	for i := 0; i < numberOfVotes; i++ {
 		voteList[i] = voteOptions[rand.Intn(max-min)+min] // #nosec G404
 	}
 	return voteList
 }
-func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerTypes.Ballot {
-	ballots := make([]*observerTypes.Ballot, numberOfBallots)
-	ballotStatus := []observerTypes.BallotStatus{observerTypes.BallotStatus_BallotFinalized_FailureObservation, observerTypes.BallotStatus_BallotFinalized_SuccessObservation}
+func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observertypes.Ballot {
+	ballots := make([]*observertypes.Ballot, numberOfBallots)
+	ballotStatus := []observertypes.BallotStatus{observertypes.BallotStatus_BallotFinalized_FailureObservation, observertypes.BallotStatus_BallotFinalized_SuccessObservation}
 	min := 0
 	max := len(ballotStatus) - 1
 	// #nosec G404 randomness is not a security issue here
 	for i := 0; i < numberOfBallots; i++ {
-		ballots[i] = &observerTypes.Ballot{
+		ballots[i] = &observertypes.Ballot{
 			Index:                "",
 			BallotIdentifier:     "TestBallot" + strconv.Itoa(i),
 			VoterList:            voterList,
 			Votes:                CreateRandomVoteList(len(voterList)),
-			ObservationType:      observerTypes.ObservationType_InBoundTx,
+			ObservationType:      observertypes.ObservationType_InBoundTx,
 			BallotThreshold:      sdk.MustNewDecFromStr("0.66"),
 			BallotStatus:         ballotStatus[rand.Intn(max-min)+min],
 			BallotCreationHeight: 0,

@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	emmisonscli "github.com/zeta-chain/zetacore/x/emissions/client/cli"
 	emmisonstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (s *CliTestSuite) TestObserverRewards() {
@@ -46,8 +46,8 @@ func (s *CliTestSuite) TestObserverRewards() {
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
-	observerParams := observerTypes.QueryParamsResponse{}
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, observerCli.CmdQueryParams(), []string{"--output", "json"})
+	observerParams := observertypes.QueryParamsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, observercli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &observerParams))
 	_, err = s.network.WaitForHeight(s.ballots[0].BallotCreationHeight + observerParams.Params.BallotMaturityBlocks)
@@ -72,7 +72,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 
 }
 
-func CalculateObserverRewards(ballots []*observerTypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
+func CalculateObserverRewards(ballots []*observertypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
 	calculatedDistributer := map[string]sdkmath.Int{}
 	blockRewards := sdk.MustNewDecFromStr(reservesFactor).Mul(sdk.MustNewDecFromStr(bondFactor)).Mul(sdk.MustNewDecFromStr(durationFactor))
 	observerRewards := sdk.MustNewDecFromStr(observerEmissionPercentage).Mul(blockRewards).TruncateInt()

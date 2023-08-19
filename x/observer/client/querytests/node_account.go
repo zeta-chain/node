@@ -6,7 +6,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/x/observer/client/cli"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -22,7 +22,7 @@ func (s *CliTestSuite) TestShowNodeAccount() {
 		id   string
 		args []string
 		err  error
-		obj  *zetaObserverTypes.NodeAccount
+		obj  *observertypes.NodeAccount
 	}{
 		{
 			desc: "found",
@@ -48,7 +48,7 @@ func (s *CliTestSuite) TestShowNodeAccount() {
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp zetaObserverTypes.QueryGetNodeAccountResponse
+				var resp observertypes.QueryGetNodeAccountResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.NodeAccount)
 				s.Require().Equal(tc.obj, resp.NodeAccount)

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) {
@@ -23,11 +23,11 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
-	nodeAccountList := make([]*observerTypes.NodeAccount, len(observerList))
+	nodeAccountList := make([]*observertypes.NodeAccount, len(observerList))
 	for i, operator := range observerList {
-		nodeAccountList[i] = &observerTypes.NodeAccount{
+		nodeAccountList[i] = &observertypes.NodeAccount{
 			Operator:   operator,
-			NodeStatus: observerTypes.NodeStatus_Active,
+			NodeStatus: observertypes.NodeStatus_Active,
 		}
 	}
 
@@ -50,20 +50,20 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	assert.NoError(t, err)
 
 	// Observer genesis state
-	var observerGenesis observerTypes.GenesisState
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &observerGenesis))
-	observerMapper := make([]*observerTypes.ObserverMapper, len(common.DefaultChainsList()))
+	var observerGenesis observertypes.GenesisState
+	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &observerGenesis))
+	observerMapper := make([]*observertypes.ObserverMapper, len(common.DefaultChainsList()))
 
 	for i, chain := range common.DefaultChainsList() {
-		observerMapper[i] = &observerTypes.ObserverMapper{
+		observerMapper[i] = &observertypes.ObserverMapper{
 			ObserverChain: chain,
 			ObserverList:  observerList,
 		}
 	}
 	observerGenesis.Observers = observerMapper
 	observerGenesis.NodeAccountList = nodeAccountList
-	observerGenesis.Keygen = &observerTypes.Keygen{
-		Status:         observerTypes.KeygenStatus_PendingKeygen,
+	observerGenesis.Keygen = &observertypes.Keygen{
+		Status:         observertypes.KeygenStatus_PendingKeygen,
 		GranteePubkeys: observerList,
 		BlockNumber:    5,
 	}
@@ -72,27 +72,27 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 
 	genesisState[types.ModuleName] = crossChainGenesisBz
 	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
-	genesisState[observerTypes.ModuleName] = observerGenesisBz
+	genesisState[observertypes.ModuleName] = observerGenesisBz
 	genesisState[evmtypes.ModuleName] = evmGenesisBz
 }
 
-func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observerTypes.Ballot) *observerTypes.GenesisState {
-	state := observerTypes.GenesisState{}
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[observerTypes.ModuleName], &state))
+func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
+	state := observertypes.GenesisState{}
+	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
 	if len(ballots) > 0 {
 		state.Ballots = ballots
 	}
-	//params := observerTypes.DefaultParams()
+	//params := observertypes.DefaultParams()
 	//params.BallotMaturityBlocks = 3
 	state.Params.BallotMaturityBlocks = 3
-	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
-	permissionFlags := &observerTypes.PermissionFlags{}
+	state.Keygen = &observertypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
+	permissionFlags := &observertypes.PermissionFlags{}
 	nullify.Fill(&permissionFlags)
 	state.PermissionFlags = permissionFlags
 
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
-	genesisState[observerTypes.ModuleName] = buf
+	genesisState[observertypes.ModuleName] = buf
 	return &state
 }
 func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {

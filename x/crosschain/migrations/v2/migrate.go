@@ -6,7 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 1 to 2
@@ -20,9 +20,9 @@ func MigrateStore(
 ) error {
 
 	// Using New Types from observer module as the structure is the same
-	var nodeAccounts []observerTypes.NodeAccount
-	var permissionFlags observerTypes.PermissionFlags
-	var keygen observerTypes.Keygen
+	var nodeAccounts []observertypes.NodeAccount
+	var permissionFlags observertypes.PermissionFlags
+	var keygen observertypes.Keygen
 	writePermissionFlags := false
 	writeKeygen := false
 
@@ -31,7 +31,7 @@ func MigrateStore(
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var val observerTypes.NodeAccount
+		var val observertypes.NodeAccount
 		cdc.MustUnmarshal(iterator.Value(), &val)
 		nodeAccounts = append(nodeAccounts, val)
 	}
@@ -68,7 +68,7 @@ func MigrateStore(
 	for _, observer := range allObservers {
 		totalObserverCountCurrentBlock += len(observer.ObserverList)
 	}
-	observerKeeper.SetLastObserverCount(ctx, &observerTypes.LastObserverCount{
+	observerKeeper.SetLastObserverCount(ctx, &observertypes.LastObserverCount{
 		Count:            uint64(totalObserverCountCurrentBlock),
 		LastChangeHeight: ctx.BlockHeight(),
 	})

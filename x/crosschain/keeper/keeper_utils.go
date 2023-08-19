@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
@@ -30,7 +30,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
@@ -87,7 +87,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiveChainID)
 	if chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 
 	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())

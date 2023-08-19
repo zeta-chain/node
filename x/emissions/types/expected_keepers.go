@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/zeta-chain/zetacore/common"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -15,14 +15,14 @@ type AccountKeeper interface {
 }
 
 type ZetaObserverKeeper interface {
-	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val zetaObserverTypes.ObserverMapper, found bool)
-	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
-	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
-	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
-	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
-	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
-	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *zetaObserverTypes.CoreParams, found bool)
+	SetObserverMapper(ctx sdk.Context, om *observertypes.ObserverMapper)
+	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val observertypes.ObserverMapper, found bool)
+	GetAllObserverMappers(ctx sdk.Context) (mappers []*observertypes.ObserverMapper)
+	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
+	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
+	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
+	GetParams(ctx sdk.Context) (params observertypes.Params)
+	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
 	GetMaturedBallotList(ctx sdk.Context) []string
 }
 

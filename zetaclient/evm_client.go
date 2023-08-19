@@ -27,7 +27,7 @@ import (
 
 	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaconnector "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	metricspkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -92,7 +92,7 @@ type EVMChainClient struct {
 var _ ChainClient = (*EVMChainClient)(nil)
 
 // Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain, ts *TelemetryServer) (*EVMChainClient, error) {
+func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricspkg.Metrics, logger zerolog.Logger, cfg *config.Config, chain common.Chain, ts *TelemetryServer) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -148,7 +148,7 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	if err != nil {
 		return nil, err
 	}
-	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
+	err = ob.RegisterPromGauge(metricspkg.PendingTxs, "Number of pending transactions")
 	if err != nil {
 		return nil, err
 	}

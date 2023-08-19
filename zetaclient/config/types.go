@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type ClientConfiguration struct {
@@ -69,7 +69,7 @@ type Config struct {
 	LogLevel      zerolog.Level
 	LogSampler    bool
 	PreParamsPath string
-	Keygen        zetaObserverTypes.Keygen
+	Keygen        observertypes.Keygen
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
@@ -94,7 +94,7 @@ func (c Config) String() string {
 	return string(s)
 }
 
-func (cp *CoreParams) UpdateCoreParams(params *zetaObserverTypes.CoreParams) {
+func (cp *CoreParams) UpdateCoreParams(params *observertypes.CoreParams) {
 	cp.ChainID = params.ChainId
 	cp.GasPriceTicker = params.GasPriceTicker
 	cp.InTxTicker = params.InTxTicker

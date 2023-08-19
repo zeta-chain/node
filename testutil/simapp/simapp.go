@@ -16,7 +16,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 
 	//"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -58,7 +58,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
 	return a, app.GenesisState{}
 }
 
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAccs []authtypes.GenesisAccount, bondAmt sdk.Int, emissionParams emissionsModuleTypes.Params, genDelBalances []banktypes.Balance, genBalances []banktypes.Balance) *app.App {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAccs []authtypes.GenesisAccount, bondAmt sdk.Int, emissionParams emissionstypes.Params, genDelBalances []banktypes.Balance, genBalances []banktypes.Balance) *app.App {
 	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genDelAccs)
@@ -90,9 +90,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genDelAc
 		delegations = append(delegations, stakingtypes.NewDelegation(genDelAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 	}
 
-	emissionsGenesis := emissionsModuleTypes.DefaultGenesis()
+	emissionsGenesis := emissionstypes.DefaultGenesis()
 	emissionsGenesis.Params = emissionParams
-	genesisState[emissionsModuleTypes.ModuleName] = app.AppCodec().MustMarshalJSON(emissionsGenesis)
+	genesisState[emissionstypes.ModuleName] = app.AppCodec().MustMarshalJSON(emissionsGenesis)
 	// set validators and delegations
 	params := stakingtypes.DefaultParams()
 	params.BondDenom = config.BaseDenom

@@ -28,7 +28,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	metricspkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -86,7 +86,7 @@ func (ob *BitcoinChainClient) GetCoreParameters() config.CoreParams {
 }
 
 // Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*BitcoinChainClient, error) {
+func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricspkg.Metrics, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -134,7 +134,7 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
 	}
 
-	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
+	err = ob.RegisterPromGauge(metricspkg.PendingTxs, "Number of pending transactions")
 	if err != nil {
 		return nil, err
 	}
