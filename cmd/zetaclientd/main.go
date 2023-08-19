@@ -55,9 +55,9 @@ func InitLogger(cfg *config.Config) zerolog.Logger {
 	var logger zerolog.Logger
 	switch cfg.LogFormat {
 	case "json":
-		logger = zerolog.New(os.Stdout).Level(cfg.LogLevel).With().Timestamp().Logger()
+		logger = zerolog.New(os.Stdout).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	case "text":
-		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).Level(cfg.LogLevel).With().Timestamp().Logger()
+		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	default:
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
 	}
