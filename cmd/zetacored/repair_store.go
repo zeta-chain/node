@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -30,8 +34,6 @@ import (
 	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -151,4 +153,48 @@ func RepairStoreCmd(appCreator servertypes.AppCreator) *cobra.Command {
 func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
+}
+
+func NewRollbackCosmosCmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rollback-cosmos [height]",
+		Short: "rollback cosmos-sdk to height",
+		Long: `
+A state rollback is performed to recover from an incorrect application state transition,
+when Tendermint has persisted an incorrect app hash and is thus unable to make
+progress. Rollback overwrites a state at height n with the state at height n - 1.
+The application also rolls back to height n - 1. No blocks are removed, so upon
+restarting Tendermint the transactions in block n will be re-executed against the
+application.
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := server.GetServerContextFromCmd(cmd)
+			cfg := ctx.Config
+			home := cfg.RootDir
+			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
+			if err != nil {
+				return err
+			}
+			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
+			// rollback tendermint state
+			//height, hash, err := tmcmd.RollbackState(ctx.Config)
+			//if err != nil {
+			//	return fmt.Errorf("failed to rollback tendermint state: %w", err)
+			//}
+			// rollback the multistore
+			height, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			if err := app.CommitMultiStore().RollbackToVersion(height); err != nil {
+				return fmt.Errorf("failed to rollback to version: %w", err)
+			}
+
+			fmt.Printf("Rolled back state to height %d", height)
+			return nil
+		},
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	return cmd
 }

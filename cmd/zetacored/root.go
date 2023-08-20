@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/evmos/ethermint/client/debug"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"io"
-	"os"
-	"path/filepath"
 
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -130,6 +131,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		config.Cmd(),
 
 		RepairStoreCmd(ac.newApp),
+		NewRollbackCosmosCmd(ac.newApp, app.DefaultNodeHome),
 	)
 	zevmserver.AddCommands(rootCmd, zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
 
