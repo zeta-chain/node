@@ -19,7 +19,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	}
 
 	k.SetParams(ctx, genState.Params)
+
 	// ensure fungible module account is set on genesis
+	// TODO: investigate if it can be removed
 	if acc := authKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
 		// NOTE: shouldn't occur
 		panic("the fungible module account has not been set")
@@ -28,12 +30,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 
 // ExportGenesis returns the fungible module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	genesis := types.DefaultGenesis()
-	genesis.Params = k.GetParams(ctx)
+	var genesis *types.GenesisState
 
-	// TODO move foreign coins to observer
-	// https://github.com/zeta-chain/node/issues/863
-	//genesis.ForeignCoinsList = k(ctx)
+	genesis.Params = k.GetParams(ctx)
+	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
 
 	// Get all zetaDepositAndCallContract
 	system, found := k.GetSystemContract(ctx)
