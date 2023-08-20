@@ -158,7 +158,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 func NewRollbackCosmosCmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rollback-cosmos [height]",
-		Short: "rollback cosmos-sdk app state to a spefici height",
+		Short: "rollback cosmos-sdk app state to a specific height",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
