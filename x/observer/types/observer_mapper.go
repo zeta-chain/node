@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+
 	"github.com/zeta-chain/zetacore/common"
 )
 
