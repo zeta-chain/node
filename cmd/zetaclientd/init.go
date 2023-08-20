@@ -79,7 +79,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ZetaCoreURL = initArgs.zetacoreURL
 	configData.AuthzHotkey = initArgs.authzHotkey
 	configData.AuthzGranter = initArgs.authzGranter
-	configData.LogLevel = zerolog.Level(initArgs.level)
+	configData.LogLevel = initArgs.level
 	configData.LogFormat = initArgs.logFormat
 	configData.LogSampler = initArgs.logSampler
 	configData.P2PDiagnostic = initArgs.p2pDiagnostic

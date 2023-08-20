@@ -5,9 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v8.0.0"
+const releaseVersion = "v8.1.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -17,7 +18,11 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		oldParams := app.ZetaObserverKeeper.GetParamsIfExists(ctx)
+		newParams := zetaObserverModuleTypes.DefaultParams()
+		newParams.ObserverParams = oldParams.ObserverParams
+		newParams.AdminPolicy = oldParams.AdminPolicy
+		app.ZetaObserverKeeper.SetParams(ctx, newParams)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -27,7 +32,7 @@ func SetupHandlers(app *App) {
 	}
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			// Added: []string{},
+			//Added: []string{evidencetypes.ModuleName},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -66,7 +65,7 @@ type Config struct {
 	Peer          string
 	PublicIP      string
 	LogFormat     string
-	LogLevel      zerolog.Level
+	LogLevel      int8 // zerolog level
 	LogSampler    bool
 	PreParamsPath string
 	Keygen        zetaObserverTypes.Keygen
