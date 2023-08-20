@@ -158,15 +158,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 func NewRollbackCosmosCmd(appCreator servertypes.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rollback-cosmos [height]",
-		Short: "rollback cosmos-sdk to height",
-		Long: `
-A state rollback is performed to recover from an incorrect application state transition,
-when Tendermint has persisted an incorrect app hash and is thus unable to make
-progress. Rollback overwrites a state at height n with the state at height n - 1.
-The application also rolls back to height n - 1. No blocks are removed, so upon
-restarting Tendermint the transactions in block n will be re-executed against the
-application.
-`,
+		Short: "rollback cosmos-sdk app state to a spefici height",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
