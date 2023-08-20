@@ -14,7 +14,7 @@ func CmdUpdatePermissionFlags() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-permission-flags [is-inbound-enabled] [is-outbound-enabled]",
 		Short: "Update PermissionFlags",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
