@@ -1,27 +1,37 @@
 package types
 
 import (
+	"errors"
+	"fmt"
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func (m *ObserverMapper) Validate() bool {
+// Validate observer mapper contains an existing chain
+func (m *ObserverMapper) Validate() error {
+	if m.ObserverChain == nil {
+		return errors.New("observer chain is not set")
+	}
+
 	chains := common.DefaultChainsList()
 	for _, chain := range chains {
-		if m.ObserverChain == chain {
-			return true
+		if *m.ObserverChain == *chain {
+			return nil
 		}
 	}
-	return false
+	return fmt.Errorf("observer chain %d doesn't exist: ", m.ObserverChain.ChainName)
 }
 
-func VerifyObserverMapper(obs []*ObserverMapper) bool {
+// VerifyObserverMapper verifies list of observer mappers
+func VerifyObserverMapper(obs []*ObserverMapper) error {
 	for _, mapper := range obs {
-		ok := mapper.Validate()
-		if !ok {
-			return ok
+		if mapper != nil {
+			err := mapper.Validate()
+			if err != nil {
+				return fmt.Errorf("observer mapper %s is invalid: %s", mapper.String(), err.Error())
+			}
 		}
 	}
-	return true
+	return nil
 }
 
 func CheckReceiveStatus(status common.ReceiveStatus) error {
