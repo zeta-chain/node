@@ -427,7 +427,7 @@ func (k Keeper) CallEVMWithData(
 		sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
 	}...)
 
-	// receipient: contract address
+	// recipient: contract address
 	if contract != nil {
 		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
 	}
@@ -451,10 +451,10 @@ func (k Keeper) CallEVMWithData(
 		//	evmtypes.EventTypeEthereumTx,
 		//	attrs...,
 		//),
-		//sdk.NewEvent(
-		//	evmtypes.EventTypeTxLog,
-		//	txLogAttrs...,
-		//),
+		sdk.NewEvent(
+			evmtypes.EventTypeTxLog,
+			txLogAttrs...,
+		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),

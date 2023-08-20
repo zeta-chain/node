@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -48,11 +49,11 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 
 	_ = outTxGasFee
 	_ = gasZRC20
-	//outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
-	//if err != nil {
-	//	return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
-	//}
-	outTxGasFeeInZeta := big.NewInt(1)
+	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
+	if err != nil {
+		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
+	}
+	//outTxGasFeeInZeta := big.NewInt(1)
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
@@ -67,24 +68,24 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
-	//{
-	//	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
-	//	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
-	//	if err != nil {
-	//		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
-	//	}
-	//
-	//	amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
-	//	if err != nil {
-	//		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
-	//	}
-	//	ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
-	//	ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
-	//	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
-	//	if err != nil {
-	//		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
-	//	}
-	//}
+	{
+		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
+		}
+
+		amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
+		}
+		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
+		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
+		if err != nil {
+			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
+		}
+	}
 
 	return nil
 }
