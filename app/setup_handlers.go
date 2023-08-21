@@ -18,7 +18,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		vm[observerTypes.ModuleName] = vm[observerTypes.ModuleName] - 1
+		vm[observertypes.ModuleName] = vm[observertypes.ModuleName] - 1
 		SetParams(app, ctx)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
@@ -42,7 +42,7 @@ func SetupHandlers(app *App) {
 // SetParams sets the default params for the observer module
 // A new policy has been added for add_observer.
 func SetParams(app *App, ctx sdk.Context) {
-	params := app.ZetaObserverKeeper.GetParams(ctx)
-	params.AdminPolicy = observerTypes.DefaultAdminPolicy()
+	params := app.ZetaObserverKeeper.GetParamsIsExists(ctx)
+	params.AdminPolicy = observertypes.DefaultAdminPolicy()
 	app.ZetaObserverKeeper.SetParams(ctx, params)
 }
