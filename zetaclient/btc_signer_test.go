@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 )
 
@@ -43,7 +44,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(&tss, nil, zerolog.Logger{}, &TelemetryServer{})
+	s.btcSigner, err = NewBTCSigner(config.BTCConfig{}, &tss, zerolog.Logger{}, &TelemetryServer{})
 	c.Assert(err, IsNil)
 }
 

@@ -39,17 +39,18 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		if cfg.Keygen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
+		keyGen := cfg.GetKeygen()
+		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
 			cfg.TestTssKeysign = true
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
-		if cfg.Keygen.Status == observerTypes.KeygenStatus_KeyGenFailed {
+		if keyGen.Status == observerTypes.KeygenStatus_KeyGenFailed {
 			triedKeygenAtBlock = false
 			continue
 		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if cfg.Keygen.Status == observerTypes.KeygenStatus_PendingKeygen {
+		if keyGen.Status == observerTypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {
@@ -57,15 +58,15 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				continue
 			}
 			// Reset the flag if the keygen block has passed and a new keygen block has been set . This condition is only reached if the older keygen is stuck at PendingKeygen for some reason
-			if cfg.Keygen.BlockNumber > currentBlock {
+			if keyGen.BlockNumber > currentBlock {
 				triedKeygenAtBlock = false
 			}
 			if !triedKeygenAtBlock {
 				// If not at keygen block do not try to generate TSS
-				if currentBlock != cfg.Keygen.BlockNumber {
+				if currentBlock != keyGen.BlockNumber {
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
-						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", cfg.Keygen.BlockNumber, currentBlock)
+						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", keyGen.BlockNumber, currentBlock)
 					}
 					continue
 				}
@@ -74,7 +75,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				err = keygenTss(cfg, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := zetaBridge.SetTSS("", cfg.Keygen.BlockNumber, common.ReceiveStatus_Failed)
+					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, common.ReceiveStatus_Failed)
 					if err != nil {
 						keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 						return nil, err
@@ -84,7 +85,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, cfg.Keygen.BlockNumber, common.ReceiveStatus_Success)
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, keyGen.BlockNumber, common.ReceiveStatus_Success)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -97,16 +98,17 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				continue
 			}
 		}
-		keygenLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", cfg.Keygen.BlockNumber)
+		keygenLogger.Debug().Msgf("Waiting for TSS to be generated or Current Keygen to be be finalized. Keygen Block : %d ", keyGen.BlockNumber)
 	}
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
 func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) error {
 
-	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", cfg.Keygen.BlockNumber, cfg.Keygen.GranteePubkeys)
+	keyGen := cfg.GetKeygen()
+	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
-	req = keygen.NewRequest(cfg.Keygen.GranteePubkeys, cfg.Keygen.BlockNumber, "0.14.0")
+	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")
 	res, err := tss.Server.Keygen(req)
 	if res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
@@ -117,7 +119,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		return err
 	}
 	tss.CurrentPubkey = res.PubKey
-	tss.Signers = cfg.Keygen.GranteePubkeys
+	tss.Signers = keyGen.GranteePubkeys
 
 	// Keygen succeed! Report TSS address
 	keygenLogger.Debug().Msgf("Keygen success! keygen response: %v", res)
