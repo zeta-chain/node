@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -184,7 +183,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverCh
 	}
 
 	// Pay gas in Zeta and update the amount for the cctx
-	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx); err != nil {
+	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx, true); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
 	}
 
