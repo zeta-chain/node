@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 
 	"sync"
@@ -33,8 +32,8 @@ import (
 	//"strconv"
 	//"strings"
 
-	stypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -108,7 +107,7 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	banktypes.RegisterLegacyAminoCodec(cdc)
 	authtypes.RegisterLegacyAminoCodec(cdc)
 	cosmos.RegisterCodec(cdc)
-	stypes.RegisterCodec(cdc)
+	crosschaintypes.RegisterCodec(cdc)
 	return cdc
 }
 
@@ -173,12 +172,12 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		return err
 	}
 	newChains := make([]common.Chain, len(coreParams))
-	newEVMParams := make(map[int64]*types.CoreParams)
-	var newBTCParams *types.CoreParams
+	newEVMParams := make(map[int64]*observertypes.CoreParams)
+	var newBTCParams *observertypes.CoreParams
 
 	// check and update core params for each chain
 	for i, params := range coreParams {
-		err := checkCoreParams(params)
+		err := config.ValidateCoreParams(params)
 		if err != nil {
 			return err
 		}
@@ -196,60 +195,4 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init)
 
 	return nil
-}
-
-// Some basic checks on core params
-func checkCoreParams(coreParams *types.CoreParams) error {
-	if coreParams == nil {
-		return fmt.Errorf("invalid core params: nil")
-	}
-	chain := common.GetChainFromChainID(coreParams.ChainId)
-	if chain == nil {
-		return fmt.Errorf("invalid core params: chain %d not supported", coreParams.ChainId)
-	}
-	if coreParams.ConfirmationCount < 1 {
-		return fmt.Errorf("invalid core params: ConfirmationCount %d", coreParams.ConfirmationCount)
-	}
-	// zeta chain skips the rest of the checks for now
-	if chain.IsZetaChain() {
-		return nil
-	}
-
-	// check tickers
-	if coreParams.GasPriceTicker < 1 {
-		return fmt.Errorf("invalid core params: GasPriceTicker %d", coreParams.GasPriceTicker)
-	}
-	if coreParams.InTxTicker < 1 {
-		return fmt.Errorf("invalid core params: InTxTicker %d", coreParams.InTxTicker)
-	}
-	if coreParams.OutTxTicker < 1 {
-		return fmt.Errorf("invalid core params: OutTxTicker %d", coreParams.OutTxTicker)
-	}
-	if coreParams.OutboundTxScheduleInterval < 1 {
-		return fmt.Errorf("invalid core params: OutboundTxScheduleInterval %d", coreParams.OutboundTxScheduleInterval)
-	}
-	if coreParams.OutboundTxScheduleLookahead < 1 {
-		return fmt.Errorf("invalid core params: OutboundTxScheduleLookahead %d", coreParams.OutboundTxScheduleLookahead)
-	}
-
-	// chain type specific checks
-	if common.IsBitcoinChain(coreParams.ChainId) && coreParams.WatchUtxoTicker < 1 {
-		return fmt.Errorf("invalid core params: watchUtxo ticker %d", coreParams.WatchUtxoTicker)
-	}
-	if common.IsEVMChain(coreParams.ChainId) {
-		if !validCoreContractAddress(coreParams.ZetaTokenContractAddress) {
-			return fmt.Errorf("invalid core params: zeta token contract address %s", coreParams.ZetaTokenContractAddress)
-		}
-		if !validCoreContractAddress(coreParams.ConnectorContractAddress) {
-			return fmt.Errorf("invalid core params: connector contract address %s", coreParams.ConnectorContractAddress)
-		}
-		if !validCoreContractAddress(coreParams.Erc20CustodyContractAddress) {
-			return fmt.Errorf("invalid core params: erc20 custody contract address %s", coreParams.Erc20CustodyContractAddress)
-		}
-	}
-	return nil
-}
-
-func validCoreContractAddress(address string) bool {
-	return ethcommon.IsHexAddress(address)
 }

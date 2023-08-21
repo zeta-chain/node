@@ -6,9 +6,10 @@ import (
 	"sort"
 	"sync"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
-	ostypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type ClientConfiguration struct {
@@ -20,13 +21,13 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	ostypes.CoreParams
+	observertypes.CoreParams
 	Chain    common.Chain
 	Endpoint string
 }
 
 type BTCConfig struct {
-	ostypes.CoreParams
+	observertypes.CoreParams
 
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
@@ -54,7 +55,7 @@ type Config struct {
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
-	Keygen          ostypes.Keygen       `json:"Keygen"`
+	Keygen          observertypes.Keygen `json:"Keygen"`
 	ChainsEnabled   []common.Chain       `json:"ChainsEnabled"`
 	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
@@ -73,13 +74,13 @@ func (c *Config) String() string {
 	return string(s)
 }
 
-func (c *Config) GetKeygen() ostypes.Keygen {
+func (c *Config) GetKeygen() observertypes.Keygen {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 	copiedPubkeys := make([]string, len(c.Keygen.GranteePubkeys))
 	copy(copiedPubkeys, c.Keygen.GranteePubkeys)
 
-	return ostypes.Keygen{
+	return observertypes.Keygen{
 		Status:         c.Keygen.Status,
 		GranteePubkeys: copiedPubkeys,
 		BlockNumber:    c.Keygen.BlockNumber,
@@ -129,7 +130,7 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 }
 
 // This is the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(keygen *ostypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*ostypes.CoreParams, btcCoreParams *ostypes.CoreParams, init bool) {
+func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool) {
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
@@ -211,4 +212,60 @@ func (c *Config) Clone() *Config {
 	}
 
 	return copied
+}
+
+// ValidateCoreParams performs some basic checks on core params
+func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
+	if coreParams == nil {
+		return fmt.Errorf("invalid core params: nil")
+	}
+	chain := common.GetChainFromChainID(coreParams.ChainId)
+	if chain == nil {
+		return fmt.Errorf("invalid core params: chain %d not supported", coreParams.ChainId)
+	}
+	if coreParams.ConfirmationCount < 1 {
+		return fmt.Errorf("invalid core params: ConfirmationCount %d", coreParams.ConfirmationCount)
+	}
+	// zeta chain skips the rest of the checks for now
+	if chain.IsZetaChain() {
+		return nil
+	}
+
+	// check tickers
+	if coreParams.GasPriceTicker < 1 {
+		return fmt.Errorf("invalid core params: GasPriceTicker %d", coreParams.GasPriceTicker)
+	}
+	if coreParams.InTxTicker < 1 {
+		return fmt.Errorf("invalid core params: InTxTicker %d", coreParams.InTxTicker)
+	}
+	if coreParams.OutTxTicker < 1 {
+		return fmt.Errorf("invalid core params: OutTxTicker %d", coreParams.OutTxTicker)
+	}
+	if coreParams.OutboundTxScheduleInterval < 1 {
+		return fmt.Errorf("invalid core params: OutboundTxScheduleInterval %d", coreParams.OutboundTxScheduleInterval)
+	}
+	if coreParams.OutboundTxScheduleLookahead < 1 {
+		return fmt.Errorf("invalid core params: OutboundTxScheduleLookahead %d", coreParams.OutboundTxScheduleLookahead)
+	}
+
+	// chain type specific checks
+	if common.IsBitcoinChain(coreParams.ChainId) && coreParams.WatchUtxoTicker < 1 {
+		return fmt.Errorf("invalid core params: watchUtxo ticker %d", coreParams.WatchUtxoTicker)
+	}
+	if common.IsEVMChain(coreParams.ChainId) {
+		if !validCoreContractAddress(coreParams.ZetaTokenContractAddress) {
+			return fmt.Errorf("invalid core params: zeta token contract address %s", coreParams.ZetaTokenContractAddress)
+		}
+		if !validCoreContractAddress(coreParams.ConnectorContractAddress) {
+			return fmt.Errorf("invalid core params: connector contract address %s", coreParams.ConnectorContractAddress)
+		}
+		if !validCoreContractAddress(coreParams.Erc20CustodyContractAddress) {
+			return fmt.Errorf("invalid core params: erc20 custody contract address %s", coreParams.Erc20CustodyContractAddress)
+		}
+	}
+	return nil
+}
+
+func validCoreContractAddress(address string) bool {
+	return ethcommon.IsHexAddress(address)
 }
