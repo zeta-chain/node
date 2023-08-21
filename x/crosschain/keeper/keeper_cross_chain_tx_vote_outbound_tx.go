@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -15,27 +16,42 @@ import (
 // Casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
-// reached, the ballot is finalized. When a ballot is finalized, if the amount
-// of zeta minted does not match the outbound transaction amount an error is
-// thrown. If the amounts match, the outbound transaction hash and the "last
-// updated" timestamp are updated.
+// reached, the ballot is finalized. When a ballot is finalized, the outbound
+// transaction is processed.
 //
-// The transaction is proceeded to be finalized:
-//
-// If the observation was successful, the status is changed from "pending
-// revert/outbound" to "reverted/mined". The difference between zeta burned
+// If the observation is successful, the difference between zeta burned
 // and minted is minted by the bank module and deposited into the module
 // account.
 //
-// If the observation was unsuccessful, and if the status is "pending outbound",
-// prices and nonce are updated and the status is changed to "pending revert".
-// If the status was "pending revert", the status is changed to "aborted".
+// If the observation is unsuccessful, the logic depends on the previous
+// status.
 //
-// If there's an error in the finalization process, the CCTX status is set to
-// 'aborted'.
+// If the previous status was `PendingOutbound`, a new revert transaction is
+// created. To cover the revert transaction fee, the required amount of tokens
+// submitted with the CCTX are swapped using a Uniswap V2 contract instance on
+// ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
+// tokens are then
+// burned. The nonce is updated. If everything is successful, the CCTX status is
+// changed to `PendingRevert`.
 //
-// After finalization the outbound transaction tracker and pending nonces are
-// removed, and the CCTX is updated in the store.
+// If the previous status was `PendingRevert`, the CCTX is aborted.
+//
+// ```mermaid
+// stateDiagram-v2
+//
+//	state observation <<choice>>
+//	state success_old_status <<choice>>
+//	state fail_old_status <<choice>>
+//	PendingOutbound --> observation: Finalize outbound
+//	observation --> success_old_status: Observation succeeded
+//	success_old_status --> Reverted: Old status is PendingRevert
+//	success_old_status --> OutboundMined: Old status is PendingOutbound
+//	observation --> fail_old_status: Observation failed
+//	fail_old_status --> PendingRevert: Old status is PendingOutbound
+//	fail_old_status --> Aborted: Old status is PendingRevert
+//	PendingOutbound --> Aborted: Finalize outbound error
+//
+// ```
 //
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
@@ -118,27 +134,31 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
-			switch oldStatus {
-			case types.CctxStatus_PendingOutbound:
-				// create new OutboundTxParams for the revert
-				cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-					Receiver:           cctx.InboundTxParams.Sender,
-					ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-					Amount:             cctx.InboundTxParams.Amount,
-					CoinType:           cctx.InboundTxParams.CoinType,
-					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
-				})
-				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
-				if err != nil {
-					return err
+			if msg.CoinType == common.CoinType_Cmd {
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
+			} else {
+				switch oldStatus {
+				case types.CctxStatus_PendingOutbound:
+					// create new OutboundTxParams for the revert
+					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
+						Receiver:           cctx.InboundTxParams.Sender,
+						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+						Amount:             cctx.InboundTxParams.Amount,
+						CoinType:           cctx.InboundTxParams.CoinType,
+						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+					})
+					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+					if err != nil {
+						return err
+					}
+					err = k.UpdateNonce(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+					if err != nil {
+						return err
+					}
+					cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
+				case types.CctxStatus_PendingRevert:
+					cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
 				}
-				err = k.UpdateNonce(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
-				if err != nil {
-					return err
-				}
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
-			case types.CctxStatus_PendingRevert:
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
 			}
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundFailure(ctx, msg, oldStatus.String(), newStatus, cctx)
@@ -149,7 +169,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		// do not commit tmpCtx
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		ctx.Logger().Error(err.Error())
-		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)

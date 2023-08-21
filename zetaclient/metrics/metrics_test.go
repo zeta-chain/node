@@ -1,10 +1,11 @@
 package metrics
 
 import (
-	. "gopkg.in/check.v1"
 	"net/http"
 	"testing"
 	"time"
+
+	. "gopkg.in/check.v1"
 )
 
 type MetricsSuite struct {

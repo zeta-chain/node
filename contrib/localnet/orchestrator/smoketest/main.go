@@ -6,16 +6,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/btcsuite/btcutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"math/big"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/btcsuite/btcutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -62,6 +65,7 @@ type SmokeTest struct {
 	fungibleClient fungibletypes.QueryClient
 	authClient     authtypes.QueryClient
 	bankClient     banktypes.QueryClient
+	observerClient observertypes.QueryClient
 
 	wg               sync.WaitGroup
 	ZetaEth          *zetaeth.ZetaEth
@@ -88,6 +92,8 @@ type SmokeTest struct {
 	TestDAppAddr         ethcommon.Address
 	ZEVMSwapAppAddr      ethcommon.Address
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
+	ContextAppAddr       ethcommon.Address
+	ContextApp           *contextapp.ContextApp
 
 	SystemContract     *systemcontract.SystemContract
 	SystemContractAddr ethcommon.Address
@@ -110,7 +116,7 @@ func init() {
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	cctxClient types.QueryClient, fungibleClient fungibletypes.QueryClient,
-	authClient authtypes.QueryClient, bankClient banktypes.QueryClient,
+	authClient authtypes.QueryClient, bankClient banktypes.QueryClient, observerClient observertypes.QueryClient,
 	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client) *SmokeTest {
 	// query system contract address
@@ -149,6 +155,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		fungibleClient:     fungibleClient,
 		authClient:         authClient,
 		bankClient:         bankClient,
+		observerClient:     observerClient,
 		wg:                 sync.WaitGroup{},
 		goerliAuth:         goerliAuth,
 		zevmAuth:           zevmAuth,
@@ -215,6 +222,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
 	bankClient := banktypes.NewQueryClient(grpcConn)
+	observerClient := observertypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
@@ -251,7 +259,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, goerliAuth, zevmAuth, btcRPCClient)
+	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, observerClient, goerliAuth, zevmAuth, btcRPCClient)
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
@@ -274,6 +282,23 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
 	smokeTest.ZEVMSwapApp = zevmSwapApp
 
+	// test system contract context upgrade
+	contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	if receipt.Status != 1 {
+		panic("ContextApp deployment failed")
+	}
+	contextApp, err := contextapp.NewContextApp(contextAppAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
+	smokeTest.ContextAppAddr = contextAppAddr
+	smokeTest.ContextApp = contextApp
+
 	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
 	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
 	fmt.Printf("##   Ether on Ethereum private net\n")
@@ -282,6 +307,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestContextUpgrade()
 
 	smokeTest.TestDepositAndCallRefund()
 	smokeTest.CheckZRC20ReserveAndSupply()

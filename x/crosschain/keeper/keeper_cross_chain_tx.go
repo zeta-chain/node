@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -22,10 +23,10 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 	store.Set(types.KeyPrefix(send.Index), b)
 
 	// set mapping inTxHash -> cctxIndex
-	k.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
-		InTxHash:  send.InboundTxParams.InboundTxObservedHash,
-		CctxIndex: send.Index,
-	})
+	in, _ := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
+	in.InTxHash = send.InboundTxParams.InboundTxObservedHash
+	in.CctxIndex = append(in.CctxIndex, send.Index)
+	k.SetInTxHashToCctx(ctx, in)
 
 	tss, found := k.GetTSS(ctx)
 	if !found {
@@ -40,6 +41,14 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 			Tss:       tss.TssPubkey,
 		})
 	}
+}
+
+// SetCrossChainTx set a specific send in the store from its index
+func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+	b := k.cdc.MustMarshal(&send)
+	store.Set(types.KeyPrefix(send.Index), b)
 }
 
 // GetCrossChainTx returns a send from its index
@@ -117,6 +126,27 @@ func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.
 	val, found := k.GetCrossChainTx(ctx, req.Index)
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
+	}
+
+	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
+}
+
+func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceRequest) (*types.QueryGetCctxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", req.Nonce, req.ChainID))
+	}
+	val, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
 	}
 
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil

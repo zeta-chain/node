@@ -56,22 +56,39 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		return addr.Hex(), nil
 	} else if IsBitcoinChain(chain.ChainId) {
 		addrStr := string(b)
-		var chainParams *chaincfg.Params
-		switch chain.ChainId {
-		case 18444:
-			chainParams = &chaincfg.RegressionNetParams
-		case 18332:
-			chainParams = &chaincfg.TestNet3Params
-		case 8332:
-			chainParams = &chaincfg.MainNetParams
+		chainParams, err := GetBTCChainParams(chain.ChainId)
+		if err != nil {
+			return "", err
 		}
-		_, err := btcutil.DecodeAddress(addrStr, chainParams)
+		_, err = btcutil.DecodeAddress(addrStr, chainParams)
 		if err != nil {
 			return "", err
 		}
 		return addrStr, nil
 	}
 	return "", fmt.Errorf("chain (%d) not supported", chain.ChainId)
+}
+
+func (chain Chain) BTCAddressFromWitnessProgram(witnessProgram []byte) (string, error) {
+	chainParams, err := GetBTCChainParams(chain.ChainId)
+	if err != nil {
+		return "", err
+	}
+	address, err := btcutil.NewAddressWitnessPubKeyHash(witnessProgram, chainParams)
+	if err != nil {
+		return "", err
+	}
+	return address.EncodeAddress(), nil
+}
+
+// DecodeAddress decode the address string to bytes
+func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
+	if IsEVMChain(chain.ChainId) {
+		return ethcommon.HexToAddress(addr).Bytes(), nil
+	} else if IsBitcoinChain(chain.ChainId) {
+		return []byte(addr), nil
+	}
+	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
 func IsEVMChain(chainID int64) bool {
@@ -153,4 +170,25 @@ func GetChainFromChainID(chainID int64) *Chain {
 		}
 	}
 	return nil
+}
+
+func GetChainNameFromChainID(chainID int64) (string, error) {
+	chain := GetChainFromChainID(chainID)
+	if chain == nil {
+		return "", fmt.Errorf("chain %d not found", chainID)
+	}
+	return chain.GetChainName().String(), nil
+}
+
+func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
+	switch chainID {
+	case 18444:
+		return &chaincfg.RegressionNetParams, nil
+	case 18332:
+		return &chaincfg.TestNet3Params, nil
+	case 8332:
+		return &chaincfg.MainNetParams, nil
+	default:
+		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+	}
 }

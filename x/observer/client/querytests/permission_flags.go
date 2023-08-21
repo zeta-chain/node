@@ -2,6 +2,7 @@ package querytests
 
 import (
 	"fmt"
+
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -41,6 +42,7 @@ func (s *CliTestSuite) TestShowPermissionFlags() {
 				var resp types.QueryGetPermissionFlagsResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.PermissionFlags)
+				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
 					nullify.Fill(&resp.PermissionFlags),
 				)

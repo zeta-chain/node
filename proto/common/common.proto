@@ -1,19 +1,21 @@
 syntax = "proto3";
 package common;
 
-option go_package = "github.com/zeta-chain/zetacore/common";
-
 //option (gogoproto.goproto_stringer_all) = false;
 //option (gogoproto.stringer_all)         = false;
 //option (gogoproto.goproto_getters_all)  = false;
 
 import "gogoproto/gogo.proto";
 
+option go_package = "github.com/zeta-chain/zetacore/common";
 
 // PubKeySet contains two pub keys , secp256k1 and ed25519
 message PubKeySet {
-  string secp256k1 = 1 [(gogoproto.casttype) = "PubKey", (gogoproto.customname) = "Secp256k1"];
-  string ed25519   = 2 [(gogoproto.casttype) = "PubKey"];
+  string secp256k1 = 1 [
+    (gogoproto.casttype) = "PubKey",
+    (gogoproto.customname) = "Secp256k1"
+  ];
+  string ed25519 = 2 [(gogoproto.casttype) = "PubKey"];
 }
 
 enum ReceiveStatus {
@@ -28,8 +30,8 @@ enum CoinType {
   Zeta = 0;
   Gas = 1; // Ether, BNB, Matic, Klay, BTC, etc
   ERC20 = 2; // ERC20 token
+  Cmd = 3; // not a real coin, rather a command
 }
-
 
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -39,26 +41,24 @@ enum ChainName {
   zeta_mainnet = 2;
   btc_mainnet = 3;
   polygon_mainnet = 4;
-  bsc_mainnet = 5 ;
-//  Testnet
+  bsc_mainnet = 5;
+  //  Testnet
   goerli_testnet = 6;
   mumbai_testnet = 7;
   ganache_testnet = 8;
   baobab_testnet = 9;
-  bsc_testnet = 10 ;
+  bsc_testnet = 10;
   zeta_testnet = 11;
-  btc_testnet = 12 ;
-//  LocalNet
-//  zeta_localnet = 13;
+  btc_testnet = 12;
+  //  LocalNet
+  //  zeta_localnet = 13;
   goerli_localnet = 14;
   btc_regtest = 15;
-// Athens
-//  zeta_athensnet=15;
+  // Athens
+  //  zeta_athensnet=15;
 }
 
 message Chain {
   ChainName chain_name = 1;
   int64 chain_id = 2;
 }
-
-

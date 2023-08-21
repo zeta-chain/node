@@ -20,7 +20,8 @@ func TestMsgRemoveForeignCoin_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
+		},
+		{
 			name: "valid address",
 			msg: MsgRemoveForeignCoin{
 				Creator: sample.AccAddress(),

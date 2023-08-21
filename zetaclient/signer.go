@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"crypto/ecdsa"
 	"fmt"
+
 	"github.com/zeta-chain/zetacore/common"
 
 	"github.com/btcsuite/btcd/btcec/v2"

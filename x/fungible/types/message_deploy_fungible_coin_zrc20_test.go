@@ -20,8 +20,17 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
-			name: "valid address",
+		},
+		{
+			name: "invalid gas limit",
+			msg: MsgDeployFungibleCoinZRC20{
+				Creator:  sample.AccAddress(),
+				GasLimit: -1,
+			},
+			err: sdkerrors.ErrInvalidGasLimit,
+		},
+		{
+			name: "valid message",
 			msg: MsgDeployFungibleCoinZRC20{
 				Creator: sample.AccAddress(),
 			},

@@ -39,21 +39,25 @@ var (
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
-// TODO Unit test for these funtions
-// TODO Remove repetitive code
-// DeployERC20Contract creates and deploys an ERC20 contract on the EVM with the
+// DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
+// TODO Unit test for these functions
+// https://github.com/zeta-chain/node/issues/864
+// TODO Remove repetitive code
 func (k Keeper) DeployZRC20Contract(
 	ctx sdk.Context,
 	name, symbol string,
 	decimals uint8,
-	chainStr string,
+	chainID int64,
 	coinType zetacommon.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) {
-	chainName := zetacommon.ParseChainName(chainStr)
-	chain := k.zetaobserverKeeper.GetParams(ctx).GetChainFromChainName(chainName)
+	chain := zetacommon.GetChainFromChainID(chainID)
+	if chain == nil {
+		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
+	}
+	chainStr := chain.ChainName.String()
 	if chain == nil {
 		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
@@ -205,7 +209,8 @@ func (k Keeper) DepositZRC20(
 // callable from fungible module
 // Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
-	zrc4Contract common.Address,
+	context systemcontract.ZContext,
+	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -215,17 +220,17 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 
-	abi, err := systemcontract.SystemContractMetaData.GetAbi()
+	sysConABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
-		"depositAndCall", zrc4Contract, amount, targetContract, message)
+	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
+		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
-// QueryZRC4Data returns the data of a deployed ZRC4 contract
-func (k Keeper) QueryZRC4Data(
+// QueryZRC20Data returns the data of a deployed ZRC20 contract
+func (k Keeper) QueryZRC20Data(
 	ctx sdk.Context,
 	contract common.Address,
 ) (types.ZRC20Data, error) {
@@ -289,12 +294,13 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
+
+	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
+	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil
 	}
-	// TODO :  return the error here, we loose the error message if we return a nil . Maube use (big.Int,error )
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {

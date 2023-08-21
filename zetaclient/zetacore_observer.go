@@ -14,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	prom "github.com/prometheus/client_golang/prometheus"
-
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 const (
@@ -122,8 +120,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					supportedChains := GetSupportedChains()
 					for _, c := range supportedChains {
-						if c == nil {
-							co.logger.ZetaChainWatcher.Error().Msg("chain nil")
+						if c == nil || c.ChainId == common.ZetaChain().ChainId {
 							continue
 						}
 						signer := co.signerMap[*c]
@@ -133,63 +130,60 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
-						res, err := co.bridge.GetAllOutTxTrackerByChain(*c)
+						ob, err := co.getTargetChainOb(c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
+							continue
+						}
+						chain, err := common.GetChainNameFromChainID(c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail, Chain ID: %s", c.ChainName)
+							continue
+						}
+						res, err := co.bridge.GetAllOutTxTrackerByChain(*c, Ascending)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Warn().Err(err).Msgf("failed to GetAllOutTxTrackerByChain for chain %s", c.ChainName.String())
+							continue
 						}
 						trackerMap := make(map[uint64]bool)
 						for _, v := range res {
 							trackerMap[v.Nonce] = true
 						}
 
+						gauge, err := ob.GetPromGauge(metrics.PendingTxs)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to get prometheus gauge: %s", metrics.PendingTxs)
+							continue
+						}
+						gauge.Set(float64(len(sendList)))
+
 						for idx, send := range sendList {
-							if send.GetCurrentOutTxParam().ReceiverChainId != c.ChainId {
-								log.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, send.GetCurrentOutTxParam().ReceiverChainId)
-								continue
-							}
-							ob, err := co.getTargetChainOb(send)
-							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail %s", c.ChainName)
+							params := send.GetCurrentOutTxParam()
+							if params.ReceiverChainId != c.ChainId {
+								log.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
 								continue
 							}
 
 							// Monitor Core Logger for OutboundTxTssNonce
-							included, _, err := ob.IsSendOutTxProcessed(send.Index, int(send.GetCurrentOutTxParam().OutboundTxTssNonce), send.GetCurrentOutTxParam().CoinType, co.logger.ZetaChainWatcher)
+							included, _, err := ob.IsSendOutTxProcessed(send.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
 							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail %s", c.ChainName)
+								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail, Chain ID: %s", c.ChainName)
 								continue
 							}
 							if included {
 								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 								continue
 							}
-							chain, err := GetTargetChain(send)
-							if err != nil {
-								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail , Chain ID : %s", c.ChainName)
-								continue
-							}
-							nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
-							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, send.GetCurrentOutTxParam().ReceiverChainId, nonce) // should be the outTxID?
+							nonce := params.OutboundTxTssNonce
+							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce) // should be the outTxID?
 
 							// FIXME: config this schedule; this value is for localnet fast testing
 							if bn >= math.MaxInt64 {
 								continue
 							}
 							currentHeight := uint64(bn)
-							var interval uint64
-							var lookahead int64
-							// FIXME: fix these ugly type switches and conversions
-							switch v := ob.(type) {
-							case *EVMChainClient:
-								interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
-								lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
-							case *BitcoinChainClient:
-								interval = uint64(v.GetChainConfig().CoreParams.OutboundTxScheduleInterval)
-								lookahead = v.GetChainConfig().CoreParams.OutboundTxScheduleLookahead
-							default:
-								co.logger.ZetaChainWatcher.Error().Msgf("unknown ob type on chain %s: type %T", chain, ob)
-								continue
-							}
+							interval := uint64(ob.GetCoreParameters().OutboundTxScheduleInterval)
+							lookahead := uint64(ob.GetCoreParameters().OutboundTxScheduleLookahead)
 
 							// determining critical outtx; if it satisfies following criteria
 							// 1. it's the first pending outtx for this chain
@@ -203,7 +197,7 @@ func (co *CoreObserver) startSendScheduler() {
 										count++
 									}
 								}
-								if count >= 7 {
+								if count >= 5 {
 									interval = criticalInterval
 								}
 							}
@@ -233,19 +227,10 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func GetTargetChain(send *types.CrossChainTx) (string, error) {
-	chainID := send.GetCurrentOutTxParam().ReceiverChainId
-	chain := common.GetChainFromChainID(chainID)
-	if chain == nil {
-		return "", fmt.Errorf("chain %d not found", chainID)
-	}
-	return chain.GetChainName().String(), nil
-}
-
-func (co *CoreObserver) getTargetChainOb(send *types.CrossChainTx) (ChainClient, error) {
-	chainStr, err := GetTargetChain(send)
+func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
+	chainStr, err := common.GetChainNameFromChainID(chainID)
 	if err != nil {
-		return nil, fmt.Errorf("chain %d not found", send.GetCurrentOutTxParam().ReceiverChainId)
+		return nil, fmt.Errorf("chain %d not found", chainID)
 	}
 	chainName := common.ParseChainName(chainStr)
 	c := common.GetChainFromChainName(chainName)

@@ -1,11 +1,10 @@
 syntax = "proto3";
 package zetachain.zetacore.emissions;
 
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "emissions/params.proto";
-// this line is used by starport scaffolding # 1
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
@@ -16,11 +15,21 @@ service Query {
     option (google.api.http).get = "/zeta-chain/zetacore/emissions/params";
   }
   // Queries a list of ListBalances items.
-	rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
-	}
+  rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
+  }
 
-// this line is used by starport scaffolding # 2
+  // Queries a list of GetEmmisonsFactors items.
+  rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+  }
+
+  // Queries a list of ShowAvailableEmissions items.
+  rpc ShowAvailableEmissions(QueryShowAvailableEmissionsRequest) returns (QueryShowAvailableEmissionsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/show_available_emissions/{address}";
+  }
+
+  // this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -32,13 +41,28 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryListPoolAddressesRequest {
-}
+message QueryListPoolAddressesRequest {}
 
 message QueryListPoolAddressesResponse {
   string undistributed_observer_balances_address = 1;
   string undistributed_tss_balances_address = 2;
   string emission_module_address = 3;
+}
+
+message QueryGetEmmisonsFactorsRequest {}
+
+message QueryGetEmmisonsFactorsResponse {
+  string reservesFactor = 1;
+  string bondFactor = 2;
+  string durationFactor = 3;
+}
+
+message QueryShowAvailableEmissionsRequest {
+  string address = 1;
+}
+
+message QueryShowAvailableEmissionsResponse {
+  string amount = 1;
 }
 
 // this line is used by starport scaffolding # 3

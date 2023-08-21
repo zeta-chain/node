@@ -18,7 +18,7 @@ on:
       - ready_for_review
 
 concurrency: 
-  group: ${{ github.head_ref || github.run_id }}
+  group: build-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -28,7 +28,65 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  build-and-test:
+  build-and-test-single-arch:
+    runs-on: ubuntu-latest
+    # runs-on: ["zeta-runners"]
+    timeout-minutes: 20
+    if: (! startsWith(github.ref, 'refs/tags/')) || (! startsWith(github.ref, 'refs/heads/develop') )
+    concurrency:
+      group: "build-and-test-single-arch"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "true"
+      
+      - name: Test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install-testnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  build-and-test-multi-arch:
     strategy:
       matrix:
         runs-on:
@@ -40,6 +98,7 @@ jobs:
 
     runs-on: ${{matrix.runs-on}}
     timeout-minutes: 30
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     steps:
       - uses: actions/checkout@v3
 
@@ -64,11 +123,6 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
       # - uses: buildjet/cache
       #   timeout-minutes: 5
       #   with:
@@ -79,22 +133,28 @@ jobs:
       #     restore-keys: |
       #       ${{ matrix.runs-on }}-go-
 
+      - name: Test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
+
       - name: Build zetacored and zetaclientd
         env:
           CGO_ENABLED: 1
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
-          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
-
-      - name: Test
-        run: |
-          echo "Running Build Tests"
-          make test
           chmod a+x ./zetacored
           ./zetacored version
+
 
       - name: Name Binaries
         if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
@@ -122,6 +182,9 @@ jobs:
   build-alpine-and-test:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    concurrency:
+      group: "alpine-build-test"
     steps:
       - uses: actions/checkout@v3
 
@@ -159,12 +222,20 @@ jobs:
             g++
             libusb-dev 
             linux-headers
+            git
           shell-name: alpine.sh
 
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      - name: Test
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+            echo "Running Build Tests"
+            apk add --no-cache --update
+            make clean
+            make test
 
       - name: Build zetacored and zetaclientd
         env:
@@ -173,17 +244,10 @@ jobs:
           GOARCH: ${{ env.CPU_ARCH }}
         shell: alpine.sh --root {0}
         run: |
-          apk add --no-cache --update
+          git config --global --add safe.directory '*'
           go mod tidy
-          make clean
           make install-testnet
           cp "$HOME"/go/bin/* ./
-
-      - name: Test
-        shell: alpine.sh --root {0}
-        run: |
-          echo "Running Build Tests"
-          make test
 
       - name: Binary Docker Test
         env:
@@ -203,6 +267,7 @@ jobs:
           path: |
             zetacored-alpine-*
             zetaclientd-alpine-*
+            
       - name: Clean Up Alpine Workspace
         if: always()
         shell: alpine.sh --root {0}
@@ -244,6 +309,12 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "false"
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
       - name: Start Private Network
         run: |
           make zetanode
@@ -277,16 +348,11 @@ jobs:
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
     needs:
-      - build-and-test
+      - build-and-test-multi-arch
       - smoke-test
       - build-alpine-and-test
     steps:
       - uses: actions/checkout@v3
-
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
@@ -394,7 +460,7 @@ jobs:
     timeout-minutes: 60
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/release')
     needs:
-      - build-and-test
+      - build-and-test-multi-arch
       - build-alpine-and-test
       - upload
     steps:
@@ -430,11 +496,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: setup-git-credentials
-        uses: de-vri-es/setup-git-credentials@v2.0.8
-        with:
-          credentials: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
       - name: Install Pipeline Dependencies
         uses: ./.github/actions/install-dependencies
@@ -496,10 +557,10 @@ jobs:
           discord_token: "${{ secrets.DISCORD_TOKEN }}"
           discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
           discord_message: |
-            Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
 
             Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
-            We will submit a governance proposal in the next few days with a 12-hour voting period. 
+            We will submit a governance proposal in the next few days.
             More specific information including block height will be shared as part of the governance proposal.
             
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}

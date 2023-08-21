@@ -3,6 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+	"time"
+
 	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
@@ -14,12 +21,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-	"time"
 )
 
 type Multiaddr = core.Multiaddr

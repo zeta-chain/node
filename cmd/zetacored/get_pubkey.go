@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/spf13/cobra"

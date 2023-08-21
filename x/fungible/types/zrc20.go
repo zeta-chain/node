@@ -25,11 +25,12 @@ type ZRC20BoolResponse struct {
 	Value bool
 }
 
-// ZRC20StringResponse defines the string value from the call response
+// UniswapV2FactoryByte32Response defines the string value from the call response
 type UniswapV2FactoryByte32Response struct {
 	Value [32]byte
 }
 
+// SystemAddressResponse defines the address value from the call response
 type SystemAddressResponse struct {
 	Value ethcommon.Address
 }
