@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"math/big"
+
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
