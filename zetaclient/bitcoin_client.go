@@ -327,13 +327,16 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 			return false, false, nil
 		}
 
-		// Check and save included tx
+		// Try including this outTx
 		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checking pending outTx %s", txnHash.String())
 		err = ob.checkNSaveIncludedTx(txnHash.String(), params)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
 			return false, false, nil
 		}
+		ob.mu.Lock()
+		res = ob.includedTxResults[outTxID] // refresh tx result
+		ob.mu.Unlock()
 	}
 
 	var amount float64
@@ -773,6 +776,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
+// The func either includes a new outTx or update an existing outTx result.
 func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) error {
 	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
 	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
