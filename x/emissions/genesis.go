@@ -11,6 +11,10 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
+	for _, we := range genState.WithdrawableEmissions {
+		k.SetWithdrawableEmission(ctx, we)
+	}
+
 	// This create module accounts if not created
 	// TODO: find a proper way  to create module accounts?
 	ak.GetModuleAccount(ctx, types.ModuleName)
@@ -22,6 +26,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genSt
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis *types.GenesisState
 	genesis.Params = k.GetParams(ctx)
+	genesis.WithdrawableEmissions = k.GetAllWithdrawableEmission(ctx)
 
 	return genesis
 }

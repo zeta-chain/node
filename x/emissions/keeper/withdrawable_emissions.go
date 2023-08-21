@@ -23,6 +23,20 @@ func (k Keeper) GetWithdrawableEmission(ctx sdk.Context, address string) (val ty
 	return val, true
 }
 
+func (k Keeper) GetAllWithdrawableEmission(ctx sdk.Context) (list []types.WithdrawableEmissions) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.WithdrawableEmissionsKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.WithdrawableEmissions
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+	return
+}
+
 func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {
