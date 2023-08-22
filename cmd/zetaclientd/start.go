@@ -135,7 +135,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 
 	// CreateSignerMap : This creates a map of all signers for each chain. Each signer is responsible for signing transactions for a particular chain
-	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg.Clone(), telemetryServer)
+	signerMap, err := CreateSignerMap(tss, masterLogger, cfg.Clone(), telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -162,7 +162,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
@@ -172,7 +172,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
-	for _, chain := range cfg.GetChainsEnabled() {
+	for _, chain := range cfg.GetEnabledChains() {
 		(chainClientMap)[chain].Stop()
 	}
 	zetaBridge.Stop()

@@ -89,7 +89,7 @@ func (c *Config) GetKeygen() observertypes.Keygen {
 	}
 }
 
-func (c *Config) GetChainsEnabled() []common.Chain {
+func (c *Config) GetEnabledChains() []common.Chain {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 	copiedChains := make([]common.Chain, len(c.ChainsEnabled))
@@ -199,7 +199,7 @@ func (c *Config) Clone() *Config {
 
 		cfgLock:         &sync.RWMutex{},
 		Keygen:          c.GetKeygen(),
-		ChainsEnabled:   c.GetChainsEnabled(),
+		ChainsEnabled:   c.GetEnabledChains(),
 		EVMChainConfigs: make(map[int64]*EVMConfig, len(c.EVMChainConfigs)),
 		BitcoinConfig:   nil,
 	}
