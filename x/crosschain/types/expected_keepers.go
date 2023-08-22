@@ -70,6 +70,8 @@ type ZetaObserverKeeper interface {
 
 type FungibleKeeper interface {
 	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
+	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
+	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
@@ -96,4 +98,13 @@ type FungibleKeeper interface {
 		outZRC4 eth.Address,
 	) ([]*big.Int, error)
 	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	DeployZRC20Contract(
+		ctx sdk.Context,
+		name, symbol string,
+		decimals uint8,
+		chainID int64,
+		coinType common.CoinType,
+		erc20Contract string,
+		gasLimit *big.Int,
+	) (eth.Address, error)
 }

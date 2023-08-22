@@ -481,6 +481,11 @@ jobs:
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
+      - name: upgrade-path-testing
+        uses: ./.github/actions/upgrade-testing
+        with:
+          github_token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
       - name: Clean Up Workspace
         if: always()
         shell: bash
