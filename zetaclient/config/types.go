@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -36,6 +37,7 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+// TODO: use snake case for json fields
 type Config struct {
 	Peer                string        `json:"Peer"`
 	PublicIP            string        `json:"PublicIP"`
@@ -267,5 +269,8 @@ func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
 }
 
 func validCoreContractAddress(address string) bool {
+	if !strings.HasPrefix(address, "0x") {
+		return false
+	}
 	return ethcommon.IsHexAddress(address)
 }
