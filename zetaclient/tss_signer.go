@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"path"
 	"path/filepath"
 	"sort"
@@ -79,6 +80,7 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	coreBridge    *ZetaCoreBridge
+	metrics       *ChainMetrics
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -110,6 +112,17 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.metrics.GetPromCounter(getMetricName(node.Pubkey))
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", getMetricName(node.Pubkey))
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 	signature := ksRes.Signatures
@@ -505,4 +518,23 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
+}
+
+func getMetricName(key string) string {
+	return "tss_" + key
+}
+
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.coreBridge.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.metrics.RegisterPromCounter(getMetricName(key), "tss node blame counter")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
