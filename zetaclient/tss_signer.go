@@ -116,9 +116,9 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 
 		// Increment Blame counter
 		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.metrics.GetPromCounter(getMetricName(node.Pubkey))
+			counter, err := tss.metrics.GetPromCounter(node.Pubkey)
 			if err != nil {
-				log.Error().Err(err).Msgf("error getting counter: %s", getMetricName(node.Pubkey))
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
 				continue
 			}
 			counter.Inc()
@@ -183,6 +183,17 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 
@@ -521,10 +532,6 @@ func combineDigests(digestList []string) []byte {
 	return digestBytes.CloneBytes()
 }
 
-func getMetricName(key string) string {
-	return "tss_" + key
-}
-
 func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
 	tss.metrics = NewChainMetrics("tss", metrics)
 	keygenRes, err := tss.coreBridge.GetKeyGen()
@@ -532,7 +539,7 @@ func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
 		return err
 	}
 	for _, key := range keygenRes.GranteePubkeys {
-		err := tss.metrics.RegisterPromCounter(getMetricName(key), "tss node blame counter")
+		err := tss.metrics.RegisterPromCounter(key, "tss node blame counter")
 		if err != nil {
 			return err
 		}
