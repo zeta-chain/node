@@ -16,4 +16,3 @@ message Keygen {
   repeated string granteePubkeys = 3;
   int64 blockNumber = 4; // the blocknum that the key needs to be generated
 }
-
