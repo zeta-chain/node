@@ -39,6 +39,46 @@ var (
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
 )
 
+func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArguments ...interface{}) (common.Address, error) {
+	abi, err := metadata.GetAbi()
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
+	}
+	ctorArgs, err := abi.Pack(
+		"",               // function--empty string for constructor
+		ctorArguments..., // feeToSetter
+	)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to abi.Pack ctor arguments: %s", err.Error())
+	}
+
+	if len(metadata.Bin) <= 2 {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "metadata Bin field too short: %s", err.Error())
+	}
+
+	bin, err := hex.DecodeString(metadata.Bin[2:])
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", err.Error())
+	}
+
+	data := make([]byte, len(bin)+len(ctorArgs))
+	copy(data[:len(bin)], bin)
+	copy(data[len(bin):], ctorArgs)
+
+	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, false, BigIntZero, nil)
+	if err != nil {
+		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract")
+	}
+
+	return contractAddr, nil
+}
+
 // DeployZRC20Contract creates and deploys an ERC20 contract on the EVM with the
 // erc20 module account as owner. Also adds itself to ForeignCoins fungible module state variable
 // TODO Unit test for these functions
@@ -103,46 +143,6 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 	//system := types.SystemContract{}
 	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
-
-	return contractAddr, nil
-}
-
-func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArguments ...interface{}) (common.Address, error) {
-	abi, err := metadata.GetAbi()
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
-	}
-	ctorArgs, err := abi.Pack(
-		"",               // function--empty string for constructor
-		ctorArguments..., // feeToSetter
-	)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to abi.Pack ctor arguments: %s", err.Error())
-	}
-
-	if len(metadata.Bin) <= 2 {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "metadata Bin field too short: %s", err.Error())
-	}
-
-	bin, err := hex.DecodeString(metadata.Bin[2:])
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", err.Error())
-	}
-
-	data := make([]byte, len(bin)+len(ctorArgs))
-	copy(data[:len(bin)], bin)
-	copy(data[len(bin):], ctorArgs)
-
-	nonce, err := k.authKeeper.GetSequence(ctx, types.ModuleAddress.Bytes())
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, false, BigIntZero, nil)
-	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract")
-	}
 
 	return contractAddr, nil
 }

@@ -8,9 +8,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
-
 func createNForeignCoins(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ForeignCoins {
 	items := make([]types.ForeignCoins, n)
 	for i := range items {
