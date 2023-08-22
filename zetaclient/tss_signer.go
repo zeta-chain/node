@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
