@@ -71,7 +71,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 		)
 	}
 
-	ctx.Logger().Info("Substracting amount from inbound tx", "amount", cctx.InboundTxParams.Amount.String(), "feeInZeta",
+	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", cctx.InboundTxParams.Amount.String(), "feeInZeta",
 		cctx.ZetaFees.String())
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
 

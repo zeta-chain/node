@@ -90,9 +90,9 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
+	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
-	toAddr, err := recvChain.EncodeAddress(event.To)
+	toAddr, err := receiverChain.EncodeAddress(event.To)
 	if err != nil {
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
@@ -114,10 +114,20 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, recvChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+
+	// Get gas price and amount
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
+	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
+	if !found {
+		fmt.Printf("gasprice not found for %s\n", receiverChain)
+		return fmt.Errorf("gasprice not found for %s", receiverChain)
+	}
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
+
 	EmitZRCWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, recvChain)
+	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
@@ -180,7 +190,6 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	}
 
 	EmitZetaWithdrawCreated(ctx, cctx)
-
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
