@@ -192,7 +192,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		return err
 	}
-	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init)
+	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	return nil
 }

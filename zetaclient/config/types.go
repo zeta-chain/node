@@ -132,47 +132,39 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 }
 
 // This is the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool) {
+func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool, logger zerolog.Logger) {
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
-	// Ignore whatever order zetacore organizes chains list in state
+	// Ignore whatever order zetacore organizes chain list in state
 	sort.SliceStable(newChains, func(i, j int) bool {
 		return newChains[i].ChainId < newChains[j].ChainId
 	})
 	if len(newChains) == 0 {
-		panic("No chains enabled in ZeroCore")
+		logger.Warn().Msg("UpdateCoreParams: No chains enabled in ZeroCore")
 	}
 
-	// Put some limitations on core params updater for now
+	// Add some warnings if chain list changes at runtime
 	if !init {
 		if len(c.ChainsEnabled) != len(newChains) {
-			panic(fmt.Sprintf("ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains))
+			logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
 		}
 		for i, chain := range newChains {
 			if chain != c.ChainsEnabled[i] {
-				panic(fmt.Sprintf("ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains))
-			}
-		}
-		for _, params := range evmCoreParams {
-			curCfg, found := c.EVMChainConfigs[params.ChainId]
-			if !found {
-				panic(fmt.Sprintf("Unreachable code: EVMConfig not found for chainID %d", params.ChainId))
-			}
-			if curCfg.ZetaTokenContractAddress != params.ZetaTokenContractAddress ||
-				curCfg.ConnectorContractAddress != params.ConnectorContractAddress ||
-				curCfg.Erc20CustodyContractAddress != params.Erc20CustodyContractAddress {
-				panic(fmt.Sprintf("Zetacore contract changed at runtime!! current cfg: %v, new cfg: %v", curCfg, params))
+				logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
 			}
 		}
 	}
 	c.Keygen = *keygen
 	c.ChainsEnabled = newChains
-	if c.BitcoinConfig != nil && btcCoreParams != nil { // update core params for bitcoin if it's enabled
+	if c.BitcoinConfig != nil && btcCoreParams != nil { // update core params for bitcoin if it has config in file
 		c.BitcoinConfig.CoreParams = *btcCoreParams
 	}
-	for _, params := range evmCoreParams { // update core params for evm chains
-		c.EVMChainConfigs[params.ChainId].CoreParams = *params
+	for _, params := range evmCoreParams { // update core params for evm chains we have configs in file
+		curCfg, found := c.EVMChainConfigs[params.ChainId]
+		if found {
+			curCfg.CoreParams = *params
+		}
 	}
 }
 
