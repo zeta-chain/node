@@ -117,7 +117,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 
 	// Get gas price and amount
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
 		fmt.Printf("gasprice not found for %s\n", receiverChain)
