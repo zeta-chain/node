@@ -1,12 +1,16 @@
 package sample
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
+
+var ErrSample = errors.New("sample error")
 
 // AccAddress returns a sample account address
 func AccAddress() string {
@@ -40,4 +44,9 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(AccAddress())
+}
+
+// Bytes returns a sample byte array
+func Bytes() []byte {
+	return []byte("sample")
 }
