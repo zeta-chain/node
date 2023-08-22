@@ -449,26 +449,6 @@ func (k Keeper) CallEVMWithData(
 			txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
 		}
 
-		// emit events
-		//var events sdk.Events
-		//if !noEthereumTxEvent {
-		//	events = sdk.Events{sdk.NewEvent(
-		//		evmtypes.EventTypeEthereumTx,
-		//		attrs...,
-		//	)}
-		//}
-		//events = append(events,
-		//	sdk.NewEvent(
-		//		evmtypes.EventTypeTxLog,
-		//		txLogAttrs...,
-		//	),
-		//	sdk.NewEvent(
-		//		sdk.EventTypeMessage,
-		//		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		//		sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
-		//		sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
-		//	),
-		//)
 		if !noEthereumTxEvent {
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
