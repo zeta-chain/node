@@ -32,7 +32,7 @@ func (s *TypesSuite) SetupTest() {
 		ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
 		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
-		ChainId:                     1337,
+		ChainId:                     5,
 		OutboundTxScheduleInterval:  1,
 		OutboundTxScheduleLookahead: 1,
 	}
@@ -45,7 +45,7 @@ func (s *TypesSuite) SetupTest() {
 		ZetaTokenContractAddress:    "",
 		ConnectorContractAddress:    "",
 		Erc20CustodyContractAddress: "",
-		ChainId:                     18444,
+		ChainId:                     18332,
 		OutboundTxScheduleInterval:  1,
 		OutboundTxScheduleLookahead: 1,
 	}
@@ -58,7 +58,7 @@ func (s *TypesSuite) SetupTest() {
 		ZetaTokenContractAddress:    "",
 		ConnectorContractAddress:    "",
 		Erc20CustodyContractAddress: "",
-		ChainId:                     101,
+		ChainId:                     7001,
 		OutboundTxScheduleInterval:  0,
 		OutboundTxScheduleLookahead: 0,
 	}
