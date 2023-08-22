@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/common"
-
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"cosmossdk.io/math"
@@ -29,9 +27,9 @@ func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 // The gas ZRC20 balance is subsequently burned to account for the expense of TSS address gas fee payment in the outbound tx.
 // **Caller should feed temporary ctx into this function**
 func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx, noEthereumTxEvent bool) error {
-	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
-		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
-	}
+	//if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
+	//	return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
+	//}
 
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
