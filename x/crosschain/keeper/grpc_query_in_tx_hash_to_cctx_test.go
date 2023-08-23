@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"strconv"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
