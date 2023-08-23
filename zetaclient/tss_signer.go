@@ -81,7 +81,7 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	coreBridge    *ZetaCoreBridge
-	metrics       *ChainMetrics
+	Metrics       *ChainMetrics
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -116,7 +116,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 
 		// Increment Blame counter
 		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.metrics.GetPromCounter(node.Pubkey)
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
 			if err != nil {
 				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
 				continue
@@ -186,7 +186,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 
 		// Increment Blame counter
 		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.metrics.GetPromCounter(node.Pubkey)
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
 			if err != nil {
 				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
 				continue
@@ -533,13 +533,13 @@ func combineDigests(digestList []string) []byte {
 }
 
 func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
-	tss.metrics = NewChainMetrics("tss", metrics)
+	tss.Metrics = NewChainMetrics("tss", metrics)
 	keygenRes, err := tss.coreBridge.GetKeyGen()
 	if err != nil {
 		return err
 	}
 	for _, key := range keygenRes.GranteePubkeys {
-		err := tss.metrics.RegisterPromCounter(key, "tss node blame counter")
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
 		if err != nil {
 			return err
 		}

@@ -110,6 +110,17 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 	res, err := tss.Server.Keygen(req)
 	if res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+
+		// Increment Blame counter
+		for _, node := range res.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				keygenLogger.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		return fmt.Errorf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 	}
 	if err != nil {
