@@ -15,6 +15,7 @@ import (
 var ErrSample = errors.New("sample error")
 
 func newRandFromSeed(s int64) *rand.Rand {
+	// #nosec G404 test purpose - weak randomness is not an issue here
 	return rand.New(rand.NewSource(s))
 }
 
