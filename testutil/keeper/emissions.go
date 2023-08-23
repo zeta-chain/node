@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -17,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	"testing"
 )
 
 func EmissionsKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
@@ -27,7 +28,7 @@ func EmissionsKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, db)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()

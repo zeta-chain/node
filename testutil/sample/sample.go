@@ -14,11 +14,15 @@ import (
 
 var ErrSample = errors.New("sample error")
 
+func newRandFromSeed(s int64) *rand.Rand {
+	return rand.New(rand.NewSource(s))
+}
+
 func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
 	h := fnv.New64a()
 	_, err := h.Write([]byte(s))
 	require.NoError(t, err)
-	return rand.New(rand.NewSource(int64(h.Sum64())))
+	return newRandFromSeed(int64(h.Sum64()))
 }
 
 // AccAddress returns a sample account address
