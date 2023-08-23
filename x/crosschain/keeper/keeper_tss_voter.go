@@ -89,6 +89,11 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	// Set TSS only on success, set Keygen either way.
 	// Keygen block can be updated using a policy transaction if keygen fails
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
+		oldTss, found := k.GetTSS(ctx)
+		if found {
+			k.SetTSSHistory(ctx, oldTss)
+		}
+
 		k.SetTSS(ctx, types.TSS{
 			TssPubkey:           msg.TssPubkey,
 			TssParticipantList:  keygen.GetGranteePubkeys(),

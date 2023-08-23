@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +17,12 @@ func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 	b := k.cdc.MustMarshal(&tss)
 	store.Set([]byte{0}, b)
+}
+
+func (k Keeper) SetTSSHistory(ctx sdk.Context, tss types.TSS) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
+	b := k.cdc.MustMarshal(&tss)
+	store.Set(types.KeyPrefix(fmt.Sprintf("%d", tss.FinalizedZetaHeight)), b)
 }
 
 // GetTSS returns the tss information
@@ -37,19 +45,28 @@ func (k Keeper) RemoveTSS(ctx sdk.Context) {
 }
 
 // GetAllTSS returns all tss information
-func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
+func (k Keeper) GetAllTSS(ctx sdk.Context) (list []*types.TSS) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-
 	defer iterator.Close()
-
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TSS
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
+		list = append(list, &val)
 	}
-
 	return
+}
+
+func (k Keeper) GetPreviousTSS(ctx sdk.Context) (val types.TSS, found bool) {
+	tssList := k.GetAllTSS(ctx)
+	if len(tssList) <= 2 {
+		return val, false
+	}
+	// Sort tssList by FinalizedZetaHeight
+	sort.SliceStable(tssList, func(i, j int) bool {
+		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
+	})
+	return *tssList[len(tssList)-2], true
 }
 
 // Queries
@@ -66,4 +83,12 @@ func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.Qu
 	}
 
 	return &types.QueryGetTSSResponse{TSS: &val}, nil
+}
+func (k Keeper) TssHistory(c context.Context, request *types.QueryTssHistoryRequest) (*types.QueryTssHistoryResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	tssList := k.GetAllTSS(ctx)
+	sort.SliceStable(tssList, func(i, j int) bool {
+		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
+	})
+	return &types.QueryTssHistoryResponse{TssList: tssList}, nil
 }

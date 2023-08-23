@@ -41,6 +41,32 @@ func CmdShowTSS() *cobra.Command {
 	return cmd
 }
 
+func CmdListTssHistory() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-tss-history",
+		Short: "shows a TSS",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryTssHistoryRequest{}
+
+			res, err := queryClient.TssHistory(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // Transaction CLI /////////////////////////
 
 func CmdCreateTSSVoter() *cobra.Command {

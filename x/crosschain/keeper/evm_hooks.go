@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,7 +86,10 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 // error indicates system error and non-recoverable; should abort
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
-
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return errorsmod.Wrap(zetacoretypes.ErrCannotFindTSSKeys, "ProcessZRC20WithdrawalEvent: cannot be processed without TSS keys")
+	}
 	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
 	if !found {
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
@@ -101,13 +105,17 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
 	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
 	EmitZRCWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, recvChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return errorsmod.Wrap(zetacoretypes.ErrCannotFindTSSKeys, "ProcessZetaSentEvent: cannot be processed without TSS keys")
+	}
 	if err := k.bankKeeper.BurnCoins(
 		ctx,
 		fungibletypes.ModuleName,
@@ -121,7 +129,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
-	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
+	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
 	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
 		return zetacoretypes.ErrNotFoundCoreParams
@@ -135,7 +143,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
 	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000+uint64(event.Raw.Index), common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }

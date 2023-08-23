@@ -70,6 +70,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain == nil {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		ctx.Logger().Error("TSS not found")
+	}
 	// IsAuthorized does various checks against the list of observer mappers
 	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
 	if !ok {
@@ -112,7 +116,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// ******************************************************************************
 
 	// Inbound Ballot has been finalized , Create CCTX
-	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, index, tss.TssPubkey, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
 		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())

@@ -122,6 +122,16 @@ service Query {
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
+
+  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+  }
+}
+
+message QueryTssHistoryRequest {}
+
+message QueryTssHistoryResponse {
+  repeated TSS TssList = 1;
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.

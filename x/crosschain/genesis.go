@@ -42,6 +42,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTSS(ctx, *genState.Tss)
 	}
 
+	for _, elem := range genState.TssHistory {
+		k.SetTSSHistory(ctx, *elem)
+	}
+
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -84,6 +88,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
+	tssList := k.GetAllTSS(ctx)
+	for _, elem := range tssList {
+		e := elem
+		genesis.TssHistory = append(genesis.TssHistory, e)
+	}
 	return genesis
 }
 
