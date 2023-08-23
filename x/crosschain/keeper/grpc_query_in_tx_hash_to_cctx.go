@@ -55,3 +55,28 @@ func (k Keeper) InTxHashToCctx(c context.Context, req *types.QueryGetInTxHashToC
 
 	return &types.QueryGetInTxHashToCctxResponse{InTxHashToCctx: val}, nil
 }
+
+// InTxHashToCctxData queries the data of all cctxs indexed by a in tx hash
+func (k Keeper) InTxHashToCctxData(
+	c context.Context,
+	req *types.QueryInTxHashToCctxDataRequest,
+) (*types.QueryInTxHashToCctxDataResponse, error) {
+	inTxHashToCctxRes, err := k.InTxHashToCctx(c, &types.QueryGetInTxHashToCctxRequest{InTxHash: req.InTxHash})
+	if err != nil {
+		return nil, err
+	}
+
+	var cctxs []types.CrossChainTx
+	ctx := sdk.UnwrapSDKContext(c)
+	for _, cctxIndex := range inTxHashToCctxRes.InTxHashToCctx.CctxIndex {
+		cctx, found := k.GetCrossChainTx(ctx, cctxIndex)
+		if !found {
+			// This is an internal error because the cctx should always exist from the index
+			return nil, status.Errorf(codes.Internal, "cctx indexed %s doesn't exist", inTxHashToCctxRes.InTxHashToCctx.CctxIndex)
+		}
+
+		cctxs = append(cctxs, cctx)
+	}
+
+	return &types.QueryInTxHashToCctxDataResponse{CrossChainTxs: cctxs}, nil
+}
