@@ -1,8 +1,9 @@
 package observer_test
 
 import (
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

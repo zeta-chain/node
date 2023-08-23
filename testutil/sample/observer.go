@@ -1,8 +1,9 @@
 package sample
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"

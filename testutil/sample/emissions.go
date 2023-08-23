@@ -1,9 +1,10 @@
 package sample
 
 import (
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
-	"testing"
 )
 
 func WithdrawableEmissions(t *testing.T) types.WithdrawableEmissions {

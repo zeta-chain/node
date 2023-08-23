@@ -1,12 +1,13 @@
 package sample
 
 import (
+	"math/rand"
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/rand"
-	"testing"
 )
 
 func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
