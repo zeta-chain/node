@@ -8,25 +8,19 @@ import (
 
 // InitGenesis initializes the emissions module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	for _, we := range genState.WithdrawableEmissions {
 		k.SetWithdrawableEmission(ctx, we)
 	}
-
-	// This create module accounts if not created
-	// TODO: find a proper way  to create module accounts?
-	ak.GetModuleAccount(ctx, types.ModuleName)
-	ak.GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
-	ak.GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)
 }
 
 // ExportGenesis returns the emissions module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	var genesis *types.GenesisState
+	var genesis types.GenesisState
 	genesis.Params = k.GetParams(ctx)
 	genesis.WithdrawableEmissions = k.GetAllWithdrawableEmission(ctx)
 
-	return genesis
+	return &genesis
 }

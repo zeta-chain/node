@@ -101,5 +101,3 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	return &genesis
 }
-
-// TODO : Verify genesis import and export
