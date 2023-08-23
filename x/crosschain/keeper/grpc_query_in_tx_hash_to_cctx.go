@@ -72,7 +72,7 @@ func (k Keeper) InTxHashToCctxData(
 		cctx, found := k.GetCrossChainTx(ctx, cctxIndex)
 		if !found {
 			// This is an internal error because the cctx should always exist from the index
-			return nil, status.Errorf(codes.Internal, "cctx indexed %s doesn't exist", inTxHashToCctxRes.InTxHashToCctx.CctxIndex)
+			return nil, status.Errorf(codes.Internal, "cctx indexed %s doesn't exist", cctxIndex)
 		}
 
 		cctxs = append(cctxs, cctx)
