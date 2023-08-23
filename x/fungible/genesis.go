@@ -8,7 +8,7 @@ import (
 
 // InitGenesis initializes the fungible module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, authKeeper types.AccountKeeper) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set all the foreignCoins
 	for _, elem := range genState.ForeignCoinsList {
 		k.SetForeignCoins(ctx, elem)
@@ -19,18 +19,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 	}
 
 	k.SetParams(ctx, genState.Params)
-
-	// ensure fungible module account is set on genesis
-	// TODO: investigate if it can be removed
-	if acc := authKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
-		// NOTE: shouldn't occur
-		panic("the fungible module account has not been set")
-	}
 }
 
 // ExportGenesis returns the fungible module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	var genesis *types.GenesisState
+	var genesis types.GenesisState
 
 	genesis.Params = k.GetParams(ctx)
 	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
@@ -41,5 +34,5 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.SystemContract = &system
 	}
 
-	return genesis
+	return &genesis
 }

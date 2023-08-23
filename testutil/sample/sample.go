@@ -50,3 +50,13 @@ func Bytes() []byte {
 func String() string {
 	return "sample"
 }
+
+// StringRandom returns a sample string with random alphanumeric characters
+func StringRandom(r *rand.Rand, length int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = chars[r.Intn(len(chars))]
+	}
+	return string(result)
+}

@@ -60,11 +60,11 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		SenderChainId:                   r.Int63(),
 		TxOrigin:                        EthAddress().String(),
 		CoinType:                        common.CoinType(r.Intn(100)),
-		Asset:                           String(),
+		Asset:                           StringRandom(r, 32),
 		Amount:                          math.NewUint(uint64(r.Int63())),
-		InboundTxObservedHash:           String(),
+		InboundTxObservedHash:           StringRandom(r, 32),
 		InboundTxObservedExternalHeight: r.Uint64(),
-		InboundTxBallotIndex:            String(),
+		InboundTxBallotIndex:            StringRandom(r, 32),
 		InboundTxFinalizedZetaHeight:    r.Uint64(),
 	}
 }
@@ -78,8 +78,8 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),
 		OutboundTxGasPrice:               String(),
-		OutboundTxHash:                   String(),
-		OutboundTxBallotIndex:            String(),
+		OutboundTxHash:                   StringRandom(r, 32),
+		OutboundTxBallotIndex:            StringRandom(r, 32),
 		OutboundTxObservedExternalHeight: r.Uint64(),
 	}
 }
@@ -101,7 +101,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 		Creator:          AccAddress(),
 		Index:            index,
 		ZetaFees:         math.NewUint(uint64(r.Int63())),
-		RelayedMessage:   String(),
+		RelayedMessage:   StringRandom(r, 32),
 		CctxStatus:       Status(t, index),
 		InboundTxParams:  InboundTxParams(r),
 		OutboundTxParams: []*types.OutboundTxParams{OutboundTxParams(r), OutboundTxParams(r)},
@@ -114,15 +114,17 @@ func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
 	return &types.LastBlockHeight{
 		Creator:           AccAddress(),
 		Index:             index,
-		Chain:             String(),
+		Chain:             StringRandom(r, 32),
 		LastSendHeight:    r.Uint64(),
 		LastReceiveHeight: r.Uint64(),
 	}
 }
 
-func InTxHashToCctx(inTxHash string) types.InTxHashToCctx {
+func InTxHashToCctx(t *testing.T, inTxHash string) types.InTxHashToCctx {
+	r := newRandFromStringSeed(nil, inTxHash)
+
 	return types.InTxHashToCctx{
 		InTxHash:  inTxHash,
-		CctxIndex: []string{String(), String()},
+		CctxIndex: []string{StringRandom(r, 32), StringRandom(r, 32)},
 	}
 }

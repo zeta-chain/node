@@ -41,9 +41,9 @@ func TestGenesis(t *testing.T) {
 			sample.LastBlockHeight(t, "2"),
 		},
 		InTxHashToCctxList: []types.InTxHashToCctx{
-			sample.InTxHashToCctx("0x0"),
-			sample.InTxHashToCctx("0x1"),
-			sample.InTxHashToCctx("0x2"),
+			sample.InTxHashToCctx(t, "0x0"),
+			sample.InTxHashToCctx(t, "0x1"),
+			sample.InTxHashToCctx(t, "0x2"),
 		},
 	}
 
