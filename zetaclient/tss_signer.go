@@ -80,7 +80,7 @@ type TSS struct {
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
-	coreBridge    *ZetaCoreBridge
+	CoreBridge    *ZetaCoreBridge
 	Metrics       *ChainMetrics
 }
 
@@ -108,7 +108,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
@@ -178,7 +178,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digest := combineDigests(digestBase64)
 		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
@@ -368,7 +368,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 		Server:     server,
 		Keys:       make(map[string]*TSSKey),
 		logger:     log.With().Str("module", "tss_signer").Logger(),
-		coreBridge: bridge,
+		CoreBridge: bridge,
 	}
 
 	files, err := os.ReadDir(cfg.TssPath)
@@ -534,7 +534,7 @@ func combineDigests(digestList []string) []byte {
 
 func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
 	tss.Metrics = NewChainMetrics("tss", metrics)
-	keygenRes, err := tss.coreBridge.GetKeyGen()
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
 	if err != nil {
 		return err
 	}
