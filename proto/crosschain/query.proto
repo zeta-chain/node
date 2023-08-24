@@ -131,7 +131,7 @@ service Query {
 message QueryTssHistoryRequest {}
 
 message QueryTssHistoryResponse {
-  repeated TSS TssList = 1;
+  repeated TSS tss_list = 1;
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.

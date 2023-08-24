@@ -44,7 +44,7 @@ func CmdShowTSS() *cobra.Command {
 func CmdListTssHistory() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-tss-history",
-		Short: "shows a TSS",
+		Short: "show historical list of TSS",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

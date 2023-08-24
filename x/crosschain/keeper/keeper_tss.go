@@ -19,13 +19,14 @@ func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store.Set([]byte{0}, b)
 }
 
+// SetTSSHistory Sets a new TSS into the TSS history store
 func (k Keeper) SetTSSHistory(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	b := k.cdc.MustMarshal(&tss)
 	store.Set(types.KeyPrefix(fmt.Sprintf("%d", tss.FinalizedZetaHeight)), b)
 }
 
-// GetTSS returns the tss information
+// GetTSS returns the current tss information
 func (k Keeper) GetTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
 
@@ -44,7 +45,7 @@ func (k Keeper) RemoveTSS(ctx sdk.Context) {
 	store.Delete([]byte{0})
 }
 
-// GetAllTSS returns all tss information
+// GetAllTSS returns all tss historical information from the store
 func (k Keeper) GetAllTSS(ctx sdk.Context) (list []*types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
@@ -57,6 +58,7 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []*types.TSS) {
 	return
 }
 
+// GetPreviousTSS returns the previous tss information
 func (k Keeper) GetPreviousTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	tssList := k.GetAllTSS(ctx)
 	if len(tssList) <= 2 {
@@ -84,6 +86,8 @@ func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.Qu
 
 	return &types.QueryGetTSSResponse{TSS: &val}, nil
 }
+
+// TssHistory Query historical list of TSS information
 func (k Keeper) TssHistory(c context.Context, request *types.QueryTssHistoryRequest) (*types.QueryTssHistoryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	tssList := k.GetAllTSS(ctx)
