@@ -122,6 +122,17 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err
 		}
+
+		// Increment Blame counter
+		for _, node := range res.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				keygenLogger.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		keygenLogger.Info().Msgf("keygen posted blame data tx hash: %s", zetaHash)
 		return fmt.Errorf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 	}

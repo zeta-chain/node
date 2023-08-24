@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/common"
@@ -79,6 +81,7 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	CoreBridge    *ZetaCoreBridge
+	Metrics       *ChainMetrics
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -110,6 +113,17 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 	signature := ksRes.Signatures
@@ -169,6 +183,17 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 
@@ -505,4 +530,19 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
+}
+
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.Metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
