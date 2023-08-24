@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"os"
 	"strings"
 	"time"
 
@@ -12,15 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
 )
-
-func getMYIP(logger zerolog.Logger) (string, error) {
-	ip := os.Getenv("MYIP")
-	if ip == "" {
-		logger.Fatal().Msg("Please set MYIP environment variable")
-		return "", errors.New("empty ip address")
-	}
-	return ip, nil
-}
 
 func waitForZetaCore(configData *config.Config, logger zerolog.Logger) {
 	// wait until zetacore is up

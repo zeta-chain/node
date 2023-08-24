@@ -55,7 +55,6 @@ func start(_ *cobra.Command, _ []string) error {
 
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
-	publicIP, err := getMYIP(startLogger)
 	if err != nil {
 		return err
 	}
@@ -120,7 +119,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
-	telemetryServer.SetIPAddress(publicIP)
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
 	if err != nil {
 		return err
