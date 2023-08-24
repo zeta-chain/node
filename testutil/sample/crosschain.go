@@ -122,7 +122,7 @@ func LastBlockHeight(t *testing.T, index string) *types.LastBlockHeight {
 }
 
 func InTxHashToCctx(t *testing.T, inTxHash string) types.InTxHashToCctx {
-	r := newRandFromStringSeed(nil, inTxHash)
+	r := newRandFromStringSeed(t, inTxHash)
 
 	return types.InTxHashToCctx{
 		InTxHash:  inTxHash,
