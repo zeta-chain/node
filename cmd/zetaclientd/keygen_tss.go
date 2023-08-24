@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/tendermint/crypto/sha3"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -103,13 +106,22 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 }
 
 func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) error {
-
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", cfg.Keygen.BlockNumber, cfg.Keygen.GranteePubkeys)
 	var req keygen.Request
 	req = keygen.NewRequest(cfg.Keygen.GranteePubkeys, cfg.Keygen.BlockNumber, "0.14.0")
 	res, err := tss.Server.Keygen(req)
 	if res.Status != tsscommon.Success || res.PubKey == "" {
 		keygenLogger.Error().Msgf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
+		// Need to broadcast keygen blame result here
+		digest, err := digestReq(req)
+		if err != nil {
+			return err
+		}
+		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, common.ZetaChain().ChainId, digest)
+		if err != nil {
+			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
+			return err
+		}
 
 		// Increment Blame counter
 		for _, node := range res.Blame.BlameNodes {
@@ -121,6 +133,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 			counter.Inc()
 		}
 
+		keygenLogger.Info().Msgf("keygen posted blame data tx hash: %s", zetaHash)
 		return fmt.Errorf("keygen fail: reason %s blame nodes %s", res.Blame.FailReason, res.Blame.BlameNodes)
 	}
 	if err != nil {
@@ -154,4 +167,17 @@ func TestTSS(tss *mc.TSS, logger zerolog.Logger) error {
 		return err
 	}
 	return nil
+}
+
+func digestReq(request keygen.Request) (string, error) {
+	bytes, err := json.Marshal(request)
+	if err != nil {
+		return "", err
+	}
+
+	hasher := sha3.NewLegacyKeccak256()
+	hasher.Write(bytes)
+	digest := hex.EncodeToString(hasher.Sum(nil))
+
+	return digest, nil
 }
