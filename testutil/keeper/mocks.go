@@ -9,7 +9,7 @@ type FungibleAccountKeeper interface {
 	fungibletypes.AccountKeeper
 }
 
-//go:generate mockery --name FungibleBankKeeper --filename fungible.go --case underscore --output ./mocks/fungible
+//go:generate mockery --name FungibleBankKeeper --filename bank.go --case underscore --output ./mocks/fungible
 type FungibleBankKeeper interface {
 	fungibletypes.BankKeeper
 }
