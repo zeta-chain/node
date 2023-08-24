@@ -98,7 +98,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
 	gasLimit := foreignCoin.GasLimit
-	// gasLimit+uint64(event.Raw.Index) to genereate different cctx for mutliple events in the same tx.
+	// gasLimit+uint64(event.Raw.Index) to genereate different cctx for multiple events in the same tx.
 	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit+uint64(event.Raw.Index), foreignCoin.CoinType, foreignCoin.Asset)
 	sendHash := msg.Digest()
