@@ -83,6 +83,7 @@ type Config struct {
 	P2PDiagnosticTicker uint64
 	TssPath             string
 	TestTssKeysign      bool
+	CurrentTssPubkey    string
 }
 
 func (c Config) GetAuthzHotkey() string {

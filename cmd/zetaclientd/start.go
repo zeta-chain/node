@@ -117,7 +117,12 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
+	tssHistoricalList, err := zetaBridge.GetTssHistory()
+	if err != nil {
+		startLogger.Error().Err(err).Msg("GetTssHistory error")
+	}
+
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList)
 	if err != nil {
 		return err
 	}

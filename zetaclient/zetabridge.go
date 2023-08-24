@@ -198,5 +198,11 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 		return err
 	}
 	cfg.Keygen = *keyGen
+	tss, err := b.GetCurrentTss()
+	if err != nil {
+		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")
+	} else {
+		cfg.CurrentTssPubkey = tss.GetTssPubkey()
+	}
 	return nil
 }

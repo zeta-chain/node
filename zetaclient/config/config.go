@@ -45,6 +45,7 @@ func Load(path string) (*Config, error) {
 	}
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
+	cfg.CurrentTssPubkey = ""
 	return cfg, nil
 }
 
