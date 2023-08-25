@@ -2,6 +2,7 @@ package crosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -40,12 +41,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	if genState.Tss != nil {
 		k.SetTSS(ctx, *genState.Tss)
+		for _, chain := range common.DefaultChainsList() {
+			k.SetPendingNonces(ctx, types.PendingNonces{
+				NonceLow:  0,
+				NonceHigh: 0,
+				ChainId:   chain.ChainId,
+				Tss:       genState.Tss.TssPubkey,
+			})
+		}
+		for _, elem := range genState.TssHistory {
+			k.SetTSSHistory(ctx, elem)
+		}
 	}
-
-	for _, elem := range genState.TssHistory {
-		k.SetTSSHistory(ctx, elem)
-	}
-
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.

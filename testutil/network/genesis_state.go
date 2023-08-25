@@ -18,7 +18,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) {
+func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string, setupChainNonces bool) {
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
@@ -29,6 +29,17 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 			Operator:   operator,
 			NodeStatus: observerTypes.NodeStatus_Active,
 		}
+	}
+	if setupChainNonces {
+		chainNonceList := make([]*types.ChainNonces, len(common.DefaultChainsList()))
+		for i, chain := range common.DefaultChainsList() {
+			chainNonceList[i] = &types.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   0,
+			}
+		}
+		crossChainGenesis.ChainNoncesList = chainNonceList
 	}
 
 	crossChainGenesis.Params.Enabled = true
