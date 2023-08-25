@@ -122,14 +122,16 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-
-	state.Tss = &types.TSS{
+	tss := types.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},
 		OperatorAddressList: []string{"operatorAddressList"},
 		FinalizedZetaHeight: 1,
 		KeyGenZetaHeight:    1,
 	}
+	state.Tss = &tss
+
+	state.TssHistory = []types.TSS{tss}
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
 			Index:   fmt.Sprintf("%d-%d", i, i),
