@@ -3,13 +3,14 @@ package types_test
 import (
 	"testing"
 
+	"math/rand"
+
 	"cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/rand"
 )
 
 func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {

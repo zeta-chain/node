@@ -3,7 +3,7 @@ package types_test
 import (
 	"math/rand"
 	"testing"
-	
+
 	"cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
