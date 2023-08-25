@@ -81,7 +81,7 @@ class Utilities:
         return result_output, error_output
 
     def generate_wallet(self):
-        wallet = generate_wallet()
+        wallet = generate_wallet(path="m/44'/60'/0'/0/0")
         #self.address = wallet["address"]
         self.mnemonic = wallet["seed"]
         self.derivation_path = wallet["derivation_path"]
