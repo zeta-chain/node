@@ -55,7 +55,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
-	setMYIP(cfg, startLogger)
+
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
@@ -117,6 +117,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
 	if err != nil {
 		return err
