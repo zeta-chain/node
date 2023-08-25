@@ -30,6 +30,16 @@ service Query {
   rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
   }
+
+  // Queries the address of a gas stability pool on a given chain.
+  rpc GasStabilityPoolAddress(QueryGetGasStabilityPoolAddress) returns (QueryGetGasStabilityPoolAddressResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_address/{chain_id}";
+  }
+
+  // Queries the balance of a gas stability pool on a given chain.
+  rpc GasStabilityPoolBalance(QueryGetGasStabilityPoolBalance) returns (QueryGetGasStabilityPoolBalanceResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -62,4 +72,22 @@ message QueryGetSystemContractRequest {}
 
 message QueryGetSystemContractResponse {
   SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetGasStabilityPoolAddress {
+  int64 chain_id = 1;
+}
+
+message QueryGetGasStabilityPoolAddressResponse {
+  string cosmos_address = 1;
+  string evm_address = 2;
+}
+
+message QueryGetGasStabilityPoolBalance {
+  int64 chain_id = 1;
+}
+
+message QueryGetGasStabilityPoolBalanceResponse {
+  string contract_address = 1;
+  string balance = 2;
 }

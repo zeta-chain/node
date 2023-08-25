@@ -7,8 +7,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// GasStabilityPoolBalance returns the balance of the gas stability pool
-func (k Keeper) GasStabilityPoolBalance(
+// GetGasStabilityPoolBalance returns the balance of the gas stability pool
+func (k Keeper) GetGasStabilityPoolBalance(
 	ctx sdk.Context,
 	chainID int64,
 ) (*big.Int, error) {
