@@ -50266,6 +50266,9 @@ definitions:
       outbound_tx_observed_external_height:
         type: string
         format: uint64
+      outbound_tx_gas_used:
+        type: string
+        format: uint64
   crosschainPendingNonces:
     type: object
     properties:
