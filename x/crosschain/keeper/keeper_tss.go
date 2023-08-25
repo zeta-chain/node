@@ -12,6 +12,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (k Keeper) AppendTss(ctx sdk.Context, tss types.TSS) {
+	k.SetTSS(ctx, tss)
+	k.SetTSSHistory(ctx, tss)
+}
+
 // SetTSS sets tss information to the store
 func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
@@ -46,14 +51,14 @@ func (k Keeper) RemoveTSS(ctx sdk.Context) {
 }
 
 // GetAllTSS returns all tss historical information from the store
-func (k Keeper) GetAllTSS(ctx sdk.Context) (list []*types.TSS) {
+func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.TSS
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, &val)
+		list = append(list, val)
 	}
 	return
 }
@@ -61,14 +66,14 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []*types.TSS) {
 // GetPreviousTSS returns the previous tss information
 func (k Keeper) GetPreviousTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	tssList := k.GetAllTSS(ctx)
-	if len(tssList) <= 2 {
+	if len(tssList) < 2 {
 		return val, false
 	}
 	// Sort tssList by FinalizedZetaHeight
 	sort.SliceStable(tssList, func(i, j int) bool {
 		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
 	})
-	return *tssList[len(tssList)-2], true
+	return tssList[len(tssList)-2], true
 }
 
 // Queries

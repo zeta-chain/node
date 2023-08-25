@@ -339,7 +339,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	return addr, nil
 }
 
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssList []*types.TSS) (*TSS, error) {
+func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS) (*TSS, error) {
 	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
@@ -356,14 +356,14 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	if err != nil {
 		return nil, err
 	}
-	err = tss.VerifyKeysharesForPubkeys(tssList)
+	err = tss.VerifyKeysharesForPubkeys(tssHistoricalList)
 	if err != nil {
 		return nil, err
 	}
 	return &tss, nil
 }
 
-func (tss *TSS) VerifyKeysharesForPubkeys(tssList []*types.TSS) error {
+func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS) error {
 	countPubkeysFromKeyshare := len(tss.Keys)
 	countPunkeysFromZetacore := len(tssList)
 	if countPubkeysFromKeyshare != countPunkeysFromZetacore {
@@ -380,7 +380,7 @@ func (tss *TSS) VerifyKeysharesForPubkeys(tssList []*types.TSS) error {
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
 	if err != nil {
-		fmt.Println("ReadDir error", err)
+		fmt.Println("ReadDir error :", err.Error())
 		return err
 	}
 	found := false

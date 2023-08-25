@@ -96,11 +96,10 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			FinalizedZetaHeight: ctx.BlockHeight(),
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		}
-		k.SetTSS(ctx, tss)
-		k.SetTSSHistory(ctx, tss)
+		k.AppendTss(ctx, tss)
 		keygen.Status = observerTypes.KeygenStatus_KeyGenSuccess
 		keygen.BlockNumber = ctx.BlockHeight()
-		// initialize the nonces and pending nonces of all enabled chain
+		// initialize the nonces and pending nonces of all enabled chains
 		supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
 		for _, chain := range supportedChains {
 			chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}

@@ -216,7 +216,7 @@ func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
 	return resp.TSS, nil
 }
 
-func (b *ZetaCoreBridge) GetTssHistory() ([]*types.TSS, error) {
+func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
 	if err != nil {

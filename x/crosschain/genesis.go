@@ -43,7 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, elem := range genState.TssHistory {
-		k.SetTSSHistory(ctx, *elem)
+		k.SetTSSHistory(ctx, elem)
 	}
 
 }
@@ -88,11 +88,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
 	}
 
-	tssList := k.GetAllTSS(ctx)
-	for _, elem := range tssList {
-		e := elem
-		genesis.TssHistory = append(genesis.TssHistory, e)
-	}
+	genesis.TssHistory = k.GetAllTSS(ctx)
+
 	return genesis
 }
 
