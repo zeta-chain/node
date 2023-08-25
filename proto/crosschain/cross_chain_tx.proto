@@ -48,6 +48,7 @@ message OutboundTxParams {
   string outbound_tx_hash = 8;
   string outbound_tx_ballot_index = 9;
   uint64 outbound_tx_observed_external_height = 10;
+  uint64 outbound_tx_gas_used = 20;
 }
 
 message Status {
