@@ -69,8 +69,10 @@ func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 func (msg *MsgVoteOnObservedOutboundTx) Digest() string {
 	m := *msg
 	m.Creator = ""
+
 	// Set status to ReceiveStatus_Created to make sure both successful and failed votes are added to the same ballot
 	m.Status = common.ReceiveStatus_Created
+
 	// Outbound and reverted txs have different digest as ObservedOutTxHash is different so they are stored in different ballots
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
