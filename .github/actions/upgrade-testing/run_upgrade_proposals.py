@@ -65,9 +65,12 @@ for tag in tag_list:
 #os.environ["STARTING_VERSION"] = "v1.2.0"
 #os.environ["END_VERSION"] = "v1.2.7"
 
+tag_list = json.loads(os.environ["TAG_LIST"])["tag_list"]
+binary_download_list = json.loads(os.environ["BINARY_DOWNLOAD_LIST"])["binary_download_list"]
+
 logger.log.info("***************************")
-os.environ["STARTING_VERSION"] = tag_list[0]
-os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
+#os.environ["STARTING_VERSION"] = tag_list[0]
+#os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
