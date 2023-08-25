@@ -26,7 +26,7 @@ func (k Keeper) GetPermissionFlags(ctx sdk.Context) (val types.PermissionFlags, 
 	return val, true
 }
 
-func (k Keeper) IsInboundAllowed(ctx sdk.Context) (found bool) {
+func (k Keeper) IsInboundEnabled(ctx sdk.Context) (found bool) {
 	flags, found := k.GetPermissionFlags(ctx)
 	if !found {
 		return false

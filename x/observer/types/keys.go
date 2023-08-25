@@ -18,7 +18,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_observer"
 
-	GroupId1Address = "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+	GroupID1Address = "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
 )
 
 func KeyPrefix(p string) []byte {

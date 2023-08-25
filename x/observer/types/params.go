@@ -38,27 +38,27 @@ func DefaultAdminPolicy() []*Admin_Policy {
 	return []*Admin_Policy{
 		{
 			PolicyType: Policy_Type_out_tx_tracker,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_stop_inbound_cctx,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_deploy_fungible_coin,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_client_params,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_keygen_block,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_add_observer,
-			Address:    GroupId1Address,
+			Address:    GroupID1Address,
 		},
 	}
 }
