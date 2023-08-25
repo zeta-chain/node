@@ -295,8 +295,6 @@ func (k Keeper) BalanceOfZRC4(
 		return nil, err
 	}
 
-	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
-	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil, sdkerrors.Wrapf(types.ErrABIUnpack, err.Error())
