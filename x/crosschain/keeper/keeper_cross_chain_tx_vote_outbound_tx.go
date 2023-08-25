@@ -113,6 +113,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
+	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = msg.ObservedOutTxGasUsed
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	tss, _ := k.GetTSS(ctx)

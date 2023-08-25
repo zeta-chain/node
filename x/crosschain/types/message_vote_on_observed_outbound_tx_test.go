@@ -25,6 +25,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				CctxHash:                 sample.String(),
 				ObservedOutTxHash:        sample.String(),
 				ObservedOutTxBlockHeight: 42,
+				ObservedOutTxGasUsed:     42,
 				ZetaMinted:               math.NewUint(42),
 				Status:                   common.ReceiveStatus_Created,
 				OutTxChain:               42,
@@ -39,6 +40,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				CctxHash:                 sample.String(),
 				ObservedOutTxHash:        sample.String(),
 				ObservedOutTxBlockHeight: 42,
+				ObservedOutTxGasUsed:     42,
 				ZetaMinted:               math.NewUint(42),
 				Status:                   common.ReceiveStatus_Created,
 				OutTxChain:               42,
@@ -54,6 +56,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				CctxHash:                 sample.String(),
 				ObservedOutTxHash:        sample.String(),
 				ObservedOutTxBlockHeight: 42,
+				ObservedOutTxGasUsed:     42,
 				ZetaMinted:               math.NewUint(42),
 				Status:                   common.ReceiveStatus_Created,
 				OutTxChain:               -1,
@@ -83,6 +86,7 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 		CctxHash:                 sample.String(),
 		ObservedOutTxHash:        sample.String(),
 		ObservedOutTxBlockHeight: 42,
+		ObservedOutTxGasUsed:     42,
 		ZetaMinted:               math.NewUint(42),
 		Status:                   common.ReceiveStatus_Created,
 		OutTxChain:               42,
@@ -121,6 +125,12 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	msg2.ObservedOutTxBlockHeight = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx block height should change hash")
+
+	// observed outbound tx gas used used
+	msg2 = msg
+	msg2.ObservedOutTxGasUsed = 43
+	hash2 = msg2.Digest()
+	require.NotEqual(t, hash, hash2, "observed outbound tx gas used should change hash")
 
 	// zeta minted used
 	msg2 = msg
