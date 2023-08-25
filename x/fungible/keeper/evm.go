@@ -285,29 +285,29 @@ func (k Keeper) QueryZRC20Data(
 func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
 	contract, account common.Address,
-) *big.Int {
+) (*big.Int, error) {
 	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil
+		return nil, sdkerrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "balanceOf", account)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
 	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
-		return nil
+		return nil, sdkerrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {
-		return nil
+		return nil, sdkerrors.Wrapf(types.ErrABIUnpack, "failed to unpack balance")
 	}
 
-	return balance
+	return balance, nil
 }
 
 // CallEVM performs a smart contract method call using given args

@@ -277,3 +277,21 @@ func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20a
 	}
 	return nil
 }
+
+func (k *Keeper) CallZRC20Deposit(
+	ctx sdk.Context,
+	sender ethcommon.Address,
+	zrc20address ethcommon.Address,
+	to ethcommon.Address,
+	amount *big.Int) error {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to get zrc20 abi")
+	}
+	_, err = k.CallEVM(ctx, *zrc20ABI, sender, zrc20address, big.NewInt(0), big.NewInt(100_000), true,
+		"deposit", to, amount)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "failed to CallEVM method burn")
+	}
+	return nil
+}
