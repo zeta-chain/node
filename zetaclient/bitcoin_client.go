@@ -357,6 +357,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		sendHash,
 		res.TxID,
 		uint64(res.BlockIndex),
+		0, // gas used not used with Bitcoin
 		amountInSat,
 		common.ReceiveStatus_Success,
 		ob.chain,
