@@ -13,9 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
-
 func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.InTxHashToCctx {
 	items := make([]types.InTxHashToCctx, n)
 	for i := range items {
