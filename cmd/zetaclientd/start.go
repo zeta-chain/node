@@ -55,7 +55,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
-	setMYIP(cfg, startLogger)
+
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
@@ -117,6 +117,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}()
 
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer)
 	if err != nil {
 		return err
@@ -149,6 +150,13 @@ func start(_ *cobra.Command, _ []string) error {
 
 	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
+
+	// Register zetaclient.TSS prometheus metrics
+	err = tss.RegisterMetrics(metrics)
+	if err != nil {
+		startLogger.Err(err).Msg("tss.RegisterMetrics")
+		return err
+	}
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
 	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
