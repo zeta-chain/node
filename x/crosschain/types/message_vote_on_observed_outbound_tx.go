@@ -10,7 +10,17 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint math.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
+func NewMsgVoteOnObservedOutboundTx(
+	creator,
+	sendHash,
+	outTxHash string,
+	outBlockHeight uint64,
+	mMint math.Uint,
+	status common.ReceiveStatus,
+	chain int64,
+	nonce uint64,
+	coinType common.CoinType,
+) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                  creator,
 		CctxHash:                 sendHash,

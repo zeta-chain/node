@@ -98,7 +98,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
 	gasLimit := foreignCoin.GasLimit
-	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
+	msg := zetacoretypes.NewMsgVoteOnObservedInboundTx("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
 		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
@@ -133,7 +133,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000+uint64(event.Raw.Index), common.CoinType_Zeta, "")
+	msg := zetacoretypes.NewMsgVoteOnObservedInboundTx("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000+uint64(event.Raw.Index), common.CoinType_Zeta, "")
 	sendHash := msg.Digest()
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 	EmitZetaWithdrawCreated(ctx, cctx)

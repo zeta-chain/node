@@ -111,7 +111,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), amount, (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
+			msg := types.NewMsgVoteOnObservedInboundTx(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), amount, (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -159,7 +159,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), argsSendHash, argsOutTxHash, uint64(argsOutBlockHeight), math.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
+			msg := types.NewMsgVoteOnObservedOutboundTx(clientCtx.GetFromAddress().String(), argsSendHash, argsOutTxHash, uint64(argsOutBlockHeight), math.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
