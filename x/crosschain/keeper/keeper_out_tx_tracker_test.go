@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -26,6 +28,23 @@ func createNOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.
 		items[i].Index = fmt.Sprintf("%d-%d", items[i].ChainId, items[i].Nonce)
 
 		keeper.SetOutTxTracker(ctx, items[i])
+	}
+	return items
+}
+
+// create a sequence of OutTxTracker with sparse nonces under a chainID
+func createNSparseOutTxTracker(keeper *keeper.Keeper, ctx sdk.Context, chainID int64, nonceStart uint64, n int) []types.OutTxTracker {
+	items := make([]types.OutTxTracker, n)
+	step := rand.Intn(10) + 1
+	nextNonce := nonceStart + uint64(step)
+	for i := range items {
+		items[i].ChainId = chainID
+		items[i].Nonce = nextNonce
+		items[i].Index = fmt.Sprintf("%d-%d", items[i].ChainId, items[i].Nonce)
+
+		keeper.SetOutTxTracker(ctx, items[i])
+		step = rand.Intn(10) + 1
+		nextNonce = nextNonce + uint64(step)
 	}
 	return items
 }
@@ -67,6 +86,44 @@ func TestOutTxTrackerGetAll(t *testing.T) {
 	require.ElementsMatch(t,
 		nullify.Fill(items),
 		nullify.Fill(keeper.GetAllOutTxTracker(ctx)),
+	)
+}
+
+func TestOutTxTrackerGetAllBeforeNonce(t *testing.T) {
+	keeper, ctx := keepertest.CrosschainKeeper(t)
+	itemsGorlie := createNSparseOutTxTracker(keeper, ctx, 5, 0, 100)
+	itemsBSCTest := createNSparseOutTxTracker(keeper, ctx, 97, 0, 100)
+	itemsMumbai := createNSparseOutTxTracker(keeper, ctx, 80001, 0, 100)
+	pg := &query.PageRequest{
+		Key:        nil,
+		Offset:     0,
+		Limit:      300,
+		CountTotal: false,
+		Reverse:    false,
+	}
+
+	//should get 50 Gorlie trackers
+	gotGorlie, err := keeper.GetAllTrackerByChainBeforeNonce(ctx, 5, int64(itemsGorlie[49].Nonce+1), pg)
+	require.Nil(t, err)
+	require.ElementsMatch(t,
+		nullify.Fill(itemsGorlie[:50]), // should get all nonces before 50th
+		nullify.Fill(gotGorlie),
+	)
+
+	// should get 50 BSCTest trackers
+	gotBSCTest, err := keeper.GetAllTrackerByChainBeforeNonce(ctx, 97, int64(itemsBSCTest[50].Nonce), pg)
+	require.Nil(t, err)
+	require.ElementsMatch(t,
+		nullify.Fill(itemsBSCTest[:50]),
+		nullify.Fill(gotBSCTest),
+	)
+
+	// should get all Mumbai trackers
+	gotMumbai, err := keeper.GetAllTrackerByChainBeforeNonce(ctx, 80001, int64(itemsMumbai[99].Nonce+1), pg)
+	require.Nil(t, err)
+	require.ElementsMatch(t,
+		nullify.Fill(itemsMumbai),
+		nullify.Fill(gotMumbai),
 	)
 }
 

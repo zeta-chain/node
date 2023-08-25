@@ -135,7 +135,16 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{
+		ChainId: chainID,
+		Pagination: &query.PageRequest{
+			Key:        nil,
+			Offset:     0,
+			Limit:      300, // iterates 300 missed trackers (for cctx's nonce < nonceHigh) at most
+			CountTotal: false,
+			Reverse:    false,
+		},
+	}, maxSizeOption)
 	if err != nil {
 		return nil, err
 	}

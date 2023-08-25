@@ -152,6 +152,9 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
 }
 
+// A pending ccxts meets one of the following 2 conditions:
+//   - The cctx's nonce falls within the range of [0, NonceLow) but its out tx tracker has not yet been cleared.
+//   - The cctx's nonce falls within the range of [NonceLow, NonceHigh).
 func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPendingRequest) (*types.QueryAllCctxPendingResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -167,17 +170,17 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	}
 	sends := make([]*types.CrossChainTx, 0)
 
-	// now query the previous nonces up to 100 prior to find any pending cctx that we might have missed
+	// query out tx trackers whose nonces fall in the range of [0, NonceLow) that we might have missed.
 	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
 	// therefore might mask some lower nonce cctx that is still pending.
-	startNonce := p.NonceLow - 100
-	if startNonce < 0 {
-		startNonce = 0
+	outTxTrackers, err := k.GetAllTrackerByChainBeforeNonce(ctx, int64(req.ChainId), p.NonceLow, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to query out tx trackers by chain %d before nonce %d", req.ChainId, p.NonceLow))
 	}
-	for i := startNonce; i < p.NonceLow; i++ {
-		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+	for _, tracker := range outTxTrackers {
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), int64(tracker.Nonce))
 		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", tracker.Nonce, req.ChainId))
 		}
 		send, found := k.GetCrossChainTx(ctx, res.CctxIndex)
 		if !found {
@@ -192,11 +195,11 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	for i := p.NonceLow; i < p.NonceHigh; i++ {
 		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
 		if !found {
-			return nil, status.Error(codes.Internal, "nonceToCctx not found")
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
 		}
 		cctx, found := k.GetCrossChainTx(ctx, ntc.CctxIndex)
 		if !found {
-			return nil, status.Error(codes.Internal, "cctxIndex not found")
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", ntc.CctxIndex))
 		}
 		sends = append(sends, &cctx)
 	}

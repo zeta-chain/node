@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -135,6 +136,34 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	}
 
 	return &types.QueryAllOutTxTrackerByChainResponse{OutTxTracker: outTxTrackers, Pagination: pageRes}, nil
+}
+
+func (k Keeper) GetAllTrackerByChainBeforeNonce(c context.Context, chainID int64, nonceHigh int64, pg *query.PageRequest) ([]types.OutTxTracker, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	store := ctx.KVStore(k.storeKey)
+	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+
+	var outTxTrackers []types.OutTxTracker
+	_, err := query.Paginate(outTxTrackerStore, pg, func(key []byte, value []byte) error {
+		var outTxTracker types.OutTxTracker
+		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
+			return err
+		}
+		if outTxTracker.ChainId == chainID && outTxTracker.Nonce < uint64(nonceHigh) {
+			outTxTrackers = append(outTxTrackers, outTxTracker)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// sort by nonce ascending
+	sort.Slice(outTxTrackers, func(i, j int) bool {
+		return outTxTrackers[i].Nonce < outTxTrackers[j].Nonce
+	})
+
+	return outTxTrackers, nil
 }
 
 func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerRequest) (*types.QueryGetOutTxTrackerResponse, error) {
