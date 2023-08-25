@@ -1,4 +1,4 @@
-package fungible_test
+package emissions_test
 
 import (
 	"testing"
@@ -7,25 +7,24 @@ import (
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/fungible"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/zetacore/x/emissions"
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
-		ForeignCoinsList: []types.ForeignCoins{
-			sample.ForeignCoins(t),
-			sample.ForeignCoins(t),
-			sample.ForeignCoins(t),
+		WithdrawableEmissions: []types.WithdrawableEmissions{
+			sample.WithdrawableEmissions(t),
+			sample.WithdrawableEmissions(t),
+			sample.WithdrawableEmissions(t),
 		},
-		SystemContract: sample.SystemContract(),
 	}
 
 	// Init and export
-	k, ctx := keepertest.FungibleKeeper(t)
-	fungible.InitGenesis(ctx, *k, genesisState)
-	got := fungible.ExportGenesis(ctx, *k)
+	k, ctx := keepertest.EmissionsKeeper(t)
+	emissions.InitGenesis(ctx, *k, genesisState)
+	got := emissions.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
 
 	// Compare genesis after init and export
