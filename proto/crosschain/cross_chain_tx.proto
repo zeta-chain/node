@@ -50,6 +50,12 @@ message OutboundTxParams {
   uint64 outbound_tx_observed_external_height = 10;
 }
 
+message Status {
+  CctxStatus status = 1;
+  string status_message = 2;
+  int64 lastUpdate_timestamp = 3;
+}
+
 message CrossChainTx {
   string creator = 1;
   string index = 2;
@@ -62,10 +68,4 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundTxParams inbound_tx_params = 9;
   repeated OutboundTxParams outbound_tx_params = 10;
-}
-
-message Status {
-  CctxStatus status = 1;
-  string status_message = 2;
-  int64 lastUpdate_timestamp = 3;
 }
