@@ -130,7 +130,7 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
-						ob, err := co.getTargetChainOb(c.ChainId)
+						ob, err := co.getUpdatedChainOb(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
 							continue
@@ -182,8 +182,8 @@ func (co *CoreObserver) startSendScheduler() {
 								continue
 							}
 							currentHeight := uint64(bn)
-							interval := uint64(ob.GetCoreParameters().OutboundTxScheduleInterval)
-							lookahead := uint64(ob.GetCoreParameters().OutboundTxScheduleLookahead)
+							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
+							lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
 
 							// determining critical outtx; if it satisfies following criteria
 							// 1. it's the first pending outtx for this chain
@@ -227,19 +227,37 @@ func (co *CoreObserver) startSendScheduler() {
 	}
 }
 
-func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
-	chainStr, err := common.GetChainNameFromChainID(chainID)
+func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
+	chainOb, err := co.getTargetChainOb(chainID)
 	if err != nil {
-		return nil, fmt.Errorf("chain %d not found", chainID)
+		return nil, err
 	}
-	chainName := common.ParseChainName(chainStr)
-	c := common.GetChainFromChainName(chainName)
+	// update chain client core parameters
+	curParams := chainOb.GetCoreParams()
+	if common.IsEVMChain(chainID) {
+		evmCfg, found := co.cfg.GetEVMConfig(chainID)
+		if found && curParams != evmCfg.CoreParams {
+			chainOb.SetCoreParams(evmCfg.CoreParams)
+			co.logger.ZetaChainWatcher.Info().Msgf("updated core params for chainID %d, new params: %v", chainID, evmCfg.CoreParams)
+		}
+	} else if common.IsBitcoinChain(chainID) {
+		_, btcCfg, found := co.cfg.GetBTCConfig()
+		if found && curParams != btcCfg.CoreParams {
+			chainOb.SetCoreParams(btcCfg.CoreParams)
+			co.logger.ZetaChainWatcher.Info().Msgf("updated core params for Bitcoin, new params: %v", btcCfg.CoreParams)
+		}
+	}
+	return chainOb, nil
+}
+
+func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
+	c := common.GetChainFromChainID(chainID)
 	if c == nil {
-		return nil, fmt.Errorf("chain %s not found", chainName)
+		return nil, fmt.Errorf("chain not found for chainID %d", chainID)
 	}
 	chainOb, found := co.clientMap[*c]
 	if !found {
-		return nil, fmt.Errorf("chain %s not found", c)
+		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
 	}
 	return chainOb, nil
 }

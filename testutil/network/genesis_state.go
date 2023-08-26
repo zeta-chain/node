@@ -32,13 +32,15 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	}
 
 	crossChainGenesis.Params.Enabled = true
+	assert.NoError(t, crossChainGenesis.Validate())
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
 	assert.NoError(t, err)
 
-	// Cross-chain genesis state
+	// EVM genesis state
 	var evmGenesisState evmtypes.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
 	evmGenesisState.Params.EvmDenom = cmdcfg.BaseDenom
+	assert.NoError(t, evmGenesisState.Validate())
 	evmGenesisBz, err := codec.MarshalJSON(&evmGenesisState)
 	assert.NoError(t, err)
 
@@ -67,6 +69,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		GranteePubkeys: observerList,
 		BlockNumber:    5,
 	}
+	assert.NoError(t, observerGenesis.Validate())
 	observerGenesis.PermissionFlags = &observerTypes.PermissionFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
@@ -96,6 +99,8 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	}
 	nullify.Fill(&permissionFlags)
 	state.PermissionFlags = permissionFlags
+
+	assert.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
@@ -154,6 +159,8 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 		nullify.Fill(&inTxHashToCctx)
 		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
 	}
+
+	assert.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
