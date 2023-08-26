@@ -1,0 +1,5 @@
+"breaking:proto":
+  - any: "proto/**/*.proto"
+
+"breaking:cli":
+  - any: "x/*/client/cli/*.go"
