@@ -1,5 +1,5 @@
-breaking-proto:
+breaking:proto:
   - "proto/**/*.proto"
 
-breaking-cli:
+breaking:cli:
   - "x/*/client/cli/*.go"
