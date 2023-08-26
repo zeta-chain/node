@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	eth "github.com/ethereum/go-ethereum/crypto"
 	"github.com/tendermint/tendermint/crypto"
@@ -190,4 +193,17 @@ func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
 		Secp256k1: secp256k1,
 		Ed25519:   ed25519,
 	}
+}
+
+func GetPubkeyBech32FromRecord(record *keyring.Record) (string, error) {
+	pk, ok := record.PubKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return "", errors.New("unable to cast any to cryptotypes.PubKey")
+	}
+
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pk)
+	if err != nil {
+		fmt.Println("fail to get address from pubkey,err:%w", err)
+	}
+	return s, nil
 }

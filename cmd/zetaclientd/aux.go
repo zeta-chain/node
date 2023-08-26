@@ -19,19 +19,18 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	zetaclient.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaBridge(chainHomeFolder string, config *config.Config) (*zetaclient.ZetaCoreBridge, error) {
-	signerPass := "password"
-	chainIP := config.ZetaCoreURL
-	kb, err := zetaclient.GetKeyringKeybase(config.AuthzHotkey, chainHomeFolder, signerPass)
+func CreateZetaBridge(cfg *config.Config) (*zetaclient.ZetaCoreBridge, error) {
+	chainIP := cfg.ZetaCoreURL
+	kb, _, err := zetaclient.GetKeyringKeybase(cfg)
 	if err != nil {
 		return nil, err
 	}
-	granterAddreess, err := cosmos.AccAddressFromBech32(config.AuthzGranter)
+	granterAddreess, err := cosmos.AccAddressFromBech32(cfg.AuthzGranter)
 	if err != nil {
 		return nil, err
 	}
-	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, config.AuthzHotkey, signerPass)
-	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, config.AuthzHotkey, config.ChainID)
+	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, cfg.SignerPass)
+	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, cfg.AuthzHotkey, cfg.ChainID)
 	if err != nil {
 		return nil, err
 	}

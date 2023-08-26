@@ -62,7 +62,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetaBridge, err := CreateZetaBridge(rootArgs.zetaCoreHome, cfg)
+	zetaBridge, err := CreateZetaBridge(cfg)
 	if err != nil {
 		panic(err)
 	}

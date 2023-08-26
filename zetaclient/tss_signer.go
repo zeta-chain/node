@@ -356,27 +356,39 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	if err != nil {
 		return nil, err
 	}
-	err = tss.VerifyKeysharesForPubkeys(tssHistoricalList)
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("-------------------")
+	fmt.Println(tssHistoricalList)
+	fmt.Println(pubkeyInBech32)
+	err = tss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
 		return nil, err
 	}
 	return &tss, nil
 }
 
-func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS) error {
-	countPubkeysFromKeyshare := len(tss.Keys)
-	countPunkeysFromZetacore := len(tssList)
-	if countPubkeysFromKeyshare != countPunkeysFromZetacore {
-		return fmt.Errorf("number of pubkeys from keyshare (%d) not equal to number of pubkeys from zetacore (%d)", countPubkeysFromKeyshare, countPunkeysFromZetacore)
-	}
+func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
-		if _, ok := tss.Keys[t.TssPubkey]; !ok {
-			return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
+		if NodeWasPartOfTss(granteePubKey32, t.TssParticipantList) {
+			if _, ok := tss.Keys[t.TssPubkey]; !ok {
+				return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
+			}
 		}
 	}
 	return nil
 }
 
+func NodeWasPartOfTss(granteePubKey32 string, granteeList []string) bool {
+	for _, grantee := range granteeList {
+		if granteePubKey32 == grantee {
+			return true
+		}
+	}
+	return false
+}
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
 	if err != nil {

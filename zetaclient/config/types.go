@@ -69,11 +69,13 @@ type Config struct {
 	LogLevel      zerolog.Level
 	LogSampler    bool
 	PreParamsPath string
+	ZetaCoreHome  string
 	Keygen        zetaObserverTypes.Keygen
 	ChainID       string
 	ZetaCoreURL   string
 	AuthzGranter  string
 	AuthzHotkey   string
+	SignerPass    string
 
 	ChainsEnabled       []common.Chain
 	EVMChainConfigs     map[int64]*EVMConfig // TODO : chain to chain id

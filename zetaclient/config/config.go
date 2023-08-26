@@ -46,6 +46,8 @@ func Load(path string) (*Config, error) {
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	cfg.CurrentTssPubkey = ""
+	cfg.ZetaCoreHome = path
+	cfg.SignerPass = "password"
 	return cfg, nil
 }
 
