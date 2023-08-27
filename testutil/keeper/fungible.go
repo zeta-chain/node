@@ -51,7 +51,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create observer keeper
-	var observerKeeper types.ObserverKeeper = ObserverKeeper(
+	var observerKeeper types.ObserverKeeper = initObserverKeeper(
 		cdc,
 		db,
 		stateStore,
