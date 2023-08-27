@@ -3,8 +3,6 @@ package keeper
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,8 +42,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	// Initialize local store
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := NewCodec()
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
@@ -82,7 +79,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	k := keeper.NewKeeper(
-		codec.NewProtoCodec(registry),
+		cdc,
 		storeKey,
 		memStoreKey,
 		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
