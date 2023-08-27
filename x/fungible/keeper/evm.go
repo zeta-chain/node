@@ -188,7 +188,7 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 	return contractAddr, nil
 }
 
-// Depoisit ZRC4 tokens into to account;
+// DepositZRC20 deposits ZRC4 tokens into to account;
 // Callable only by the fungible module account
 // returns directly CallEVM()
 func (k Keeper) DepositZRC20(
@@ -205,7 +205,7 @@ func (k Keeper) DepositZRC20(
 	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
 }
 
-// Deposit into ZRC4 and call contract function in a single tx
+// DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
 // callable from fungible module
 // Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,

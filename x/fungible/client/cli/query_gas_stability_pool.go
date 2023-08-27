@@ -18,7 +18,7 @@ func CmdGasStabilityPoolAddress() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			chainID, err := strconv.ParseInt(args[1], 10, 64)
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func CmdGasStabilityPoolBalance() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			chainID, err := strconv.ParseInt(args[1], 10, 64)
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
 			}

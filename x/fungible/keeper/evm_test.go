@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"testing"
 
@@ -15,6 +16,28 @@ import (
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
+
+func TestKeeper_DeploySystemContract(t *testing.T) {
+	t.Run("deploy the system contract at the given address", func(t *testing.T) {
+		// k, ctx := testkeeper.FungibleNoMocks(t)
+	})
+}
+
+func TestKeeper_DeployWZETA(t *testing.T) {
+	t.Run("deploy the wzeta contract at the given address", func(t *testing.T) {
+		k, ctx := testkeeper.FungibleKeeper(t)
+		ctx = ctx.WithChainID("test_1-1")
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		addr, err := k.DeployWZETA(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, addr)
+
+		found, err := k.GetWZetaContractAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, addr, found)
+	})
+}
 
 func TestKeeper_CallEVMWithData(t *testing.T) {
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {

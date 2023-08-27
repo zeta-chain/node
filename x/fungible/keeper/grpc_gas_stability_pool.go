@@ -37,7 +37,7 @@ func (k Keeper) GasStabilityPoolBalance(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if balance == nil {
-		return nil, status.Error(codes.NotFound, "not found")
+		return nil, status.Error(codes.NotFound, "no balance for the gas stability pool")
 	}
 
 	return &types.QueryGetGasStabilityPoolBalanceResponse{Balance: balance.String()}, nil
