@@ -16,7 +16,6 @@ import (
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 type FungibleMockOptions struct {
@@ -101,7 +100,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		observerKeeper,
 	)
 
-	fungiblemodule.InitGenesis(ctx, *k, *fungibletypes.DefaultGenesis())
+	fungiblemodule.InitGenesis(ctx, *k, *types.DefaultGenesis())
 
 	return k, ctx
 }

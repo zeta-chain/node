@@ -292,6 +292,7 @@ func (sdkm SDKModules) InitGenesis(ctx sdk.Context) {
 
 // InitBlockProposer initialize the block proposer for test purposes with an associated validator
 func (sdkm SDKModules) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+	// #nosec G404 test purpose - weak randomness is not an issue here
 	r := rand.New(rand.NewSource(42))
 
 	// Set validator in the store
