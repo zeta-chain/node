@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"testing"
 
@@ -23,18 +24,55 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 	})
 }
 
-func TestKeeper_DeployWZETA(t *testing.T) {
-	t.Run("deploy the wzeta contract at the given address", func(t *testing.T) {
-		k, ctx := testkeeper.FungibleKeeper(t)
+func TestKeeper_Deploy(t *testing.T) {
+	t.Run("deploy the contracts", func(t *testing.T) {
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		addr, err := k.DeployWZETA(ctx)
+		// can deploy wzeta
+		wzeta, err := k.DeployWZETA(ctx)
 		require.NoError(t, err)
-		require.NotEmpty(t, addr)
+		require.NotEmpty(t, wzeta)
 
-		//found, err := k.GetWZetaContractAddress(ctx)
+		// can deploy uniswap v2 factory
+		uniswapV2Factory, err := k.DeployUniswapV2Factory(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, uniswapV2Factory)
+
+		// can deploy uniswap v2 router
+		uniswapV2Router, err := k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+		require.NoError(t, err)
+		require.NotEmpty(t, uniswapV2Router)
+
+		// can deploy connector zevm
+		connector, err := k.DeployConnectorZEVM(ctx, wzeta)
+		require.NoError(t, err)
+		require.NotEmpty(t, connector)
+
+		// can deploy system contract
+		systemContract, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
+		require.NoError(t, err)
+		require.NotEmpty(t, systemContract)
+
+		// can find system contract address
+		found, err := k.GetSystemContractAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, systemContract, found)
+
+		acc := sdkk.EvmKeeper.GetAccount(ctx, systemContract)
+		require.NotNil(t, acc)
+		code := sdkk.EvmKeeper.GetCode(ctx, common.BytesToHash(acc.CodeHash))
+		_ = code
+
+		// can find factory address
+		found, err = k.GetUniswapV2Router02Address(ctx)
+		require.NoError(t, err)
+		require.Equal(t, wzeta, found)
+
+		// can find the contract addresses
+		//found, err = k.GetWZetaContractAddress(ctx)
 		//require.NoError(t, err)
-		//require.Equal(t, addr, found)
+		//require.Equal(t, wzeta, found)
 	})
 }
 

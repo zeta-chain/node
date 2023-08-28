@@ -36,7 +36,8 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-type SDKModules struct {
+// SDKKeepers is a struct containing regular SDK module keepers for test purposes
+type SDKKeepers struct {
 	ParamsKeeper    paramskeeper.Keeper
 	AuthKeeper      authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
@@ -264,7 +265,7 @@ func NewSDKKeepers(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-) SDKModules {
+) SDKKeepers {
 	paramsKeeper := ParamsKeeper(cdc, db, ss)
 	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
 	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
@@ -272,7 +273,7 @@ func NewSDKKeepers(
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
 
-	return SDKModules{
+	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,
 		AuthKeeper:      authKeeper,
 		BankKeeper:      bankKeeper,
@@ -283,7 +284,7 @@ func NewSDKKeepers(
 }
 
 // InitGenesis initializes the test modules genesis state
-func (sdkm SDKModules) InitGenesis(ctx sdk.Context) {
+func (sdkm SDKKeepers) InitGenesis(ctx sdk.Context) {
 	sdkm.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
 	sdkm.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
 	sdkm.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
@@ -291,7 +292,7 @@ func (sdkm SDKModules) InitGenesis(ctx sdk.Context) {
 }
 
 // InitBlockProposer initialize the block proposer for test purposes with an associated validator
-func (sdkm SDKModules) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+func (sdkm SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
 	// #nosec G404 test purpose - weak randomness is not an issue here
 	r := rand.New(rand.NewSource(42))
 
