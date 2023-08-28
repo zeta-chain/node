@@ -5,8 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -16,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/server/config"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func TestKeeper_DeploySystemContract(t *testing.T) {
