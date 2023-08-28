@@ -71,3 +71,33 @@ func CmdShowInTxHashToCctx() *cobra.Command {
 
 	return cmd
 }
+
+func CmdInTxHashToCctxData() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "in-tx-hash-to-cctx-data [in-tx-hash]",
+		Short: "query a cctx data from a in tx hash",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			argInTxHash := args[0]
+
+			params := &types.QueryInTxHashToCctxDataRequest{
+				InTxHash: argInTxHash,
+			}
+
+			res, err := queryClient.InTxHashToCctxData(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

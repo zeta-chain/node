@@ -27,8 +27,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type SDKModules struct {
@@ -273,25 +271,4 @@ func NewSDKKeepers(
 		FeeMarketKeeper: feeMarketKeeper,
 		EvmKeeper:       evmKeeper,
 	}
-}
-
-// ObserverKeeper instantiates an observer keeper for testing purposes
-func ObserverKeeper(
-	cdc codec.Codec,
-	db *tmdb.MemDB,
-	ss store.CommitMultiStore,
-	stakingKeeper stakingkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
-) *observerkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(observertypes.StoreKey)
-	memKey := sdk.NewKVStoreKey(observertypes.MemStoreKey)
-	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-
-	return observerkeeper.NewKeeper(
-		cdc,
-		storeKey,
-		memKey,
-		paramKeeper.Subspace(observertypes.ModuleName),
-		stakingKeeper,
-	)
 }
