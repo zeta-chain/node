@@ -67,12 +67,12 @@ func TestKeeper_Deploy(t *testing.T) {
 		// can find factory address
 		found, err = k.GetUniswapV2Router02Address(ctx)
 		require.NoError(t, err)
-		require.Equal(t, wzeta, found)
+		require.Equal(t, uniswapV2Router, found)
 
 		// can find the contract addresses
-		//found, err = k.GetWZetaContractAddress(ctx)
-		//require.NoError(t, err)
-		//require.Equal(t, wzeta, found)
+		found, err = k.GetWZetaContractAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, wzeta, found)
 	})
 }
 

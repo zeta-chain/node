@@ -4,9 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -24,13 +21,16 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ethermint "github.com/evmos/ethermint/types"
 	evmmodule "github.com/evmos/ethermint/x/evm"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -104,7 +104,7 @@ func AccountKeeper(
 		cdc,
 		storeKey,
 		paramKeeper.Subspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount,
+		ethermint.ProtoAccount,
 		moduleAccountPerms,
 		"zeta",
 	)
