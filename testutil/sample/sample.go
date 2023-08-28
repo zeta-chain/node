@@ -2,14 +2,29 @@ package sample
 
 import (
 	"errors"
+	"hash/fnv"
 	"math/rand"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 )
 
 var ErrSample = errors.New("sample error")
+
+func newRandFromSeed(s int64) *rand.Rand {
+	// #nosec G404 test purpose - weak randomness is not an issue here
+	return rand.New(rand.NewSource(s))
+}
+
+func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
+	h := fnv.New64a()
+	_, err := h.Write([]byte(s))
+	require.NoError(t, err)
+	return newRandFromSeed(int64(h.Sum64()))
+}
 
 // AccAddress returns a sample account address
 func AccAddress() string {

@@ -103,7 +103,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byt
 		log.Warn().Msg("keysign fail")
 	}
 	if ksRes.Status == thorcommon.Fail {
-		log.Warn().Msg("keysign status FAIL posting blame to core")
+		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
@@ -433,9 +433,9 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
-	IP := os.Getenv("MYIP")
+	IP := cfg.PublicIP
 	if len(IP) == 0 {
-		log.Info().Msg("empty env MYIP")
+		log.Info().Msg("empty public IP in config")
 	}
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,

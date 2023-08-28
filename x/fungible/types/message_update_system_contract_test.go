@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,17 +6,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgUpdateSystemContract
+		msg  types.MsgUpdateSystemContract
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgUpdateSystemContract{
+			msg: types.MsgUpdateSystemContract{
 				Creator:                  "invalid_address",
 				NewSystemContractAddress: sample.EthAddress().String(),
 			},
@@ -24,7 +25,7 @@ func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid new system contract address",
-			msg: MsgUpdateSystemContract{
+			msg: types.MsgUpdateSystemContract{
 				Creator:                  sample.AccAddress(),
 				NewSystemContractAddress: "invalid_address",
 			},
@@ -32,7 +33,7 @@ func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: MsgUpdateSystemContract{
+			msg: types.MsgUpdateSystemContract{
 				Creator:                  sample.AccAddress(),
 				NewSystemContractAddress: sample.EthAddress().String(),
 			},

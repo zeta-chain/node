@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -7,17 +7,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgUpdateZRC20WithdrawFee
+		msg  types.MsgUpdateZRC20WithdrawFee
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        "invalid_address",
 				Zrc20Address:   sample.EthAddress().String(),
 				NewWithdrawFee: sdk.NewUint(1),
@@ -26,7 +27,7 @@ func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid new system contract address",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        sample.AccAddress(),
 				Zrc20Address:   "invalid_address",
 				NewWithdrawFee: sdk.NewUint(1),
@@ -35,7 +36,7 @@ func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid new withdraw fee",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:      sample.AccAddress(),
 				Zrc20Address: sample.EthAddress().String(),
 			},
@@ -43,7 +44,7 @@ func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid message",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        sample.AccAddress(),
 				Zrc20Address:   sample.EthAddress().String(),
 				NewWithdrawFee: sdk.NewUint(1),
