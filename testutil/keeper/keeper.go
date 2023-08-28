@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"math/rand"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"

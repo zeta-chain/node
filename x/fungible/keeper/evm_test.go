@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
