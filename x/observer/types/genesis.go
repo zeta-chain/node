@@ -15,7 +15,7 @@ func DefaultGenesis() *GenesisState {
 		Ballots:           nil,
 		Observers:         nil,
 		NodeAccountList:   []*NodeAccount{},
-		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true},
+		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
 		Keygen:            nil,
 		LastObserverCount: nil,
 	}
