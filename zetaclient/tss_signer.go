@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/common"
@@ -79,7 +81,8 @@ type TSS struct {
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
-	coreBridge    *ZetaCoreBridge
+	CoreBridge    *ZetaCoreBridge
+	Metrics       *ChainMetrics
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -105,16 +108,27 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		log.Warn().Msg("keysign fail")
 	}
 	if ksRes.Status == thorcommon.Fail {
-		log.Warn().Msg("keysign status FAIL posting blame to core")
+		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 	signature := ksRes.Signatures
@@ -169,11 +183,22 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digest := combineDigests(digestBase64)
 		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 
@@ -349,7 +374,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 		Keys:          make(map[string]*TSSKey),
 		CurrentPubkey: cfg.CurrentTssPubkey,
 		logger:        log.With().Str("module", "tss_signer").Logger(),
-		coreBridge:    bridge,
+		CoreBridge:    bridge,
 	}
 
 	err = tss.LoadTssFilesFromDirectory(cfg.TssPath)
@@ -365,6 +390,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	fmt.Println(pubkeyInBech32)
 	err = tss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
+		fmt.Println("ReadDir error", err)
 		return nil, err
 	}
 	return &tss, nil
@@ -446,9 +472,9 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
-	IP := os.Getenv("MYIP")
+	IP := cfg.PublicIP
 	if len(IP) == 0 {
-		log.Info().Msg("empty env MYIP")
+		log.Info().Msg("empty public IP in config")
 	}
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,
@@ -543,4 +569,19 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
+}
+
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.Metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

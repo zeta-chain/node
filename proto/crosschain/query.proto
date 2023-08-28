@@ -42,6 +42,11 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx/{inTxHash}";
   }
 
+  // Queries a InTxHashToCctx data by index.
+  rpc InTxHashToCctxData(QueryInTxHashToCctxDataRequest) returns (QueryInTxHashToCctxDataResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}";
+  }
+
   // Queries a list of InTxHashToCctx items.
   rpc InTxHashToCctxAll(QueryAllInTxHashToCctxRequest) returns (QueryAllInTxHashToCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
@@ -177,6 +182,14 @@ message QueryGetInTxHashToCctxRequest {
 
 message QueryGetInTxHashToCctxResponse {
   InTxHashToCctx inTxHashToCctx = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryInTxHashToCctxDataRequest {
+  string inTxHash = 1;
+}
+
+message QueryInTxHashToCctxDataResponse {
+  repeated CrossChainTx CrossChainTxs = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllInTxHashToCctxRequest {

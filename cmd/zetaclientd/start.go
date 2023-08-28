@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"time"
 
 	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
@@ -56,7 +55,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	masterLogger := log.Logger
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
-	setMYIP(cfg, startLogger)
+
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
@@ -75,10 +74,16 @@ func start(_ *cobra.Command, _ []string) error {
 	CreateAuthzSigner(zetaBridge.GetKeys().GetOperatorAddress().String(), zetaBridge.GetKeys().GetAddress())
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
-	// ConfigUpdater : This runs at every tick to check for configuration from zetacore and updates config if there are any changes . Zetacore stores configuration information which is common across all clients
-	go zetaBridge.ConfigUpdater(cfg)
-	time.Sleep((time.Duration(cfg.ConfigUpdateTicker) + 1) * time.Second)
+	// Initialize core parameters from zetacore
+	err = zetaBridge.UpdateConfigFromCore(cfg, true)
+	if err != nil {
+		startLogger.Error().Err(err).Msg("Error getting core parameters")
+		return err
+	}
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
+
+	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
+	go zetaBridge.ConfigUpdater(cfg)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
@@ -93,8 +98,7 @@ func start(_ *cobra.Command, _ []string) error {
 		log.Error().Msgf(errMsg)
 		return errors.New(errMsg)
 	}
-	var priKey secp256k1.PrivKey
-	priKey = bridgePk.Bytes()[:32]
+	priKey := secp256k1.PrivKey(bridgePk.Bytes()[:32])
 
 	// Generate pre Params if not present already
 	peers, err := initPeers(cfg.Peer)
@@ -123,6 +127,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
 	}
 
+	telemetryServer.SetIPAddress(cfg.PublicIP)
 	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList)
 	if err != nil {
 		return err
@@ -140,7 +145,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap1, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
+	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -156,6 +161,13 @@ func start(_ *cobra.Command, _ []string) error {
 	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
+	// Register zetaclient.TSS prometheus metrics
+	err = tss.RegisterMetrics(metrics)
+	if err != nil {
+		startLogger.Err(err).Msg("tss.RegisterMetrics")
+		return err
+	}
+
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
 	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
 	if err != nil {
@@ -167,7 +179,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap1, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
@@ -177,7 +189,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
-	for _, chain := range cfg.ChainsEnabled {
+	for _, chain := range cfg.GetEnabledChains() {
 		(chainClientMap)[chain].Stop()
 	}
 	zetaBridge.Stop()

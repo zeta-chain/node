@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -31,6 +33,20 @@ var EmptyPubKey PubKey
 // EmptyPubKeySet
 //var EmptyPubKeySet PubKeySet
 
+// NewPubKey create a new instance of PubKey
+// key is bech32 encoded string
+
+func GetAddressFromPubkeyString(pubkey string) (sdk.AccAddress, error) {
+	cryptopub, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, pubkey)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := sdk.AccAddressFromHexUnsafe(cryptopub.Address().String())
+	if err != nil {
+		return nil, err
+	}
+	return addr, nil
+}
 func NewPubKey(key string) (PubKey, error) {
 	if len(key) == 0 {
 		return EmptyPubKey, nil

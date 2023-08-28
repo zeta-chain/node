@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,9 +86,33 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 
 // Tx
 
-// Not implemented.
+// AddObserver adds in a new observer to the store.It can be executed using an admin policy account
+// Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
+		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
+	}
+	observerMappers := k.GetAllObserverMappers(ctx)
+	totalObserverCountCurrentBlock := uint64(0)
+	for _, mapper := range observerMappers {
+		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
+		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
+		k.SetObserverMapper(ctx, mapper)
+	}
+	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
+	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
+	k.SetNodeAccount(ctx, types.NodeAccount{
+		Operator:       msg.ObserverAddress,
+		GranteeAddress: granteeAddress.String(),
+		GranteePubkey:  &pubkeySet,
+		NodeStatus:     types.NodeStatus_Active,
+	})
+	k.DisableInboundOnly(ctx)
+	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
+	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
 }
 

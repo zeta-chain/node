@@ -34,7 +34,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	file = filepath.Clean(file)
-	cfg := &Config{}
+	cfg := NewConfig()
 	input, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err

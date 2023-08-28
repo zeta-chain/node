@@ -32,7 +32,8 @@ import (
 	//"strconv"
 	//"strings"
 
-	stypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -106,7 +107,7 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	banktypes.RegisterLegacyAminoCodec(cdc)
 	authtypes.RegisterLegacyAminoCodec(cdc)
 	cosmos.RegisterCodec(cdc)
-	stypes.RegisterCodec(cdc)
+	crosschaintypes.RegisterCodec(cdc)
 	return cdc
 }
 
@@ -151,7 +152,7 @@ func (b *ZetaCoreBridge) GetKeys() *Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
+func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err
@@ -170,33 +171,29 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	chains := make([]common.Chain, len(coreParams))
+	newChains := make([]common.Chain, len(coreParams))
+	newEVMParams := make(map[int64]*observertypes.CoreParams)
+	var newBTCParams *observertypes.CoreParams
+
+	// check and update core params for each chain
 	for i, params := range coreParams {
-		chains[i] = *common.GetChainFromChainID(params.ChainId)
+		err := config.ValidateCoreParams(params)
+		if err != nil {
+			return err
+		}
+		newChains[i] = *common.GetChainFromChainID(params.ChainId)
 		if common.IsBitcoinChain(params.ChainId) {
-			if cfg.BitcoinConfig == nil {
-				panic("BitcoinConfig is nil for this client")
-			}
-			if cfg.BitcoinConfig.CoreParams == nil {
-				cfg.BitcoinConfig.CoreParams = config.NewCoreParams()
-			}
-			cfg.BitcoinConfig.CoreParams.UpdateCoreParams(params)
-			continue
+			newBTCParams = params
+		} else {
+			newEVMParams[params.ChainId] = params
 		}
-		_, found := cfg.EVMChainConfigs[params.ChainId]
-		if !found {
-			panic(fmt.Sprintf("EvmConfig %d is nil for this client ", params.ChainId))
-		}
-		if cfg.EVMChainConfigs[params.ChainId].CoreParams == nil {
-			cfg.EVMChainConfigs[params.ChainId].CoreParams = config.NewCoreParams()
-		}
-		cfg.EVMChainConfigs[params.ChainId].CoreParams.UpdateCoreParams(params)
 	}
-	cfg.ChainsEnabled = chains
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
 		return err
 	}
+	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+
 	cfg.Keygen = *keyGen
 	tss, err := b.GetCurrentTss()
 	if err != nil {

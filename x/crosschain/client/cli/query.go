@@ -36,6 +36,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdListSend(),
 		CmdShowSend(),
 		CmdLastZetaHeight(),
+		CmdInTxHashToCctxData(),
 		CmdListInTxHashToCctx(),
 		CmdShowInTxHashToCctx(),
 		CmdQueryParams(),
