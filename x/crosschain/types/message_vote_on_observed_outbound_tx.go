@@ -16,6 +16,7 @@ func NewMsgVoteOnObservedOutboundTx(
 	outTxHash string,
 	outBlockHeight,
 	outTxGasUsed uint64,
+	outTxEffectiveGasPrice math.Int,
 	mMint math.Uint,
 	status common.ReceiveStatus,
 	chain int64,
@@ -23,16 +24,17 @@ func NewMsgVoteOnObservedOutboundTx(
 	coinType common.CoinType,
 ) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
-		Creator:                  creator,
-		CctxHash:                 sendHash,
-		ObservedOutTxHash:        outTxHash,
-		ObservedOutTxBlockHeight: outBlockHeight,
-		ObservedOutTxGasUsed:     outTxGasUsed,
-		ZetaMinted:               mMint,
-		Status:                   status,
-		OutTxChain:               chain,
-		OutTxTssNonce:            nonce,
-		CoinType:                 coinType,
+		Creator:                        creator,
+		CctxHash:                       sendHash,
+		ObservedOutTxHash:              outTxHash,
+		ObservedOutTxBlockHeight:       outBlockHeight,
+		ObservedOutTxGasUsed:           outTxGasUsed,
+		ObservedOutTxEffectiveGasPrice: outTxEffectiveGasPrice,
+		ZetaMinted:                     mMint,
+		Status:                         status,
+		OutTxChain:                     chain,
+		OutTxTssNonce:                  nonce,
+		CoinType:                       coinType,
 	}
 }
 
@@ -65,6 +67,7 @@ func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 	if msg.OutTxChain < 0 {
 		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
 	}
+
 	return nil
 }
 

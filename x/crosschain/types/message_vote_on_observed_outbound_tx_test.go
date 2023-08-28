@@ -21,6 +21,22 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: types.MsgVoteOnObservedOutboundTx{
+				Creator:                        sample.AccAddress(),
+				CctxHash:                       sample.String(),
+				ObservedOutTxHash:              sample.String(),
+				ObservedOutTxBlockHeight:       42,
+				ObservedOutTxGasUsed:           42,
+				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
+				ZetaMinted:                     math.NewUint(42),
+				Status:                         common.ReceiveStatus_Created,
+				OutTxChain:                     42,
+				OutTxTssNonce:                  42,
+				CoinType:                       common.CoinType_Zeta,
+			},
+		},
+		{
+			name: "effective gas price can be nil",
+			msg: types.MsgVoteOnObservedOutboundTx{
 				Creator:                  sample.AccAddress(),
 				CctxHash:                 sample.String(),
 				ObservedOutTxHash:        sample.String(),
@@ -36,32 +52,34 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                  "invalid_address",
-				CctxHash:                 sample.String(),
-				ObservedOutTxHash:        sample.String(),
-				ObservedOutTxBlockHeight: 42,
-				ObservedOutTxGasUsed:     42,
-				ZetaMinted:               math.NewUint(42),
-				Status:                   common.ReceiveStatus_Created,
-				OutTxChain:               42,
-				OutTxTssNonce:            42,
-				CoinType:                 common.CoinType_Zeta,
+				Creator:                        "invalid_address",
+				CctxHash:                       sample.String(),
+				ObservedOutTxHash:              sample.String(),
+				ObservedOutTxBlockHeight:       42,
+				ObservedOutTxGasUsed:           42,
+				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
+				ZetaMinted:                     math.NewUint(42),
+				Status:                         common.ReceiveStatus_Created,
+				OutTxChain:                     42,
+				OutTxTssNonce:                  42,
+				CoinType:                       common.CoinType_Zeta,
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid chain ID",
 			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                  sample.AccAddress(),
-				CctxHash:                 sample.String(),
-				ObservedOutTxHash:        sample.String(),
-				ObservedOutTxBlockHeight: 42,
-				ObservedOutTxGasUsed:     42,
-				ZetaMinted:               math.NewUint(42),
-				Status:                   common.ReceiveStatus_Created,
-				OutTxChain:               -1,
-				OutTxTssNonce:            42,
-				CoinType:                 common.CoinType_Zeta,
+				Creator:                        sample.AccAddress(),
+				CctxHash:                       sample.String(),
+				ObservedOutTxHash:              sample.String(),
+				ObservedOutTxBlockHeight:       42,
+				ObservedOutTxGasUsed:           42,
+				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
+				ZetaMinted:                     math.NewUint(42),
+				Status:                         common.ReceiveStatus_Created,
+				OutTxChain:                     -1,
+				OutTxTssNonce:                  42,
+				CoinType:                       common.CoinType_Zeta,
 			},
 			err: types.ErrInvalidChainID,
 		},
@@ -82,16 +100,17 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
 
 	msg := types.MsgVoteOnObservedOutboundTx{
-		Creator:                  sample.AccAddress(),
-		CctxHash:                 sample.String(),
-		ObservedOutTxHash:        sample.String(),
-		ObservedOutTxBlockHeight: 42,
-		ObservedOutTxGasUsed:     42,
-		ZetaMinted:               math.NewUint(42),
-		Status:                   common.ReceiveStatus_Created,
-		OutTxChain:               42,
-		OutTxTssNonce:            42,
-		CoinType:                 common.CoinType_Zeta,
+		Creator:                        sample.AccAddress(),
+		CctxHash:                       sample.String(),
+		ObservedOutTxHash:              sample.String(),
+		ObservedOutTxBlockHeight:       42,
+		ObservedOutTxGasUsed:           42,
+		ObservedOutTxEffectiveGasPrice: math.NewInt(42),
+		ZetaMinted:                     math.NewUint(42),
+		Status:                         common.ReceiveStatus_Created,
+		OutTxChain:                     42,
+		OutTxTssNonce:                  42,
+		CoinType:                       common.CoinType_Zeta,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -131,6 +150,12 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	msg2.ObservedOutTxGasUsed = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx gas used should change hash")
+
+	// observed outbound tx effective gas price used
+	msg2 = msg
+	msg2.ObservedOutTxEffectiveGasPrice = math.NewInt(43)
+	hash2 = msg2.Digest()
+	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas price should change hash")
 
 	// zeta minted used
 	msg2 = msg
