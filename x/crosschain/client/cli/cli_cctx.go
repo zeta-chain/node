@@ -143,7 +143,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [ZetaMinted] [Status] [chain] [outTXNonce] [coinType]",
 		Short: "Broadcast message receiveConfirmation",
-		Args:  cobra.ExactArgs(9),
+		Args:  cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSendHash := args[0]
 			argsOutTxHash := args[1]
