@@ -217,6 +217,7 @@ func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string
 		outtxHash,
 		1,
 		0,
+		math.ZeroInt(),
 		math.NewUintFromString(zetaminted),
 		0,
 		common.GoerliChain().ChainId,
