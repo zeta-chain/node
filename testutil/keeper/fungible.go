@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmmodule "github.com/evmos/ethermint/x/evm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -56,6 +58,18 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.ParamsKeeper,
 	)
 
+	// Create the fungible keeper
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	// Initialize the context
+	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	ctx = ctx.WithChainID("test_1-1")
+
+	defaultGenesis := evmtypes.DefaultGenesisState()
+	evmmodule.InitGenesis(ctx, sdkKeepers.EvmKeeper, sdkKeepers.AuthKeeper, *defaultGenesis)
+
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
 	var bankKeeper types.BankKeeper = sdkKeepers.BankKeeper
@@ -73,11 +87,6 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		evmKeeper = fungiblemocks.NewFungibleEVMKeeper(t)
 	}
 
-	// Create the fungible keeper
-	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
@@ -89,7 +98,6 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		observerKeeper,
 	)
 
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	return k, ctx
 }
 

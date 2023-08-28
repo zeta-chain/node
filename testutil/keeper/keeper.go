@@ -234,7 +234,7 @@ func EVMKeeper(
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
-	return evmkeeper.NewKeeper(
+	k := evmkeeper.NewKeeper(
 		cdc,
 		storeKey,
 		transientKey,
@@ -248,6 +248,8 @@ func EVMKeeper(
 		"",
 		paramKeeper.Subspace(evmtypes.ModuleName),
 	)
+
+	return k
 }
 
 // NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes

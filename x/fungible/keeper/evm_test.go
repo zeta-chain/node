@@ -26,7 +26,6 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 func TestKeeper_DeployWZETA(t *testing.T) {
 	t.Run("deploy the wzeta contract at the given address", func(t *testing.T) {
 		k, ctx := testkeeper.FungibleKeeper(t)
-		ctx = ctx.WithChainID("test_1-1")
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		addr, err := k.DeployWZETA(ctx)
