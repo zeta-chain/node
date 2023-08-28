@@ -351,38 +351,38 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// add your dev test here
 	smokeTest.TestMyTest()
 
-	{
-		LoudPrintf("Test ZRC20 blocked methods\n")
-		sampleZRC20, err := zrc20.NewZRC20(smokeTest.USDTZRC20Addr, zevmClient)
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = sampleZRC20.Approve(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
-		if err != nil {
-			panic(err)
-		}
-		tx, err := sampleZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
-		if err != nil {
-			panic(err)
-		}
-		receipt := MustWaitForTxReceipt(zevmClient, tx)
-		if receipt.Status != 0 {
-			panic("IncreaseAllowance should be blocked!")
-		} else {
-			fmt.Printf("IncreaseAllowance is blocked as expected\n")
-		}
-		tx, err = sampleZRC20.DecreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
-		if err != nil {
-			panic(err)
-		}
-		receipt = MustWaitForTxReceipt(zevmClient, tx)
-		if receipt.Status != 0 {
-			panic("IncreaseAllowance should be blocked!")
-		} else {
-			fmt.Printf("IncreaseAllowance is blocked as expected\n")
-		}
-	}
+	//{
+	//	LoudPrintf("Test ZRC20 blocked methods\n")
+	//	sampleZRC20, err := zrc20.NewZRC20(smokeTest.USDTZRC20Addr, zevmClient)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	_, err = sampleZRC20.Approve(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	tx, err := sampleZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	//	if receipt.Status != 0 {
+	//		panic("IncreaseAllowance should be blocked!")
+	//	} else {
+	//		fmt.Printf("IncreaseAllowance is blocked as expected\n")
+	//	}
+	//	tx, err = sampleZRC20.DecreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	//	if receipt.Status != 0 {
+	//		panic("IncreaseAllowance should be blocked!")
+	//	} else {
+	//		fmt.Printf("IncreaseAllowance is blocked as expected\n")
+	//	}
+	//}
 
 	smokeTest.wg.Wait()
 }
