@@ -34,10 +34,23 @@ type BTCSigner struct {
 
 var _ ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerolog.Logger, ts *TelemetryServer) (*BTCSigner, error) {
+func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logger, ts *TelemetryServer) (*BTCSigner, error) {
+	connCfg := &rpcclient.ConnConfig{
+		Host:         cfg.RPCHost,
+		User:         cfg.RPCUsername,
+		Pass:         cfg.RPCPassword,
+		HTTPPostMode: true,
+		DisableTLS:   true,
+		Params:       cfg.RPCParams,
+	}
+	client, err := rpcclient.New(connCfg, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating bitcoin rpc client: %s", err)
+	}
+
 	return &BTCSigner{
 		tssSigner: tssSigner,
-		rpcClient: rpcClient,
+		rpcClient: client,
 		logger: logger.With().
 			Str("chain", "BTC").
 			Str("module", "BTCSigner").Logger(),

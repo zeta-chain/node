@@ -126,32 +126,31 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 }
 
 func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
-	b.logger.Info().Msg("UpdateConfig started")
+	b.logger.Info().Msg("ConfigUpdater started")
 	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateConfigFromCore(cfg)
+			err := b.UpdateConfigFromCore(cfg, false)
 			if err != nil {
-				b.logger.Err(err).Msg("UpdateConfig error")
-				return
+				b.logger.Err(err).Msg("ConfigUpdater failed to update config")
 			}
 		case <-b.stop:
-			b.logger.Info().Msg("UpdateConfig stopped")
+			b.logger.Info().Msg("ConfigUpdater stopped")
 			return
 		}
 	}
 }
 
-func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chain *common.Chain, index string) (string, error) {
+func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	zetaBlame := &observertypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
 		Nodes:         observertypes.ConvertNodes(blame.BlameNodes),
 	}
-	msg := observertypes.NewMsgAddBlameVoteMsg(signerAddress, chain.ChainId, zetaBlame)
+	msg := observertypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	var gasLimit uint64 = PostBlameDataGasLimit
 
