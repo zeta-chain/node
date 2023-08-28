@@ -37,8 +37,11 @@ upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 first = True
 non_consensus_upgrades = []
+
 for tag in tag_list:
     if first:
+        if tag != os.environ["STARTING_VERSION"]:
+            continue
         first_major_version = tag.split(".")[0]
         first_minor_version = tag.split(".")[1]
         first_sub_version = tag.split(".")[2]
@@ -64,13 +67,12 @@ for tag in tag_list:
 #non_consensus_upgrades = ["v1.2.5","v1.2.7"]
 #os.environ["STARTING_VERSION"] = "v1.2.0"
 #os.environ["END_VERSION"] = "v1.2.7"
-
-tag_list = json.loads(os.environ["TAG_LIST"])["tag_list"]
-binary_download_list = json.loads(os.environ["BINARY_DOWNLOAD_LIST"])["binary_download_list"]
+#tag_list = json.loads(os.environ["TAG_LIST"])["tag_list"]
+#binary_download_list = json.loads(os.environ["BINARY_DOWNLOAD_LIST"])["binary_download_list"]
 
 logger.log.info("***************************")
 #os.environ["STARTING_VERSION"] = tag_list[0]
-#os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
+os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
 logger.log.info(f"Starting Version: {os.environ['STARTING_VERSION']}")
